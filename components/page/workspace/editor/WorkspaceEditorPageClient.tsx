@@ -3,7 +3,10 @@
 import {memo, useCallback, useEffect, useMemo, useState, useRef} from "react";
 import Link from "next/link";
 import { useSearchParams } from 'next/navigation';
-import { Image, Type, Music, Play, RotateCcw, Lock, ChevronLeft, Edit, Eye, EyeOff } from 'lucide-react';
+import { Image, Type, Music, Play, RotateCcw, ChevronLeft, Edit, Eye, EyeOff } from 'lucide-react';
+import { getFontWeightName } from "@/utils/fontUtils";
+import { fontMap, type FontName } from "@/lib/fonts";
+import FONT_FAMILY_LIST, {FontFamily} from "@/lib/FontFamilyList";
 
 interface VideoProject {
     id: string;
@@ -59,6 +62,24 @@ function WorkspaceEditorPageClient() {
     const musicStartInputRef = useRef<HTMLInputElement>(null);
     const fontSizeInputRef = useRef<HTMLInputElement>(null);
     const captionRef = useRef<HTMLParagraphElement>(null);
+
+    const [selectedFontFamilyName, setSelectedFontFamilyName] = useState('');
+    const [selectedFontWeight, setSelectedFontWeight] = useState(400);
+    const [fontFamilyList, setFontFamilyList] = useState<FontFamily[]>([]);
+    const selectedFontFamily = useMemo(() => {
+        return fontFamilyList.find((fontFamily) => {
+            return fontFamily.name === selectedFontFamilyName;
+        }) ?? fontFamilyList[0];
+    }, [fontFamilyList, selectedFontFamilyName]);
+    const selectedFontFamilyWeightList = useMemo(() => {
+        return selectedFontFamily?.weightList ?? [];
+    }, [selectedFontFamily]);
+
+    const selectedFontFamilyFull = useMemo(() => {
+        const fontName = selectedFontFamily?.name as FontName;
+        const nextFont = fontMap[fontName];
+        return nextFont ? nextFont.style.fontFamily : `'${selectedFontFamily?.name}', '${selectedFontFamily?.generic}'`;
+    }, [selectedFontFamily]);
     
     const setCaptionRef = useCallback((node: HTMLParagraphElement | null) => {
         captionRef.current = node;
@@ -72,9 +93,21 @@ function WorkspaceEditorPageClient() {
     const [captionPosition, setCaptionPosition] = useState(80); // percentage from top (0-100)
     const [captionHeight, setCaptionHeight] = useState(0);
     const [showCaptionLine, setShowCaptionLine] = useState(true);
+    
+    // Shadow settings state
+    const [shadowEnabled, setShadowEnabled] = useState(true);
+    const [shadowIntensity, setShadowIntensity] = useState(80); // 0-100 (maps to opacity)
+    const [shadowThickness, setShadowThickness] = useState(50); // 0-100 (maps to blur-radius)
+    
+    // Color settings state
+    const [activeColor, setActiveColor] = useState('#FFFFFF');
+    const [inactiveColor, setInactiveColor] = useState('#A0A0A0');
+    const [activeOutlineEnabled, setActiveOutlineEnabled] = useState(false);
+    const [activeOutlineColor, setActiveOutlineColor] = useState('#000000');
+    const [inactiveOutlineEnabled, setInactiveOutlineEnabled] = useState(false);
+    const [inactiveOutlineColor, setInactiveOutlineColor] = useState('#404040');
 
     const sliderHeight = useMemo(() => {
-        console.log(`captionHeight = ${captionHeight}, sliderHeight = ${VIDEO_HEIGHT - captionHeight}`)
         return VIDEO_HEIGHT - captionHeight;
     }, [captionHeight]);
 
@@ -145,7 +178,13 @@ function WorkspaceEditorPageClient() {
         // Simulate loading project data
         const loadProject = async () => {
             setIsLoading(true);
-            await new Promise(resolve => setTimeout(resolve, 1000));
+            // await new Promise(resolve => setTimeout(resolve, 1000));
+
+            const newFamilyList = FONT_FAMILY_LIST.sort((a, b) => {
+                return a.name.localeCompare(b.name);
+            });
+            setFontFamilyList(newFamilyList);
+            setSelectedFontFamilyName(newFamilyList[0].name);
             setProject(mockProject);
             setIsLoading(false);
         };
@@ -199,31 +238,8 @@ function WorkspaceEditorPageClient() {
     // Video duration in seconds (from project creation)
     const videoDuration = 30;
 
-    // Mock caption font data
-    const [fontFamilyList, setFontFamilyList] = useState([
-        { name: "Arial", generic: "sans-serif", isSelected: true },
-        { name: "Helvetica", generic: "sans-serif", isSelected: false },
-        { name: "Times New Roman", generic: "serif", isSelected: false },
-        { name: "Georgia", generic: "serif", isSelected: false },
-        { name: "Courier New", generic: "monospace", isSelected: false },
-        { name: "Verdana", generic: "sans-serif", isSelected: false },
-    ]);
-
-    const selectedFontFamily = useMemo(() => {
-        return fontFamilyList.find((fontFamily) => {
-            return fontFamily.isSelected;
-        }) ?? { name: "Arial", generic: "sans-serif", isSelected: true };
-    }, [fontFamilyList]);
-
     const onSelectFontFamily = useCallback((fontFamilyName: string) => {
-        setFontFamilyList((prevFontFamilyList) => {
-            return prevFontFamilyList.map((fontFamily) => {
-                return {
-                    ...fontFamily,
-                    isSelected: fontFamily.name === fontFamilyName
-                }
-            })
-        })
+        setSelectedFontFamilyName(fontFamilyName);
     }, [])
 
     // Mock background music data
@@ -243,6 +259,15 @@ function WorkspaceEditorPageClient() {
         { id: SidebarType.Caption, icon: Type, name: 'Caption' },
         { id: SidebarType.Music, icon: Music, name: 'Music' }
     ], []);
+
+    useEffect(() => {
+        if (shadowEnabled) {
+            document.getElementById("shadow-section")?.scrollIntoView({
+                behavior: "smooth",
+                block: "end",
+            })
+        }
+    }, [shadowEnabled])
 
     if (isLoading) {
         return (
@@ -334,8 +359,8 @@ function WorkspaceEditorPageClient() {
                                 }`}
                                 title={item.name}
                             >
-                                <IconComponent size={18} />
-                                <span className="text-xs mt-1 leading-tight">{item.name}</span>
+                                <IconComponent size={24} />
+                                <span className="text-sm mt-1 leading-tight">{item.name}</span>
                             </button>
                         );
                     })}
@@ -345,7 +370,7 @@ function WorkspaceEditorPageClient() {
                 <div className="flex-1 bg-gray-900/30 backdrop-blur-sm border-r border-purple-500/20 overflow-y-auto">
                     {activeSidebar === SidebarType.Scene && (
                         <div className="p-4 space-y-4">
-                            <div className="text-purple-300 text-xl font-medium mb-4">Scene</div>
+                            <div className="text-purple-300 text-2xl font-medium mb-4">Scene</div>
                             {mockSequences.map((sequence, index) => (
                             <div 
                                 key={sequence.id}
@@ -365,7 +390,7 @@ function WorkspaceEditorPageClient() {
                                                     e.stopPropagation();
                                                     console.log('Editing scene script:', sequence.id);
                                                 }}
-                                                className="flex items-center space-x-1 text-gray-400 hover:text-blue-400 text-sm transition-colors"
+                                                className="flex items-center space-x-1 text-gray-400 hover:text-blue-400 text-base transition-colors"
                                                 title="Edit Scene Script"
                                             >
                                                 <Edit size={12} />
@@ -377,7 +402,7 @@ function WorkspaceEditorPageClient() {
                                                 e.stopPropagation();
                                                 onRerunSequence(sequence.id);
                                             }}
-                                            className="flex items-center space-x-1 text-gray-400 hover:text-pink-400 text-sm transition-colors"
+                                            className="flex items-center space-x-1 text-gray-400 hover:text-pink-400 text-base transition-colors"
                                         >
                                             <Play size={14} />
                                             <span>Re-Run</span>
@@ -394,7 +419,7 @@ function WorkspaceEditorPageClient() {
                                         </div>
                                     </div>
                                     <div className="absolute bottom-0 left-0">
-                                        <span className="text-purple-300 text-sm">⏱ Scene Start: {sequence.duration}</span>
+                                        <span className="text-purple-300 text-base">⏱ Scene Start: {sequence.duration}</span>
                                     </div>
                                 </div>
                             </div>
@@ -403,23 +428,29 @@ function WorkspaceEditorPageClient() {
                     )}
 
                     {activeSidebar === SidebarType.Caption && (
-                        <div className="p-4 space-y-6">
-                            <div className="text-purple-300 text-xl font-medium mb-4">Caption</div>
+                        <div id="shadow-section" className="p-4 space-y-6">
+                            <div className="text-purple-300 text-2xl font-medium mb-4">Caption</div>
+                            
+                            {/* Fonts */}
+                            <div className="text-white text-lg font-medium">Fonts</div>
                             
                             {/* Font Family */}
                             <div className="space-y-2">
                                 <label className="text-white text-base font-medium">Font Family</label>
                                 <select 
-                                    value={selectedFontFamily.name}
+                                    value={selectedFontFamilyName}
                                     onChange={(e) => onSelectFontFamily(e.target.value)}
-                                    style={{ fontFamily: `${selectedFontFamily.name}, ${selectedFontFamily.generic}` }}
-                                    className="w-full bg-gray-800/50 border border-purple-500/30 rounded-lg px-3 py-2 text-white text-sm focus:border-purple-400 focus:outline-none cursor-pointer"
+                                    style={{
+                                        fontFamily: selectedFontFamilyFull,
+                                        fontWeight: selectedFontWeight,
+                                    }}
+                                    className="w-full bg-gray-800/50 border border-purple-500/30 rounded-lg px-3 py-2 text-white text-base focus:border-purple-400 focus:outline-none cursor-pointer"
                                 >
                                     {fontFamilyList.map((fontFamily, index) => {
                                         return <option
                                             key={`${fontFamily.name}_${index}`}
                                             value={fontFamily.name}
-                                            style={{ fontFamily: `${fontFamily.name}, ${fontFamily.generic}` }}
+                                            style={{ fontFamily: `${fontFamily.name}` }}
                                         >
                                             {fontFamily.name}
                                         </option>
@@ -457,9 +488,9 @@ function WorkspaceEditorPageClient() {
                                                     setFontSize(Math.min(72, numValue));
                                                 }
                                             }}
-                                            className="w-20 bg-gray-800/50 border border-purple-500/30 rounded-lg px-3 py-2 text-white text-sm focus:border-purple-400 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                            className="w-20 bg-gray-800/50 border border-purple-500/30 rounded-lg px-3 py-2 text-white text-base focus:border-purple-400 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                                         />
-                                        <span className="text-gray-400 text-sm">px</span>
+                                        <span className="text-gray-400 text-base">px</span>
                                     </div>
                                     <input 
                                         type="range" 
@@ -475,95 +506,280 @@ function WorkspaceEditorPageClient() {
                             {/* Font Weight */}
                             <div className="space-y-2">
                                 <label className="text-white text-base font-medium">Font Weight</label>
-                                <div className="space-y-3">
-                                    <select className="w-full bg-gray-800/50 border border-purple-500/30 rounded-lg px-3 py-2 text-white text-sm focus:border-purple-400 focus:outline-none cursor-pointer">
-                                        <option value="100">Thin (100)</option>
-                                        <option value="200">Extra Light (200)</option>
-                                        <option value="300">Light (300)</option>
-                                        <option value="400" selected>Normal (400)</option>
-                                        <option value="500">Medium (500)</option>
-                                        <option value="600">Semi Bold (600)</option>
-                                        <option value="700">Bold (700)</option>
-                                        <option value="800">Extra Bold (800)</option>
-                                        <option value="900">Black (900)</option>
+                                <div className="flex items-center space-x-4">
+                                    <select
+                                        className="w-48 bg-gray-800/50 border border-purple-500/30 rounded-lg px-3 py-2 text-white text-base focus:border-purple-400 focus:outline-none cursor-pointer"
+                                        onChange={(e) => { setSelectedFontWeight(parseInt(e.target.value)) }}
+                                        value={selectedFontWeight}
+                                        style={{
+                                            fontFamily: selectedFontFamilyName,
+                                            fontWeight: selectedFontWeight
+                                        }}
+                                    >
+                                        {selectedFontFamilyWeightList.map((fontVariant, index) => {
+                                            return <option
+                                                key={`${fontVariant.weight}_${index}`}
+                                                value={fontVariant.weight}
+                                            >
+                                                {`${getFontWeightName(fontVariant.weight)} (${fontVariant.weight})`}
+                                            </option>
+                                        })}
                                     </select>
                                     <input 
                                         type="range" 
-                                        min="100" 
-                                        max="900" 
+                                        min={selectedFontFamilyWeightList.length > 0 ? Math.min(...selectedFontFamilyWeightList.map(w => w.weight)) : 100}
+                                        max={selectedFontFamilyWeightList.length > 0 ? Math.max(...selectedFontFamilyWeightList.map(w => w.weight)) : 900}
                                         step="100"
-                                        defaultValue="400"
-                                        className="w-full accent-purple-500"
+                                        value={selectedFontWeight}
+                                        onChange={(e) => setSelectedFontWeight(parseInt(e.target.value))}
+                                        className="flex-1 accent-purple-500"
                                     />
                                 </div>
                             </div>
 
                             {/* Colors */}
                             <div className="space-y-4">
-                                <div className="text-white text-base font-medium">Colors</div>
+                                <div className="text-white text-lg font-medium">Colors</div>
                                 
                                 {/* Active Color */}
-                                <div className="flex items-center space-x-3">
-                                    <div className="w-6 h-6 rounded-full border border-purple-500/30" style={{backgroundColor: '#ffffff'}}></div>
-                                    <div className="flex-1">
-                                        <label className="text-gray-300 text-sm">Active Color</label>
-                                        <input 
-                                            type="text" 
-                                            defaultValue="#ffffff"
-                                            placeholder="#ffffff"
-                                            className="w-full bg-gray-800/50 border border-purple-500/30 rounded-lg px-3 py-2 text-white text-sm focus:border-purple-400 focus:outline-none mt-1"
-                                        />
+                                <div className="space-y-2">
+                                    <label className="text-gray-300 text-base">Active Color</label>
+                                    <div className="flex items-center space-x-3">
+                                        <div className="w-6 h-6 rounded-full border border-purple-500/30" style={{backgroundColor: activeColor}}></div>
+                                        <div className="flex items-center flex-1">
+                                            <span className="bg-gray-800/50 border border-purple-500/30 border-r-0 rounded-l-lg px-3 py-2 text-white text-base">#</span>
+                                            <input 
+                                                type="text" 
+                                                value={activeColor.replace('#', '')}
+                                                onKeyDown={(e) => {
+                                                    if (!/[0-9A-Fa-f]/.test(e.key) && !['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab'].includes(e.key)) {
+                                                        e.preventDefault();
+                                                    }
+                                                }}
+                                                // onChange={(e) => setActiveColor('#' + e.target.value)}
+                                                onChange={(e) => setActiveColor(`#${e.target.value.toUpperCase()}`)}
+                                                placeholder="FFFFFF"
+                                                maxLength={6}
+                                                className="flex-1 bg-gray-800/50 border border-purple-500/30 rounded-r-lg px-3 py-2 text-white text-base focus:border-purple-400 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                            />
+                                        </div>
                                     </div>
                                 </div>
 
                                 {/* Inactive Color */}
-                                <div className="flex items-center space-x-3">
-                                    <div className="w-6 h-6 rounded-full border border-purple-500/30" style={{backgroundColor: '#a0a0a0'}}></div>
-                                    <div className="flex-1">
-                                        <label className="text-gray-300 text-sm">Inactive Color</label>
-                                        <input 
-                                            type="text" 
-                                            defaultValue="#a0a0a0"
-                                            placeholder="#a0a0a0"
-                                            className="w-full bg-gray-800/50 border border-purple-500/30 rounded-lg px-3 py-2 text-white text-sm focus:border-purple-400 focus:outline-none mt-1"
-                                        />
+                                <div className="space-y-2">
+                                    <label className="text-gray-300 text-base">Inactive Color</label>
+                                    <div className="flex items-center space-x-3">
+                                        <div className="w-6 h-6 rounded-full border border-purple-500/30" style={{backgroundColor: inactiveColor}}></div>
+                                        <div className="flex items-center flex-1">
+                                            <span className="bg-gray-800/50 border border-purple-500/30 border-r-0 rounded-l-lg px-3 py-2 text-white text-base">#</span>
+                                            <input 
+                                                type="text" 
+                                                value={inactiveColor.replace('#', '')}
+                                                onKeyDown={(e) => {
+                                                    if (!/[0-9A-Fa-f]/.test(e.key) && !['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab'].includes(e.key)) {
+                                                        e.preventDefault();
+                                                    }
+                                                }}
+                                                // onChange={(e) => setInactiveColor('#' + e.target.value)}
+                                                onChange={(e) => setInactiveColor(`#${e.target.value.toUpperCase()}`)}
+                                                placeholder="A0A0A0"
+                                                maxLength={6}
+                                                className="flex-1 bg-gray-800/50 border border-purple-500/30 rounded-r-lg px-3 py-2 text-white text-base focus:border-purple-400 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                            />
+                                        </div>
                                     </div>
                                 </div>
 
                                 {/* Active Outline Color */}
-                                <div className="flex items-center space-x-3">
-                                    <div className="w-6 h-6 rounded-full border border-purple-500/30" style={{backgroundColor: '#000000'}}></div>
-                                    <div className="flex-1">
-                                        <label className="text-gray-300 text-sm">Active Outline Color</label>
-                                        <input 
-                                            type="text" 
-                                            defaultValue="#000000"
-                                            placeholder="#000000"
-                                            className="w-full bg-gray-800/50 border border-purple-500/30 rounded-lg px-3 py-2 text-white text-sm focus:border-purple-400 focus:outline-none mt-1"
-                                        />
+                                <div className="space-y-2">
+                                    <div className="flex items-center space-x-3">
+                                        <label className="text-gray-300 text-base">Active Outline Color</label>
+                                        <label className="relative inline-flex items-center cursor-pointer">
+                                            <input
+                                                type="checkbox"
+                                                checked={activeOutlineEnabled}
+                                                onChange={(e) => setActiveOutlineEnabled(e.target.checked)}
+                                                className="sr-only peer"
+                                            />
+                                            <div className="w-11 h-6 bg-gray-800 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-purple-400 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all border border-purple-500/30 peer-checked:bg-gradient-to-r peer-checked:from-pink-500 peer-checked:to-purple-600"></div>
+                                        </label>
                                     </div>
+                                    {activeOutlineEnabled && (
+                                        <div className="flex items-center space-x-3">
+                                            <div className="w-6 h-6 rounded-full border border-purple-500/30" style={{backgroundColor: activeOutlineColor}}></div>
+                                            <div className="flex items-center flex-1">
+                                                <span className="bg-gray-800/50 border border-purple-500/30 border-r-0 rounded-l-lg px-3 py-2 text-white text-base">#</span>
+                                                <input 
+                                                    type="text" 
+                                                    value={activeOutlineColor.replace('#', '')}
+                                                    onKeyDown={(e) => {
+                                                        if (!/[0-9A-Fa-f]/.test(e.key) && !['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab'].includes(e.key)) {
+                                                            e.preventDefault();
+                                                        }
+                                                    }}
+                                                    // onChange={(e) => setActiveOutlineColor('#' + e.target.value)}
+                                                    onChange={(e) => setActiveOutlineColor(`#${e.target.value.toUpperCase()}`)}
+                                                    placeholder="000000"
+                                                    maxLength={6}
+                                                    className="flex-1 bg-gray-800/50 border border-purple-500/30 rounded-r-lg px-3 py-2 text-white text-base focus:border-purple-400 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                                />
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
 
                                 {/* Inactive Outline Color */}
-                                <div className="flex items-center space-x-3">
-                                    <div className="w-6 h-6 rounded-full border border-purple-500/30" style={{backgroundColor: '#404040'}}></div>
-                                    <div className="flex-1">
-                                        <label className="text-gray-300 text-sm">Inactive Outline Color</label>
-                                        <input 
-                                            type="text" 
-                                            defaultValue="#404040"
-                                            placeholder="#404040"
-                                            className="w-full bg-gray-800/50 border border-purple-500/30 rounded-lg px-3 py-2 text-white text-sm focus:border-purple-400 focus:outline-none mt-1"
-                                        />
+                                <div className="space-y-2">
+                                    <div className="flex items-center space-x-3">
+                                        <label className="text-gray-300 text-base">Inactive Outline Color</label>
+                                        <label className="relative inline-flex items-center cursor-pointer">
+                                            <input
+                                                type="checkbox"
+                                                checked={inactiveOutlineEnabled}
+                                                onChange={(e) => setInactiveOutlineEnabled(e.target.checked)}
+                                                className="sr-only peer"
+                                            />
+                                            <div className="w-11 h-6 bg-gray-800 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-purple-400 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all border border-purple-500/30 peer-checked:bg-gradient-to-r peer-checked:from-pink-500 peer-checked:to-purple-600"></div>
+                                        </label>
                                     </div>
+                                    {inactiveOutlineEnabled && (
+                                        <div className="flex items-center space-x-3">
+                                            <div className="w-6 h-6 rounded-full border border-purple-500/30" style={{backgroundColor: inactiveOutlineColor}}></div>
+                                            <div className="flex items-center flex-1">
+                                                <span className="bg-gray-800/50 border border-purple-500/30 border-r-0 rounded-l-lg px-3 py-2 text-white text-base">#</span>
+                                                <input 
+                                                    type="text" 
+                                                    value={inactiveOutlineColor.replace('#', '')}
+                                                    onKeyDown={(e) => {
+                                                        if (!/[0-9A-Fa-f]/.test(e.key) && !['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab'].includes(e.key)) {
+                                                            e.preventDefault();
+                                                        }
+                                                    }}
+                                                    // onChange={(e) => setInactiveOutlineColor('#' + e.target.value)}
+                                                    onChange={(e) => setInactiveOutlineColor(`#${e.target.value.toUpperCase()}`)}
+                                                    placeholder="404040"
+                                                    maxLength={6}
+                                                    className="flex-1 bg-gray-800/50 border border-purple-500/30 rounded-r-lg px-3 py-2 text-white text-base focus:border-purple-400 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                                />
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
+                            </div>
+
+                            {/* Shadow */}
+                            <div className="space-y-4">
+                                <div className="flex items-center space-x-3">
+                                    <label className="text-white text-lg font-medium">Shadow</label>
+                                    <label className="relative inline-flex items-center cursor-pointer">
+                                        <input
+                                            type="checkbox"
+                                            checked={shadowEnabled}
+                                            onChange={(e) => setShadowEnabled(e.target.checked)}
+                                            className="sr-only peer"
+                                        />
+                                        <div className="w-11 h-6 bg-gray-800 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-purple-400 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all border border-purple-500/30 peer-checked:bg-gradient-to-r peer-checked:from-pink-500 peer-checked:to-purple-600"></div>
+                                    </label>
+                                </div>
+                                
+                                {shadowEnabled && (
+                                    <div className="space-y-4">
+                                        {/* Intensity */}
+                                        <div className="space-y-2">
+                                            <label className="text-white text-base font-medium">Intensity</label>
+                                            <div className="flex items-center space-x-4">
+                                                <div className="flex items-center space-x-2">
+                                                    <input 
+                                                        type="number" 
+                                                        min="0" 
+                                                        max="100" 
+                                                        value={shadowIntensity}
+                                                        onInput={(e) => {
+                                                            const input = e.target as HTMLInputElement;
+                                                            let inputValue = input.value;
+                                                            
+                                                            // Remove leading zeros except for just "0"
+                                                            if (inputValue.length > 1 && inputValue.startsWith('0')) {
+                                                                inputValue = inputValue.replace(/^0+/, '');
+                                                                if (inputValue === '') inputValue = '0';
+                                                                input.value = inputValue;
+                                                            }
+                                                            
+                                                            // Allow empty or 0 values, but limit max to 100
+                                                            if (inputValue === '') {
+                                                                setShadowIntensity(0);
+                                                            } else {
+                                                                const numValue = parseInt(inputValue) || 0;
+                                                                setShadowIntensity(Math.min(100, numValue));
+                                                            }
+                                                        }}
+                                                        className="w-20 bg-gray-800/50 border border-purple-500/30 rounded-lg px-3 py-2 text-white text-base focus:border-purple-400 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                                    />
+                                                    <span className="text-gray-400 text-base">%</span>
+                                                </div>
+                                                <input 
+                                                    type="range" 
+                                                    min="0" 
+                                                    max="100" 
+                                                    value={shadowIntensity}
+                                                    onChange={(e) => setShadowIntensity(parseInt(e.target.value))}
+                                                    className="flex-1 accent-purple-500"
+                                                />
+                                            </div>
+                                        </div>
+
+                                        {/* Thickness */}
+                                        <div className="space-y-2">
+                                            <label className="text-white text-base font-medium">Thickness</label>
+                                            <div className="flex items-center space-x-4">
+                                                <div className="flex items-center space-x-2">
+                                                    <input 
+                                                        type="number" 
+                                                        min="0" 
+                                                        max="100" 
+                                                        value={shadowThickness}
+                                                        onInput={(e) => {
+                                                            const input = e.target as HTMLInputElement;
+                                                            let inputValue = input.value;
+                                                            
+                                                            // Remove leading zeros except for just "0"
+                                                            if (inputValue.length > 1 && inputValue.startsWith('0')) {
+                                                                inputValue = inputValue.replace(/^0+/, '');
+                                                                if (inputValue === '') inputValue = '0';
+                                                                input.value = inputValue;
+                                                            }
+                                                            
+                                                            // Allow empty or 0 values, but limit max to 100
+                                                            if (inputValue === '') {
+                                                                setShadowThickness(0);
+                                                            } else {
+                                                                const numValue = parseInt(inputValue) || 0;
+                                                                setShadowThickness(Math.min(100, numValue));
+                                                            }
+                                                        }}
+                                                        className="w-20 bg-gray-800/50 border border-purple-500/30 rounded-lg px-3 py-2 text-white text-base focus:border-purple-400 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                                    />
+                                                </div>
+                                                <input 
+                                                    type="range" 
+                                                    min="0" 
+                                                    max="100" 
+                                                    value={shadowThickness}
+                                                    onChange={(e) => setShadowThickness(parseInt(e.target.value))}
+                                                    className="flex-1 accent-purple-500"
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     )}
 
                     {activeSidebar === SidebarType.Music && (
                         <div className="p-4 space-y-4">
-                            <div className="text-purple-300 text-xl font-medium mb-4">Music</div>
+                            <div className="text-purple-300 text-2xl font-medium mb-4">Music</div>
                             {backgroundMusic.map((music) => (
                                 <div
                                     key={music.id}
@@ -787,12 +1003,16 @@ function WorkspaceEditorPageClient() {
                                             >
                                                 <p 
                                                     ref={setCaptionRef}
-                                                    className="text-white text-center leading-tight px-2 py-1 cursor-default"
+                                                    className="text-center leading-tight px-2 py-1 cursor-default"
                                                     style={{ 
-                                                        fontFamily: `${selectedFontFamily.name}, ${selectedFontFamily.generic}`,
+                                                        fontFamily: selectedFontFamilyFull,
                                                         fontSize: `${fontSize}px`,
-                                                        fontWeight: '400',
-                                                        textShadow: '2px 2px 4px rgba(0,0,0,0.8)'
+                                                        fontWeight: selectedFontWeight,
+                                                        color: activeColor,
+                                                        WebkitTextStroke: activeOutlineEnabled ? `1px ${activeOutlineColor}` : '0px transparent',
+                                                        textShadow: shadowEnabled 
+                                                            ? `2px 2px ${(shadowThickness / 100) * 8}px rgba(0,0,0,${shadowIntensity / 100})`
+                                                            : 'none'
                                                     }}
                                                 >
                                                     {currentSegment.text}
