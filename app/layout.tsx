@@ -1,15 +1,12 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { ReactNode } from "react";
+import { Rajdhani } from "next/font/google";
+import ConditionalHeader from "@/components/public/ConditionalHeader";
+import ConditionalMain from "@/components/public/ConditionalMain";
 import "./globals.css";
-import Header from "@/components/public/Header";
 
-const geistSans = Geist({
-    variable: "--font-geist-sans",
-    subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-    variable: "--font-geist-mono",
+const defaultFont = Rajdhani({
+    weight: ['300', '400', '500', '600', '700'],
     subsets: ["latin"],
 });
 
@@ -21,18 +18,18 @@ export const metadata: Metadata = {
 export default function RootLayout({
     children,
 }: Readonly<{
-    children: React.ReactNode;
+    children: ReactNode;
 }>) {
     return (
         <html lang="en">
             <body
-                className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+                className={`${defaultFont.className} antialiased`}
             >
                 <div className="min-h-screen">
-                    <Header/>
-                    <main>
+                    <ConditionalHeader/>
+                    <ConditionalMain>
                         {children}
-                    </main>
+                    </ConditionalMain>
                 </div>
             </body>
         </html>
