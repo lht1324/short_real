@@ -60,6 +60,10 @@ function WorkspaceEditorPageClient() {
     const [selectedSequence, setSelectedSequence] = useState<string | null>(null);
     const [musicStartSeconds, setMusicStartSeconds] = useState(45); // Start time in seconds
     const musicStartInputRef = useRef<HTMLInputElement>(null);
+    
+    // Edit script state
+    const [editingScriptId, setEditingScriptId] = useState<string | null>(null);
+    const [tempScriptText, setTempScriptText] = useState('');
     const fontSizeInputRef = useRef<HTMLInputElement>(null);
     const captionRef = useRef<HTMLParagraphElement>(null);
 
@@ -235,6 +239,26 @@ function WorkspaceEditorPageClient() {
         console.log('Re-running sequence:', sequenceId);
     }, []);
 
+    const onEditScript = useCallback((sequenceId: string) => {
+        const sequence = mockSequences.find(s => s.id === sequenceId);
+        if (sequence) {
+            setEditingScriptId(sequenceId);
+            setTempScriptText(sequence.text);
+        }
+    }, []);
+
+    const onSaveScript = useCallback((sequenceId: string) => {
+        console.log('Saving script for sequence:', sequenceId, 'New text:', tempScriptText);
+        // Here you would update the sequence text in your state/backend
+        setEditingScriptId(null);
+        setTempScriptText('');
+    }, [tempScriptText]);
+
+    const onCancelEditScript = useCallback(() => {
+        setEditingScriptId(null);
+        setTempScriptText('');
+    }, []);
+
     // Video duration in seconds (from project creation)
     const videoDuration = 30;
 
@@ -388,7 +412,7 @@ function WorkspaceEditorPageClient() {
                                             <button
                                                 onClick={(e) => {
                                                     e.stopPropagation();
-                                                    console.log('Editing scene script:', sequence.id);
+                                                    onEditScript(sequence.id);
                                                 }}
                                                 className="flex items-center space-x-1 text-gray-400 hover:text-blue-400 text-base transition-colors"
                                                 title="Edit Scene Script"
@@ -410,9 +434,41 @@ function WorkspaceEditorPageClient() {
                                     </div>
                                     <div className="flex items-start justify-between">
                                         <div className="flex-1 mr-4">
-                                            <p className="text-white text-base leading-relaxed">
-                                                {sequence.text}
-                                            </p>
+                                            {editingScriptId === sequence.id ? (
+                                                <div className="space-y-3">
+                                                    <textarea
+                                                        value={tempScriptText}
+                                                        onChange={(e) => setTempScriptText(e.target.value)}
+                                                        className="w-full bg-gray-800/50 border border-purple-500/30 rounded-lg px-3 py-2 text-white text-base leading-relaxed focus:border-purple-400 focus:outline-none resize-none"
+                                                        rows={4}
+                                                        placeholder="Enter scene script..."
+                                                    />
+                                                    <div className="flex items-center space-x-2">
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                onSaveScript(sequence.id);
+                                                            }}
+                                                            className="bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white px-3 py-1.5 rounded-lg text-sm font-medium transition-all"
+                                                        >
+                                                            Save
+                                                        </button>
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                onCancelEditScript();
+                                                            }}
+                                                            className="bg-gray-700/50 hover:bg-gray-600/50 text-white px-3 py-1.5 rounded-lg text-sm font-medium transition-all"
+                                                        >
+                                                            Cancel
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            ) : (
+                                                <p className="text-white text-base leading-relaxed">
+                                                    {sequence.text}
+                                                </p>
+                                            )}
                                         </div>
                                         <div className="w-32 bg-gradient-to-br from-pink-400 via-purple-500 to-indigo-600 rounded-lg overflow-hidden border border-purple-500/30" style={{aspectRatio: '9/16'}}>
                                             <div className="w-full h-full bg-gradient-to-t from-black/20 to-transparent"></div>
