@@ -33,7 +33,6 @@ interface VideoSequence {
     id: string;
     text: string;
     duration: string;
-    imageUrl: string;
     isSelected?: boolean;
     segmentList: CaptionSegment[];
 }
