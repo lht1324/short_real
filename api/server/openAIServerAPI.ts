@@ -20,8 +20,8 @@ export const openAIServerAPI = {
             }
 
             // 프롬프트를 OpenAI 형식으로 매핑
-            let systemMessage = `You are an expert video script writer specializing in ${request.duration}-second short-form videos.
-Please write a script according to the following specifications:
+            let systemMessage = `You are a professional AI video generation prompts engineer for Pika v2.2 who's specializing in ${request.duration}-second short-form videos like Youtube Shorts, Instagram Reels, and TikTok.
+Please write a prompt according to the following specifications:
 
 - Length: Approximately ${request.duration} seconds (roughly ${request.duration * 2.5} words)`;
 
@@ -40,12 +40,14 @@ Please write a script according to the following specifications:
             systemMessage += `
 
 Script Writing Guidelines:
-1. Write in a tone that matches the selected voice characteristics
-2. Create content and pacing that complements the background music's atmosphere
-3. Include descriptions and storytelling appropriate for the visual style
-4. Write naturally and engagingly for short-form video narration
+1. Write in a direct, engaging tone that matches the selected voice characteristics
+2. Create compelling short-form content that hooks viewers immediately
+3. Use storytelling that builds tension and excitement, complementing the background music's atmosphere
+4. Focus on dramatic moments, turning points, or surprising facts
+5. Write for mobile viewers with short attention spans
+6. Use present tense and active voice for immediacy
 
-Please provide only the script content without any additional explanations.`;
+Please provide ONLY the narration script text without any formatting tags, stage directions, or metadata.`;
 
             // OpenAI API 호출
             const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -58,10 +60,9 @@ Please provide only the script content without any additional explanations.`;
                     model: 'o4-mini-2025-04-16',
                     messages: [
                         { role: 'system', content: systemMessage },
-                        { role: 'user', content: request.prompt }
+                        { role: 'user', content: request.userPrompt }
                     ],
-                    max_tokens: 1000,
-                    temperature: 0.7
+                    max_completion_tokens: 4000,
                 })
             });
 
@@ -77,6 +78,8 @@ Please provide only the script content without any additional explanations.`;
             }
 
             const completion: OpenAIChatOriginalResponse = await response.json();
+            console.log("completion", completion);
+            console.log("completionMessage", completion.choices[0]?.message);
             const generatedScript = completion.choices[0]?.message?.content;
 
             if (!generatedScript) {
@@ -99,7 +102,7 @@ Please provide only the script content without any additional explanations.`;
                     script: generatedScript,
                     wordCount,
                     estimatedDuration,
-                    prompt: request.prompt
+                    prompt: request.userPrompt
                 },
                 usage: completion.usage
             };

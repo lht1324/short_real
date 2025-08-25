@@ -1,7 +1,7 @@
 // OpenAI Chat Completions API 응답 타입 정의
 
 export interface ScriptGenerationRequest {
-    prompt: string;
+    userPrompt: string;
     duration: number; // 초 단위 (15 또는 30)
     style?: {
         id: string;

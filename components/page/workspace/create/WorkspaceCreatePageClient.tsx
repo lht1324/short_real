@@ -3,6 +3,8 @@
 import {memo, useCallback, useMemo, useState} from "react";
 import Link from "next/link";
 import { ChevronLeft, AlertTriangle, X, Sparkles, ListTodo, Plus, Play, ChevronDown, ChevronRight } from 'lucide-react';
+import { openAIClientAPI } from '@/api/client/openAIClientAPI';
+import {ScriptGenerationRequest} from "@/api/types/open-ai/ScriptGeneration";
 
 interface Voice {
     id: string;
@@ -118,17 +120,57 @@ function WorkspaceCreatePageClient() {
         
         setIsGenerating(true);
         
-        // Simulate AI script generation based on user prompt
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        
-        // Mock response based on user prompt
-        const generatedScript = `Based on your request: "${aiPrompt}", here's a generated script. This would be a detailed script that matches your requirements for a ${selectedDuration}-second video.`;
-        
-        setDescription(generatedScript);
-        setIsGenerating(false);
-        setShowAIModal(false);
-        setAiPrompt('');
-    }, [aiPrompt, selectedDuration]);
+        try {
+            // 선택된 스타일, 음성, 음악 정보 가져오기
+            const selectedStyle = styleExamples[style as keyof typeof styleExamples];
+            const selectedVoice = voices.find(v => v.id === voice);
+            const selectedMusic = backgroundMusic.find(m => m.id === music);
+
+            // API 요청 데이터 구성
+            const requestData: ScriptGenerationRequest = {
+                userPrompt: aiPrompt,
+                duration: duration,
+                style: selectedStyle ? {
+                    id: style,
+                    name: selectedStyle.name,
+                    description: selectedStyle.description
+                } : undefined,
+                voice: selectedVoice ? {
+                    id: selectedVoice.id,
+                    name: selectedVoice.name,
+                    characteristics: selectedVoice.characteristics
+                } : undefined,
+                music: selectedMusic ? {
+                    id: selectedMusic.id,
+                    title: selectedMusic.title,
+                    artist: selectedMusic.artist
+                } : undefined
+            };
+
+            console.log('Generating script with data:', requestData);
+
+            // OpenAI API 호출
+            const result = await openAIClientAPI.postOpenAIScript(requestData);
+
+            if (result && result.success && result.data) {
+                console.log("Script generation result", result);
+                console.log('Script generated successfully:', result.data);
+                setDescription(result.data.script);
+                setIsGenerating(false);
+                setShowAIModal(false);
+                setAiPrompt('');
+            } else {
+                console.error('Script generation failed:', result?.error);
+                alert(result?.error?.message || 'Failed to generate script. Please try again.');
+                setIsGenerating(false);
+            }
+
+        } catch (error) {
+            console.error('Error generating script:', error);
+            alert('An error occurred while generating script. Please try again.');
+            setIsGenerating(false);
+        }
+    }, [aiPrompt, duration, style, voice, music, styleExamples, voices, backgroundMusic]);
 
     const openAIModal = useCallback(() => {
         setShowAIModal(true);

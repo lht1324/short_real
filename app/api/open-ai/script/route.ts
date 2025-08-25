@@ -4,11 +4,11 @@ import { ScriptGenerationRequest } from '@/api/types/open-ai/ScriptGeneration';
 
 export async function POST(request: NextRequest) {
     try {
-        // ”­ ø8 ñ
+        // ìš”ì²­ ë³¸ë¬¸ íŒŒì‹±
         const body: ScriptGenerationRequest = await request.json();
 
-        // D DÜ €
-        if (!body.prompt) {
+        // í•„ìˆ˜ í•„ë“œ ê²€ì¦
+        if (!body.userPrompt) {
             return NextResponse.json({
                 success: false,
                 error: {
@@ -28,10 +28,10 @@ export async function POST(request: NextRequest) {
             }, { status: 400 });
         }
 
-        // OpenAI API| µt ¤l½¸ İ1
+        // OpenAI APIë¥¼ í†µí•´ ìŠ¤í¬ë¦½íŠ¸ ìƒì„±
         const result = await openAIServerAPI.postOpenAIScript(body);
 
-        // °ü X
+        // ê²°ê³¼ ë°˜í™˜
         return NextResponse.json(result);
 
     } catch (error) {
