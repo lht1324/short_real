@@ -2,7 +2,7 @@
 
 import {memo, useCallback, useMemo, useState} from "react";
 import Link from "next/link";
-import { ChevronLeft, AlertTriangle, X, Sparkles, Home, Plus, Play, ChevronDown, ChevronRight } from 'lucide-react';
+import { ChevronLeft, AlertTriangle, X, Sparkles, ListTodo, Plus, Play, ChevronDown, ChevronRight } from 'lucide-react';
 
 interface Voice {
     id: string;
@@ -109,7 +109,7 @@ function WorkspaceCreatePageClient() {
 
     // Virtual tabs for navigation consistency
     const virtualTabs = useMemo(() => [
-        { id: 'dashboard', icon: Home, name: 'Dashboard', href: '/workspace/dashboard' },
+        { id: 'dashboard', icon: ListTodo, name: 'Tasks', href: '/workspace/dashboard' },
         { id: 'create', icon: Plus, name: 'Create', href: '/workspace/create', active: true }
     ], []);
 
@@ -163,15 +163,8 @@ function WorkspaceCreatePageClient() {
         <div className="min-h-screen bg-black text-white">
             {/* Top Header - Same as Editor */}
             <div className="flex items-center justify-between py-4 border-b border-purple-500/20 bg-gray-900/50 backdrop-blur-sm">
-                <div className="flex items-center pl-3">
-                    <Link 
-                        href="/workspace/dashboard"
-                        className="text-gray-400 hover:text-pink-400 transition-colors"
-                        title="Back to Dashboard"
-                    >
-                        <ChevronLeft size={40} />
-                    </Link>
-                    <div className="w-12 h-12 ml-3 bg-gradient-to-r from-pink-500 to-purple-600 rounded-lg flex items-center justify-center">
+                <div className="flex items-center" style={{paddingLeft: '16px'}}>
+                    <div className="w-12 h-12 bg-gradient-to-r from-pink-500 to-purple-600 rounded-lg flex items-center justify-center">
                         <span className="text-white font-bold text-sm">✨</span>
                     </div>
                     <div className="flex flex-col ml-4">
