@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ChevronLeft, AlertTriangle, X, Sparkles, ListTodo, Plus, Play, ChevronDown, ChevronRight } from 'lucide-react';
 import { openAIClientAPI } from '@/api/client/openAIClientAPI';
 import {ScriptGenerationRequest} from "@/api/types/open-ai/ScriptGeneration";
+import {VideoDataGenerationRequest} from "@/api/types/open-ai/VideoDataGeneration";
 
 interface Voice {
     id: string;
@@ -69,6 +70,8 @@ function WorkspaceCreatePageClient() {
     const [showAIModal, setShowAIModal] = useState(false);
     const [aiPrompt, setAiPrompt] = useState('');
     const [selectedDuration, setSelectedDuration] = useState(15);
+
+    const [videoDataResponse, setVideoDataResponse] = useState({ });
     
     // Collapse states for sections
     const [isStyleExpanded, setIsStyleExpanded] = useState(true);
@@ -190,16 +193,64 @@ function WorkspaceCreatePageClient() {
     }, [aiPrompt]);
 
     const onSubmitProject = useCallback(async () => {
+        if (!description.trim()) {
+            alert('스크립트를 입력해주세요.');
+            return;
+        }
+
         setIsSubmitting(true);
-        console.log('Creating project with data:', formData);
         
-        // Simulate API call
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        
-        setIsSubmitting(false);
-        // Redirect to dashboard after creation
-        window.location.href = '/workspace/dashboard';
-    }, [formData]);
+        try {
+            // 선택된 스타일, 음성, 음악 정보 가져오기
+            const selectedStyle = styleExamples[style as keyof typeof styleExamples];
+            const selectedVoice = voices.find(v => v.id === voice);
+            const selectedMusic = backgroundMusic.find(m => m.id === music);
+
+            // VideoData API 요청 데이터 구성
+            const requestData: VideoDataGenerationRequest = {
+                script: description,
+                duration: duration,
+                style: selectedStyle ? {
+                    id: style,
+                    name: selectedStyle.name,
+                    description: selectedStyle.description
+                } : undefined,
+                voice: selectedVoice ? {
+                    id: selectedVoice.id,
+                    name: selectedVoice.name,
+                    characteristics: selectedVoice.characteristics
+                } : undefined,
+                music: selectedMusic ? {
+                    id: selectedMusic.id,
+                    title: selectedMusic.title,
+                    artist: selectedMusic.artist
+                } : undefined
+            };
+
+            console.log('Creating video project with data:', requestData);
+
+            // VideoData API 호출
+            const result = await openAIClientAPI.postOpenAIVideoData(requestData);
+
+            if (result && result.success && result.data) {
+                console.log('Video data generation successful:', result.data);
+                setVideoDataResponse(result.data);
+                
+                // 성공 시 대시보드로 이동
+                alert('비디오 프로젝트 생성이 완료되었습니다!');
+                // window.location.href = '/workspace/dashboard';
+            } else {
+                console.error('Video data generation failed:', result?.error);
+                alert(result?.error?.message || '비디오 프로젝트 생성에 실패했습니다. 다시 시도해주세요.');
+            }
+
+        } catch (error) {
+            console.error('Error creating video project:', error);
+            alert('비디오 프로젝트 생성 중 오류가 발생했습니다. 다시 시도해주세요.');
+        } finally {
+            setIsSubmitting(false);
+        }
+    }, [description, duration, style, voice, music, styleExamples, voices, backgroundMusic]);
 
     return (
         <div className="min-h-screen bg-black text-white">
@@ -279,6 +330,28 @@ function WorkspaceCreatePageClient() {
                                     rows={6}
                                     className="w-full px-4 py-3 rounded-xl bg-gray-800/50 border border-purple-500/30 text-white placeholder-gray-400 focus:border-purple-400 focus:ring-2 focus:ring-purple-400/20 focus:outline-none transition-all resize-none text-base"
                                 />
+                            </div>
+
+                            {/* VideoData API Test Section */}
+                            <div>
+                                <label className="block text-xl font-medium text-white mb-3">
+                                    VideoData API Test
+                                </label>
+                                <div className="bg-gray-800/50 border border-purple-500/30 rounded-xl p-4">
+                                    <div className="flex items-center justify-between mb-3">
+                                        <span className="text-purple-300 text-sm font-medium">JSON Response</span>
+                                        <button
+                                            onClick={onSubmitProject}
+                                            type="button"
+                                            className="px-3 py-1.5 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-lg text-sm font-medium hover:from-blue-600 hover:to-cyan-600 transition-all duration-300"
+                                        >
+                                            Test VideoData API
+                                        </button>
+                                    </div>
+                                    <pre className="bg-gray-900/50 border border-gray-700/50 rounded-lg p-3 text-xs text-green-400 overflow-x-auto font-mono">
+                                        {JSON.stringify(videoDataResponse, null, 2)}
+                                    </pre>
+                                </div>
                             </div>
 
                             {/* Duration Selection */}
