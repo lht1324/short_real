@@ -1,21 +1,38 @@
 import { elevenLabsClient } from '@/lib/elevenLabsClient';
+import { Voice as VoiceOrigin } from "@elevenlabs/elevenlabs-js/api";
+import { Voice } from "@/api/types/eleven-labs/Voice";
 
 export const voiceServerAPI = {
     // GET /voices - 사용 가능한 음성 목록 조회
-    async getVoices() {
-        const response = await elevenLabsClient.voices.search();
-        return {
-            voices: response.voices?.map(voice => ({
-                voice_id: voice.voiceId,
-                name: voice.name,
+    async getVoices(): Promise<Voice[]> {
+        const response = await elevenLabsClient.voices.search({
+            pageSize: 100,
+            search: "label.language=en"
+        });
+
+        return response.voices.map((voice: VoiceOrigin) => {
+            return {
+                id: voice.voiceId,
+                name: voice.name || 'Unknown',
                 description: voice.description || '',
                 category: voice.category || 'general',
                 language: voice.labels?.language || 'en',
                 gender: voice.labels?.gender || 'unknown',
                 age: voice.labels?.age || 'unknown',
-                accent: voice.labels?.accent || 'unknown'
-            })) || []
-        };
+                accent: voice.labels?.accent || 'unknown',
+                previewUrl: voice.previewUrl || '',
+                labels: voice.labels ? {
+                    accent: voice.labels.accent,
+                    descriptive: voice.labels.descriptive,
+                    age: voice.labels.age,
+                    gender: voice.labels.gender,
+                    language: voice.labels.language,
+                    use_case: voice.labels.use_case
+                } : undefined
+            }
+        }).sort((a: Voice, b: Voice) => {
+            return a.name.localeCompare(b.name)
+        });
     },
 
     // POST /voices/preview - 음성 프리뷰 생성

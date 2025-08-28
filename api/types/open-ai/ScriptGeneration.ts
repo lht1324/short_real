@@ -1,6 +1,7 @@
 // OpenAI Chat Completions API 응답 타입 정의
 
 import {OpenAIUsage} from "@/api/types/open-ai/OpenAIResponse";
+import {Voice} from "@/api/types/eleven-labs/Voice";
 
 export interface ScriptGenerationRequest {
     userPrompt: string;
@@ -10,11 +11,12 @@ export interface ScriptGenerationRequest {
         name: string;
         description: string;
     };
-    voice?: {
-        id: string;
-        name: string;
-        characteristics: string;
-    };
+    // voice?: {
+    //     id: string;
+    //     name: string;
+    //     characteristics: string;
+    // };
+    voice?: Voice;
     music?: {
         id: string;
         title: string;

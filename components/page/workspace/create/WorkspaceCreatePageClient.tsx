@@ -1,18 +1,31 @@
 'use client'
 
-import {memo, useCallback, useMemo, useState} from "react";
+import {memo, useCallback, useEffect, useMemo, useState} from "react";
 import Link from "next/link";
-import { ChevronLeft, AlertTriangle, X, Sparkles, ListTodo, Plus, Play, ChevronDown, ChevronRight } from 'lucide-react';
+import Image from "next/image";
+import {
+    AlertTriangle,
+    X,
+    Sparkles,
+    ListTodo,
+    Plus,
+    Play,
+    Square,
+    ChevronDown,
+    ChevronRight,
+} from 'lucide-react';
 import { openAIClientAPI } from '@/api/client/openAIClientAPI';
 import {ScriptGenerationRequest} from "@/api/types/open-ai/ScriptGeneration";
 import {VideoDataGenerationRequest} from "@/api/types/open-ai/VideoDataGeneration";
+import {Voice} from "@/api/types/eleven-labs/Voice";
+import {voiceClientAPI} from "@/api/client/voiceClientAPI";
 
-interface Voice {
-    id: string;
-    name: string;
-    characteristics: string;
-    preview?: string;
-}
+// interface Voice {
+//     id: string;
+//     name: string;
+//     characteristics: string;
+//     preview?: string;
+// }
 
 interface BackgroundMusic {
     id: string;
@@ -29,14 +42,16 @@ function WorkspaceCreatePageClient() {
     // 자막은 캡션 폰트, 크기, 색상, 위치 정도만.
     // 다 지정됐으면 생성된 영상 + 생성된 음성 + 에디터 최종 음악 + 에디터 최종 자막을 합쳐준다.
     // 음성만 재생성해주는 기능 추가 - 크레딧 받는 걸로
-    const voices: Voice[] = useMemo(() => [
-        { id: 'josh', name: 'Josh', characteristics: 'Narration, Deep, Young' },
-        { id: 'emma', name: 'Emma', characteristics: 'Friendly, Clear, Professional' },
-        { id: 'alex', name: 'Alex', characteristics: 'Energetic, Upbeat, Modern' },
-        { id: 'sarah', name: 'Sarah', characteristics: 'Calm, Soothing, Mature' },
-        { id: 'mike', name: 'Mike', characteristics: 'Dramatic, Bold, Storytelling' },
-        { id: 'lily', name: 'Lily', characteristics: 'Youthful, Bright, Engaging' }
-    ], []);
+    // const voices: Voice[] = useMemo(() => [
+    //     { id: 'josh', name: 'Josh', characteristics: 'Narration, Deep, Young' },
+    //     { id: 'emma', name: 'Emma', characteristics: 'Friendly, Clear, Professional' },
+    //     { id: 'alex', name: 'Alex', characteristics: 'Energetic, Upbeat, Modern' },
+    //     { id: 'sarah', name: 'Sarah', characteristics: 'Calm, Soothing, Mature' },
+    //     { id: 'mike', name: 'Mike', characteristics: 'Dramatic, Bold, Storytelling' },
+    //     { id: 'lily', name: 'Lily', characteristics: 'Youthful, Bright, Engaging' }
+    // ], []);
+
+    const [voiceList, setVoiceList] = useState<Voice[]>([]);
 
     const backgroundMusic: BackgroundMusic[] = useMemo(() => [
         { id: 'ghost_arpeggios', title: 'Ghost Arpeggios', artist: 'Violin, Scary' },
@@ -53,17 +68,9 @@ function WorkspaceCreatePageClient() {
     const [description, setDescription] = useState<string>('');
     const [duration, setDuration] = useState<number>(15);
     const [style, setStyle] = useState<string>('cinematic');
-    const [voice, setVoice] = useState<string>('josh');
+    // const [voice, setVoice] = useState<string>('josh');
+    const [selectedVoiceId, setSelectedVoiceId] = useState<string>('');
     const [music, setMusic] = useState<string>('ghost_arpeggios');
-
-    // Form data for API
-    const formData = useMemo(() => ({
-        description,
-        duration,
-        style,
-        voice,
-        music
-    }), [description, duration, style, voice, music]);
 
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isGenerating, setIsGenerating] = useState(false);
@@ -72,6 +79,10 @@ function WorkspaceCreatePageClient() {
     const [selectedDuration, setSelectedDuration] = useState(15);
 
     const [videoDataResponse, setVideoDataResponse] = useState({ });
+    
+    // Audio state management
+    const [currentAudio, setCurrentAudio] = useState<HTMLAudioElement | null>(null);
+    const [playingVoiceId, setPlayingVoiceId] = useState<string | null>(null);
     
     // Collapse states for sections
     const [isStyleExpanded, setIsStyleExpanded] = useState(true);
@@ -126,7 +137,9 @@ function WorkspaceCreatePageClient() {
         try {
             // 선택된 스타일, 음성, 음악 정보 가져오기
             const selectedStyle = styleExamples[style as keyof typeof styleExamples];
-            const selectedVoice = voices.find(v => v.id === voice);
+            const selectedVoice = voiceList.find((voice) => {
+                return voice.id === selectedVoiceId;
+            });
             const selectedMusic = backgroundMusic.find(m => m.id === music);
 
             // API 요청 데이터 구성
@@ -138,11 +151,12 @@ function WorkspaceCreatePageClient() {
                     name: selectedStyle.name,
                     description: selectedStyle.description
                 } : undefined,
-                voice: selectedVoice ? {
-                    id: selectedVoice.id,
-                    name: selectedVoice.name,
-                    characteristics: selectedVoice.characteristics
-                } : undefined,
+                // voice: selectedVoice ? {
+                //     id: selectedVoice.id,
+                //     name: selectedVoice.name,
+                //     characteristics: selectedVoice.characteristics
+                // } : undefined,
+                voice: selectedVoice,
                 music: selectedMusic ? {
                     id: selectedMusic.id,
                     title: selectedMusic.title,
@@ -173,11 +187,11 @@ function WorkspaceCreatePageClient() {
             alert('An error occurred while generating script. Please try again.');
             setIsGenerating(false);
         }
-    }, [aiPrompt, duration, style, voice, music, styleExamples, voices, backgroundMusic]);
+    }, [aiPrompt, duration, style, selectedVoiceId, music, styleExamples, voiceList, backgroundMusic]);
 
     const openAIModal = useCallback(() => {
         setShowAIModal(true);
-    }, [duration]);
+    }, []);
 
     const closeAIModal = useCallback(() => {
         setShowAIModal(false);
@@ -185,12 +199,62 @@ function WorkspaceCreatePageClient() {
         setIsGenerating(false);
     }, []);
 
-    // Check if prompt is too vague
-    const isVaguePrompt = useMemo(() => {
-        const vague = /^(make|create|show|tell).{0,10}(something|anything|뭔가|재밌는)/.test(aiPrompt.toLowerCase());
-        const tooShort = aiPrompt.length < 10;
-        return vague || tooShort;
-    }, [aiPrompt]);
+    const onClickPlayVoicePreview = useCallback((voice: Voice) => {
+        // 음성 재생 중 다른 음성 재생
+        if (playingVoiceId !== voice.id && currentAudio) {
+            currentAudio.pause();
+            currentAudio.currentTime = 0;
+            setCurrentAudio(null);
+            setPlayingVoiceId(null);
+        }
+
+        // 새로운 음성 재생
+        if (voice.previewUrl) {
+            const audio = new Audio(voice.previewUrl);
+            
+            // 재생 종료 시 state 초기화 (해당 오디오만)
+            audio.addEventListener('ended', () => {
+                setCurrentAudio((current) => {
+                    if (current === audio) {
+                        setPlayingVoiceId(null);
+                        return null;
+                    }
+
+                    return current;
+                });
+            });
+
+            // 에러 처리 (해당 오디오만)
+            audio.addEventListener('error', (error) => {
+                console.error('Audio playback error:', error);
+                setCurrentAudio((current) => {
+                    if (current === audio) {
+                        setPlayingVoiceId(null);
+                        return null;
+                    }
+                    return current;
+                });
+            });
+
+            audio.play().then(() => {
+                setCurrentAudio(audio);
+                setPlayingVoiceId(voice.id);
+            }).catch((error) => {
+                console.error('Failed to play audio:', error);
+                setCurrentAudio(null);
+                setPlayingVoiceId(null);
+                // 재생 실패 시에만 state 초기화 (기존 오디오는 그대로 유지)
+            });
+        } else {
+            console.log('No preview URL available for:', voice.name);
+        }
+    }, [currentAudio, playingVoiceId]);
+    
+    const onClickStopVoicePreview = useCallback(() => {
+        currentAudio?.pause();
+        setCurrentAudio(null);
+        setPlayingVoiceId(null);
+    }, [currentAudio]);
 
     const onSubmitProject = useCallback(async () => {
         if (!description.trim()) {
@@ -203,7 +267,9 @@ function WorkspaceCreatePageClient() {
         try {
             // 선택된 스타일, 음성, 음악 정보 가져오기
             const selectedStyle = styleExamples[style as keyof typeof styleExamples];
-            const selectedVoice = voices.find(v => v.id === voice);
+            const selectedVoice = voiceList.find((voice) => {
+                return voice.id === selectedVoiceId;
+            });
             const selectedMusic = backgroundMusic.find(m => m.id === music);
 
             // VideoData API 요청 데이터 구성
@@ -215,11 +281,7 @@ function WorkspaceCreatePageClient() {
                     name: selectedStyle.name,
                     description: selectedStyle.description
                 } : undefined,
-                voice: selectedVoice ? {
-                    id: selectedVoice.id,
-                    name: selectedVoice.name,
-                    characteristics: selectedVoice.characteristics
-                } : undefined,
+                voice: selectedVoice,
                 music: selectedMusic ? {
                     id: selectedMusic.id,
                     title: selectedMusic.title,
@@ -250,21 +312,47 @@ function WorkspaceCreatePageClient() {
         } finally {
             setIsSubmitting(false);
         }
-    }, [description, duration, style, voice, music, styleExamples, voices, backgroundMusic]);
+    }, [description, duration, style, selectedVoiceId, music, styleExamples, voiceList, backgroundMusic]);
+
+    useEffect(() => {
+        const loadData = async () => {
+            const voiceDataList = await voiceClientAPI.getVoices();
+
+            setVoiceList(voiceDataList);
+        }
+
+        loadData().then();
+    }, []);
+
+    // 컴포넌트 언마운트 시 오디오 정리
+    useEffect(() => {
+        return () => {
+            if (currentAudio) {
+                currentAudio.pause();
+                currentAudio.currentTime = 0;
+                setCurrentAudio(null);
+                setPlayingVoiceId(null);
+            }
+        };
+    }, [currentAudio]);
 
     return (
         <div className="min-h-screen bg-black text-white">
             {/* Top Header - Same as Editor */}
             <div className="flex items-center justify-between py-4 border-b border-purple-500/20 bg-gray-900/50 backdrop-blur-sm">
                 <div className="flex items-center" style={{paddingLeft: '16px'}}>
-                    <div className="w-12 h-12 bg-gradient-to-r from-pink-500 to-purple-600 rounded-lg flex items-center justify-center">
-                        <span className="text-white font-bold text-sm">✨</span>
-                    </div>
+                    <Image
+                        src="/logo/logo-64.png"
+                        alt="Short Real"
+                        width={64}
+                        height={64}
+                        className="w-16 h-16"
+                    />
                     <div className="flex flex-col ml-4">
-                        <span className="text-4xl font-bold bg-gradient-to-r from-pink-400 to-purple-500 bg-clip-text text-transparent">
+                        <span className="text-4xl font-bold bg-gradient-to-r from-pink-400 to-purple-500 bg-clip-text text-transparent cursor-default">
                             Create Video
                         </span>
-                        <p className="text-gray-400 text-base pl-0.5">
+                        <p className="text-gray-400 text-base pl-0.5 cursor-default">
                             Tell AI what you want to create.
                         </p>
                     </div>
@@ -422,33 +510,81 @@ function WorkspaceCreatePageClient() {
                                 </button>
                                 {isVoiceExpanded && (
                                     <div className="grid grid-cols-2 gap-3">
-                                    {voices.map((voiceOption) => (
-                                        <div
-                                            key={voiceOption.id}
-                                            onClick={() => setVoice(voiceOption.id)}
-                                            className={`p-3 rounded-lg border transition-all text-left cursor-pointer ${
-                                                voice === voiceOption.id
-                                                    ? 'border-pink-500 bg-pink-500/10'
-                                                    : 'border-purple-500/30 bg-gray-800/30 hover:border-purple-400/50'
-                                            }`}
-                                        >
-                                            <div className="flex items-center justify-between">
-                                                <div className="min-w-0 flex-1">
-                                                    <div className="text-white font-medium text-base">{voiceOption.name}</div>
-                                                    <div className="text-gray-400 text-sm truncate">{voiceOption.characteristics}</div>
+                                    {voiceList.map((voice) => {
+                                        const labels = voice.labels;
+                                        const genderIcon = labels?.gender === 'male' ? '♂' : labels?.gender === 'female' ? '♀' : '';
+                                        const ageDisplay = labels?.age === 'young' ? 'Young' : labels?.age === 'middle_aged' ? 'Adult' : labels?.age === 'old' ? 'Senior' : '';
+                                        const accentDisplay = labels?.accent === 'american' ? 'US' : labels?.accent === 'british' ? 'UK' : labels?.accent === 'australian' ? 'AU' : labels?.accent || '';
+                                        
+                                        return (
+                                            <div
+                                                key={voice.id}
+                                                onClick={() => setSelectedVoiceId(voice.id)}
+                                                className={`p-3 rounded-lg border transition-all text-left cursor-pointer ${
+                                                    voice.id === selectedVoiceId
+                                                        ? 'border-pink-500 bg-pink-500/10'
+                                                        : 'border-purple-500/30 bg-gray-800/30 hover:border-purple-400/50'
+                                                }`}
+                                            >
+                                                <div className="flex items-start justify-between">
+                                                    <div className="min-w-0 flex-1">
+                                                        <div className="flex items-center gap-2 mb-1">
+                                                            <div className="text-white font-medium text-base">{voice.name}</div>
+                                                            {genderIcon && (
+                                                                <span className="text-purple-300 text-sm font-medium">{genderIcon}</span>
+                                                            )}
+                                                        </div>
+                                                        
+                                                        {/* Labels as tags */}
+                                                        <div className="flex flex-wrap gap-1 mb-2">
+                                                            {ageDisplay && (
+                                                                <span className="text-xs px-1.5 py-0.5 bg-blue-500/20 text-blue-300 rounded border border-blue-400/30">
+                                                                    {ageDisplay}
+                                                                </span>
+                                                            )}
+                                                            {accentDisplay && (
+                                                                <span className="text-xs px-1.5 py-0.5 bg-green-500/20 text-green-300 rounded border border-green-400/30">
+                                                                    {accentDisplay}
+                                                                </span>
+                                                            )}
+                                                            {labels?.descriptive && (
+                                                                <span className="text-xs px-1.5 py-0.5 bg-purple-500/20 text-purple-300 rounded border border-purple-400/30">
+                                                                    {labels.descriptive}
+                                                                </span>
+                                                            )}
+                                                            {labels?.use_case && (
+                                                                <span className="text-xs px-1.5 py-0.5 bg-orange-500/20 text-orange-300 rounded border border-orange-400/30">
+                                                                    {labels.use_case.replace('_', ' ')}
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                        
+                                                        <div className="text-gray-300 text-sm leading-relaxed mt-2 break-words">
+                                                            {voice.description}
+                                                        </div>
+                                                    </div>
+                                                    <button
+                                                        className="p-1.5 rounded-full bg-gray-700/50 hover:bg-gray-600/50 transition-colors flex-shrink-0 ml-2"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+
+                                                            if (!currentAudio || playingVoiceId !== voice.id) {
+                                                                onClickPlayVoicePreview(voice);
+                                                            } else {
+                                                                onClickStopVoicePreview();
+                                                            }
+                                                        }}
+                                                    >
+                                                        {playingVoiceId === voice.id ? (
+                                                            <Square size={14} className="text-white" />
+                                                        ) : (
+                                                            <Play size={14} className="text-white" />
+                                                        )}
+                                                    </button>
                                                 </div>
-                                                <button
-                                                    className="p-1.5 rounded-full bg-gray-700/50 hover:bg-gray-600/50 transition-colors flex-shrink-0"
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        console.log('Play voice preview:', voiceOption.id);
-                                                    }}
-                                                >
-                                                    <Play size={14} className="text-white" />
-                                                </button>
                                             </div>
-                                        </div>
-                                    ))}
+                                        );
+                                    })}
                                     </div>
                                 )}
                             </div>

@@ -2,6 +2,7 @@
 
 import {OpenAIUsage} from "@/api/types/open-ai/OpenAIResponse";
 import {SceneData} from "@/api/types/supabase/VideoGenerationTasks";
+import {Voice} from "@/api/types/eleven-labs/Voice";
 
 export interface VideoDataGenerationRequest {
     script: string; // 생성된 스크립트
@@ -11,11 +12,7 @@ export interface VideoDataGenerationRequest {
         name: string;
         description: string;
     };
-    voice?: {
-        id: string;
-        name: string;
-        characteristics: string;
-    };
+    voice?: Voice,
     music?: {
         id: string;
         title: string;
