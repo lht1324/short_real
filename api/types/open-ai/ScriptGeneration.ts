@@ -2,6 +2,7 @@
 
 import {OpenAIUsage} from "@/api/types/open-ai/OpenAIResponse";
 import {Voice} from "@/api/types/eleven-labs/Voice";
+import {BGMInfo} from "@/api/types/supabase/BackgroundMusics";
 
 export interface ScriptGenerationRequest {
     userPrompt: string;
@@ -17,11 +18,7 @@ export interface ScriptGenerationRequest {
     //     characteristics: string;
     // };
     voice?: Voice;
-    music?: {
-        id: string;
-        title: string;
-        artist: string;
-    };
+    music?: BGMInfo;
 }
 
 // 우리 앱에서 사용할 스크립트 응답 타입

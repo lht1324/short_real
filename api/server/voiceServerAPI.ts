@@ -7,7 +7,7 @@ export const voiceServerAPI = {
     async getVoices(): Promise<Voice[]> {
         const response = await elevenLabsClient.voices.search({
             pageSize: 100,
-            search: "label.language=en"
+            search: "en"
         });
 
         return response.voices.map((voice: VoiceOrigin) => {

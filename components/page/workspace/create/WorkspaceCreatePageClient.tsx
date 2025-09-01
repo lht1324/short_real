@@ -19,21 +19,13 @@ import {ScriptGenerationRequest} from "@/api/types/open-ai/ScriptGeneration";
 import {VideoDataGenerationRequest} from "@/api/types/open-ai/VideoDataGeneration";
 import {Voice} from "@/api/types/eleven-labs/Voice";
 import {voiceClientAPI} from "@/api/client/voiceClientAPI";
+import {BGMInfo} from "@/api/types/supabase/BackgroundMusics";
+import {musicClientAPI} from "@/api/client/musicClientAPI";
 
-// interface Voice {
-//     id: string;
-//     name: string;
-//     characteristics: string;
-//     preview?: string;
-// }
-
-interface BackgroundMusic {
-    id: string;
-    title: string;
-    artist: string;
-    preview?: string;
+interface ThemeFilterData {
+    themeName: string,
+    isSelected: boolean,
 }
-
 
 function WorkspaceCreatePageClient() {
     // 음성, 음악 선택 기능 추가
@@ -42,35 +34,26 @@ function WorkspaceCreatePageClient() {
     // 자막은 캡션 폰트, 크기, 색상, 위치 정도만.
     // 다 지정됐으면 생성된 영상 + 생성된 음성 + 에디터 최종 음악 + 에디터 최종 자막을 합쳐준다.
     // 음성만 재생성해주는 기능 추가 - 크레딧 받는 걸로
-    // const voices: Voice[] = useMemo(() => [
-    //     { id: 'josh', name: 'Josh', characteristics: 'Narration, Deep, Young' },
-    //     { id: 'emma', name: 'Emma', characteristics: 'Friendly, Clear, Professional' },
-    //     { id: 'alex', name: 'Alex', characteristics: 'Energetic, Upbeat, Modern' },
-    //     { id: 'sarah', name: 'Sarah', characteristics: 'Calm, Soothing, Mature' },
-    //     { id: 'mike', name: 'Mike', characteristics: 'Dramatic, Bold, Storytelling' },
-    //     { id: 'lily', name: 'Lily', characteristics: 'Youthful, Bright, Engaging' }
-    // ], []);
 
     const [voiceList, setVoiceList] = useState<Voice[]>([]);
-
-    const backgroundMusic: BackgroundMusic[] = useMemo(() => [
-        { id: 'ghost_arpeggios', title: 'Ghost Arpeggios', artist: 'Violin, Scary' },
-        { id: 'epic_adventure', title: 'Epic Adventure', artist: 'Orchestral, Heroic' },
-        { id: 'synthwave_nights', title: 'Synthwave Nights', artist: 'Electronic, Retro' },
-        { id: 'mysterious_forest', title: 'Mysterious Forest', artist: 'Ambient, Nature' },
-        { id: 'urban_beats', title: 'Urban Beats', artist: 'Hip Hop, Modern' },
-        { id: 'peaceful_morning', title: 'Peaceful Morning', artist: 'Piano, Calm' },
-        { id: 'space_odyssey', title: 'Space Odyssey', artist: 'Sci-Fi, Atmospheric' },
-        { id: 'comedy_sketch', title: 'Comedy Sketch', artist: 'Upbeat, Funny' }
-    ], []);
+    const [backgroundMusicList, setBackgroundMusicList] = useState<BGMInfo[]>([]);
+    const [backgroundMusicThemeFilterItemList, setBackgroundMusicThemeFilterItemList] = useState<ThemeFilterData[]>([]);
+    const selectedBackgroundMusicList = useMemo(() => {
+        return backgroundMusicList.filter((backgroundMusic) => {
+            return backgroundMusic.themes.some((theme) => {
+                return backgroundMusicThemeFilterItemList.find((themeFilterItem) => {
+                    return themeFilterItem.themeName === theme;
+                })?.isSelected ?? false;
+            })
+        })
+    }, [backgroundMusicList, backgroundMusicThemeFilterItemList]);
 
     // Section states
     const [description, setDescription] = useState<string>('');
     const [duration, setDuration] = useState<number>(15);
     const [style, setStyle] = useState<string>('cinematic');
-    // const [voice, setVoice] = useState<string>('josh');
     const [selectedVoiceId, setSelectedVoiceId] = useState<string>('');
-    const [music, setMusic] = useState<string>('ghost_arpeggios');
+    const [selectedBackgroundMusicId, setSelectedBackgroundMusicId] = useState<string>('');
 
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isGenerating, setIsGenerating] = useState(false);
@@ -82,7 +65,7 @@ function WorkspaceCreatePageClient() {
     
     // Audio state management
     const [currentAudio, setCurrentAudio] = useState<HTMLAudioElement | null>(null);
-    const [playingVoiceId, setPlayingVoiceId] = useState<string | null>(null);
+    const [playingSoundId, setPlayingSoundId] = useState<string | null>(null);
     
     // Collapse states for sections
     const [isStyleExpanded, setIsStyleExpanded] = useState(true);
@@ -91,35 +74,89 @@ function WorkspaceCreatePageClient() {
 
     // Style examples for preview
     const styleExamples = useMemo(() => ({
-        cinematic: {
-            name: 'Cinematic',
-            description: 'Film-like visuals with dramatic lighting',
-            thumbnail: '/api/placeholder/200/356',
-            videoUrl: '/examples/cinematic-sample.mp4'
-        },
-        anime: {
-            name: 'Anime',
-            description: 'Japanese animation style with vibrant colors',
-            thumbnail: '/api/placeholder/200/356',
-            videoUrl: '/examples/anime-sample.mp4'
-        },
         realistic: {
             name: 'Realistic',
-            description: 'Photo-realistic renders and environments',
+            description: 'Photorealistic rendering with high detail and lifelike accuracy.',
             thumbnail: '/api/placeholder/200/356',
             videoUrl: '/examples/realistic-sample.mp4'
         },
-        cartoon: {
-            name: 'Cartoon',
-            description: 'Stylized and colorful cartoon graphics',
+        cinematic: {
+            name: 'Cinematic',
+            description: 'Film-like quality with dramatic lighting and professional color grading.',
             thumbnail: '/api/placeholder/200/356',
-            videoUrl: '/examples/cartoon-sample.mp4'
+            videoUrl: '/examples/cinematic-sample.mp4'
         },
         vintage: {
             name: 'Vintage',
-            description: 'Retro aesthetics with film grain effects',
+            description: 'Emulates the look of old film stock with grain, light leaks, and faded colors.',
             thumbnail: '/api/placeholder/200/356',
             videoUrl: '/examples/vintage-sample.mp4'
+        },
+        line_art: {
+            name: 'Line Art',
+            description: 'Clean, minimalist style focusing on outlines and contours with little to no shading.',
+            thumbnail: '/api/placeholder/200/356',
+            videoUrl: '/examples/lineart-sample.mp4'
+        },
+        cartoon: {
+            name: 'Cartoon',
+            description: 'Stylized with exaggerated features, bold outlines, and vibrant, flat colors.',
+            thumbnail: '/api/placeholder/200/356',
+            videoUrl: '/examples/cartoon-sample.mp4'
+        },
+        anime: {
+            name: 'Anime',
+            description: 'Japanese animation style, characterized by large expressive eyes and vibrant scenes.',
+            thumbnail: '/api/placeholder/200/356',
+            videoUrl: '/examples/anime-sample.mp4'
+        },
+        pop_art: {
+            name: 'Pop Art',
+            description: 'Inspired by Andy Warhol, featuring bold, saturated colors and comic book aesthetics.',
+            thumbnail: '/api/placeholder/200/356',
+            videoUrl: '/examples/popart-sample.mp4'
+        },
+        pixel_art: {
+            name: 'Pixel Art',
+            description: 'Retro digital art made of visible pixels, reminiscent of 8-bit and 16-bit video games.',
+            thumbnail: '/api/placeholder/200/356',
+            videoUrl: '/examples/pixelart-sample.mp4'
+        },
+        concept_art: {
+            name: 'Concept Art',
+            description: 'Painterly and atmospheric style used in film and game development to visualize ideas.',
+            thumbnail: '/api/placeholder/200/356',
+            videoUrl: '/examples/conceptart-sample.mp4'
+        },
+        steampunk: {
+            name: 'Steampunk',
+            description: 'A retrofuturistic style combining Victorian-era aesthetics with industrial steam-powered machinery.',
+            thumbnail: '/api/placeholder/200/356',
+            videoUrl: '/examples/steampunk-sample.mp4'
+        },
+        neon_synth: {
+            name: 'Neon Synth',
+            description: 'An 80s retro-futuristic aesthetic with glowing neon grids, vibrant pinks, and purples.',
+            thumbnail: '/api/placeholder/200/356',
+            videoUrl: '/examples/neonsynth-sample.mp4'
+        },
+        cyberpunk: {
+            name: 'Cyberpunk',
+            description: 'A dystopian futuristic setting with neon-drenched cityscapes and advanced technology.',
+            thumbnail: '/api/placeholder/200/356',
+            videoUrl: '/examples/cyberpunk-sample.mp4'
+        },
+        fantasy: {
+            name: 'Fantasy',
+            description: 'Epic and magical settings featuring mythical creatures, castles, and enchanted forests.',
+            thumbnail: '/api/placeholder/200/356',
+            videoUrl: '/examples/fantasy-sample.mp4'
+        },
+        gothic: {
+            name: 'Gothic',
+            description: 'A dark, mysterious, and moody style with macabre themes and ornate architecture.',
+            thumbnail: '/api/placeholder/200/356',
+            videoUrl: '/examples/gothic-sample.mp4'
         }
     }), []);
 
@@ -140,7 +177,9 @@ function WorkspaceCreatePageClient() {
             const selectedVoice = voiceList.find((voice) => {
                 return voice.id === selectedVoiceId;
             });
-            const selectedMusic = backgroundMusic.find(m => m.id === music);
+            const selectedMusic = backgroundMusicList.find((backgroundMusic) => {
+                return backgroundMusic.id === selectedBackgroundMusicId;
+            });
 
             // API 요청 데이터 구성
             const requestData: ScriptGenerationRequest = {
@@ -151,17 +190,8 @@ function WorkspaceCreatePageClient() {
                     name: selectedStyle.name,
                     description: selectedStyle.description
                 } : undefined,
-                // voice: selectedVoice ? {
-                //     id: selectedVoice.id,
-                //     name: selectedVoice.name,
-                //     characteristics: selectedVoice.characteristics
-                // } : undefined,
                 voice: selectedVoice,
-                music: selectedMusic ? {
-                    id: selectedMusic.id,
-                    title: selectedMusic.title,
-                    artist: selectedMusic.artist
-                } : undefined
+                music: selectedMusic,
             };
 
             console.log('Generating script with data:', requestData);
@@ -187,7 +217,7 @@ function WorkspaceCreatePageClient() {
             alert('An error occurred while generating script. Please try again.');
             setIsGenerating(false);
         }
-    }, [aiPrompt, duration, style, selectedVoiceId, music, styleExamples, voiceList, backgroundMusic]);
+    }, [aiPrompt, duration, style, selectedVoiceId, selectedBackgroundMusicId, styleExamples, voiceList, backgroundMusicList]);
 
     const openAIModal = useCallback(() => {
         setShowAIModal(true);
@@ -199,24 +229,24 @@ function WorkspaceCreatePageClient() {
         setIsGenerating(false);
     }, []);
 
-    const onClickPlayVoicePreview = useCallback((voice: Voice) => {
+    const onClickPlaySoundPreview = useCallback((soundId: string, soundPreviewUrl?: string) => {
         // 음성 재생 중 다른 음성 재생
-        if (playingVoiceId !== voice.id && currentAudio) {
+        if (playingSoundId !== soundId && currentAudio) {
             currentAudio.pause();
             currentAudio.currentTime = 0;
             setCurrentAudio(null);
-            setPlayingVoiceId(null);
+            setPlayingSoundId(null);
         }
 
         // 새로운 음성 재생
-        if (voice.previewUrl) {
-            const audio = new Audio(voice.previewUrl);
+        if (soundPreviewUrl) {
+            const audio = new Audio(soundPreviewUrl);
             
             // 재생 종료 시 state 초기화 (해당 오디오만)
             audio.addEventListener('ended', () => {
                 setCurrentAudio((current) => {
                     if (current === audio) {
-                        setPlayingVoiceId(null);
+                        setPlayingSoundId(null);
                         return null;
                     }
 
@@ -229,7 +259,7 @@ function WorkspaceCreatePageClient() {
                 console.error('Audio playback error:', error);
                 setCurrentAudio((current) => {
                     if (current === audio) {
-                        setPlayingVoiceId(null);
+                        setPlayingSoundId(null);
                         return null;
                     }
                     return current;
@@ -238,22 +268,22 @@ function WorkspaceCreatePageClient() {
 
             audio.play().then(() => {
                 setCurrentAudio(audio);
-                setPlayingVoiceId(voice.id);
+                setPlayingSoundId(soundId);
             }).catch((error) => {
                 console.error('Failed to play audio:', error);
                 setCurrentAudio(null);
-                setPlayingVoiceId(null);
+                setPlayingSoundId(null);
                 // 재생 실패 시에만 state 초기화 (기존 오디오는 그대로 유지)
             });
         } else {
-            console.log('No preview URL available for:', voice.name);
+            console.log('No preview URL available for:', soundId);
         }
-    }, [currentAudio, playingVoiceId]);
+    }, [currentAudio, playingSoundId]);
     
-    const onClickStopVoicePreview = useCallback(() => {
+    const onClickStopSoundPreview = useCallback(() => {
         currentAudio?.pause();
         setCurrentAudio(null);
-        setPlayingVoiceId(null);
+        setPlayingSoundId(null);
     }, [currentAudio]);
 
     const onSubmitProject = useCallback(async () => {
@@ -270,7 +300,9 @@ function WorkspaceCreatePageClient() {
             const selectedVoice = voiceList.find((voice) => {
                 return voice.id === selectedVoiceId;
             });
-            const selectedMusic = backgroundMusic.find(m => m.id === music);
+            const selectedMusic = backgroundMusicList.find((backgroundMusic) => {
+                return backgroundMusic.id === selectedBackgroundMusicId;
+            });
 
             // VideoData API 요청 데이터 구성
             const requestData: VideoDataGenerationRequest = {
@@ -312,13 +344,25 @@ function WorkspaceCreatePageClient() {
         } finally {
             setIsSubmitting(false);
         }
-    }, [description, duration, style, selectedVoiceId, music, styleExamples, voiceList, backgroundMusic]);
+    }, [description, duration, style, selectedVoiceId, selectedBackgroundMusicId, styleExamples, voiceList, backgroundMusicList]);
 
     useEffect(() => {
         const loadData = async () => {
             const voiceDataList = await voiceClientAPI.getVoices();
+            const bgmDataList = await musicClientAPI.getBackgroundMusics();
 
+            console.log("voiceDataList", voiceDataList);
             setVoiceList(voiceDataList);
+            setBackgroundMusicList(bgmDataList);
+
+            // themes 추출 및 중복 제거 후 ThemeFilterData로 매핑
+            const allThemes = bgmDataList.flatMap(bgm => bgm.themes);
+            const uniqueThemes = [...new Set(allThemes)];
+            const themeFilterItems: ThemeFilterData[] = uniqueThemes.map(theme => ({
+                themeName: theme,
+                isSelected: true // 기본적으로 모든 theme 선택됨
+            }));
+            setBackgroundMusicThemeFilterItemList(themeFilterItems);
         }
 
         loadData().then();
@@ -331,7 +375,7 @@ function WorkspaceCreatePageClient() {
                 currentAudio.pause();
                 currentAudio.currentTime = 0;
                 setCurrentAudio(null);
-                setPlayingVoiceId(null);
+                setPlayingSoundId(null);
             }
         };
     }, [currentAudio]);
@@ -568,14 +612,14 @@ function WorkspaceCreatePageClient() {
                                                         onClick={(e) => {
                                                             e.stopPropagation();
 
-                                                            if (!currentAudio || playingVoiceId !== voice.id) {
-                                                                onClickPlayVoicePreview(voice);
+                                                            if (!currentAudio || playingSoundId !== voice.id) {
+                                                                onClickPlaySoundPreview(voice.id, voice.previewUrl);
                                                             } else {
-                                                                onClickStopVoicePreview();
+                                                                onClickStopSoundPreview();
                                                             }
                                                         }}
                                                     >
-                                                        {playingVoiceId === voice.id ? (
+                                                        {playingSoundId === voice.id ? (
                                                             <Square size={14} className="text-white" />
                                                         ) : (
                                                             <Play size={14} className="text-white" />
@@ -602,34 +646,90 @@ function WorkspaceCreatePageClient() {
                                     </span>
                                 </button>
                                 {isMusicExpanded && (
-                                    <div className="grid grid-cols-2 gap-3">
-                                    {backgroundMusic.map((musicOption) => (
-                                        <div
-                                            key={musicOption.id}
-                                            onClick={() => setMusic(musicOption.id)}
-                                            className={`p-3 rounded-lg border transition-all text-left cursor-pointer ${
-                                                music === musicOption.id
-                                                    ? 'border-pink-500 bg-pink-500/10'
-                                                    : 'border-purple-500/30 bg-gray-800/30 hover:border-purple-400/50'
-                                            }`}
-                                        >
+                                    <div className="space-y-4">
+                                        {/* Theme Filter */}
+                                        <div>
+                                            <div className="flex items-center gap-2 mb-2">
+                                                <label className="text-sm font-medium text-purple-300">
+                                                    Filter by Theme
+                                                </label>
+                                                {/* 전체 선택 버튼 */}
+                                                <button
+                                                    onClick={() => {
+                                                        const allSelected = backgroundMusicThemeFilterItemList.every(item => item.isSelected);
+                                                        setBackgroundMusicThemeFilterItemList(prev => 
+                                                            prev.map(item => ({ ...item, isSelected: !allSelected }))
+                                                        );
+                                                    }}
+                                                    className="text-xs px-2 py-1 rounded border bg-pink-500/20 text-pink-300 border-pink-400/50 font-medium hover:bg-pink-500/30 transition-all"
+                                                >
+                                                    {backgroundMusicThemeFilterItemList.every(item => item.isSelected) ? 'Deselect All' : 'Select All'}
+                                                </button>
+                                            </div>
+                                            <div className="flex flex-wrap gap-2">
+                                                {backgroundMusicThemeFilterItemList.map((themeFilter) => (
+                                                    <button
+                                                        key={themeFilter.themeName}
+                                                        onClick={() => {
+                                                            setBackgroundMusicThemeFilterItemList(prev => 
+                                                                prev.map(item => 
+                                                                    item.themeName === themeFilter.themeName 
+                                                                        ? { ...item, isSelected: !item.isSelected }
+                                                                        : item
+                                                                )
+                                                            );
+                                                        }}
+                                                        className={`text-xs px-2 py-1 rounded border transition-all ${
+                                                            themeFilter.isSelected
+                                                                ? 'bg-purple-500/20 text-purple-300 border-purple-400/50'
+                                                                : 'bg-gray-700/50 text-gray-400 border-gray-600/50 hover:bg-gray-600/50'
+                                                        }`}
+                                                    >
+                                                        {themeFilter.themeName}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+                                        
+                                        {/* Music Grid */}
+                                        <div className="grid grid-cols-2 gap-3">
+                                        {selectedBackgroundMusicList.map((backgroundMusic) => (
+                                            <div
+                                                key={backgroundMusic.id}
+                                                onClick={() => setSelectedBackgroundMusicId(backgroundMusic.id)}
+                                                className={`p-3 rounded-lg border transition-all text-left cursor-pointer ${
+                                                    selectedBackgroundMusicId === backgroundMusic.id
+                                                        ? 'border-pink-500 bg-pink-500/10'
+                                                        : 'border-purple-500/30 bg-gray-800/30 hover:border-purple-400/50'
+                                                }`}
+                                            >
                                             <div className="flex items-center justify-between">
                                                 <div className="min-w-0 flex-1">
-                                                    <div className="text-white font-medium text-base truncate">{musicOption.title}</div>
-                                                    <div className="text-gray-400 text-sm truncate">{musicOption.artist}</div>
+                                                    <div className="text-white font-medium text-base truncate">{backgroundMusic.title}</div>
+                                                    <div className="text-gray-400 text-sm truncate">{backgroundMusic.themes.join(', ')}</div>
                                                 </div>
                                                 <button
                                                     className="p-1.5 rounded-full bg-gray-700/50 hover:bg-gray-600/50 transition-colors flex-shrink-0"
                                                     onClick={(e) => {
                                                         e.stopPropagation();
-                                                        console.log('Play music preview:', musicOption.id);
+
+                                                        if (!currentAudio || playingSoundId !== backgroundMusic.id) {
+                                                            onClickPlaySoundPreview(backgroundMusic.id, backgroundMusic.previewUrl);
+                                                        } else {
+                                                            onClickStopSoundPreview();
+                                                        }
                                                     }}
                                                 >
-                                                    <Play size={14} className="text-white" />
+                                                    {playingSoundId === backgroundMusic.id ? (
+                                                        <Square size={14} className="text-white" />
+                                                    ) : (
+                                                        <Play size={14} className="text-white" />
+                                                    )}
                                                 </button>
                                             </div>
                                         </div>
-                                    ))}
+                                        ))}
+                                        </div>
                                     </div>
                                 )}
                             </div>
