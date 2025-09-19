@@ -1,14 +1,15 @@
 import { createSupabaseServer } from '@/lib/supabaseServer';
-import { VideoGenerationTaskInsert, VideoGenerationTask, VideoGenerationTaskUpdate } from '@/api/types/supabase/VideoGenerationTasks';
+import { VideoGenerationTask } from '@/api/types/supabase/VideoGenerationTasks';
+import {createSupabaseServiceRoleClient} from "@/lib/supabaseServiceRole";
 
 export const videoGenerationTasksServerAPI = {
     // POST - 새로운 영상 생성 작업 생성
-    async createTask(taskData: VideoGenerationTaskInsert): Promise<VideoGenerationTask> {
+    async postVideoGenerationTask(taskData: VideoGenerationTask): Promise<VideoGenerationTask> {
         const supabase = await createSupabaseServer("mutate");
         
         const { data, error } = await supabase
             .from('video_generation_tasks')
-            .insert(taskData)
+            .upsert(taskData)
             .select()
             .single();
 
@@ -20,7 +21,7 @@ export const videoGenerationTasksServerAPI = {
     },
 
     // GET - 전체 작업 조회
-    async getTasks(): Promise<VideoGenerationTask[] | null> {
+    async getVideoGenerationTasks(): Promise<VideoGenerationTask[] | null> {
         const supabase = await createSupabaseServer("readOnly");
 
         const { data, error } = await supabase
@@ -38,8 +39,9 @@ export const videoGenerationTasksServerAPI = {
     },
 
     // GET - 작업 ID로 단일 작업 조회
-    async getTaskById(taskId: string): Promise<VideoGenerationTask | null> {
-        const supabase = await createSupabaseServer("readOnly");
+    async getVideoGenerationTaskById(taskId: string): Promise<VideoGenerationTask | null> {
+        // const supabase = await createSupabaseServer("readOnly");
+        const supabase = createSupabaseServiceRoleClient();
         
         const { data, error } = await supabase
             .from('video_generation_tasks')
@@ -58,7 +60,7 @@ export const videoGenerationTasksServerAPI = {
     },
 
     // GET - 사용자 ID로 작업 목록 조회
-    async getTasksByUserId(userId: string, limit: number = 10, offset: number = 0): Promise<VideoGenerationTask[]> {
+    async getVideoGenerationTaskByUserId(userId: string, limit: number = 10, offset: number = 0): Promise<VideoGenerationTask[]> {
         const supabase = await createSupabaseServer("readOnly");
         
         const { data, error } = await supabase
@@ -75,19 +77,19 @@ export const videoGenerationTasksServerAPI = {
         return data || [];
     },
 
-    // PUT - 작업 상태 업데이트
-    async updateTask(taskId: string, updateData: VideoGenerationTaskUpdate): Promise<VideoGenerationTask> {
+    // PATCH - 작업 데이터 업데이트
+    async patchVideoGenerationTask(videoGenerationTask: Partial<VideoGenerationTask>): Promise<VideoGenerationTask> {
         const supabase = await createSupabaseServer("mutate");
-        
+
         const { data, error } = await supabase
             .from('video_generation_tasks')
-            .update(updateData)
-            .eq('id', taskId)
+            .update(videoGenerationTask)
+            .eq('id', videoGenerationTask.id)
             .select()
             .single();
 
         if (error) {
-            throw new Error(`Failed to update video generation task: ${error.message}`);
+            throw new Error(`Failed to update task status: ${error.message}`);
         }
 
         return data;

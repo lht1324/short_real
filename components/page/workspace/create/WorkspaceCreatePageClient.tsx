@@ -16,11 +16,14 @@ import {
 } from 'lucide-react';
 import { openAIClientAPI } from '@/api/client/openAIClientAPI';
 import {ScriptGenerationRequest} from "@/api/types/open-ai/ScriptGeneration";
-import {VideoDataGenerationRequest} from "@/api/types/open-ai/VideoDataGeneration";
 import {Voice} from "@/api/types/eleven-labs/Voice";
 import {voiceClientAPI} from "@/api/client/voiceClientAPI";
 import {BGMInfo} from "@/api/types/supabase/BackgroundMusics";
 import {musicClientAPI} from "@/api/client/musicClientAPI";
+import {Style} from "@/api/types/supabase/Styles";
+import {VideoGenerationRequest} from "@/api/types/supabase/VideoGenerationTasks";
+import {videoClientAPI} from "@/api/client/videoClientAPI";
+import {postFetch} from "@/api/client/baseFetch";
 
 interface ThemeFilterData {
     themeName: string,
@@ -51,7 +54,7 @@ function WorkspaceCreatePageClient() {
     // Section states
     const [description, setDescription] = useState<string>('');
     const [duration, setDuration] = useState<number>(15);
-    const [style, setStyle] = useState<string>('cinematic');
+    const [selectedStyleId, setSelectedStyleId] = useState<string>('');
     const [selectedVoiceId, setSelectedVoiceId] = useState<string>('');
     const [selectedBackgroundMusicId, setSelectedBackgroundMusicId] = useState<string>('');
 
@@ -72,93 +75,127 @@ function WorkspaceCreatePageClient() {
     const [isVoiceExpanded, setIsVoiceExpanded] = useState(true);
     const [isMusicExpanded, setIsMusicExpanded] = useState(true);
 
+    // 어차피 Scene별로 나눈다고 할 때, 나레이션 만드는 건 그대로 놔둔다
+    // 영상을 각 Scene마다 생성한 뒤 합쳐야 하니, 에디터에서 각 Scene 누를 때마다 해당 Scene 영상을 보여주는 거다
+    // 나레이션은 Scene마다 생성된 영상에 그대로 보여주는 거고.
+    /**
+     * 🎨 공식 지원 스타일 (확인된 것들)
+     * 애니메이션 스타일
+     *
+     * Pixar style: 3D 렌더링에 유연하고 일관성 있는 스타일
+     * Studio Ghibli: 애니메이션에서 가장 일관성 있게 생성되는 스타일
+     * Disney style: 클래식한 서구 만화 스타일
+     * Anime style: 일본 애니메이션 스타일 (horror anime 등 세부 변형 가능)
+     * Pixel art: 마인크래프트나 메이플스토리 같은 픽셀 아트 Pika Scenes (v2.2) | Image to Video | API Documentation | fal.ai
+     *
+     * 실사/시네마틱 스타일
+     *
+     * Stop motion: 찰흙 애니메이션이나 액션 피규어 스타일
+     * Claymation: 찰흙 인형 애니메이션
+     * Tilt-shift photography: 미니어처 모델 효과
+     * Cinematic shots: 영화적 카메라워크
+     */
     // Style examples for preview
-    const styleExamples = useMemo(() => ({
-        realistic: {
+    const styleList = useMemo((): Style[] => [
+        {
+            id: 'realistic',
             name: 'Realistic',
             description: 'Photorealistic rendering with high detail and lifelike accuracy.',
-            thumbnail: '/api/placeholder/200/356',
-            videoUrl: '/examples/realistic-sample.mp4'
+            stylePrompt: 'photorealistic, DSLR quality, professional photography, high detail, natural lighting, lifelike textures, 8K resolution, sharp focus',
+            thumbnailUrl: '/api/placeholder/200/356'
         },
-        cinematic: {
+        {
+            id: 'cinematic',
             name: 'Cinematic',
             description: 'Film-like quality with dramatic lighting and professional color grading.',
-            thumbnail: '/api/placeholder/200/356',
-            videoUrl: '/examples/cinematic-sample.mp4'
+            stylePrompt: 'cinematic lighting, film grain, dramatic shadows, professional color grading, movie still, widescreen aspect ratio, depth of field',
+            thumbnailUrl: '/api/placeholder/200/356'
         },
-        vintage: {
+        {
+            id: 'vintage',
             name: 'Vintage',
             description: 'Emulates the look of old film stock with grain, light leaks, and faded colors.',
-            thumbnail: '/api/placeholder/200/356',
-            videoUrl: '/examples/vintage-sample.mp4'
+            stylePrompt: 'vintage photography, film grain, retro colors, aged paper texture, light leaks, faded colors, nostalgic mood, old film aesthetic',
+            thumbnailUrl: '/api/placeholder/200/356'
         },
-        line_art: {
+        {
+            id: 'line_art',
             name: 'Line Art',
             description: 'Clean, minimalist style focusing on outlines and contours with little to no shading.',
-            thumbnail: '/api/placeholder/200/356',
-            videoUrl: '/examples/lineart-sample.mp4'
+            stylePrompt: 'line art, clean lineart, minimalist design, black and white, simple outlines, no shading, vector style, contour drawing',
+            thumbnailUrl: '/api/placeholder/200/356'
         },
-        cartoon: {
+        {
+            id: 'cartoon',
             name: 'Cartoon',
             description: 'Stylized with exaggerated features, bold outlines, and vibrant, flat colors.',
-            thumbnail: '/api/placeholder/200/356',
-            videoUrl: '/examples/cartoon-sample.mp4'
+            stylePrompt: 'cartoon style, bold outlines, flat colors, exaggerated features, vibrant colors, cell shading, animated style, colorful',
+            thumbnailUrl: '/api/placeholder/200/356'
         },
-        anime: {
+        {
+            id: 'anime',
             name: 'Anime',
             description: 'Japanese animation style, characterized by large expressive eyes and vibrant scenes.',
-            thumbnail: '/api/placeholder/200/356',
-            videoUrl: '/examples/anime-sample.mp4'
+            stylePrompt: 'anime style, manga art, cel-shading, vibrant colors, Japanese animation, large expressive eyes, clean lineart, anime aesthetic',
+            thumbnailUrl: '/api/placeholder/200/356'
         },
-        pop_art: {
+        {
+            id: 'pop_art',
             name: 'Pop Art',
             description: 'Inspired by Andy Warhol, featuring bold, saturated colors and comic book aesthetics.',
-            thumbnail: '/api/placeholder/200/356',
-            videoUrl: '/examples/popart-sample.mp4'
+            stylePrompt: 'pop art, Andy Warhol style, bold saturated colors, comic book aesthetic, halftone dots, high contrast, retro poster style',
+            thumbnailUrl: '/api/placeholder/200/356'
         },
-        pixel_art: {
+        {
+            id: 'pixel_art',
             name: 'Pixel Art',
             description: 'Retro digital art made of visible pixels, reminiscent of 8-bit and 16-bit video games.',
-            thumbnail: '/api/placeholder/200/356',
-            videoUrl: '/examples/pixelart-sample.mp4'
+            stylePrompt: 'pixel art, 8-bit style, 16-bit graphics, retro gaming, visible pixels, low resolution, pixelated, retro digital art',
+            thumbnailUrl: '/api/placeholder/200/356'
         },
-        concept_art: {
+        {
+            id: 'concept_art',
             name: 'Concept Art',
             description: 'Painterly and atmospheric style used in film and game development to visualize ideas.',
-            thumbnail: '/api/placeholder/200/356',
-            videoUrl: '/examples/conceptart-sample.mp4'
+            stylePrompt: 'concept art, digital painting, atmospheric lighting, painterly style, matte painting, cinematic concept, detailed artwork',
+            thumbnailUrl: '/api/placeholder/200/356'
         },
-        steampunk: {
+        {
+            id: 'steampunk',
             name: 'Steampunk',
             description: 'A retrofuturistic style combining Victorian-era aesthetics with industrial steam-powered machinery.',
-            thumbnail: '/api/placeholder/200/356',
-            videoUrl: '/examples/steampunk-sample.mp4'
+            stylePrompt: 'steampunk aesthetic, Victorian era, brass machinery, industrial design, steam-powered, gears and cogs, retrofuturistic, copper tones',
+            thumbnailUrl: '/api/placeholder/200/356'
         },
-        neon_synth: {
+        {
+            id: 'neon_synth',
             name: 'Neon Synth',
             description: 'An 80s retro-futuristic aesthetic with glowing neon grids, vibrant pinks, and purples.',
-            thumbnail: '/api/placeholder/200/356',
-            videoUrl: '/examples/neonsynth-sample.mp4'
+            stylePrompt: 'synthwave aesthetic, neon lights, 80s retro, glowing grids, vibrant pinks and purples, cyberpunk neon, retrowave, vaporwave',
+            thumbnailUrl: '/api/placeholder/200/356'
         },
-        cyberpunk: {
+        {
+            id: 'cyberpunk',
             name: 'Cyberpunk',
             description: 'A dystopian futuristic setting with neon-drenched cityscapes and advanced technology.',
-            thumbnail: '/api/placeholder/200/356',
-            videoUrl: '/examples/cyberpunk-sample.mp4'
+            stylePrompt: 'cyberpunk aesthetic, neon-drenched cityscape, futuristic technology, dark atmosphere, sci-fi, dystopian future, holographic displays',
+            thumbnailUrl: '/api/placeholder/200/356'
         },
-        fantasy: {
+        {
+            id: 'fantasy',
             name: 'Fantasy',
             description: 'Epic and magical settings featuring mythical creatures, castles, and enchanted forests.',
-            thumbnail: '/api/placeholder/200/356',
-            videoUrl: '/examples/fantasy-sample.mp4'
+            stylePrompt: 'fantasy art, magical atmosphere, mythical creatures, enchanted forest, medieval castles, epic landscape, mystical lighting, magical realism',
+            thumbnailUrl: '/api/placeholder/200/356'
         },
-        gothic: {
+        {
+            id: 'gothic',
             name: 'Gothic',
             description: 'A dark, mysterious, and moody style with macabre themes and ornate architecture.',
-            thumbnail: '/api/placeholder/200/356',
-            videoUrl: '/examples/gothic-sample.mp4'
+            stylePrompt: 'gothic architecture, dark atmosphere, mysterious mood, ornate details, dramatic shadows, macabre themes, medieval gothic, dark romanticism',
+            thumbnailUrl: '/api/placeholder/200/356'
         }
-    }), []);
+    ], []);
 
     // Virtual tabs for navigation consistency
     const virtualTabs = useMemo(() => [
@@ -172,32 +209,16 @@ function WorkspaceCreatePageClient() {
         setIsGenerating(true);
         
         try {
-            // 선택된 스타일, 음성, 음악 정보 가져오기
-            const selectedStyle = styleExamples[style as keyof typeof styleExamples];
-            const selectedVoice = voiceList.find((voice) => {
-                return voice.id === selectedVoiceId;
-            });
-            const selectedMusic = backgroundMusicList.find((backgroundMusic) => {
-                return backgroundMusic.id === selectedBackgroundMusicId;
-            });
-
             // API 요청 데이터 구성
             const requestData: ScriptGenerationRequest = {
                 userPrompt: aiPrompt,
                 duration: duration,
-                style: selectedStyle ? {
-                    id: style,
-                    name: selectedStyle.name,
-                    description: selectedStyle.description
-                } : undefined,
-                voice: selectedVoice,
-                music: selectedMusic,
             };
 
             console.log('Generating script with data:', requestData);
 
             // OpenAI API 호출
-            const result = await openAIClientAPI.postOpenAIScript(requestData);
+            const result = await openAIClientAPI.postScript(requestData);
 
             if (result && result.success && result.data) {
                 console.log("Script generation result", result);
@@ -217,7 +238,7 @@ function WorkspaceCreatePageClient() {
             alert('An error occurred while generating script. Please try again.');
             setIsGenerating(false);
         }
-    }, [aiPrompt, duration, style, selectedVoiceId, selectedBackgroundMusicId, styleExamples, voiceList, backgroundMusicList]);
+    }, [aiPrompt, duration]);
 
     const openAIModal = useCallback(() => {
         setShowAIModal(true);
@@ -286,6 +307,13 @@ function WorkspaceCreatePageClient() {
         setPlayingSoundId(null);
     }, [currentAudio]);
 
+    // 예상 영상 시간 계산 (2.5단어/초 기준)
+    const estimatedDuration = useMemo(() => {
+        if (!description.trim()) return 0;
+        const wordCount = description.split(' ').length;
+        return Math.round(wordCount / 2.5);
+    }, [description]);
+
     const onSubmitProject = useCallback(async () => {
         if (!description.trim()) {
             alert('스크립트를 입력해주세요.');
@@ -296,7 +324,9 @@ function WorkspaceCreatePageClient() {
         
         try {
             // 선택된 스타일, 음성, 음악 정보 가져오기
-            const selectedStyle = styleExamples[style as keyof typeof styleExamples];
+            const selectedStyle = styleList.find((style) => {
+                return style.id === selectedStyleId;
+            });
             const selectedVoice = voiceList.find((voice) => {
                 return voice.id === selectedVoiceId;
             });
@@ -305,37 +335,31 @@ function WorkspaceCreatePageClient() {
             });
 
             // VideoData API 요청 데이터 구성
-            const requestData: VideoDataGenerationRequest = {
-                script: description,
+            const requestData: VideoGenerationRequest = {
+                userId: "",
+                narrationScript: description,
                 duration: duration,
-                style: selectedStyle ? {
-                    id: style,
-                    name: selectedStyle.name,
-                    description: selectedStyle.description
-                } : undefined,
+                style: selectedStyle,
                 voice: selectedVoice,
-                music: selectedMusic ? {
-                    id: selectedMusic.id,
-                    title: selectedMusic.title,
-                    artist: selectedMusic.artist
-                } : undefined
+                music: selectedMusic,
             };
 
             console.log('Creating video project with data:', requestData);
 
-            // VideoData API 호출
-            const result = await openAIClientAPI.postOpenAIVideoData(requestData);
+            // Video API 호출
+            const result = await videoClientAPI.postVideoGeneration(requestData);
 
-            if (result && result.success && result.data) {
-                console.log('Video data generation successful:', result.data);
-                setVideoDataResponse(result.data);
+            if (result) {
+                console.log('Video data generation succeed.');
+                // setVideoDataResponse(result.data);
                 
                 // 성공 시 대시보드로 이동
                 alert('비디오 프로젝트 생성이 완료되었습니다!');
                 // window.location.href = '/workspace/dashboard';
             } else {
-                console.error('Video data generation failed:', result?.error);
-                alert(result?.error?.message || '비디오 프로젝트 생성에 실패했습니다. 다시 시도해주세요.');
+                console.error('Video data generation failed.');
+                alert('비디오 프로젝트 생성에 실패했습니다. 다시 시도해주세요.');
+                throw Error('Video data generation failed.');
             }
 
         } catch (error) {
@@ -344,7 +368,48 @@ function WorkspaceCreatePageClient() {
         } finally {
             setIsSubmitting(false);
         }
-    }, [description, duration, style, selectedVoiceId, selectedBackgroundMusicId, styleExamples, voiceList, backgroundMusicList]);
+    }, [description, duration, selectedStyleId, selectedVoiceId, selectedBackgroundMusicId, styleList, voiceList, backgroundMusicList]);
+
+    const requestIdList = useMemo(() => {
+        return [
+            "3fstybtmjhrm80cs8cevx5g1r0",
+            "dnje5ptmd1rme0cs8cer2f29sr",
+            "5bmpfvtmr5rme0cs8ces82rt9r",
+            "x8yrzd2khsrmc0cs8cev8zjc3m",
+            "zthtr9tkm5rmc0cs8cesqzj08m"
+        ]
+    }, []);
+
+    const videoUrlList = useMemo(() => {
+        return [
+            "https://tbgymsmwuljvewatnvqg.supabase.co/storage/v1/object/sign/processed_video_storage/3fstybtmjhrm80cs8cevx5g1r0.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9iZjk2NWFiNi1hYmE4LTRkYTEtYTM5Yy0yMDk3ZmQ1ZGU1MGEiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJwcm9jZXNzZWRfdmlkZW9fc3RvcmFnZS8zZnN0eWJ0bWpocm04MGNzOGNldng1ZzFyMC5tcDQiLCJpYXQiOjE3NTc3Njc5NjUsImV4cCI6MTc4OTMwMzk2NX0.A3o-tGQWw5oVgNNfWBXJZ9I5tY9OCbzfYcU_K2WpP-0",
+            "https://tbgymsmwuljvewatnvqg.supabase.co/storage/v1/object/sign/processed_video_storage/dnje5ptmd1rme0cs8cer2f29sr.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9iZjk2NWFiNi1hYmE4LTRkYTEtYTM5Yy0yMDk3ZmQ1ZGU1MGEiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJwcm9jZXNzZWRfdmlkZW9fc3RvcmFnZS9kbmplNXB0bWQxcm1lMGNzOGNlcjJmMjlzci5tcDQiLCJpYXQiOjE3NTc3Njc5NzgsImV4cCI6MTc4OTMwMzk3OH0.gRY8mXPnck57IaQzBjCCisKDCg-CecFjN4rD1DPwIuw",
+            "https://tbgymsmwuljvewatnvqg.supabase.co/storage/v1/object/sign/processed_video_storage/5bmpfvtmr5rme0cs8ces82rt9r.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9iZjk2NWFiNi1hYmE4LTRkYTEtYTM5Yy0yMDk3ZmQ1ZGU1MGEiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJwcm9jZXNzZWRfdmlkZW9fc3RvcmFnZS81Ym1wZnZ0bXI1cm1lMGNzOGNlczgycnQ5ci5tcDQiLCJpYXQiOjE3NTc3Njc5OTYsImV4cCI6MTc4OTMwMzk5Nn0.MM31D3yOH7_WubhiA0eRoWg_29fMMEyoe_25FUkAABo",
+            "https://tbgymsmwuljvewatnvqg.supabase.co/storage/v1/object/sign/processed_video_storage/x8yrzd2khsrmc0cs8cev8zjc3m.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9iZjk2NWFiNi1hYmE4LTRkYTEtYTM5Yy0yMDk3ZmQ1ZGU1MGEiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJwcm9jZXNzZWRfdmlkZW9fc3RvcmFnZS94OHlyemQya2hzcm1jMGNzOGNldjh6amMzbS5tcDQiLCJpYXQiOjE3NTc3NjgwMDgsImV4cCI6MTc4OTMwNDAwOH0.5EgQf1E2BoCdAhUzTuvYoOVNXlhu97FVTs1JTPEC4gc",
+            "https://tbgymsmwuljvewatnvqg.supabase.co/storage/v1/object/sign/processed_video_storage/zthtr9tkm5rmc0cs8cesqzj08m.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9iZjk2NWFiNi1hYmE4LTRkYTEtYTM5Yy0yMDk3ZmQ1ZGU1MGEiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJwcm9jZXNzZWRfdmlkZW9fc3RvcmFnZS96dGh0cjl0a201cm1jMGNzOGNlc3F6ajA4bS5tcDQiLCJpYXQiOjE3NTc3NjgwMjEsImV4cCI6MTc4OTMwNDAyMX0.d0ywlFVanLdBub6fJ1CqpZAkwYq7A87Z8kM9KJmTwxw"
+        ]
+    }, []);
+    const onTestWebhook = useCallback(async () => {
+        for (let i = 0; i < requestIdList.length; i++) {
+            try {
+                await postFetch(`/webhook/replicate?generationTaskId=ea380b39-0761-4936-a684-c5685ee6fd42`, {
+                    id: requestIdList[i],
+                    output: videoUrlList[i],
+                    // "starting" | "processing" | "succeeded" | "failed" | "canceled" | "aborted"
+                    status: "succeeded",
+                    error: undefined,
+                });
+
+                // 마지막 요청이 아닌 경우에만 딜레이 적용
+                if (i < requestIdList.length - 1) {
+                    await new Promise(resolve => setTimeout(resolve, 5000));
+                }
+                console.log(`Webhook test ${i + 1} succeeded.`);
+            } catch (error) {
+                console.error(`Webhook test ${i + 1} failed:`, error);
+            }
+        }
+    }, [requestIdList, videoUrlList]);
 
     useEffect(() => {
         const loadData = async () => {
@@ -379,6 +444,38 @@ function WorkspaceCreatePageClient() {
             }
         };
     }, [currentAudio]);
+
+    // API 엔드포인트 미리 컴파일 (Next.js 서버리스 함수 초기화)
+    useEffect(() => {
+        const precompileAPIs = async () => {
+            try {
+                console.log('Pre-compiling API routes...');
+                
+                // 모든 API 라우트들을 병렬로 프리컴파일
+                const apiRoutes = [
+                    '/api/open-ai/script',
+                    '/api/video',
+                    '/api/video/merge',
+                    '/webhook/replicate'
+                ];
+                
+                const precompilePromises = apiRoutes.map(route => 
+                    fetch(route, { 
+                        method: 'OPTIONS',
+                        headers: { 'Content-Type': 'application/json' }
+                    }).catch(() => {}) // 에러 무시
+                );
+                
+                await Promise.all(precompilePromises);
+                console.log('All API routes pre-compiled');
+            } catch (error) {
+                console.log('API pre-compilation completed:', error);
+            }
+        };
+        
+        // 컴포넌트 마운트 후 바로 실행
+        precompileAPIs().then();
+    }, []);
 
     return (
         <div className="min-h-screen bg-black text-white">
@@ -443,9 +540,16 @@ function WorkspaceCreatePageClient() {
                             {/* Script Section */}
                             <div>
                                 <div className="flex items-center justify-between mb-3">
-                                    <label className="block text-xl font-semibold text-purple-300">
-                                        Script
-                                    </label>
+                                    <div className="flex items-center space-x-3">
+                                        <label className="block text-xl font-semibold text-purple-300">
+                                            Script
+                                        </label>
+                                        {description.trim() && (
+                                            <span className="px-2 py-1 bg-blue-500/20 text-blue-300 text-sm font-medium rounded border border-blue-400/30">
+                                                ~{estimatedDuration}s
+                                            </span>
+                                        )}
+                                    </div>
                                     <button
                                         type="button"
                                         onClick={openAIModal}
@@ -473,7 +577,7 @@ function WorkspaceCreatePageClient() {
                                     <div className="flex items-center justify-between mb-3">
                                         <span className="text-purple-300 text-sm font-medium">JSON Response</span>
                                         <button
-                                            onClick={onSubmitProject}
+                                            onClick={onTestWebhook}
                                             type="button"
                                             className="px-3 py-1.5 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-lg text-sm font-medium hover:from-blue-600 hover:to-cyan-600 transition-all duration-300"
                                         >
@@ -522,18 +626,18 @@ function WorkspaceCreatePageClient() {
                                 </button>
                                 {isStyleExpanded && (
                                     <div className="grid grid-cols-2 gap-3">
-                                    {Object.entries(styleExamples).map(([key, styleExample]) => (
+                                    {styleList.map((style) => (
                                         <button
-                                            key={key}
-                                            onClick={() => setStyle(key)}
+                                            key={style.id}
+                                            onClick={() => { setSelectedStyleId(style.id); }}
                                             className={`p-3 rounded-lg border transition-all text-left ${
-                                                style === key
+                                                selectedStyleId === style.id
                                                     ? 'border-pink-500 bg-pink-500/10'
                                                     : 'border-purple-500/30 bg-gray-800/30 hover:border-purple-400/50'
                                             }`}
                                         >
-                                            <div className="text-white font-medium text-base">{styleExample.name}</div>
-                                            <div className="text-gray-400 text-sm mt-1">{styleExample.description}</div>
+                                            <div className="text-white font-medium text-base">{style.name}</div>
+                                            <div className="text-gray-400 text-sm mt-1">{style.description}</div>
                                         </button>
                                     ))}
                                     </div>
@@ -754,7 +858,7 @@ function WorkspaceCreatePageClient() {
                             
                             {/* Selected Style Preview */}
                             <div className="w-[280px] bg-gradient-to-br from-gray-900 to-black rounded-2xl border border-purple-500/30 overflow-hidden shadow-2xl mx-auto" style={{aspectRatio: '9/16'}}>
-                                {styleExamples[style as keyof typeof styleExamples] ? (
+                                {selectedStyleId ? (
                                     <div className="w-full h-full bg-gradient-to-br from-pink-400 via-purple-500 to-indigo-600 flex items-center justify-center relative">
                                         <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent"></div>
                                         
@@ -775,10 +879,10 @@ function WorkspaceCreatePageClient() {
                             {/* Style Info */}
                             <div className="mt-6 text-center">
                                 <p className="text-purple-300 text-base mb-1">
-                                    Selected: <span className="text-white font-medium text-lg">{styleExamples[style as keyof typeof styleExamples]?.name || style}</span>
+                                    Selected: <span className="text-white font-medium text-lg">{styleList.find((style) => { return style.id === selectedStyleId; })?.name || selectedStyleId}</span>
                                 </p>
                                 <p className="text-gray-300 text-sm mb-3">
-                                    {styleExamples[style as keyof typeof styleExamples]?.description}
+                                    {styleList.find((style) => { return style.id === selectedStyleId; })?.description}
                                 </p>
                                 <p className="text-gray-400 text-sm">
                                     This preview shows how your video will look with the selected visual style.

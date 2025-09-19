@@ -1,24 +1,10 @@
 // OpenAI Chat Completions API 응답 타입 정의
 
 import {OpenAIUsage} from "@/api/types/open-ai/OpenAIResponse";
-import {Voice} from "@/api/types/eleven-labs/Voice";
-import {BGMInfo} from "@/api/types/supabase/BackgroundMusics";
 
 export interface ScriptGenerationRequest {
     userPrompt: string;
     duration: number; // 초 단위 (15 또는 30)
-    style?: {
-        id: string;
-        name: string;
-        description: string;
-    };
-    // voice?: {
-    //     id: string;
-    //     name: string;
-    //     characteristics: string;
-    // };
-    voice?: Voice;
-    music?: BGMInfo;
 }
 
 // 우리 앱에서 사용할 스크립트 응답 타입
