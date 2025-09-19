@@ -1,0 +1,276 @@
+[
+    // EPIC & Heroic
+    {
+        id: 'venture',
+        title: 'Venture',
+        artist: 'Ardie Son',
+        description: 'Epic, Dramatic, Tense, Serious, Hopeful',
+        previewUrl: ''
+    },
+    {
+        id: 'beacon_of_hope',
+        title: 'Beacon of Hope',
+        artist: 'Steven Beddall',
+        description: 'Epic, Uplifting, Dramatic, Serious, Hopeful',
+        previewUrl: ''
+    },
+    {
+        id: 'like_a_bird',
+        title: 'Like a Bird',
+        artist: 'Letra',
+        description: 'Epic, Cinematic, Uplifting, Dramatic, Serious, Hopeful',
+        previewUrl: ''
+    },
+    {
+        id: 'final_confrontation',
+        title: 'Final Confrontation - Creative Cut - Beat',
+        artist: 'Matthias Förster',
+        description: 'Epic, Cinematic, Dramatic, Intense',
+        previewUrl: ''
+    },
+    {
+        id: 'skyward',
+        title: 'Skyward',
+        artist: 'TURPAK',
+        description: 'Epic, Cinematic, Uplifting',
+        previewUrl: ''
+    },
+    {
+        id: 'now_or_never',
+        title: 'Now or Never',
+        artist: 'TURPAK',
+        description: 'Epic, Cinematic',
+        previewUrl: ''
+    },
+    {
+        id: 'into_the_battle',
+        title: 'Into the Battle',
+        artist: 'Ian Post',
+        description: 'Cinematic, Epic, Intense',
+        previewUrl: ''
+    },
+    {
+        id: 'at_war',
+        title: 'At War',
+        artist: 'Francesco D\'Andrea',
+        description: 'Classical, Fantasy, Cinematic, Epic, Dramatic',
+        previewUrl: ''
+    },
+    
+    // Scary & Dark
+    {
+        id: 'they_are_coming',
+        title: 'They Are Coming',
+        artist: 'Tomáš Herudek',
+        description: 'Powerful, Dark, Dramatic, Tense, Serious, Scary',
+        previewUrl: ''
+    },
+    {
+        id: 'creepy_music_box_ident',
+        title: 'Creepy Music Box Ident',
+        artist: 'Artlist Musical Logos',
+        description: 'Cinematic, Creepy, Dark, Mysterious',
+        previewUrl: ''
+    },
+    {
+        id: 'creepy_mysterious_tones',
+        title: 'Creepy Mysterious Tones',
+        artist: 'Artlist Musical Logos',
+        description: 'Cinematic, Creepy, Dark, Mysterious, Scary',
+        previewUrl: ''
+    },
+    {
+        id: 'darklouds',
+        title: 'darklouds',
+        artist: 'Out of Flux',
+        description: 'Ambient, Cinematic, Dark, Atmospheric',
+        previewUrl: ''
+    },
+    
+    // Dramatic & Intense
+    {
+        id: 'jinx_short_version_a',
+        title: 'Jinx - Short version a',
+        artist: 'Roie Shpigler',
+        description: 'Cinematic, Dramatic, Tense, Intense',
+        previewUrl: ''
+    },
+    {
+        id: 'optimistic',
+        title: 'Optimistic',
+        artist: 'Stanley Gurvich',
+        description: 'Fantasy, Cinematic, Dramatic, Hopeful',
+        previewUrl: ''
+    },
+    {
+        id: 'fry_10',
+        title: 'Fry 10',
+        artist: 'Just for Kicks',
+        description: 'Cinematic, Dramatic, Intense',
+        previewUrl: ''
+    },
+    {
+        id: 'fry_10_no_backing_vocals',
+        title: 'Fry 10 - No Backing Vocals',
+        artist: 'Just for Kicks',
+        description: 'Cinematic, Dramatic, Intense',
+        previewUrl: ''
+    },
+    {
+        id: 'thats_beefy',
+        title: 'That\'s Beefy',
+        artist: 'Just for Kicks',
+        description: 'Energetic, Powerful',
+        previewUrl: ''
+    },
+    
+    // Chill & Lofi
+    {
+        id: 'highway',
+        title: 'Highway',
+        artist: 'Yarin Primak, Loya, idokay',
+        description: 'Lounge',
+        previewUrl: ''
+    },
+    {
+        id: 'pour_la_femme_instrumental',
+        title: 'Pour La Femme - Instrumental version',
+        artist: 'ZISO',
+        description: 'Lounge, Jazz',
+        previewUrl: ''
+    },
+    {
+        id: 'microdose',
+        title: 'Microdose',
+        artist: 'Roie Shpigler',
+        description: 'Jazz, Relaxing',
+        previewUrl: ''
+    },
+    {
+        id: 'mochi',
+        title: 'Mochi',
+        artist: 'Just for Kicks',
+        description: 'Relaxing',
+        previewUrl: ''
+    },
+    
+    // Romantic & Uplifting
+    {
+        id: 'love_you_early_short',
+        title: 'Love You Early - Short version',
+        artist: 'MILANO',
+        description: 'Uplifting',
+        previewUrl: ''
+    },
+    
+    // Whimsical & Light
+    {
+        id: 'marbies_short_version_b',
+        title: 'Marbies - Short version b',
+        artist: 'Roie Shpigler',
+        description: 'Fantasy, Whimsical',
+        previewUrl: ''
+    },
+    {
+        id: 'windbird_short_version_b',
+        title: 'Windbird - Short version b',
+        artist: 'Roie Shpigler',
+        description: 'Light, Pleasant, Uplifting',
+        previewUrl: ''
+    },
+    
+    // Atmospheric & World
+    {
+        id: 'graystar',
+        title: 'Graystar',
+        artist: 'Out of Flux',
+        description: 'Cinematic, Ambient',
+        previewUrl: ''
+    },
+    {
+        id: 'kathmandu',
+        title: 'Kathmandu',
+        artist: 'Ben Winwood',
+        description: 'Cinematic',
+        previewUrl: ''
+    },
+    
+    // Comedy & Quirky (Kevin MacLeod)
+    {
+        id: 'monkeys_spinning_monkeys',
+        title: 'Monkeys Spinning Monkeys',
+        artist: 'Kevin MacLeod',
+        description: 'Happy, Light, Comedy',
+        previewUrl: ''
+    },
+    {
+        id: 'the_builder',
+        title: 'The Builder',
+        artist: 'Kevin MacLeod',
+        description: 'Upbeat, Energetic',
+        previewUrl: ''
+    },
+    {
+        id: 'sneaky_snitch',
+        title: 'Sneaky Snitch',
+        artist: 'Kevin MacLeod',
+        description: 'Sneaky, Comedy, Mystery, Playful',
+        previewUrl: ''
+    },
+    {
+        id: 'if_i_had_a_chicken',
+        title: 'If I Had a Chicken',
+        artist: 'Kevin MacLeod',
+        description: 'Happy, Quirky, Whimsical',
+        previewUrl: ''
+    },
+    {
+        id: 'investigations',
+        title: 'Investigations',
+        artist: 'Kevin MacLeod',
+        description: 'Mystery, Sneaky, Comedy',
+        previewUrl: ''
+    },
+    {
+        id: 'fluffing_a_duck',
+        title: 'Fluffing a Duck',
+        artist: 'Kevin MacLeod',
+        description: 'Comedy, Quirky, Light, Playful',
+        previewUrl: ''
+    },
+    {
+        id: 'amazing_plan',
+        title: 'Amazing Plan',
+        artist: 'Kevin MacLeod',
+        description: 'Comedy, Upbeat',
+        previewUrl: ''
+    },
+    {
+        id: 'scheming_weasel_faster',
+        title: 'Scheming Weasel (faster Version)',
+        artist: 'Kevin MacLeod',
+        description: 'Sneaky, Comedy, Playful',
+        previewUrl: ''
+    },
+    {
+        id: 'local_forecast_elevator',
+        title: 'Local Forecast - Elevator',
+        artist: 'Kevin MacLeod',
+        description: 'Relaxing',
+        previewUrl: ''
+    },
+    {
+        id: 'sneaky_adventure',
+        title: 'Sneaky Adventure',
+        artist: 'Kevin MacLeod',
+        description: 'Sneaky, Mystery, Playful',
+        previewUrl: ''
+    },
+    {
+        id: 'carefree',
+        title: 'Carefree',
+        artist: 'Kevin MacLeod',
+        description: 'Happy, Relaxing, Pleasant',
+        previewUrl: ''
+    }
+]

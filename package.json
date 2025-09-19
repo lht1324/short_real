@@ -9,15 +9,21 @@
         "lint": "next lint"
     },
     "dependencies": {
-        "@elevenlabs/elevenlabs-js": "^2.10.0",
+        "@elevenlabs/elevenlabs-js": "^2.15.0",
         "@fal-ai/client": "^1.6.2",
+        "@google/genai": "^1.17.0",
         "@supabase/ssr": "^0.6.1",
         "@supabase/supabase-js": "^2.55.0",
         "dotenv": "^17.2.1",
+        "inngest": "^3.40.3",
         "lucide-react": "^0.539.0",
+        "mediabunny": "^1.15.1",
         "next": "15.4.6",
+        "openai": "^5.19.1",
         "react": "19.1.0",
-        "react-dom": "19.1.0"
+        "react-dom": "19.1.0",
+        "replicate": "^1.1.0",
+        "server-only": "^0.0.1"
     },
     "devDependencies": {
         "@eslint/eslintrc": "^3",

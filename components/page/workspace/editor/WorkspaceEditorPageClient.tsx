@@ -33,7 +33,6 @@ interface VideoSequence {
     id: string;
     text: string;
     duration: string;
-    imageUrl: string;
     isSelected?: boolean;
     segmentList: CaptionSegment[];
 }
@@ -298,7 +297,7 @@ function WorkspaceEditorPageClient() {
             <div className="min-h-screen bg-black text-white flex items-center justify-center">
                 <div className="text-center">
                     <div className="w-8 h-8 border-2 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-                    <p className="text-gray-400">Loading your mess...</p>
+                    <p className="text-gray-400">Loading your pure video...</p>
                 </div>
             </div>
         );

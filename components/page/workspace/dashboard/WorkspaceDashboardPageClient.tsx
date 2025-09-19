@@ -2,6 +2,7 @@
 
 import {memo, useCallback, useMemo} from "react";
 import Link from "next/link";
+import { Plus, Calendar, Download, X, ListTodo } from 'lucide-react';
 
 enum CurrentStage {
     Processing = 'processing',
@@ -25,7 +26,7 @@ function WorkspaceDashboardPageClient() {
             title: 'Summer vacation highlights'
         },
         {
-            id: '2', 
+            id: '2',
             startDate: '2025-01-10',
             currentStage: CurrentStage.Completed,
             title: 'Birthday party memories'
@@ -72,100 +73,147 @@ function WorkspaceDashboardPageClient() {
         }
     }, []);
 
-    return (
-        <div className="min-h-screen bg-black text-white overflow-hidden">
-            {/* Vaporwave Background Effects */}
-            <div className="absolute inset-0 opacity-20">
-                <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-gradient-to-r from-pink-500 to-purple-600 rounded-full blur-3xl"></div>
-                <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-gradient-to-r from-purple-500 to-indigo-600 rounded-full blur-3xl"></div>
-                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-72 h-72 bg-gradient-to-r from-indigo-500 to-cyan-500 rounded-full blur-3xl"></div>
-            </div>
+    // Virtual tabs for navigation consistency
+    const virtualTabs = useMemo(() => [
+        { id: 'dashboard', icon: ListTodo, name: 'Tasks', href: '/workspace/dashboard', active: true },
+        { id: 'create', icon: Plus, name: 'Create', href: '/workspace/create' }
+    ], []);
 
-            <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-                <div className="flex justify-between items-center mb-12">
-                    <h1 className="text-4xl sm:text-5xl font-bold">
-                        <span className="bg-gradient-to-r from-pink-500 to-purple-600 bg-clip-text text-transparent">
-                            Video
-                        </span>{" "}
-                        <span className="bg-gradient-to-r from-purple-500 to-indigo-600 bg-clip-text text-transparent">
-                            Workspace
+    return (
+        <div className="min-h-screen bg-black text-white">
+            {/* Top Header - Same as Create */}
+            <div className="flex items-center justify-between py-4 border-b border-purple-500/20 bg-gray-900/50 backdrop-blur-sm">
+                <div className="flex items-center" style={{paddingLeft: '16px'}}>
+                    <div className="w-12 h-12 bg-gradient-to-r from-pink-500 to-purple-600 rounded-lg flex items-center justify-center">
+                        <span className="text-white font-bold text-sm">🏠</span>
+                    </div>
+                    <div className="flex flex-col ml-4">
+                        <span className="text-4xl font-bold bg-gradient-to-r from-pink-400 to-purple-500 bg-clip-text text-transparent">
+                            Video Task Manager
                         </span>
-                    </h1>
+                        <p className="text-gray-400 text-base pl-0.5">
+                            Your tasks&#39; progresses here.
+                        </p>
+                    </div>
+                </div>
+                <div className="pr-6">
                     <Link 
                         href="/workspace/create"
-                        className="group bg-gradient-to-r from-pink-500 to-purple-600 text-white px-8 py-4 rounded-xl text-lg font-semibold hover:from-pink-600 hover:to-purple-700 transition-all duration-300 transform hover:scale-105 flex items-center space-x-2 shadow-lg shadow-purple-500/25"
+                        className="group bg-gradient-to-r from-pink-500 to-purple-600 text-white px-6 py-3 rounded-xl text-lg font-semibold hover:from-pink-600 hover:to-purple-700 transition-all duration-300 transform hover:scale-105 flex items-center space-x-2 shadow-lg shadow-purple-500/25"
                     >
-                        <span>Start New Project</span>
-                        <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                        </svg>
+                        <Plus size={20} />
+                        <span>Start New Task</span>
                     </Link>
                 </div>
+            </div>
 
-                <div className="bg-gray-900/50 backdrop-blur-sm rounded-2xl shadow-2xl border border-purple-500/20">
-                    <div className="px-8 py-6 border-b border-purple-500/20">
-                        <h2 className="text-2xl font-bold bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent">
-                            Current Projects
-                        </h2>
-                    </div>
+            {/* Vaporwave Background Effects */}
+            <div className="absolute inset-0 opacity-10 pointer-events-none">
+                <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-gradient-to-r from-pink-500 to-purple-600 rounded-full blur-3xl"></div>
+                <div className="absolute bottom-1/4 right-1/4 w-52 h-52 bg-gradient-to-r from-purple-500 to-indigo-600 rounded-full blur-3xl"></div>
+                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-48 h-48 bg-gradient-to-r from-indigo-500 to-cyan-500 rounded-full blur-3xl"></div>
+            </div>
 
-                    {mockWorkItems.length === 0 ? (
-                        <div className="px-8 py-16 text-center">
-                            <p className="text-gray-400 text-lg">No projects yet. Start your first project!</p>
-                        </div>
-                    ) : (
-                        <div className="divide-y divide-purple-500/10">
-                            {mockWorkItems.map((item) => (
-                                <div key={item.id} className="px-8 py-6 hover:bg-purple-500/5 transition-all duration-300">
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex-1">
-                                            <h3 className="text-xl font-semibold text-white mb-3">
-                                                {item.title}
-                                            </h3>
-                                            <div className="flex items-center space-x-6 text-gray-300">
-                                                <span className="flex items-center space-x-2">
-                                                    <svg className="w-4 h-4 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                                    </svg>
-                                                    <span>Started: {item.startDate}</span>
-                                                </span>
-                                                <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStageColor(item.currentStage)} backdrop-blur-sm`}>
-                                                    {getStageText(item.currentStage)}
-                                                </span>
+            <div className="flex h-[calc(100vh-97px)]">
+                {/* Left Virtual Tab Sidebar */}
+                <div className="w-20 bg-gray-900/50 backdrop-blur-sm border-r border-purple-500/20 flex flex-col items-center py-4 space-y-4">
+                    {virtualTabs.map((tab) => {
+                        const IconComponent = tab.icon;
+                        return (
+                            <Link
+                                key={tab.id}
+                                href={tab.href}
+                                className={`size-[calc(4px*16)] rounded-lg flex flex-col items-center justify-center transition-all border ${
+                                    tab.active 
+                                        ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white border-purple-400/50 shadow-lg' 
+                                        : 'text-gray-400 hover:text-pink-400 hover:bg-gray-800/50 border-transparent hover:border-purple-500/30'
+                                }`}
+                                title={tab.name}
+                            >
+                                <IconComponent size={24} />
+                                <span className="text-sm mt-1.5 leading-tight">{tab.name}</span>
+                            </Link>
+                        );
+                    })}
+                </div>
+
+                {/* Main Content Panel */}
+                <div className="flex-1 bg-gray-900/30 backdrop-blur-sm overflow-y-auto">
+                    <div className="p-6">
+                        <div className="text-purple-300 text-2xl font-medium mb-6">Current Video Tasks</div>
+
+                        {mockWorkItems.length === 0 ? (
+                            <div className="max-w-4xl">
+                                <div className="text-center py-16">
+                                    <div className="w-16 h-16 bg-gradient-to-r from-pink-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                                        <Plus size={24} className="text-white" />
+                                    </div>
+                                    <p className="text-gray-400 text-lg mb-4">No tasks yet</p>
+                                    <Link
+                                        href="/workspace/create"
+                                        className="inline-flex items-center space-x-2 bg-gradient-to-r from-pink-500 to-purple-600 text-white px-6 py-3 rounded-xl text-base font-semibold hover:from-pink-600 hover:to-purple-700 transition-all duration-300 transform hover:scale-105 shadow-lg shadow-purple-500/25"
+                                    >
+                                        <Plus size={16} />
+                                        <span>Start New Task</span>
+                                    </Link>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="space-y-4 max-w-4xl">
+                                {mockWorkItems.map((item) => (
+                                    <div key={item.id} className="bg-gray-800/50 backdrop-blur-sm rounded-xl border border-purple-500/20 p-6 hover:bg-gray-800/70 transition-all duration-300">
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex-1">
+                                                <h3 className="text-xl font-semibold text-white mb-3">
+                                                    {item.title}
+                                                </h3>
+                                                <div className="flex items-center space-x-6 text-gray-300">
+                                                    <span className="flex items-center space-x-2">
+                                                        <Calendar size={16} className="text-purple-400" />
+                                                        <span>Started: {item.startDate}</span>
+                                                    </span>
+                                                    <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStageColor(item.currentStage)} backdrop-blur-sm`}>
+                                                        {getStageText(item.currentStage)}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            
+                                            <div className="flex items-center space-x-3">
+                                                {item.currentStage === CurrentStage.Editing && (
+                                                    <Link
+                                                        href={`/workspace/editor?task_id=${item.id}`}
+                                                        className="group bg-gradient-to-r from-green-500 to-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:from-green-600 hover:to-emerald-700 transition-all duration-300 transform hover:scale-105 shadow-lg shadow-green-500/25"
+                                                    >
+                                                        Edit Video
+                                                    </Link>
+                                                )}
+                                                
+                                                {item.currentStage === CurrentStage.Completed && (
+                                                    <button
+                                                        onClick={() => handleDownload(item.id)}
+                                                        className="group bg-gradient-to-r from-indigo-500 to-purple-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:from-indigo-600 hover:to-purple-700 transition-all duration-300 transform hover:scale-105 shadow-lg shadow-purple-500/25 flex items-center space-x-2"
+                                                    >
+                                                        <Download size={14} />
+                                                        <span>Download</span>
+                                                    </button>
+                                                )}
+
+                                                {item.currentStage !== CurrentStage.Completed && (
+                                                    <button
+                                                        onClick={() => handleCancelWork(item.id)}
+                                                        className="group bg-gradient-to-r from-red-500 to-pink-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:from-red-600 hover:to-pink-700 transition-all duration-300 transform hover:scale-105 shadow-lg shadow-red-500/25 flex items-center space-x-2"
+                                                    >
+                                                        <X size={14} />
+                                                        <span>Cancel</span>
+                                                    </button>
+                                                )}
                                             </div>
                                         </div>
-                                        
-                                        <div className="flex items-center space-x-4">
-                                            {item.currentStage === CurrentStage.Editing && (
-                                                <Link
-                                                    href={`/workspace/editor?task_id=${item.id}`}
-                                                    className="group bg-gradient-to-r from-green-500 to-emerald-600 text-white px-6 py-3 rounded-xl text-sm font-semibold hover:from-green-600 hover:to-emerald-700 transition-all duration-300 transform hover:scale-105 shadow-lg shadow-green-500/25"
-                                                >
-                                                    Edit Video
-                                                </Link>
-                                            )}
-                                            
-                                            {item.currentStage === CurrentStage.Completed && (
-                                                <button
-                                                    onClick={() => handleDownload(item.id)}
-                                                    className="group bg-gradient-to-r from-indigo-500 to-purple-600 text-white px-6 py-3 rounded-xl text-sm font-semibold hover:from-indigo-600 hover:to-purple-700 transition-all duration-300 transform hover:scale-105 shadow-lg shadow-purple-500/25"
-                                                >
-                                                    Download
-                                                </button>
-                                            )}
-
-                                            {item.currentStage !== CurrentStage.Completed && <button
-                                                onClick={() => handleCancelWork(item.id)}
-                                                className="group bg-gradient-to-r from-red-500 to-pink-600 text-white px-6 py-3 rounded-xl text-sm font-semibold hover:from-red-600 hover:to-pink-700 transition-all duration-300 transform hover:scale-105 shadow-lg shadow-red-500/25"
-                                            >
-                                                Cancel
-                                            </button>}
-                                        </div>
                                     </div>
-                                </div>
-                            ))}
-                        </div>
-                    )}
+                                ))}
+                            </div>
+                        )}
+                    </div>
                 </div>
             </div>
         </div>
