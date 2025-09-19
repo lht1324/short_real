@@ -10,7 +10,7 @@ export interface SceneData {
     sceneDuration: number;
     imageGenPromptDirective: string;
     imageGenPrompt?: string; // 각 Scene 이미지 생성에 넣을 프롬프트
-    videoGenPrompt?: string; // 각 Scene 영상 생성에 넣을 프롬프트
+    videoGenPositivePrompt?: string; // 각 Scene 영상 생성에 넣을 프롬프트
     videoGenNegativePrompt?: string;
     requestId?: string;
     sceneSubtitleSegments?: SubtitleSegment[];
@@ -45,7 +45,9 @@ export interface VideoGenerationTask {
     narration_script: string; // text, not null
     scene_breakdown_list: SceneData[]; // jsonb, not null
     subtitle_segment_list: SubtitleSegment[]; // jsonb, not null
+    master_style_positive_prompt?: string;
     master_style_negative_prompt?: string;
+    video_main_subject?: string;
     processed_scene_count?: number;
     selected_music_id?: string; // varchar(100), nullable
     selected_style_id?: string; // varchar(100), nullable

@@ -4,6 +4,7 @@ import {
 } from "@/api/types/open-ai/ScriptGeneration";
 import {Style} from "@/api/types/supabase/Styles";
 import {SceneData, SubtitleSegment} from "@/api/types/supabase/VideoGenerationTasks";
+import {PostGenerateRequest} from "@/api/types/suno-api/SunoAPIRequests";
 
 enum OpenAIModel {
     GPT_4O_MINI = "gpt-4o-mini-2024-07-18",
@@ -693,6 +694,126 @@ Focus ONLY on motion. The intent is provided for context, not for re-description
                     code: 'INTERNAL_ERROR'
                 }
             };
+        }
+    },
+
+    async postMusicGenerationData(
+        videoMainSubject: string,
+        fullNarrationScript: string,
+        masterStylePositivePrompt: string,
+        sceneDataList: SceneData[]
+    ): Promise<{ success: boolean; data?: Partial<PostGenerateRequest>; error?: { message: string; code: string } }> {
+        try {
+            const apiKey = process.env.OPENAI_API_KEY;
+            if (!apiKey) {
+                return {
+                    success: false,
+                    error: {
+                        message: 'OpenAI API key is not configured',
+                        code: 'MISSING_API_KEY'
+                    }
+                };
+            }
+
+            const systemMessage = `You are an expert AI music director. Your mission is to analyze video data and generate parameters for an **instrumental** background music track using the Suno API. **All generated music must be purely instrumental, with no vocals or lyrics.**
+
+**INPUT DATA STRUCTURE:**
+You will receive a JSON object in the user message containing the following key information about the video:
+- **videoMainSubject (string):** The primary subject, person, or concept of the entire video (e.g., "Elon Musk", "The Roman Empire"). This is the 'main character' of the story.
+- **fullNarrationScript (string):** The complete script for the video. Use this to understand the overall story arc and emotional progression.
+- **masterStylePositivePrompt (string):** A detailed prompt defining the overall visual aesthetic (e.g., "cinematic, vibrant cyberpunk style"). This is a huge clue for the musical mood.
+- **sceneDataList (array of SceneData objects):** A list of individual scenes. Each \`SceneData\` object contains detailed information about a scene.
+  - **Focus on these key fields** to understand the mood:
+    - \`sceneNumber\`: The sequence number of the scene.
+    - \`narration\`: The spoken script for this specific scene.
+    - \`imageGenPromptDirective\`: A high-level, conceptual guide for the scene's visual goal. It sets the overall direction.
+    - \`imageGenPrompt\`: A detailed, concrete prompt describing the specific visuals of the scene. **This provides the strongest clues for the atmosphere and mood.**
+    - \`videoGenPrompt\`: Describes motion in the scene, which can inform the music's dynamics.
+
+Your output MUST be a valid JSON object with "title", "style", "prompt", and "negativeTags".
+
+**PARAMETER GUIDELINES:**
+1.  **title (string):** Create a short, catchy title for the music track.
+2.  **style (string):** Define the overall genre, mood, and key instrumentation. This should be a concise but descriptive phrase. Examples: "Cinematic Epic Orchestral", "Lofi Chillhop Beat", "Upbeat Corporate Pop", "Mysterious Ambient Soundscape", "Acoustic Folk, Sentimental", "8-bit Retro Game Music".
+3.  **prompt (string):** Write a detailed paragraph describing the music, its instruments, and emotional progression. **Crucially, the description must be for an instrumental track only. Do not mention or request any vocals, singing, or lyrics.**
+4.  **negativeTags (string):** Based on the desired mood, list comma-separated keywords of musical genres, instruments, or feelings to AVOID. **You MUST always include tags to prevent vocals, such as "vocals", "lyrics", and "singing".** Example: For an 'Uplifting Lofi' track, this might be "Heavy Metal, Aggressive Drums, sad, dissonant, vocals, singing, lyrics".
+
+**CRITICAL OUTPUT FORMAT:**
+- Your response must be ONLY a valid JSON object.
+- Use double quotes for all keys and string values.
+
+**GOLD-STANDARD EXAMPLE:**
+- YOUR REQUIRED OUTPUT (JSON):
+  {
+    "title": "Solo Journey",
+    "style": "Uplifting Lofi Electronic",
+    "prompt": "A gentle, optimistic lofi beat with a simple piano melody...",
+    "negativeTags": "Heavy Metal, Aggressive Drums, Distorted Guitar, sad, melancholic, dark, vocals, singing, lyrics, voice"
+  }`;
+
+            // AI에 전달할 데이터를 명확한 구조로 재구성
+            const musicPromptRequestData = {
+                videoMainSubject: videoMainSubject,
+                fullNarrationScript: fullNarrationScript,
+                masterStylePositivePrompt: masterStylePositivePrompt,
+                sceneDataList: sceneDataList.map((sceneData) => {
+                    return {
+                        sceneNumber: sceneData.sceneNumber,
+                        narration: sceneData.narration,
+                        imageGenPromptDirective: sceneData.imageGenPromptDirective,
+                        imageGenPrompt: sceneData.imageGenPrompt,
+                        videoGenPrompt: sceneData.videoGenPositivePrompt,
+                    }
+                })
+            };
+
+            const userMessage = `Based on the following video data, please generate the Suno API parameters in the required JSON format.
+
+**TASK DATA:**
+${JSON.stringify(musicPromptRequestData, null, 2)}
+
+Now, provide the final JSON output.`;
+
+            const client = new OpenAI({ apiKey });
+
+            // ... (이하 API 호출 및 응답 처리 로직은 이전과 동일)
+            const completion = await client.chat.completions.create({
+                model: OpenAIModel.GPT_O4_MINI,
+                messages: [
+                    { role: 'system', content: systemMessage },
+                    { role: 'user', content: userMessage }
+                ],
+                max_completion_tokens: 3072,
+            });
+
+            const generatedContent = completion.choices[0]?.message?.content;
+
+            if (!generatedContent) {
+                return { success: false, error: { message: 'No music generation data from OpenAI', code: 'EMPTY_RESPONSE' } };
+            }
+
+            try {
+                const jsonRegex = /```json\s*([\s\S]*?)\s*```/;
+                const match = generatedContent.match(jsonRegex);
+                const jsonString = match ? match[1] : generatedContent;
+
+                const parsedData: Partial<PostGenerateRequest> = JSON.parse(jsonString);
+
+                if (!parsedData.prompt || !parsedData.style || !parsedData.title) {
+                    throw new Error("Missing one or more required fields: prompt, style, title");
+                }
+
+                return {
+                    success: true,
+                    data: parsedData
+                };
+            } catch (parseError) {
+                console.error('Failed to parse music generation JSON response:', parseError);
+                return { success: false, error: { message: 'Failed to parse music generation response from AI', code: 'PARSE_ERROR' } };
+            }
+        } catch (error) {
+            console.error('Music generation data error:', error);
+            return { success: false, error: { message: error instanceof Error ? error.message : 'Unknown error occurred', code: 'INTERNAL_ERROR' } };
         }
     },
 }

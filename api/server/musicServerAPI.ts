@@ -1,6 +1,7 @@
 import { createSupabaseServer } from "@/lib/supabaseServer";
 import { BackgroundMusic } from "@/api/types/supabase/BackgroundMusics";
 import { PostgrestResponse } from "@supabase/supabase-js";
+import {createSupabaseServiceRoleClient} from "@/lib/supabaseServiceRole";
 
 export const musicServerAPI = {
     async getBackgroundMusics(): Promise<BackgroundMusic[]> {
@@ -46,6 +47,45 @@ export const musicServerAPI = {
         } catch (error) {
             console.error('Unexpected error in getBackgroundMusicSignedUrls:', error);
             return [];
+        }
+    },
+
+    async postMusic(generationTaskId: string, musicFileList: (File | Blob | ArrayBuffer)[]): Promise<{ success: boolean, error?: string }> {
+        const supabase = createSupabaseServiceRoleClient();
+
+        try {
+            let uploadSuccessCount = 0;
+
+            for (let index = 0; index < musicFileList.length; index++) {
+                const musicFile = musicFileList[index];
+
+                const filePath = `${generationTaskId}/${generationTaskId}_${index}.mp3`;
+
+                const { error } = await supabase.storage
+                    .from('video_music_temp_storage')
+                    .upload(filePath, musicFile, {
+                        contentType: 'audio/mpeg',
+                        upsert: true
+                    });
+
+                if (error) {
+                    console.error('Error uploading music file to storage:', error);
+
+                    throw new Error(error.message);
+                }
+
+                uploadSuccessCount++;
+            }
+
+            return {
+                success: uploadSuccessCount === musicFileList.length,
+            };
+        } catch (error) {
+            console.error('Unexpected error in postMusic:', error);
+            return {
+                success: false,
+                error: error instanceof Error ? error.message : "Unexpected error in postMusic"
+            };
         }
     }
 }

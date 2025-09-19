@@ -61,7 +61,7 @@ export const videoServerAPI = {
 
         const inputData: ReplicateInput = {
             image: imageUrl,
-            prompt: sceneData.videoGenPrompt || "",
+            prompt: sceneData.videoGenPositivePrompt || "",
             negative_prompt: videoGenNegativePrompt,
             num_inference_steps: 28,
             num_frames: videoParameters.num_frames,

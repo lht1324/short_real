@@ -68,14 +68,6 @@ export async function POST(request: NextRequest) {
         }
 
         // 3. 각 Scene의 자막 데이터 분리
-        // const normalizeWord = (text: string) => {
-        //     return text
-        //         .replace(/—/g, '--') // Em dash를 일반 하이픈 두 개로
-        //         .replace(/[’‘]/g, "'")   // 스마트 따옴표를 일반 아포스트로피로
-        //         .replace(/[“”]/g, '"')   // 스마트 큰따옴표를 일반 큰따옴표로
-        //         .replace(/[-.,!?']/g, "") // 기존 문장 부호 제거
-        //         .toLowerCase(); // ★★★ 소문자로 통일하여 비교 정확도 향상 ★★★
-        // };
         const normalizeWord = (text: string) => {
             return text
                 .replace(/\W/g, "")            // 알파벳과 숫자만 남기고 모든 구두점/공백 제거
@@ -185,16 +177,6 @@ export async function POST(request: NextRequest) {
         }
 
         const sceneDataWithVideoGenPromptPromiseList: Promise<SceneData>[] = sceneDataWithImageGenPromptList.map(async (sceneData) => {
-            // const { data, error } = await supabase.storage
-            //     .from('scene_image_temp_storage')
-            //     .createSignedUrl(`${postVideoGenerationTaskResult.id}/${sceneData.sceneNumber}.jpeg`, 3600);
-            //
-            // if (error || !data?.signedUrl) {
-            //     throw new Error(error?.message || `Scene ${sceneData.sceneNumber}: 이미지 데이터가 없습니다.`);
-            // }
-            //
-            // const imageUrl = data.signedUrl;
-
             const { data: imageData, error: imageError } = await supabase.storage
                 .from("scene_image_temp_storage")
                 .download(`${postVideoGenerationTaskResult.id}/${sceneData.sceneNumber}.jpeg`)
@@ -219,10 +201,6 @@ export async function POST(request: NextRequest) {
                 imageBase64,
             );
 
-            // if (!(postVideoGenPromptResult.success) || !(postVideoGenPromptResult.videoGenPrompt)) {
-            //     throw new Error("Failed to generate video gen prompt");
-            // }
-
             if (!postVideoGenPromptResult.success || !postVideoGenPromptResult.videoGenPositivePrompt || !postVideoGenPromptResult.videoGenNegativePrompt) {
                 throw new Error("Failed to generate video gen prompt");
             }
@@ -236,87 +214,6 @@ export async function POST(request: NextRequest) {
         });
         const sceneDataWithVideoGenPromptList = await Promise.all(sceneDataWithVideoGenPromptPromiseList);
 
-        // let sceneDataWithGenPromptList: SceneData[];
-        // try {
-        //     sceneDataWithGenPromptList = await Promise.all(
-        //         sceneDataList.map(async (sceneData) => {
-        //             const postImageGenPromptResult = await openAIServerAPI.postImageGenPrompt(sceneData.imageGenPromptDirective, masterStylePrompt);
-        //
-        //             if (!(postImageGenPromptResult.success) || !(postImageGenPromptResult.imageGenPrompt)) {
-        //                 return sceneData;
-        //             }
-        //
-        //             const imageGenPrompt = postImageGenPromptResult.imageGenPrompt;
-        //
-        //             // 분리 예정 -> 이미지 생성용 프롬프트로 이미지 생성하고 영상 생성용 프롬프트 생성할 때 이미지도 넣어주기
-        //             const postVideoGenPromptResult = await openAIServerAPI.postVideoGenPrompt(imageGenPrompt, sceneData.narration);
-        //
-        //             if (!(postVideoGenPromptResult.success) || !(postVideoGenPromptResult.videoGenPrompt)) {
-        //                 return sceneData;
-        //             }
-        //
-        //             const videoGenPrompt = postVideoGenPromptResult.videoGenPrompt;
-        //
-        //             return {
-        //                 ...sceneData,
-        //                 imageGenPrompt: imageGenPrompt,
-        //                 videoGenPrompt: videoGenPrompt,
-        //             }
-        //         })
-        //     )
-        // } catch (error) {
-        //     console.log("1st Promise.all() error: ", error);
-        //     return NextResponse.json(
-        //         { error: 'An unexpected error occurred during prompt generation.' },
-        //         { status: 500 }
-        //     );
-        // }
-        //
-        // const isFailedPostGenPrompt = sceneDataWithGenPromptList.some((sceneData) => {
-        //     return !(sceneData.imageGenPrompt) || !(sceneData.videoGenPrompt);
-        // });
-        //
-        // if (isFailedPostGenPrompt) {
-        //     return NextResponse.json(
-        //         { error: 'Failed to generate image gen prompt' },
-        //         { status: 500 }
-        //     );
-        // }
-        //
-        // // 5. geminiServerAPI로 Scene별 이미지 생성 요청 (imageBase64)
-        // const sceneDataWithImageList: SceneData[] = await Promise.all(
-        //     sceneDataWithGenPromptList.map(async (sceneData) => {
-        //         const postImageResult = await imageServerAPI.postImage(
-        //             sceneData.imageGenPrompt as string,
-        //             postVideoGenerationTaskResult.id as string,
-        //             sceneData.sceneNumber,
-        //             MasterNegativePrompts.Anime,
-        //         );
-        //
-        //         return {
-        //             ...sceneData,
-        //             imageBase64: postImageResult.success
-        //                 ? postImageResult.imageBase64
-        //                 : undefined,
-        //         }
-        //     })
-        // );
-        //
-        // if (sceneDataWithImageList.some((sceneData) => !(sceneData.imageBase64))) {
-        //     return NextResponse.json(
-        //         { error: 'Failed to generate image with Imagen 4' },
-        //         { status: 500 }
-        //     );
-        // }
-        //
-        // console.log(`이미지 생성 완료. 성공: `, sceneDataWithImageList.map((sceneData) => {
-        //     return {
-        //         ...sceneData,
-        //         imageBase64: undefined,
-        //         isImageGenerated: !!sceneData.imageBase64,
-        //     }
-        // }));
-
         console.log(`최종 Scene 데이터 준비 완료. Scene 수: ${sceneDataWithVideoGenPromptList.length}`);
 
         // 7. videoServerAPI로 Scene별 영상 동시 생성 요청 (이미지 + 자막 데이터 포함)
@@ -324,7 +221,6 @@ export async function POST(request: NextRequest) {
             sceneDataWithVideoGenPromptList.map(async (sceneData): Promise<SceneData> => {
                 const requestId = await videoServerAPI.postVideo(
                     sceneData,
-                    // MasterNegativePrompts.Anime,
                     `${MasterNegativePrompts.Common} ${sceneData.videoGenNegativePrompt}`,
                     postVideoGenerationTaskResult.id as string,
                 );
@@ -339,14 +235,14 @@ export async function POST(request: NextRequest) {
         console.log(`requestIdList = ${finalSceneDataList.map(sceneData => sceneData.requestId).join(', ')}`);
         
         // 8. DB 업데이트
-        // const testUserId = userId || randomUUID(); // OAuth 없이 테스트용 UUID 생성
         const updatedVideoGenerationTask = await videoGenerationTasksServerAPI.patchVideoGenerationTask({
             id: postVideoGenerationTaskResult.id,
             scene_breakdown_list: finalSceneDataList,
             subtitle_segment_list: voiceGenerationResult.subtitleSegmentList,
+            master_style_positive_prompt: masterStylePositivePrompt,
             master_style_negative_prompt: masterStyleNegativePrompt,
+            video_main_subject: videoMainSubject,
         })
-        // const createdTask = await videoGenerationTasksServerAPI.postVideoGenerationTask(taskData);
 
         if (!updatedVideoGenerationTask.id || !updatedVideoGenerationTask.created_at) {
             throw Error('Failed to update video generation task');
