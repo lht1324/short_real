@@ -11,8 +11,8 @@ import {
 } from "@/api/types/supabase/VideoGenerationTasks";
 import { randomUUID } from 'crypto';
 import {imageServerAPI} from "@/api/server/imageServerAPI";
-import {MasterNegativePrompts} from "@/lib/MasterNegativePrompts";
 import {createSupabaseServiceRoleClient} from "@/lib/supabaseServiceRole";
+import {findOptimalVideoParameters} from "@/utils/videoUtils";
 
 export async function POST(request: NextRequest) {
     const supabase = createSupabaseServiceRoleClient();
@@ -80,30 +80,48 @@ export async function POST(request: NextRequest) {
         console.log("fullList: ", fullSubtitleList);
 
         const sceneDataList: SceneData[] = postSceneSegmentationResult.sceneDataList.map((sceneData) => {
-            // const sceneNarrationWords = sceneData.narration.replace(/[-.,!?']/g, "").split(/\s+/);
+            // 1. Scene의 원본 문장을 정규화된 단어 배열로 만듭니다.
             const sceneNarrationWords = sceneData.narration.split(/\s+/).map(normalizeWord).filter(w => w);
             const segmentsForScene: SubtitleSegment[] = [];
 
-            // 전체 자막 리스트에서 현재 Scene의 단어들과 일치하는 부분을 찾음
-            sceneNarrationWords.forEach((word) => {
-                let found = false;
+            // 2. Scene의 각 단어(targetWord)를 순회합니다.
+            for (const targetWord of sceneNarrationWords) {
+                let assembledWord = "";
+                const tempSegments: SubtitleSegment[] = [];
+                let searchIndex = currentWordIndex;
 
-                for (let wordIndex = currentWordIndex; wordIndex < fullSubtitleList.length; wordIndex++) {
-                    // const cleanSegmentWord = fullSubtitleList[wordIndex].word.replace(/[-.,!?']/g, "");
-                    const cleanSegmentWord = normalizeWord(fullSubtitleList[wordIndex].word);
+                // 3. 자막 리스트에서 단어들을 조립하며 targetWord와 일치하는지 찾습니다.
+                while (searchIndex < fullSubtitleList.length) {
+                    const currentSegment = fullSubtitleList[searchIndex];
+                    const normalizedSegmentWord = normalizeWord(currentSegment.word);
 
-                    if (cleanSegmentWord === word) {
-                        segmentsForScene.push(fullSubtitleList[wordIndex]);
-                        currentWordIndex = wordIndex + 1;
-                        found = true;
+                    // 현재 자막 조각을 임시로 추가합니다.
+                    tempSegments.push(currentSegment);
+                    assembledWord += normalizedSegmentWord;
+                    searchIndex++;
+
+                    // 4. 조립된 단어가 목표 단어(targetWord)와 일치하는지 확인합니다.
+                    if (assembledWord === targetWord) {
+                        // 일치! 임시 저장했던 자막 조각들을 최종 목록에 추가합니다.
+                        // segmentsForScene.push(...tempSegments);
+                        segmentsForScene.push({
+                            word: tempSegments.map(segment => segment.word).join(""),
+                            startSec: tempSegments[0].startSec,
+                            endSec: tempSegments[tempSegments.length - 1].endSec,
+                        })
+                        // 전체 자막 리스트의 시작 인덱스를 업데이트합니다.
+                        currentWordIndex = searchIndex;
+                        break; // 현재 targetWord 찾기 완료, 다음 targetWord로 넘어갑니다.
+                    }
+
+                    // 5. 조립된 단어가 목표 단어의 일부와 일치하지 않으면 뭔가 잘못된 것이므로 루프를 중단합니다.
+                    if (!targetWord.startsWith(assembledWord)) {
+                        console.warn(`Mismatch detected for scene ${sceneData.sceneNumber}. Target: "${targetWord}", Assembled: "${assembledWord}".`);
+                        // tempSegments를 추가하지 않고 루프를 중단하여 불일치 조각이 포함되는 것을 방지합니다.
                         break;
                     }
                 }
-                if (!found) {
-                    // 예외 처리: 단어를 찾지 못한 경우
-                    console.warn(`Could not find the word "${word}" for scene ${sceneData.sceneNumber}`);
-                }
-            })
+            }
 
             return {
                 ...sceneData,
@@ -156,7 +174,7 @@ export async function POST(request: NextRequest) {
 
         for (let index = 0; index < sceneDataWithImageGenPromptList.length; index++) {
             const sceneData = sceneDataWithImageGenPromptList[index];
-            const combinedMasterNegativeKeywords = `${masterStyleNegativePrompt}, ${MasterNegativePrompts.Common}`.split(/\s*,\s*/);
+            const combinedMasterNegativeKeywords = `${masterStyleNegativePrompt}`.split(/\s*,\s*/);
             const uniqueMasterNegativeKeywordSet = new Set(combinedMasterNegativeKeywords);
             const uniqueMasterNegativePrompt = Array.from(uniqueMasterNegativeKeywordSet).join(", ");
 
@@ -165,7 +183,6 @@ export async function POST(request: NextRequest) {
                 postVideoGenerationTaskResult.id as string,
                 sceneData.sceneNumber,
                 uniqueMasterNegativePrompt,
-                // `${masterStyleNegativePrompt}, ${MasterNegativePrompts.Common}`,
             );
 
             if (!postImageResult.success) {
@@ -195,21 +212,28 @@ export async function POST(request: NextRequest) {
             // ArrayBuffer를 Base64로 인코딩
             const imageBase64 = Buffer.from(imageArrayBuffer).toString('base64');
 
+            const {
+                num_frames: numFrames,
+                frames_per_second: framesPerSeconds,
+                resulting_duration: videoActualDuration,
+            } = findOptimalVideoParameters(sceneData.sceneDuration);
+
             const postVideoGenPromptResult = await openAIServerAPI.postVideoGenPrompt(
                 sceneData.imageGenPrompt as string,
                 sceneData.narration,
                 imageBase64,
+                numFrames,
+                framesPerSeconds,
+                videoActualDuration
             );
-
-            if (!postVideoGenPromptResult.success || !postVideoGenPromptResult.videoGenPositivePrompt || !postVideoGenPromptResult.videoGenNegativePrompt) {
+1
+            if (!postVideoGenPromptResult.success || !postVideoGenPromptResult.videoGenPrompt) {
                 throw new Error("Failed to generate video gen prompt");
             }
 
             return {
                 ...sceneData,
-                // videoGenPrompt: postVideoGenPromptResult.videoGenPrompt,
-                videoGenPrompt: postVideoGenPromptResult.videoGenPositivePrompt,
-                videoGenNegativePrompt: postVideoGenPromptResult.videoGenNegativePrompt,
+                videoGenPrompt: postVideoGenPromptResult.videoGenPrompt,
             }
         });
         const sceneDataWithVideoGenPromptList = await Promise.all(sceneDataWithVideoGenPromptPromiseList);
@@ -221,7 +245,6 @@ export async function POST(request: NextRequest) {
             sceneDataWithVideoGenPromptList.map(async (sceneData): Promise<SceneData> => {
                 const requestId = await videoServerAPI.postVideo(
                     sceneData,
-                    `${MasterNegativePrompts.Common} ${sceneData.videoGenNegativePrompt}`,
                     postVideoGenerationTaskResult.id as string,
                 );
                 

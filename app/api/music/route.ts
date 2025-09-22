@@ -90,7 +90,7 @@ export async function POST(request: NextRequest) {
             title: title,
             customMode: true,
             instrumental: true,
-            model: SunoModelType.V4,
+            model: SunoModelType.V4_5,
             negativeTags: negativeTags,
             // styleWeight: styleWeight,
             // weirdnessConstraint: weirdnessConstraint,

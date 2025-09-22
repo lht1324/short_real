@@ -74,8 +74,6 @@ export async function POST(request: NextRequest) {
 
                 const newRequestId = await videoServerAPI.postVideo(
                     sceneToProcess,
-                    // MasterNegativePrompts.Anime,
-                    `${MasterNegativePrompts.Common} ${sceneToProcess.videoGenNegativePrompt}`,
                     generationTaskId,
                 );
 

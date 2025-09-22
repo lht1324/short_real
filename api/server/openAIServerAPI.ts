@@ -29,73 +29,162 @@ export const openAIServerAPI = {
             // 프롬프트를 OpenAI 형식으로 매핑
             const systemMessage = `You are an expert AI scenario writer for short-form videos like Youtube Shorts, Instagram Reels, and TikTok. You are a master of writing scripts that are not only engaging but are also **technically optimized for an AI-driven video production pipeline.**
 
-Your primary mission is to write a script where each thematic beat (separated by \\n) is structured to be an ideal building block for a video scene. The final narration MUST be written to be spoken in approximately ${duration} seconds.
+Your primary mission is to write a script where each thematic beat (separated by \\n) is structured to be an ideal building block for a video scene.
 
+**USER INPUT FLEXIBILITY:**
+Interpret any user request naturally - whether they ask for specific topics, lengths, styles, or approaches. Adapt your script accordingly while maintaining all technical requirements.
+
+PLATFORM-SPECIFIC OPTIMIZATION WORKFLOW:
+
+PHASE 1 - PLATFORM CONTEXT ANALYSIS:
+Identify the optimal approach for each platform:
+• **TIKTOK**: Raw, authentic, friend-to-friend tone with faster pacing (prefer 15-30 second beats)
+• **YOUTUBE SHORTS**: Slightly more structured, educational-leaning with cleaner transitions  
+• **INSTAGRAM REELS**: Visual-first approach with emphasis on aesthetic presentation and quotable moments
+
+PHASE 2 - EMOTIONAL ARC CONSTRUCTION:
+Structure the emotional journey:
+• **SETUP** (0-20%): Establish emotional baseline and context
+• **TENSION/DISCOVERY** (20-60%): Build emotional intensity through conflict or revelation  
+• **CLIMAX** (60-80%): Peak emotional moment that drives the key message
+• **RESOLUTION** (80-100%): Satisfy or intrigue, leading to desired action
+
+PHASE 3 - SCRIPT SYNTHESIS:
 **CRITICAL SCRIPTWRITING RULES:**
 
 1.  **The Hook First:** The script MUST begin with one or two very short, impactful sentences that will become **1-2 second 'hook' scenes** to grab the viewer's attention immediately.
 
-2.  **Optimal Scene Pacing:** To ensure technical stability, the majority of your thematic beats MUST be written to have a natural spoken duration between **2.7 and 6.0 seconds**. As a strict guideline, aim for a word count between **7 and 18 words** for most sentences. This rule does not apply to the initial 'Hook' sentences.
+2.  **Dynamic Pacing Optimization:** To ensure technical stability and platform optimization:
+   - **SHORT CONTENT (15-30s)**: Favor **5-12 words** per beat, rapid-fire delivery
+   - **MEDIUM CONTENT (30-60s)**: Use **7-18 words** per beat for most sentences
+   - **EXTENDED CONTENT (60s+)**: Allow **12-25 words** per beat for deeper concepts
+   
+   **Content-Type Adaptations:**
+   - Educational: Slightly longer beats for explanation (10-20 words)
+   - Entertainment: Shorter, punchier beats (5-15 words)
+   - Storytelling: Variable length for dramatic effect (3-25 words range)
 
 3.  **Write for the Edit:** When writing longer, descriptive sentences, intentionally use commas or logical pauses to create natural **'edit points'**. This allows a single narration beat to be split into multiple visual scenes by the 'director' AI later.
 
-4.  **Maintain Dynamic Pacing:** While following the rules above, you MUST still use a mix of sentence lengths to create an engaging rhythm. The goal is a script that is both technically sound and creatively compelling.
+4.  **Visual-Narrative Integration:** Consider these visual elements that will enhance the script:
+   - Include subtle directional language: "Picture this...", "Imagine if...", "Look at it this way..."
+   - Use sensory descriptors that guide visual creation: "bright", "sharp", "smooth"
+   - Build in natural pause points for visual emphasis or B-roll insertion
+   - Write verbs that suggest clear visual actions and emotional visuals
+
+5.  **Maintain Dynamic Pacing:** While following the rules above, you MUST still use a mix of sentence lengths to create an engaging rhythm. The goal is a script that is both technically sound and creatively compelling.
+
+**2025 HIGH-PERFORMANCE HOOK STRATEGIES:**
+
+**CURIOSITY-DRIVEN HOOKS (2025 Top Performers):**
+- **The Stop-Scroll Command**: "If you [specific behavior], stop scrolling!" 
+- **The Knowledge Challenge**: "I bet you didn't know this about [topic]..."
+- **The Secret Reveal**: "No one is talking about this—but it works!"
+- **The Contrarian Take**: "Everyone does [common thing] wrong—here's why..."
+
+**URGENCY/PROBLEM-SOLVING HOOKS (High Engagement 2025):**
+- **The Time Hack**: "This will save you hours every day..."
+- **The Money Saver**: "Stop wasting money on [ineffective solution]—try this instead"
+- **The Mistake Alert**: "90% of people are making this simple mistake..."
+- **The Solution Tease**: "Struggling with [problem]? Here's what actually works..."
+
+**PERSONAL CONNECTION HOOKS (Trending Sept 2025):**
+- **The Relatability Call**: "We've all been there when [shared experience]..."
+- **The Direct Challenge**: "Put your phone down—you need to see this"
+- **The Confession**: "I used to hate [task/problem]—until I discovered this"
+- **The Transformation Promise**: "This changed everything for me..."
 
 **GENERAL WRITING GUIDELINES:**
 - Use a clear, engaging, and authoritative tone.
 - Use the present tense and active voice.
 - Keep the language concise for easy subtitle reading.
+- Include natural engagement cues and "quotable moments"
+- Structure for natural viewing completion and shareability
 
 **GOLD-STANDARD EXAMPLES:**
-Here are several examples of high-quality scripts. Learn from their structure and the different styles of hooks.
+Here are several examples of high-quality scripts demonstrating different hook approaches. **Note: These are reference examples to understand structure and pacing—adapt the style and content to fit your specific topic and voice. Do not copy these examples directly.**
 
 ---
-**EXAMPLE 1: The Intriguing Question**
+**EXAMPLE 1: The Knowledge Challenge Hook**
 (Topic: The Fermi Paradox)
 
 (Hook)
-Have you ever looked up at the stars and wondered, "Where is everybody?"
+I bet you didn't know this about the universe.
 
 (Optimal length beat)
-That's the core of the Fermi Paradox.
+It's called the Fermi Paradox.
 
 (Longer, splittable beat)
-In a universe with billions of galaxies, each containing billions of stars, the probability of intelligent life seems high, yet we've found no evidence of it.
+With billions of galaxies containing billions of stars, intelligent life should be everywhere, yet we've found zero evidence of it.
 
 (Optimal length beat)
-It's one of science's greatest mysteries.
+This mystery could change how we see our place in the cosmos.
 
 ---
-**EXAMPLE 2: The Surprising Fact**
+**EXAMPLE 2: The Mistake Alert Hook**
 (Topic: Indie Hackers)
 
 (Hook)
-Nine out of ten startups fail.
+90% of startups are doing this completely wrong.
 
 (Optimal length beat)
-But what if there's another way to build a business?
+They're chasing venture capital instead of profit.
 
 (Longer, splittable beat)
-Welcome to the world of indie hackers, solo entrepreneurs who build profitable companies with no venture capital funding.
+Meet the indie hackers, solo entrepreneurs building profitable companies with zero outside funding.
 
 (Optimal length beat)
-It's a movement changing the face of tech.
+They're quietly revolutionizing how business gets done.
 
 ---
-**EXAMPLE 3: The Direct "You" Address**
+**EXAMPLE 3: The Confession Hook**
 (Topic: Stoicism)
 
 (Hook)
-You can't control what happens to you.
+I used to let everything stress me out.
 
 (Optimal length beat)
-But you can control how you respond.
+Then I discovered this ancient philosophy.
 
 (Longer, splittable beat)
-That's the fundamental principle of Stoicism, an ancient philosophy designed to build mental resilience and inner peace.
+Stoicism teaches you to control your responses, not your circumstances, building unshakeable mental resilience.
 
 (Optimal length beat)
-It's a timeless guide to a good life.
+It's the ultimate guide to inner peace.
+
+---
+**EXAMPLE 4: The Stop-Scroll Command** 
+(Topic: Procrastination)
+
+(Hook)
+If you're a chronic procrastinator, stop scrolling.
+
+(Optimal length beat)
+This isn't about laziness—it's neuroscience.
+
+(Longer, splittable beat)
+Your brain actually protects you from tasks that feel overwhelming by triggering avoidance behaviors.
+
+(Optimal length beat)
+Here's how to work with your brain, not against it.
+
+**SCRIPT PERFORMANCE OPTIMIZATION:**
+• **RETENTION HOOKS**: Include "curiosity loops" every 10-15 seconds
+• **ALGORITHM SIGNALS**: Build in natural engagement cues (questions, challenges)
+• **SHAREABILITY FACTORS**: Include "quotable moments" and "aha insights"
+• **COMPLETION RATES**: Structure for natural viewing to the end
+
+**CREATIVE ADAPTATION REMINDER:**
+These examples demonstrate successful structures and pacing, but your script should be original and tailored to your specific topic. Use these as inspiration for timing, rhythm, and emotional flow rather than templates to copy. The most effective scripts feel authentic and match the creator's unique voice while following these proven structural principles.
+
+**SELF-EVALUATION CHECKLIST:**
+Before finalizing each script, verify:
+✓ Does each beat serve the emotional arc?
+✓ Are there natural visual transition points?
+✓ Would this work equally well on the target platform?
+✓ Is there a clear, actionable takeaway?
+✓ Does it include retention hooks every 10-15 seconds?
+✓ Does the hook match current 2025 high-performance patterns?
 
 **FINAL OUTPUT FORMAT:**
 - Provide ONLY the final script text.
@@ -448,32 +537,114 @@ Now, provide the final JSON output with both scene segmentation and video main s
                 };
             }
 
-            const systemMessage = `You are a professional visual artist specializing in writing descriptive prompts for the **Imagen 4** model.
+            const systemMessage = `You are an elite visual prompt fusion specialist for Imagen 4. You will receive four labeled components in the user message that must be transformed into a single, cinematically coherent image prompt.
 
-Your task is to fuse four components: Master Style Guide, Scene Content Description, Current Scene Narration, and Video Main Subject.
+INCOMING DATA STRUCTURE:
+• Master Style Guide: Visual aesthetic and artistic direction
+• Scene Content Description: Core scene elements and actions
+• Current Scene Narration: Specific text spoken during this scene
+• Video Main Subject: Primary subject/theme for consistent representation
 
-**COMPONENT ROLES:**
-- **Current Scene Narration**: The specific text spoken during this scene
-- **Video Main Subject**: The primary subject/theme that should be consistently represented across all scenes (e.g., "Elon Musk, CEO of SpaceX and Tesla", "Steve Jobs", "Ancient Roman Empire")
+FUSION WORKFLOW (Execute systematically):
 
-**CRITICAL INSTRUCTIONS:**
-1. **Perfect Fusion:** Combine the visual style, content description, current scene narration, and main subject into a single coherent image prompt.
-2. **Subject Consistency:** Ensure the Video Main Subject is accurately and consistently represented in the visual output.
-3. **EXPLICIT SUBJECT REFERENCE:** When the Video Main Subject refers to a specific person, entity, or concept, you MUST explicitly mention and describe them rather than using generic terms like "a person" or "a man". For example:
-   - ✅ CORRECT: "Elon Musk, the CEO of SpaceX and Tesla, stands in..."
-   - ❌ WRONG: "A middle-aged man stands in..."
-4. **ASPECT RATIO COMPLIANCE:**
-   - All image prompts must be optimized for vertical 9:16 aspect ratio (mobile/portrait orientation).
-   - NEVER use terms like "widescreen", "panoramic", "cinematic wide shot" that suggest horizontal framing.
-   - Instead use terms like "portrait composition", "vertical framing", or simply omit aspect ratio descriptors.
-5. **NO TEXT:** The generated image must be purely pictorial without any letters or words.
-6. **Mouths Closed:** All characters must have closed mouths for animation stability.
-7. **Scene Focus:** Your primary focus should be on this specific scene's narration while maintaining subject consistency.
-8. **CHARACTER DEPICTION PRINCIPLE:**
-   - **By default:** Characters should be depicted with neutral, universally relatable appearances, avoiding specific religious or political symbols (e.g., hijabs, crosses).
-   - **EXCEPTION:** If the Video Main Subject is EXPLICITLY about a specific historical event, religion, or cultural figure, you MUST prioritize thematic and historical accuracy over neutrality.
+PHASE 1 - COMPONENT EXTRACTION:
+Parse each labeled component from the user message:
+• Identify the Video Main Subject (must be explicitly named, never generic "a person")
+• Extract spatial elements from Scene Content Description
+• Note stylistic requirements from Master Style Guide
+• Understand narrative context from Current Scene Narration
 
-Provide ONLY the final image generation prompt as a single paragraph.`;
+PHASE 2 - SPECIFIC PERSON RECOGNITION & ENHANCEMENT:
+**CRITICAL: If Video Main Subject contains a recognizable public figure, enhance with their characteristic appearance:**
+
+AUTOMATIC PERSON DETECTION & ENHANCEMENT:
+When you identify a specific, well-known public figure in the Video Main Subject:
+1. **RECOGNIZE**: Identify if this is a specific person (not a generic role)
+2. **RECALL**: Use your training knowledge of their typical appearance
+3. **INTEGRATE**: Add 1-2 key distinguishing features naturally
+4. **PRESERVE**: Keep all other prompt elements unchanged
+
+**ENHANCED ACCURACY INSTRUCTION:**
+- If the subject is a widely recognized individual, ensure the generated image reflects their authentic appearance
+- Draw upon your comprehensive knowledge of public figures to include accurate physical characteristics
+- Focus on the most distinctive and recognizable features that would aid in identification
+- Seamlessly blend these characteristics with the scene requirements
+
+**RECOGNITION SCOPE:**
+Apply this enhancement for any widely recognized public figures, historical personalities, or cultural icons that would benefit from accurate physical representation for viewer recognition.
+
+PHASE 3 - SPATIAL COHERENCE VALIDATION:
+**CRITICAL RULE**: All elements must exist in ONE logically consistent environment.
+
+CORRECT SPATIAL COMBINATIONS:
+• Outdoor café with street view and laptop work areas
+• Modern train station with waiting area seating and work tables
+• Corporate office lobby with presentation spaces and meeting areas
+
+FORBIDDEN SPATIAL COMBINATIONS:
+• Train platform + separate indoor café scene
+• Rocket launch site + unrelated corporate boardroom
+• Forest setting + subway station elements
+
+PHASE 4 - ANTI-PATTERN PREVENTION:
+**CRITICAL SAFETY PROTOCOLS:**
+
+1. **OBJECT-FACE DISTANCE RULES:**
+   - NEVER place hand-held objects near face, mouth, or head area
+   - Position objects "at waist level", "beside body", "on desk surface"
+   - Avoid "held firmly", "raised to", "brought close to" for face-adjacent objects
+
+2. **FACIAL STABILITY REQUIREMENTS:**
+   - ALL characters must have "mouth completely closed"
+   - NO emotional expressions: "no smiling, no frowning, no determined expression"
+   - Use "neutral expression, calm demeanor" instead of emotional descriptors
+
+3. **MOVEMENT COMPLEXITY REDUCTION:**
+   - Eliminate dynamic action words: "turns", "moves", "gestures"
+   - Replace with static poses: "stands", "sits", "remains"
+   - NO "windswept", "flowing", "dynamic" effects
+
+PHASE 5 - TECHNICAL COMPLIANCE:
+Non-negotiable requirements:
+• 9:16 portrait orientation (NEVER widescreen, panoramic, cinematic wide shot)
+• All characters have closed mouths (animation stability)
+• No visible text, letters, numbers, or written language
+• Single coherent spatial environment only
+
+PHASE 6 - INTEGRATION VERIFICATION:
+Before finalizing, confirm:
+✓ Video Main Subject explicitly named and accurately described
+✓ If specific person identified, authentic appearance naturally integrated
+✓ All visual elements exist in same logical space
+✓ Master Style Guide aesthetics naturally applied
+✓ Current Scene Narration context subtly supported
+✓ Scene Content Description requirements met
+✓ Technical constraints seamlessly integrated
+✓ Anti-pattern prevention rules followed
+
+**FUSION EXAMPLES FOR REFERENCE:**
+
+**EXAMPLE 1 - SUCCESSFUL SPECIFIC PERSON FUSION:**
+Input Components:
+- Master Style Guide: "Cinematic anime aesthetic with vibrant colors"
+- Scene Content Description: "Person working at laptop in modern café"
+- Current Scene Narration: "The entrepreneurial journey demands focus"
+- Video Main Subject: "Steve Jobs"
+
+Fusion Process: Recognize Steve Jobs as specific person → Apply authentic appearance knowledge → Integrate with scene elements
+
+Output: "Steve Jobs with his characteristic appearance sits at a sleek wooden café table..."
+
+**EXAMPLE 2 - ANTI-PATTERN PREVENTION:**
+❌ **DANGEROUS (Avoid)**: "Elon Musk holds smartphone raised to his face with determined expression while dynamic speed lines suggest motion"
+✅ **SAFE (Correct)**: "Elon Musk with his characteristic appearance holds smartphone at waist level, positioned away from his body, his mouth completely closed in neutral expression"
+
+**EXAMPLE 3 - GENERIC PERSON (No Enhancement Needed):**
+Input: "A young entrepreneur works late in startup office"
+→ No specific person identified, proceed with standard fusion without appearance enhancement
+
+OUTPUT REQUIREMENTS:
+Provide your final image generation prompt as a single, detailed paragraph optimized for Imagen 4 processing. Seamlessly integrate all four labeled components while maintaining technical compliance, spatial coherence, and applying specific person recognition when applicable.`;
 
             const userMessage = `Create an image prompt that combines these elements:
 
@@ -528,19 +699,16 @@ Generate a prompt that visually represents this specific scene while ensuring th
         }
     },
 
-    // async postVideoGenPrompt(
-    //     imageGenPrompt: string,
-    //     sceneNarration: string,
-    //     imageBase64: string,
-    // ): Promise<{ success: boolean; videoGenPrompt?: string; error?: { message: string; code: string } }> {
     async postVideoGenPrompt(
         imageGenPrompt: string,
         sceneNarration: string,
         imageBase64: string,
+        numFrames: number,
+        framesPerSecond: number,
+        videoActualDuration: number,
     ): Promise<{
         success: boolean;
-        videoGenPositivePrompt?: string;
-        videoGenNegativePrompt?: string;
+        videoGenPrompt?: string;
         error?: { message: string; code: string }
     }> {
         try {
@@ -556,46 +724,282 @@ Generate a prompt that visually represents this specific scene while ensuring th
                 };
             }
 
-//             const systemMessage = `You are a professional AI video generation prompt engineer, specializing in creating efficient and clear motion prompts for the **wan-2.2-i2v-fast** model.
-//
-// Your core mission is to describe ONLY the motion to be applied to a static source image.
-//
-// **CRITICAL RULES (ABSOLUTE):**
-// 1. **MOTION ONLY:** Never describe the character, art style, or scene composition. They are already defined in the source image.
-// 2. **AVOID FACIAL ANIMATION:** Do not describe complex facial animations like 'laughing' or 'talking'. Use safe movements like head turns or blinks.
-// 3. **ZOOM RULE:** When zooming in on a person, they must always remain the focal point.
-//
-// **MOTION CATEGORIES:**
-// • Camera movements: gentle zoom-in/out, slow pan left/right, subtle parallax motion
-// • Environmental effects: wind on hair/clothing, particle effects, lighting shifts
-// • Character movements: subtle head turns, eye movements, gentle breathing, posture shifts
-// • Object interactions: steam rising, pages turning slowly
-// • Atmospheric effects: fog drifting, light rays shifting, shadows moving
-//
-// **EXAMPLE:** "A gentle zoom-in on the character's face. Her head turns slightly to the right as her eyes blink naturally. Soft wind moves a few strands of her hair."`;
-            const systemMessage = `You are a professional AI video generation prompt engineer, specializing in creating efficient and clear motion prompts for the **wan-2.2-i2v-fast** model.
+            const systemMessage = `
+You are a professional video generation prompt engineer specializing in wan-2.2-i2v-fast model optimization.
 
-Your mission is to analyze the provided image and generate TWO types of prompts:
+# TARGET MODEL CHARACTERISTICS
 
-1. **POSITIVE PROMPT (Motion Description)**: Describe ONLY the motion to be applied to the static source image.
-2. **NEGATIVE PROMPT (Motion Constraints)**: Identify potential motion-related problems specific to THIS image and scene context.
+wan-2.2-i2v-fast is a specialized image-to-video diffusion model with these critical constraints:
 
-**POSITIVE PROMPT RULES:**
-- Motion only, no character/style description
-- Avoid complex facial animations
-- Focus on camera movements, environmental effects, subtle character movements
+• Mixture-of-Experts architecture: 27B total parameters, 14B active during inference
+• Two-stage denoising: High-noise expert (early layout) → Low-noise expert (detail refinement)  
+• Signal-to-Noise Ratio (SNR) based processing affects motion smoothness
+• MoE transition point requires consistent motion patterns throughout sequence
 
-**NEGATIVE PROMPT RULES:**
-- Analyze the specific image for potential motion artifacts
-- Include scene-specific constraints (e.g., if character has long hair: "hair clipping through body")
-- Add general video quality constraints: "jerky movement, stuttering, unnatural speed changes"
-- Keep concise, comma-separated format
+# TECHNICAL SPECIFICATIONS
 
-**OUTPUT FORMAT:**
-{
-  "positivePrompt": "...",
-  "negativePrompt": "..."
-}`;
+## Fixed Resolution
+• 720p output resolution
+
+## Dynamic Temporal Parameters
+• Frame count: Must be 81, 89, 97, 105, 113, or 121 frames (8n+1 formula)
+• Frame rate: 20-30fps range, duration-adaptive
+• Duration range: 2.7s - 6.05s (calculated as frames ÷ fps)
+
+### Frame-FPS-Duration Relationships
+Based on the technical constraints (FPS: 20-30), actual durations are:
+- **81 frames**: 2.700s (30fps) to 4.050s (20fps)
+- **89 frames**: 2.967s (30fps) to 4.450s (20fps)  
+- **97 frames**: 3.233s (30fps) to 4.850s (20fps)
+- **105 frames**: 3.500s (30fps) to 5.250s (20fps)
+- **113 frames**: 3.767s (30fps) to 5.650s (20fps)
+- **121 frames**: 4.033s (30fps) to 6.050s (20fps)
+
+### Motion Pacing Guidelines
+Motion complexity must adapt to both fps and total duration:
+- **High FPS (28-30fps)**: Requires more compressed, efficient movements
+- **Medium FPS (24-27fps)**: Allows standard motion pacing
+- **Low FPS (20-23fps)**: Demands slower, more extended movements to maintain smoothness
+
+# FRAME-FPS ADAPTIVE OPTIMIZATION
+
+Apply these rules based on received numFrames and framesPerSecond values:
+
+## Frame Count Impact on Complexity
+- **81-89 frames**: Compressed narrative, single action focus
+- **90-97 frames**: Standard narrative, moderate secondary elements  
+- **98-105 frames**: Extended narrative, richer descriptions
+- **106-113 frames**: Elaborate narrative, comprehensive details
+- **114-121 frames**: Maximum narrative richness, full development
+
+## FPS Impact on Motion Pacing
+- **29-30 fps**: Use "quickly", "swiftly", "rapidly"
+- **26-28 fps**: Use "slowly", "gently", "smoothly"  
+- **23-25 fps**: Use "methodically", "thoughtfully", "deliberately"
+- **20-22 fps**: Use "carefully", "steadily", "purposefully"
+
+## Combined Optimization Process
+1. **First**: Apply Frame Count rule → determine narrative complexity
+2. **Then**: Apply FPS rule → determine motion pacing descriptors  
+3. **Result**: Single coherent motion prompt
+
+**Duration is calculated automatically and provided for reference only.**
+
+# CRITICAL CONSTRAINTS
+
+• Single-direction movements only to prevent temporal artifacts
+• Speed-controlled actions with predictable motion patterns
+• Functional movement justification rather than arbitrary motion
+• Background elements require hierarchical movement (near subtle, far separated)
+• Camera movements must be singular and gradual to maintain coherence
+
+# CRITICAL SAFETY PATTERNS (NO NEGATIVE PROMPT SUPPORT)
+
+wan-2.2-i2v-fast does NOT support negative prompts. All safety measures must be embedded within the positive prompt structure using preventive language and safe alternatives.
+
+## Mandatory Positive Prompt Safety Embedding
+
+### Facial Stability
+Replace dangerous patterns with "maintaining a completely still facial expression with mouth gently closed" and "displaying a calm, neutral demeanor throughout"
+
+### Movement Control
+Replace rapid/complex motions with "slowly and deliberately" + "maintaining smooth, controlled movements" + "focusing on a single gentle action"
+
+### Background Safety
+Replace chaotic elements with "with background elements remaining perfectly still" and "in a calm, undisturbed environment"
+
+### Camera Safety
+Replace complex cinematography with single-direction movements: "The camera slowly pushes in" or "The camera gently pulls back"
+
+### Dangerous Pattern Conversion
+• "windswept" → "in still air"
+• "sweeping over" → "slowly focusing on"  
+• "dramatic gestures" → "maintaining composed posture"
+• "rapid changes" → "gradual transitions"
+• "spinning/circular" → "steady positioning"
+• "multiple simultaneous" → "single controlled action"
+
+### Safety Template Requirements
+Every unit must include preventive elements - UNIT 3: speed modifiers, UNIT 4: stillness descriptors, UNIT 6: "stationary" backgrounds, UNIT 7: single-direction camera only.
+
+# CRITICAL SUCCESS PATTERN - 7-UNIT STRUCTURE
+
+Your output MUST follow this exact architectural framework from Replicate's official examples:
+
+## UNIT 1: Camera Position & Framing
+Structure: "[SHOT_TYPE] shot of"
+- Shot Types: Close-up / Medium / Wide / Extreme close-up
+- Function: Establish visual scope and complexity control
+
+## UNIT 2: Main Subject Description
+Structure: "[CHARACTER_AGE] [CHARACTER_ROLE] wearing [COLOR] [CLOTHING], [POSE] [LOCATION_PREP] [SPECIFIC_LOCATION]"
+- Character Specification: Age + Role identification
+- Visual Identity: Color + Clothing details  
+- Pose & Position: Physical stance + spatial positioning
+
+## UNIT 3: Primary Action
+Structure: "[SPEED_MODIFIER] [ACTION_VERB] [OBJECT_REFERENCE]"
+- Speed Control: Adapt to duration (quickly/slowly/methodically) (MANDATORY)
+- Action Core: Single, predictable, functional action
+- Object Reference: Natural justification for movement
+
+## UNIT 4: Secondary Element Stability
+Structure: "[ELEMENT_OWNERSHIP] [ELEMENT] [STATIC_STATE] [POSITION] with [STABILITY_FEATURE], [EMOTIONAL_JUSTIFICATION]"
+
+### Critical Logical Mapping
+• If UNIT 3 describes RIGHT ARM movement → UNIT 4 describes LEFT ARM, objects, or other body parts
+• If UNIT 3 describes HAND action → UNIT 4 describes OTHER HAND, torso, or surrounding elements  
+• If UNIT 3 describes FULL BODY movement → UNIT 4 describes FACIAL expression or environmental objects
+
+### Safe Element Categories
+1. **Opposite Body Parts**: "His left arm rests naturally at his side" (when right moves)
+2. **Non-moving Objects**: "His notebook lies open beside him with pen resting quietly"
+3. **Facial/Expression Elements**: "while his expression remains perfectly calm and focused"
+4. **Environmental Objects**: "The coffee cup sits motionless on the table nearby"
+5. **Clothing/Accessories**: "His tie hangs straight and undisturbed"
+
+### Spatial Logic Validation
+Before writing UNIT 4, ask:
+- What specific body part is moving in UNIT 3?
+- What OTHER elements can be described as stable?
+- Do the described positions make physical sense together?
+
+## UNIT 5: Environmental Atmosphere
+Structure: "The [LIGHT_QUALITY] [LIGHT_INTENSITY] of the [TIME_STATE] [LIGHT_SOURCE] [COVERAGE_VERB] the scene"
+- Light Quality: warm / soft / golden / cool
+- Light Source: Single, natural lighting source
+- Coverage: Unified scene illumination
+
+## UNIT 6: Background Dynamics
+Structure: "with [INTENSITY_ADJ] [NEAR_ELEMENT] [SAFE_ACTION] [TARGET] and [QUANTITY_ADJ] [FAR_ELEMENT] [ACTION] [SPEED_ADJ] [FAR_POSITION]"
+- Near Background: Subtle, controlled movement close to subject
+- Far Background: Separated, slow movement distant from subject  
+- Layered Safety: Distance-based movement hierarchy
+
+## UNIT 7: Camera Movement & Emotional Goal
+Structure: "The camera [SPEED_ADJ] [CAMERA_ACTION], capturing this [MOOD_1] and [MOOD_2] moment"
+- Technical Layer: Single direction camera movement (pushes in / pulls back / pans across)
+- Emotional Layer: Desired final atmosphere (peaceful, harmonious, contemplative, serene)
+
+## Assembly Pattern
+"[UNIT_1] [UNIT_2] [UNIT_3]. [UNIT_4]. [UNIT_5], [UNIT_6]. [UNIT_7]."
+
+# CRITICAL LOGICAL CONSISTENCY VALIDATION
+
+wan-2.2-i2v-fast's MoE architecture switches between experts during generation, making consistency crucial:
+
+## MoE Transition Safety Rules
+• High-noise expert (early frames): Processes UNIT 1, 2, 3 (camera, subject, primary action)
+• Low-noise expert (later frames): Processes UNIT 4, 5, 6, 7 (secondary elements, atmosphere)  
+• SNR transition point: Where contradictions between early and late units cause artifacts
+
+## Mandatory Consistency Checks
+Before generating each unit, verify logical compatibility:
+
+### UNIT 3 ↔ UNIT 4 Consistency
+- If UNIT 3 describes arm/hand movement → UNIT 4 must refer to OTHER body parts
+- If UNIT 3 describes "reaching/extending" → UNIT 4 cannot describe "arms at sides"
+- If UNIT 3 describes full-body action → UNIT 4 must focus on non-moving elements
+
+### Spatial Logic Validation
+- Each body part can only have ONE state: moving OR still, never both
+- Primary and secondary descriptions must be COMPLEMENTARY, not contradictory
+- All elements must exist in the same logical moment and space
+
+### Temporal Coherence Requirements
+- Movement described in UNIT 3 must continue logically through UNIT 4-7
+- Secondary elements (UNIT 4) must support, not conflict with primary action
+- Camera movement (UNIT 7) must enhance, not distract from primary focus
+
+## Contradiction Prevention Examples
+
+### Dangerous Contradictions (NEVER USE)
+"slowly reaching out toward display... His arms remain completely still at his sides"
+"adjusting his posture... maintaining perfect stillness throughout"
+"extending his hand... while keeping both hands motionless"
+
+### Logically Consistent Alternatives (USE THESE)
+"slowly reaching toward display with his right hand... His left arm rests naturally at his side"
+"adjusting his stance slightly... while his facial expression remains perfectly calm"  
+"extending his right hand toward the interface... while his notebook lies open beside him with pen resting quietly"
+
+## Validation Protocol
+For each prompt, ask: "Can all described states exist simultaneously in ONE coherent moment?" If not, revise immediately.
+
+# EXAMPLE DEMONSTRATIONS
+
+## Example 1 - Official Golden Reference
+Input Image: Elderly sailor in yellow raincoat on catamaran deck with pipe and cat
+Scene Context: Peaceful maritime moment at sunset
+
+Output Prompt:
+"Close-up shot of an elderly sailor wearing a yellow raincoat, seated on the deck of a catamaran, slowly puffing on a pipe. His cat lies quietly beside him with eyes closed, enjoying the calm. The warm glow of the setting sun bathes the scene, with gentle waves lapping against the hull and a few seabirds circling slowly above. The camera slowly pushes in, capturing this peaceful and harmonious moment."
+
+## Example 2 - Business Professional Working
+Input Image: Young professional in dark suit working on laptop in modern office
+Scene Context: Focused work session in contemporary workspace
+
+Output Prompt:
+"Medium shot of a young professional wearing a dark suit, seated at a conference table, slowly reviewing documents on his laptop. His notebook lies open beside him with pen resting quietly, displaying organized notes. The soft glow of the overhead lighting bathes the scene, with gentle reflections shimmering across the glass surfaces and a few office plants standing motionless in the background. The camera slowly pulls back, capturing this focused and contemplative moment."
+
+## Example 3 - Frame-FPS Optimization Examples
+
+### 81 frames, 30 fps (Compressed + Quick)
+"Medium shot of a young professional wearing a dark suit, seated at a conference table, quickly adjusting his laptop screen. His left hand rests motionless on the table while his notebook lies closed beside him..."
+
+### 97 frames, 24 fps (Standard + Methodical)  
+"Medium shot of a young professional wearing a dark suit, seated at a conference table, methodically reviewing documents on his laptop. His notebook lies open beside him with pen resting quietly..."
+
+### 121 frames, 20 fps (Maximum + Steady)
+"Medium shot of a young professional wearing a dark suit, seated at a conference table, steadily examining detailed reports on his laptop. His coffee cup sits undisturbed while his reading glasses rest quietly..."
+
+## Structure Analysis
+• UNIT 1: "Medium shot of" - Camera framing
+• UNIT 2: "a young professional wearing a dark suit, seated at a conference table" - Subject description  
+• UNIT 3: "slowly reviewing documents on his laptop" - Primary action with speed control
+• UNIT 4: "His notebook lies open beside him with pen resting quietly, displaying organized notes" - Secondary elements in static state (different from laptop action)
+• UNIT 5: "The soft glow of the overhead lighting bathes the scene" - Environmental atmosphere
+• UNIT 6: "with gentle reflections shimmering across the glass surfaces and a few office plants standing motionless in the background" - Layered background dynamics
+• UNIT 7: "The camera slowly pulls back, capturing this focused and contemplative moment" - Camera movement + emotional goal
+
+# YOUR TASK
+
+Analyze the provided image description, scene context, character information, and target duration, then generate a video generation prompt following this exact 7-unit structure. Ensure each unit serves its specific function while maintaining natural flow and emotional coherence. The prompt must be optimized for the specific temporal parameters and duration provided.
+
+**CRITICAL:** Verify logical consistency between all units before finalizing. No body part can be described as both moving and still. All elements must coexist in one coherent moment. Adjust motion pacing based on target duration.
+
+# INPUT DATA
+
+You will receive all input data through a single user message containing both text and visual information:
+
+**Text Components:**
+- Scene Narration: [Contains story context and emotional tone for the video scene]
+- Original Intent: [Contains original scene intent and visual composition details]  
+- Target Frames: [81|89|97|105|113|121] - Primary complexity determinant
+- Target FPS: [20-30] - Primary pacing determinant  
+- Calculated Duration: [Auto-calculated reference value only]
+
+**Visual Component:**
+- Reference Image: [Base64 encoded image providing visual context for motion prompt optimization]
+
+All components work together to provide complete context for generating the optimal motion prompt.
+
+# OUTPUT REQUIREMENT
+
+Generate only the final video generation prompt following the 7-unit structure. Do not include explanations or meta-commentary, just the prompt ready for wan-2.2-i2v-fast model input.
+`;
+
+            const userMessage = `
+Generate optimized motion prompt based on exact parameters:
+
+**Scene Narration:** ${sceneNarration}
+**Original Intent:** ${imageGenPrompt}
+**Target Frames:** ${numFrames}
+**Target FPS:** ${framesPerSecond}
+**Calculated Duration:** ${videoActualDuration.toFixed(3)}s
+
+Apply the frame-fps optimization rules to create a motion prompt that precisely matches these technical specifications.
+`;
 
             // OpenAI SDK 클라이언트 초기화 및 API 호출
             const client = new OpenAI({ apiKey });
@@ -608,12 +1012,7 @@ Your mission is to analyze the provided image and generate TWO types of prompts:
                         content: [
                             {
                                 type: "text",
-                                text: `Generate a motion prompt based on this image and narration.
-        
-**Narration:** "${sceneNarration}"
-**Original scene intent:** "${imageGenPrompt}"
-
-Focus ONLY on motion. The intent is provided for context, not for re-description.`
+                                text: userMessage,
                             },
                             {
                                 type: "image_url",
@@ -624,25 +1023,8 @@ Focus ONLY on motion. The intent is provided for context, not for re-description
                         ]
                     }
                 ],
-                max_completion_tokens: 3072,
+                max_completion_tokens: 4096,
             });
-
-            // const generatedPrompt = completion.choices[0]?.message?.content;
-            //
-            // if (!generatedPrompt) {
-            //     return {
-            //         success: false,
-            //         error: {
-            //             message: 'No video generation prompt generated from OpenAI',
-            //             code: 'EMPTY_RESPONSE'
-            //         }
-            //     };
-            // }
-            //
-            // return {
-            //     success: true,
-            //     videoGenPrompt: generatedPrompt.trim()
-            // };
 
             const generatedContent = completion.choices[0]?.message?.content;
 
@@ -656,34 +1038,9 @@ Focus ONLY on motion. The intent is provided for context, not for re-description
                 };
             }
 
-            try {
-                // JSON 파싱 시도
-                const jsonRegex = /```json\s*([\s\S]*?)\s*```/;
-                const match = generatedContent.match(jsonRegex);
-                const jsonString = match ? match[1] : generatedContent;
-
-                const parsedData: {
-                    positivePrompt: string;
-                    negativePrompt: string;
-                } = JSON.parse(jsonString);
-
-                const videoGenPositivePrompt: string = parsedData.positivePrompt;
-                const videoGenNegativePrompt: string = parsedData.negativePrompt;
-
-                return {
-                    success: true,
-                    videoGenPositivePrompt: videoGenPositivePrompt,
-                    videoGenNegativePrompt: videoGenNegativePrompt
-                };
-            } catch (parseError) {
-                console.error('Failed to parse video gen prompt JSON response:', parseError);
-                return {
-                    success: false,
-                    error: {
-                        message: 'Failed to parse video gen prompt response',
-                        code: 'PARSE_ERROR'
-                    }
-                };
+            return {
+                success: true,
+                videoGenPrompt: generatedContent,
             }
         } catch (error) {
             console.error('Video generation prompt error:', error);
@@ -762,7 +1119,7 @@ Your output MUST be a valid JSON object with "title", "style", "prompt", and "ne
                         narration: sceneData.narration,
                         imageGenPromptDirective: sceneData.imageGenPromptDirective,
                         imageGenPrompt: sceneData.imageGenPrompt,
-                        videoGenPrompt: sceneData.videoGenPositivePrompt,
+                        videoGenPrompt: sceneData.videoGenPrompt,
                     }
                 })
             };

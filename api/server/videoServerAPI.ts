@@ -19,7 +19,6 @@ export const videoServerAPI = {
     // POST /videos - Scene별 이미지투비디오 생성 요청 제출
     async postVideo(
         sceneData: SceneData,
-        videoGenNegativePrompt: string,
         generationTaskId: string,
         aspectRatio: VideoAspectRatio = VIDEO_ASPECT_RATIOS.PORTRAIT_9_16,
         videoResolution: VideoResolution = VIDEO_RESOLUTIONS.RES_720P,
@@ -61,8 +60,7 @@ export const videoServerAPI = {
 
         const inputData: ReplicateInput = {
             image: imageUrl,
-            prompt: sceneData.videoGenPositivePrompt || "",
-            negative_prompt: videoGenNegativePrompt,
+            prompt: sceneData.videoGenPrompt || "",
             num_inference_steps: 28,
             num_frames: videoParameters.num_frames,
             frames_per_second: videoParameters.frames_per_second,
