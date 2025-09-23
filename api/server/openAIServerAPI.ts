@@ -706,6 +706,7 @@ Generate a prompt that visually represents this specific scene while ensuring th
         numFrames: number,
         framesPerSecond: number,
         videoActualDuration: number,
+        sceneExpectedDuration: number,
     ): Promise<{
         success: boolean;
         videoGenPrompt?: string;
@@ -772,11 +773,16 @@ Apply these rules based on received numFrames and framesPerSecond values:
 - **106-113 frames**: Elaborate narrative, comprehensive details
 - **114-121 frames**: Maximum narrative richness, full development
 
-## FPS Impact on Motion Pacing
-- **29-30 fps**: Use "quickly", "swiftly", "rapidly"
-- **26-28 fps**: Use "slowly", "gently", "smoothly"  
+## Effective FPS Impact on Motion Pacing (Post-Production Aware)
+- **50+ fps**: Use "explosively", "instantaneously", "lightning-fast"
+- **35-49 fps**: Use "rapidly", "swiftly", "energetically" 
+- **29-34 fps**: Use "quickly", "briskly", "actively"
+- **26-28 fps**: Use "smoothly", "naturally", "fluidly"
 - **23-25 fps**: Use "methodically", "thoughtfully", "deliberately"
-- **20-22 fps**: Use "carefully", "steadily", "purposefully"
+- **18-22 fps**: Use "slowly", "gently", "carefully"
+- **12-17 fps**: Use "very slowly", "gradually", "peacefully"
+- **8-11 fps**: Use "extremely slowly", "meditatively", "contemplatively"
+- **< 8 fps**: Use "glacially", "imperceptibly", "statue-like"
 
 ## Combined Optimization Process
 1. **First**: Apply Frame Count rule → determine narrative complexity
@@ -842,6 +848,27 @@ Structure: "[SPEED_MODIFIER] [ACTION_VERB] [OBJECT_REFERENCE]"
 - Speed Control: Adapt to duration (quickly/slowly/methodically) (MANDATORY)
 - Action Core: Single, predictable, functional action
 - Object Reference: Natural justification for movement
+
+### IMAGE STATE INTERPRETATION GUIDELINES
+
+**Static Snapshot Principle:**
+- ALWAYS interpret the provided image as a frozen moment in time, NOT as an ongoing action
+- Focus on WHAT COMES NEXT naturally from this static position, not what might be "in progress"
+
+**Natural Progression Logic:**
+- If character has arms extended → natural progression is gentle lowering or holding position
+- If character is mid-gesture → natural progression is completing the gesture smoothly
+- If objects are positioned → natural progression is maintaining position with subtle environmental effects
+
+**PROHIBITED Interpretations:**
+- ❌ DO NOT assume any action is "currently happening" in the image
+- ❌ DO NOT create reverse or undo actions to "complete" perceived incomplete states  
+- ❌ DO NOT interpret static poses as needing structural corrections
+
+**Safe Continuation Examples:**
+- Person with arms raised → "gently lowering arms to a natural resting position"
+- Person at doorway → "maintaining graceful stance while welcoming gesture settles"
+- Objects scattered → "remaining in current positions with subtle light interplay"
 
 ## UNIT 4: Secondary Element Stability
 Structure: "[ELEMENT_OWNERSHIP] [ELEMENT] [STATIC_STATE] [POSITION] with [STABILITY_FEATURE], [EMOTIONAL_JUSTIFICATION]"
@@ -989,13 +1016,15 @@ All components work together to provide complete context for generating the opti
 Generate only the final video generation prompt following the 7-unit structure. Do not include explanations or meta-commentary, just the prompt ready for wan-2.2-i2v-fast model input.
 `;
 
+            const speedRatio = sceneExpectedDuration / videoActualDuration;
+            const effectiveFPS = Math.max(8, Math.min(120, Math.round(framesPerSecond / speedRatio)));
             const userMessage = `
 Generate optimized motion prompt based on exact parameters:
 
 **Scene Narration:** ${sceneNarration}
 **Original Intent:** ${imageGenPrompt}
 **Target Frames:** ${numFrames}
-**Target FPS:** ${framesPerSecond}
+**Target FPS:** ${effectiveFPS.toFixed(0)}
 **Calculated Duration:** ${videoActualDuration.toFixed(3)}s
 
 Apply the frame-fps optimization rules to create a motion prompt that precisely matches these technical specifications.
@@ -1023,16 +1052,18 @@ Apply the frame-fps optimization rules to create a motion prompt that precisely 
                         ]
                     }
                 ],
-                max_completion_tokens: 4096,
+                max_completion_tokens: 6144,
             });
 
             const generatedContent = completion.choices[0]?.message?.content;
+
+            console.log(`generatedContent: ${generatedContent}`);
 
             if (!generatedContent) {
                 return {
                     success: false,
                     error: {
-                        message: 'No scene segmentation generated from OpenAI',
+                        message: 'No video generation prompt generated from OpenAI',
                         code: 'EMPTY_RESPONSE'
                     }
                 };

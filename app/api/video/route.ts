@@ -224,7 +224,8 @@ export async function POST(request: NextRequest) {
                 imageBase64,
                 numFrames,
                 framesPerSeconds,
-                videoActualDuration
+                videoActualDuration,
+                sceneData.sceneDuration,
             );
 1
             if (!postVideoGenPromptResult.success || !postVideoGenPromptResult.videoGenPrompt) {
