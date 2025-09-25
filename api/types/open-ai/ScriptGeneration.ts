@@ -1,7 +1,5 @@
 // OpenAI Chat Completions API 응답 타입 정의
 
-import {OpenAIUsage} from "@/api/types/open-ai/OpenAIResponse";
-
 export interface ScriptGenerationRequest {
     userPrompt: string;
     duration: number; // 초 단위 (15 또는 30)
@@ -23,12 +21,8 @@ export interface ScriptGenerationResponse {
     usage?: OpenAIUsage; // API 사용량 정보
 }
 
-// API 에러 응답 타입
-export interface APIError {
-    error: {
-        message: string;
-        type: string;
-        param?: string;
-        code?: string;
-    };
+export interface OpenAIUsage {
+    prompt_tokens: number;
+    completion_tokens: number;
+    total_tokens: number;
 }

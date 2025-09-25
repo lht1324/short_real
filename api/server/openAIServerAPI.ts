@@ -4,6 +4,7 @@ import {
 } from "@/api/types/open-ai/ScriptGeneration";
 import {Style} from "@/api/types/supabase/Styles";
 import {SceneData, SubtitleSegment} from "@/api/types/supabase/VideoGenerationTasks";
+import {PostGenerateRequest} from "@/api/types/suno-api/SunoAPIRequests";
 
 enum OpenAIModel {
     GPT_4O_MINI = "gpt-4o-mini-2024-07-18",
@@ -11,7 +12,7 @@ enum OpenAIModel {
 }
 
 export const openAIServerAPI = {
-    async postScript(userPrompt: string, duration: number): Promise<ScriptGenerationResponse> {
+    async postScript(userPrompt: string): Promise<ScriptGenerationResponse> {
         try {
             // OpenAI API 키 확인
             const apiKey = process.env.OPENAI_API_KEY;
@@ -26,82 +27,46 @@ export const openAIServerAPI = {
             }
 
             // 프롬프트를 OpenAI 형식으로 매핑
-            const systemMessage = `You are an expert AI scenario writer for short-form videos like Youtube Shorts, Instagram Reels, and TikTok. You are a master of writing scripts that are not only engaging but are also **technically optimized for an AI-driven video production pipeline.**
+            const systemMessage = `
+# ROLE
+You are an elite short-form video script generation specialist optimized for AI-driven production pipelines.
 
-Your primary mission is to write a script where each thematic beat (separated by \\n) is structured to be an ideal building block for a video scene. The final narration MUST be written to be spoken in approximately ${duration} seconds.
+# WORKFLOW
 
-**CRITICAL SCRIPTWRITING RULES:**
+## PHASE 1 - INPUT ANALYSIS
+Extract key elements from user request (all optional):
+- **Topic**: Core subject and angle
+- **Platform**: Target platform or apply intelligent defaults  
+- **Duration**: Timing requirements or optimal length
+- **Style**: Tone preferences or infer from context
+- **Special Requirements**: Hooks, viral elements, etc.
 
-1.  **The Hook First:** The script MUST begin with one or two very short, impactful sentences that will become **1-2 second 'hook' scenes** to grab the viewer's attention immediately.
+## PHASE 2 - SCRIPT GENERATION
+Create engaging narrative structure:
+- **Original Hook**: Topic-specific opening that is short, punchy, and instantly grabs attention. The hook must be concise and powerful enough to stop scrolling within the first few seconds, creating curiosity without formulaic patterns ("Stop scrolling", "If you know X", "X is not just Y").
+- **Story Arc**: Build tension through setup → discovery → climax → resolution
+- **Engagement Elements**: Include retention hooks and curiosity loops
 
-2.  **Optimal Scene Pacing:** To ensure technical stability, the majority of your thematic beats MUST be written to have a natural spoken duration between **2.7 and 6.0 seconds**. As a strict guideline, aim for a word count between **7 and 18 words** for most sentences. This rule does not apply to the initial 'Hook' sentences.
+## PHASE 3 - TECHNICAL OPTIMIZATION
+Optimize for AI video pipeline:
+- **Platform Adaptation**: Adjust pacing and style for target platform
+- **Scene Structure**: Each line as distinct building block with natural edit points
+- **Production Ready**: Ensure compatibility with visual generation and audio synthesis
 
-3.  **Write for the Edit:** When writing longer, descriptive sentences, intentionally use commas or logical pauses to create natural **'edit points'**. This allows a single narration beat to be split into multiple visual scenes by the 'director' AI later.
+# INPUT
+- User provides a natural language request (topic, platform, style, length, or any combination)
+- All elements are optional; if missing, apply intelligent defaults
+- Example: "Tell me about Steve Jobs and iPhone. Youtube Shorts, 5 sentences."
 
-4.  **Maintain Dynamic Pacing:** While following the rules above, you MUST still use a mix of sentence lengths to create an engaging rhythm. The goal is a script that is both technically sound and creatively compelling.
+# OUTPUT REQUIREMENTS
+- Raw script text with line breaks
+- No labels or meta-commentary
+- Technically sound yet creatively engaging
+- Authentic hooks that avoid overused patterns
 
-**GENERAL WRITING GUIDELINES:**
-- Use a clear, engaging, and authoritative tone.
-- Use the present tense and active voice.
-- Keep the language concise for easy subtitle reading.
-
-**GOLD-STANDARD EXAMPLES:**
-Here are several examples of high-quality scripts. Learn from their structure and the different styles of hooks.
-
----
-**EXAMPLE 1: The Intriguing Question**
-(Topic: The Fermi Paradox)
-
-(Hook)
-Have you ever looked up at the stars and wondered, "Where is everybody?"
-
-(Optimal length beat)
-That's the core of the Fermi Paradox.
-
-(Longer, splittable beat)
-In a universe with billions of galaxies, each containing billions of stars, the probability of intelligent life seems high, yet we've found no evidence of it.
-
-(Optimal length beat)
-It's one of science's greatest mysteries.
-
----
-**EXAMPLE 2: The Surprising Fact**
-(Topic: Indie Hackers)
-
-(Hook)
-Nine out of ten startups fail.
-
-(Optimal length beat)
-But what if there's another way to build a business?
-
-(Longer, splittable beat)
-Welcome to the world of indie hackers, solo entrepreneurs who build profitable companies with no venture capital funding.
-
-(Optimal length beat)
-It's a movement changing the face of tech.
-
----
-**EXAMPLE 3: The Direct "You" Address**
-(Topic: Stoicism)
-
-(Hook)
-You can't control what happens to you.
-
-(Optimal length beat)
-But you can control how you respond.
-
-(Longer, splittable beat)
-That's the fundamental principle of Stoicism, an ancient philosophy designed to build mental resilience and inner peace.
-
-(Optimal length beat)
-It's a timeless guide to a good life.
-
-**FINAL OUTPUT FORMAT:**
-- Provide ONLY the final script text.
-- Do NOT include the explanatory labels like (Hook) or (Topic).
-- Your response must contain only the narration, with each beat on a new line, ready for the text-to-speech engine.
-
-Please provide ONLY the narration text. Use a single line break (\\n) to separate distinct thematic ideas as instructed above.`;
+# TASK
+Generate original short-form video scripts that balance creative excellence with AI production pipeline requirements.
+`;
 
             // OpenAI SDK 클라이언트 초기화
             const client = new OpenAI({ apiKey });
@@ -447,32 +412,126 @@ Now, provide the final JSON output with both scene segmentation and video main s
                 };
             }
 
-            const systemMessage = `You are a professional visual artist specializing in writing descriptive prompts for the **Imagen 4** model.
+            const systemMessage = `
+You are an elite Imagen 4 prompt specialist with expertise in cinematic image generation. Transform four labeled input components into a single, photographically coherent Imagen 4 prompt following the precise 6-unit structure.
 
-Your task is to fuse four components: Master Style Guide, Scene Content Description, Current Scene Narration, and Video Main Subject.
+# TARGET MODEL - IMAGEN 4 OPTIMIZATION
 
-**COMPONENT ROLES:**
-- **Current Scene Narration**: The specific text spoken during this scene
-- **Video Main Subject**: The primary subject/theme that should be consistently represented across all scenes (e.g., "Elon Musk, CEO of SpaceX and Tesla", "Steve Jobs", "Ancient Roman Empire")
+You are working with Google's **Imagen 4**, optimized for:
 
-**CRITICAL INSTRUCTIONS:**
-1. **Perfect Fusion:** Combine the visual style, content description, current scene narration, and main subject into a single coherent image prompt.
-2. **Subject Consistency:** Ensure the Video Main Subject is accurately and consistently represented in the visual output.
-3. **EXPLICIT SUBJECT REFERENCE:** When the Video Main Subject refers to a specific person, entity, or concept, you MUST explicitly mention and describe them rather than using generic terms like "a person" or "a man". For example:
-   - ✅ CORRECT: "Elon Musk, the CEO of SpaceX and Tesla, stands in..."
-   - ❌ WRONG: "A middle-aged man stands in..."
-4. **ASPECT RATIO COMPLIANCE:**
-   - All image prompts must be optimized for vertical 9:16 aspect ratio (mobile/portrait orientation).
-   - NEVER use terms like "widescreen", "panoramic", "cinematic wide shot" that suggest horizontal framing.
-   - Instead use terms like "portrait composition", "vertical framing", or simply omit aspect ratio descriptors.
-5. **NO TEXT:** The generated image must be purely pictorial without any letters or words.
-6. **Mouths Closed:** All characters must have closed mouths for animation stability.
-7. **Scene Focus:** Your primary focus should be on this specific scene's narration while maintaining subject consistency.
-8. **CHARACTER DEPICTION PRINCIPLE:**
-   - **By default:** Characters should be depicted with neutral, universally relatable appearances, avoiding specific religious or political symbols (e.g., hijabs, crosses).
-   - **EXCEPTION:** If the Video Main Subject is EXPLICITLY about a specific historical event, religion, or cultural figure, you MUST prioritize thematic and historical accuracy over neutrality.
+- **Photorealistic Quality**: Exceptional detail rendering and texture accuracy
+- **Natural Language Understanding**: Superior prompt comprehension and contextual interpretation  
+- **High-Resolution Output**: Support for detailed, crisp 2K generation
+- **Advanced Composition**: Excellent spatial relationships and lighting control
 
-Provide ONLY the final image generation prompt as a single paragraph.`;
+**Optimal Prompts**: Imagen 4 responds best to detailed, conversational descriptions using natural language and specific visual terminology rather than keyword lists.
+
+# FUSION WORKFLOW - VALIDATION PHASES
+
+## PHASE 1 - COMPONENT EXTRACTION
+Parse each labeled component and identify the Video Main Subject (must be explicitly named, never generic "a person").
+
+## PHASE 2 - PERSON RECOGNITION ENHANCEMENT
+If Video Main Subject contains a recognizable public figure, enhance with their characteristic appearance using training knowledge while preserving all other prompt elements.
+
+## PHASE 3 - CONTENT APPROPRIATENESS STANDARDS
+Apply unified standards optimized for quality and subsequent video conversion:
+
+### INTEGRATED VALIDATION CHECKLIST
+- ✓ **Period Accuracy**: Clothing and accessories appropriate to historical context and setting
+- ✓ **Religious Sensitivity**: Exclude religious symbols unless explicitly required by subject/context
+- ✓ **Video Compatibility**: Well-fitted, smooth fabrics and stable visual elements for image-to-video conversion
+- ✓ **Spatial Coherence**: Single, logically consistent environment
+- ✓ **Text Control**: 
+  * Environmental text (signs, labels, storefronts) allowed when contextually natural
+  * Never include Scene Narration content as subtitles, captions, or visible dialogue
+  * Minimize unnecessary text elements
+
+# CRITICAL 6-UNIT FUSION STRUCTURE
+
+Generate your final Imagen 4 prompt as a single, natural paragraph following this structure:
+
+## UNIT 1: STYLE PREFIX & GENRE FOUNDATION
+[STYLE_PREFIX]: Create a [CINEMATIC_REFERENCE] [QUALITY_DESCRIPTOR] [FRAMING_TYPE] capturing [EMOTIONAL_TONE]
+
+**Template**: "The photo: Create a cinematic, photorealistic medium shot capturing the nostalgic warmth of..."
+- **Style Prefix**: "The photo:", "The illustration:", "The painting:"
+- **Genre Reference**: late 90s indie film, golden hour photography, vintage commercial aesthetic
+- **Quality**: cinematic, photorealistic, intimate, nostalgic
+- **Framing**: close-up, medium shot, wide shot
+- **Emotional Tone**: warmth, authenticity, contemplation, elegance
+
+## UNIT 2: SUBJECT DEFINITION & POSITIONING
+The focus is [SUBJECT_IDENTITY] with [PHYSICAL_ATTRIBUTES], [POSE_DESCRIPTION] with [EMOTIONAL_EXPRESSION], [COMPOSITIONAL_PLACEMENT]
+
+**Template**: "The focus is a young woman with distinctive features, positioned naturally..."
+- **Identity**: Apply PHASE 2 person recognition; use period-appropriate presentation (PHASE 3)
+- **Physical Attributes**: characteristic features, age, distinctive elements
+- **Pose**: natural positioning, interaction with environment
+- **Expression**: complex emotional states, authentic reactions
+- **Composition**: rule of thirds, off-center, balanced framing
+
+## UNIT 3: CLOTHING & OBJECT SYSTEM
+[SUBJECT] wears [LAYERED_CLOTHING] and [ACCESSORIES], [BRAND_TEXT_INTEGRATION]
+
+**Template**: "She wears well-tailored period clothing with natural fabric drape..."
+- **Layered Clothing**: Apply PHASE 3 standards for period accuracy and video compatibility
+- **Fabric Quality**: well-fitted garments with smooth drape, optimized for video conversion
+- **Accessories**: contextually appropriate jewelry, bags, period items
+- **Brand Integration**: natural text placement when required by input components
+
+## UNIT 4: LIGHTING & ATMOSPHERE
+The lighting is [LIGHT_QUALITY] [LIGHT_SOURCE] [DIRECTIONAL_DESCRIPTION], creating [VISUAL_EFFECTS] and [ENVIRONMENTAL_INTERACTION]
+
+**Template**: "The lighting is soft, golden hour sunlight streaming naturally, creating gentle highlights..."
+- **Light Quality**: soft, dramatic, natural, artificial
+- **Light Source**: sunlight, window light, studio lighting
+- **Direction**: streaming through, filtering down, bouncing off
+- **Visual Effects**: lens flare, rim lighting, natural shadows
+- **Environmental Interaction**: dust motes, reflections, atmospheric elements
+
+## UNIT 5: ENVIRONMENTAL FRAMING
+The background shows [ENVIRONMENT_TYPE] with [SPECIFIC_ELEMENTS], rendered with [DEPTH_CONTROL] and [ENVIRONMENTAL_STORYTELLING]
+
+**Template**: "The background shows a carefully arranged environment with contextual elements..."
+- **Environment**: Apply PHASE 3 spatial coherence - single, consistent location
+- **Specific Elements**: props, architecture, natural elements positioned appropriately
+- **Depth Control**: shallow/deep focus, bokeh effects
+- **Environmental Storytelling**: elements that reveal character or enhance mood
+- **Static Stability**: background elements remain appropriately positioned
+
+## UNIT 6: TECHNICAL & EMOTIONAL FINISH
+[TEXTURE_ELEMENTS], [COLOR_PALETTE], and [FOCUS_STRATEGY] enhance the [FINAL_MOOD_DESCRIPTOR]
+
+**Template**: "Natural film grain, warm color palette, and sharp focus on expressive details enhance the intimate mood..."
+- **Texture**: film grain, digital clarity, material surfaces
+- **Color Palette**: warm/cool tones, saturation levels, mood-appropriate colors
+- **Focus Strategy**: what draws attention, depth relationships
+- **Final Mood**: overall emotional impact, atmospheric conclusion
+
+# USER INPUT EXPECTATIONS
+
+Your input will contain exactly four labeled components:
+- **Master Style Guide**: Visual aesthetic and artistic direction
+- **Scene Content Description**: Core scene elements, characters, objects, and actions
+- **Current Scene Narration**: Specific dialogue or narration text providing context
+- **Video Main Subject**: Primary subject/person/theme for consistent representation
+
+# OUTPUT REQUIREMENTS
+
+Generate a single, flowing paragraph that:
+1. Begins with appropriate style prefix ("The photo:", "The illustration:", etc.)
+2. Follows the 6-unit structure seamlessly without obvious breaks
+3. Maintains cultural and historical appropriateness per PHASE 3 standards
+4. Applies specific person recognition when applicable
+5. Ensures spatial coherence in a single environment
+6. Optimizes fabric and visual elements for video conversion compatibility
+7. Reads naturally for Imagen 4's advanced compositional understanding
+
+# YOUR TASK
+
+Process the input components through the 3-phase validation workflow, then generate a single Imagen 4 prompt paragraph following the 6-unit structure. The output must combine the natural flow of professional prompt engineering with technical optimization for both image quality and subsequent video conversion.
+`;
 
             const userMessage = `Create an image prompt that combines these elements:
 
@@ -497,7 +556,7 @@ Generate a prompt that visually represents this specific scene while ensuring th
                     { role: 'system', content: systemMessage },
                     { role: 'user', content: userMessage }
                 ],
-                max_completion_tokens: 3072,
+                max_completion_tokens: 4096,
             });
 
             const generatedPrompt = completion.choices[0]?.message?.content;
@@ -527,19 +586,17 @@ Generate a prompt that visually represents this specific scene while ensuring th
         }
     },
 
-    // async postVideoGenPrompt(
-    //     imageGenPrompt: string,
-    //     sceneNarration: string,
-    //     imageBase64: string,
-    // ): Promise<{ success: boolean; videoGenPrompt?: string; error?: { message: string; code: string } }> {
     async postVideoGenPrompt(
         imageGenPrompt: string,
         sceneNarration: string,
         imageBase64: string,
+        numFrames: number,
+        framesPerSecond: number,
+        videoActualDuration: number,
+        sceneExpectedDuration: number,
     ): Promise<{
         success: boolean;
-        videoGenPositivePrompt?: string;
-        videoGenNegativePrompt?: string;
+        videoGenPrompt?: string;
         error?: { message: string; code: string }
     }> {
         try {
@@ -555,46 +612,158 @@ Generate a prompt that visually represents this specific scene while ensuring th
                 };
             }
 
-//             const systemMessage = `You are a professional AI video generation prompt engineer, specializing in creating efficient and clear motion prompts for the **wan-2.2-i2v-fast** model.
-//
-// Your core mission is to describe ONLY the motion to be applied to a static source image.
-//
-// **CRITICAL RULES (ABSOLUTE):**
-// 1. **MOTION ONLY:** Never describe the character, art style, or scene composition. They are already defined in the source image.
-// 2. **AVOID FACIAL ANIMATION:** Do not describe complex facial animations like 'laughing' or 'talking'. Use safe movements like head turns or blinks.
-// 3. **ZOOM RULE:** When zooming in on a person, they must always remain the focal point.
-//
-// **MOTION CATEGORIES:**
-// • Camera movements: gentle zoom-in/out, slow pan left/right, subtle parallax motion
-// • Environmental effects: wind on hair/clothing, particle effects, lighting shifts
-// • Character movements: subtle head turns, eye movements, gentle breathing, posture shifts
-// • Object interactions: steam rising, pages turning slowly
-// • Atmospheric effects: fog drifting, light rays shifting, shadows moving
-//
-// **EXAMPLE:** "A gentle zoom-in on the character's face. Her head turns slightly to the right as her eyes blink naturally. Soft wind moves a few strands of her hair."`;
-            const systemMessage = `You are a professional AI video generation prompt engineer, specializing in creating efficient and clear motion prompts for the **wan-2.2-i2v-fast** model.
+            const systemMessage = `
+You are an elite video generation prompt specialist optimized for the wan-2.2-i2v-fast model. Transform input components into a technically precise video generation prompt using the proven 7-unit architecture.
 
-Your mission is to analyze the provided image and generate TWO types of prompts:
+# TARGET MODEL - WAN-2.2-I2V-FAST OPTIMIZATION
 
-1. **POSITIVE PROMPT (Motion Description)**: Describe ONLY the motion to be applied to the static source image.
-2. **NEGATIVE PROMPT (Motion Constraints)**: Identify potential motion-related problems specific to THIS image and scene context.
+Working with **wan-2.2-i2v-fast**: Advanced image-to-video model featuring MoE (Mixture of Experts) architecture with 2-stage denoising and SNR-based expert transition.
 
-**POSITIVE PROMPT RULES:**
-- Motion only, no character/style description
-- Avoid complex facial animations
-- Focus on camera movements, environmental effects, subtle character movements
+**Model Specifications**:
+- **Total Parameters**: 27B (14B active via MoE routing)
+- **Architecture**: Transformer-based diffusion with expert specialization
+- **Resolution**: 720p output optimized
+- **Frame Structure**: 8n+1 constraint (81, 89, 97, 105, 113, 121 frames)
+- **Processing**: High-noise expert → Low-noise expert transition via SNR thresholds
 
-**NEGATIVE PROMPT RULES:**
-- Analyze the specific image for potential motion artifacts
-- Include scene-specific constraints (e.g., if character has long hair: "hair clipping through body")
-- Add general video quality constraints: "jerky movement, stuttering, unnatural speed changes"
-- Keep concise, comma-separated format
+**MoE Processing Structure**: 
+- **High-noise expert** (UNIT 1-3): Camera positioning, subject establishment, primary actions
+- **Low-noise expert** (UNIT 4-7): Secondary elements, environmental atmosphere, camera movement finalization
+- **Critical**: Ensure consistency between expert phases to prevent temporal artifacts (limb teleportation, camera/object motion confusion)
 
-**OUTPUT FORMAT:**
-{
-  "positivePrompt": "...",
-  "negativePrompt": "..."
-}`;
+**Technical Constraints**: Frame count and FPS determined by input parameters. **No negative prompt support** - embed all safety measures in positive structure.
+
+# FUSION WORKFLOW - OPTIMIZED 5-PHASE SYSTEM
+
+## PHASE 1 - INPUT PROCESSING & VALIDATION
+Parse Scene Narration and Original Intent, extract motion requirements, validate frame count (8n+1 structure) and FPS constraints.
+
+## PHASE 2 - DURATION-FPS OPTIMIZATION
+**Duration-Based Complexity Scaling:** Use provided Calculated Duration
+- **< 3.0 seconds**: Compressed narrative, single action focus
+- **3.0-4.0 seconds**: Standard narrative, moderate elements  
+- **4.0-5.0 seconds**: Extended narrative, rich details
+- **5.0-6.0 seconds**: Detailed narrative, comprehensive development
+- **> 6.0 seconds**: Maximum narrative richness
+
+**Effective FPS Impact on Motion Pacing:** Always combine with "controlled", "deliberate", "smooth" modifiers
+- **50+ fps**: "explosively", "instantaneously", "lightning-fast"
+- **35-49 fps**: "rapidly", "swiftly", "energetically"
+- **29-34 fps**: "quickly", "briskly", "actively"
+- **26-28 fps**: "smoothly", "naturally", "fluidly"
+- **23-25 fps**: "methodically", "thoughtfully", "deliberately"
+- **18-22 fps**: "slowly", "gently", "carefully"
+- **12-17 fps**: "very slowly", "gradually", "peacefully"
+- **8-11 fps**: "extremely slowly", "meditatively", "contemplatively"
+- **< 8 fps**: "glacially", "imperceptibly", "statue-like"
+
+## PHASE 3 - MOTION SAFETY VALIDATION
+
+**Image State Interpretation:** Interpret provided image as frozen moment, focus on natural next progression. Never assume ongoing action or create reverse/undo movements.
+
+**Safety Transformation Patterns:** "windswept"→"in still air", "dramatic gestures"→"maintaining composed posture", "rapid changes"→"gradual transitions", "spinning/circular"→"steady positioning", "multiple simultaneous"→"single controlled action"
+
+**Core Motion Constraints:** Single-direction movement only, every movement serves narrative purpose, near elements subtle/distant elements static.
+
+## PHASE 4 - LOGICAL CONSISTENCY VALIDATION
+
+**MoE Compatibility:** Prevent contradictions between UNIT 1-3 (high-noise expert) and UNIT 4-7 (low-noise expert) that cause temporal artifacts like object/limb teleportation or camera/object motion confusion.
+
+**Validation Check:** "Can all described states exist simultaneously in ONE coherent moment?"
+
+## PHASE 5 - 7-UNIT STRUCTURE GENERATION
+Apply Replicate architecture with integrated safety protocols.
+
+# CORE SAFETY PROTOCOLS
+
+- **Camera Movement**: Single-direction movement only ("slowly pushes in" OR "gently pulls back")
+- **Facial Stability**: "completely still facial expression with mouth gently closed"  
+- **Background Control**: Near elements subtle, distant static unless narratively justified
+- **Camera vs Object Separation**: UNIT 1,7 handle camera only; UNIT 2-6 handle subjects/objects only
+
+# CRITICAL 7-UNIT ARCHITECTURE
+
+## UNIT 1: CAMERA POSITION & FRAMING
+[SHOT_TYPE] [ANGLE] [DISTANCE] establishing [ENVIRONMENT]
+Apply Camera Movement Protocol
+
+## UNIT 2: MAIN SUBJECT DESCRIPTION  
+[SUBJECT_IDENTITY] with [PHYSICAL_CHARACTERISTICS] [POSITIONING] [CONTEXT]
+Apply Facial Stability Protocol
+
+## UNIT 3: PRIMARY ACTION
+[SUBJECT] [ACTION_VERB] [ACTION_DETAILS] with [MOTION_QUALITY] [EMOTION]
+Apply PHASE 2 Motion terminology with Image State principles
+
+## UNIT 4: SECONDARY ELEMENT STABILITY
+[SUPPORTING_OBJECTS] [INTERACTION_STATE] while [STABILITY_DESCRIPTION] [CONTEXT]
+Apply Background Control Protocol
+
+**CRITICAL ANTI-ARTIFACT PROTOCOL:** If UNIT 3 describes specific body part movement → UNIT 4 must describe **complementary static elements only**
+
+**Logical Mapping Rules:**
+- **RIGHT ARM movement** → LEFT ARM, objects, other body parts (static)
+- **HAND action** → OTHER HAND, torso, surrounding elements (static)
+- **FULL BODY movement** → FACIAL expression, environmental objects (static)
+
+**Safe Categories:** Opposite body parts, non-moving objects, facial elements, environmental objects, clothing/accessories
+
+## UNIT 5: ENVIRONMENTAL ATMOSPHERE
+[ENVIRONMENT_TYPE] [ATMOSPHERIC_CONDITIONS] [LIGHTING] [MOOD_ELEMENTS]
+
+## UNIT 6: BACKGROUND DYNAMICS
+[BACKGROUND_ELEMENTS] [STABILITY_STATE] [DEPTH_RELATIONSHIPS] [CONSISTENCY]
+Apply Background Control Protocol
+
+## UNIT 7: CAMERA MOVEMENT & EMOTIONAL GOAL
+[CAMERA_ACTION] [EMOTIONAL_OUTCOME] [FINAL_FOCUS]
+Apply Camera Movement Protocol with emotional justification
+
+# ASSEMBLY PATTERN
+"[UNIT_1] [UNIT_2] [UNIT_3]. [UNIT_4]. [UNIT_5], [UNIT_6]. [UNIT_7]."
+
+# EXAMPLE DEMONSTRATIONS
+
+## Example 1 - Official Golden Reference
+**Input**: Elderly sailor in yellow raincoat on catamaran deck with pipe and cat
+**Output**: "Close-up shot of an elderly sailor wearing a yellow raincoat, seated on the deck of a catamaran. The distinguished man with weathered features and a white beard maintains a completely still facial expression with mouth gently closed around his pipe. He slowly and deliberately draws on his wooden pipe with smooth, controlled movements, savoring the moment with quiet contemplation. His tabby cat lies perfectly still beside him, resting peacefully against his leg while remaining motionless throughout. The late afternoon atmosphere bathes the scene in warm, golden light filtering through gentle maritime air. Distant ocean elements and rigging maintain their positions with subtle depth relationships creating authentic nautical ambiance. The camera slowly pulls back to reveal the full catamaran setting, emphasizing the timeless tranquility of this seafaring moment."
+
+## Example 2 - Business Professional
+**Input**: Professional woman in office reviewing documents  
+**Output**: "Medium shot from slightly above, establishing a modern corporate office environment. A professional woman with confident posture and composed demeanor positions herself naturally at her executive desk. She methodically and thoughtfully reviews important documents with deliberate, controlled hand movements, maintaining focused concentration. Her laptop remains open and stationary beside organized paperwork while her coffee cup sits motionless on the polished surface. The bright morning atmosphere fills the space with clean, professional lighting from large windows. Background office elements and wall decorations stay appropriately positioned with crisp depth relationships supporting the corporate setting. The camera gently pushes in to capture her executive presence, emphasizing the productive energy of modern business leadership."
+
+# INPUT DATA EXPECTATIONS
+
+Your input will contain:
+- **Scene Narration**: Current scene dialogue/narration content
+- **Original Intent**: Creative vision and emotional goals  
+- **Target Frames**: Frame count following 8n+1 structure
+- **Target FPS**: Frame rate for motion pacing
+- **Calculated Duration**: Scene duration in seconds
+- **Reference Image**: Base64 encoded starting image
+
+# OUTPUT REQUIREMENTS
+
+Generate only the final video generation prompt following the 7-unit structure. No explanations, meta-commentary, or process descriptions. Output must be a single, flowing paragraph optimized for wan-2.2-i2v-fast processing with embedded safety measures and technical compliance.
+
+# YOUR TASK
+
+Process input through the 5-phase validation workflow, then generate the video prompt using the 7-unit architecture. Ensure MoE expert compatibility, prevent temporal artifacts, and maintain logical consistency while preserving creative vision and emotional goals.
+`;
+
+            const speedRatio = sceneExpectedDuration / videoActualDuration;
+            const effectiveFPS = Math.max(8, Math.min(120, Math.round(framesPerSecond / speedRatio)));
+            const userMessage = `
+Generate optimized motion prompt based on exact parameters:
+
+**Scene Narration:** ${sceneNarration}
+**Original Intent:** ${imageGenPrompt}
+**Target Frames:** ${numFrames}
+**Target FPS:** ${effectiveFPS.toFixed(0)}
+**Calculated Duration:** ${videoActualDuration.toFixed(3)}s
+
+Apply the frame-fps optimization rules to create a motion prompt that precisely matches these technical specifications.
+`;
 
             // OpenAI SDK 클라이언트 초기화 및 API 호출
             const client = new OpenAI({ apiKey });
@@ -607,12 +776,7 @@ Your mission is to analyze the provided image and generate TWO types of prompts:
                         content: [
                             {
                                 type: "text",
-                                text: `Generate a motion prompt based on this image and narration.
-        
-**Narration:** "${sceneNarration}"
-**Original scene intent:** "${imageGenPrompt}"
-
-Focus ONLY on motion. The intent is provided for context, not for re-description.`
+                                text: userMessage,
                             },
                             {
                                 type: "image_url",
@@ -623,66 +787,26 @@ Focus ONLY on motion. The intent is provided for context, not for re-description
                         ]
                     }
                 ],
-                max_completion_tokens: 3072,
+                max_completion_tokens: 6144,
             });
 
-            // const generatedPrompt = completion.choices[0]?.message?.content;
-            //
-            // if (!generatedPrompt) {
-            //     return {
-            //         success: false,
-            //         error: {
-            //             message: 'No video generation prompt generated from OpenAI',
-            //             code: 'EMPTY_RESPONSE'
-            //         }
-            //     };
-            // }
-            //
-            // return {
-            //     success: true,
-            //     videoGenPrompt: generatedPrompt.trim()
-            // };
-
             const generatedContent = completion.choices[0]?.message?.content;
+
+            console.log(`generatedContent: ${generatedContent}`);
 
             if (!generatedContent) {
                 return {
                     success: false,
                     error: {
-                        message: 'No scene segmentation generated from OpenAI',
+                        message: 'No video generation prompt generated from OpenAI',
                         code: 'EMPTY_RESPONSE'
                     }
                 };
             }
 
-            try {
-                // JSON 파싱 시도
-                const jsonRegex = /```json\s*([\s\S]*?)\s*```/;
-                const match = generatedContent.match(jsonRegex);
-                const jsonString = match ? match[1] : generatedContent;
-
-                const parsedData: {
-                    positivePrompt: string;
-                    negativePrompt: string;
-                } = JSON.parse(jsonString);
-
-                const videoGenPositivePrompt: string = parsedData.positivePrompt;
-                const videoGenNegativePrompt: string = parsedData.negativePrompt;
-
-                return {
-                    success: true,
-                    videoGenPositivePrompt: videoGenPositivePrompt,
-                    videoGenNegativePrompt: videoGenNegativePrompt
-                };
-            } catch (parseError) {
-                console.error('Failed to parse video gen prompt JSON response:', parseError);
-                return {
-                    success: false,
-                    error: {
-                        message: 'Failed to parse video gen prompt response',
-                        code: 'PARSE_ERROR'
-                    }
-                };
+            return {
+                success: true,
+                videoGenPrompt: generatedContent,
             }
         } catch (error) {
             console.error('Video generation prompt error:', error);
@@ -693,6 +817,238 @@ Focus ONLY on motion. The intent is provided for context, not for re-description
                     code: 'INTERNAL_ERROR'
                 }
             };
+        }
+    },
+
+    async postMusicGenerationData(
+        videoMainSubject: string,
+        fullNarrationScript: string,
+        masterStylePositivePrompt: string,
+        sceneDataList: SceneData[]
+    ): Promise<{ success: boolean; data?: Partial<PostGenerateRequest>; error?: { message: string; code: string } }> {
+        try {
+            const apiKey = process.env.OPENAI_API_KEY;
+            if (!apiKey) {
+                return {
+                    success: false,
+                    error: {
+                        message: 'OpenAI API key is not configured',
+                        code: 'MISSING_API_KEY'
+                    }
+                };
+            }
+
+            const systemMessage = `You are a Music Reasoning Specialist powered by advanced reasoning capabilities.
+
+# SUNO API CHARACTERISTICS
+
+Suno API provides access to Suno v4.5 (latest as of Sept 2025) with these capabilities:
+• Professional-grade AI music generation with v4.5 enhanced audio quality
+• Advanced text-to-music conversion with detailed prompt interpretation
+• Instrumental-only mode with explicit vocal suppression  
+• Duration flexibility from 15 seconds to 4+ minutes
+• Support for negativeTags parameter for element exclusion
+• Watermark-free output for commercial use (with proper licensing)
+• Generation time scales proportionally with requested duration (typically 1-2x realtime)
+
+## Critical Suno API Constraints
+• Descriptive prompts work better than technical musical notation
+• negativeTags parameter available for excluding unwanted elements
+• Instrumental specification should be explicit in both prompt and negativeTags
+• Style tags significantly influence overall generation approach
+• Generated music includes inaudible watermarking for content tracking
+• Commercial use requires appropriate Suno licensing compliance
+• Longer durations require more complex musical structure planning
+
+# REASONING FRAMEWORK
+
+Execute these three phases sequentially, showing your analytical process at each step.
+
+## PHASE 1: TEMPORAL STRUCTURE ANALYSIS
+• Calculate total video duration from scene timing data
+• Determine generation complexity based on duration (15-30s: simple structure, 30-60s: A-B-A, 60s+: multi-section)
+• Map scene duration patterns to dynamic progression
+• Plan musical architecture proportional to total length
+• Consider that generation time will scale with video duration
+
+## PHASE 2: VISUAL-TO-AUDIO TRANSFORMATION  
+• Extract emotional indicators from narration script
+• Convert visual style keywords to musical mood descriptors
+• Analyze scene visual intensity for dynamic mapping
+• Establish genre consistency with video subject matter
+
+## PHASE 3: SUNO API OPTIMIZATION
+• Synthesize reasoning results into coherent parameters
+• Ensure instrumental-only specification (no vocals/lyrics)
+• Validate parameter consistency and musical logic
+• Generate final JSON output optimized for Suno API processing
+
+# CRITICAL REASONING GUIDELINES
+
+1. **SYSTEMATIC ANALYSIS** - Process each phase completely before proceeding
+2. **LOGICAL DEDUCTION** - Base every parameter decision on analyzed evidence  
+3. **TEMPORAL AWARENESS** - Consider how music must evolve over video duration
+4. **COHERENCE VALIDATION** - Ensure all parameters work together harmoniously
+5. **SUNO OPTIMIZATION** - Embed all constraints positively in prompt descriptions
+
+# REASONING EXAMPLES
+
+## Example 1: Technology/Business Theme
+"Let me analyze this systematically:
+
+PHASE 1 - TEMPORAL ANALYSIS:
+Total duration is 47 seconds, suggesting a simple A-B-A structure...
+Scene durations show accelerating pace in middle section...
+
+PHASE 2 - VISUAL-TO-AUDIO MAPPING:  
+Subject 'startup entrepreneur' suggests modern, optimistic tone...
+Style prompt mentions 'vibrant, clean aesthetic' → bright, uplifting musical elements...
+
+PHASE 3 - PARAMETER SYNTHESIS:
+Based on analysis, optimal approach is uplifting electronic with orchestral elements...
+47-second duration requires continuous energy without vocal breaks..."
+
+## Example 2: Nature/Documentary Theme
+"Let me analyze this systematically:
+
+PHASE 1 - TEMPORAL ANALYSIS:
+Total duration is 52 seconds, allowing for contemplative build...
+Scene timing shows gradual reveal pattern...
+
+PHASE 2 - VISUAL-TO-AUDIO MAPPING:
+Subject 'mountain wildlife' suggests organic, peaceful atmosphere...
+Visual cues indicate 'natural textures, earth tones' → acoustic instruments, ambient layers...
+
+PHASE 3 - PARAMETER SYNTHESIS:
+Ambient acoustic soundscape with subtle orchestral swells...
+Nature documentary requires non-intrusive, atmospheric support..."
+
+## Example 3: Lifestyle/Wellness Theme  
+"Let me analyze this systematically:
+
+PHASE 1 - TEMPORAL ANALYSIS:
+Total duration is 38 seconds, needs warm, inviting progression...
+Consistent pacing suggests steady, calming rhythm...
+
+PHASE 2 - VISUAL-TO-AUDIO MAPPING:
+Subject 'morning yoga routine' suggests serene, centering mood...
+'Soft lighting, minimal aesthetic' → gentle acoustic, light percussion...
+
+PHASE 3 - PARAMETER SYNTHESIS:
+Meditative acoustic with subtle electronic elements...
+Wellness content requires soothing, non-distracting background..."
+
+# INPUT DATA STRUCTURE
+
+You will receive a JSON object containing:
+• **totalDuration**: Total video length in seconds for musical structure planning
+• **videoMainSubject**: Primary subject/theme for genre and mood consistency
+• **fullNarrationScript**: Complete narration for emotional progression analysis
+• **masterStylePositivePrompt**: Visual style guide for mood translation
+• **sceneDataList**: Array of core scene data for temporal analysis
+
+## SceneData Structure (Essential Fields Only)
+Each scene object contains only the music-relevant data:
+{
+  "sceneNumber": number,        // Sequential scene identifier
+  "narration": string,          // Scene-specific emotional content
+  "sceneDuration": number,      // Individual scene timing
+  "imageGenPrompt": string      // Visual intensity for musical mapping
+}
+
+# OUTPUT REQUIREMENTS
+
+Generate a valid JSON object with these exact fields:
+
+## Required JSON Structure
+{
+  "title": "string - Short, catchy track title",
+  "style": "string - Genre and instrumentation description", 
+  "prompt": "string - Detailed instrumental music description paragraph",
+  "negativeTags": "string - Comma-separated elements to avoid (must include vocals, singing, lyrics, voice)"
+}
+
+## Critical Output Instructions
+- Follow the three-phase reasoning framework INTERNALLY
+- Your final response must contain ONLY the valid JSON object
+- Do not include explanations, reasoning process, or meta-commentary
+- Ensure the JSON is properly formatted and parseable
+
+# TASK EXECUTION
+
+Analyze the provided video data through systematic reasoning chains and generate optimal Suno API parameters for instrumental background music. 
+
+**Think through each phase systematically before providing your final JSON output.**`;
+
+
+            // AI에 전달할 데이터를 명확한 구조로 재구성
+            const musicPromptRequestData = {
+                videoTotalDuration: sceneDataList.map((sceneData) => {
+                    return sceneData.sceneDuration;
+                }).reduce((acc, duration) => {
+                    return acc + duration;
+                }, 0.0),
+                videoMainSubject: videoMainSubject,
+                fullNarrationScript: fullNarrationScript,
+                masterStylePositivePrompt: masterStylePositivePrompt,
+                sceneDataList: sceneDataList.map((sceneData) => {
+                    return {
+                        sceneNumber: sceneData.sceneNumber,
+                        narration: sceneData.narration,
+                        sceneDuration: sceneData.sceneDuration,
+                        imageGenPrompt: sceneData.imageGenPrompt,
+                    }
+                })
+            };
+
+            const userMessage = `            
+Based on the following video data, please generate the Suno API parameters in the required JSON format.
+
+**TASK DATA:**
+${JSON.stringify(musicPromptRequestData, null, 2)}
+
+Now, provide the final JSON output.
+`;
+
+            const client = new OpenAI({ apiKey });
+
+            const completion = await client.chat.completions.create({
+                model: OpenAIModel.GPT_O4_MINI,
+                messages: [
+                    { role: 'system', content: systemMessage },
+                    { role: 'user', content: userMessage }
+                ],
+                max_completion_tokens: 3072,
+            });
+
+            const generatedContent = completion.choices[0]?.message?.content;
+
+            if (!generatedContent) {
+                return { success: false, error: { message: 'No music generation data from OpenAI', code: 'EMPTY_RESPONSE' } };
+            }
+
+            try {
+                const jsonRegex = /```json\s*([\s\S]*?)\s*```/;
+                const match = generatedContent.match(jsonRegex);
+                const jsonString = match ? match[1] : generatedContent;
+
+                const parsedData: Partial<PostGenerateRequest> = JSON.parse(jsonString);
+
+                if (!parsedData.prompt || !parsedData.style || !parsedData.title) {
+                    throw new Error("Missing one or more required fields: prompt, style, title");
+                }
+
+                return {
+                    success: true,
+                    data: parsedData
+                };
+            } catch (parseError) {
+                console.error('Failed to parse music generation JSON response:', parseError);
+                return { success: false, error: { message: 'Failed to parse music generation response from AI', code: 'PARSE_ERROR' } };
+            }
+        } catch (error) {
+            console.error('Music generation data error:', error);
+            return { success: false, error: { message: error instanceof Error ? error.message : 'Unknown error occurred', code: 'INTERNAL_ERROR' } };
         }
     },
 }

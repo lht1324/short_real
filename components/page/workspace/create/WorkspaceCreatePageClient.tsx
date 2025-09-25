@@ -382,17 +382,17 @@ function WorkspaceCreatePageClient() {
 
     const videoUrlList = useMemo(() => {
         return [
-            "https://tbgymsmwuljvewatnvqg.supabase.co/storage/v1/object/sign/processed_video_storage/3fstybtmjhrm80cs8cevx5g1r0.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9iZjk2NWFiNi1hYmE4LTRkYTEtYTM5Yy0yMDk3ZmQ1ZGU1MGEiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJwcm9jZXNzZWRfdmlkZW9fc3RvcmFnZS8zZnN0eWJ0bWpocm04MGNzOGNldng1ZzFyMC5tcDQiLCJpYXQiOjE3NTc3Njc5NjUsImV4cCI6MTc4OTMwMzk2NX0.A3o-tGQWw5oVgNNfWBXJZ9I5tY9OCbzfYcU_K2WpP-0",
-            "https://tbgymsmwuljvewatnvqg.supabase.co/storage/v1/object/sign/processed_video_storage/dnje5ptmd1rme0cs8cer2f29sr.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9iZjk2NWFiNi1hYmE4LTRkYTEtYTM5Yy0yMDk3ZmQ1ZGU1MGEiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJwcm9jZXNzZWRfdmlkZW9fc3RvcmFnZS9kbmplNXB0bWQxcm1lMGNzOGNlcjJmMjlzci5tcDQiLCJpYXQiOjE3NTc3Njc5NzgsImV4cCI6MTc4OTMwMzk3OH0.gRY8mXPnck57IaQzBjCCisKDCg-CecFjN4rD1DPwIuw",
-            "https://tbgymsmwuljvewatnvqg.supabase.co/storage/v1/object/sign/processed_video_storage/5bmpfvtmr5rme0cs8ces82rt9r.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9iZjk2NWFiNi1hYmE4LTRkYTEtYTM5Yy0yMDk3ZmQ1ZGU1MGEiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJwcm9jZXNzZWRfdmlkZW9fc3RvcmFnZS81Ym1wZnZ0bXI1cm1lMGNzOGNlczgycnQ5ci5tcDQiLCJpYXQiOjE3NTc3Njc5OTYsImV4cCI6MTc4OTMwMzk5Nn0.MM31D3yOH7_WubhiA0eRoWg_29fMMEyoe_25FUkAABo",
-            "https://tbgymsmwuljvewatnvqg.supabase.co/storage/v1/object/sign/processed_video_storage/x8yrzd2khsrmc0cs8cev8zjc3m.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9iZjk2NWFiNi1hYmE4LTRkYTEtYTM5Yy0yMDk3ZmQ1ZGU1MGEiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJwcm9jZXNzZWRfdmlkZW9fc3RvcmFnZS94OHlyemQya2hzcm1jMGNzOGNldjh6amMzbS5tcDQiLCJpYXQiOjE3NTc3NjgwMDgsImV4cCI6MTc4OTMwNDAwOH0.5EgQf1E2BoCdAhUzTuvYoOVNXlhu97FVTs1JTPEC4gc",
-            "https://tbgymsmwuljvewatnvqg.supabase.co/storage/v1/object/sign/processed_video_storage/zthtr9tkm5rmc0cs8cesqzj08m.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9iZjk2NWFiNi1hYmE4LTRkYTEtYTM5Yy0yMDk3ZmQ1ZGU1MGEiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJwcm9jZXNzZWRfdmlkZW9fc3RvcmFnZS96dGh0cjl0a201cm1jMGNzOGNlc3F6ajA4bS5tcDQiLCJpYXQiOjE3NTc3NjgwMjEsImV4cCI6MTc4OTMwNDAyMX0.d0ywlFVanLdBub6fJ1CqpZAkwYq7A87Z8kM9KJmTwxw"
+            "https://tbgymsmwuljvewatnvqg.supabase.co/storage/v1/object/sign/processed_video_storage/jhebnme2v1rm80csbbptfpqber.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9iZjk2NWFiNi1hYmE4LTRkYTEtYTM5Yy0yMDk3ZmQ1ZGU1MGEiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJwcm9jZXNzZWRfdmlkZW9fc3RvcmFnZS9qaGVibm1lMnYxcm04MGNzYmJwdGZwcWJlci5tcDQiLCJpYXQiOjE3NTgyNzk1MTgsImV4cCI6MTc4OTgxNTUxOH0.pf1J1oCPsZFVcUFOtnjZp7JMrNvEsOev1BsRf7U198w",
+            "https://tbgymsmwuljvewatnvqg.supabase.co/storage/v1/object/sign/processed_video_storage/n5h5k5e2zdrma0csbbptq7xcq0.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9iZjk2NWFiNi1hYmE4LTRkYTEtYTM5Yy0yMDk3ZmQ1ZGU1MGEiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJwcm9jZXNzZWRfdmlkZW9fc3RvcmFnZS9uNWg1azVlMnpkcm1hMGNzYmJwdHE3eGNxMC5tcDQiLCJpYXQiOjE3NTgyNzk1MjgsImV4cCI6MTc4OTgxNTUyOH0.ARTmGkgTsSvbflZb7orYGmnwMonz-ZPff9WAR9Kfhig",
+            "https://tbgymsmwuljvewatnvqg.supabase.co/storage/v1/object/sign/processed_video_storage/24qj3ve2vxrme0csbbpre22aew.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9iZjk2NWFiNi1hYmE4LTRkYTEtYTM5Yy0yMDk3ZmQ1ZGU1MGEiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJwcm9jZXNzZWRfdmlkZW9fc3RvcmFnZS8yNHFqM3ZlMnZ4cm1lMGNzYmJwcmUyMmFldy5tcDQiLCJpYXQiOjE3NTgyNzk1NjcsImV4cCI6MTc4OTgxNTU2N30.PoZ8hpqBHiG0w0JBZLbu6HEBAO0gga70A0iFmwgfUGE",
+            "https://tbgymsmwuljvewatnvqg.supabase.co/storage/v1/object/sign/processed_video_storage/ejtpsvy2x5rmc0csbbpte50q0m.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9iZjk2NWFiNi1hYmE4LTRkYTEtYTM5Yy0yMDk3ZmQ1ZGU1MGEiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJwcm9jZXNzZWRfdmlkZW9fc3RvcmFnZS9lanRwc3Z5Mng1cm1jMGNzYmJwdGU1MHEwbS5tcDQiLCJpYXQiOjE3NTgyNzk1NzYsImV4cCI6MTc4OTgxNTU3Nn0.i5ys7M2cAdwsDOzgXw_aWc_E8Yd1kBV9bgSdJFI9Xjw",
+            "https://tbgymsmwuljvewatnvqg.supabase.co/storage/v1/object/sign/processed_video_storage/w59ebwe2vdrmc0csbbprhab7qw.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9iZjk2NWFiNi1hYmE4LTRkYTEtYTM5Yy0yMDk3ZmQ1ZGU1MGEiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJwcm9jZXNzZWRfdmlkZW9fc3RvcmFnZS93NTllYndlMnZkcm1jMGNzYmJwcmhhYjdxdy5tcDQiLCJpYXQiOjE3NTgyNzk1ODgsImV4cCI6MTc4OTgxNTU4OH0.GMPY4WHyWD1N0hHRBmqfo5TeMw6A-QWyz03fpQ_wPXs"
         ]
     }, []);
     const onTestWebhook = useCallback(async () => {
         for (let i = 0; i < requestIdList.length; i++) {
             try {
-                await postFetch(`/webhook/replicate?generationTaskId=ea380b39-0761-4936-a684-c5685ee6fd42`, {
+                await postFetch(`/webhook/replicate?generationTaskId=1519017a-1f2f-4c59-8ef1-4b8d692e7905`, {
                     id: requestIdList[i],
                     output: videoUrlList[i],
                     // "starting" | "processing" | "succeeded" | "failed" | "canceled" | "aborted"
@@ -454,9 +454,11 @@ function WorkspaceCreatePageClient() {
                 // 모든 API 라우트들을 병렬로 프리컴파일
                 const apiRoutes = [
                     '/api/open-ai/script',
+                    '/api/music',
                     '/api/video',
                     '/api/video/merge',
-                    '/webhook/replicate'
+                    '/webhook/replicate',
+                    '/webhook/suno-api'
                 ];
                 
                 const precompilePromises = apiRoutes.map(route => 

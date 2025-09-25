@@ -2,7 +2,12 @@ import {GenerateImagesResponse, GoogleGenAI, PersonGeneration} from "@google/gen
 import {createSupabaseServiceRoleClient} from "@/lib/supabaseServiceRole";
 
 export const imageServerAPI = {
-    async postImage(imageGenPrompt: string, generationTaskId: string, sceneNumber: number, negativePrompt?: string): Promise<{ success: boolean; error?: { message: string; code: string } }> {
+    async postImage(
+        imageGenPrompt: string,
+        generationTaskId: string,
+        sceneNumber: number,
+        negativePrompt?: string
+    ): Promise<{ success: boolean; error?: { message: string; code: string } }> {
         const supabase = createSupabaseServiceRoleClient();
 
         try {

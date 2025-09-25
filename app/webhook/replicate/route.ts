@@ -6,6 +6,9 @@ import {SceneGenerationStatus} from "@/api/types/supabase/VideoGenerationTasks";
 import {createSupabaseServiceRoleClient} from "@/lib/supabaseServiceRole";
 import {getErrorMessage} from "@/utils/ErrorUtils";
 import {MasterNegativePrompts} from "@/lib/MasterNegativePrompts";
+import {sunoAPIServerAPI} from "@/api/server/sunoAPIServerAPI";
+import {openAIServerAPI} from "@/api/server/openAIServerAPI";
+import {musicServerAPI} from "@/api/server/musicServerAPI";
 
 // import { adjustVideoSpeedAndUpload } from "@/lib/services/videoService"; // (추천) 실제 로직은 이렇게 분리
 
@@ -71,8 +74,6 @@ export async function POST(request: NextRequest) {
 
                 const newRequestId = await videoServerAPI.postVideo(
                     sceneToProcess,
-                    // MasterNegativePrompts.Anime,
-                    `${MasterNegativePrompts.Common} ${sceneToProcess.videoGenNegativePrompt}`,
                     generationTaskId,
                 );
 
@@ -177,13 +178,6 @@ export async function POST(request: NextRequest) {
             "increment_and_get_scene_count",
             { task_id: generationTask.id }
         )
-        // const isAllScenesProcessed = patchVideoGenerationTaskResult.scene_breakdown_list.every((sceneData) => {
-        //     return sceneData.status === SceneGenerationStatus.PROCESSED;
-        // });
-        // const isAllScenesProcessed = countResult.processed_count === countResult.total_count;
-
-        console.log("countResult", countResult);
-        console.log("rpcError", rpcError);
 
         const processedCountFromDB = countResult.processed_count;
         const totalCountFromDB = countResult.total_count;
@@ -205,8 +199,29 @@ export async function POST(request: NextRequest) {
         if (isAllScenesProcessed) {
             console.log(`모든 Scene 처리 완료. 최종 병합을 시작합니다: ${generationTask.id}`);
 
+            const postMusicGenerationDataResult = await openAIServerAPI.postMusicGenerationData(
+                generationTask.video_main_subject as string,
+                generationTask.narration_script,
+                generationTask.master_style_positive_prompt as string,
+                updatedSceneList,
+            )
+
+            if (!postMusicGenerationDataResult.success || !postMusicGenerationDataResult.data) {
+                throw new Error("Failed to create music generation data.");
+            }
+
+            fetch(new URL(`${process.env.BASE_URL}/api/music?generationTaskId=${generationTaskId}`, request.url).toString(), {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    // 필요하다면 내부 인증을 위한 시크릿 키 등을 추가할 수 있습니다.
+                    // 'Authorization': `Bearer ${process.env.INTERNAL_SECRET_KEY}`
+                },
+                body: JSON.stringify(postMusicGenerationDataResult.data),
+            });
+
             // 현재 요청의 기본 URL을 사용하여 병합 엔드포인트의 전체 URL을 생성
-            const mergeEndpointUrl = new URL('http://localhost:3000/api/video/merge', request.url);
+            const mergeEndpointUrl = new URL(`${process.env.BASE_URL}/api/video/merge`, request.url);
 
             // ★★★ 서버 사이드에서 직접 POST 요청을 보냄 ★★★
             // 이 fetch의 응답을 기다릴 필요 없으므로 await를 사용하지 않음 ("Fire and Forget")
