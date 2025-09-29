@@ -1,4 +1,5 @@
-const VALID_NUM_FRAMES = [81, 89, 97, 105, 113, 121];
+// const VALID_NUM_FRAMES = [81, 89, 97, 105, 113, 121];
+const VALID_NUM_FRAMES = [81, 89, 97, 105, 113];
 const MIN_FPS = 5;
 const MAX_FPS = 30;
 const STANDARD_FPS = 24;
@@ -10,9 +11,11 @@ const MIN_DURATION_PARAMS = {
     resulting_duration: (81 - 1) / 30, // 2.667s
 };
 const MAX_DURATION_PARAMS = {
-    num_frames: 121,
+    // num_frames: 121,
+    num_frames: 113,
     frames_per_second: 20,
-    resulting_duration: (121 - 1) / 20, // 6.0s
+    // resulting_duration: (121 - 1) / 20, // 6.0s
+    resulting_duration: (113 - 1) / 20, // 5.6s
 };
 
 interface VideoParameters {

@@ -13,6 +13,7 @@ import { randomUUID } from 'crypto';
 import {imageServerAPI} from "@/api/server/imageServerAPI";
 import {createSupabaseServiceRoleClient} from "@/lib/supabaseServiceRole";
 import {findOptimalVideoParameters} from "@/utils/videoUtils";
+import {MasterStyleInfo} from "@/api/server/MasterStyleInfo";
 
 export async function POST(request: NextRequest) {
     const supabase = createSupabaseServiceRoleClient();
@@ -21,7 +22,6 @@ export async function POST(request: NextRequest) {
         const {
             userId,
             narrationScript,
-            duration,
             style,
             voice,
             music,
@@ -29,9 +29,9 @@ export async function POST(request: NextRequest) {
 
         // 필수 필드 검증
         // if (!narrationScript || !userId || !style || !voice) {
-        if (!narrationScript || !duration || !style || !voice) {
+        if (!narrationScript || !style || !voice) {
             return NextResponse.json(
-                { error: 'narrationScript, duration, voiceId, and userId are required.' },
+                { error: 'narrationScript, styleId, voiceId, and userId are required.' },
                 { status: 400 }
             );
         }
@@ -60,7 +60,8 @@ export async function POST(request: NextRequest) {
         console.log("sceneDataList", postSceneSegmentationResult.sceneDataList);
         console.log("videoMainSubject", postSceneSegmentationResult.videoMainSubject);
 
-        if (!postMasterStylePromptResult.success || !postMasterStylePromptResult.masterStylePositivePrompt || !postMasterStylePromptResult.masterStyleNegativePrompt) {
+        // if (!postMasterStylePromptResult.success || !postMasterStylePromptResult.masterStylePositivePrompt || !postMasterStylePromptResult.masterStyleNegativePrompt) {
+        if (!postMasterStylePromptResult.success || !postMasterStylePromptResult.masterStylePositivePromptInfo || !postMasterStylePromptResult.masterStyleNegativePrompt) {
             return NextResponse.json(
                 { error: postMasterStylePromptResult?.error?.message || 'Failed to generate master style with OpenAI' },
                 { status: 500 }
@@ -130,7 +131,8 @@ export async function POST(request: NextRequest) {
             };
         });
         const videoMainSubject = postSceneSegmentationResult.videoMainSubject;
-        const masterStylePositivePrompt = postMasterStylePromptResult.masterStylePositivePrompt;
+        // const masterStylePositivePrompt = postMasterStylePromptResult.masterStylePositivePrompt;
+        const masterStylePositivePromptInfo: MasterStyleInfo = postMasterStylePromptResult.masterStylePositivePromptInfo;
         const masterStyleNegativePrompt = postMasterStylePromptResult.masterStyleNegativePrompt;
 
         // 6. VideoGenerationTaskResult row 생성
@@ -156,7 +158,8 @@ export async function POST(request: NextRequest) {
         const sceneDataWithImageGenPromptPromiseList: Promise<SceneData>[] = sceneDataList.map(async (sceneData) => {
             const postImageGenPromptResult = await openAIServerAPI.postImageGenPrompt(
                 sceneData.imageGenPromptDirective,
-                masterStylePositivePrompt,
+                // masterStylePositivePrompt,
+                masterStylePositivePromptInfo,
                 sceneData.narration,
                 videoMainSubject,
             );
@@ -192,6 +195,24 @@ export async function POST(request: NextRequest) {
                 );
             }
         }
+
+        // const patchedVideoGenerationTask = await videoGenerationTasksServerAPI.patchVideoGenerationTask({
+        //     id: postVideoGenerationTaskResult.id,
+        //     scene_breakdown_list: sceneDataWithImageGenPromptList,
+        //     subtitle_segment_list: voiceGenerationResult.subtitleSegmentList,
+        //     // master_style_positive_prompt: masterStylePositivePrompt,
+        //     master_style_positive_prompt: masterStylePositivePromptInfo,
+        //     master_style_negative_prompt: masterStyleNegativePrompt,
+        //     video_main_subject: videoMainSubject,
+        // })
+        // console.log(`taskId: ${patchedVideoGenerationTask.id}`)
+        // return NextResponse.json({
+        //     success: true,
+        //     data: {
+        //         taskId: patchedVideoGenerationTask.id,
+        //     },
+        //     message: `Voice generation, video data analysis, and ${sceneDataWithImageGenPromptList.length} scene video generation requests completed. Task ID: ${patchedVideoGenerationTask.id}`
+        // });
 
         const sceneDataWithVideoGenPromptPromiseList: Promise<SceneData>[] = sceneDataWithImageGenPromptList.map(async (sceneData) => {
             const { data: imageData, error: imageError } = await supabase.storage
@@ -263,7 +284,7 @@ export async function POST(request: NextRequest) {
             id: postVideoGenerationTaskResult.id,
             scene_breakdown_list: finalSceneDataList,
             subtitle_segment_list: voiceGenerationResult.subtitleSegmentList,
-            master_style_positive_prompt: masterStylePositivePrompt,
+            master_style_positive_prompt: masterStylePositivePromptInfo,
             master_style_negative_prompt: masterStyleNegativePrompt,
             video_main_subject: videoMainSubject,
         })

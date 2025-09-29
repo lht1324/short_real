@@ -3,6 +3,7 @@
 import {Voice} from "@/api/types/eleven-labs/Voice";
 import {BGMInfo} from "@/api/types/supabase/BackgroundMusics";
 import {Style} from "@/api/types/supabase/Styles";
+import {MasterStyleInfo} from "@/api/server/MasterStyleInfo";
 
 export interface SceneData {
     sceneNumber: number;
@@ -25,7 +26,6 @@ export interface SubtitleSegment {
 export interface VideoGenerationRequest {
     userId: string;
     narrationScript: string;
-    duration: number;
     style?: Style;
     voice?: Voice;
     music?: BGMInfo;
@@ -44,7 +44,7 @@ export interface VideoGenerationTask {
     narration_script: string; // text, not null
     scene_breakdown_list: SceneData[]; // jsonb, not null
     subtitle_segment_list: SubtitleSegment[]; // jsonb, not null
-    master_style_positive_prompt?: string;
+    master_style_positive_prompt?: MasterStyleInfo;
     master_style_negative_prompt?: string;
     video_main_subject?: string;
     processed_scene_count?: number;

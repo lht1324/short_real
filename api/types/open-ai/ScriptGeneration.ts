@@ -2,7 +2,6 @@
 
 export interface ScriptGenerationRequest {
     userPrompt: string;
-    duration: number; // 초 단위 (15 또는 30)
 }
 
 // 우리 앱에서 사용할 스크립트 응답 타입

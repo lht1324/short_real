@@ -13,6 +13,7 @@ import {
     Square,
     ChevronDown,
     ChevronRight,
+    Film,
 } from 'lucide-react';
 import { openAIClientAPI } from '@/api/client/openAIClientAPI';
 import {ScriptGenerationRequest} from "@/api/types/open-ai/ScriptGeneration";
@@ -21,9 +22,11 @@ import {voiceClientAPI} from "@/api/client/voiceClientAPI";
 import {BGMInfo} from "@/api/types/supabase/BackgroundMusics";
 import {musicClientAPI} from "@/api/client/musicClientAPI";
 import {Style} from "@/api/types/supabase/Styles";
-import {VideoGenerationRequest} from "@/api/types/supabase/VideoGenerationTasks";
+import {SceneData, VideoGenerationRequest} from "@/api/types/supabase/VideoGenerationTasks";
 import {videoClientAPI} from "@/api/client/videoClientAPI";
 import {postFetch} from "@/api/client/baseFetch";
+import {StoryboardData} from "@/app/api/open-ai/scene/PostSceneResponse";
+import StoryboardItem from "@/components/page/workspace/create/StoryboardItem";
 
 interface ThemeFilterData {
     themeName: string,
@@ -52,19 +55,20 @@ function WorkspaceCreatePageClient() {
     }, [backgroundMusicList, backgroundMusicThemeFilterItemList]);
 
     // Section states
-    const [description, setDescription] = useState<string>('');
-    const [duration, setDuration] = useState<number>(15);
+    const [script, setScript] = useState<string>('');
     const [selectedStyleId, setSelectedStyleId] = useState<string>('');
     const [selectedVoiceId, setSelectedVoiceId] = useState<string>('');
     const [selectedBackgroundMusicId, setSelectedBackgroundMusicId] = useState<string>('');
+    
+    // Storyboard states
+    const [sceneDataList, setSceneDataList] = useState<SceneData[]>([]);
+    const [videoMainSubject, setVideoMainSubject] = useState<string | null>(null);
 
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isGenerating, setIsGenerating] = useState(false);
+    const [isGeneratingStoryboardData, setIsGeneratingStoryboardData] = useState(false);
     const [showAIModal, setShowAIModal] = useState(false);
     const [aiPrompt, setAiPrompt] = useState('');
-    const [selectedDuration, setSelectedDuration] = useState(15);
-
-    const [videoDataResponse, setVideoDataResponse] = useState({ });
     
     // Audio state management
     const [currentAudio, setCurrentAudio] = useState<HTMLAudioElement | null>(null);
@@ -75,26 +79,6 @@ function WorkspaceCreatePageClient() {
     const [isVoiceExpanded, setIsVoiceExpanded] = useState(true);
     const [isMusicExpanded, setIsMusicExpanded] = useState(true);
 
-    // 어차피 Scene별로 나눈다고 할 때, 나레이션 만드는 건 그대로 놔둔다
-    // 영상을 각 Scene마다 생성한 뒤 합쳐야 하니, 에디터에서 각 Scene 누를 때마다 해당 Scene 영상을 보여주는 거다
-    // 나레이션은 Scene마다 생성된 영상에 그대로 보여주는 거고.
-    /**
-     * 🎨 공식 지원 스타일 (확인된 것들)
-     * 애니메이션 스타일
-     *
-     * Pixar style: 3D 렌더링에 유연하고 일관성 있는 스타일
-     * Studio Ghibli: 애니메이션에서 가장 일관성 있게 생성되는 스타일
-     * Disney style: 클래식한 서구 만화 스타일
-     * Anime style: 일본 애니메이션 스타일 (horror anime 등 세부 변형 가능)
-     * Pixel art: 마인크래프트나 메이플스토리 같은 픽셀 아트 Pika Scenes (v2.2) | Image to Video | API Documentation | fal.ai
-     *
-     * 실사/시네마틱 스타일
-     *
-     * Stop motion: 찰흙 애니메이션이나 액션 피규어 스타일
-     * Claymation: 찰흙 인형 애니메이션
-     * Tilt-shift photography: 미니어처 모델 효과
-     * Cinematic shots: 영화적 카메라워크
-     */
     // Style examples for preview
     const styleList = useMemo((): Style[] => [
         {
@@ -212,18 +196,17 @@ function WorkspaceCreatePageClient() {
             // API 요청 데이터 구성
             const requestData: ScriptGenerationRequest = {
                 userPrompt: aiPrompt,
-                duration: duration,
             };
 
             console.log('Generating script with data:', requestData);
 
             // OpenAI API 호출
-            const result = await openAIClientAPI.postScript(requestData);
+            const result = await openAIClientAPI.postOpenAIScript(requestData);
 
             if (result && result.success && result.data) {
                 console.log("Script generation result", result);
                 console.log('Script generated successfully:', result.data);
-                setDescription(result.data.script);
+                setScript(result.data.script);
                 setIsGenerating(false);
                 setShowAIModal(false);
                 setAiPrompt('');
@@ -238,7 +221,38 @@ function WorkspaceCreatePageClient() {
             alert('An error occurred while generating script. Please try again.');
             setIsGenerating(false);
         }
-    }, [aiPrompt, duration]);
+    }, [aiPrompt]);
+    
+    const onClickGenerateStoryboard = useCallback(async () => {
+        try {
+            if (!script || !selectedVoiceId) {
+                throw new Error("Write script or select voice first.")
+            }
+
+            setIsGeneratingStoryboardData(true);
+
+            const result: StoryboardData | null = await openAIClientAPI.postOpenAIScene({
+                narrationScript: script,
+                voiceId: selectedVoiceId,
+            });
+            
+            if (!result || !result.sceneDataList || !result.videoMainSubject) {
+                throw new Error("Storyboard generation is failed.")
+            }
+            
+            const newSceneDataList = result.sceneDataList;
+            const newVideoMainSubject = result.videoMainSubject;
+            
+            setSceneDataList(newSceneDataList);
+            setVideoMainSubject(newVideoMainSubject);
+
+            setIsGeneratingStoryboardData(false);
+        } catch (error) {
+            console.error('onClickGenerateStoryboard', error);
+            alert('An error occurred while generating script. Please try again.');
+            setIsGeneratingStoryboardData(false);
+        }
+    }, [script, selectedVoiceId]);
 
     const openAIModal = useCallback(() => {
         setShowAIModal(true);
@@ -309,13 +323,13 @@ function WorkspaceCreatePageClient() {
 
     // 예상 영상 시간 계산 (2.5단어/초 기준)
     const estimatedDuration = useMemo(() => {
-        if (!description.trim()) return 0;
-        const wordCount = description.split(' ').length;
+        if (!script.trim()) return 0;
+        const wordCount = script.split(' ').length;
         return Math.round(wordCount / 2.5);
-    }, [description]);
+    }, [script]);
 
     const onSubmitProject = useCallback(async () => {
-        if (!description.trim()) {
+        if (!script.trim()) {
             alert('스크립트를 입력해주세요.');
             return;
         }
@@ -337,8 +351,7 @@ function WorkspaceCreatePageClient() {
             // VideoData API 요청 데이터 구성
             const requestData: VideoGenerationRequest = {
                 userId: "",
-                narrationScript: description,
-                duration: duration,
+                narrationScript: script,
                 style: selectedStyle,
                 voice: selectedVoice,
                 music: selectedMusic,
@@ -368,7 +381,7 @@ function WorkspaceCreatePageClient() {
         } finally {
             setIsSubmitting(false);
         }
-    }, [description, duration, selectedStyleId, selectedVoiceId, selectedBackgroundMusicId, styleList, voiceList, backgroundMusicList]);
+    }, [script, selectedStyleId, selectedVoiceId, selectedBackgroundMusicId, styleList, voiceList, backgroundMusicList]);
 
     const requestIdList = useMemo(() => {
         return [
@@ -546,7 +559,7 @@ function WorkspaceCreatePageClient() {
                                         <label className="block text-xl font-semibold text-purple-300">
                                             Script
                                         </label>
-                                        {description.trim() && (
+                                        {script.trim() && (
                                             <span className="px-2 py-1 bg-blue-500/20 text-blue-300 text-sm font-medium rounded border border-blue-400/30">
                                                 ~{estimatedDuration}s
                                             </span>
@@ -562,12 +575,92 @@ function WorkspaceCreatePageClient() {
                                     </button>
                                 </div>
                                 <textarea
-                                    value={description}
-                                    onChange={(e) => setDescription(e.target.value)}
+                                    value={script}
+                                    onChange={(e) => setScript(e.target.value)}
                                     placeholder="Describe what you want to create. Be as detailed as possible..."
                                     rows={6}
                                     className="w-full px-4 py-3 rounded-xl bg-gray-800/50 border border-purple-500/30 text-white placeholder-gray-400 focus:border-purple-400 focus:ring-2 focus:ring-purple-400/20 focus:outline-none transition-all resize-none text-base"
                                 />
+                            </div>
+
+                            {/* Storyboard Section */}
+                            <div>
+                                <div className="flex items-center justify-between mb-4">
+                                    <label className="block text-xl font-semibold text-purple-300">
+                                        Storyboard
+                                    </label>
+                                    <button
+                                        type="button"
+                                        onClick={onClickGenerateStoryboard}
+                                        disabled={isGeneratingStoryboardData || !script.trim() || !selectedVoiceId}
+                                        className="px-3 py-1.5 bg-gradient-to-r from-green-500 to-blue-500 text-white rounded-lg text-sm font-medium hover:from-green-600 hover:to-blue-600 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-1"
+                                    >
+                                        {isGeneratingStoryboardData ? (
+                                            <>
+                                                <div className="w-3 h-3 border border-white/30 border-t-white rounded-full animate-spin"></div>
+                                                <span>Generating...</span>
+                                            </>
+                                        ) : (
+                                            <span>Generate Storyboard</span>
+                                        )}
+                                    </button>
+                                </div>
+
+                                {/* Main Subject 표시 */}
+                                {videoMainSubject && (
+                                    <div className="mb-4 p-3 bg-purple-500/10 border border-purple-400/30 rounded-lg">
+                                        <div className="flex items-center space-x-2">
+                                            <div className="w-2 h-2 bg-purple-400 rounded-full"></div>
+                                            <span className="text-sm font-medium text-purple-300">Main Subject:</span>
+                                            <span className="text-sm text-white">{videoMainSubject}</span>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Storyboard 그리드 */}
+                                {sceneDataList.length !== 0 && videoMainSubject && (
+                                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                                        {sceneDataList.sort((a, b) => {
+                                            return a.sceneNumber - b.sceneNumber;
+                                        }).map((sceneData) => {
+                                            return <StoryboardItem key={sceneData.sceneNumber} sceneData={sceneData} />
+                                        })}
+                                    </div>
+                                )}
+
+                                {/* 로딩 상태 또는 빈 상태 메시지 */}
+                                {sceneDataList.length === 0 && (
+                                    <div className="text-center py-8 px-4 bg-gray-800/30 border border-gray-600/30 rounded-lg">
+                                        {isGeneratingStoryboardData ? (
+                                            // 로딩 중 상태
+                                            <>
+                                                <div className="text-purple-400 mb-4">
+                                                    <div className="w-16 h-16 mx-auto mb-4 relative">
+                                                        <div className="absolute inset-0 border-4 border-purple-200/20 rounded-full"></div>
+                                                        <div className="absolute inset-0 border-4 border-purple-400 border-t-transparent rounded-full animate-spin"></div>
+                                                        <div className="absolute inset-2 border-2 border-purple-300/40 border-b-transparent rounded-full animate-spin" style={{animationDirection: 'reverse', animationDuration: '1.5s'}}></div>
+                                                    </div>
+                                                </div>
+                                                <p className="text-base text-purple-300 font-medium mb-2">AI Screenwriter at Work</p>
+                                                <p className="text-sm text-gray-400">Crafting your storyboard with cinematic precision...</p>
+                                                <div className="mt-4 flex justify-center space-x-1">
+                                                    <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{animationDelay: '0ms'}}></div>
+                                                    <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{animationDelay: '150ms'}}></div>
+                                                    <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{animationDelay: '300ms'}}></div>
+                                                </div>
+                                            </>
+                                        ) : (
+                                            // 빈 상태
+                                            <>
+                                                <div className="text-gray-400 mb-2">
+                                                    <Film className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                                                </div>
+                                                <p className="text-sm text-gray-400 font-medium">No storyboard generated yet</p>
+                                                <p className="text-xs text-gray-500 mt-1">Generate a storyboard to see scene breakdown</p>
+                                            </>
+                                        )}
+                                    </div>
+                                )}
                             </div>
 
                             {/* VideoData API Test Section */}
@@ -587,32 +680,32 @@ function WorkspaceCreatePageClient() {
                                         </button>
                                     </div>
                                     <pre className="bg-gray-900/50 border border-gray-700/50 rounded-lg p-3 text-xs text-green-400 overflow-x-auto font-mono">
-                                        {JSON.stringify(videoDataResponse, null, 2)}
+                                        {`{ }`}
                                     </pre>
                                 </div>
                             </div>
 
                             {/* Duration Selection */}
-                            <div>
-                                <label className="block text-xl font-medium text-white mb-3">
-                                    Duration
-                                </label>
-                                <div className="flex gap-3">
-                                    {[15, 30].map(seconds => (
-                                        <button
-                                            key={seconds}
-                                            onClick={() => setDuration(seconds)}
-                                            className={`px-4 py-2 rounded-lg text-base font-medium transition-all ${
-                                                duration === seconds
-                                                    ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white border border-pink-400/50'
-                                                    : 'bg-gray-800/30 text-gray-300 hover:bg-gray-700/50 border border-purple-500/30'
-                                            }`}
-                                        >
-                                            {seconds}s
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
+                            {/*<div>*/}
+                            {/*    <label className="block text-xl font-medium text-white mb-3">*/}
+                            {/*        Duration*/}
+                            {/*    </label>*/}
+                            {/*    <div className="flex gap-3">*/}
+                            {/*        {[15, 30].map(seconds => (*/}
+                            {/*            <button*/}
+                            {/*                key={seconds}*/}
+                            {/*                onClick={() => setDuration(seconds)}*/}
+                            {/*                className={`px-4 py-2 rounded-lg text-base font-medium transition-all ${*/}
+                            {/*                    duration === seconds*/}
+                            {/*                        ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white border border-pink-400/50'*/}
+                            {/*                        : 'bg-gray-800/30 text-gray-300 hover:bg-gray-700/50 border border-purple-500/30'*/}
+                            {/*                }`}*/}
+                            {/*            >*/}
+                            {/*                {seconds}s*/}
+                            {/*            </button>*/}
+                            {/*        ))}*/}
+                            {/*    </div>*/}
+                            {/*</div>*/}
 
                             {/* Visual Style Cards */}
                             <div>
@@ -896,7 +989,7 @@ function WorkspaceCreatePageClient() {
                     <div className="p-6 border-t border-purple-500/20 bg-gray-900/50 backdrop-blur-sm relative z-10">
                         <button
                             onClick={onSubmitProject}
-                            disabled={!description || isSubmitting}
+                            disabled={!script || isSubmitting}
                             className="mx-auto max-w-xs w-full group bg-gradient-to-r from-pink-500 to-purple-600 text-white px-6 py-4 rounded-xl text-xl font-semibold hover:from-pink-600 hover:to-purple-700 transition-all duration-300 transform hover:scale-105 flex items-center justify-center space-x-2 shadow-lg shadow-purple-500/25 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
                         >
                             {isSubmitting ? (
@@ -952,24 +1045,24 @@ function WorkspaceCreatePageClient() {
                                     </div>
                                     
                                     {/* Duration Selection */}
-                                    <div>
-                                        <label className="block text-sm font-medium text-white mb-2">Length</label>
-                                        <div className="grid grid-cols-2 gap-2">
-                                            {[15, 30].map(seconds => (
-                                                <button
-                                                    key={seconds}
-                                                    onClick={() => setDuration(seconds)}
-                                                    className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${
-                                                        duration === seconds
-                                                            ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white border border-pink-400/50'
-                                                            : 'bg-gray-800/30 text-gray-300 hover:bg-gray-700/50 border border-purple-500/30'
-                                                    }`}
-                                                >
-                                                    {seconds}s
-                                                </button>
-                                            ))}
-                                        </div>
-                                    </div>
+                                    {/*<div>*/}
+                                    {/*    <label className="block text-sm font-medium text-white mb-2">Length</label>*/}
+                                    {/*    <div className="grid grid-cols-2 gap-2">*/}
+                                    {/*        {[15, 30].map(seconds => (*/}
+                                    {/*            <button*/}
+                                    {/*                key={seconds}*/}
+                                    {/*                onClick={() => setDuration(seconds)}*/}
+                                    {/*                className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${*/}
+                                    {/*                    duration === seconds*/}
+                                    {/*                        ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white border border-pink-400/50'*/}
+                                    {/*                        : 'bg-gray-800/30 text-gray-300 hover:bg-gray-700/50 border border-purple-500/30'*/}
+                                    {/*                }`}*/}
+                                    {/*            >*/}
+                                    {/*                {seconds}s*/}
+                                    {/*            </button>*/}
+                                    {/*        ))}*/}
+                                    {/*    </div>*/}
+                                    {/*</div>*/}
                                     
                                     {/* Warning Message - Simplified */}
                                     <div className="bg-amber-500/10 border border-amber-400/30 rounded-lg p-3">

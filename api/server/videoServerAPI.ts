@@ -44,7 +44,7 @@ export const videoServerAPI = {
         // Signed URL 생성 (1시간 유효)
         const { data, error } = await supabase.storage
             .from('scene_image_temp_storage')
-            .createSignedUrl(`${generationTaskId}/${sceneData.sceneNumber}.jpeg`, 3600);
+            .createSignedUrl(`${generationTaskId}/${sceneData.sceneNumber}.jpeg`, 60 * 60 * 24);
 
         // if (!imageUrl) {
         //     throw new Error(`Scene ${sceneData.sceneNumber}: 이미지 데이터가 없습니다.`);
