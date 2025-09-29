@@ -19,19 +19,12 @@ import { openAIClientAPI } from '@/api/client/openAIClientAPI';
 import {ScriptGenerationRequest} from "@/api/types/open-ai/ScriptGeneration";
 import {Voice} from "@/api/types/eleven-labs/Voice";
 import {voiceClientAPI} from "@/api/client/voiceClientAPI";
-import {BGMInfo} from "@/api/types/supabase/BackgroundMusics";
-import {musicClientAPI} from "@/api/client/musicClientAPI";
 import {Style} from "@/api/types/supabase/Styles";
 import {SceneData, VideoGenerationRequest} from "@/api/types/supabase/VideoGenerationTasks";
 import {videoClientAPI} from "@/api/client/videoClientAPI";
 import {postFetch} from "@/api/client/baseFetch";
 import {StoryboardData} from "@/app/api/open-ai/scene/PostSceneResponse";
 import StoryboardItem from "@/components/page/workspace/create/StoryboardItem";
-
-interface ThemeFilterData {
-    themeName: string,
-    isSelected: boolean,
-}
 
 function WorkspaceCreatePageClient() {
     // 음성, 음악 선택 기능 추가
@@ -42,23 +35,20 @@ function WorkspaceCreatePageClient() {
     // 음성만 재생성해주는 기능 추가 - 크레딧 받는 걸로
 
     const [voiceList, setVoiceList] = useState<Voice[]>([]);
-    const [backgroundMusicList, setBackgroundMusicList] = useState<BGMInfo[]>([]);
-    const [backgroundMusicThemeFilterItemList, setBackgroundMusicThemeFilterItemList] = useState<ThemeFilterData[]>([]);
-    const selectedBackgroundMusicList = useMemo(() => {
-        return backgroundMusicList.filter((backgroundMusic) => {
-            return backgroundMusic.themes.some((theme) => {
-                return backgroundMusicThemeFilterItemList.find((themeFilterItem) => {
-                    return themeFilterItem.themeName === theme;
-                })?.isSelected ?? false;
-            })
+    const [voiceTagRecord, setVoiceTagRecord] = useState<Record<string, boolean>>({ });
+    const isAllTagSelected = useMemo(() => {
+        return Object.values(voiceTagRecord).every((isTagSelected) => isTagSelected);
+    }, [voiceTagRecord]);
+    const filteredVoiceList = useMemo(() => {
+        return voiceList.filter((voice) => {
+            return voiceTagRecord[voice.labels.gender] || voiceTagRecord[voice.labels.age];
         })
-    }, [backgroundMusicList, backgroundMusicThemeFilterItemList]);
+    }, [voiceList, voiceTagRecord]);
 
     // Section states
     const [script, setScript] = useState<string>('');
     const [selectedStyleId, setSelectedStyleId] = useState<string>('');
     const [selectedVoiceId, setSelectedVoiceId] = useState<string>('');
-    const [selectedBackgroundMusicId, setSelectedBackgroundMusicId] = useState<string>('');
     
     // Storyboard states
     const [sceneDataList, setSceneDataList] = useState<SceneData[]>([]);
@@ -76,8 +66,6 @@ function WorkspaceCreatePageClient() {
     
     // Collapse states for sections
     const [isStyleExpanded, setIsStyleExpanded] = useState(true);
-    const [isVoiceExpanded, setIsVoiceExpanded] = useState(true);
-    const [isMusicExpanded, setIsMusicExpanded] = useState(true);
 
     // Style examples for preview
     const styleList = useMemo((): Style[] => [
@@ -344,9 +332,6 @@ function WorkspaceCreatePageClient() {
             const selectedVoice = voiceList.find((voice) => {
                 return voice.id === selectedVoiceId;
             });
-            const selectedMusic = backgroundMusicList.find((backgroundMusic) => {
-                return backgroundMusic.id === selectedBackgroundMusicId;
-            });
 
             // VideoData API 요청 데이터 구성
             const requestData: VideoGenerationRequest = {
@@ -354,7 +339,6 @@ function WorkspaceCreatePageClient() {
                 narrationScript: script,
                 style: selectedStyle,
                 voice: selectedVoice,
-                music: selectedMusic,
             };
 
             console.log('Creating video project with data:', requestData);
@@ -381,7 +365,7 @@ function WorkspaceCreatePageClient() {
         } finally {
             setIsSubmitting(false);
         }
-    }, [script, selectedStyleId, selectedVoiceId, selectedBackgroundMusicId, styleList, voiceList, backgroundMusicList]);
+    }, [script, selectedStyleId, selectedVoiceId, styleList, voiceList]);
 
     const requestIdList = useMemo(() => {
         return [
@@ -427,20 +411,31 @@ function WorkspaceCreatePageClient() {
     useEffect(() => {
         const loadData = async () => {
             const voiceDataList = await voiceClientAPI.getVoices();
-            const bgmDataList = await musicClientAPI.getBackgroundMusics();
 
-            console.log("voiceDataList", voiceDataList);
+            // 모든 gender와 age 값들을 수집
+            const allTags = new Set<string>();
+
+            voiceDataList.forEach((voiceData) => {
+                const labels = voiceData.labels;
+                if (labels?.gender) {
+                    allTags.add(labels.gender);
+                }
+                if (labels?.age) {
+                    allTags.add(labels.age);
+                }
+            });
+
+            // 중복 제거된 태그들을 isSelected: true로 설정하여 배열로 변환
+            const uniqueTagNameList = Array.from(allTags).map(tagName => {
+                return tagName;
+            });
+            const uniqueTagRecord: Record<string, boolean> = { }
+            uniqueTagNameList.forEach((uniqueTagName) => {
+                uniqueTagRecord[uniqueTagName] = true;
+            })
+
             setVoiceList(voiceDataList);
-            setBackgroundMusicList(bgmDataList);
-
-            // themes 추출 및 중복 제거 후 ThemeFilterData로 매핑
-            const allThemes = bgmDataList.flatMap(bgm => bgm.themes);
-            const uniqueThemes = [...new Set(allThemes)];
-            const themeFilterItems: ThemeFilterData[] = uniqueThemes.map(theme => ({
-                themeName: theme,
-                isSelected: true // 기본적으로 모든 theme 선택됨
-            }));
-            setBackgroundMusicThemeFilterItemList(themeFilterItems);
+            setVoiceTagRecord(uniqueTagRecord);
         }
 
         loadData().then();
@@ -589,12 +584,22 @@ function WorkspaceCreatePageClient() {
                                     <label className="block text-xl font-semibold text-purple-300">
                                         Storyboard
                                     </label>
-                                    <button
-                                        type="button"
-                                        onClick={onClickGenerateStoryboard}
-                                        disabled={isGeneratingStoryboardData || !script.trim() || !selectedVoiceId}
-                                        className="px-3 py-1.5 bg-gradient-to-r from-green-500 to-blue-500 text-white rounded-lg text-sm font-medium hover:from-green-600 hover:to-blue-600 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-1"
-                                    >
+                                    <div className="relative">
+                                        <button
+                                            type="button"
+                                            onClick={onClickGenerateStoryboard}
+                                            disabled={isGeneratingStoryboardData || !script.trim() || !selectedVoiceId}
+                                            className="px-3 py-1.5 bg-gradient-to-r from-green-500 to-blue-500 text-white rounded-lg text-sm font-medium hover:from-green-600 hover:to-blue-600 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-1 peer"
+                                            title={
+                                                isGeneratingStoryboardData
+                                                    ? "Generating storyboard..."
+                                                    : !script.trim()
+                                                    ? "Please write a script first"
+                                                    : !selectedVoiceId
+                                                    ? "Please select a voice first"
+                                                    : "Generate Storyboard"
+                                            }
+                                        >
                                         {isGeneratingStoryboardData ? (
                                             <>
                                                 <div className="w-3 h-3 border border-white/30 border-t-white rounded-full animate-spin"></div>
@@ -603,7 +608,8 @@ function WorkspaceCreatePageClient() {
                                         ) : (
                                             <span>Generate Storyboard</span>
                                         )}
-                                    </button>
+                                        </button>
+                                    </div>
                                 </div>
 
                                 {/* Main Subject 표시 */}
@@ -619,7 +625,7 @@ function WorkspaceCreatePageClient() {
 
                                 {/* Storyboard 그리드 */}
                                 {sceneDataList.length !== 0 && videoMainSubject && (
-                                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 max-w-4xl">
                                         {sceneDataList.sort((a, b) => {
                                             return a.sceneNumber - b.sceneNumber;
                                         }).map((sceneData) => {
@@ -655,64 +661,20 @@ function WorkspaceCreatePageClient() {
                                                 <div className="text-gray-400 mb-2">
                                                     <Film className="w-12 h-12 mx-auto mb-3 opacity-50" />
                                                 </div>
-                                                <p className="text-sm text-gray-400 font-medium">No storyboard generated yet</p>
-                                                <p className="text-xs text-gray-500 mt-1">Generate a storyboard to see scene breakdown</p>
+                                                <p className="text-base text-gray-400 font-medium">No storyboard generated yet</p>
+                                                <p className="text-sm text-gray-500 mt-1">Generate a storyboard to see scene breakdown</p>
                                             </>
                                         )}
                                     </div>
                                 )}
                             </div>
 
-                            {/* VideoData API Test Section */}
+                            {/* Visual Style Selection */}
                             <div>
-                                <label className="block text-xl font-medium text-white mb-3">
-                                    VideoData API Test
-                                </label>
-                                <div className="bg-gray-800/50 border border-purple-500/30 rounded-xl p-4">
-                                    <div className="flex items-center justify-between mb-3">
-                                        <span className="text-purple-300 text-sm font-medium">JSON Response</span>
-                                        <button
-                                            onClick={onTestWebhook}
-                                            type="button"
-                                            className="px-3 py-1.5 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-lg text-sm font-medium hover:from-blue-600 hover:to-cyan-600 transition-all duration-300"
-                                        >
-                                            Test VideoData API
-                                        </button>
-                                    </div>
-                                    <pre className="bg-gray-900/50 border border-gray-700/50 rounded-lg p-3 text-xs text-green-400 overflow-x-auto font-mono">
-                                        {`{ }`}
-                                    </pre>
-                                </div>
-                            </div>
-
-                            {/* Duration Selection */}
-                            {/*<div>*/}
-                            {/*    <label className="block text-xl font-medium text-white mb-3">*/}
-                            {/*        Duration*/}
-                            {/*    </label>*/}
-                            {/*    <div className="flex gap-3">*/}
-                            {/*        {[15, 30].map(seconds => (*/}
-                            {/*            <button*/}
-                            {/*                key={seconds}*/}
-                            {/*                onClick={() => setDuration(seconds)}*/}
-                            {/*                className={`px-4 py-2 rounded-lg text-base font-medium transition-all ${*/}
-                            {/*                    duration === seconds*/}
-                            {/*                        ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white border border-pink-400/50'*/}
-                            {/*                        : 'bg-gray-800/30 text-gray-300 hover:bg-gray-700/50 border border-purple-500/30'*/}
-                            {/*                }`}*/}
-                            {/*            >*/}
-                            {/*                {seconds}s*/}
-                            {/*            </button>*/}
-                            {/*        ))}*/}
-                            {/*    </div>*/}
-                            {/*</div>*/}
-
-                            {/* Visual Style Cards */}
-                            <div>
-                                <button 
+                                <button
                                     type="button"
                                     onClick={() => setIsStyleExpanded(!isStyleExpanded)}
-                                    className="flex items-center text-xl font-medium text-white mb-3 hover:text-purple-300 transition-colors"
+                                    className="flex items-center text-xl font-semibold text-purple-300 mb-4 hover:text-purple-200 transition-colors"
                                 >
                                     <span>Visual Style</span>
                                     <span className="ml-2">
@@ -725,7 +687,7 @@ function WorkspaceCreatePageClient() {
                                         <button
                                             key={style.id}
                                             onClick={() => { setSelectedStyleId(style.id); }}
-                                            className={`p-3 rounded-lg border transition-all text-left ${
+                                            className={`w-full p-3 rounded-lg border transition-all text-left ${
                                                 selectedStyleId === style.id
                                                     ? 'border-pink-500 bg-pink-500/10'
                                                     : 'border-purple-500/30 bg-gray-800/30 hover:border-purple-400/50'
@@ -739,71 +701,184 @@ function WorkspaceCreatePageClient() {
                                 )}
                             </div>
 
+                            {/* VideoData API Test Section */}
+                            {/*<div>*/}
+                            {/*    <label className="block text-xl font-medium text-white mb-3">*/}
+                            {/*        VideoData API Test*/}
+                            {/*    </label>*/}
+                            {/*    <div className="bg-gray-800/50 border border-purple-500/30 rounded-xl p-4">*/}
+                            {/*        <div className="flex items-center justify-between mb-3">*/}
+                            {/*            <span className="text-purple-300 text-sm font-medium">JSON Response</span>*/}
+                            {/*            <button*/}
+                            {/*                onClick={onTestWebhook}*/}
+                            {/*                type="button"*/}
+                            {/*                className="px-3 py-1.5 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-lg text-sm font-medium hover:from-blue-600 hover:to-cyan-600 transition-all duration-300"*/}
+                            {/*            >*/}
+                            {/*                Test VideoData API*/}
+                            {/*            </button>*/}
+                            {/*        </div>*/}
+                            {/*        <pre className="bg-gray-900/50 border border-gray-700/50 rounded-lg p-3 text-xs text-green-400 overflow-x-auto font-mono">*/}
+                            {/*            {`{ }`}*/}
+                            {/*        </pre>*/}
+                            {/*    </div>*/}
+                            {/*</div>*/}
+                        </div>
+                    </div>
+                </div>
+
+                {/* Voice Selection Panel */}
+                <div className="w-[400px] flex-shrink-0 bg-gray-900/30 backdrop-blur-sm border-r border-purple-500/20 overflow-y-auto">
+                    <div className="p-6">
+                        <div className="text-purple-300 text-2xl font-medium mb-4">Voice</div>
+
+                        {/* Voice Filters */}
+                        <div className="mb-6">
+                            {/* Select All Button */}
+                            <div className="mb-3">
+                                <button
+                                    onClick={() => {
+                                        setVoiceTagRecord(prev => {
+                                            const newRecord: Record<string, boolean> = {};
+                                            Object.keys(prev).forEach((tagName) => {
+                                                newRecord[tagName] = !isAllTagSelected;
+                                            });
+                                            return newRecord;
+                                        });
+                                    }}
+                                    className={`${isAllTagSelected
+                                        ? "text-sm px-3 py-1.5 rounded-lg border font-medium transition-all bg-indigo-500/20 text-indigo-300 border-indigo-400/30 hover:bg-indigo-500/30"
+                                        : "text-sm px-3 py-1.5 rounded-lg border font-medium transition-all bg-gray-500/20 text-gray-400 border-gray-500/30 hover:bg-gray-500/30"
+                                    }`}
+                                >
+                                    Select All
+                                </button>
+                            </div>
+                            <div className="flex flex-wrap gap-2">
+                                {Object.keys(voiceTagRecord).map((tagName) => {
+                                    const isActive = voiceTagRecord[tagName];
+
+                                    // 태그별 색상 결정
+                                    const getTagColor = () => {
+                                        switch (tagName) {
+                                            case 'male':
+                                                return isActive
+                                                    ? 'bg-blue-500/20 text-blue-300 border-blue-400/30'
+                                                    : 'bg-gray-500/20 text-gray-400 border-gray-500/30 hover:bg-gray-500/30';
+                                            case 'female':
+                                                return isActive
+                                                    ? 'bg-red-500/20 text-red-300 border-red-400/30'
+                                                    : 'bg-gray-500/20 text-gray-400 border-gray-500/30 hover:bg-gray-500/30';
+                                            case 'young':
+                                                return isActive
+                                                    ? 'bg-green-500/20 text-green-300 border-green-400/30'
+                                                    : 'bg-gray-500/20 text-gray-400 border-gray-500/30 hover:bg-gray-500/30';
+                                            case 'middle_aged':
+                                                return isActive
+                                                    ? 'bg-purple-500/20 text-purple-300 border-purple-400/30'
+                                                    : 'bg-gray-500/20 text-gray-400 border-gray-500/30 hover:bg-gray-500/30';
+                                            case 'old':
+                                                return isActive
+                                                    ? 'bg-orange-500/20 text-orange-300 border-orange-400/30'
+                                                    : 'bg-gray-500/20 text-gray-400 border-gray-500/30 hover:bg-gray-500/30';
+                                            default:
+                                                return isActive
+                                                    ? 'bg-gray-500/20 text-gray-300 border-gray-400/30'
+                                                    : 'bg-gray-500/20 text-gray-400 border-gray-500/30 hover:bg-gray-500/30';
+                                        }
+                                    };
+
+                                    // 표시할 라벨 결정
+                                    const getDisplayLabel = () => {
+                                        switch (tagName) {
+                                            case 'male': return 'Male';
+                                            case 'female': return 'Female';
+                                            case 'young': return 'Young';
+                                            case 'middle_aged': return 'Adult';
+                                            case 'old': return 'Senior';
+                                            case 'neutral': return 'Neutral';
+                                            default: return tagName;
+                                        }
+                                    };
+
+                                    return (
+                                        <button
+                                            key={tagName}
+                                            onClick={() => {
+                                                setVoiceTagRecord(prev => ({
+                                                    ...prev,
+                                                    [tagName]: !prev[tagName]
+                                                }));
+                                            }}
+                                            className={`text-xs px-2 py-1 rounded-full border font-medium transition-all ${getTagColor()}`}
+                                        >
+                                            {getDisplayLabel()}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        </div>
+
+                        <div className="space-y-6">
                             {/* Voice Selection */}
                             <div>
-                                <button 
-                                    type="button"
-                                    onClick={() => setIsVoiceExpanded(!isVoiceExpanded)}
-                                    className="flex items-center text-xl font-medium text-white mb-3 hover:text-purple-300 transition-colors"
-                                >
-                                    <span>Voice</span>
-                                    <span className="ml-2">
-                                        {isVoiceExpanded ? <ChevronDown size={20} /> : <ChevronRight size={20} />}
-                                    </span>
-                                </button>
-                                {isVoiceExpanded && (
-                                    <div className="grid grid-cols-2 gap-3">
-                                    {voiceList.map((voice) => {
+                                <div className="grid grid-cols-2 gap-3">
+                                    {filteredVoiceList.map((voice) => {
                                         const labels = voice.labels;
-                                        const genderIcon = labels?.gender === 'male' ? '♂' : labels?.gender === 'female' ? '♀' : '';
-                                        const ageDisplay = labels?.age === 'young' ? 'Young' : labels?.age === 'middle_aged' ? 'Adult' : labels?.age === 'old' ? 'Senior' : '';
-                                        const accentDisplay = labels?.accent === 'american' ? 'US' : labels?.accent === 'british' ? 'UK' : labels?.accent === 'australian' ? 'AU' : labels?.accent || '';
-                                        
+                                        const genderDisplay = labels?.gender === 'male'
+                                            ? 'Male'
+                                            : labels?.gender === 'female'
+                                                ? 'Female'
+                                                : labels?.gender === 'neutral'
+                                                    ? 'Neutral'
+                                                    : '';
+                                        const ageDisplay = labels?.age === 'young'
+                                            ? 'Young'
+                                            : labels?.age === 'middle_aged'
+                                                ? 'Adult'
+                                                : labels?.age === 'old'
+                                                    ? 'Senior'
+                                                    : '';
+
                                         return (
                                             <div
                                                 key={voice.id}
                                                 onClick={() => setSelectedVoiceId(voice.id)}
-                                                className={`p-3 rounded-lg border transition-all text-left cursor-pointer ${
+                                                className={`pt-3 pr-3 pb-3 rounded-lg border transition-all text-left cursor-pointer ${
                                                     voice.id === selectedVoiceId
                                                         ? 'border-pink-500 bg-pink-500/10'
                                                         : 'border-purple-500/30 bg-gray-800/30 hover:border-purple-400/50'
                                                 }`}
                                             >
-                                                <div className="flex items-start justify-between">
+                                                <div className="flex items-center justify-between">
                                                     <div className="min-w-0 flex-1">
-                                                        <div className="flex items-center gap-2 mb-1">
-                                                            <div className="text-white font-medium text-base">{voice.name}</div>
-                                                            {genderIcon && (
-                                                                <span className="text-purple-300 text-sm font-medium">{genderIcon}</span>
-                                                            )}
-                                                        </div>
-                                                        
-                                                        {/* Labels as tags */}
-                                                        <div className="flex flex-wrap gap-1 mb-2">
-                                                            {ageDisplay && (
-                                                                <span className="text-xs px-1.5 py-0.5 bg-blue-500/20 text-blue-300 rounded border border-blue-400/30">
-                                                                    {ageDisplay}
-                                                                </span>
-                                                            )}
-                                                            {accentDisplay && (
-                                                                <span className="text-xs px-1.5 py-0.5 bg-green-500/20 text-green-300 rounded border border-green-400/30">
-                                                                    {accentDisplay}
-                                                                </span>
-                                                            )}
-                                                            {labels?.descriptive && (
-                                                                <span className="text-xs px-1.5 py-0.5 bg-purple-500/20 text-purple-300 rounded border border-purple-400/30">
-                                                                    {labels.descriptive}
-                                                                </span>
-                                                            )}
-                                                            {labels?.use_case && (
-                                                                <span className="text-xs px-1.5 py-0.5 bg-orange-500/20 text-orange-300 rounded border border-orange-400/30">
-                                                                    {labels.use_case.replace('_', ' ')}
-                                                                </span>
-                                                            )}
-                                                        </div>
-                                                        
-                                                        <div className="text-gray-300 text-sm leading-relaxed mt-2 break-words">
-                                                            {voice.description}
+                                                        <div className="flex flex-col gap-1.5">
+                                                            <div className="pl-3 text-white font-medium text-base">{voice.name}</div>
+                                                            <div className="flex pl-2 gap-1.5">
+                                                                {genderDisplay && (
+                                                                    <span className={`text-xs px-2 py-1 rounded-full border font-medium ${
+                                                                        labels?.gender === 'male'
+                                                                            ? 'bg-blue-500/20 text-blue-300 border-blue-400/30'
+                                                                            : labels?.gender === 'female'
+                                                                                ? 'bg-red-500/20 text-red-300 border-red-400/30'
+                                                                                : 'bg-gray-500/20 text-gray-300 border-gray-400/30'
+                                                                    }`}>
+                                                                        {genderDisplay}
+                                                                    </span>
+                                                                )}
+                                                                {ageDisplay && (
+                                                                    <span className={`text-xs px-2 py-1 rounded-full border font-medium ${
+                                                                        labels?.age === 'young'
+                                                                            ? 'bg-green-500/20 text-green-300 border-green-400/30'
+                                                                            : labels?.age === 'middle_aged'
+                                                                            ? 'bg-purple-500/20 text-purple-300 border-purple-400/30'
+                                                                            : labels?.age === 'old'
+                                                                            ? 'bg-orange-500/20 text-orange-300 border-orange-400/30'
+                                                                            : 'bg-gray-500/20 text-gray-300 border-gray-400/30'
+                                                                    }`}>
+                                                                        {ageDisplay}
+                                                                    </span>
+                                                                )}
+                                                            </div>
                                                         </div>
                                                     </div>
                                                     <button
@@ -828,109 +903,7 @@ function WorkspaceCreatePageClient() {
                                             </div>
                                         );
                                     })}
-                                    </div>
-                                )}
-                            </div>
-
-                            {/* Background Music Selection */}
-                            <div>
-                                <button 
-                                    type="button"
-                                    onClick={() => setIsMusicExpanded(!isMusicExpanded)}
-                                    className="flex items-center text-xl font-medium text-white mb-3 hover:text-purple-300 transition-colors"
-                                >
-                                    <span>Background Music</span>
-                                    <span className="ml-2">
-                                        {isMusicExpanded ? <ChevronDown size={20} /> : <ChevronRight size={20} />}
-                                    </span>
-                                </button>
-                                {isMusicExpanded && (
-                                    <div className="space-y-4">
-                                        {/* Theme Filter */}
-                                        <div>
-                                            <div className="flex items-center gap-2 mb-2">
-                                                <label className="text-sm font-medium text-purple-300">
-                                                    Filter by Theme
-                                                </label>
-                                                {/* 전체 선택 버튼 */}
-                                                <button
-                                                    onClick={() => {
-                                                        const allSelected = backgroundMusicThemeFilterItemList.every(item => item.isSelected);
-                                                        setBackgroundMusicThemeFilterItemList(prev => 
-                                                            prev.map(item => ({ ...item, isSelected: !allSelected }))
-                                                        );
-                                                    }}
-                                                    className="text-xs px-2 py-1 rounded border bg-pink-500/20 text-pink-300 border-pink-400/50 font-medium hover:bg-pink-500/30 transition-all"
-                                                >
-                                                    {backgroundMusicThemeFilterItemList.every(item => item.isSelected) ? 'Deselect All' : 'Select All'}
-                                                </button>
-                                            </div>
-                                            <div className="flex flex-wrap gap-2">
-                                                {backgroundMusicThemeFilterItemList.map((themeFilter) => (
-                                                    <button
-                                                        key={themeFilter.themeName}
-                                                        onClick={() => {
-                                                            setBackgroundMusicThemeFilterItemList(prev => 
-                                                                prev.map(item => 
-                                                                    item.themeName === themeFilter.themeName 
-                                                                        ? { ...item, isSelected: !item.isSelected }
-                                                                        : item
-                                                                )
-                                                            );
-                                                        }}
-                                                        className={`text-xs px-2 py-1 rounded border transition-all ${
-                                                            themeFilter.isSelected
-                                                                ? 'bg-purple-500/20 text-purple-300 border-purple-400/50'
-                                                                : 'bg-gray-700/50 text-gray-400 border-gray-600/50 hover:bg-gray-600/50'
-                                                        }`}
-                                                    >
-                                                        {themeFilter.themeName}
-                                                    </button>
-                                                ))}
-                                            </div>
-                                        </div>
-                                        
-                                        {/* Music Grid */}
-                                        <div className="grid grid-cols-2 gap-3">
-                                        {selectedBackgroundMusicList.map((backgroundMusic) => (
-                                            <div
-                                                key={backgroundMusic.id}
-                                                onClick={() => setSelectedBackgroundMusicId(backgroundMusic.id)}
-                                                className={`p-3 rounded-lg border transition-all text-left cursor-pointer ${
-                                                    selectedBackgroundMusicId === backgroundMusic.id
-                                                        ? 'border-pink-500 bg-pink-500/10'
-                                                        : 'border-purple-500/30 bg-gray-800/30 hover:border-purple-400/50'
-                                                }`}
-                                            >
-                                            <div className="flex items-center justify-between">
-                                                <div className="min-w-0 flex-1">
-                                                    <div className="text-white font-medium text-base truncate">{backgroundMusic.title}</div>
-                                                    <div className="text-gray-400 text-sm truncate">{backgroundMusic.themes.join(', ')}</div>
-                                                </div>
-                                                <button
-                                                    className="p-1.5 rounded-full bg-gray-700/50 hover:bg-gray-600/50 transition-colors flex-shrink-0"
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-
-                                                        if (!currentAudio || playingSoundId !== backgroundMusic.id) {
-                                                            onClickPlaySoundPreview(backgroundMusic.id, backgroundMusic.previewUrl);
-                                                        } else {
-                                                            onClickStopSoundPreview();
-                                                        }
-                                                    }}
-                                                >
-                                                    {playingSoundId === backgroundMusic.id ? (
-                                                        <Square size={14} className="text-white" />
-                                                    ) : (
-                                                        <Play size={14} className="text-white" />
-                                                    )}
-                                                </button>
-                                            </div>
-                                        </div>
-                                        ))}
-                                        </div>
-                                    </div>
-                                )}
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -1043,26 +1016,6 @@ function WorkspaceCreatePageClient() {
                                             className="w-full bg-gray-800/50 border border-purple-500/30 rounded-lg px-3 py-2 text-white text-sm focus:border-purple-400 focus:outline-none resize-none placeholder-gray-400 transition-all"
                                         />
                                     </div>
-                                    
-                                    {/* Duration Selection */}
-                                    {/*<div>*/}
-                                    {/*    <label className="block text-sm font-medium text-white mb-2">Length</label>*/}
-                                    {/*    <div className="grid grid-cols-2 gap-2">*/}
-                                    {/*        {[15, 30].map(seconds => (*/}
-                                    {/*            <button*/}
-                                    {/*                key={seconds}*/}
-                                    {/*                onClick={() => setDuration(seconds)}*/}
-                                    {/*                className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${*/}
-                                    {/*                    duration === seconds*/}
-                                    {/*                        ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white border border-pink-400/50'*/}
-                                    {/*                        : 'bg-gray-800/30 text-gray-300 hover:bg-gray-700/50 border border-purple-500/30'*/}
-                                    {/*                }`}*/}
-                                    {/*            >*/}
-                                    {/*                {seconds}s*/}
-                                    {/*            </button>*/}
-                                    {/*        ))}*/}
-                                    {/*    </div>*/}
-                                    {/*</div>*/}
                                     
                                     {/* Warning Message - Simplified */}
                                     <div className="bg-amber-500/10 border border-amber-400/30 rounded-lg p-3">

@@ -28,7 +28,6 @@ export interface VideoGenerationRequest {
     narrationScript: string;
     style?: Style;
     voice?: Voice;
-    music?: BGMInfo;
 }
 
 export interface VideoGenerationResponse {

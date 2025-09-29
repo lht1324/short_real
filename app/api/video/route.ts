@@ -24,7 +24,6 @@ export async function POST(request: NextRequest) {
             narrationScript,
             style,
             voice,
-            music,
         }: VideoGenerationRequest = body;
 
         // 필수 필드 검증
@@ -144,7 +143,6 @@ export async function POST(request: NextRequest) {
             subtitle_segment_list: [],
             selected_style_id: style.id,
             selected_voice_id: voice.id,
-            selected_music_id: music?.id,
         });
 
         if (!postVideoGenerationTaskResult || !postVideoGenerationTaskResult.id) {

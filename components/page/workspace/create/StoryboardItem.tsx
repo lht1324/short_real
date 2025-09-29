@@ -9,7 +9,7 @@ function StoryboardItem({
     sceneData: SceneData;
 }) {
     return (
-        <div className="bg-gray-800 rounded-lg shadow-lg border border-gray-400 overflow-hidden hover:shadow-xl transition-shadow duration-300">
+        <div className="bg-black rounded-lg shadow-lg border border-gray-400 overflow-hidden hover:shadow-xl transition-shadow duration-300">
             {/* 클래퍼보드 상단 - 클랩 스틱 부분 */}
             <div className="bg-gray-900 border-b-2 border-gray-400 relative overflow-hidden" style={{height: '40px'}}>
                 {/* 상단 줄무늬 - 오른쪽 향하는 대각선 */}
@@ -26,11 +26,11 @@ function StoryboardItem({
                 {/* 하단 줄무늬 - 왼쪽 향하는 대각선 */}
                 <div className="absolute bottom-0 left-0 right-0 h-1/2" style={{
                     background: `repeating-linear-gradient(
-                        -45deg,
-                        #000000 0px,
-                        #000000 12px,
+                        ${-(45 + 180)}deg,
+                        #ffffff 0px,
                         #ffffff 12px,
-                        #ffffff 24px
+                        #000000 12px,
+                        #000000 24px
                     )`
                 }}></div>
 
@@ -75,7 +75,7 @@ function StoryboardItem({
                     <div className="flex-1 pl-3">
                         <div className="bg-black p-3 h-full">
                             <div className="text-base text-white font-bold mb-2 text-center">NARRATION</div>
-                            <p className="text-sm text-white font-semibold leading-relaxed line-clamp-3 italic">
+                            <p className="text-sm text-white font-semibold leading-relaxed italic">
                                 {`"${sceneData.narration}"`}
                             </p>
                         </div>
@@ -88,7 +88,7 @@ function StoryboardItem({
                 {/* 하단: Scene Description */}
                 <div className="bg-black p-3">
                     <div className="text-base text-white font-bold mb-2 text-center">SCENE DESCRIPTION</div>
-                    <p className="text-sm text-white font-semibold leading-relaxed line-clamp-4">
+                    <p className="text-sm text-white font-semibold leading-relaxed">
                         {sceneData.imageGenPromptDirective}
                     </p>
                 </div>
