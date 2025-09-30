@@ -23,12 +23,12 @@ export async function POST(request: NextRequest) {
             userId,
             narrationScript,
             style,
-            voice,
+            voiceId,
         }: VideoGenerationRequest = body;
 
         // 필수 필드 검증
         // if (!narrationScript || !userId || !style || !voice) {
-        if (!narrationScript || !style || !voice) {
+        if (!narrationScript || !style || !voiceId) {
             return NextResponse.json(
                 { error: 'narrationScript, styleId, voiceId, and userId are required.' },
                 { status: 400 }
@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
         // 1. voiceServerAPI로 음성 생성 및 Base64 인코딩
         const voiceGenerationResult = await voiceServerAPI.postVoice(
             narrationScript,
-            voice.id
+            voiceId,
         );
 
         // 2. openAIServerAPI로 비디오 Scene 분리 데이터, 마스터 스타일 프롬프트 생성 요청
@@ -142,7 +142,7 @@ export async function POST(request: NextRequest) {
             scene_breakdown_list: [],
             subtitle_segment_list: [],
             selected_style_id: style.id,
-            selected_voice_id: voice.id,
+            selected_voice_id: voiceId,
         });
 
         if (!postVideoGenerationTaskResult || !postVideoGenerationTaskResult.id) {

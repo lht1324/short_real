@@ -10,21 +10,19 @@ import {
     ListTodo,
     Plus,
     Play,
-    Square,
     ChevronDown,
     ChevronRight,
     Film,
 } from 'lucide-react';
 import { openAIClientAPI } from '@/api/client/openAIClientAPI';
 import {ScriptGenerationRequest} from "@/api/types/open-ai/ScriptGeneration";
-import {Voice} from "@/api/types/eleven-labs/Voice";
-import {voiceClientAPI} from "@/api/client/voiceClientAPI";
 import {Style} from "@/api/types/supabase/Styles";
 import {SceneData, VideoGenerationRequest} from "@/api/types/supabase/VideoGenerationTasks";
 import {videoClientAPI} from "@/api/client/videoClientAPI";
 import {postFetch} from "@/api/client/baseFetch";
 import {StoryboardData} from "@/app/api/open-ai/scene/PostSceneResponse";
 import StoryboardItem from "@/components/page/workspace/create/StoryboardItem";
+import VoiceSelectionPanel from "@/components/page/workspace/create/VoiceSelectionPanel";
 
 function WorkspaceCreatePageClient() {
     // 음성, 음악 선택 기능 추가
@@ -32,37 +30,34 @@ function WorkspaceCreatePageClient() {
     // 음악은 선택한 거 그대로 에디터에서 틀어주고, 실시간으로 바꾸는 것처럼 만들어준다.
     // 자막은 캡션 폰트, 크기, 색상, 위치 정도만.
     // 다 지정됐으면 생성된 영상 + 생성된 음성 + 에디터 최종 음악 + 에디터 최종 자막을 합쳐준다.
-    // 음성만 재생성해주는 기능 추가 - 크레딧 받는 걸로
 
-    const [voiceList, setVoiceList] = useState<Voice[]>([]);
-    const [voiceTagRecord, setVoiceTagRecord] = useState<Record<string, boolean>>({ });
-    const isAllTagSelected = useMemo(() => {
-        return Object.values(voiceTagRecord).every((isTagSelected) => isTagSelected);
-    }, [voiceTagRecord]);
-    const filteredVoiceList = useMemo(() => {
-        return voiceList.filter((voice) => {
-            return voiceTagRecord[voice.labels.gender] || voiceTagRecord[voice.labels.age];
-        })
-    }, [voiceList, voiceTagRecord]);
+    const [isVoiceLoading, setIsVoiceLoading] = useState(true);
+    const isLoading = useMemo(() => {
+        return isVoiceLoading;
+    }, [isVoiceLoading]);
 
     // Section states
     const [script, setScript] = useState<string>('');
     const [selectedStyleId, setSelectedStyleId] = useState<string>('');
     const [selectedVoiceId, setSelectedVoiceId] = useState<string>('');
+
+    const onSelectVoice = useCallback((voiceId: string) => {
+        setSelectedVoiceId(voiceId);
+    }, []);
+
+    const onChangeVoiceLoading = useCallback((isVoiceLoading: boolean) => {
+        setIsVoiceLoading(isVoiceLoading);
+    }, []);
     
     // Storyboard states
     const [sceneDataList, setSceneDataList] = useState<SceneData[]>([]);
     const [videoMainSubject, setVideoMainSubject] = useState<string | null>(null);
 
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [isGenerating, setIsGenerating] = useState(false);
+    const [isGeneratingScript, setIsGeneratingScript] = useState(false);
     const [isGeneratingStoryboardData, setIsGeneratingStoryboardData] = useState(false);
     const [showAIModal, setShowAIModal] = useState(false);
     const [aiPrompt, setAiPrompt] = useState('');
-    
-    // Audio state management
-    const [currentAudio, setCurrentAudio] = useState<HTMLAudioElement | null>(null);
-    const [playingSoundId, setPlayingSoundId] = useState<string | null>(null);
     
     // Collapse states for sections
     const [isStyleExpanded, setIsStyleExpanded] = useState(true);
@@ -178,7 +173,7 @@ function WorkspaceCreatePageClient() {
     const onGenerateScript = useCallback(async () => {
         if (!aiPrompt.trim()) return;
         
-        setIsGenerating(true);
+        setIsGeneratingScript(true);
         
         try {
             // API 요청 데이터 구성
@@ -195,19 +190,19 @@ function WorkspaceCreatePageClient() {
                 console.log("Script generation result", result);
                 console.log('Script generated successfully:', result.data);
                 setScript(result.data.script);
-                setIsGenerating(false);
+                setIsGeneratingScript(false);
                 setShowAIModal(false);
                 setAiPrompt('');
             } else {
                 console.error('Script generation failed:', result?.error);
                 alert(result?.error?.message || 'Failed to generate script. Please try again.');
-                setIsGenerating(false);
+                setIsGeneratingScript(false);
             }
 
         } catch (error) {
             console.error('Error generating script:', error);
             alert('An error occurred while generating script. Please try again.');
-            setIsGenerating(false);
+            setIsGeneratingScript(false);
         }
     }, [aiPrompt]);
     
@@ -249,65 +244,8 @@ function WorkspaceCreatePageClient() {
     const closeAIModal = useCallback(() => {
         setShowAIModal(false);
         setAiPrompt('');
-        setIsGenerating(false);
+        setIsGeneratingScript(false);
     }, []);
-
-    const onClickPlaySoundPreview = useCallback((soundId: string, soundPreviewUrl?: string) => {
-        // 음성 재생 중 다른 음성 재생
-        if (playingSoundId !== soundId && currentAudio) {
-            currentAudio.pause();
-            currentAudio.currentTime = 0;
-            setCurrentAudio(null);
-            setPlayingSoundId(null);
-        }
-
-        // 새로운 음성 재생
-        if (soundPreviewUrl) {
-            const audio = new Audio(soundPreviewUrl);
-            
-            // 재생 종료 시 state 초기화 (해당 오디오만)
-            audio.addEventListener('ended', () => {
-                setCurrentAudio((current) => {
-                    if (current === audio) {
-                        setPlayingSoundId(null);
-                        return null;
-                    }
-
-                    return current;
-                });
-            });
-
-            // 에러 처리 (해당 오디오만)
-            audio.addEventListener('error', (error) => {
-                console.error('Audio playback error:', error);
-                setCurrentAudio((current) => {
-                    if (current === audio) {
-                        setPlayingSoundId(null);
-                        return null;
-                    }
-                    return current;
-                });
-            });
-
-            audio.play().then(() => {
-                setCurrentAudio(audio);
-                setPlayingSoundId(soundId);
-            }).catch((error) => {
-                console.error('Failed to play audio:', error);
-                setCurrentAudio(null);
-                setPlayingSoundId(null);
-                // 재생 실패 시에만 state 초기화 (기존 오디오는 그대로 유지)
-            });
-        } else {
-            console.log('No preview URL available for:', soundId);
-        }
-    }, [currentAudio, playingSoundId]);
-    
-    const onClickStopSoundPreview = useCallback(() => {
-        currentAudio?.pause();
-        setCurrentAudio(null);
-        setPlayingSoundId(null);
-    }, [currentAudio]);
 
     // 예상 영상 시간 계산 (2.5단어/초 기준)
     const estimatedDuration = useMemo(() => {
@@ -329,16 +267,20 @@ function WorkspaceCreatePageClient() {
             const selectedStyle = styleList.find((style) => {
                 return style.id === selectedStyleId;
             });
-            const selectedVoice = voiceList.find((voice) => {
-                return voice.id === selectedVoiceId;
-            });
+            // const selectedVoice = voiceList.find((voice) => {
+            //     return voice.id === selectedVoiceId;
+            // });
+
+            if (!selectedStyle || !selectedVoiceId) {
+                throw new Error("Selected style or voice was not found.");
+            }
 
             // VideoData API 요청 데이터 구성
             const requestData: VideoGenerationRequest = {
                 userId: "",
                 narrationScript: script,
                 style: selectedStyle,
-                voice: selectedVoice,
+                voiceId: selectedVoiceId,
             };
 
             console.log('Creating video project with data:', requestData);
@@ -365,7 +307,7 @@ function WorkspaceCreatePageClient() {
         } finally {
             setIsSubmitting(false);
         }
-    }, [script, selectedStyleId, selectedVoiceId, styleList, voiceList]);
+    }, [script, selectedStyleId, selectedVoiceId, styleList]);
 
     const requestIdList = useMemo(() => {
         return [
@@ -408,51 +350,6 @@ function WorkspaceCreatePageClient() {
         }
     }, [requestIdList, videoUrlList]);
 
-    useEffect(() => {
-        const loadData = async () => {
-            const voiceDataList = await voiceClientAPI.getVoices();
-
-            // 모든 gender와 age 값들을 수집
-            const allTags = new Set<string>();
-
-            voiceDataList.forEach((voiceData) => {
-                const labels = voiceData.labels;
-                if (labels?.gender) {
-                    allTags.add(labels.gender);
-                }
-                if (labels?.age) {
-                    allTags.add(labels.age);
-                }
-            });
-
-            // 중복 제거된 태그들을 isSelected: true로 설정하여 배열로 변환
-            const uniqueTagNameList = Array.from(allTags).map(tagName => {
-                return tagName;
-            });
-            const uniqueTagRecord: Record<string, boolean> = { }
-            uniqueTagNameList.forEach((uniqueTagName) => {
-                uniqueTagRecord[uniqueTagName] = true;
-            })
-
-            setVoiceList(voiceDataList);
-            setVoiceTagRecord(uniqueTagRecord);
-        }
-
-        loadData().then();
-    }, []);
-
-    // 컴포넌트 언마운트 시 오디오 정리
-    useEffect(() => {
-        return () => {
-            if (currentAudio) {
-                currentAudio.pause();
-                currentAudio.currentTime = 0;
-                setCurrentAudio(null);
-                setPlayingSoundId(null);
-            }
-        };
-    }, [currentAudio]);
-
     // API 엔드포인트 미리 컴파일 (Next.js 서버리스 함수 초기화)
     useEffect(() => {
         const precompileAPIs = async () => {
@@ -489,6 +386,44 @@ function WorkspaceCreatePageClient() {
 
     return (
         <div className="min-h-screen bg-black text-white">
+            {/* Loading Overlay */}
+            {isLoading && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md">
+                    <div className="flex flex-col items-center space-y-6">
+                        {/* 로딩 스피너 */}
+                        <div className="relative w-24 h-24">
+                            {/* 외부 링 */}
+                            <div className="absolute inset-0 border-4 border-purple-200/20 rounded-full"></div>
+                            {/* 회전하는 그라디언트 링 */}
+                            <div className="absolute inset-0 border-4 border-transparent border-t-pink-500 border-r-purple-500 rounded-full animate-spin"></div>
+                            {/* 내부 역방향 회전 링 */}
+                            <div className="absolute inset-3 border-2 border-transparent border-b-purple-400 border-l-pink-400 rounded-full animate-spin" style={{animationDirection: 'reverse', animationDuration: '1.5s'}}></div>
+                            {/* 중앙 아이콘 */}
+                            <div className="absolute inset-0 flex items-center justify-center">
+                                <Sparkles className="w-8 h-8 text-purple-400 animate-pulse" />
+                            </div>
+                        </div>
+
+                        {/* 로딩 텍스트 */}
+                        <div className="text-center space-y-2">
+                            <h3 className="text-2xl font-semibold bg-gradient-to-r from-pink-400 to-purple-500 bg-clip-text text-transparent">
+                                Loading Create Studio
+                            </h3>
+                            <p className="text-gray-400 text-sm">
+                                Preparing your creative workspace...
+                            </p>
+                        </div>
+
+                        {/* 애니메이션 도트 */}
+                        <div className="flex space-x-2">
+                            <div className="w-2 h-2 bg-pink-500 rounded-full animate-bounce" style={{animationDelay: '0ms'}}></div>
+                            <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style={{animationDelay: '150ms'}}></div>
+                            <div className="w-2 h-2 bg-indigo-500 rounded-full animate-bounce" style={{animationDelay: '300ms'}}></div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* Top Header - Same as Editor */}
             <div className="flex items-center justify-between py-4 border-b border-purple-500/20 bg-gray-900/50 backdrop-blur-sm">
                 <div className="flex items-center" style={{paddingLeft: '16px'}}>
@@ -584,21 +519,12 @@ function WorkspaceCreatePageClient() {
                                     <label className="block text-xl font-semibold text-purple-300">
                                         Storyboard
                                     </label>
-                                    <div className="relative">
+                                    <div className="relative group">
                                         <button
                                             type="button"
                                             onClick={onClickGenerateStoryboard}
                                             disabled={isGeneratingStoryboardData || !script.trim() || !selectedVoiceId}
-                                            className="px-3 py-1.5 bg-gradient-to-r from-green-500 to-blue-500 text-white rounded-lg text-sm font-medium hover:from-green-600 hover:to-blue-600 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-1 peer"
-                                            title={
-                                                isGeneratingStoryboardData
-                                                    ? "Generating storyboard..."
-                                                    : !script.trim()
-                                                    ? "Please write a script first"
-                                                    : !selectedVoiceId
-                                                    ? "Please select a voice first"
-                                                    : "Generate Storyboard"
-                                            }
+                                            className="px-3 py-1.5 bg-gradient-to-r from-green-500 to-blue-500 text-white rounded-lg text-sm font-medium hover:from-green-600 hover:to-blue-600 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-1"
                                         >
                                         {isGeneratingStoryboardData ? (
                                             <>
@@ -609,6 +535,27 @@ function WorkspaceCreatePageClient() {
                                             <span>Generate Storyboard</span>
                                         )}
                                         </button>
+
+                                        {/* 툴팁 오버레이 */}
+                                        {(!script.trim() || !selectedVoiceId) && (
+                                            <div className="absolute top-full right-0 mt-2 w-64 bg-gray-900/95 backdrop-blur-sm border border-purple-500/30 rounded-lg p-3 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-10 shadow-xl">
+                                                <div className="text-xs font-medium text-purple-300 mb-2">Requirements</div>
+                                                <div className="space-y-1.5">
+                                                    <div className="flex items-center space-x-2 text-xs">
+                                                        <span>{script.trim() ? '🟢' : '🔴'}</span>
+                                                        <span className={script.trim() ? 'text-green-300' : 'text-gray-400'}>
+                                                            Script written
+                                                        </span>
+                                                    </div>
+                                                    <div className="flex items-center space-x-2 text-xs">
+                                                        <span>{selectedVoiceId ? '🟢' : '🔴'}</span>
+                                                        <span className={selectedVoiceId ? 'text-green-300' : 'text-gray-400'}>
+                                                            Voice selected
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
 
@@ -727,187 +674,11 @@ function WorkspaceCreatePageClient() {
                 </div>
 
                 {/* Voice Selection Panel */}
-                <div className="w-[400px] flex-shrink-0 bg-gray-900/30 backdrop-blur-sm border-r border-purple-500/20 overflow-y-auto">
-                    <div className="p-6">
-                        <div className="text-purple-300 text-2xl font-medium mb-4">Voice</div>
-
-                        {/* Voice Filters */}
-                        <div className="mb-6">
-                            {/* Select All Button */}
-                            <div className="mb-3">
-                                <button
-                                    onClick={() => {
-                                        setVoiceTagRecord(prev => {
-                                            const newRecord: Record<string, boolean> = {};
-                                            Object.keys(prev).forEach((tagName) => {
-                                                newRecord[tagName] = !isAllTagSelected;
-                                            });
-                                            return newRecord;
-                                        });
-                                    }}
-                                    className={`${isAllTagSelected
-                                        ? "text-sm px-3 py-1.5 rounded-lg border font-medium transition-all bg-indigo-500/20 text-indigo-300 border-indigo-400/30 hover:bg-indigo-500/30"
-                                        : "text-sm px-3 py-1.5 rounded-lg border font-medium transition-all bg-gray-500/20 text-gray-400 border-gray-500/30 hover:bg-gray-500/30"
-                                    }`}
-                                >
-                                    Select All
-                                </button>
-                            </div>
-                            <div className="flex flex-wrap gap-2">
-                                {Object.keys(voiceTagRecord).map((tagName) => {
-                                    const isActive = voiceTagRecord[tagName];
-
-                                    // 태그별 색상 결정
-                                    const getTagColor = () => {
-                                        switch (tagName) {
-                                            case 'male':
-                                                return isActive
-                                                    ? 'bg-blue-500/20 text-blue-300 border-blue-400/30'
-                                                    : 'bg-gray-500/20 text-gray-400 border-gray-500/30 hover:bg-gray-500/30';
-                                            case 'female':
-                                                return isActive
-                                                    ? 'bg-red-500/20 text-red-300 border-red-400/30'
-                                                    : 'bg-gray-500/20 text-gray-400 border-gray-500/30 hover:bg-gray-500/30';
-                                            case 'young':
-                                                return isActive
-                                                    ? 'bg-green-500/20 text-green-300 border-green-400/30'
-                                                    : 'bg-gray-500/20 text-gray-400 border-gray-500/30 hover:bg-gray-500/30';
-                                            case 'middle_aged':
-                                                return isActive
-                                                    ? 'bg-purple-500/20 text-purple-300 border-purple-400/30'
-                                                    : 'bg-gray-500/20 text-gray-400 border-gray-500/30 hover:bg-gray-500/30';
-                                            case 'old':
-                                                return isActive
-                                                    ? 'bg-orange-500/20 text-orange-300 border-orange-400/30'
-                                                    : 'bg-gray-500/20 text-gray-400 border-gray-500/30 hover:bg-gray-500/30';
-                                            default:
-                                                return isActive
-                                                    ? 'bg-gray-500/20 text-gray-300 border-gray-400/30'
-                                                    : 'bg-gray-500/20 text-gray-400 border-gray-500/30 hover:bg-gray-500/30';
-                                        }
-                                    };
-
-                                    // 표시할 라벨 결정
-                                    const getDisplayLabel = () => {
-                                        switch (tagName) {
-                                            case 'male': return 'Male';
-                                            case 'female': return 'Female';
-                                            case 'young': return 'Young';
-                                            case 'middle_aged': return 'Adult';
-                                            case 'old': return 'Senior';
-                                            case 'neutral': return 'Neutral';
-                                            default: return tagName;
-                                        }
-                                    };
-
-                                    return (
-                                        <button
-                                            key={tagName}
-                                            onClick={() => {
-                                                setVoiceTagRecord(prev => ({
-                                                    ...prev,
-                                                    [tagName]: !prev[tagName]
-                                                }));
-                                            }}
-                                            className={`text-xs px-2 py-1 rounded-full border font-medium transition-all ${getTagColor()}`}
-                                        >
-                                            {getDisplayLabel()}
-                                        </button>
-                                    );
-                                })}
-                            </div>
-                        </div>
-
-                        <div className="space-y-6">
-                            {/* Voice Selection */}
-                            <div>
-                                <div className="grid grid-cols-2 gap-3">
-                                    {filteredVoiceList.map((voice) => {
-                                        const labels = voice.labels;
-                                        const genderDisplay = labels?.gender === 'male'
-                                            ? 'Male'
-                                            : labels?.gender === 'female'
-                                                ? 'Female'
-                                                : labels?.gender === 'neutral'
-                                                    ? 'Neutral'
-                                                    : '';
-                                        const ageDisplay = labels?.age === 'young'
-                                            ? 'Young'
-                                            : labels?.age === 'middle_aged'
-                                                ? 'Adult'
-                                                : labels?.age === 'old'
-                                                    ? 'Senior'
-                                                    : '';
-
-                                        return (
-                                            <div
-                                                key={voice.id}
-                                                onClick={() => setSelectedVoiceId(voice.id)}
-                                                className={`pt-3 pr-3 pb-3 rounded-lg border transition-all text-left cursor-pointer ${
-                                                    voice.id === selectedVoiceId
-                                                        ? 'border-pink-500 bg-pink-500/10'
-                                                        : 'border-purple-500/30 bg-gray-800/30 hover:border-purple-400/50'
-                                                }`}
-                                            >
-                                                <div className="flex items-center justify-between">
-                                                    <div className="min-w-0 flex-1">
-                                                        <div className="flex flex-col gap-1.5">
-                                                            <div className="pl-3 text-white font-medium text-base">{voice.name}</div>
-                                                            <div className="flex pl-2 gap-1.5">
-                                                                {genderDisplay && (
-                                                                    <span className={`text-xs px-2 py-1 rounded-full border font-medium ${
-                                                                        labels?.gender === 'male'
-                                                                            ? 'bg-blue-500/20 text-blue-300 border-blue-400/30'
-                                                                            : labels?.gender === 'female'
-                                                                                ? 'bg-red-500/20 text-red-300 border-red-400/30'
-                                                                                : 'bg-gray-500/20 text-gray-300 border-gray-400/30'
-                                                                    }`}>
-                                                                        {genderDisplay}
-                                                                    </span>
-                                                                )}
-                                                                {ageDisplay && (
-                                                                    <span className={`text-xs px-2 py-1 rounded-full border font-medium ${
-                                                                        labels?.age === 'young'
-                                                                            ? 'bg-green-500/20 text-green-300 border-green-400/30'
-                                                                            : labels?.age === 'middle_aged'
-                                                                            ? 'bg-purple-500/20 text-purple-300 border-purple-400/30'
-                                                                            : labels?.age === 'old'
-                                                                            ? 'bg-orange-500/20 text-orange-300 border-orange-400/30'
-                                                                            : 'bg-gray-500/20 text-gray-300 border-gray-400/30'
-                                                                    }`}>
-                                                                        {ageDisplay}
-                                                                    </span>
-                                                                )}
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <button
-                                                        className="p-1.5 rounded-full bg-gray-700/50 hover:bg-gray-600/50 transition-colors flex-shrink-0 ml-2"
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-
-                                                            if (!currentAudio || playingSoundId !== voice.id) {
-                                                                onClickPlaySoundPreview(voice.id, voice.previewUrl);
-                                                            } else {
-                                                                onClickStopSoundPreview();
-                                                            }
-                                                        }}
-                                                    >
-                                                        {playingSoundId === voice.id ? (
-                                                            <Square size={14} className="text-white" />
-                                                        ) : (
-                                                            <Play size={14} className="text-white" />
-                                                        )}
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                <VoiceSelectionPanel
+                    selectedVoiceId={selectedVoiceId}
+                    onSelectVoice={onSelectVoice}
+                    onChangeIsLoading={onChangeVoiceLoading}
+                />
 
                 {/* Style Preview Panel */}
                 <div className="flex-1 bg-black flex flex-col relative">
@@ -1030,10 +801,10 @@ function WorkspaceCreatePageClient() {
                                     
                                     <button 
                                         onClick={onGenerateScript} 
-                                        disabled={isGenerating || !aiPrompt.trim()}
+                                        disabled={isGeneratingScript || !aiPrompt.trim()}
                                         className="w-full bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white px-4 py-3 rounded-lg font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2 shadow-lg shadow-purple-500/25"
                                     >
-                                        {isGenerating ? (
+                                        {isGeneratingScript ? (
                                             <>
                                                 <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
                                                 <span>Generating...</span>

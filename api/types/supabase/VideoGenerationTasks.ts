@@ -27,7 +27,7 @@ export interface VideoGenerationRequest {
     userId: string;
     narrationScript: string;
     style?: Style;
-    voice?: Voice;
+    voiceId?: string;
 }
 
 export interface VideoGenerationResponse {
