@@ -2,6 +2,7 @@
 
 import { memo } from 'react';
 import { Sun, Menu } from 'lucide-react';
+import Image from "next/image";
 
 function Header() {
     return (
@@ -10,10 +11,17 @@ function Header() {
                 <div className="flex items-center justify-between h-16">
                     {/* Logo */}
                     <div className="flex items-center space-x-2">
-                        <div className="w-8 h-8 bg-gradient-to-r from-pink-500 to-purple-600 rounded-lg flex items-center justify-center">
-                            <span className="text-white font-bold text-sm">⚡</span>
-                        </div>
-                        <span className="text-white font-bold text-xl">ShortReal</span>
+                        {/*<div className="w-8 h-8 bg-gradient-to-r from-pink-500 to-purple-600 rounded-lg flex items-center justify-center">*/}
+                        {/*    <span className="text-white font-bold text-sm">⚡</span>*/}
+                        {/*</div>*/}
+                        <Image
+                            src="/logo/logo-64.png"
+                            alt="Short Real"
+                            width={48}
+                            height={48}
+                            className="w-12 h-12"
+                        />
+                        <span className="text-white font-bold text-2xl">ShortReal</span>
                     </div>
 
                     {/* Desktop Navigation */}
@@ -47,7 +55,10 @@ function Header() {
                         {/*</button>*/}
 
                         {/* Get Started */}
-                        <button className="bg-gradient-to-r from-pink-500 to-purple-600 text-white px-4 py-2 rounded-lg hover:from-pink-600 hover:to-purple-700 transition-all duration-300 transform hover:scale-105">
+                        <button
+                            className="bg-gradient-to-r from-pink-500 to-purple-600 text-white px-4 py-2 rounded-lg hover:from-pink-600 hover:to-purple-700 transition-all duration-300 transform hover:scale-105"
+                            onClick={() => {}}
+                        >
                             Get Started
                         </button>
 
