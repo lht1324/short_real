@@ -103,10 +103,12 @@ export class RendiClient {
                     return sceneData.requestId!;
                 });
 
-                await videoGenerationTasksServerAPI.patchVideoGenerationTask({
-                    id: generationTaskId,
-                    scene_breakdown_list: mappedList,
-                });
+                await videoGenerationTasksServerAPI.patchVideoGenerationTask(
+                    generationTaskId,
+                    {
+                        scene_breakdown_list: mappedList,
+                    }
+                );
 
                 // 처리된 영상 파일들 삭제
                 const filesToDelete = requestIdList.map(requestId => `${generationTaskId}/${requestId}.mp4`);

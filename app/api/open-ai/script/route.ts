@@ -7,11 +7,7 @@ export async function POST(request: NextRequest) {
         // 요청 본문 파싱
         const {
             userPrompt,
-            duration,
-        }: {
-            userPrompt: string;
-            duration: number;
-        } = await request.json();
+        }: ScriptGenerationRequest = await request.json();
 
         // 필수 필드 검증
         if (!userPrompt) {
@@ -24,18 +20,8 @@ export async function POST(request: NextRequest) {
             }, { status: 400 });
         }
 
-        if (!duration || (duration !== 15 && duration !== 30)) {
-            return NextResponse.json({
-                success: false,
-                error: {
-                    message: 'Duration must be 15 or 30 seconds',
-                    code: 'INVALID_DURATION'
-                }
-            }, { status: 400 });
-        }
-
         // OpenAI API를 통해 스크립트 생성
-        const result = await openAIServerAPI.postScript(userPrompt, duration);
+        const result = await openAIServerAPI.postScript(userPrompt);
 
         // 결과 반환
         return NextResponse.json(result);

@@ -16,7 +16,7 @@ import {FalAIClient} from "@/lib/fal-ai/FalAIClient";
 import {FalAIService} from "@/lib/fal-ai/FalAIService";
 
 export const videoServerAPI = {
-    // POST /videos - Scene별 이미지투비디오 생성 요청 제출
+    // POST /videos - Scene별 image-to-video 생성 요청 제출
     async postVideo(
         sceneData: SceneData,
         generationTaskId: string,
@@ -44,7 +44,7 @@ export const videoServerAPI = {
         // Signed URL 생성 (1시간 유효)
         const { data, error } = await supabase.storage
             .from('scene_image_temp_storage')
-            .createSignedUrl(`${generationTaskId}/${sceneData.sceneNumber}.jpeg`, 3600);
+            .createSignedUrl(`${generationTaskId}/${sceneData.sceneNumber}.jpeg`, 60 * 60 * 24);
 
         // if (!imageUrl) {
         //     throw new Error(`Scene ${sceneData.sceneNumber}: 이미지 데이터가 없습니다.`);
@@ -285,10 +285,12 @@ export const videoServerAPI = {
                         return sceneData.requestId!;
                     });
 
-                    await videoGenerationTasksServerAPI.patchVideoGenerationTask({
-                        id: generationTaskId,
-                        scene_breakdown_list: mappedList,
-                    });
+                    await videoGenerationTasksServerAPI.patchVideoGenerationTask(
+                        generationTaskId,
+                        {
+                            scene_breakdown_list: mappedList,
+                        }
+                    );
 
                     // 처리된 영상 파일들 삭제
                     const filesToDelete = requestIdList.map(requestId => `${generationTaskId}/${requestId}.mp4`);
@@ -305,5 +307,5 @@ export const videoServerAPI = {
             await videoGenerationTasksServerAPI.updateTaskStatus(generationTaskId, 'failed');
             throw error;
         }
-    }
+    },
 }

@@ -10,25 +10,24 @@ import {
     ListTodo,
     Plus,
     Play,
-    Square,
     ChevronDown,
     ChevronRight,
+    Film,
+    Save,
 } from 'lucide-react';
 import { openAIClientAPI } from '@/api/client/openAIClientAPI';
 import {ScriptGenerationRequest} from "@/api/types/open-ai/ScriptGeneration";
-import {Voice} from "@/api/types/eleven-labs/Voice";
-import {voiceClientAPI} from "@/api/client/voiceClientAPI";
-import {BGMInfo} from "@/api/types/supabase/BackgroundMusics";
-import {musicClientAPI} from "@/api/client/musicClientAPI";
 import {Style} from "@/api/types/supabase/Styles";
-import {VideoGenerationRequest} from "@/api/types/supabase/VideoGenerationTasks";
+import {SceneData, VideoGenerationTask} from "@/api/types/supabase/VideoGenerationTasks";
 import {videoClientAPI} from "@/api/client/videoClientAPI";
 import {postFetch} from "@/api/client/baseFetch";
-
-interface ThemeFilterData {
-    themeName: string,
-    isSelected: boolean,
-}
+import {StoryboardData} from "@/api/types/api/open-ai/scene/PostOpenAISceneResponse";
+import StoryboardItem from "@/components/page/workspace/create/StoryboardItem";
+import VoiceSelectionPanel from "@/components/page/workspace/create/VoiceSelectionPanel";
+import {PostVideoRequest} from "@/api/types/api/video/PostVideoRequest";
+import {useSearchParams} from "next/navigation";
+import {PostOpenAISceneRequest} from "@/api/types/api/open-ai/scene/PostOpenAISceneRequest";
+import DefaultModal from "@/components/public/DefaultModal";
 
 function WorkspaceCreatePageClient() {
     // 음성, 음악 선택 기능 추가
@@ -36,65 +35,54 @@ function WorkspaceCreatePageClient() {
     // 음악은 선택한 거 그대로 에디터에서 틀어주고, 실시간으로 바꾸는 것처럼 만들어준다.
     // 자막은 캡션 폰트, 크기, 색상, 위치 정도만.
     // 다 지정됐으면 생성된 영상 + 생성된 음성 + 에디터 최종 음악 + 에디터 최종 자막을 합쳐준다.
-    // 음성만 재생성해주는 기능 추가 - 크레딧 받는 걸로
+    const searchParams = useSearchParams();
 
-    const [voiceList, setVoiceList] = useState<Voice[]>([]);
-    const [backgroundMusicList, setBackgroundMusicList] = useState<BGMInfo[]>([]);
-    const [backgroundMusicThemeFilterItemList, setBackgroundMusicThemeFilterItemList] = useState<ThemeFilterData[]>([]);
-    const selectedBackgroundMusicList = useMemo(() => {
-        return backgroundMusicList.filter((backgroundMusic) => {
-            return backgroundMusic.themes.some((theme) => {
-                return backgroundMusicThemeFilterItemList.find((themeFilterItem) => {
-                    return themeFilterItem.themeName === theme;
-                })?.isSelected ?? false;
-            })
-        })
-    }, [backgroundMusicList, backgroundMusicThemeFilterItemList]);
+    const [isVoiceLoading, setIsVoiceLoading] = useState(true);
+    const [isGenerationTaskLoading, setIsGenerationTaskLoading] = useState(true);
+    const isLoading = useMemo(() => {
+        return isVoiceLoading || isGenerationTaskLoading;
+    }, [isVoiceLoading, isGenerationTaskLoading]);
+
+    const taskId = useMemo(() => {
+        return searchParams.get("taskId") ?? undefined;
+    }, [searchParams]);
 
     // Section states
-    const [description, setDescription] = useState<string>('');
-    const [duration, setDuration] = useState<number>(15);
+    const [script, setScript] = useState<string>('');
     const [selectedStyleId, setSelectedStyleId] = useState<string>('');
     const [selectedVoiceId, setSelectedVoiceId] = useState<string>('');
-    const [selectedBackgroundMusicId, setSelectedBackgroundMusicId] = useState<string>('');
+    
+    // Storyboard states
+    const [sceneDataList, setSceneDataList] = useState<SceneData[]>([]);
+    const [videoMainSubject, setVideoMainSubject] = useState<string | null>(null);
 
+    const isVideoGenerationEnabled = useMemo(() => {
+        const isScriptNotEmpty = script.length !== 0;
+        const isSceneDataListNotEmpty = sceneDataList.length !== 0;
+        const isVideoMainSubjectNotEmpty = !!videoMainSubject;
+        const isStyleSelected = selectedStyleId.length !== 0;
+        const isVoiceSelected = selectedVoiceId.length !== 0;
+        
+        return isScriptNotEmpty &&
+            isSceneDataListNotEmpty &&
+            isVideoMainSubjectNotEmpty &&
+            isVoiceSelected &&
+            isStyleSelected;
+    }, [script, sceneDataList, videoMainSubject, selectedVoiceId, selectedStyleId]);
+    
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [isGenerating, setIsGenerating] = useState(false);
+    const [isGeneratingScript, setIsGeneratingScript] = useState(false);
+    const [isGeneratingStoryboardData, setIsGeneratingStoryboardData] = useState(false);
     const [showAIModal, setShowAIModal] = useState(false);
     const [aiPrompt, setAiPrompt] = useState('');
-    const [selectedDuration, setSelectedDuration] = useState(15);
-
-    const [videoDataResponse, setVideoDataResponse] = useState({ });
-    
-    // Audio state management
-    const [currentAudio, setCurrentAudio] = useState<HTMLAudioElement | null>(null);
-    const [playingSoundId, setPlayingSoundId] = useState<string | null>(null);
+    const [isSaving, setIsSaving] = useState(false);
+    const [showSaveSuccessModal, setShowSaveSuccessModal] = useState(false);
+    const [showVoiceChangeWarningModal, setShowVoiceChangeWarningModal] = useState(false);
+    const [pendingVoiceId, setPendingVoiceId] = useState<string | null>(null);
     
     // Collapse states for sections
     const [isStyleExpanded, setIsStyleExpanded] = useState(true);
-    const [isVoiceExpanded, setIsVoiceExpanded] = useState(true);
-    const [isMusicExpanded, setIsMusicExpanded] = useState(true);
 
-    // 어차피 Scene별로 나눈다고 할 때, 나레이션 만드는 건 그대로 놔둔다
-    // 영상을 각 Scene마다 생성한 뒤 합쳐야 하니, 에디터에서 각 Scene 누를 때마다 해당 Scene 영상을 보여주는 거다
-    // 나레이션은 Scene마다 생성된 영상에 그대로 보여주는 거고.
-    /**
-     * 🎨 공식 지원 스타일 (확인된 것들)
-     * 애니메이션 스타일
-     *
-     * Pixar style: 3D 렌더링에 유연하고 일관성 있는 스타일
-     * Studio Ghibli: 애니메이션에서 가장 일관성 있게 생성되는 스타일
-     * Disney style: 클래식한 서구 만화 스타일
-     * Anime style: 일본 애니메이션 스타일 (horror anime 등 세부 변형 가능)
-     * Pixel art: 마인크래프트나 메이플스토리 같은 픽셀 아트 Pika Scenes (v2.2) | Image to Video | API Documentation | fal.ai
-     *
-     * 실사/시네마틱 스타일
-     *
-     * Stop motion: 찰흙 애니메이션이나 액션 피규어 스타일
-     * Claymation: 찰흙 인형 애니메이션
-     * Tilt-shift photography: 미니어처 모델 효과
-     * Cinematic shots: 영화적 카메라워크
-     */
     // Style examples for preview
     const styleList = useMemo((): Style[] => [
         {
@@ -203,42 +191,103 @@ function WorkspaceCreatePageClient() {
         { id: 'create', icon: Plus, name: 'Create', href: '/workspace/create', active: true }
     ], []);
 
-    const onGenerateScript = useCallback(async () => {
+    const onClickGenerateScript = useCallback(async () => {
         if (!aiPrompt.trim()) return;
         
-        setIsGenerating(true);
+        setIsGeneratingScript(true);
         
         try {
             // API 요청 데이터 구성
             const requestData: ScriptGenerationRequest = {
                 userPrompt: aiPrompt,
-                duration: duration,
             };
 
             console.log('Generating script with data:', requestData);
 
             // OpenAI API 호출
-            const result = await openAIClientAPI.postScript(requestData);
+            const result = await openAIClientAPI.postOpenAIScript(requestData);
 
             if (result && result.success && result.data) {
                 console.log("Script generation result", result);
                 console.log('Script generated successfully:', result.data);
-                setDescription(result.data.script);
-                setIsGenerating(false);
+                setScript(result.data.script);
+                setIsGeneratingScript(false);
                 setShowAIModal(false);
                 setAiPrompt('');
             } else {
                 console.error('Script generation failed:', result?.error);
                 alert(result?.error?.message || 'Failed to generate script. Please try again.');
-                setIsGenerating(false);
+                setIsGeneratingScript(false);
             }
 
         } catch (error) {
             console.error('Error generating script:', error);
             alert('An error occurred while generating script. Please try again.');
-            setIsGenerating(false);
+            setIsGeneratingScript(false);
         }
-    }, [aiPrompt, duration]);
+    }, [aiPrompt]);
+    
+    const onClickGenerateStoryboard = useCallback(async () => {
+        try {
+            if (!script && !selectedVoiceId) {
+                throw new Error("Write script and select voice first.")
+            }
+            if (!script) {
+                throw new Error("Write script first.")
+            }
+            if (!selectedVoiceId) {
+                throw new Error("Select voice first.")
+            }
+
+            setIsGeneratingStoryboardData(true);
+
+            const request: PostOpenAISceneRequest = {
+                taskId: taskId,
+                narrationScript: script,
+                styleId: selectedStyleId,
+                voiceId: selectedVoiceId,
+            }
+            const result = await openAIClientAPI.postOpenAIScene(request);
+            
+            if (!result || !result.taskId || !result.sceneDataList || !result.videoMainSubject) {
+                throw new Error("Storyboard generation is failed.")
+            }
+
+            const {
+                taskId: newTaskId,
+                sceneDataList: newSceneDataList,
+                videoMainSubject: newVideoMainSubject,
+            }: StoryboardData = result;
+
+            window.history.pushState(null, "", `/workspace/create?taskId=${newTaskId}`);
+            setSceneDataList(newSceneDataList);
+            setVideoMainSubject(newVideoMainSubject);
+
+            setIsGeneratingStoryboardData(false);
+        } catch (error) {
+            console.error('onClickGenerateStoryboard', error);
+            alert(error instanceof Error ? error.message : 'Unknown error');
+            setIsGeneratingStoryboardData(false);
+        }
+    }, [taskId, script, selectedVoiceId, selectedStyleId]);
+    
+    const onSelectVoice = useCallback((voiceId: string) => {
+        if (voiceId !== selectedVoiceId) {
+            // Storyboard가 생성된 상태에서 Voice 변경 시 경고
+            const isStoryboardGenerated = sceneDataList.length !== 0 && videoMainSubject && selectedVoiceId;
+
+            if (isStoryboardGenerated) {
+                setPendingVoiceId(voiceId);
+                setShowVoiceChangeWarningModal(true);
+            } else {
+                setSelectedVoiceId(voiceId);
+            }
+        }
+    }, [sceneDataList, videoMainSubject, selectedVoiceId]);
+
+    const onChangeVoiceLoading = useCallback((isVoiceLoading: boolean) => {
+        setIsVoiceLoading(isVoiceLoading);
+    }, []);
 
     const openAIModal = useCallback(() => {
         setShowAIModal(true);
@@ -247,75 +296,18 @@ function WorkspaceCreatePageClient() {
     const closeAIModal = useCallback(() => {
         setShowAIModal(false);
         setAiPrompt('');
-        setIsGenerating(false);
+        setIsGeneratingScript(false);
     }, []);
-
-    const onClickPlaySoundPreview = useCallback((soundId: string, soundPreviewUrl?: string) => {
-        // 음성 재생 중 다른 음성 재생
-        if (playingSoundId !== soundId && currentAudio) {
-            currentAudio.pause();
-            currentAudio.currentTime = 0;
-            setCurrentAudio(null);
-            setPlayingSoundId(null);
-        }
-
-        // 새로운 음성 재생
-        if (soundPreviewUrl) {
-            const audio = new Audio(soundPreviewUrl);
-            
-            // 재생 종료 시 state 초기화 (해당 오디오만)
-            audio.addEventListener('ended', () => {
-                setCurrentAudio((current) => {
-                    if (current === audio) {
-                        setPlayingSoundId(null);
-                        return null;
-                    }
-
-                    return current;
-                });
-            });
-
-            // 에러 처리 (해당 오디오만)
-            audio.addEventListener('error', (error) => {
-                console.error('Audio playback error:', error);
-                setCurrentAudio((current) => {
-                    if (current === audio) {
-                        setPlayingSoundId(null);
-                        return null;
-                    }
-                    return current;
-                });
-            });
-
-            audio.play().then(() => {
-                setCurrentAudio(audio);
-                setPlayingSoundId(soundId);
-            }).catch((error) => {
-                console.error('Failed to play audio:', error);
-                setCurrentAudio(null);
-                setPlayingSoundId(null);
-                // 재생 실패 시에만 state 초기화 (기존 오디오는 그대로 유지)
-            });
-        } else {
-            console.log('No preview URL available for:', soundId);
-        }
-    }, [currentAudio, playingSoundId]);
-    
-    const onClickStopSoundPreview = useCallback(() => {
-        currentAudio?.pause();
-        setCurrentAudio(null);
-        setPlayingSoundId(null);
-    }, [currentAudio]);
 
     // 예상 영상 시간 계산 (2.5단어/초 기준)
     const estimatedDuration = useMemo(() => {
-        if (!description.trim()) return 0;
-        const wordCount = description.split(' ').length;
+        if (!script.trim()) return 0;
+        const wordCount = script.split(' ').length;
         return Math.round(wordCount / 2.5);
-    }, [description]);
+    }, [script]);
 
-    const onSubmitProject = useCallback(async () => {
-        if (!description.trim()) {
+    const onClickGenerateVideo = useCallback(async () => {
+        if (!script.trim()) {
             alert('스크립트를 입력해주세요.');
             return;
         }
@@ -327,27 +319,25 @@ function WorkspaceCreatePageClient() {
             const selectedStyle = styleList.find((style) => {
                 return style.id === selectedStyleId;
             });
-            const selectedVoice = voiceList.find((voice) => {
-                return voice.id === selectedVoiceId;
-            });
-            const selectedMusic = backgroundMusicList.find((backgroundMusic) => {
-                return backgroundMusic.id === selectedBackgroundMusicId;
-            });
+
+            if (!selectedStyle || !selectedVoiceId) {
+                throw new Error("Selected style or voice was not found.");
+            }
 
             // VideoData API 요청 데이터 구성
-            const requestData: VideoGenerationRequest = {
+            const requestData: PostVideoRequest = {
                 userId: "",
-                narrationScript: description,
-                duration: duration,
+                narrationScript: script,
                 style: selectedStyle,
-                voice: selectedVoice,
-                music: selectedMusic,
+                voiceId: selectedVoiceId,
+                sceneDataList: sceneDataList,
+                videoMainSubject: videoMainSubject ?? undefined,
             };
 
             console.log('Creating video project with data:', requestData);
 
             // Video API 호출
-            const result = await videoClientAPI.postVideoGeneration(requestData);
+            const result = await videoClientAPI.postVideo(requestData);
 
             if (result) {
                 console.log('Video data generation succeed.');
@@ -368,7 +358,55 @@ function WorkspaceCreatePageClient() {
         } finally {
             setIsSubmitting(false);
         }
-    }, [description, duration, selectedStyleId, selectedVoiceId, selectedBackgroundMusicId, styleList, voiceList, backgroundMusicList]);
+    }, [script, selectedStyleId, selectedVoiceId, styleList, sceneDataList, videoMainSubject]);
+
+    const onClickSaveDraft = useCallback(async () => {
+        setIsSaving(true);
+
+        try {
+            const request: Partial<VideoGenerationTask> = {
+                narration_script: script.length !== 0 ? script : undefined,
+                scene_breakdown_list: sceneDataList.length !== 0 ? sceneDataList : undefined,
+                video_main_subject: videoMainSubject ?? undefined,
+                selected_style_id: selectedStyleId.length !== 0 ? selectedStyleId : undefined,
+                selected_voice_id: selectedVoiceId.length !== 0 ? selectedVoiceId : undefined,
+            }
+            const result: VideoGenerationTask | null = taskId
+                ? await videoClientAPI.patchVideoTaskByTaskId(taskId, request)
+                : await videoClientAPI.postVideoTask(request);
+            
+            if (!result) {
+                throw new Error("Saving draft was failed. Try again.")
+            }
+
+            setShowSaveSuccessModal(true);
+        } catch (error) {
+            console.error('Error saving draft:', error);
+            alert('Saving draft was failed. Try again.');
+        } finally {
+            setIsSaving(false);
+        }
+    }, [taskId, script, selectedStyleId, selectedVoiceId, sceneDataList, videoMainSubject]);
+
+    const onCloseSaveSuccessModal = useCallback(() => {
+        setShowSaveSuccessModal(false);
+    }, []);
+
+    const onConfirmVoiceChange = useCallback(async () => {
+        if (pendingVoiceId) {
+            setSelectedVoiceId(pendingVoiceId);
+            setPendingVoiceId(null);
+            setShowVoiceChangeWarningModal(false);
+
+            // Storyboard 재생성
+            await onClickGenerateStoryboard();
+        }
+    }, [pendingVoiceId, onClickGenerateStoryboard]);
+
+    const onCancelVoiceChange = useCallback(() => {
+        setPendingVoiceId(null);
+        setShowVoiceChangeWarningModal(false);
+    }, []);
 
     const requestIdList = useMemo(() => {
         return [
@@ -411,76 +449,77 @@ function WorkspaceCreatePageClient() {
         }
     }, [requestIdList, videoUrlList]);
 
+    // 페이지 로드 시: taskId 있으면 데이터 복원
     useEffect(() => {
-        const loadData = async () => {
-            const voiceDataList = await voiceClientAPI.getVoices();
-            const bgmDataList = await musicClientAPI.getBackgroundMusics();
+        if (taskId) {
+            const getVideoTaskByTaskId = async () => {
+                const videoGenerationTask = await videoClientAPI.getVideoTaskByTaskId(taskId);
 
-            console.log("voiceDataList", voiceDataList);
-            setVoiceList(voiceDataList);
-            setBackgroundMusicList(bgmDataList);
+                if (videoGenerationTask) {
+                    const script = videoGenerationTask.narration_script;
+                    const sceneDataList = videoGenerationTask.scene_breakdown_list;
+                    const videoMainSubject = videoGenerationTask.video_main_subject;
+                    const voiceId = videoGenerationTask.selected_voice_id;
+                    const styleId = videoGenerationTask.selected_style_id;
 
-            // themes 추출 및 중복 제거 후 ThemeFilterData로 매핑
-            const allThemes = bgmDataList.flatMap(bgm => bgm.themes);
-            const uniqueThemes = [...new Set(allThemes)];
-            const themeFilterItems: ThemeFilterData[] = uniqueThemes.map(theme => ({
-                themeName: theme,
-                isSelected: true // 기본적으로 모든 theme 선택됨
-            }));
-            setBackgroundMusicThemeFilterItemList(themeFilterItems);
+                    setScript(script);
+                    setSceneDataList(sceneDataList);
+                    setVideoMainSubject(videoMainSubject ?? '');
+                    setSelectedVoiceId(voiceId ?? '');
+                    setSelectedStyleId(styleId ?? '');
+
+                    setIsGenerationTaskLoading(false);
+                } else {
+                    setIsGenerationTaskLoading(false);
+                }
+            }
+
+            getVideoTaskByTaskId().then();
+        } else {
+            setIsGenerationTaskLoading(false);
         }
-
-        loadData().then();
-    }, []);
-
-    // 컴포넌트 언마운트 시 오디오 정리
-    useEffect(() => {
-        return () => {
-            if (currentAudio) {
-                currentAudio.pause();
-                currentAudio.currentTime = 0;
-                setCurrentAudio(null);
-                setPlayingSoundId(null);
-            }
-        };
-    }, [currentAudio]);
-
-    // API 엔드포인트 미리 컴파일 (Next.js 서버리스 함수 초기화)
-    useEffect(() => {
-        const precompileAPIs = async () => {
-            try {
-                console.log('Pre-compiling API routes...');
-                
-                // 모든 API 라우트들을 병렬로 프리컴파일
-                const apiRoutes = [
-                    '/api/open-ai/script',
-                    '/api/music',
-                    '/api/video',
-                    '/api/video/merge',
-                    '/webhook/replicate',
-                    '/webhook/suno-api'
-                ];
-                
-                const precompilePromises = apiRoutes.map(route => 
-                    fetch(route, { 
-                        method: 'OPTIONS',
-                        headers: { 'Content-Type': 'application/json' }
-                    }).catch(() => {}) // 에러 무시
-                );
-                
-                await Promise.all(precompilePromises);
-                console.log('All API routes pre-compiled');
-            } catch (error) {
-                console.log('API pre-compilation completed:', error);
-            }
-        };
-        
-        // 컴포넌트 마운트 후 바로 실행
-        precompileAPIs().then();
-    }, []);
+    }, [taskId]);
 
     return (
         <div className="min-h-screen bg-black text-white">
+            {/* Loading Overlay */}
+            {isLoading && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md">
+                    <div className="flex flex-col items-center space-y-6">
+                        {/* 로딩 스피너 */}
+                        <div className="relative w-24 h-24">
+                            {/* 외부 링 */}
+                            <div className="absolute inset-0 border-4 border-purple-200/20 rounded-full"></div>
+                            {/* 회전하는 그라디언트 링 */}
+                            <div className="absolute inset-0 border-4 border-transparent border-t-pink-500 border-r-purple-500 rounded-full animate-spin"></div>
+                            {/* 내부 역방향 회전 링 */}
+                            <div className="absolute inset-3 border-2 border-transparent border-b-purple-400 border-l-pink-400 rounded-full animate-spin" style={{animationDirection: 'reverse', animationDuration: '1.5s'}}></div>
+                            {/* 중앙 아이콘 */}
+                            <div className="absolute inset-0 flex items-center justify-center">
+                                <Sparkles className="w-8 h-8 text-purple-400 animate-pulse" />
+                            </div>
+                        </div>
+
+                        {/* 로딩 텍스트 */}
+                        <div className="text-center space-y-2">
+                            <h3 className="text-2xl font-semibold bg-gradient-to-r from-pink-400 to-purple-500 bg-clip-text text-transparent">
+                                Loading Create Studio
+                            </h3>
+                            <p className="text-gray-400 text-sm">
+                                Preparing your creative workspace...
+                            </p>
+                        </div>
+
+                        {/* 애니메이션 도트 */}
+                        <div className="flex space-x-2">
+                            <div className="w-2 h-2 bg-pink-500 rounded-full animate-bounce" style={{animationDelay: '0ms'}}></div>
+                            <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style={{animationDelay: '150ms'}}></div>
+                            <div className="w-2 h-2 bg-indigo-500 rounded-full animate-bounce" style={{animationDelay: '300ms'}}></div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* Top Header - Same as Editor */}
             <div className="flex items-center justify-between py-4 border-b border-purple-500/20 bg-gray-900/50 backdrop-blur-sm">
                 <div className="flex items-center" style={{paddingLeft: '16px'}}>
@@ -546,7 +585,7 @@ function WorkspaceCreatePageClient() {
                                         <label className="block text-xl font-semibold text-purple-300">
                                             Script
                                         </label>
-                                        {description.trim() && (
+                                        {script.trim() && (
                                             <span className="px-2 py-1 bg-blue-500/20 text-blue-300 text-sm font-medium rounded border border-blue-400/30">
                                                 ~{estimatedDuration}s
                                             </span>
@@ -562,64 +601,125 @@ function WorkspaceCreatePageClient() {
                                     </button>
                                 </div>
                                 <textarea
-                                    value={description}
-                                    onChange={(e) => setDescription(e.target.value)}
+                                    value={script}
+                                    onChange={(e) => setScript(e.target.value)}
                                     placeholder="Describe what you want to create. Be as detailed as possible..."
                                     rows={6}
                                     className="w-full px-4 py-3 rounded-xl bg-gray-800/50 border border-purple-500/30 text-white placeholder-gray-400 focus:border-purple-400 focus:ring-2 focus:ring-purple-400/20 focus:outline-none transition-all resize-none text-base"
                                 />
                             </div>
 
-                            {/* VideoData API Test Section */}
+                            {/* Storyboard Section */}
                             <div>
-                                <label className="block text-xl font-medium text-white mb-3">
-                                    VideoData API Test
-                                </label>
-                                <div className="bg-gray-800/50 border border-purple-500/30 rounded-xl p-4">
-                                    <div className="flex items-center justify-between mb-3">
-                                        <span className="text-purple-300 text-sm font-medium">JSON Response</span>
+                                <div className="flex items-center justify-between mb-4">
+                                    <label className="block text-xl font-semibold text-purple-300">
+                                        Storyboard
+                                    </label>
+                                    <div className="relative group">
                                         <button
-                                            onClick={onTestWebhook}
                                             type="button"
-                                            className="px-3 py-1.5 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-lg text-sm font-medium hover:from-blue-600 hover:to-cyan-600 transition-all duration-300"
+                                            onClick={onClickGenerateStoryboard}
+                                            disabled={isGeneratingStoryboardData || !script.trim() || !selectedVoiceId}
+                                            className="px-3 py-1.5 bg-gradient-to-r from-green-500 to-blue-500 text-white rounded-lg text-sm font-medium hover:from-green-600 hover:to-blue-600 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-1"
                                         >
-                                            Test VideoData API
+                                        {isGeneratingStoryboardData ? (
+                                            <>
+                                                <div className="w-3 h-3 border border-white/30 border-t-white rounded-full animate-spin"></div>
+                                                <span>Generating...</span>
+                                            </>
+                                        ) : sceneDataList.length === 0 && !videoMainSubject ? (
+                                            <span>Generate Storyboard</span>
+                                        ) : (
+                                            <span>Regenerate Storyboard</span>
+                                        )}
                                         </button>
+
+                                        {/* 툴팁 오버레이 */}
+                                        {(!script.trim() || !selectedVoiceId) && (
+                                            <div className="absolute top-full right-0 mt-2 w-64 bg-gray-900/95 backdrop-blur-sm border border-purple-500/30 rounded-lg p-3 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-10 shadow-xl">
+                                                <div className="text-xs font-medium text-purple-300 mb-2">Requirements</div>
+                                                <div className="space-y-1.5">
+                                                    <div className="flex items-center space-x-2 text-xs">
+                                                        <span>{script.trim() ? '🟢' : '🔴'}</span>
+                                                        <span className={script.trim() ? 'text-green-300' : 'text-gray-400'}>
+                                                            Script written
+                                                        </span>
+                                                    </div>
+                                                    <div className="flex items-center space-x-2 text-xs">
+                                                        <span>{selectedVoiceId ? '🟢' : '🔴'}</span>
+                                                        <span className={selectedVoiceId ? 'text-green-300' : 'text-gray-400'}>
+                                                            Voice selected
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
-                                    <pre className="bg-gray-900/50 border border-gray-700/50 rounded-lg p-3 text-xs text-green-400 overflow-x-auto font-mono">
-                                        {JSON.stringify(videoDataResponse, null, 2)}
-                                    </pre>
                                 </div>
+
+                                {/* Main Subject 표시 */}
+                                {videoMainSubject && (
+                                    <div className="mb-4 p-3 bg-purple-500/10 border border-purple-400/30 rounded-lg">
+                                        <div className="flex items-center space-x-2">
+                                            <div className="w-2 h-2 bg-purple-400 rounded-full"></div>
+                                            <span className="text-sm font-medium text-purple-300">Main Subject:</span>
+                                            <span className="text-sm text-white">{videoMainSubject}</span>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Storyboard 그리드 */}
+                                {sceneDataList.length !== 0 && videoMainSubject && (
+                                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 max-w-4xl">
+                                        {sceneDataList.sort((a, b) => {
+                                            return a.sceneNumber - b.sceneNumber;
+                                        }).map((sceneData) => {
+                                            return <StoryboardItem key={sceneData.sceneNumber} sceneData={sceneData} />
+                                        })}
+                                    </div>
+                                )}
+
+                                {/* 로딩 상태 또는 빈 상태 메시지 */}
+                                {sceneDataList.length === 0 && (
+                                    <div className="text-center py-8 px-4 bg-gray-800/30 border border-gray-600/30 rounded-lg">
+                                        {isGeneratingStoryboardData ? (
+                                            // 로딩 중 상태
+                                            <>
+                                                <div className="text-purple-400 mb-4">
+                                                    <div className="w-16 h-16 mx-auto mb-4 relative">
+                                                        <div className="absolute inset-0 border-4 border-purple-200/20 rounded-full"></div>
+                                                        <div className="absolute inset-0 border-4 border-purple-400 border-t-transparent rounded-full animate-spin"></div>
+                                                        <div className="absolute inset-2 border-2 border-purple-300/40 border-b-transparent rounded-full animate-spin" style={{animationDirection: 'reverse', animationDuration: '1.5s'}}></div>
+                                                    </div>
+                                                </div>
+                                                <p className="text-base text-purple-300 font-medium mb-2">AI Screenwriter at Work</p>
+                                                <p className="text-sm text-gray-400">Crafting your storyboard with cinematic precision...</p>
+                                                <div className="mt-4 flex justify-center space-x-1">
+                                                    <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{animationDelay: '0ms'}}></div>
+                                                    <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{animationDelay: '150ms'}}></div>
+                                                    <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{animationDelay: '300ms'}}></div>
+                                                </div>
+                                            </>
+                                        ) : (
+                                            // 빈 상태
+                                            <>
+                                                <div className="text-gray-400 mb-2">
+                                                    <Film className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                                                </div>
+                                                <p className="text-base text-gray-400 font-medium">No storyboard generated yet</p>
+                                                <p className="text-sm text-gray-500 mt-1">Generate a storyboard to see scene breakdown</p>
+                                            </>
+                                        )}
+                                    </div>
+                                )}
                             </div>
 
-                            {/* Duration Selection */}
+                            {/* Visual Style Selection */}
                             <div>
-                                <label className="block text-xl font-medium text-white mb-3">
-                                    Duration
-                                </label>
-                                <div className="flex gap-3">
-                                    {[15, 30].map(seconds => (
-                                        <button
-                                            key={seconds}
-                                            onClick={() => setDuration(seconds)}
-                                            className={`px-4 py-2 rounded-lg text-base font-medium transition-all ${
-                                                duration === seconds
-                                                    ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white border border-pink-400/50'
-                                                    : 'bg-gray-800/30 text-gray-300 hover:bg-gray-700/50 border border-purple-500/30'
-                                            }`}
-                                        >
-                                            {seconds}s
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-
-                            {/* Visual Style Cards */}
-                            <div>
-                                <button 
+                                <button
                                     type="button"
                                     onClick={() => setIsStyleExpanded(!isStyleExpanded)}
-                                    className="flex items-center text-xl font-medium text-white mb-3 hover:text-purple-300 transition-colors"
+                                    className="flex items-center text-xl font-semibold text-purple-300 mb-4 hover:text-purple-200 transition-colors"
                                 >
                                     <span>Visual Style</span>
                                     <span className="ml-2">
@@ -632,7 +732,7 @@ function WorkspaceCreatePageClient() {
                                         <button
                                             key={style.id}
                                             onClick={() => { setSelectedStyleId(style.id); }}
-                                            className={`p-3 rounded-lg border transition-all text-left ${
+                                            className={`w-full p-3 rounded-lg border transition-all text-left ${
                                                 selectedStyleId === style.id
                                                     ? 'border-pink-500 bg-pink-500/10'
                                                     : 'border-purple-500/30 bg-gray-800/30 hover:border-purple-400/50'
@@ -646,202 +746,37 @@ function WorkspaceCreatePageClient() {
                                 )}
                             </div>
 
-                            {/* Voice Selection */}
-                            <div>
-                                <button 
-                                    type="button"
-                                    onClick={() => setIsVoiceExpanded(!isVoiceExpanded)}
-                                    className="flex items-center text-xl font-medium text-white mb-3 hover:text-purple-300 transition-colors"
-                                >
-                                    <span>Voice</span>
-                                    <span className="ml-2">
-                                        {isVoiceExpanded ? <ChevronDown size={20} /> : <ChevronRight size={20} />}
-                                    </span>
-                                </button>
-                                {isVoiceExpanded && (
-                                    <div className="grid grid-cols-2 gap-3">
-                                    {voiceList.map((voice) => {
-                                        const labels = voice.labels;
-                                        const genderIcon = labels?.gender === 'male' ? '♂' : labels?.gender === 'female' ? '♀' : '';
-                                        const ageDisplay = labels?.age === 'young' ? 'Young' : labels?.age === 'middle_aged' ? 'Adult' : labels?.age === 'old' ? 'Senior' : '';
-                                        const accentDisplay = labels?.accent === 'american' ? 'US' : labels?.accent === 'british' ? 'UK' : labels?.accent === 'australian' ? 'AU' : labels?.accent || '';
-                                        
-                                        return (
-                                            <div
-                                                key={voice.id}
-                                                onClick={() => setSelectedVoiceId(voice.id)}
-                                                className={`p-3 rounded-lg border transition-all text-left cursor-pointer ${
-                                                    voice.id === selectedVoiceId
-                                                        ? 'border-pink-500 bg-pink-500/10'
-                                                        : 'border-purple-500/30 bg-gray-800/30 hover:border-purple-400/50'
-                                                }`}
-                                            >
-                                                <div className="flex items-start justify-between">
-                                                    <div className="min-w-0 flex-1">
-                                                        <div className="flex items-center gap-2 mb-1">
-                                                            <div className="text-white font-medium text-base">{voice.name}</div>
-                                                            {genderIcon && (
-                                                                <span className="text-purple-300 text-sm font-medium">{genderIcon}</span>
-                                                            )}
-                                                        </div>
-                                                        
-                                                        {/* Labels as tags */}
-                                                        <div className="flex flex-wrap gap-1 mb-2">
-                                                            {ageDisplay && (
-                                                                <span className="text-xs px-1.5 py-0.5 bg-blue-500/20 text-blue-300 rounded border border-blue-400/30">
-                                                                    {ageDisplay}
-                                                                </span>
-                                                            )}
-                                                            {accentDisplay && (
-                                                                <span className="text-xs px-1.5 py-0.5 bg-green-500/20 text-green-300 rounded border border-green-400/30">
-                                                                    {accentDisplay}
-                                                                </span>
-                                                            )}
-                                                            {labels?.descriptive && (
-                                                                <span className="text-xs px-1.5 py-0.5 bg-purple-500/20 text-purple-300 rounded border border-purple-400/30">
-                                                                    {labels.descriptive}
-                                                                </span>
-                                                            )}
-                                                            {labels?.use_case && (
-                                                                <span className="text-xs px-1.5 py-0.5 bg-orange-500/20 text-orange-300 rounded border border-orange-400/30">
-                                                                    {labels.use_case.replace('_', ' ')}
-                                                                </span>
-                                                            )}
-                                                        </div>
-                                                        
-                                                        <div className="text-gray-300 text-sm leading-relaxed mt-2 break-words">
-                                                            {voice.description}
-                                                        </div>
-                                                    </div>
-                                                    <button
-                                                        className="p-1.5 rounded-full bg-gray-700/50 hover:bg-gray-600/50 transition-colors flex-shrink-0 ml-2"
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-
-                                                            if (!currentAudio || playingSoundId !== voice.id) {
-                                                                onClickPlaySoundPreview(voice.id, voice.previewUrl);
-                                                            } else {
-                                                                onClickStopSoundPreview();
-                                                            }
-                                                        }}
-                                                    >
-                                                        {playingSoundId === voice.id ? (
-                                                            <Square size={14} className="text-white" />
-                                                        ) : (
-                                                            <Play size={14} className="text-white" />
-                                                        )}
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        );
-                                    })}
-                                    </div>
-                                )}
-                            </div>
-
-                            {/* Background Music Selection */}
-                            <div>
-                                <button 
-                                    type="button"
-                                    onClick={() => setIsMusicExpanded(!isMusicExpanded)}
-                                    className="flex items-center text-xl font-medium text-white mb-3 hover:text-purple-300 transition-colors"
-                                >
-                                    <span>Background Music</span>
-                                    <span className="ml-2">
-                                        {isMusicExpanded ? <ChevronDown size={20} /> : <ChevronRight size={20} />}
-                                    </span>
-                                </button>
-                                {isMusicExpanded && (
-                                    <div className="space-y-4">
-                                        {/* Theme Filter */}
-                                        <div>
-                                            <div className="flex items-center gap-2 mb-2">
-                                                <label className="text-sm font-medium text-purple-300">
-                                                    Filter by Theme
-                                                </label>
-                                                {/* 전체 선택 버튼 */}
-                                                <button
-                                                    onClick={() => {
-                                                        const allSelected = backgroundMusicThemeFilterItemList.every(item => item.isSelected);
-                                                        setBackgroundMusicThemeFilterItemList(prev => 
-                                                            prev.map(item => ({ ...item, isSelected: !allSelected }))
-                                                        );
-                                                    }}
-                                                    className="text-xs px-2 py-1 rounded border bg-pink-500/20 text-pink-300 border-pink-400/50 font-medium hover:bg-pink-500/30 transition-all"
-                                                >
-                                                    {backgroundMusicThemeFilterItemList.every(item => item.isSelected) ? 'Deselect All' : 'Select All'}
-                                                </button>
-                                            </div>
-                                            <div className="flex flex-wrap gap-2">
-                                                {backgroundMusicThemeFilterItemList.map((themeFilter) => (
-                                                    <button
-                                                        key={themeFilter.themeName}
-                                                        onClick={() => {
-                                                            setBackgroundMusicThemeFilterItemList(prev => 
-                                                                prev.map(item => 
-                                                                    item.themeName === themeFilter.themeName 
-                                                                        ? { ...item, isSelected: !item.isSelected }
-                                                                        : item
-                                                                )
-                                                            );
-                                                        }}
-                                                        className={`text-xs px-2 py-1 rounded border transition-all ${
-                                                            themeFilter.isSelected
-                                                                ? 'bg-purple-500/20 text-purple-300 border-purple-400/50'
-                                                                : 'bg-gray-700/50 text-gray-400 border-gray-600/50 hover:bg-gray-600/50'
-                                                        }`}
-                                                    >
-                                                        {themeFilter.themeName}
-                                                    </button>
-                                                ))}
-                                            </div>
-                                        </div>
-                                        
-                                        {/* Music Grid */}
-                                        <div className="grid grid-cols-2 gap-3">
-                                        {selectedBackgroundMusicList.map((backgroundMusic) => (
-                                            <div
-                                                key={backgroundMusic.id}
-                                                onClick={() => setSelectedBackgroundMusicId(backgroundMusic.id)}
-                                                className={`p-3 rounded-lg border transition-all text-left cursor-pointer ${
-                                                    selectedBackgroundMusicId === backgroundMusic.id
-                                                        ? 'border-pink-500 bg-pink-500/10'
-                                                        : 'border-purple-500/30 bg-gray-800/30 hover:border-purple-400/50'
-                                                }`}
-                                            >
-                                            <div className="flex items-center justify-between">
-                                                <div className="min-w-0 flex-1">
-                                                    <div className="text-white font-medium text-base truncate">{backgroundMusic.title}</div>
-                                                    <div className="text-gray-400 text-sm truncate">{backgroundMusic.themes.join(', ')}</div>
-                                                </div>
-                                                <button
-                                                    className="p-1.5 rounded-full bg-gray-700/50 hover:bg-gray-600/50 transition-colors flex-shrink-0"
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-
-                                                        if (!currentAudio || playingSoundId !== backgroundMusic.id) {
-                                                            onClickPlaySoundPreview(backgroundMusic.id, backgroundMusic.previewUrl);
-                                                        } else {
-                                                            onClickStopSoundPreview();
-                                                        }
-                                                    }}
-                                                >
-                                                    {playingSoundId === backgroundMusic.id ? (
-                                                        <Square size={14} className="text-white" />
-                                                    ) : (
-                                                        <Play size={14} className="text-white" />
-                                                    )}
-                                                </button>
-                                            </div>
-                                        </div>
-                                        ))}
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
+                            {/* VideoData API Test Section */}
+                            {/*<div>*/}
+                            {/*    <label className="block text-xl font-medium text-white mb-3">*/}
+                            {/*        VideoData API Test*/}
+                            {/*    </label>*/}
+                            {/*    <div className="bg-gray-800/50 border border-purple-500/30 rounded-xl p-4">*/}
+                            {/*        <div className="flex items-center justify-between mb-3">*/}
+                            {/*            <span className="text-purple-300 text-sm font-medium">JSON Response</span>*/}
+                            {/*            <button*/}
+                            {/*                onClick={onTestWebhook}*/}
+                            {/*                type="button"*/}
+                            {/*                className="px-3 py-1.5 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-lg text-sm font-medium hover:from-blue-600 hover:to-cyan-600 transition-all duration-300"*/}
+                            {/*            >*/}
+                            {/*                Test VideoData API*/}
+                            {/*            </button>*/}
+                            {/*        </div>*/}
+                            {/*        <pre className="bg-gray-900/50 border border-gray-700/50 rounded-lg p-3 text-xs text-green-400 overflow-x-auto font-mono">*/}
+                            {/*            {`{ }`}*/}
+                            {/*        </pre>*/}
+                            {/*    </div>*/}
+                            {/*</div>*/}
                         </div>
                     </div>
                 </div>
+
+                {/* Voice Selection Panel */}
+                <VoiceSelectionPanel
+                    selectedVoiceId={selectedVoiceId}
+                    onSelectVoice={onSelectVoice}
+                    onChangeIsLoading={onChangeVoiceLoading}
+                />
 
                 {/* Style Preview Panel */}
                 <div className="flex-1 bg-black flex flex-col relative">
@@ -894,27 +829,110 @@ function WorkspaceCreatePageClient() {
                     </div>
                     
                     <div className="p-6 border-t border-purple-500/20 bg-gray-900/50 backdrop-blur-sm relative z-10">
-                        <button
-                            onClick={onSubmitProject}
-                            disabled={!description || isSubmitting}
-                            className="mx-auto max-w-xs w-full group bg-gradient-to-r from-pink-500 to-purple-600 text-white px-6 py-4 rounded-xl text-xl font-semibold hover:from-pink-600 hover:to-purple-700 transition-all duration-300 transform hover:scale-105 flex items-center justify-center space-x-2 shadow-lg shadow-purple-500/25 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
-                        >
-                            {isSubmitting ? (
-                                <>
-                                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                                    <span>Requesting...</span>
-                                </>
-                            ) : (
-                                <>
-                                    <span>Generate Video</span>
-                                    <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                                    </svg>
-                                </>
-                            )}
-                        </button>
+                        <div className="flex w-fit items-center space-x-4 max-w-2xl mx-auto">
+                            {/* Save Draft 버튼 */}
+                            <button
+                                onClick={onClickSaveDraft}
+                                disabled={isSaving}
+                                className="flex items-center space-x-2 px-4 py-3 bg-gray-800/50 hover:bg-gray-800 border border-gray-600/50 hover:border-gray-500/50 text-gray-300 hover:text-white rounded-lg font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                {isSaving ? (
+                                    <>
+                                        <div className="w-4 h-4 border-2 border-gray-400/30 border-t-gray-400 rounded-full animate-spin"></div>
+                                        <span className="text-sm">Saving...</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <Save size={16} />
+                                        <span className="text-sm">Save Draft</span>
+                                    </>
+                                )}
+                            </button>
+
+                            {/* Generate Video 버튼 */}
+                            <div className="relative group">
+                                <button
+                                    onClick={onClickGenerateVideo}
+                                    disabled={!isVideoGenerationEnabled || isSubmitting}
+                                    className="flex-1 min-w-[280px] group bg-gradient-to-r from-pink-500 to-purple-600 text-white px-6 py-3 rounded-xl text-lg font-semibold hover:from-pink-600 hover:to-purple-700 transition-all duration-300 transform hover:scale-105 flex items-center justify-center space-x-2 shadow-lg shadow-purple-500/25 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                                >
+                                    {isSubmitting ? (
+                                        <>
+                                            <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                                            <span>Requesting...</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <span>Generate Video</span>
+                                            <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                                            </svg>
+                                        </>
+                                    )}
+                                </button>
+
+                                {/* 툴팁 오버레이 */}
+                                {!isVideoGenerationEnabled && (
+                                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-64 bg-gray-900/95 backdrop-blur-sm border border-purple-500/30 rounded-lg p-3 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-10 shadow-xl">
+                                        <div className="text-xs font-medium text-purple-300 mb-2">Requirements</div>
+                                        <div className="space-y-1.5">
+                                            <div className="flex items-center space-x-2 text-xs">
+                                                <span>{script.trim() ? '🟢' : '🔴'}</span>
+                                                <span className={script.trim() ? 'text-green-300' : 'text-gray-400'}>
+                                                    Script written
+                                                </span>
+                                            </div>
+                                            <div className="flex items-center space-x-2 text-xs">
+                                                <span>{sceneDataList.length !== 0 && videoMainSubject ? '🟢' : '🔴'}</span>
+                                                <span className={sceneDataList.length !== 0 && videoMainSubject ? 'text-green-300' : 'text-gray-400'}>
+                                                    Storyboard generated
+                                                </span>
+                                            </div>
+                                            <div className="flex items-center space-x-2 text-xs">
+                                                <span>{selectedVoiceId ? '🟢' : '🔴'}</span>
+                                                <span className={selectedVoiceId ? 'text-green-300' : 'text-gray-400'}>
+                                                    Voice selected
+                                                </span>
+                                            </div>
+                                            <div className="flex items-center space-x-2 text-xs">
+                                                <span>{selectedStyleId ? '🟢' : '🔴'}</span>
+                                                <span className={selectedStyleId ? 'text-green-300' : 'text-gray-400'}>
+                                                    Style selected
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
                     </div>
                 </div>
+
+                {/* Save Success Modal */}
+                {showSaveSuccessModal && (
+                    <DefaultModal
+                        title="Draft Saved"
+                        message="Your draft has been saved successfully. You can continue editing or come back later."
+                        cancelText="Continue"
+                        onClickCancel={onCloseSaveSuccessModal}
+                    />
+                )}
+
+                {/* Voice Change Warning Modal */}
+                {showVoiceChangeWarningModal && (
+                    <DefaultModal
+                        title="Voice Change Warning"
+                        message={
+                            "Voice change requires storyboard regeneration.\n" +
+                            "Current storyboard will be lost.\n" +
+                            "Continue?"
+                        }
+                        confirmText="Regenerate"
+                        cancelText="Cancel"
+                        onClickConfirm={onConfirmVoiceChange}
+                        onClickCancel={onCancelVoiceChange}
+                    />
+                )}
 
                 {/* AI Generation Modal */}
                 {showAIModal && (
@@ -922,7 +940,7 @@ function WorkspaceCreatePageClient() {
                         onClick={closeAIModal}
                         className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50"
                     >
-                        <div 
+                        <div
                             onClick={(e) => e.stopPropagation()}
                             className="bg-gray-900/95 backdrop-blur-sm border border-purple-500/30 rounded-xl max-w-lg w-full mx-4 overflow-hidden shadow-2xl"
                         >
@@ -938,11 +956,11 @@ function WorkspaceCreatePageClient() {
                                         <X size={18} />
                                     </button>
                                 </div>
-                                
+
                                 <div className="space-y-4">
                                     <div>
                                         <label className="block text-sm font-medium text-white mb-2">What do you want to create?</label>
-                                        <textarea 
+                                        <textarea
                                             placeholder="Tell me about Elon Musk's early SpaceX struggles"
                                             value={aiPrompt}
                                             onChange={(e) => setAiPrompt(e.target.value)}
@@ -950,27 +968,7 @@ function WorkspaceCreatePageClient() {
                                             className="w-full bg-gray-800/50 border border-purple-500/30 rounded-lg px-3 py-2 text-white text-sm focus:border-purple-400 focus:outline-none resize-none placeholder-gray-400 transition-all"
                                         />
                                     </div>
-                                    
-                                    {/* Duration Selection */}
-                                    <div>
-                                        <label className="block text-sm font-medium text-white mb-2">Length</label>
-                                        <div className="grid grid-cols-2 gap-2">
-                                            {[15, 30].map(seconds => (
-                                                <button
-                                                    key={seconds}
-                                                    onClick={() => setDuration(seconds)}
-                                                    className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${
-                                                        duration === seconds
-                                                            ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white border border-pink-400/50'
-                                                            : 'bg-gray-800/30 text-gray-300 hover:bg-gray-700/50 border border-purple-500/30'
-                                                    }`}
-                                                >
-                                                    {seconds}s
-                                                </button>
-                                            ))}
-                                        </div>
-                                    </div>
-                                    
+
                                     {/* Warning Message - Simplified */}
                                     <div className="bg-amber-500/10 border border-amber-400/30 rounded-lg p-3">
                                         <div className="flex items-start space-x-2">
@@ -981,13 +979,13 @@ function WorkspaceCreatePageClient() {
                                             </div>
                                         </div>
                                     </div>
-                                    
-                                    <button 
-                                        onClick={onGenerateScript} 
-                                        disabled={isGenerating || !aiPrompt.trim()}
+
+                                    <button
+                                        onClick={onClickGenerateScript}
+                                        disabled={isGeneratingScript || !aiPrompt.trim()}
                                         className="w-full bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white px-4 py-3 rounded-lg font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2 shadow-lg shadow-purple-500/25"
                                     >
-                                        {isGenerating ? (
+                                        {isGeneratingScript ? (
                                             <>
                                                 <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
                                                 <span>Generating...</span>
