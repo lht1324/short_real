@@ -23,17 +23,6 @@ export interface SubtitleSegment {
     endSec: number;
 }
 
-export interface VideoGenerationRequest {
-    userId: string;
-    narrationScript: string;
-    style?: Style;
-    voiceId?: string;
-}
-
-export interface VideoGenerationResponse {
-    taskId: string;
-}
-
 export interface VideoGenerationTask {
     id?: string; // uuid
     user_id: string; // uuid

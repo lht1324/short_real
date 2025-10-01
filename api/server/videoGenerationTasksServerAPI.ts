@@ -4,7 +4,7 @@ import {createSupabaseServiceRoleClient} from "@/lib/supabaseServiceRole";
 
 export const videoGenerationTasksServerAPI = {
     // POST - 새로운 영상 생성 작업 생성
-    async postVideoGenerationTask(taskData: VideoGenerationTask): Promise<VideoGenerationTask> {
+    async postVideoGenerationTask(taskData: Partial<VideoGenerationTask>): Promise<VideoGenerationTask> {
         const supabase = await createSupabaseServer("mutate");
         
         const { data, error } = await supabase
@@ -78,13 +78,13 @@ export const videoGenerationTasksServerAPI = {
     },
 
     // PATCH - 작업 데이터 업데이트
-    async patchVideoGenerationTask(videoGenerationTask: Partial<VideoGenerationTask>): Promise<VideoGenerationTask> {
+    async patchVideoGenerationTask(taskId: string, videoGenerationTask: Partial<VideoGenerationTask>): Promise<VideoGenerationTask> {
         const supabase = await createSupabaseServer("mutate");
 
         const { data, error } = await supabase
             .from('video_generation_tasks')
             .update(videoGenerationTask)
-            .eq('id', videoGenerationTask.id)
+            .eq('id', taskId)
             .select()
             .single();
 

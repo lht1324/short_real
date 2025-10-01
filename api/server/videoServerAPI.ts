@@ -16,7 +16,7 @@ import {FalAIClient} from "@/lib/fal-ai/FalAIClient";
 import {FalAIService} from "@/lib/fal-ai/FalAIService";
 
 export const videoServerAPI = {
-    // POST /videos - Scene별 이미지투비디오 생성 요청 제출
+    // POST /videos - Scene별 image-to-video 생성 요청 제출
     async postVideo(
         sceneData: SceneData,
         generationTaskId: string,
@@ -285,10 +285,12 @@ export const videoServerAPI = {
                         return sceneData.requestId!;
                     });
 
-                    await videoGenerationTasksServerAPI.patchVideoGenerationTask({
-                        id: generationTaskId,
-                        scene_breakdown_list: mappedList,
-                    });
+                    await videoGenerationTasksServerAPI.patchVideoGenerationTask(
+                        generationTaskId,
+                        {
+                            scene_breakdown_list: mappedList,
+                        }
+                    );
 
                     // 처리된 영상 파일들 삭제
                     const filesToDelete = requestIdList.map(requestId => `${generationTaskId}/${requestId}.mp4`);
@@ -305,5 +307,5 @@ export const videoServerAPI = {
             await videoGenerationTasksServerAPI.updateTaskStatus(generationTaskId, 'failed');
             throw error;
         }
-    }
+    },
 }

@@ -28,6 +28,10 @@ function VoiceSelectionPanel({
         const anyAgeSelected = Object.values(voiceAgeTagRecord).some(v => v);
 
         return voiceList.filter((voice) => {
+            if (selectedVoiceId === voice.id && (!anyGenderSelected && !anyAgeSelected)) {
+                return true;
+            }
+
             if (!voice.labels?.gender || !voice.labels?.age || (!anyGenderSelected && !anyAgeSelected)) {
                 return false;
             }
@@ -41,7 +45,7 @@ function VoiceSelectionPanel({
 
             return isEnabledGender && isEnabledAge;
         })
-    }, [voiceList, voiceGenderTagRecord, voiceAgeTagRecord]);
+    }, [selectedVoiceId, voiceList, voiceGenderTagRecord, voiceAgeTagRecord]);
 
     // Audio state management
     const [currentAudio, setCurrentAudio] = useState<HTMLAudioElement | null>(null);
@@ -223,28 +227,30 @@ function VoiceSelectionPanel({
                             {Object.keys(voiceGenderTagRecord).map((tagName) => {
                             const isActive = voiceGenderTagRecord[tagName];
 
-                            // 태그별 색상 결정
-                            const getTagColor = () => {
-                                switch (tagName) {
-                                    case 'male': return "blue";
-                                    case 'female': return "red";
-                                    default: return "gray";
+
+                            // Tailwind 동적 클래스 문제 해결: 조건문으로 전체 클래스 반환
+                            const getTagClasses = () => {
+                                if (!isActive) {
+                                    return "bg-gray-500/20 text-gray-400 border-gray-500/30 hover:bg-gray-500/30";
                                 }
-                            };
+
+                                switch (tagName) {
+                                    case 'male': return "bg-blue-500/20 text-blue-300 border-blue-400/30";
+                                    case 'female': return "bg-red-500/20 text-red-300 border-red-400/30";
+                                    case 'neutral': return "bg-gray-500/20 text-gray-300 border-gray-400/30";
+                                    default: return "bg-gray-500/20 text-gray-400 border-gray-500/30";
+                                    }
+                                };
 
                             // 표시할 라벨 결정
                             const getDisplayLabel = () => {
                                 switch (tagName) {
                                     case 'male': return 'Male';
                                     case 'female': return 'Female';
+                                    case 'neutral': return 'Neutral';
                                     default: return tagName;
                                 }
                             };
-
-                            const tagColor = getTagColor();
-                            const tagColorTailwind = isActive
-                                ? `bg-${tagColor}-500/20 text-${tagColor}-300 border-${tagColor}-400/30`
-                                : "bg-gray-500/20 text-gray-400 border-gray-500/30 hover:bg-gray-500/30";
 
                             return (
                                 <button
@@ -252,7 +258,7 @@ function VoiceSelectionPanel({
                                     onClick={() => {
                                         onToggleVoiceGenderTag(tagName);
                                     }}
-                                    className={`text-xs px-2 py-1 rounded-full border font-medium transition-all ${tagColorTailwind}`}
+                                    className={`text-xs px-2 py-1 rounded-full border font-medium transition-all ${getTagClasses()}`}
                                 >
                                     {getDisplayLabel()}
                                 </button>
@@ -268,31 +274,28 @@ function VoiceSelectionPanel({
                             {Object.keys(voiceAgeTagRecord).map((tagName) => {
                             const isActive = voiceAgeTagRecord[tagName];
 
-                            // 태그별 색상 결정
-                            const getTagColor = () => {
+                            // Tailwind 동적 클래스 문제 해결: 조건문으로 전체 클래스 반환
+                            const getTagClasses = () => {
+                                if (!isActive) {
+                                    return "bg-gray-500/20 text-gray-400 border-gray-500/30 hover:bg-gray-500/30";
+                                }
+
                                 switch (tagName) {
-                                    case 'young': return "green";
-                                    case 'middle_aged': return "purple"
-                                    case 'old': return "orange"
-                                    default: return "gray"
+                                    case 'young': return "bg-green-500/20 text-green-300 border-green-400/30";
+                                    case 'middle_aged': return "bg-purple-500/20 text-purple-300 border-purple-400/30";
+                                    case 'old': return "bg-orange-500/20 text-orange-300 border-orange-400/30";
+                                    default: return "bg-gray-500/20 text-gray-400 border-gray-500/30";
                                 }
                             };
-
                             // 표시할 라벨 결정
                             const getDisplayLabel = () => {
                                 switch (tagName) {
                                     case 'young': return 'Young';
                                     case 'middle_aged': return 'Adult';
                                     case 'old': return 'Senior';
-                                    case 'neutral': return 'Neutral';
                                     default: return tagName;
                                 }
                             };
-
-                            const tagColor = getTagColor();
-                            const tagColorTailwind = isActive
-                                ? `bg-${tagColor}-500/20 text-${tagColor}-300 border-${tagColor}-400/30`
-                                : "bg-gray-500/20 text-gray-400 border-gray-500/30 hover:bg-gray-500/30";
 
                             return (
                                 <button
@@ -300,7 +303,7 @@ function VoiceSelectionPanel({
                                     onClick={() => {
                                         onToggleVoiceAgeTag(tagName);
                                     }}
-                                    className={`text-xs px-2 py-1 rounded-full border font-medium transition-all ${tagColorTailwind}`}
+                                    className={`text-xs px-2 py-1 rounded-full border font-medium transition-all ${getTagClasses()}`}
                                 >
                                     {getDisplayLabel()}
                                 </button>
@@ -319,6 +322,7 @@ function VoiceSelectionPanel({
                                     switch (gender) {
                                         case "male": return "blue";
                                         case "female": return "red";
+                                        case 'neutral': return "gray";
                                         default: return "gray";
                                     }
                                 }
@@ -350,6 +354,31 @@ function VoiceSelectionPanel({
                                 const genderColor = getGenderColor(gender);
                                 const ageColor = getAgeColor(age);
 
+                                // Voice 아이템 태그 클래스 생성 (동적 클래스 문제 해결)
+                                const getGenderTagClass = (color: string) => {
+                                    switch (color) {
+                                        case 'blue':
+                                            return 'text-xs px-2 py-1 rounded-full border font-medium bg-blue-500/20 text-blue-300 border-blue-400/30';
+                                        case 'red':
+                                            return 'text-xs px-2 py-1 rounded-full border font-medium bg-red-500/20 text-red-300 border-red-400/30';
+                                        default:
+                                            return 'text-xs px-2 py-1 rounded-full border font-medium bg-gray-500/20 text-gray-300 border-gray-400/30';
+                                    }
+                                };
+
+                                const getAgeTagClass = (color: string) => {
+                                    switch (color) {
+                                        case 'green':
+                                            return 'text-xs px-2 py-1 rounded-full border font-medium bg-green-500/20 text-green-300 border-green-400/30';
+                                        case 'purple':
+                                            return 'text-xs px-2 py-1 rounded-full border font-medium bg-purple-500/20 text-purple-300 border-purple-400/30';
+                                        case 'orange':
+                                            return 'text-xs px-2 py-1 rounded-full border font-medium bg-orange-500/20 text-orange-300 border-orange-400/30';
+                                        default:
+                                            return 'text-xs px-2 py-1 rounded-full border font-medium bg-gray-500/20 text-gray-300 border-gray-400/30';
+                                    }
+                                };
+
                                 return (
                                     <div
                                         key={voice.id}
@@ -365,16 +394,16 @@ function VoiceSelectionPanel({
                                                 <div className="flex flex-col gap-1.5">
                                                     <div className="pl-3 text-white font-medium text-base">{voice.name}</div>
                                                     <div className="flex pl-2 gap-1.5">
-                                                        {genderDisplay && (<span
-                                                            className={`text-xs px-2 py-1 rounded-full border font-medium bg-${genderColor}-500/20 text-${genderColor}-300 border-${genderColor}-400/30`}
-                                                        >
-                                                            {genderDisplay}
-                                                        </span>)}
-                                                        {ageDisplay && (<span
-                                                            className={`text-xs px-2 py-1 rounded-full border font-medium bg-${ageColor}-500/20 text-${ageColor}-300 border-${ageColor}-400/30`}
-                                                        >
-                                                            {ageDisplay}
-                                                        </span>)}
+                                                        {genderDisplay && (
+                                                            <span className={getGenderTagClass(genderColor)}>
+                                                                {genderDisplay}
+                                                            </span>
+                                                        )}
+                                                        {ageDisplay && (
+                                                            <span className={getAgeTagClass(ageColor)}>
+                                                                {ageDisplay}
+                                                            </span>
+                                                        )}
                                                     </div>
                                                 </div>
                                             </div>

@@ -1,6 +1,6 @@
 import { SceneData } from "@/api/types/supabase/VideoGenerationTasks";
 
-export interface PostSceneResponse {
+export interface PostOpenAISceneResponse {
     success: boolean;
     data?: StoryboardData;
     error?: {
@@ -10,6 +10,7 @@ export interface PostSceneResponse {
 }
 
 export interface StoryboardData {
+    taskId: string;
     sceneDataList: SceneData[];
     videoMainSubject: string;
 }

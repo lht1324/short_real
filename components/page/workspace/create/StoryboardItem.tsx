@@ -75,7 +75,7 @@ function StoryboardItem({
                     <div className="flex-1 pl-3">
                         <div className="bg-black p-3 h-full">
                             <div className="text-base text-white font-bold mb-2 text-center">NARRATION</div>
-                            <p className="text-sm text-white font-semibold leading-relaxed italic">
+                            <p className="text-sm text-white font-semibold leading-relaxed italic line-clamp-3">
                                 {`"${sceneData.narration}"`}
                             </p>
                         </div>

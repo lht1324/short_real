@@ -1053,10 +1053,11 @@ Apply the frame-fps optimization rules to create a motion prompt that precisely 
         }
     },
 
+    // masterStylePositivePrompt 변경된 구조 맞춰 프롬프트 수정
     async postMusicGenerationData(
         videoMainSubject: string,
         fullNarrationScript: string,
-        masterStylePositivePrompt: string,
+        masterStylePositivePrompt: MasterStyleInfo,
         sceneDataList: SceneData[]
     ): Promise<{ success: boolean; data?: Partial<PostGenerateRequest>; error?: { message: string; code: string } }> {
         try {

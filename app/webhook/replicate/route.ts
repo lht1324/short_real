@@ -77,17 +77,19 @@ export async function POST(request: NextRequest) {
                     generationTaskId,
                 );
 
-                const patchVideoGenerationTaskResult = await videoGenerationTasksServerAPI.patchVideoGenerationTask({
-                    id: generationTaskId,
-                    scene_breakdown_list: originalSceneDataList.map((sceneData) => {
-                        return sceneData.requestId === sceneToProcess.requestId
-                            ? {
-                                ...sceneData,
-                                requestId: newRequestId,
-                            }
-                            : sceneData;
-                    })
-                })
+                const patchVideoGenerationTaskResult = await videoGenerationTasksServerAPI.patchVideoGenerationTask(
+                    generationTaskId,
+                    {
+                        scene_breakdown_list: originalSceneDataList.map((sceneData) => {
+                            return sceneData.requestId === sceneToProcess.requestId
+                                ? {
+                                    ...sceneData,
+                                    requestId: newRequestId,
+                                }
+                                : sceneData;
+                        })
+                    }
+                )
 
                 if (!patchVideoGenerationTaskResult) {
                     throw new Error(`Patching video generation task is failed.`);
@@ -99,17 +101,19 @@ export async function POST(request: NextRequest) {
                 // 3. CUDA가 아닌 다른 에러인 경우 (영구 실패 처리)
                 console.log(`[Permanent Failure] Non-CUDA error for prediction ${prediction.id}. Not retrying.`);
 
-                await videoGenerationTasksServerAPI.patchVideoGenerationTask({
-                    id: generationTaskId,
-                    scene_breakdown_list: originalSceneDataList.map((sceneData) => {
-                        return sceneData.sceneNumber === sceneToProcess?.sceneNumber
-                            ? {
-                                ...sceneData,
-                                status: SceneGenerationStatus.FAILED,
-                            }
-                            : sceneData;
-                    })
-                })
+                await videoGenerationTasksServerAPI.patchVideoGenerationTask(
+                    generationTaskId,
+                    {
+                        scene_breakdown_list: originalSceneDataList.map((sceneData) => {
+                            return sceneData.sceneNumber === sceneToProcess?.sceneNumber
+                                ? {
+                                    ...sceneData,
+                                    status: SceneGenerationStatus.FAILED,
+                                }
+                                : sceneData;
+                        })
+                    }
+                )
 
                 // Replicate에는 성공으로 응답하여 더 이상 웹훅을 받지 않도록 합니다.
                 return NextResponse.json({ success: true, message: "Non-CUDA failure acknowledged. No retry." });
@@ -166,10 +170,12 @@ export async function POST(request: NextRequest) {
             return sceneData;
         });
 
-        await videoGenerationTasksServerAPI.patchVideoGenerationTask({
-            id: generationTask.id,
-            scene_breakdown_list: updatedSceneList,
-        });
+        await videoGenerationTasksServerAPI.patchVideoGenerationTask(
+            generationTaskId,
+            {
+                scene_breakdown_list: updatedSceneList,
+            }
+        );
 
         // ==================================================================
         //  ▲▲▲ 여기까지 영상 처리 로직 ▲▲▲
@@ -202,7 +208,7 @@ export async function POST(request: NextRequest) {
             const postMusicGenerationDataResult = await openAIServerAPI.postMusicGenerationData(
                 generationTask.video_main_subject as string,
                 generationTask.narration_script,
-                generationTask.master_style_positive_prompt as string,
+                generationTask.master_style_positive_prompt,
                 updatedSceneList,
             )
 

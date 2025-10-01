@@ -13,16 +13,21 @@ import {
     ChevronDown,
     ChevronRight,
     Film,
+    Save,
 } from 'lucide-react';
 import { openAIClientAPI } from '@/api/client/openAIClientAPI';
 import {ScriptGenerationRequest} from "@/api/types/open-ai/ScriptGeneration";
 import {Style} from "@/api/types/supabase/Styles";
-import {SceneData, VideoGenerationRequest} from "@/api/types/supabase/VideoGenerationTasks";
+import {SceneData, VideoGenerationTask} from "@/api/types/supabase/VideoGenerationTasks";
 import {videoClientAPI} from "@/api/client/videoClientAPI";
 import {postFetch} from "@/api/client/baseFetch";
-import {StoryboardData} from "@/app/api/open-ai/scene/PostSceneResponse";
+import {StoryboardData} from "@/api/types/api/open-ai/scene/PostOpenAISceneResponse";
 import StoryboardItem from "@/components/page/workspace/create/StoryboardItem";
 import VoiceSelectionPanel from "@/components/page/workspace/create/VoiceSelectionPanel";
+import {PostVideoRequest} from "@/api/types/api/video/PostVideoRequest";
+import {useSearchParams} from "next/navigation";
+import {PostOpenAISceneRequest} from "@/api/types/api/open-ai/scene/PostOpenAISceneRequest";
+import DefaultModal from "@/components/public/DefaultModal";
 
 function WorkspaceCreatePageClient() {
     // 음성, 음악 선택 기능 추가
@@ -30,34 +35,50 @@ function WorkspaceCreatePageClient() {
     // 음악은 선택한 거 그대로 에디터에서 틀어주고, 실시간으로 바꾸는 것처럼 만들어준다.
     // 자막은 캡션 폰트, 크기, 색상, 위치 정도만.
     // 다 지정됐으면 생성된 영상 + 생성된 음성 + 에디터 최종 음악 + 에디터 최종 자막을 합쳐준다.
+    const searchParams = useSearchParams();
 
     const [isVoiceLoading, setIsVoiceLoading] = useState(true);
+    const [isGenerationTaskLoading, setIsGenerationTaskLoading] = useState(true);
     const isLoading = useMemo(() => {
-        return isVoiceLoading;
-    }, [isVoiceLoading]);
+        return isVoiceLoading || isGenerationTaskLoading;
+    }, [isVoiceLoading, isGenerationTaskLoading]);
+
+    const taskId = useMemo(() => {
+        return searchParams.get("taskId") ?? undefined;
+    }, [searchParams]);
 
     // Section states
     const [script, setScript] = useState<string>('');
     const [selectedStyleId, setSelectedStyleId] = useState<string>('');
     const [selectedVoiceId, setSelectedVoiceId] = useState<string>('');
-
-    const onSelectVoice = useCallback((voiceId: string) => {
-        setSelectedVoiceId(voiceId);
-    }, []);
-
-    const onChangeVoiceLoading = useCallback((isVoiceLoading: boolean) => {
-        setIsVoiceLoading(isVoiceLoading);
-    }, []);
     
     // Storyboard states
     const [sceneDataList, setSceneDataList] = useState<SceneData[]>([]);
     const [videoMainSubject, setVideoMainSubject] = useState<string | null>(null);
 
+    const isVideoGenerationEnabled = useMemo(() => {
+        const isScriptNotEmpty = script.length !== 0;
+        const isSceneDataListNotEmpty = sceneDataList.length !== 0;
+        const isVideoMainSubjectNotEmpty = !!videoMainSubject;
+        const isStyleSelected = selectedStyleId.length !== 0;
+        const isVoiceSelected = selectedVoiceId.length !== 0;
+        
+        return isScriptNotEmpty &&
+            isSceneDataListNotEmpty &&
+            isVideoMainSubjectNotEmpty &&
+            isVoiceSelected &&
+            isStyleSelected;
+    }, [script, sceneDataList, videoMainSubject, selectedVoiceId, selectedStyleId]);
+    
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isGeneratingScript, setIsGeneratingScript] = useState(false);
     const [isGeneratingStoryboardData, setIsGeneratingStoryboardData] = useState(false);
     const [showAIModal, setShowAIModal] = useState(false);
     const [aiPrompt, setAiPrompt] = useState('');
+    const [isSaving, setIsSaving] = useState(false);
+    const [showSaveSuccessModal, setShowSaveSuccessModal] = useState(false);
+    const [showVoiceChangeWarningModal, setShowVoiceChangeWarningModal] = useState(false);
+    const [pendingVoiceId, setPendingVoiceId] = useState<string | null>(null);
     
     // Collapse states for sections
     const [isStyleExpanded, setIsStyleExpanded] = useState(true);
@@ -170,7 +191,7 @@ function WorkspaceCreatePageClient() {
         { id: 'create', icon: Plus, name: 'Create', href: '/workspace/create', active: true }
     ], []);
 
-    const onGenerateScript = useCallback(async () => {
+    const onClickGenerateScript = useCallback(async () => {
         if (!aiPrompt.trim()) return;
         
         setIsGeneratingScript(true);
@@ -208,34 +229,65 @@ function WorkspaceCreatePageClient() {
     
     const onClickGenerateStoryboard = useCallback(async () => {
         try {
-            if (!script || !selectedVoiceId) {
-                throw new Error("Write script or select voice first.")
+            if (!script && !selectedVoiceId) {
+                throw new Error("Write script and select voice first.")
+            }
+            if (!script) {
+                throw new Error("Write script first.")
+            }
+            if (!selectedVoiceId) {
+                throw new Error("Select voice first.")
             }
 
             setIsGeneratingStoryboardData(true);
 
-            const result: StoryboardData | null = await openAIClientAPI.postOpenAIScene({
+            const request: PostOpenAISceneRequest = {
+                taskId: taskId,
                 narrationScript: script,
+                styleId: selectedStyleId,
                 voiceId: selectedVoiceId,
-            });
+            }
+            const result = await openAIClientAPI.postOpenAIScene(request);
             
-            if (!result || !result.sceneDataList || !result.videoMainSubject) {
+            if (!result || !result.taskId || !result.sceneDataList || !result.videoMainSubject) {
                 throw new Error("Storyboard generation is failed.")
             }
-            
-            const newSceneDataList = result.sceneDataList;
-            const newVideoMainSubject = result.videoMainSubject;
-            
+
+            const {
+                taskId: newTaskId,
+                sceneDataList: newSceneDataList,
+                videoMainSubject: newVideoMainSubject,
+            }: StoryboardData = result;
+
+            window.history.pushState(null, "", `/workspace/create?taskId=${newTaskId}`);
             setSceneDataList(newSceneDataList);
             setVideoMainSubject(newVideoMainSubject);
 
             setIsGeneratingStoryboardData(false);
         } catch (error) {
             console.error('onClickGenerateStoryboard', error);
-            alert('An error occurred while generating script. Please try again.');
+            alert(error instanceof Error ? error.message : 'Unknown error');
             setIsGeneratingStoryboardData(false);
         }
-    }, [script, selectedVoiceId]);
+    }, [taskId, script, selectedVoiceId, selectedStyleId]);
+    
+    const onSelectVoice = useCallback((voiceId: string) => {
+        if (voiceId !== selectedVoiceId) {
+            // Storyboard가 생성된 상태에서 Voice 변경 시 경고
+            const isStoryboardGenerated = sceneDataList.length !== 0 && videoMainSubject && selectedVoiceId;
+
+            if (isStoryboardGenerated) {
+                setPendingVoiceId(voiceId);
+                setShowVoiceChangeWarningModal(true);
+            } else {
+                setSelectedVoiceId(voiceId);
+            }
+        }
+    }, [sceneDataList, videoMainSubject, selectedVoiceId]);
+
+    const onChangeVoiceLoading = useCallback((isVoiceLoading: boolean) => {
+        setIsVoiceLoading(isVoiceLoading);
+    }, []);
 
     const openAIModal = useCallback(() => {
         setShowAIModal(true);
@@ -254,7 +306,7 @@ function WorkspaceCreatePageClient() {
         return Math.round(wordCount / 2.5);
     }, [script]);
 
-    const onSubmitProject = useCallback(async () => {
+    const onClickGenerateVideo = useCallback(async () => {
         if (!script.trim()) {
             alert('스크립트를 입력해주세요.');
             return;
@@ -267,26 +319,25 @@ function WorkspaceCreatePageClient() {
             const selectedStyle = styleList.find((style) => {
                 return style.id === selectedStyleId;
             });
-            // const selectedVoice = voiceList.find((voice) => {
-            //     return voice.id === selectedVoiceId;
-            // });
 
             if (!selectedStyle || !selectedVoiceId) {
                 throw new Error("Selected style or voice was not found.");
             }
 
             // VideoData API 요청 데이터 구성
-            const requestData: VideoGenerationRequest = {
+            const requestData: PostVideoRequest = {
                 userId: "",
                 narrationScript: script,
                 style: selectedStyle,
                 voiceId: selectedVoiceId,
+                sceneDataList: sceneDataList,
+                videoMainSubject: videoMainSubject ?? undefined,
             };
 
             console.log('Creating video project with data:', requestData);
 
             // Video API 호출
-            const result = await videoClientAPI.postVideoGeneration(requestData);
+            const result = await videoClientAPI.postVideo(requestData);
 
             if (result) {
                 console.log('Video data generation succeed.');
@@ -307,7 +358,55 @@ function WorkspaceCreatePageClient() {
         } finally {
             setIsSubmitting(false);
         }
-    }, [script, selectedStyleId, selectedVoiceId, styleList]);
+    }, [script, selectedStyleId, selectedVoiceId, styleList, sceneDataList, videoMainSubject]);
+
+    const onClickSaveDraft = useCallback(async () => {
+        setIsSaving(true);
+
+        try {
+            const request: Partial<VideoGenerationTask> = {
+                narration_script: script.length !== 0 ? script : undefined,
+                scene_breakdown_list: sceneDataList.length !== 0 ? sceneDataList : undefined,
+                video_main_subject: videoMainSubject ?? undefined,
+                selected_style_id: selectedStyleId.length !== 0 ? selectedStyleId : undefined,
+                selected_voice_id: selectedVoiceId.length !== 0 ? selectedVoiceId : undefined,
+            }
+            const result: VideoGenerationTask | null = taskId
+                ? await videoClientAPI.patchVideoTaskByTaskId(taskId, request)
+                : await videoClientAPI.postVideoTask(request);
+            
+            if (!result) {
+                throw new Error("Saving draft was failed. Try again.")
+            }
+
+            setShowSaveSuccessModal(true);
+        } catch (error) {
+            console.error('Error saving draft:', error);
+            alert('Saving draft was failed. Try again.');
+        } finally {
+            setIsSaving(false);
+        }
+    }, [taskId, script, selectedStyleId, selectedVoiceId, sceneDataList, videoMainSubject]);
+
+    const onCloseSaveSuccessModal = useCallback(() => {
+        setShowSaveSuccessModal(false);
+    }, []);
+
+    const onConfirmVoiceChange = useCallback(async () => {
+        if (pendingVoiceId) {
+            setSelectedVoiceId(pendingVoiceId);
+            setPendingVoiceId(null);
+            setShowVoiceChangeWarningModal(false);
+
+            // Storyboard 재생성
+            await onClickGenerateStoryboard();
+        }
+    }, [pendingVoiceId, onClickGenerateStoryboard]);
+
+    const onCancelVoiceChange = useCallback(() => {
+        setPendingVoiceId(null);
+        setShowVoiceChangeWarningModal(false);
+    }, []);
 
     const requestIdList = useMemo(() => {
         return [
@@ -350,39 +449,36 @@ function WorkspaceCreatePageClient() {
         }
     }, [requestIdList, videoUrlList]);
 
-    // API 엔드포인트 미리 컴파일 (Next.js 서버리스 함수 초기화)
+    // 페이지 로드 시: taskId 있으면 데이터 복원
     useEffect(() => {
-        const precompileAPIs = async () => {
-            try {
-                console.log('Pre-compiling API routes...');
-                
-                // 모든 API 라우트들을 병렬로 프리컴파일
-                const apiRoutes = [
-                    '/api/open-ai/script',
-                    '/api/music',
-                    '/api/video',
-                    '/api/video/merge',
-                    '/webhook/replicate',
-                    '/webhook/suno-api'
-                ];
-                
-                const precompilePromises = apiRoutes.map(route => 
-                    fetch(route, { 
-                        method: 'OPTIONS',
-                        headers: { 'Content-Type': 'application/json' }
-                    }).catch(() => {}) // 에러 무시
-                );
-                
-                await Promise.all(precompilePromises);
-                console.log('All API routes pre-compiled');
-            } catch (error) {
-                console.log('API pre-compilation completed:', error);
+        if (taskId) {
+            const getVideoTaskByTaskId = async () => {
+                const videoGenerationTask = await videoClientAPI.getVideoTaskByTaskId(taskId);
+
+                if (videoGenerationTask) {
+                    const script = videoGenerationTask.narration_script;
+                    const sceneDataList = videoGenerationTask.scene_breakdown_list;
+                    const videoMainSubject = videoGenerationTask.video_main_subject;
+                    const voiceId = videoGenerationTask.selected_voice_id;
+                    const styleId = videoGenerationTask.selected_style_id;
+
+                    setScript(script);
+                    setSceneDataList(sceneDataList);
+                    setVideoMainSubject(videoMainSubject ?? '');
+                    setSelectedVoiceId(voiceId ?? '');
+                    setSelectedStyleId(styleId ?? '');
+
+                    setIsGenerationTaskLoading(false);
+                } else {
+                    setIsGenerationTaskLoading(false);
+                }
             }
-        };
-        
-        // 컴포넌트 마운트 후 바로 실행
-        precompileAPIs().then();
-    }, []);
+
+            getVideoTaskByTaskId().then();
+        } else {
+            setIsGenerationTaskLoading(false);
+        }
+    }, [taskId]);
 
     return (
         <div className="min-h-screen bg-black text-white">
@@ -531,8 +627,10 @@ function WorkspaceCreatePageClient() {
                                                 <div className="w-3 h-3 border border-white/30 border-t-white rounded-full animate-spin"></div>
                                                 <span>Generating...</span>
                                             </>
-                                        ) : (
+                                        ) : sceneDataList.length === 0 && !videoMainSubject ? (
                                             <span>Generate Storyboard</span>
+                                        ) : (
+                                            <span>Regenerate Storyboard</span>
                                         )}
                                         </button>
 
@@ -731,27 +829,110 @@ function WorkspaceCreatePageClient() {
                     </div>
                     
                     <div className="p-6 border-t border-purple-500/20 bg-gray-900/50 backdrop-blur-sm relative z-10">
-                        <button
-                            onClick={onSubmitProject}
-                            disabled={!script || isSubmitting}
-                            className="mx-auto max-w-xs w-full group bg-gradient-to-r from-pink-500 to-purple-600 text-white px-6 py-4 rounded-xl text-xl font-semibold hover:from-pink-600 hover:to-purple-700 transition-all duration-300 transform hover:scale-105 flex items-center justify-center space-x-2 shadow-lg shadow-purple-500/25 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
-                        >
-                            {isSubmitting ? (
-                                <>
-                                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                                    <span>Requesting...</span>
-                                </>
-                            ) : (
-                                <>
-                                    <span>Generate Video</span>
-                                    <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                                    </svg>
-                                </>
-                            )}
-                        </button>
+                        <div className="flex w-fit items-center space-x-4 max-w-2xl mx-auto">
+                            {/* Save Draft 버튼 */}
+                            <button
+                                onClick={onClickSaveDraft}
+                                disabled={isSaving}
+                                className="flex items-center space-x-2 px-4 py-3 bg-gray-800/50 hover:bg-gray-800 border border-gray-600/50 hover:border-gray-500/50 text-gray-300 hover:text-white rounded-lg font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                {isSaving ? (
+                                    <>
+                                        <div className="w-4 h-4 border-2 border-gray-400/30 border-t-gray-400 rounded-full animate-spin"></div>
+                                        <span className="text-sm">Saving...</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <Save size={16} />
+                                        <span className="text-sm">Save Draft</span>
+                                    </>
+                                )}
+                            </button>
+
+                            {/* Generate Video 버튼 */}
+                            <div className="relative group">
+                                <button
+                                    onClick={onClickGenerateVideo}
+                                    disabled={!isVideoGenerationEnabled || isSubmitting}
+                                    className="flex-1 min-w-[280px] group bg-gradient-to-r from-pink-500 to-purple-600 text-white px-6 py-3 rounded-xl text-lg font-semibold hover:from-pink-600 hover:to-purple-700 transition-all duration-300 transform hover:scale-105 flex items-center justify-center space-x-2 shadow-lg shadow-purple-500/25 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                                >
+                                    {isSubmitting ? (
+                                        <>
+                                            <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                                            <span>Requesting...</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <span>Generate Video</span>
+                                            <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                                            </svg>
+                                        </>
+                                    )}
+                                </button>
+
+                                {/* 툴팁 오버레이 */}
+                                {!isVideoGenerationEnabled && (
+                                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-64 bg-gray-900/95 backdrop-blur-sm border border-purple-500/30 rounded-lg p-3 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-10 shadow-xl">
+                                        <div className="text-xs font-medium text-purple-300 mb-2">Requirements</div>
+                                        <div className="space-y-1.5">
+                                            <div className="flex items-center space-x-2 text-xs">
+                                                <span>{script.trim() ? '🟢' : '🔴'}</span>
+                                                <span className={script.trim() ? 'text-green-300' : 'text-gray-400'}>
+                                                    Script written
+                                                </span>
+                                            </div>
+                                            <div className="flex items-center space-x-2 text-xs">
+                                                <span>{sceneDataList.length !== 0 && videoMainSubject ? '🟢' : '🔴'}</span>
+                                                <span className={sceneDataList.length !== 0 && videoMainSubject ? 'text-green-300' : 'text-gray-400'}>
+                                                    Storyboard generated
+                                                </span>
+                                            </div>
+                                            <div className="flex items-center space-x-2 text-xs">
+                                                <span>{selectedVoiceId ? '🟢' : '🔴'}</span>
+                                                <span className={selectedVoiceId ? 'text-green-300' : 'text-gray-400'}>
+                                                    Voice selected
+                                                </span>
+                                            </div>
+                                            <div className="flex items-center space-x-2 text-xs">
+                                                <span>{selectedStyleId ? '🟢' : '🔴'}</span>
+                                                <span className={selectedStyleId ? 'text-green-300' : 'text-gray-400'}>
+                                                    Style selected
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
                     </div>
                 </div>
+
+                {/* Save Success Modal */}
+                {showSaveSuccessModal && (
+                    <DefaultModal
+                        title="Draft Saved"
+                        message="Your draft has been saved successfully. You can continue editing or come back later."
+                        cancelText="Continue"
+                        onClickCancel={onCloseSaveSuccessModal}
+                    />
+                )}
+
+                {/* Voice Change Warning Modal */}
+                {showVoiceChangeWarningModal && (
+                    <DefaultModal
+                        title="Voice Change Warning"
+                        message={
+                            "Voice change requires storyboard regeneration.\n" +
+                            "Current storyboard will be lost.\n" +
+                            "Continue?"
+                        }
+                        confirmText="Regenerate"
+                        cancelText="Cancel"
+                        onClickConfirm={onConfirmVoiceChange}
+                        onClickCancel={onCancelVoiceChange}
+                    />
+                )}
 
                 {/* AI Generation Modal */}
                 {showAIModal && (
@@ -759,7 +940,7 @@ function WorkspaceCreatePageClient() {
                         onClick={closeAIModal}
                         className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50"
                     >
-                        <div 
+                        <div
                             onClick={(e) => e.stopPropagation()}
                             className="bg-gray-900/95 backdrop-blur-sm border border-purple-500/30 rounded-xl max-w-lg w-full mx-4 overflow-hidden shadow-2xl"
                         >
@@ -775,11 +956,11 @@ function WorkspaceCreatePageClient() {
                                         <X size={18} />
                                     </button>
                                 </div>
-                                
+
                                 <div className="space-y-4">
                                     <div>
                                         <label className="block text-sm font-medium text-white mb-2">What do you want to create?</label>
-                                        <textarea 
+                                        <textarea
                                             placeholder="Tell me about Elon Musk's early SpaceX struggles"
                                             value={aiPrompt}
                                             onChange={(e) => setAiPrompt(e.target.value)}
@@ -787,7 +968,7 @@ function WorkspaceCreatePageClient() {
                                             className="w-full bg-gray-800/50 border border-purple-500/30 rounded-lg px-3 py-2 text-white text-sm focus:border-purple-400 focus:outline-none resize-none placeholder-gray-400 transition-all"
                                         />
                                     </div>
-                                    
+
                                     {/* Warning Message - Simplified */}
                                     <div className="bg-amber-500/10 border border-amber-400/30 rounded-lg p-3">
                                         <div className="flex items-start space-x-2">
@@ -798,9 +979,9 @@ function WorkspaceCreatePageClient() {
                                             </div>
                                         </div>
                                     </div>
-                                    
-                                    <button 
-                                        onClick={onGenerateScript} 
+
+                                    <button
+                                        onClick={onClickGenerateScript}
                                         disabled={isGeneratingScript || !aiPrompt.trim()}
                                         className="w-full bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white px-4 py-3 rounded-lg font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2 shadow-lg shadow-purple-500/25"
                                     >
