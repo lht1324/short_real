@@ -1,10 +1,10 @@
-import {createSupabaseServer} from "@/lib/supabaseServer";
 import {User} from "@/api/types/supabase/Users";
 import {PostgrestSingleResponse} from "@supabase/supabase-js";
+import {createSupabaseServiceRoleClient} from "@/lib/supabaseServiceRole";
 
 export const usersServerAPI = {
     async getUserByUserId(userId: string): Promise<User | null> {
-        const supabase = await createSupabaseServer();
+        const supabase = createSupabaseServiceRoleClient();
 
         try {
             const { data, error }: PostgrestSingleResponse<User | null> = await supabase
@@ -25,8 +25,8 @@ export const usersServerAPI = {
         }
     },
 
-    async postUsers(user: User): Promise<User | null> {
-        const supabase = await createSupabaseServer();
+    async postUsers(user: Partial<User>): Promise<User | null> {
+        const supabase = createSupabaseServiceRoleClient();
 
         try {
             const { data, error } = await supabase

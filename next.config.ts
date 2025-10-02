@@ -1,6 +1,17 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+    // 외부 이미지 허용
+    images: {
+        remotePatterns: [
+            {
+                protocol: 'https',
+                hostname: 'lh3.googleusercontent.com',
+                port: '',
+                pathname: '/**',
+            },
+        ]
+    },
     webpack: (config, { isServer }) => {
         // 서버 측에서만 이 설정을 적용합니다.
         if (isServer) {
