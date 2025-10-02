@@ -42,6 +42,25 @@ export const videoClientAPI = {
         }
     },
 
+    async getVideoTasksByUserId(userId: string): Promise<VideoGenerationTask[] | null> {
+        try {
+            const response = await getFetch(`/api/video/task/user/${userId}`);
+
+            if (!response.ok) {
+                if (response.status === 404) {
+                    console.warn(`Tasks not found for user: ${userId}`);
+                    return null;
+                }
+                throw Error(`HTTP error! status: ${response.status}`);
+            }
+
+            return await response.json();
+        } catch (error) {
+            console.error('Failed to get user video tasks:', error);
+            return null;
+        }
+    },
+
     async getVideoTaskByTaskId(taskId: string): Promise<VideoGenerationTask | null> {
         try {
             const response = await getFetch(`/api/video/task/${taskId}`);

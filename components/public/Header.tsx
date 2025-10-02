@@ -1,7 +1,7 @@
 'use client'
 
 import {memo, useCallback, useEffect, useMemo, useState} from 'react';
-import { Menu, LogOut, User as UserIcon } from 'lucide-react';
+import { Menu, LogOut, User as UserIcon, LayoutDashboard } from 'lucide-react';
 import Image from "next/image";
 import {useRouter} from "next/navigation";
 import {useAuth} from "@/context/AuthContext";
@@ -39,9 +39,6 @@ function Header() {
                             router.push("/");
                         }}
                     >
-                        {/*<div className="w-8 h-8 bg-gradient-to-r from-pink-500 to-purple-600 rounded-lg flex items-center justify-center">*/}
-                        {/*    <span className="text-white font-bold text-sm">⚡</span>*/}
-                        {/*</div>*/}
                         <Image
                             src="/logo/logo-64.png"
                             alt="Short Real"
@@ -94,6 +91,15 @@ function Header() {
                                 {/* Dropdown Menu */}
                                 {isDropdownOpen && (
                                     <div className="absolute right-0 mt-2 w-48 bg-gray-900/95 backdrop-blur-sm border border-purple-500/30 rounded-xl shadow-2xl overflow-hidden">
+                                        <button
+                                            onClick={() => {
+                                                router.push("/workspace/dashboard");
+                                            }}
+                                            className="w-full flex items-center space-x-3 px-4 py-3 text-gray-300 hover:bg-gray-800/50 hover:text-purple-400 transition-colors"
+                                        >
+                                            <LayoutDashboard size={16} />
+                                            <span className="text-sm">Dashboard</span>
+                                        </button>
                                         <button
                                             onClick={() => {
                                                 // Profile onClick - leave empty as requested

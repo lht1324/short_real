@@ -1,27 +1,5 @@
 // video_generation_tasks 테이블 타입 정의
-
-import {Voice} from "@/api/types/eleven-labs/Voice";
-import {BGMInfo} from "@/api/types/supabase/BackgroundMusics";
-import {Style} from "@/api/types/supabase/Styles";
 import {MasterStyleInfo} from "@/api/server/MasterStyleInfo";
-
-export interface SceneData {
-    sceneNumber: number;
-    narration: string; // 각 Scene에 보여질 자막
-    sceneDuration: number;
-    imageGenPromptDirective: string;
-    imageGenPrompt?: string; // 각 Scene 이미지 생성에 넣을 프롬프트
-    videoGenPrompt?: string; // 각 Scene 영상 생성에 넣을 프롬프트
-    requestId?: string;
-    sceneSubtitleSegments?: SubtitleSegment[];
-    status: SceneGenerationStatus;
-}
-
-export interface SubtitleSegment {
-    word: string;
-    startSec: number;
-    endSec: number;
-}
 
 export interface VideoGenerationTask {
     id?: string; // uuid
@@ -43,31 +21,55 @@ export interface VideoGenerationTask {
     updated_at?: string;
 }
 
+// '전체' 플로우의 현재 상태, '작업' 한정 아님.
+export enum VideoGenerationTaskStatus {
+    // 초안 작성
+    DRAFTING = 'drafting',
+    // 음성 생성
+    GENERATING_VOICE = 'generating_voice',
+    // 마스터 스타일 프롬프트 생성
+    GENERATING_MASTER_STYLE_PROMPT = 'generating_master_style_prompt',
+    // 이미지 생성용 프롬프트 생성
+    GENERATING_IMAGE_PROMPT = 'generating_image_prompt',
+    // 영상 생성용 프롬프트 생성
+    GENERATING_VIDEO_PROMPT = 'generating_video_prompt',
+    // 영상 생성
+    GENERATING_VIDEO = 'generating_video',
+    // 영상 병합
+    STITCHING_VIDEOS = 'stitching_videos',
+    // 영상과 음성 병합
+    MERGING_VIDEO_AND_AUDIO = 'merging_video_and_audio',
+    // 작곡
+    COMPOSING_MUSIC = 'composing_music',
+    // 편집
+    EDITOR = "editor",
+    // 완료
+    COMPLETED = 'completed',
+    // 실패
+    FAILED = 'failed',
+}
+
+export interface SceneData {
+    sceneNumber: number;
+    narration: string; // 각 Scene에 보여질 자막
+    sceneDuration: number;
+    imageGenPromptDirective: string;
+    imageGenPrompt?: string; // 각 Scene 이미지 생성에 넣을 프롬프트
+    videoGenPrompt?: string; // 각 Scene 영상 생성에 넣을 프롬프트
+    requestId?: string;
+    sceneSubtitleSegments?: SubtitleSegment[];
+    status: SceneGenerationStatus;
+}
+
+export interface SubtitleSegment {
+    word: string;
+    startSec: number;
+    endSec: number;
+}
+
 export enum SceneGenerationStatus {
     IN_PROGRESS = 'in_progress',
     COMPLETED = 'completed',
     PROCESSED = 'processed',
     FAILED = 'failed'
-}
-
-export enum VideoGenerationTaskStatus {
-    PENDING = 'pending',
-    IN_PROGRESS = 'in_progress',
-    COMPLETED = 'completed',
-    FAILED = 'failed'
-}
-
-export enum VideoAspectRatio {
-    HORIZONTAL_16_9 = "16:9",
-    VERTICAL_16_9 = "9:16",
-    SQUARE = "1:1",
-    HORIZONTAL_5_4 = "5:4",
-    VERTICAL_5_4 = "4:5",
-    HORIZONTAL_3_2 = "3:2",
-    VERTICAL_3_2 = "2:3",
-}
-
-export enum VideoResolution {
-    RES_480P = "480p",
-    RES_720P = "720p",
 }

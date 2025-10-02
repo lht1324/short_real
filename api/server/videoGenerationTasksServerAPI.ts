@@ -1,5 +1,5 @@
 import { createSupabaseServer } from '@/lib/supabaseServer';
-import { VideoGenerationTask } from '@/api/types/supabase/VideoGenerationTasks';
+import {VideoGenerationTask, VideoGenerationTaskStatus} from '@/api/types/supabase/VideoGenerationTasks';
 import {createSupabaseServiceRoleClient} from "@/lib/supabaseServiceRole";
 
 export const videoGenerationTasksServerAPI = {
@@ -60,15 +60,15 @@ export const videoGenerationTasksServerAPI = {
     },
 
     // GET - 사용자 ID로 작업 목록 조회
-    async getVideoGenerationTaskByUserId(userId: string, limit: number = 10, offset: number = 0): Promise<VideoGenerationTask[]> {
-        const supabase = await createSupabaseServer("readOnly");
+    async getVideoGenerationTasksByUserId(userId: string, limit: number = 10, offset: number = 0): Promise<VideoGenerationTask[]> {
+        const supabase = createSupabaseServiceRoleClient();
         
         const { data, error } = await supabase
             .from('video_generation_tasks')
             .select('*')
             .eq('user_id', userId)
-            .order('created_at', { ascending: false })
-            .range(offset, offset + limit - 1);
+            .order('created_at', { ascending: false });
+            // .range(offset, offset + limit - 1);
 
         if (error) {
             throw new Error(`Failed to get user's video generation tasks: ${error.message}`);
@@ -99,6 +99,24 @@ export const videoGenerationTasksServerAPI = {
     async updateTaskStatus(taskId: string, status: 'pending' | 'in_progress' | 'completed' | 'failed'): Promise<VideoGenerationTask> {
         const supabase = await createSupabaseServer("mutate");
         
+        const { data, error } = await supabase
+            .from('video_generation_tasks')
+            .update({ status })
+            .eq('id', taskId)
+            .select()
+            .single();
+
+        if (error) {
+            throw new Error(`Failed to update task status: ${error.message}`);
+        }
+
+        return data;
+    },
+
+    // PATCH - 작업 상태만 업데이트
+    async patchVideoGenerationTaskStatus(taskId: string, status: VideoGenerationTaskStatus): Promise<VideoGenerationTask> {
+        const supabase = await createSupabaseServer("mutate");
+
         const { data, error } = await supabase
             .from('video_generation_tasks')
             .update({ status })
