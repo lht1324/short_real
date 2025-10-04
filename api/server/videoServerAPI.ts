@@ -308,4 +308,18 @@ export const videoServerAPI = {
             throw error;
         }
     },
+
+    async getVideoSignedUrl(filePath: string) {
+        const supabase = createSupabaseServiceRoleClient();
+
+        const { data, error } = await supabase.storage
+            .from('processed_video_storage')
+            .createSignedUrl(filePath, 60 * 60 * 24);
+
+        if (error || !data?.signedUrl) {
+            throw new Error(error?.message || `There is no image data.`);
+        }
+
+        return data.signedUrl;
+    }
 }

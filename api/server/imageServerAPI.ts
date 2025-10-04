@@ -94,10 +94,10 @@ export const imageServerAPI = {
 
         const { data, error } = await supabase.storage
             .from('scene_image_temp_storage')
-            .createSignedUrl(filePath, 3600);
+            .createSignedUrl(filePath, 60 * 60 * 24);
 
         if (error || !data?.signedUrl) {
-            throw new Error(error?.message || `이미지 데이터가 없습니다.`);
+            throw new Error(error?.message || `There is no image data.`);
         }
 
         return data.signedUrl;

@@ -27,9 +27,11 @@ export interface TaskData {
 }
 
 function WorkspaceDashboardPageClient() {
+    // Draft 마저 작성하는 버튼 추가
     const router = useRouter();
     const { user } = useAuth();
     const [taskDataList, setTaskDataList] = useState<TaskData[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
 
     // Virtual tabs for navigation consistency
     const virtualTabs = useMemo(() => [
@@ -111,6 +113,11 @@ function WorkspaceDashboardPageClient() {
 
     useEffect(() => {
         if (user?.id) {
+            // 10초 타임아웃 설정
+            const timeout = setTimeout(() => {
+                setIsLoading(false);
+            }, 15000);
+
             const loadData = async () => {
                 try {
                     const videoGenerationTaskList = await videoClientAPI.getVideoTasksByUserId(user?.id);
@@ -145,13 +152,20 @@ function WorkspaceDashboardPageClient() {
                             selectedStyleId: task.selected_style_id,
                         }
                     }))
+
+                    setIsLoading(false);
                 } catch (error) {
                     console.error("WorkspaceDashboardPage: ", error);
+                    setIsLoading(false);
                     router.push("/");
                 }
             }
-            
+
             loadData().then();
+
+            return () => {
+                clearTimeout(timeout);
+            }
         }
     }, [router, user?.id, calculateProgress]);
 
@@ -266,6 +280,17 @@ function WorkspaceDashboardPageClient() {
                     setShowCancelConfirmModal(false);
                 }}
             />}
+
+            {/* Loading Overlay */}
+            {isLoading && (
+                <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center">
+                    <div className="text-center">
+                        <div className="w-16 h-16 border-4 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto mb-6"></div>
+                        <p className="text-gray-300 text-xl font-medium">Loading tasks...</p>
+                        <p className="text-gray-500 text-sm mt-2">Please wait a moment</p>
+                    </div>
+                </div>
+            )}
         </div>
     )
 }
