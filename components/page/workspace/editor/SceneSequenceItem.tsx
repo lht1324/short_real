@@ -10,6 +10,7 @@ interface SceneSequenceItemProps {
     isHovered: boolean;
     isCurrentScene: boolean;
     isLastItem: boolean;
+    onClickSceneSequence: (sceneStartSec: number) => void;
     onMouseEnter: () => void;
     onMouseLeave: () => void;
     onLoadImage: () => void;
@@ -21,6 +22,7 @@ function SceneSequenceItem({
     isHovered,
     isCurrentScene,
     isLastItem,
+    onClickSceneSequence,
     onMouseEnter,
     onMouseLeave,
     onLoadImage,
@@ -41,7 +43,7 @@ function SceneSequenceItem({
                         ${isHovered ? 'z-50' : 'z-0'}
                     `}
             onClick={() => {
-                onClickSceneSequence(index === 0 ? 0.00 : sceneStartSec);
+                onClickSceneSequence(captionData.sceneNumber === 1 ? 0.00 : sceneStartSec);
             }}
         >
             <div className="flex items-start justify-between">
@@ -68,7 +70,7 @@ function SceneSequenceItem({
                             <Image
                                 src={imageUrl}
                                 className="object-cover"
-                                alt={`Scene ${index + 1}`}
+                                alt={`Scene ${captionData.sceneNumber}`}
                                 width={128}
                                 height={228}
                                 onLoad={() => { onLoadImage() }}
@@ -83,7 +85,7 @@ function SceneSequenceItem({
                     {/* 확대된 이미지 툴팁 */}
                     {isHovered && imageUrl && (
                         <div
-                            className={isLastItem
+                            className={!isLastItem
                                 ? "absolute right-0 top-0 w-64 rounded-lg overflow-hidden border-2 border-purple-400/80 shadow-2xl z-50 pointer-events-none"
                                 : "absolute right-0 bottom-0 w-64 rounded-lg overflow-hidden border-2 border-purple-400/80 shadow-2xl z-50 pointer-events-none"
                             }
@@ -91,7 +93,7 @@ function SceneSequenceItem({
                         >
                             <Image
                                 src={imageUrl}
-                                alt={`Scene ${index + 1} - Enlarged`}
+                                alt={`Scene ${captionData.sceneNumber} - Enlarged`}
                                 width={256}
                                 height={456}
                                 className="object-cover"

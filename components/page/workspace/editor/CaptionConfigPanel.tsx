@@ -190,8 +190,8 @@ function CaptionConfigPanel({
                         <input
                             ref={fontSizeInputRef}
                             type="number"
-                            min="0"
-                            max="72"
+                            min="36"
+                            max="84"
                             value={fontSize}
                             onInput={(e) => {
                                 const input = e.target as HTMLInputElement;
@@ -209,7 +209,7 @@ function CaptionConfigPanel({
                                     onChangeFontSize(0);
                                 } else {
                                     const numValue = parseInt(inputValue) || 0;
-                                    onChangeFontSize(Math.min(72, numValue));
+                                    onChangeFontSize(Math.min(36, numValue));
                                 }
                             }}
                             className="w-20 bg-gray-800/50 border border-purple-500/30 rounded-lg px-3 py-2 text-white text-base focus:border-purple-400 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
@@ -218,8 +218,8 @@ function CaptionConfigPanel({
                     </div>
                     <input
                         type="range"
-                        min="0"
-                        max="72"
+                        min="36"
+                        max="80"
                         value={fontSize}
                         onChange={(e) => onChangeFontSize(parseInt(e.target.value))}
                         className="flex-1 accent-purple-500"

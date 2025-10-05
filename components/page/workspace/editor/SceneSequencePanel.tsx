@@ -6,6 +6,11 @@ import {CaptionData} from "@/components/page/workspace/editor/WorkspaceEditorPag
 import {imageClientAPI} from "@/api/client/imageClientAPI";
 import SceneSequenceItem from "@/components/page/workspace/editor/SceneSequenceItem";
 
+interface ImageData {
+    url: string;
+    isLoaded: boolean;
+}
+
 interface SceneSequencePanelProps {
     taskId: string;
     captionDataList: CaptionData[];
@@ -24,29 +29,26 @@ function SceneSequencePanel({
     // 컴포넌트 내부 주석은 정책 상 구현하기 애매해서 남겨둔 부분
     // 선택은 클릭으로 선택하는 걸 빼고 자동으로 테두리 바꿔주는 기능으로 남기자
     const [isLoading, setIsLoading] = useState(true);
-    const [imageDataList, setImageDataList] = useState<{ url: string, isLoaded: boolean }[]>([]);
+    const [imageDataList, setImageDataList] = useState<ImageData[]>([]);
     const [hoveredImageIndex, setHoveredImageIndex] = useState<number | null>(null);
 
     useEffect(() => {
-        if (taskId && captionDataList.length > 0) {
+        if (taskId && captionDataList.length > 0 && imageDataList.length === 0) {
             const loadData = async () => {
-                // captionDataList, taskId로 imageSignedUrl 갖고 오기
                 const imageSignedUrlList = await imageClientAPI.getImages(taskId, captionDataList.length);
-
-                setImageDataList(imageSignedUrlList.map((imageUrl) => {
-                    return {
-                        url: imageUrl,
-                        isLoaded: false,
-                    }
+                const newImageDataList = imageSignedUrlList.map((imageUrl) => ({
+                    url: imageUrl,
+                    isLoaded: false,
                 }));
+
+                setImageDataList(newImageDataList);
             }
 
             loadData().then(() => {
                 setIsLoading(false);
-                onFinishLoading();
             });
         }
-    }, [taskId, captionDataList, onFinishLoading]);
+    }, [taskId, captionDataList, imageDataList.length]);
 
     useEffect(() => {
         const isEveryImageLoaded = imageDataList.every((imageData) => {
@@ -58,10 +60,16 @@ function SceneSequencePanel({
         }
     }, [imageDataList, onFinishLoading]);
 
+    useEffect(() => {
+        if (!isLoading) {
+            onFinishLoading();
+        }
+    }, [isLoading, onFinishLoading]);
+
     return (
         <div className="p-4 space-y-4">
             <div className="text-purple-300 text-2xl font-medium mb-4">Scene</div>
-            {isLoading && captionDataList.map((captionData, index) => {
+            {captionDataList.map((captionData, index) => {
                 return <SceneSequenceItem
                     key={index}
                     captionData={captionData}
@@ -69,6 +77,7 @@ function SceneSequencePanel({
                     isHovered={hoveredImageIndex === index}
                     isCurrentScene={currentSceneIndex === index}
                     isLastItem={index === captionDataList.length - 1}
+                    onClickSceneSequence={(sceneStartSec: number) => {}}
                     onLoadImage={() => {
                         setImageDataList((prevImageDataList) => {
                             return prevImageDataList.map((prevImageData, prevIndex) => {

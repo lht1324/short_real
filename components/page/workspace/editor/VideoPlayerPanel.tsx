@@ -211,16 +211,22 @@ function VideoPlayerPanel({
         const rect = element.getBoundingClientRect();
         const clickX = Math.max(0, Math.min(clientX - rect.left, rect.width));
         const percentage = clickX / rect.width;
-        const newTime = percentage * duration;
+        const newCurrentTime = parseFloat((percentage * duration).toFixed(3));
 
-        videoRef.current.currentTime = newTime;
-        setCurrentTime(newTime);
-        onChangeVideoCurrentTime(newTime);
+        videoRef.current.currentTime = newCurrentTime;
+        setCurrentTime((prevCurrentTime) => {
+            if (prevCurrentTime !== newCurrentTime) {
+                onChangeVideoCurrentTime(newCurrentTime);
+                return newCurrentTime;
+            } else {
+                return prevCurrentTime;
+            }
+        });
 
         if (isVideoEnded) {
             setIsVideoEnded(false);
         }
-    }, [duration, isVideoEnded]);
+    }, [duration, isVideoEnded, onChangeVideoCurrentTime]);
 
     const onClickTimeline = useCallback((e: MouseEvent<HTMLDivElement>) => {
         updateTimelinePosition(e.clientX, e.currentTarget);
@@ -245,7 +251,7 @@ function VideoPlayerPanel({
         setIsVideoEnded(false);
         await videoRef.current.play();
         setIsPlayingVideo(true);
-    }, []);
+    }, [onChangeVideoCurrentTime]);
 
     const setCaptionRef = useCallback((node: HTMLParagraphElement | null) => {
         captionRef.current = node;
@@ -328,8 +334,16 @@ function VideoPlayerPanel({
 
         const updateTime = () => {
             if (videoRef.current && !videoRef.current.paused) {
-                setCurrentTime(videoRef.current.currentTime);
-                onChangeVideoCurrentTime(videoRef.current.currentTime);
+                const newCurrentTime = parseFloat(videoRef.current.currentTime.toFixed(3));
+
+                setCurrentTime((prevCurrentTime) => {
+                    if (prevCurrentTime !== newCurrentTime) {
+                        onChangeVideoCurrentTime(newCurrentTime);
+                        return newCurrentTime;
+                    } else {
+                        return prevCurrentTime;
+                    }
+                })
                 animationFrameId = requestAnimationFrame(updateTime);
             }
         };
@@ -511,6 +525,7 @@ function VideoPlayerPanel({
                                         <div
                                             className="h-full bg-gradient-to-r from-pink-400 to-purple-500 rounded-full relative"
                                             style={{
+                                                // video timeline 전용 currentTIme 추가?
                                                 width: `${progressPercentage}%`,
                                                 transition: isDraggingTimeline ? 'none' : 'width 0.1s ease-out'
                                             }}

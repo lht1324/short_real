@@ -61,9 +61,9 @@ enum SidebarType {
 
 const INITIAL_CAPTION_CONFIG_STATE: CaptionConfigState = {
     // Font settings state
-    fontFamilyName: "",
-    fontSize: 32,
-    fontWeight: 400,
+    fontFamilyName: "Roboto",
+    fontSize: 60,
+    fontWeight: 900,
 
     // Caption settings state
     captionPosition: 80,
@@ -134,10 +134,22 @@ function WorkspaceEditorPageClient() {
                 ? 0.00 <= videoCurrentTime && captionData.endSec >= videoCurrentTime
                 : captionData.startSec <= videoCurrentTime && captionData.endSec >= videoCurrentTime;
         });
-    })
+    }, [captionDataList, videoCurrentTime]);
 
     const onChangeCaptionConfigState = useCallback((captionConfig: CaptionConfigState) => {
         setCaptionConfigState(captionConfig);
+    }, []);
+
+    const onSceneSequencePanelFinishLoading = useCallback(() => {
+        setIsSceneSequencePanelLoading(false);
+    }, []);
+
+    const onFinishVideoPlayerPanelLoading = useCallback(() => {
+        setIsVideoPlayerPanelLoading(false);
+    }, []);
+
+    const onChangeVideoCurrentTime = useCallback((currentTime: number) => {
+        setVideoCurrentTime(currentTime);
     }, []);
 
     const onExportVideo = useCallback(async () => {
@@ -156,12 +168,12 @@ function WorkspaceEditorPageClient() {
                         return a.name.localeCompare(b.name);
                     });
                     setFontFamilyList(newFamilyList);
-                    setCaptionConfigState((prev) => {
-                        return {
-                            ...prev,
-                            fontFamilyName: newFamilyList[0].name,
-                        }
-                    });
+                    // setCaptionConfigState((prev) => {
+                    //     return {
+                    //         ...prev,
+                    //         fontFamilyName: newFamilyList[0].name,
+                    //     }
+                    // });
 
                     // Task Data Initialization
                     const [taskVideoUrl, videoGenerationTask] = await Promise.all([
@@ -288,7 +300,8 @@ function WorkspaceEditorPageClient() {
                         taskId={taskId}
                         captionDataList={captionDataList}
                         currentSceneIndex={currentSceneIndex}
-                        onFinishLoading={() => { setIsSceneSequencePanelLoading(false); }}
+                        onClickSceneSequence={() => { }}
+                        onFinishLoading={onSceneSequencePanelFinishLoading}
                     />)}
 
                     {activeSidebar === SidebarType.Caption && (<CaptionConfigPanel
@@ -309,8 +322,8 @@ function WorkspaceEditorPageClient() {
                     captionConfigState={captionConfigState}
                     selectedFontFamilyFullShape={selectedFontFamilyFullShape}
                     onChangeCaptionConfigState={onChangeCaptionConfigState}
-                    onChangeVideoCurrentTime={(currentTime: number) => { setVideoCurrentTime(currentTime); }}
-                    onFinishLoading={() => { setIsVideoPlayerPanelLoading(false); }}
+                    onChangeVideoCurrentTime={onChangeVideoCurrentTime}
+                    onFinishLoading={onFinishVideoPlayerPanelLoading}
                 />}
             </div>
             {/* Loading Overlay */}
