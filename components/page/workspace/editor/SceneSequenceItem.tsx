@@ -38,7 +38,7 @@ function SceneSequenceItem({
         <div
             key={captionData.sceneNumber}
             className={`
-                        relative p-4 rounded-xl border transition-all cursor-default backdrop-blur-sm bg-gray-800/30
+                        relative p-4 rounded-xl border transition-all cursor-pointer backdrop-blur-sm bg-gray-800/30
                         ${isCurrentScene ? "border-pink-500" : "border-purple-500/20 hover:border-purple-400/40"}
                         ${isHovered ? 'z-50' : 'z-0'}
                     `}

@@ -1,31 +1,47 @@
 'use client'
 
-import {memo, useCallback, useEffect, useMemo, useRef, useState, MouseEvent} from "react";
+import {memo, useCallback, useEffect, useMemo, useRef, useState, MouseEvent, ChangeEvent, forwardRef, useImperativeHandle} from "react";
 import {Eye, EyeOff, Play, Pause, RotateCcw} from "lucide-react";
 import {CaptionConfigState, CaptionData} from "@/components/page/workspace/editor/WorkspaceEditorPageClient";
+import {SubtitleSegment} from "@/api/types/supabase/VideoGenerationTasks";
 
 const VIDEO_WIDTH = 36 * 9;
 const VIDEO_HEIGHT = VIDEO_WIDTH / 9 * 16;
 
+interface PairedSegment {
+    word: string;
+    startSec: number;
+    endSec: number;
+    isActive: boolean;
+}
+
+export interface VideoPlayerHandle {
+    seekTo: (time: number) => void;
+    play: () => void;
+    pause: () => void;
+}
+
 interface VideoPlayerPanelProps {
     videoUrl: string;
+    currentTime: number;
     captionDataList: CaptionData[];
     captionConfigState: CaptionConfigState;
     selectedFontFamilyFullShape: string;
     onChangeCaptionConfigState: (captionConfigState: CaptionConfigState) => void;
-    onChangeVideoCurrentTime: (currentTime: number) => void;
+    onChangeCurrentTime: (currentTime: number) => void;
     onFinishLoading: () => void;
 }
 
-function VideoPlayerPanel({
+const VideoPlayerPanel = forwardRef<VideoPlayerHandle, VideoPlayerPanelProps>(({
     videoUrl,
+    currentTime,
     captionDataList,
     captionConfigState,
     selectedFontFamilyFullShape,
     onChangeCaptionConfigState,
-    onChangeVideoCurrentTime,
+    onChangeCurrentTime,
     onFinishLoading,
-}: VideoPlayerPanelProps) {
+}, ref) => {
     // 첫 자막 0초에 안 걸려도 보이게 해 주기
     const videoRef = useRef<HTMLVideoElement>(null);
     const captionRef = useRef<HTMLParagraphElement>(null);
@@ -33,8 +49,8 @@ function VideoPlayerPanel({
 
     const [isPlayingVideo, setIsPlayingVideo] = useState<boolean>(false);
     const [isVideoEnded, setIsVideoEnded] = useState(false);
-    const [currentTime, setCurrentTime] = useState(0);
-    const [duration, setDuration] = useState(0);
+    // const [currentTime, setCurrentTime] = useState(0);
+    const [videoDuration, setVideoDuration] = useState(0);
     const [isDraggingTimeline, setIsDraggingTimeline] = useState(false);
 
     // Font settings state
@@ -71,19 +87,18 @@ function VideoPlayerPanel({
     }, [twoLineTextHeight]);
     const prevSliderHeightRef = useRef(sliderHeight);
 
-    const currentSegment = useMemo(() => {
-        // 현재 씬 찾기
-        const currentCaption = currentTime < captionDataList[0]?.startSec
+    const currentPairedSegmentDataList = useMemo(() => {
+        const currentSceneCaption = currentTime < captionDataList[0]?.startSec
             ? captionDataList[0]
-            : captionDataList.find((caption) => {
-                return currentTime >= caption.startSec && currentTime < caption.endSec;
+            : captionDataList.find((captionData) => {
+                return currentTime >= captionData.startSec && currentTime <= captionData.endSec;
             });
 
-        if (!currentCaption) return null;
+        if (!currentSceneCaption) return null;
 
         // 두 단어씩 묶기 (개별 단어 정보 유지)
-        const pairedSegments: { words: { word: string, startSec: number, endSec: number }[], startSec: number, endSec: number }[] = [];
-        const segments = currentCaption.subtitleSegmentationList;
+        const pairedSegments: PairedSegment[][] = []; // SubtitleSegment[1~2][]
+        const segments = currentSceneCaption.subtitleSegmentationList;
 
         for (let index = 0; index < segments.length; index += 2) {
             const hasSecondWord = index + 1 < segments.length;
@@ -91,31 +106,33 @@ function VideoPlayerPanel({
                 ? [segments[index], segments[index + 1]]
                 : [segments[index]];
 
-            pairedSegments.push({
-                words: index !== 0
-                    ? words
-                    : words.map((word, wordIndex) => {
-                        return wordIndex === 0
-                            ? {
-                                ...word,
-                                startSec: 0,
-                            }
-                            : word;
-                    }),
-                startSec: index !== 0
-                    ? segments[index].startSec
-                    : 0.0,
-                endSec: hasSecondWord
-                    ? segments[index + 1].endSec
-                    : segments[index].endSec,
+            const mappedWords = words.map((word, wordIndex) => {
+                const startSec = index === 0 && wordIndex === 0
+                    ? 0
+                    : word.startSec;
+
+                return {
+                    ...word,
+                    startSec: startSec,
+                    isActive: currentTime >= startSec && currentTime <= word.endSec,
+                }
             })
+            pairedSegments.push(mappedWords);
         }
 
         // 현재 시간에 해당하는 세그먼트 찾기
-        return pairedSegments.find((segment) => {
-            return currentTime >= segment.startSec && currentTime <= segment.endSec;
-        });
-    }, [captionDataList, currentTime]);
+        return pairedSegments
+    }, [currentTime, captionDataList]);
+
+    const currentPairedSegmentData: PairedSegment[] | null = useMemo(() => {
+        if (!currentPairedSegmentDataList) return null;
+
+        return currentPairedSegmentDataList.find((pairedSegmentData) => {
+            return pairedSegmentData.some((segmentData) => {
+                return segmentData.isActive;
+            })
+        }) ?? null;
+    }, [currentPairedSegmentDataList]);
 
     const captionActualTop = useMemo(() => {
         // Calculate actual top position based on available slider range
@@ -165,6 +182,16 @@ function VideoPlayerPanel({
             });
         }
     }, [captionConfigState, onChangeCaptionConfigState]);
+    const onChangeCaptionPositionSlider = useCallback((e: ChangeEvent<HTMLInputElement>) => {
+        const newValue = 100 - parseInt(e.target.value);
+
+        if (captionConfigState.captionPosition !== newValue) {
+            onChangeCaptionConfigState({
+                ...captionConfigState,
+                captionPosition: newValue,
+            });
+        }
+    }, [captionConfigState, onChangeCaptionConfigState]);
 
     const onChangeCaptionHeight = useCallback((newCaptionHeight: number) => {
         if (captionConfigState.captionHeight !== newCaptionHeight) {
@@ -200,7 +227,7 @@ function VideoPlayerPanel({
 
     const onLoadedMetadata = useCallback(() => {
         if (videoRef.current) {
-            setDuration(videoRef.current.duration);
+            setVideoDuration(videoRef.current.duration);
         }
         onFinishLoading();
     }, [onFinishLoading]);
@@ -211,22 +238,15 @@ function VideoPlayerPanel({
         const rect = element.getBoundingClientRect();
         const clickX = Math.max(0, Math.min(clientX - rect.left, rect.width));
         const percentage = clickX / rect.width;
-        const newCurrentTime = parseFloat((percentage * duration).toFixed(3));
+        const newCurrentTime = parseFloat((percentage * videoDuration).toFixed(3));
 
         videoRef.current.currentTime = newCurrentTime;
-        setCurrentTime((prevCurrentTime) => {
-            if (prevCurrentTime !== newCurrentTime) {
-                onChangeVideoCurrentTime(newCurrentTime);
-                return newCurrentTime;
-            } else {
-                return prevCurrentTime;
-            }
-        });
+        onChangeCurrentTime(newCurrentTime);
 
         if (isVideoEnded) {
             setIsVideoEnded(false);
         }
-    }, [duration, isVideoEnded, onChangeVideoCurrentTime]);
+    }, [videoDuration, isVideoEnded, onChangeCurrentTime]);
 
     const onClickTimeline = useCallback((e: MouseEvent<HTMLDivElement>) => {
         updateTimelinePosition(e.clientX, e.currentTarget);
@@ -246,12 +266,12 @@ function VideoPlayerPanel({
         if (!videoRef.current) return;
 
         videoRef.current.currentTime = 0;
-        setCurrentTime(0);
-        onChangeVideoCurrentTime(0);
+        // setCurrentTime(0);
+        onChangeCurrentTime(0);
         setIsVideoEnded(false);
         await videoRef.current.play();
         setIsPlayingVideo(true);
-    }, [onChangeVideoCurrentTime]);
+    }, [onChangeCurrentTime]);
 
     const setCaptionRef = useCallback((node: HTMLParagraphElement | null) => {
         captionRef.current = node;
@@ -268,8 +288,40 @@ function VideoPlayerPanel({
     }, [onChangeCaptionHeight]);
 
     const progressPercentage = useMemo(() => {
-        return duration > 0 ? (currentTime / duration) * 100 : 0;
-    }, [currentTime, duration]);
+        return videoDuration > 0
+            ? (currentTime / videoDuration) * 100
+            : 0;
+    }, [currentTime, videoDuration]);
+
+    const timelineCurrentSec = useMemo(() => {
+        return formatTime(currentTime);
+    }, [currentTime, formatTime]);
+
+    const timelineEndSec = useMemo(() => {
+        return formatTime(videoDuration);
+    }, [videoDuration, formatTime]);
+
+    // Expose imperative methods to parent component
+    useImperativeHandle(ref, () => ({
+        seekTo: (time: number) => {
+            if (videoRef.current) {
+                videoRef.current.currentTime = time;
+                onChangeCurrentTime(time);
+            }
+        },
+        play: () => {
+            if (videoRef.current) {
+                videoRef.current.play();
+                setIsPlayingVideo(true);
+            }
+        },
+        pause: () => {
+            if (videoRef.current) {
+                videoRef.current.pause();
+                setIsPlayingVideo(false);
+            }
+        },
+    }), [onChangeCurrentTime]);
 
     // Measure caption height when fontSize changes
     useEffect(() => {
@@ -336,14 +388,7 @@ function VideoPlayerPanel({
             if (videoRef.current && !videoRef.current.paused) {
                 const newCurrentTime = parseFloat(videoRef.current.currentTime.toFixed(3));
 
-                setCurrentTime((prevCurrentTime) => {
-                    if (prevCurrentTime !== newCurrentTime) {
-                        onChangeVideoCurrentTime(newCurrentTime);
-                        return newCurrentTime;
-                    } else {
-                        return prevCurrentTime;
-                    }
-                })
+                onChangeCurrentTime(newCurrentTime)
                 animationFrameId = requestAnimationFrame(updateTime);
             }
         };
@@ -355,7 +400,7 @@ function VideoPlayerPanel({
                 cancelAnimationFrame(animationFrameId);
             }
         };
-    }, [isPlayingVideo, onChangeVideoCurrentTime]);
+    }, [isPlayingVideo, onChangeCurrentTime]);
 
     return (
         <div className="flex-1 bg-black flex flex-col relative" style={{ pointerEvents: isDraggingTimeline ? 'none' : 'auto' }}>
@@ -414,18 +459,13 @@ function VideoPlayerPanel({
                     )}
 
                     {/* Caption Position Slider */}
-                    {/*<div className="relative" style={{ height: `${VIDEO_HEIGHT - captionHeight}px` }}>*/}
                     <div className={`relative`} style={{ height: `${sliderHeight}px` }}>
                         <input
                             type="range"
                             min="0"
                             max="100"
                             value={100 - captionPosition} // Inverted: top of slider = top of video
-                            onChange={(e) => {
-                                const newCaptionPosition = 100 - parseInt(e.target.value)
-                                
-                                onChangeCaptionPosition(newCaptionPosition);
-                            }}
+                            onChange={onChangeCaptionPositionSlider}
                             className="w-6 h-full cursor-grab active:cursor-grabbing
                                 [&::-webkit-slider-runnable-track]:px-0.5
                                 [&::-webkit-slider-runnable-track]:py-0.5
@@ -460,7 +500,7 @@ function VideoPlayerPanel({
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent pointer-events-none"></div>
 
                                 {/* Caption Overlay */}
-                                {currentSegment && fontSize > 0 && (
+                                {currentPairedSegmentData && fontSize > 0 && (
                                     <div
                                         className="absolute left-4 right-4 z-20"
                                         style={{ top: `${captionActualTop}%` }}
@@ -477,21 +517,18 @@ function VideoPlayerPanel({
                                                     : 'none'
                                             }}
                                         >
-                                            {currentSegment.words.map((word, index) => {
-                                                const isActive = currentTime >= word.startSec && currentTime < word.endSec;
-                                                return (
-                                                    <span
-                                                        key={index}
-                                                        style={{
-                                                            color: isActive ? activeColor : inactiveColor,
-                                                            WebkitTextStroke: isActive
-                                                                ? (activeOutlineEnabled ? `1px ${activeOutlineColor}` : '0px transparent')
-                                                                : (inactiveOutlineEnabled ? `1px ${inactiveOutlineColor}` : '0px transparent'),
-                                                        }}
-                                                    >
-                                                        {word.word}{index < currentSegment.words.length - 1 ? ' ' : ''}
-                                                    </span>
-                                                );
+                                            {currentPairedSegmentData.map((pairedSegmentData, index) => {
+                                                return <span
+                                                    key={index}
+                                                    style={{
+                                                        color: pairedSegmentData.isActive ? activeColor : inactiveColor,
+                                                        WebkitTextStroke: pairedSegmentData.isActive
+                                                            ? (activeOutlineEnabled ? `1px ${activeOutlineColor}` : '0px transparent')
+                                                            : (inactiveOutlineEnabled ? `1px ${inactiveOutlineColor}` : '0px transparent'),
+                                                    }}
+                                                >
+                                                    {pairedSegmentData.word}{(index + 1) % 2 === 1 ? ' ' : ''}
+                                                </span>
                                             })}
                                         </p>
                                     </div>
@@ -512,8 +549,8 @@ function VideoPlayerPanel({
                                 </div>
                                 <div className="absolute bottom-4 left-4 right-4">
                                     <div className="flex items-center justify-between text-white text-sm mb-2">
-                                        <span>{formatTime(currentTime)}</span>
-                                        <span>{formatTime(duration)}</span>
+                                        <span>{timelineCurrentSec}</span>
+                                        <span>{timelineEndSec}</span>
                                     </div>
                                     <div
                                         ref={timelineRef}
@@ -527,7 +564,7 @@ function VideoPlayerPanel({
                                             style={{
                                                 // video timeline 전용 currentTIme 추가?
                                                 width: `${progressPercentage}%`,
-                                                transition: isDraggingTimeline ? 'none' : 'width 0.1s ease-out'
+                                                transition: 'none',
                                             }}
                                         >
                                             {/* 인디케이터 */}
@@ -558,7 +595,9 @@ function VideoPlayerPanel({
                 </p>
             </div>
         </div>
-    )
-}
+    );
+});
+
+VideoPlayerPanel.displayName = 'VideoPlayerPanel';
 
 export default memo(VideoPlayerPanel);

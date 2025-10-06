@@ -77,7 +77,7 @@ function SceneSequencePanel({
                     isHovered={hoveredImageIndex === index}
                     isCurrentScene={currentSceneIndex === index}
                     isLastItem={index === captionDataList.length - 1}
-                    onClickSceneSequence={(sceneStartSec: number) => {}}
+                    onClickSceneSequence={onClickSceneSequence}
                     onLoadImage={() => {
                         setImageDataList((prevImageDataList) => {
                             return prevImageDataList.map((prevImageData, prevIndex) => {

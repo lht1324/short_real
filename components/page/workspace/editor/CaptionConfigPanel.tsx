@@ -219,7 +219,7 @@ function CaptionConfigPanel({
                     <input
                         type="range"
                         min="36"
-                        max="80"
+                        max="84"
                         value={fontSize}
                         onChange={(e) => onChangeFontSize(parseInt(e.target.value))}
                         className="flex-1 accent-purple-500"

@@ -1,6 +1,6 @@
 'use client'
 
-import {memo, useCallback, useEffect, useMemo, useState} from "react";
+import {memo, useCallback, useEffect, useMemo, useRef, useState} from "react";
 import Link from "next/link";
 import Image from "next/image";
 import {useRouter, useSearchParams} from 'next/navigation';
@@ -11,7 +11,7 @@ import {videoClientAPI} from "@/api/client/videoClientAPI";
 import {SubtitleSegment} from "@/api/types/supabase/VideoGenerationTasks";
 import SceneSequencePanel from "@/components/page/workspace/editor/SceneSequencePanel";
 import CaptionConfigPanel from "@/components/page/workspace/editor/CaptionConfigPanel";
-import VideoPlayerPanel from "@/components/page/workspace/editor/VideoPlayerPanel";
+import VideoPlayerPanel, {VideoPlayerHandle} from "@/components/page/workspace/editor/VideoPlayerPanel";
 import MusicPanel from "@/components/page/workspace/editor/MusicPanel";
 
 interface VideoData {
@@ -89,6 +89,8 @@ function WorkspaceEditorPageClient() {
     const searchParams = useSearchParams();
     const taskId = searchParams.get('taskId');
 
+    const videoPlayerRef = useRef<VideoPlayerHandle>(null);
+
     const sidebarItems = useMemo(() => [
         { id: SidebarType.Scene, icon: ImageIcon, name: 'Scene' },
         { id: SidebarType.Caption, icon: Type, name: 'Caption' },
@@ -136,11 +138,16 @@ function WorkspaceEditorPageClient() {
         });
     }, [captionDataList, videoCurrentTime]);
 
+    const onClickSceneSequence = useCallback((sceneStartSec: number) => {
+        videoPlayerRef.current?.seekTo(sceneStartSec);
+        setVideoCurrentTime(sceneStartSec);
+    }, []);
+
     const onChangeCaptionConfigState = useCallback((captionConfig: CaptionConfigState) => {
         setCaptionConfigState(captionConfig);
     }, []);
 
-    const onSceneSequencePanelFinishLoading = useCallback(() => {
+    const onFinishSceneSequencePanelLoading = useCallback(() => {
         setIsSceneSequencePanelLoading(false);
     }, []);
 
@@ -148,8 +155,12 @@ function WorkspaceEditorPageClient() {
         setIsVideoPlayerPanelLoading(false);
     }, []);
 
-    const onChangeVideoCurrentTime = useCallback((currentTime: number) => {
-        setVideoCurrentTime(currentTime);
+    const onChangeVideoCurrentTime = useCallback((newCurrentTime: number) => {
+        setVideoCurrentTime((prevCurrentTime) => {
+            return prevCurrentTime !== newCurrentTime
+                ? newCurrentTime
+                : prevCurrentTime;
+        });
     }, []);
 
     const onExportVideo = useCallback(async () => {
@@ -168,12 +179,6 @@ function WorkspaceEditorPageClient() {
                         return a.name.localeCompare(b.name);
                     });
                     setFontFamilyList(newFamilyList);
-                    // setCaptionConfigState((prev) => {
-                    //     return {
-                    //         ...prev,
-                    //         fontFamilyName: newFamilyList[0].name,
-                    //     }
-                    // });
 
                     // Task Data Initialization
                     const [taskVideoUrl, videoGenerationTask] = await Promise.all([
@@ -220,6 +225,10 @@ function WorkspaceEditorPageClient() {
             }
         }
     }, [router, taskId]);
+
+    useEffect(() => {
+        console.log("videoCurrentTime", videoCurrentTime);
+    }, [videoCurrentTime]);
 
     return (
         <div className="min-h-screen bg-black text-white">
@@ -300,8 +309,8 @@ function WorkspaceEditorPageClient() {
                         taskId={taskId}
                         captionDataList={captionDataList}
                         currentSceneIndex={currentSceneIndex}
-                        onClickSceneSequence={() => { }}
-                        onFinishLoading={onSceneSequencePanelFinishLoading}
+                        onClickSceneSequence={onClickSceneSequence}
+                        onFinishLoading={onFinishSceneSequencePanelLoading}
                     />)}
 
                     {activeSidebar === SidebarType.Caption && (<CaptionConfigPanel
@@ -317,12 +326,14 @@ function WorkspaceEditorPageClient() {
 
                 {/* Video Player */}
                 {videoData && <VideoPlayerPanel
+                    ref={videoPlayerRef}
                     videoUrl={videoData.videoUrl}
+                    currentTime={videoCurrentTime}
                     captionDataList={captionDataList}
                     captionConfigState={captionConfigState}
                     selectedFontFamilyFullShape={selectedFontFamilyFullShape}
                     onChangeCaptionConfigState={onChangeCaptionConfigState}
-                    onChangeVideoCurrentTime={onChangeVideoCurrentTime}
+                    onChangeCurrentTime={onChangeVideoCurrentTime}
                     onFinishLoading={onFinishVideoPlayerPanelLoading}
                 />}
             </div>
