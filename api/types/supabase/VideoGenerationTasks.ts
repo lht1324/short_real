@@ -1,9 +1,54 @@
 // video_generation_tasks 테이블 타입 정의
-
-import {Voice} from "@/api/types/eleven-labs/Voice";
-import {BGMInfo} from "@/api/types/supabase/BackgroundMusics";
-import {Style} from "@/api/types/supabase/Styles";
 import {MasterStyleInfo} from "@/api/server/MasterStyleInfo";
+
+export interface VideoGenerationTask {
+    id?: string; // uuid
+    user_id: string; // uuid
+    title?: string; // varchar(255), nullable
+    status?: VideoGenerationTaskStatus; // varchar(50), default 'pending'
+    video_prompt?: string; // text, nullable
+    narration_script: string; // text, not null
+    scene_breakdown_list: SceneData[]; // jsonb, not null
+    subtitle_segment_list: SubtitleSegment[]; // jsonb, not null
+    master_style_positive_prompt?: MasterStyleInfo;
+    master_style_negative_prompt?: string;
+    video_main_subject?: string;
+    processed_scene_count?: number;
+    music_data_list?: MusicData[];
+    selected_music_id?: string; // varchar(100), nullable
+    selected_style_id?: string; // varchar(100), nullable
+    selected_voice_id?: string; // varchar(100), nullable
+    created_at?: string; // timestamp with time zone, default CURRENT_TIMESTAMP
+    updated_at?: string;
+}
+
+// '전체' 플로우의 현재 상태, '작업' 한정 아님.
+export enum VideoGenerationTaskStatus {
+    // 초안 작성
+    DRAFTING = 'drafting',
+    // 음성 생성
+    GENERATING_VOICE = 'generating_voice',
+    // 마스터 스타일 프롬프트 생성
+    GENERATING_MASTER_STYLE_PROMPT = 'generating_master_style_prompt',
+    // 이미지 생성용 프롬프트 생성
+    GENERATING_IMAGE_PROMPT = 'generating_image_prompt',
+    // 영상 생성용 프롬프트 생성
+    GENERATING_VIDEO_PROMPT = 'generating_video_prompt',
+    // 영상 생성
+    GENERATING_VIDEO = 'generating_video',
+    // 영상 병합
+    STITCHING_VIDEOS = 'stitching_videos',
+    // 영상과 음성 병합
+    MERGING_VIDEO_AND_AUDIO = 'merging_video_and_audio',
+    // 작곡
+    COMPOSING_MUSIC = 'composing_music',
+    // 편집
+    EDITOR = "editor",
+    // 완료
+    COMPLETED = 'completed',
+    // 실패
+    FAILED = 'failed',
+}
 
 export interface SceneData {
     sceneNumber: number;
@@ -23,26 +68,6 @@ export interface SubtitleSegment {
     endSec: number;
 }
 
-export interface VideoGenerationTask {
-    id?: string; // uuid
-    user_id: string; // uuid
-    title?: string; // varchar(255), nullable
-    status?: VideoGenerationTaskStatus; // varchar(50), default 'pending'
-    video_prompt?: string; // text, nullable
-    narration_script: string; // text, not null
-    scene_breakdown_list: SceneData[]; // jsonb, not null
-    subtitle_segment_list: SubtitleSegment[]; // jsonb, not null
-    master_style_positive_prompt?: MasterStyleInfo;
-    master_style_negative_prompt?: string;
-    video_main_subject?: string;
-    processed_scene_count?: number;
-    selected_music_id?: string; // varchar(100), nullable
-    selected_style_id?: string; // varchar(100), nullable
-    selected_voice_id?: string; // varchar(100), nullable
-    created_at?: string; // timestamp with time zone, default CURRENT_TIMESTAMP
-    updated_at?: string;
-}
-
 export enum SceneGenerationStatus {
     IN_PROGRESS = 'in_progress',
     COMPLETED = 'completed',
@@ -50,24 +75,10 @@ export enum SceneGenerationStatus {
     FAILED = 'failed'
 }
 
-export enum VideoGenerationTaskStatus {
-    PENDING = 'pending',
-    IN_PROGRESS = 'in_progress',
-    COMPLETED = 'completed',
-    FAILED = 'failed'
-}
-
-export enum VideoAspectRatio {
-    HORIZONTAL_16_9 = "16:9",
-    VERTICAL_16_9 = "9:16",
-    SQUARE = "1:1",
-    HORIZONTAL_5_4 = "5:4",
-    VERTICAL_5_4 = "4:5",
-    HORIZONTAL_3_2 = "3:2",
-    VERTICAL_3_2 = "2:3",
-}
-
-export enum VideoResolution {
-    RES_480P = "480p",
-    RES_720P = "720p",
+export interface MusicData {
+    title: string;
+    tagList: string[];
+    audioUrl?: string;
+    imageUrl?: string;
+    duration: number; // sec
 }

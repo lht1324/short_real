@@ -1,77 +1,37 @@
 'use client'
 
-import {memo, useCallback, useMemo} from "react";
+import {memo, useCallback, useEffect, useMemo, useState} from "react";
 import Link from "next/link";
-import { Plus, Calendar, Download, X, ListTodo } from 'lucide-react';
+import {ListTodo, Plus} from 'lucide-react';
+import {VideoGenerationTaskStatus} from "@/api/types/supabase/VideoGenerationTasks";
+import Image from "next/image";
+import {videoClientAPI} from "@/api/client/videoClientAPI";
+import {useAuth} from "@/context/AuthContext";
+import {useRouter} from "next/navigation";
+import DashboardItem from "@/components/page/workspace/dashboard/DashboardItem";
+import DefaultModal from "@/components/public/DefaultModal";
 
-enum CurrentStage {
-    Processing = 'processing',
-    Editing = 'editing',
-    Completed = 'completed'
-}
-
-interface WorkItem {
+export interface TaskData {
     id: string;
-    startDate: string;
-    currentStage: CurrentStage;
-    title: string;
+    title?: string;
+    status: VideoGenerationTaskStatus;
+    sceneCount?: number;
+    processedSceneCount?: number;
+    progress?: number; // 0-100
+    currentStep: number;
+    totalStep: number;
+    createdAt?: Date;
+    updatedAt?: Date;
+    selectedVoiceId?: string;
+    selectedStyleId?: string;
 }
 
 function WorkspaceDashboardPageClient() {
-    const mockWorkItems: WorkItem[] = useMemo(() => [
-        {
-            id: '1',
-            startDate: '2025-01-15',
-            currentStage: CurrentStage.Editing,
-            title: 'Summer vacation highlights'
-        },
-        {
-            id: '2',
-            startDate: '2025-01-10',
-            currentStage: CurrentStage.Completed,
-            title: 'Birthday party memories'
-        },
-        {
-            id: '3',
-            startDate: '2025-01-18',
-            currentStage: CurrentStage.Processing,
-            title: 'Weekend trip footage'
-        }
-    ], []);
-
-    const handleCancelWork = useCallback((workId: string) => {
-        console.log('Cancel work:', workId);
-    }, []);
-
-    const handleDownload = useCallback((workId: string) => {
-        console.log('Download video:', workId);
-    }, []);
-
-    const getStageText = useCallback((stage: WorkItem['currentStage']) => {
-        switch (stage) {
-            case 'processing':
-                return 'Processing';
-            case 'editing':
-                return 'Ready for editing';
-            case 'completed':
-                return 'Completed';
-            default:
-                return 'Unknown';
-        }
-    }, []);
-
-    const getStageColor = useCallback((stage: WorkItem['currentStage']) => {
-        switch (stage) {
-            case 'processing':
-                return 'bg-gradient-to-r from-yellow-500 to-orange-500 text-white';
-            case 'editing':
-                return 'bg-gradient-to-r from-cyan-500 to-blue-500 text-white';
-            case 'completed':
-                return 'bg-gradient-to-r from-green-500 to-emerald-500 text-white';
-            default:
-                return 'bg-gradient-to-r from-gray-500 to-gray-600 text-white';
-        }
-    }, []);
+    // Draft 마저 작성하는 버튼 추가
+    const router = useRouter();
+    const { user } = useAuth();
+    const [taskDataList, setTaskDataList] = useState<TaskData[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
 
     // Virtual tabs for navigation consistency
     const virtualTabs = useMemo(() => [
@@ -79,14 +39,148 @@ function WorkspaceDashboardPageClient() {
         { id: 'create', icon: Plus, name: 'Create', href: '/workspace/create' }
     ], []);
 
+    const [pendingCancelTaskId, setPendingCancelTaskId] = useState<string | null>(null);
+
+    const [showCancelConfirmModal, setShowCancelConfirmModal] = useState(false);
+
+    const onClickCancel = useCallback((taskId: string) => {
+        setPendingCancelTaskId(taskId);
+        setShowCancelConfirmModal(true);
+    }, []);
+
+    const onClickDownload = useCallback((taskId: string) => {
+        // base URL로 래핑해서 video/download/[taskId] path 열어주고 거기서 보이게 하기
+        console.log('Download video:', taskId);
+    }, []);
+
+    const onClickRetry = useCallback((taskId: string) => {
+        console.log('Retry generation:', taskId);
+    }, []);
+
+    const cancelVideoGenerationTask = useCallback(async () => {
+        // Row 삭제, Replicate 취소 요청, ...
+        try {
+
+        } catch (error) {
+
+        }
+    }, [pendingCancelTaskId]);
+
+    // VideoGenerationTaskStatus 기반 진행률 계산
+    const calculateProgress = useCallback((status: VideoGenerationTaskStatus): {
+        progress: number;
+        currentStep: number;
+        totalStep: number;
+    } => {
+        // 정상 플로우 순서 정의
+        const processingSteps = [
+            VideoGenerationTaskStatus.DRAFTING,
+            VideoGenerationTaskStatus.GENERATING_VOICE,
+            VideoGenerationTaskStatus.GENERATING_MASTER_STYLE_PROMPT,
+            VideoGenerationTaskStatus.GENERATING_IMAGE_PROMPT,
+            VideoGenerationTaskStatus.GENERATING_VIDEO_PROMPT,
+            VideoGenerationTaskStatus.GENERATING_VIDEO,
+            VideoGenerationTaskStatus.STITCHING_VIDEOS,
+            VideoGenerationTaskStatus.MERGING_VIDEO_AND_AUDIO,
+            VideoGenerationTaskStatus.EDITOR,
+            VideoGenerationTaskStatus.COMPOSING_MUSIC,
+            VideoGenerationTaskStatus.COMPLETED,
+        ];
+
+        const currentStepIndex = processingSteps.indexOf(status);
+
+        // Processing 단계가 아니면 진행률 계산 안 함
+        if (currentStepIndex === -1) {
+            return {
+                progress: status === VideoGenerationTaskStatus.COMPLETED
+                    ? 100
+                    : 0,
+                currentStep: status === VideoGenerationTaskStatus.COMPLETED
+                    ? processingSteps.length
+                    : 0,
+                totalStep: processingSteps.length
+            }
+        }
+
+        // (현재 단계 인덱스 + 1) / 전체 단계 수 * 100
+        return {
+            // progress: Math.round(((currentStepIndex + 1) / processingSteps.length) * 100),
+            progress: parseFloat((((currentStepIndex + 1) / processingSteps.length) * 100).toFixed(1)),
+            currentStep: currentStepIndex + 1,
+            totalStep: processingSteps.length
+        };
+    }, []);
+
+    useEffect(() => {
+        if (user?.id) {
+            // 10초 타임아웃 설정
+            const timeout = setTimeout(() => {
+                setIsLoading(false);
+            }, 15000);
+
+            const loadData = async () => {
+                try {
+                    const videoGenerationTaskList = await videoClientAPI.getVideoTasksByUserId(user?.id);
+
+                    if (!videoGenerationTaskList) {
+                        throw new Error("Cannot read videoGenerationTaskList. Try again.");
+                    }
+
+                    setTaskDataList(videoGenerationTaskList.filter((task) => {
+                        return !!task.id && !!task.status && !!task.created_at && !!task.updated_at;
+                    }).map((task): TaskData => {
+                        const status = task.status as VideoGenerationTaskStatus;
+                        const {
+                            progress,
+                            currentStep,
+                            totalStep,
+                        } = calculateProgress(status);
+
+                        console.log(`[${task.id}]: ${task.scene_breakdown_list.length}`)
+                        return {
+                            id: task.id as string,
+                            title: task.video_main_subject,
+                            status: status,
+                            sceneCount: task.scene_breakdown_list.length,
+                            processedSceneCount: task.processed_scene_count,
+                            progress: progress,
+                            currentStep: currentStep,
+                            totalStep: totalStep,
+                            createdAt: new Date(task.created_at as string),
+                            updatedAt: new Date(task.updated_at as string),
+                            selectedVoiceId: task.selected_voice_id,
+                            selectedStyleId: task.selected_style_id,
+                        }
+                    }))
+
+                    setIsLoading(false);
+                } catch (error) {
+                    console.error("WorkspaceDashboardPage: ", error);
+                    setIsLoading(false);
+                    router.push("/");
+                }
+            }
+
+            loadData().then();
+
+            return () => {
+                clearTimeout(timeout);
+            }
+        }
+    }, [router, user?.id, calculateProgress]);
+
     return (
         <div className="min-h-screen bg-black text-white">
             {/* Top Header - Same as Create */}
             <div className="flex items-center justify-between py-4 border-b border-purple-500/20 bg-gray-900/50 backdrop-blur-sm">
                 <div className="flex items-center" style={{paddingLeft: '16px'}}>
-                    <div className="w-12 h-12 bg-gradient-to-r from-pink-500 to-purple-600 rounded-lg flex items-center justify-center">
-                        <span className="text-white font-bold text-sm">🏠</span>
-                    </div>
+                    <Image
+                        src="/logo/logo-64.png"
+                        alt="Short Real"
+                        width={64}
+                        height={64}
+                        className="w-16 h-16"
+                    />
                     <div className="flex flex-col ml-4">
                         <span className="text-4xl font-bold bg-gradient-to-r from-pink-400 to-purple-500 bg-clip-text text-transparent">
                             Video Task Manager
@@ -142,7 +236,7 @@ function WorkspaceDashboardPageClient() {
                     <div className="p-6">
                         <div className="text-purple-300 text-2xl font-medium mb-6">Current Video Tasks</div>
 
-                        {mockWorkItems.length === 0 ? (
+                        {taskDataList.length === 0 ? (
                             <div className="max-w-4xl">
                                 <div className="text-center py-16">
                                     <div className="w-16 h-16 bg-gradient-to-r from-pink-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -160,62 +254,43 @@ function WorkspaceDashboardPageClient() {
                             </div>
                         ) : (
                             <div className="space-y-4 max-w-4xl">
-                                {mockWorkItems.map((item) => (
-                                    <div key={item.id} className="bg-gray-800/50 backdrop-blur-sm rounded-xl border border-purple-500/20 p-6 hover:bg-gray-800/70 transition-all duration-300">
-                                        <div className="flex items-center justify-between">
-                                            <div className="flex-1">
-                                                <h3 className="text-xl font-semibold text-white mb-3">
-                                                    {item.title}
-                                                </h3>
-                                                <div className="flex items-center space-x-6 text-gray-300">
-                                                    <span className="flex items-center space-x-2">
-                                                        <Calendar size={16} className="text-purple-400" />
-                                                        <span>Started: {item.startDate}</span>
-                                                    </span>
-                                                    <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStageColor(item.currentStage)} backdrop-blur-sm`}>
-                                                        {getStageText(item.currentStage)}
-                                                    </span>
-                                                </div>
-                                            </div>
-                                            
-                                            <div className="flex items-center space-x-3">
-                                                {item.currentStage === CurrentStage.Editing && (
-                                                    <Link
-                                                        href={`/workspace/editor?task_id=${item.id}`}
-                                                        className="group bg-gradient-to-r from-green-500 to-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:from-green-600 hover:to-emerald-700 transition-all duration-300 transform hover:scale-105 shadow-lg shadow-green-500/25"
-                                                    >
-                                                        Edit Video
-                                                    </Link>
-                                                )}
-                                                
-                                                {item.currentStage === CurrentStage.Completed && (
-                                                    <button
-                                                        onClick={() => handleDownload(item.id)}
-                                                        className="group bg-gradient-to-r from-indigo-500 to-purple-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:from-indigo-600 hover:to-purple-700 transition-all duration-300 transform hover:scale-105 shadow-lg shadow-purple-500/25 flex items-center space-x-2"
-                                                    >
-                                                        <Download size={14} />
-                                                        <span>Download</span>
-                                                    </button>
-                                                )}
-
-                                                {item.currentStage !== CurrentStage.Completed && (
-                                                    <button
-                                                        onClick={() => handleCancelWork(item.id)}
-                                                        className="group bg-gradient-to-r from-red-500 to-pink-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:from-red-600 hover:to-pink-700 transition-all duration-300 transform hover:scale-105 shadow-lg shadow-red-500/25 flex items-center space-x-2"
-                                                    >
-                                                        <X size={14} />
-                                                        <span>Cancel</span>
-                                                    </button>
-                                                )}
-                                            </div>
-                                        </div>
-                                    </div>
-                                ))}
+                                {taskDataList.map((taskData) => {
+                                    return <DashboardItem
+                                        key={taskData.id}
+                                        taskData={taskData}
+                                        onClickCancel={onClickCancel}
+                                        onClickDownload={onClickDownload}
+                                        onClickRetry={onClickRetry}
+                                    />
+                                })}
                             </div>
                         )}
                     </div>
                 </div>
             </div>
+            {showCancelConfirmModal && <DefaultModal
+                title="Cancel Task"
+                message={"Are you sure you want to cancel this task?\n\n" +
+                "⚠️ Warning: Credits used for this task will not be refunded."}
+                confirmText="Yes"
+                cancelText="No"
+                onClickConfirm={() => {}}
+                onClickCancel={() => {
+                    setPendingCancelTaskId(null);
+                    setShowCancelConfirmModal(false);
+                }}
+            />}
+
+            {/* Loading Overlay */}
+            {isLoading && (
+                <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center">
+                    <div className="text-center">
+                        <div className="w-16 h-16 border-4 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto mb-6"></div>
+                        <p className="text-gray-300 text-xl font-medium">Loading tasks...</p>
+                        <p className="text-gray-500 text-sm mt-2">Please wait a moment</p>
+                    </div>
+                </div>
+            )}
         </div>
     )
 }

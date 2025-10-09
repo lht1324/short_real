@@ -2,6 +2,7 @@ import { createSupabaseServer } from "@/lib/supabaseServer";
 import { BackgroundMusic } from "@/api/types/supabase/BackgroundMusics";
 import { PostgrestResponse } from "@supabase/supabase-js";
 import {createSupabaseServiceRoleClient} from "@/lib/supabaseServiceRole";
+import {MusicData} from "@/api/types/supabase/VideoGenerationTasks";
 
 export const musicServerAPI = {
     async getBackgroundMusics(): Promise<BackgroundMusic[]> {
@@ -86,6 +87,86 @@ export const musicServerAPI = {
                 success: false,
                 error: error instanceof Error ? error.message : "Unexpected error in postMusic"
             };
+        }
+    },
+
+    async getMusicData(taskId: string): Promise<MusicData[]> {
+        const supabase = await createSupabaseServiceRoleClient();
+
+        try {
+            // 1. video_generation_tasks 테이블에서 music_data_list 가져오기
+            const { data: taskData, error: taskError } = await supabase
+                .from('video_generation_tasks')
+                .select('*')
+                .eq('id', taskId)
+                .single();
+
+            if (taskError) {
+                console.error('Error fetching music_data_list:', taskError);
+                throw taskError;
+            }
+
+            if (!taskData?.music_data_list || taskData.music_data_list.length === 0) {
+                return [];
+            }
+
+            const musicDataList = taskData.music_data_list as MusicData[];
+
+            // 2. video_music_temp_storage에서 파일 리스트 확인
+            const { data: fileList, error: listError } = await supabase
+                .storage
+                .from('video_music_temp_storage')
+                .list(taskId);
+
+            if (listError) {
+                console.error('Error listing music files:', listError);
+                throw listError;
+            }
+
+            if (!fileList || fileList.length === 0) {
+                return musicDataList;
+            }
+
+            // 3. 파일 개수 / 2로 music 개수 파악
+            const musicCount = Math.floor(fileList.length / 2);
+
+            // 4. 각 index에 대해 signedUrl 생성
+            const pathList: string[] = [];
+            for (let index = 0; index < musicCount; index++) {
+                pathList.push(`${taskId}/${taskId}_${index}.mp3`);
+                pathList.push(`${taskId}/${taskId}_${index}.jpeg`);
+            }
+
+            const { data: signedUrlDataList, error: urlError } = await supabase
+                .storage
+                .from('video_music_temp_storage')
+                .createSignedUrls(pathList, 86400);
+
+            if (urlError) {
+                console.error('Error creating signed URLs:', urlError);
+                throw urlError;
+            }
+
+            // 5. music_data_list와 signedUrl 결합
+            const completeMusicDataList: MusicData[] = musicDataList.map((musicData, index) => {
+                const audioSignedData = signedUrlDataList?.find(
+                    item => item.path === `${taskId}/${taskId}_${index}.mp3`
+                );
+                const imageSignedData = signedUrlDataList?.find(
+                    item => item.path === `${taskId}/${taskId}_${index}.jpeg`
+                );
+
+                return {
+                    ...musicData,
+                    audioUrl: audioSignedData?.signedUrl || musicData.audioUrl,
+                    imageUrl: imageSignedData?.signedUrl || musicData.imageUrl,
+                };
+            });
+
+            return completeMusicDataList;
+        } catch (error) {
+            console.error('Unexpected error in getMusicDatas:', error);
+            return [];
         }
     }
 }

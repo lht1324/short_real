@@ -1,4 +1,4 @@
-import {SceneData, SceneGenerationStatus} from '@/api/types/supabase/VideoGenerationTasks';
+import {SceneData, SceneGenerationStatus, VideoGenerationTaskStatus} from '@/api/types/supabase/VideoGenerationTasks';
 import {findOptimalVideoParameters} from "@/utils/videoUtils";
 import {
     ReplicateInput,
@@ -233,7 +233,7 @@ export const videoServerAPI = {
             console.log(`[Merge Service] 최종 영상 병합 완료`);
 
             // 5. Task 상태 'completed'로 업데이트
-            await videoGenerationTasksServerAPI.updateTaskStatus(generationTaskId, 'completed');
+            await videoGenerationTasksServerAPI.updateTaskStatus(generationTaskId, VideoGenerationTaskStatus.COMPLETED);
 
             // 5.5. Rendi에서 최종 병합된 영상을 다운로드하여 Supabase Storage에 업로드
             const finalVideoUrl = mergeVideoAndAudioResult.video.url;
@@ -304,8 +304,22 @@ export const videoServerAPI = {
 
                 }
             }
-            await videoGenerationTasksServerAPI.updateTaskStatus(generationTaskId, 'failed');
+            await videoGenerationTasksServerAPI.patchVideoGenerationTaskStatus(generationTaskId, VideoGenerationTaskStatus.FAILED);
             throw error;
         }
     },
+
+    async getVideoSignedUrl(filePath: string) {
+        const supabase = createSupabaseServiceRoleClient();
+
+        const { data, error } = await supabase.storage
+            .from('processed_video_storage')
+            .createSignedUrl(filePath, 60 * 60 * 24);
+
+        if (error || !data?.signedUrl) {
+            throw new Error(error?.message || `There is no image data.`);
+        }
+
+        return data.signedUrl;
+    }
 }

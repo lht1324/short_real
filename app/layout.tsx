@@ -4,6 +4,8 @@ import { Rajdhani } from "next/font/google";
 import ConditionalHeader from "@/components/public/ConditionalHeader";
 import ConditionalMain from "@/components/public/ConditionalMain";
 import ApiPreloader from "@/components/public/ApiPreloader";
+import { Analytics } from "@vercel/analytics/next";
+import {AuthProvider} from "@/context/AuthContext";
 import "./globals.css";
 
 const defaultFont = Rajdhani({
@@ -26,13 +28,16 @@ export default function RootLayout({
             <body
                 className={`${defaultFont.className} antialiased`}
             >
-                <ApiPreloader />
-                <div className="min-h-screen">
-                    <ConditionalHeader/>
-                    <ConditionalMain>
-                        {children}
-                    </ConditionalMain>
-                </div>
+                <AuthProvider>
+                    <ApiPreloader />
+                    <div className="min-h-screen">
+                        <ConditionalHeader/>
+                        <ConditionalMain>
+                            {children}
+                        </ConditionalMain>
+                    </div>
+                </AuthProvider>
+                <Analytics/>
             </body>
         </html>
     );

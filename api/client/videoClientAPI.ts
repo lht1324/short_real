@@ -42,6 +42,25 @@ export const videoClientAPI = {
         }
     },
 
+    async getVideoTasksByUserId(userId: string): Promise<VideoGenerationTask[] | null> {
+        try {
+            const response = await getFetch(`/api/video/task/user/${userId}`);
+
+            if (!response.ok) {
+                if (response.status === 404) {
+                    console.warn(`Tasks not found for user: ${userId}`);
+                    return null;
+                }
+                throw Error(`HTTP error! status: ${response.status}`);
+            }
+
+            return await response.json();
+        } catch (error) {
+            console.error('Failed to get user video tasks:', error);
+            return null;
+        }
+    },
+
     async getVideoTaskByTaskId(taskId: string): Promise<VideoGenerationTask | null> {
         try {
             const response = await getFetch(`/api/video/task/${taskId}`);
@@ -76,6 +95,26 @@ export const videoClientAPI = {
             return await response.json();
         } catch (error) {
             console.error('Failed to get video task:', error);
+            return null;
+        }
+    },
+
+    async getVideoUrl(taskId: string): Promise<string | null> {
+        try {
+            const response = await getFetch(`/api/video/url?taskId=${taskId}`);
+
+            if (!response.ok) {
+                if (response.status === 404) {
+                    console.warn(`Video not found for task: ${taskId}`);
+                    return null;
+                }
+                throw Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            return data.url;
+        } catch (error) {
+            console.error('Failed to get video URL:', error);
             return null;
         }
     }
