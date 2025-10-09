@@ -46,14 +46,15 @@ function SceneSequenceItem({
                 onClickSceneSequence(captionData.sceneNumber === 1 ? 0.00 : sceneStartSec);
             }}
         >
-            <div className="flex items-start justify-between">
-                <div className="flex flex-col space-y-3 flex-1 mr-4">
-                    {/* 시간 아래쪽으로 밀어주기 */}
-                    <div className="text-purple-300 text-lg font-medium">Scene #{captionData.sceneNumber}</div>
-                    <p className="text-white text-base leading-relaxed">
-                        {captionData.script}
-                    </p>
-                    <span className="text-purple-300 text-base">⏱ {sceneStartSec.toFixed(2)}s ~ {sceneEndSec.toFixed(2)}s</span>
+            <div className="flex items-stretch justify-between">
+                <div className="flex flex-1 flex-col justify-between mr-4">
+                    <div className="space-y-3">
+                        <div className="text-purple-300 text-lg font-medium">Scene #{captionData.sceneNumber}</div>
+                        <p className="text-white text-base leading-relaxed">
+                            {captionData.script}
+                        </p>
+                    </div>
+                    <span className="text-purple-300 text-base pt-3">⏱ {sceneStartSec.toFixed(2)}s ~ {sceneEndSec.toFixed(2)}s</span>
                 </div>
                 <div className="relative">
                     <div

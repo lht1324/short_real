@@ -1,150 +1,227 @@
 'use client'
 
-import {memo, useMemo, useRef, useState} from "react";
+import {memo, useCallback, useEffect, useRef, useState} from "react";
+import {MusicData} from "@/api/types/supabase/VideoGenerationTasks";
+import MusicItem from "@/components/page/workspace/editor/MusicItem";
 
 interface MusicPanelProps {
-
+    musicDataList: MusicData[];
+    videoDuration: number;
+    onOpenEditModal?: (musicIndex: number) => void;
 }
 
 function MusicPanel({
-
+    musicDataList,
+    videoDuration,
+    onOpenEditModal,
 }: MusicPanelProps) {
-    // 생성된 음악 사용하거나, 사용자가 올리는 방식으로 수정
-    const [musicStartSeconds, setMusicStartSeconds] = useState(45); // Start time in seconds
-    const musicStartInputRef = useRef<HTMLInputElement>(null);
+    // Audio 인스턴스는 ref로 관리
+    const audioRef = useRef<HTMLAudioElement | null>(null);
 
-    // Video duration in seconds (from project creation)
-    const videoDuration = 30;
+    // UI에 영향을 주는 값들만 state로 관리
+    const [selectedItemIndex, setSelectedItemIndex] = useState(0);
+    const [playingMusicIndex, setPlayingMusicIndex] = useState<number | null>(null);
+    const [isMusicPlaying, setIsMusicPlaying] = useState(false);
+    const [musicCurrentTime, setMusicCurrentTime] = useState(0);
+    const [musicProgress, setMusicProgress] = useState(0);
 
-    const backgroundMusic = useMemo(() => [
-        { id: 'ghost_arpeggios', title: 'Ghost Arpeggios', artist: 'Violin, Scary', duration: 180, isSelected: true },
-        { id: 'epic_adventure', title: 'Epic Adventure', artist: 'Orchestral, Heroic', duration: 240, isSelected: false },
-        { id: 'synthwave_nights', title: 'Synthwave Nights', artist: 'Electronic, Retro', duration: 200, isSelected: false },
-        { id: 'mysterious_forest', title: 'Mysterious Forest', artist: 'Ambient, Nature', duration: 160, isSelected: false },
-        { id: 'urban_beats', title: 'Urban Beats', artist: 'Hip Hop, Modern', duration: 190, isSelected: false },
-        { id: 'peaceful_morning', title: 'Peaceful Morning', artist: 'Piano, Calm', duration: 220, isSelected: false },
-        { id: 'space_odyssey', title: 'Space Odyssey', artist: 'Sci-Fi, Atmospheric', duration: 300, isSelected: false },
-        { id: 'comedy_sketch', title: 'Comedy Sketch', artist: 'Upbeat, Funny', duration: 150, isSelected: false }
-    ], []);
+    // 오디오 종료 핸들러
+    const handleAudioEnded = useCallback(() => {
+        setPlayingMusicIndex(null);
+        setIsMusicPlaying(false);
+        setMusicCurrentTime(0);
+        setMusicProgress(0);
+    }, []);
+
+    // 오디오 에러 핸들러
+    const handleAudioError = useCallback((error: Event) => {
+        console.error('Audio playback error:', error);
+        setPlayingMusicIndex(null);
+        setIsMusicPlaying(false);
+        setMusicCurrentTime(0);
+        setMusicProgress(0);
+    }, []);
+
+    // 타임 업데이트 핸들러
+    const handleTimeUpdate = useCallback(() => {
+        if (audioRef.current) {
+            const currentTime = audioRef.current.currentTime;
+            const duration = audioRef.current.duration;
+            setMusicCurrentTime(currentTime);
+            setMusicProgress(duration > 0 ? (currentTime / duration) * 100 : 0);
+        }
+    }, []);
+
+    // 오디오 이벤트 리스너 정리 함수
+    const cleanupAudio = useCallback(() => {
+        if (audioRef.current) {
+            audioRef.current.pause();
+            audioRef.current.currentTime = 0;
+            audioRef.current.removeEventListener('ended', handleAudioEnded);
+            audioRef.current.removeEventListener('error', handleAudioError);
+            audioRef.current.removeEventListener('timeupdate', handleTimeUpdate);
+            audioRef.current = null;
+        }
+        setIsMusicPlaying(false);
+        setMusicCurrentTime(0);
+        setMusicProgress(0);
+    }, [handleAudioEnded, handleAudioError, handleTimeUpdate]);
+
+    // 새로운 오디오 초기화
+    const initializeAudio = useCallback((audioUrl: string, musicIndex: number) => {
+        cleanupAudio();
+
+        const audio = new Audio(audioUrl);
+        audio.addEventListener('ended', handleAudioEnded);
+        audio.addEventListener('error', handleAudioError);
+        audio.addEventListener('timeupdate', handleTimeUpdate);
+
+        audioRef.current = audio;
+        setSelectedItemIndex(prevIndex => prevIndex != musicIndex ? musicIndex : prevIndex);
+        setPlayingMusicIndex(musicIndex);
+
+        audio.play()
+            .then(() => {
+                setIsMusicPlaying(true);
+            })
+            .catch((error) => {
+                console.error('Failed to play audio:', error);
+                cleanupAudio();
+                setPlayingMusicIndex(null);
+            });
+    }, [cleanupAudio, handleAudioEnded, handleAudioError, handleTimeUpdate]);
+
+    const onClickItem = useCallback((index: number) => {
+        setSelectedItemIndex(index);
+        
+        if (isMusicPlaying) {
+            cleanupAudio();
+        }
+    }, [isMusicPlaying, cleanupAudio]);
+
+    // 재생/일시정지 토글 핸들러
+    const onToggleMusicPlay = useCallback((musicIndex: number) => {
+        const targetMusicData = musicDataList[musicIndex];
+        if (!targetMusicData?.audioUrl) return;
+
+        // 1. 재생 중인 음악 없음 -> 새 음악 재생
+        if (playingMusicIndex === null) {
+            initializeAudio(targetMusicData.audioUrl, musicIndex);
+            return;
+        }
+
+        // 2-1. 같은 아이템 클릭 -> 일시정지/재개
+        if (playingMusicIndex === musicIndex) {
+            if (audioRef.current) {
+                if (isMusicPlaying) {
+                    audioRef.current.pause();
+                    setIsMusicPlaying(false);
+                } else {
+                    audioRef.current.play()
+                        .then(() => {
+                            setIsMusicPlaying(true);
+                        })
+                        .catch((error) => {
+                            console.error('Failed to resume audio:', error);
+                            cleanupAudio();
+                            setPlayingMusicIndex(null);
+                        });
+                }
+            }
+            return;
+        }
+
+        // 2-2. 다른 아이템 클릭 -> 기존 음악 정지 후 새 음악 재생
+        initializeAudio(targetMusicData.audioUrl, musicIndex);
+    }, [musicDataList, playingMusicIndex, isMusicPlaying, initializeAudio, cleanupAudio]);
+
+    const onSeekMusic = useCallback((musicIndex: number, timeInSeconds: number) => {
+        const targetMusicData = musicDataList[musicIndex];
+        if (!targetMusicData?.audioUrl) return;
+
+        // 1. 해당 음악이 재생 중인 경우 -> seek만 수행
+        if (playingMusicIndex === musicIndex && audioRef.current) {
+            audioRef.current.currentTime = timeInSeconds;
+
+            // 일시정지 상태면 재생
+            if (!isMusicPlaying) {
+                audioRef.current.play()
+                    .then(() => {
+                        setIsMusicPlaying(true);
+                    })
+                    .catch((error) => {
+                        console.error('Failed to resume audio:', error);
+                        cleanupAudio();
+                        setPlayingMusicIndex(null);
+                    });
+            }
+            return;
+        }
+
+        // 2. 다른 음악이거나 재생 중이 아닌 경우 -> 새로운 오디오 생성 후 seek
+        cleanupAudio();
+
+        const audio = new Audio(targetMusicData.audioUrl);
+        audio.addEventListener('ended', handleAudioEnded);
+        audio.addEventListener('error', handleAudioError);
+        audio.addEventListener('timeupdate', handleTimeUpdate);
+
+        audioRef.current = audio;
+        setSelectedItemIndex(prevIndex => prevIndex !== musicIndex ? musicIndex : prevIndex);
+        setPlayingMusicIndex(musicIndex);
+
+        // seek 후 재생
+        audio.currentTime = timeInSeconds;
+        audio.play()
+            .then(() => {
+                setIsMusicPlaying(true);
+            })
+            .catch((error) => {
+                console.error('Failed to play audio:', error);
+                cleanupAudio();
+                setPlayingMusicIndex(null);
+            });
+    }, [musicDataList, playingMusicIndex, isMusicPlaying, cleanupAudio, handleAudioEnded, handleAudioError, handleTimeUpdate]);
+
+    const onClickOpenEditModalForIndex = useCallback((index: number) => {
+        return () => {
+            onOpenEditModal?.(index);
+        };
+    }, [onOpenEditModal]);
+
+    // 컴포넌트 언마운트 시 오디오 정리
+    useEffect(() => {
+        return () => {
+            cleanupAudio();
+        };
+    }, [cleanupAudio]);
 
     return (
         <div className="p-4 space-y-4">
-            <div className="text-purple-300 text-2xl font-medium mb-4">Music</div>
-            {backgroundMusic.map((music) => (
-                <div
-                    key={music.id}
-                    className={`p-4 rounded-xl border transition-all cursor-pointer backdrop-blur-sm ${
-                        music.isSelected
-                            ? 'border-pink-500 bg-pink-500/10'
-                            : 'border-purple-500/20 bg-gray-800/30 hover:border-purple-400/40 hover:bg-gray-800/50'
-                    }`}
-                    onClick={() => console.log('Selected music:', music.id)}
-                >
-                    <div>
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center space-x-4">
-                                <div className="w-12 h-12 rounded-xl bg-indigo-500 flex items-center justify-center flex-shrink-0">
-                                    <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
-                                        <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>
-                                    </svg>
-                                </div>
-                                <div className="flex-1">
-                                    <p className="text-white text-base font-medium leading-tight">{music.title}</p>
-                                    <p className="text-gray-400 text-sm mt-1">{music.artist} • {Math.floor(music.duration/60)}:{(music.duration%60).toString().padStart(2, '0')}</p>
-                                </div>
-                            </div>
-                            <button
-                                className="p-2 rounded-full bg-gray-700/50 hover:bg-gray-600/50 transition-colors flex-shrink-0 ml-3"
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    console.log('Play music preview:', music.id);
-                                }}
-                            >
-                                <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
-                                    <path d="M8 5v14l11-7z"/>
-                                </svg>
-                            </button>
-                        </div>
-
-                        {/* Music Settings - Only show for selected music */}
-                        {music.isSelected && (
-                            <div className="mt-4 pt-3 border-t border-purple-500/20">
-                                <div className="space-y-4">
-                                    {/* Start Time Input */}
-                                    <div className="space-y-2">
-                                        <label className="text-white text-sm font-medium">Start Time</label>
-                                        <div className="flex items-center space-x-3">
-                                            <div className="flex items-center space-x-2">
-                                                <input
-                                                    ref={musicStartInputRef}
-                                                    type="number"
-                                                    min="0"
-                                                    max={music.duration - videoDuration}
-                                                    value={musicStartSeconds}
-                                                    onInput={(e) => {
-                                                        const input = e.target as HTMLInputElement;
-                                                        let inputValue = input.value;
-
-                                                        // Remove leading zeros except for just "0"
-                                                        if (inputValue.length > 1 && inputValue.startsWith('0')) {
-                                                            inputValue = inputValue.replace(/^0+/, '');
-                                                            if (inputValue === '') inputValue = '0';
-                                                            input.value = inputValue;
-                                                        }
-
-                                                        const numValue = parseInt(inputValue) || 0;
-                                                        setMusicStartSeconds(Math.max(0, Math.min(music.duration - videoDuration, numValue)));
-                                                    }}
-                                                    className="w-20 bg-gray-800/50 border border-purple-500/30 rounded-lg px-3 py-2 text-white text-sm focus:border-purple-400 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                                                />
-                                                <span className="text-gray-400 text-sm">seconds</span>
-                                            </div>
-                                            <span className="text-gray-400 text-sm">({Math.floor(musicStartSeconds / 60)}:{(musicStartSeconds % 60).toString().padStart(2, '0')})</span>
-                                        </div>
-                                        <div className="text-xs text-gray-500">
-                                            Used: {Math.floor(musicStartSeconds / 60)}:{(musicStartSeconds % 60).toString().padStart(2, '0')} - {Math.floor((musicStartSeconds + videoDuration) / 60)}:{((musicStartSeconds + videoDuration) % 60).toString().padStart(2, '0')}
-                                        </div>
-                                    </div>
-
-                                    {/* Timeline Visualization */}
-                                    <div className="space-y-2">
-                                        <div className="flex items-center justify-between text-xs text-gray-400">
-                                            <span>Timeline</span>
-                                            <span>Total: {Math.floor(music.duration/60)}:{(music.duration%60).toString().padStart(2, '0')}</span>
-                                        </div>
-
-                                        {/* Timeline Track */}
-                                        <div className="relative h-6 bg-gray-700/50 rounded-lg border border-gray-600">
-                                            {/* Timeline background */}
-                                            <div className="absolute inset-1 bg-gray-800 rounded-md"></div>
-
-                                            {/* Selected section rectangle (non-interactive) */}
-                                            <div
-                                                className="absolute top-1 h-4 bg-gradient-to-r from-pink-500 to-purple-600 rounded-md border border-purple-400/30"
-                                                style={{
-                                                    left: `${(musicStartSeconds / music.duration) * 100}%`,
-                                                    width: `${(videoDuration / music.duration) * 100}%`
-                                                }}
-                                            >
-                                                {/* Inner highlight */}
-                                                <div className="absolute inset-0.5 bg-white/10 rounded-sm"></div>
-                                            </div>
-                                        </div>
-
-                                        {/* Time markers */}
-                                        <div className="flex justify-between text-xs text-gray-500">
-                                            <span>0:00</span>
-                                            <span>{Math.floor(music.duration/60)}:{(music.duration%60).toString().padStart(2, '0')}</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-                    </div>
+            {musicDataList.length === 0 ? (
+                <div className="text-center text-gray-400 py-8">
+                    Musics were not generated.
                 </div>
-            ))}
+            ) : (
+                musicDataList.map((musicData, index) => {
+                    const isSelected = index === selectedItemIndex;
+
+                    return <MusicItem
+                        key={index}
+                        musicData={musicData}
+                        videoDuration={videoDuration}
+                        isSelected={isSelected}
+                        isPlaying={isSelected && isMusicPlaying}
+                        progress={isSelected ? musicProgress : 0}
+                        onClickItem={() => onClickItem(index)}
+                        onClickPlayButton={() => onToggleMusicPlay(index)}
+                        onClickOpenEditModal={onClickOpenEditModalForIndex(index)}
+                        onSeek={(timeInSeconds) => onSeekMusic(index, timeInSeconds)}
+                    />
+                })
+            )}
         </div>
-    )
+    );
 }
 
 export default memo(MusicPanel);

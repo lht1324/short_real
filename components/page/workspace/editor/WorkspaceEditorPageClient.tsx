@@ -8,11 +8,13 @@ import { Image as ImageIcon, Type, Music, RotateCcw, ChevronLeft } from 'lucide-
 import { fontMap, type FontName } from "@/lib/fonts";
 import FONT_FAMILY_LIST, {FontFamily} from "@/lib/FontFamilyList";
 import {videoClientAPI} from "@/api/client/videoClientAPI";
-import {SubtitleSegment} from "@/api/types/supabase/VideoGenerationTasks";
+import {MusicData, SubtitleSegment} from "@/api/types/supabase/VideoGenerationTasks";
 import SceneSequencePanel from "@/components/page/workspace/editor/SceneSequencePanel";
 import CaptionConfigPanel from "@/components/page/workspace/editor/CaptionConfigPanel";
 import VideoPlayerPanel, {VideoPlayerHandle} from "@/components/page/workspace/editor/VideoPlayerPanel";
 import MusicPanel from "@/components/page/workspace/editor/MusicPanel";
+import MusicEditModal from "@/components/page/workspace/editor/MusicEditModal";
+import {musicClientAPI} from "@/api/client/musicClientAPI";
 
 interface VideoData {
     title: string;
@@ -49,12 +51,13 @@ export interface CaptionConfigState {
     inactiveColor: string;
     activeOutlineColor: string;
     inactiveOutlineColor: string;
+    activeOutlineThickness: number; // 0-100 (maps to stroke width)
+    inactiveOutlineThickness: number; // 0-100 (maps to stroke width)
     activeOutlineEnabled: boolean;
     inactiveOutlineEnabled: boolean;
 }
 
-enum SidebarType {
-    Scene = 'scene',
+enum ConfigPanelType {
     Caption = 'caption',
     Music = 'music'
 }
@@ -80,8 +83,10 @@ const INITIAL_CAPTION_CONFIG_STATE: CaptionConfigState = {
     inactiveColor:'#A0A0A0',
     activeOutlineEnabled: false,
     activeOutlineColor:'#000000',
+    activeOutlineThickness: 50,
     inactiveOutlineEnabled:false,
     inactiveOutlineColor:'#404040',
+    inactiveOutlineThickness: 50,
 }
 
 function WorkspaceEditorPageClient() {
@@ -89,14 +94,11 @@ function WorkspaceEditorPageClient() {
     const searchParams = useSearchParams();
     const taskId = searchParams.get('taskId');
 
+    const headerRef = useRef<HTMLDivElement>(null);
     const videoPlayerRef = useRef<VideoPlayerHandle>(null);
 
-    const sidebarItems = useMemo(() => [
-        { id: SidebarType.Scene, icon: ImageIcon, name: 'Scene' },
-        { id: SidebarType.Caption, icon: Type, name: 'Caption' },
-        { id: SidebarType.Music, icon: Music, name: 'Music' }
-    ], []);
-    const [activeSidebar, setActiveSidebar] = useState<SidebarType>(SidebarType.Scene);
+    const [headerHeight, setHeaderHeight] = useState(0);
+    const [activeConfigPanel, setActiveConfigPanel] = useState<ConfigPanelType>(ConfigPanelType.Caption);
 
     const [isPublicDataLoading, setIsPublicDataLoading] = useState(true);
     const [isSceneSequencePanelLoading, setIsSceneSequencePanelLoading] = useState(true);
@@ -138,6 +140,19 @@ function WorkspaceEditorPageClient() {
         });
     }, [captionDataList, videoCurrentTime]);
 
+    const [musicDataList, setMusicDataList] = useState<MusicData[]>([]);
+    const videoDuration = useMemo(() => {
+        return captionDataList.length > 0
+            ? captionDataList[captionDataList.length - 1].endSec
+            : 0
+    }, [captionDataList]);
+
+    const [isMusicEditModalOpen, setIsMusicEditModalOpen] = useState(false);
+    const [editingMusicIndex, setEditingMusicIndex] = useState<number | null>(null);
+    const editingMusicData = useMemo(() => {
+        return editingMusicIndex !== null ? musicDataList[editingMusicIndex] : null;
+    }, [editingMusicIndex, musicDataList]);
+
     const onClickSceneSequence = useCallback((sceneStartSec: number) => {
         videoPlayerRef.current?.seekTo(sceneStartSec);
         setVideoCurrentTime(sceneStartSec);
@@ -167,6 +182,21 @@ function WorkspaceEditorPageClient() {
         console.log('Exporting video...');
         // Download or redirect logic
     }, []);
+
+    const onOpenMusicEditModal = useCallback((musicIndex: number) => {
+        setEditingMusicIndex(musicIndex);
+        setIsMusicEditModalOpen(true);
+    }, []);
+
+    const onCloseMusicEditModal = useCallback(() => {
+        setIsMusicEditModalOpen(false);
+        setEditingMusicIndex(null);
+    }, []);
+
+    const onSaveMusicEdit = useCallback((startTime: number, volume: number) => {
+        console.log('Save music edit:', { musicIndex: editingMusicIndex, startTime, volume });
+        // TODO: 음악 설정 저장 로직
+    }, [editingMusicIndex]);
 
     useEffect(() => {
         if (taskId) {
@@ -213,6 +243,15 @@ function WorkspaceEditorPageClient() {
                         videoUrl: taskVideoUrl,
                         captionDataList: captionDataList,
                     });
+
+
+                    const musicDataList = await musicClientAPI.getMusicData(taskId);
+
+                    if (!musicDataList) {
+                        throw new Error(`Failed to load music data for task: ${taskId}`);
+                    }
+
+                    setMusicDataList(musicDataList);
                 }
 
                 loadData().then(() => {
@@ -227,13 +266,18 @@ function WorkspaceEditorPageClient() {
     }, [router, taskId]);
 
     useEffect(() => {
-        console.log("videoCurrentTime", videoCurrentTime);
-    }, [videoCurrentTime]);
+        if (headerRef.current) {
+            setHeaderHeight(headerRef.current.offsetHeight);
+        }
+    }, []);
 
     return (
         <div className="min-h-screen bg-black text-white">
             {/* Top Header */}
-            <div className="flex items-center justify-between py-4 border-b border-purple-500/20 bg-gray-900/50 backdrop-blur-sm">
+            <div
+                ref={headerRef}
+                className="flex items-center justify-between py-4 border-b border-purple-500/20 bg-gray-900/50 backdrop-blur-sm"
+            >
                 <div className="flex items-center pl-3">
                     <Link 
                         href="/workspace/dashboard"
@@ -280,62 +324,85 @@ function WorkspaceEditorPageClient() {
                 </div>
             </div>
 
-            <div className="flex h-[calc(100vh-73px)]">
-                {/* Left Sidebar */}
-                <div className="w-20 bg-gray-900/50 backdrop-blur-sm border-r border-purple-500/20 flex flex-col items-center py-4 space-y-4">
-                    {sidebarItems.map((item) => {
-                        const IconComponent = item.icon;
-                        return (
-                            <button
-                                key={item.id}
-                                onClick={() => setActiveSidebar(item.id)}
-                                className={`w-16 h-16 rounded-lg flex flex-col items-center justify-center transition-all border ${
-                                    activeSidebar === item.id 
-                                        ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white border-purple-400/50 shadow-lg' 
-                                        : 'text-gray-400 hover:text-pink-400 hover:bg-gray-800/50 border-transparent hover:border-purple-500/30'
-                                }`}
-                                title={item.name}
-                            >
-                                <IconComponent size={24} />
-                                <span className="text-sm mt-1 leading-tight">{item.name}</span>
-                            </button>
-                        );
-                    })}
-                </div>
-
+            <div
+                className="flex"
+                style={{ height: headerHeight > 0 ? `calc(100vh - ${headerHeight}px)` : '100vh' }}
+            >
                 {/* Sequences Panel */}
-                {taskId && <div className="flex-1 bg-gray-900/30 backdrop-blur-sm border-r border-purple-500/20 overflow-y-auto">
-                    {activeSidebar === SidebarType.Scene && (<SceneSequencePanel
+                {taskId && <div className="flex-[0.24] h-full px-3 bg-gray-900/30 backdrop-blur-sm border-r border-purple-500/20 overflow-y-auto">
+                    <SceneSequencePanel
                         taskId={taskId}
                         captionDataList={captionDataList}
                         currentSceneIndex={currentSceneIndex}
                         onClickSceneSequence={onClickSceneSequence}
                         onFinishLoading={onFinishSceneSequencePanelLoading}
-                    />)}
-
-                    {activeSidebar === SidebarType.Caption && (<CaptionConfigPanel
-                        captionConfigState={captionConfigState}
-                        fontFamilyNameList={fontFamilyList.map(font => font.name)}
-                        selectedFontFamilyWeightList={selectedFontFamilyWeightList}
-                        selectedFontFamilyFullShape={selectedFontFamilyFullShape}
-                        onChangeCaptionConfigState={onChangeCaptionConfigState}
-                    />)}
-
-                    {activeSidebar === SidebarType.Music && (<MusicPanel/>)}
+                    />
                 </div>}
 
+                {/* Config Panel */}
+                <div className="flex-[0.26] h-full bg-gray-900/30 backdrop-blur-sm border-r border-purple-500/20 flex flex-col">
+                    {/* Tab Navigation */}
+                    <div className="flex items-end px-4 pt-4">
+                        <button
+                            onClick={() => setActiveConfigPanel(ConfigPanelType.Caption)}
+                            className={`px-6 py-2 text-xl font-medium rounded-t-lg border-t border-l border-r transition-all relative ${
+                                activeConfigPanel === ConfigPanelType.Caption
+                                    ? 'text-purple-300 border-purple-400/50 bg-gray-900/30 -mb-px z-10'
+                                    : 'text-gray-400 border-transparent bg-gray-800/30 hover:text-purple-200 hover:border-purple-500/30'
+                            }`}
+                        >
+                            Caption
+                        </button>
+                        <button
+                            onClick={() => setActiveConfigPanel(ConfigPanelType.Music)}
+                            className={`px-6 py-2 text-xl font-medium rounded-t-lg border-t border-l border-r transition-all relative ${
+                                activeConfigPanel === ConfigPanelType.Music
+                                    ? 'text-purple-300 border-purple-400/50 bg-gray-900/30 -mb-px z-10'
+                                    : 'text-gray-400 border-transparent bg-gray-800/30 hover:text-purple-200 hover:border-purple-500/30'
+                            }`}
+                        >
+                            Music
+                        </button>
+                    </div>
+
+                    {/* Tab Border Line */}
+                    <div className="border-t border-purple-400/50 mx-4"></div>
+
+                    {/* Panel Content */}
+                    <div className="flex-1 px-3 overflow-y-auto">
+                        {activeConfigPanel === ConfigPanelType.Caption && (
+                            <CaptionConfigPanel
+                                captionConfigState={captionConfigState}
+                                fontFamilyNameList={fontFamilyList.map(font => font.name)}
+                                selectedFontFamilyWeightList={selectedFontFamilyWeightList}
+                                selectedFontFamilyFullShape={selectedFontFamilyFullShape}
+                                onChangeCaptionConfigState={onChangeCaptionConfigState}
+                            />
+                        )}
+                        {activeConfigPanel === ConfigPanelType.Music && (
+                            <MusicPanel
+                                musicDataList={musicDataList}
+                                videoDuration={videoDuration}
+                                onOpenEditModal={onOpenMusicEditModal}
+                            />
+                        )}
+                    </div>
+                </div>
+
                 {/* Video Player */}
-                {videoData && <VideoPlayerPanel
-                    ref={videoPlayerRef}
-                    videoUrl={videoData.videoUrl}
-                    currentTime={videoCurrentTime}
-                    captionDataList={captionDataList}
-                    captionConfigState={captionConfigState}
-                    selectedFontFamilyFullShape={selectedFontFamilyFullShape}
-                    onChangeCaptionConfigState={onChangeCaptionConfigState}
-                    onChangeCurrentTime={onChangeVideoCurrentTime}
-                    onFinishLoading={onFinishVideoPlayerPanelLoading}
-                />}
+                {videoData && <div className="flex-[0.50] h-full">
+                    <VideoPlayerPanel
+                        ref={videoPlayerRef}
+                        videoUrl={videoData.videoUrl}
+                        currentTime={videoCurrentTime}
+                        captionDataList={captionDataList}
+                        captionConfigState={captionConfigState}
+                        selectedFontFamilyFullShape={selectedFontFamilyFullShape}
+                        onChangeCaptionConfigState={onChangeCaptionConfigState}
+                        onChangeCurrentTime={onChangeVideoCurrentTime}
+                        onFinishLoading={onFinishVideoPlayerPanelLoading}
+                    />
+                </div>}
             </div>
             {/* Loading Overlay */}
             {isLoading && (<div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50">
@@ -344,6 +411,17 @@ function WorkspaceEditorPageClient() {
                     <p className="text-gray-400">Loading your pure video...</p>
                 </div>
             </div>)}
+
+            {/* Music Edit Modal */}
+            {editingMusicData && (
+                <MusicEditModal
+                    musicData={editingMusicData}
+                    videoDuration={videoDuration}
+                    isOpen={isMusicEditModalOpen}
+                    onClose={onCloseMusicEditModal}
+                    onSave={onSaveMusicEdit}
+                />
+            )}
         </div>
     )
 }

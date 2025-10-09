@@ -3,10 +3,6 @@
 import {memo, useCallback, useEffect, useMemo, useRef, useState, MouseEvent, ChangeEvent, forwardRef, useImperativeHandle} from "react";
 import {Eye, EyeOff, Play, Pause, RotateCcw} from "lucide-react";
 import {CaptionConfigState, CaptionData} from "@/components/page/workspace/editor/WorkspaceEditorPageClient";
-import {SubtitleSegment} from "@/api/types/supabase/VideoGenerationTasks";
-
-const VIDEO_WIDTH = 36 * 9;
-const VIDEO_HEIGHT = VIDEO_WIDTH / 9 * 16;
 
 interface PairedSegment {
     word: string;
@@ -49,17 +45,15 @@ const VideoPlayerPanel = forwardRef<VideoPlayerHandle, VideoPlayerPanelProps>(({
 
     const [isPlayingVideo, setIsPlayingVideo] = useState<boolean>(false);
     const [isVideoEnded, setIsVideoEnded] = useState(false);
-    // const [currentTime, setCurrentTime] = useState(0);
     const [videoDuration, setVideoDuration] = useState(0);
     const [isDraggingTimeline, setIsDraggingTimeline] = useState(false);
+    const [videoContainerWidth, setVideoContainerWidth] = useState<number>(324); // 16/9
+    const [videoContainerHeight, setVideoContainerHeight] = useState<number>(576); // 16/9
 
     // Font settings state
     const fontSize = useMemo(() => {
         return captionConfigState.fontSize;
     }, [captionConfigState.fontSize]);
-    const fontWeight = useMemo(() => {
-        return captionConfigState.fontWeight;
-    }, [captionConfigState.fontWeight]);
 
     // Caption settings state
     const captionPosition = useMemo(() => {
@@ -75,17 +69,74 @@ const VideoPlayerPanel = forwardRef<VideoPlayerHandle, VideoPlayerPanelProps>(({
     const [captionLineCount, setCaptionLineCount] = useState<1 | 2>(1);
     // 두 줄 텍스트 높이 계산
     const twoLineTextHeight = useMemo(() => {
-        const totalPadding = 8; // py-1 (위아래 4px씩)
-
         return captionLineCount === 2
             ? captionHeight
-            : captionHeight * 2 - totalPadding;
+            : captionHeight * 2;
     }, [captionHeight, captionLineCount]);
 
-    const sliderHeight = useMemo(() => {
-        return VIDEO_HEIGHT - twoLineTextHeight;
+    const captionAreaHeight = useMemo(() => {
+        const lineAreaHeight = 24;
+
+        return lineAreaHeight + twoLineTextHeight + lineAreaHeight;
     }, [twoLineTextHeight]);
+
+    const captionAreaTop = useMemo(() => {
+        return (captionConfigState.captionPosition / 100) * (videoContainerHeight - captionAreaHeight);
+    }, [captionConfigState.captionPosition, videoContainerHeight, captionAreaHeight]);
+
+    const sliderHeight = useMemo(() => {
+        return videoContainerHeight - captionAreaHeight;
+    }, [videoContainerHeight, captionAreaHeight]);
     const prevSliderHeightRef = useRef(sliderHeight);
+
+    const captionStyle = useMemo(() => {
+        return {
+            fontFamily: selectedFontFamilyFullShape,
+            fontSize: `${captionConfigState.fontSize * 0.7}px`,
+            fontWeight: captionConfigState.fontWeight,
+            textShadow: captionConfigState.isShadowEnabled
+                ? `2px 2px ${(captionConfigState.shadowThickness / 100) * 8}px rgba(0,0,0,${captionConfigState.shadowIntensity / 100})`
+                : 'none'
+        }
+    }, [
+        selectedFontFamilyFullShape,
+        captionConfigState.fontSize,
+        captionConfigState.fontWeight,
+        captionConfigState.isShadowEnabled,
+        captionConfigState.shadowThickness,
+        captionConfigState.shadowIntensity,
+    ]);
+
+    const getPairedCaptionStyle = useCallback((isActive: boolean) => {
+        const activeColor = captionConfigState.activeColor;
+        const inactiveColor = captionConfigState.inactiveColor;
+        const activeOutlineEnabled = captionConfigState.activeOutlineEnabled;
+        const inactiveOutlineEnabled = captionConfigState.inactiveOutlineEnabled;
+        const activeOutlineColor = captionConfigState.activeOutlineColor;
+        const inactiveOutlineColor = captionConfigState.inactiveOutlineColor;
+        const activeOutlineThickness = captionConfigState.activeOutlineThickness;
+        const inactiveOutlineThickness = captionConfigState.inactiveOutlineThickness;
+
+        return {
+            color: isActive ? activeColor : inactiveColor,
+            WebkitTextStroke: isActive
+                ? activeOutlineEnabled
+                    ? `${(activeOutlineThickness / 100) * 4}px ${activeOutlineColor}`
+                    : '0px transparent'
+                : inactiveOutlineEnabled
+                    ? `${(inactiveOutlineThickness / 100) * 4}px ${inactiveOutlineColor}`
+                    : '0px transparent',
+        }
+    }, [
+        captionConfigState.activeColor,
+        captionConfigState.inactiveColor,
+        captionConfigState.activeOutlineEnabled,
+        captionConfigState.inactiveOutlineEnabled,
+        captionConfigState.activeOutlineColor,
+        captionConfigState.inactiveOutlineColor,
+        captionConfigState.activeOutlineThickness,
+        captionConfigState.inactiveOutlineThickness
+    ]);
 
     const currentPairedSegmentDataList = useMemo(() => {
         const currentSceneCaption = currentTime < captionDataList[0]?.startSec
@@ -134,46 +185,6 @@ const VideoPlayerPanel = forwardRef<VideoPlayerHandle, VideoPlayerPanelProps>(({
         }) ?? null;
     }, [currentPairedSegmentDataList]);
 
-    const captionActualTop = useMemo(() => {
-        // Calculate actual top position based on available slider range
-        const paddingTop = 16; // px
-        const availableHeight = VIDEO_HEIGHT - twoLineTextHeight - paddingTop;
-        const actualTopPx = (captionPosition / 100) * availableHeight;
-
-        return (actualTopPx / VIDEO_HEIGHT) * 100;
-    }, [twoLineTextHeight, captionPosition]);
-
-    // Shadow settings state
-    const isShadowEnabled = useMemo(() => {
-        return captionConfigState.isShadowEnabled;
-    }, [captionConfigState.isShadowEnabled]);
-    const shadowIntensity = useMemo(() => {
-        return captionConfigState.shadowIntensity;
-    }, [captionConfigState.shadowIntensity]);
-    const shadowThickness = useMemo(() => {
-        return captionConfigState.shadowThickness;
-    }, [captionConfigState.shadowThickness]);
-
-    // Color settings state
-    const activeColor = useMemo(() => {
-        return captionConfigState.activeColor;
-    }, [captionConfigState.activeColor]);
-    const inactiveColor = useMemo(() => {
-        return captionConfigState.inactiveColor;
-    }, [captionConfigState.inactiveColor]);
-    const activeOutlineColor = useMemo(() => {
-        return captionConfigState.activeOutlineColor;
-    }, [captionConfigState.activeOutlineColor]);
-    const inactiveOutlineColor = useMemo(() => {
-        return captionConfigState.inactiveOutlineColor;
-    }, [captionConfigState.inactiveOutlineColor]);
-    const activeOutlineEnabled = useMemo(() => {
-        return captionConfigState.activeOutlineEnabled;
-    }, [captionConfigState.activeOutlineEnabled]);
-    const inactiveOutlineEnabled = useMemo(() => {
-        return captionConfigState.inactiveOutlineEnabled;
-    }, [captionConfigState.inactiveOutlineEnabled]);
-
     const onChangeCaptionPosition = useCallback((newCaptionPosition: number) => {
         if (captionConfigState.captionPosition !== newCaptionPosition) {
             onChangeCaptionConfigState({
@@ -214,13 +225,13 @@ const VideoPlayerPanel = forwardRef<VideoPlayerHandle, VideoPlayerPanelProps>(({
         return `${mins}:${secs.toString().padStart(2, '0')}`;
     }, []);
 
-    const onClickPlayAndPause = useCallback(() => {
+    const onClickPlayAndPause = useCallback(async () => {
         if (!videoRef.current) return;
 
         if (isPlayingVideo) {
             videoRef.current.pause();
         } else {
-            videoRef.current.play();
+            await videoRef.current.play();
         }
         setIsPlayingVideo(prev => !prev);
     }, [isPlayingVideo]);
@@ -228,6 +239,21 @@ const VideoPlayerPanel = forwardRef<VideoPlayerHandle, VideoPlayerPanelProps>(({
     const onLoadedMetadata = useCallback(() => {
         if (videoRef.current) {
             setVideoDuration(videoRef.current.duration);
+
+            // 비디오의 실제 크기를 가져와서 324px 너비 기준으로 높이 계산
+            const videoNaturalWidth = videoRef.current.videoWidth;
+            const videoNaturalHeight = videoRef.current.videoHeight;
+
+            if (videoNaturalWidth > 0 && videoNaturalHeight > 0) {
+                const standardWidth = videoNaturalWidth > videoNaturalHeight
+                    ? 576 // horizontal
+                    : 324 // vertical or square
+
+                // const containerWidth = 324;
+                const calculatedHeight = Math.round((videoNaturalHeight / videoNaturalWidth) * standardWidth);
+                setVideoContainerWidth(standardWidth);
+                setVideoContainerHeight(calculatedHeight);
+            }
         }
         onFinishLoading();
     }, [onFinishLoading]);
@@ -266,7 +292,6 @@ const VideoPlayerPanel = forwardRef<VideoPlayerHandle, VideoPlayerPanelProps>(({
         if (!videoRef.current) return;
 
         videoRef.current.currentTime = 0;
-        // setCurrentTime(0);
         onChangeCurrentTime(0);
         setIsVideoEnded(false);
         await videoRef.current.play();
@@ -333,7 +358,7 @@ const VideoPlayerPanel = forwardRef<VideoPlayerHandle, VideoPlayerPanelProps>(({
     useEffect(() => {
         // Calculate current handle position in pixels
         if (prevSliderHeightRef.current !== sliderHeight) {
-            const maxSliderPercentage = (sliderHeight / VIDEO_HEIGHT) * 100;
+            const maxSliderPercentage = (sliderHeight / videoContainerHeight) * 100;
 
             if (captionPosition > maxSliderPercentage) {
                 onChangeCaptionPosition(100);
@@ -341,7 +366,7 @@ const VideoPlayerPanel = forwardRef<VideoPlayerHandle, VideoPlayerPanelProps>(({
 
             prevSliderHeightRef.current = sliderHeight;
         }
-    }, [captionPosition, onChangeCaptionPosition, sliderHeight]);
+    }, [captionPosition, onChangeCaptionPosition, sliderHeight, videoContainerHeight]);
 
     useEffect(() => {
         if (!isDraggingTimeline) return;
@@ -403,7 +428,10 @@ const VideoPlayerPanel = forwardRef<VideoPlayerHandle, VideoPlayerPanelProps>(({
     }, [isPlayingVideo, onChangeCurrentTime]);
 
     return (
-        <div className="flex-1 bg-black flex flex-col relative" style={{ pointerEvents: isDraggingTimeline ? 'none' : 'auto' }}>
+        <div
+            className="h-full bg-black flex flex-col relative"
+            style={{ pointerEvents: isDraggingTimeline ? 'none' : 'auto' }}
+        >
             {/* Vaporwave Background Effects */}
             <div className="absolute inset-0 opacity-10" style={{ pointerEvents: 'none' }}>
                 <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-gradient-to-r from-pink-500 to-purple-600 rounded-full blur-3xl"></div>
@@ -413,53 +441,53 @@ const VideoPlayerPanel = forwardRef<VideoPlayerHandle, VideoPlayerPanelProps>(({
 
             <div className="flex-1 flex items-center justify-center p-8 relative z-10">
                 <div className="flex items-start space-x-6 relative">
-                    {fontSize > 0 && (
-                        <div
-                            className="absolute flex flex-col"
-                            style={{
-                                top: `${16 + (captionPosition / 100) * (VIDEO_HEIGHT - twoLineTextHeight - 16)}px`,
-                                left: '-24px',
-                                right: '-20px',
-                            }}
-                        >
-                            {/* Row: 버튼 + 윗줄 */}
-                            <div className="flex flex-row items-center w-full relative">
-                                {/* Caption Position Toggle Button */}
-                                <button
-                                    onClick={onToggleShowCaptionLine}
-                                    className="flex-shrink-0 z-30 p-1 rounded-full bg-gray-800/50 hover:bg-gray-700/70 border border-gray-600/50 transition-all mr-2"
-                                    title={showCaptionLine ? "Hide caption guideline" : "Show caption guideline"}
-                                >
-                                    {showCaptionLine ? (
-                                        <Eye size={12} className="text-gray-300" />
-                                    ) : (
-                                        <EyeOff size={12} className="text-gray-500" />
-                                    )}
-                                </button>
-
-                                {/* Caption Position Line (첫 줄) */}
-                                {showCaptionLine && (
-                                    <div className="flex-1 border-t-2 border-dashed border-gray-300/80 z-20"></div>
+                    {fontSize > 0 && <div
+                        className="absolute flex flex-col z-20"
+                        style={{
+                            top: `${captionAreaTop}px`,
+                            left: '-24px',
+                            right: '-20px',
+                            height: 'fit-content',
+                        }}
+                    >
+                        {/* Row: 버튼 + 윗줄 */}
+                        <div className="flex flex-row items-center w-full relative">
+                            {/* Caption Position Toggle Button */}
+                            <button
+                                onClick={onToggleShowCaptionLine}
+                                className="flex-shrink-0 z-30 p-[5px] rounded-full bg-gray-800/50 hover:bg-gray-700/70 border border-gray-600/50 transition-all mr-2"
+                                title={showCaptionLine ? "Hide caption guideline" : "Show caption guideline"}
+                            >
+                                {showCaptionLine ? (
+                                    <Eye size={12} className="text-gray-300" />
+                                ) : (
+                                    <EyeOff size={12} className="text-gray-500" />
                                 )}
-                            </div>
+                            </button>
 
-                            {/* 두 줄 텍스트 영역 표시선 */}
+                            {/* Caption Position Line (첫 줄) */}
                             {showCaptionLine && (
-                                <div
-                                    className="border-t-2 border-dashed border-gray-300/50 z-20"
-                                    style={{
-                                        position: 'absolute',
-                                        top: `${twoLineTextHeight}px`,
-                                        left: '30px',
-                                        right: 0,
-                                    }}
-                                ></div>
+                                <div className="flex-1 border-t-2 border-dashed border-gray-300/80"/>
                             )}
                         </div>
-                    )}
+                        <div style={{ height: `${twoLineTextHeight}px` }} />
+                        {/* 두 줄 텍스트 영역 표시선 */}
+                        {showCaptionLine && <div className="pt-[11px] pb-[11px]">
+                            <div
+                                className="border-t-2 border-dashed border-gray-300/50"
+                                style={{
+                                    // Eye + Eye's margin right
+                                    marginLeft: `${22 + 8}px`,
+                                }}
+                            />
+                        </div>}
+                    </div>}
 
                     {/* Caption Position Slider */}
-                    <div className={`relative`} style={{ height: `${sliderHeight}px` }}>
+                    <div
+                        className={`relative`}
+                        style={{ height: `${sliderHeight}px` }}
+                    >
                         <input
                             type="range"
                             min="0"
@@ -485,15 +513,20 @@ const VideoPlayerPanel = forwardRef<VideoPlayerHandle, VideoPlayerPanelProps>(({
                     </div>
 
                     <div
-                        className="w-[324px] mt-5 bg-gradient-to-br from-gray-900 to-black rounded-2xl border border-purple-500/30 overflow-hidden shadow-2xl relative"
-                        style={{ aspectRatio: '9/16' }}
+                        className="relative bg-gradient-to-br from-gray-900 to-black rounded-2xl border border-purple-500/30 overflow-hidden shadow-2xl"
+                        style={{
+                            width: `${videoContainerWidth}px`,
+                            height: `${videoContainerHeight}px`
+                            // aspectRatio: '9/16'
+                        }}
                     >
                         {videoUrl ? (
-                            <div className="w-full h-full flex items-center justify-center relative">
+                            <div className="relative w-full h-full flex items-center justify-center">
                                 <video
                                     ref={videoRef}
                                     src={videoUrl}
                                     className="w-full h-full object-contain"
+                                    style={{ willChange: 'transform' }}
                                     onLoadedMetadata={onLoadedMetadata}
                                     onEnded={onVideoEnded}
                                 />
@@ -503,29 +536,20 @@ const VideoPlayerPanel = forwardRef<VideoPlayerHandle, VideoPlayerPanelProps>(({
                                 {currentPairedSegmentData && fontSize > 0 && (
                                     <div
                                         className="absolute left-4 right-4 z-20"
-                                        style={{ top: `${captionActualTop}%` }}
+                                        style={{
+                                            // Eye button size
+                                            top: `${captionAreaTop + 24}px`
+                                        }}
                                     >
                                         <p
                                             ref={setCaptionRef}
-                                            className="text-center leading-tight px-2 py-1 cursor-default"
-                                            style={{
-                                                fontFamily: selectedFontFamilyFullShape,
-                                                fontSize: `${fontSize * 0.7}px`,
-                                                fontWeight: fontWeight,
-                                                textShadow: isShadowEnabled
-                                                    ? `2px 2px ${(shadowThickness / 100) * 8}px rgba(0,0,0,${shadowIntensity / 100})`
-                                                    : 'none'
-                                            }}
+                                            className="text-center leading-tight px-2 cursor-default"
+                                            style={captionStyle}
                                         >
                                             {currentPairedSegmentData.map((pairedSegmentData, index) => {
                                                 return <span
                                                     key={index}
-                                                    style={{
-                                                        color: pairedSegmentData.isActive ? activeColor : inactiveColor,
-                                                        WebkitTextStroke: pairedSegmentData.isActive
-                                                            ? (activeOutlineEnabled ? `1px ${activeOutlineColor}` : '0px transparent')
-                                                            : (inactiveOutlineEnabled ? `1px ${inactiveOutlineColor}` : '0px transparent'),
-                                                    }}
+                                                    style={getPairedCaptionStyle(pairedSegmentData.isActive)}
                                                 >
                                                     {pairedSegmentData.word}{(index + 1) % 2 === 1 ? ' ' : ''}
                                                 </span>
@@ -547,7 +571,7 @@ const VideoPlayerPanel = forwardRef<VideoPlayerHandle, VideoPlayerPanelProps>(({
                                         )}
                                     </button>
                                 </div>
-                                <div className="absolute bottom-4 left-4 right-4">
+                                <div className="absolute bottom-4 left-4 right-4 z-30">
                                     <div className="flex items-center justify-between text-white text-sm mb-2">
                                         <span>{timelineCurrentSec}</span>
                                         <span>{timelineEndSec}</span>
@@ -562,16 +586,15 @@ const VideoPlayerPanel = forwardRef<VideoPlayerHandle, VideoPlayerPanelProps>(({
                                         <div
                                             className="h-full bg-gradient-to-r from-pink-400 to-purple-500 rounded-full relative"
                                             style={{
-                                                // video timeline 전용 currentTIme 추가?
                                                 width: `${progressPercentage}%`,
                                                 transition: 'none',
                                             }}
                                         >
                                             {/* 인디케이터 */}
                                             <div
-                                                className="absolute right-0 top-1/2 -translate-y-1/2 w-4 h-4 bg-white rounded-full shadow-lg"
+                                                className="absolute top-1/2 left-full w-4 h-4 bg-white rounded-full shadow-lg"
                                                 style={{
-                                                    transform: 'translateY(-50%)',
+                                                    transform: 'translate(-50%, -50%)',
                                                     boxShadow: '0 0 8px rgba(168, 85, 247, 0.6)'
                                                 }}
                                             ></div>

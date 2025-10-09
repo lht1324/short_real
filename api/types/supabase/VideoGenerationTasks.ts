@@ -14,6 +14,7 @@ export interface VideoGenerationTask {
     master_style_negative_prompt?: string;
     video_main_subject?: string;
     processed_scene_count?: number;
+    music_data_list?: MusicData[];
     selected_music_id?: string; // varchar(100), nullable
     selected_style_id?: string; // varchar(100), nullable
     selected_voice_id?: string; // varchar(100), nullable
@@ -72,4 +73,12 @@ export enum SceneGenerationStatus {
     COMPLETED = 'completed',
     PROCESSED = 'processed',
     FAILED = 'failed'
+}
+
+export interface MusicData {
+    title: string;
+    tagList: string[];
+    audioUrl?: string;
+    imageUrl?: string;
+    duration: number; // sec
 }
