@@ -4,7 +4,7 @@ import {memo, useCallback, useEffect, useMemo, useRef, useState} from "react";
 import Link from "next/link";
 import Image from "next/image";
 import {useRouter, useSearchParams} from 'next/navigation';
-import { Image as ImageIcon, Type, Music, RotateCcw, ChevronLeft } from 'lucide-react';
+import { RotateCcw, ChevronLeft } from 'lucide-react';
 import { fontMap, type FontName } from "@/lib/fonts";
 import FONT_FAMILY_LIST, {FontFamily} from "@/lib/FontFamilyList";
 import {videoClientAPI} from "@/api/client/videoClientAPI";
@@ -13,7 +13,7 @@ import SceneSequencePanel from "@/components/page/workspace/editor/SceneSequence
 import CaptionConfigPanel from "@/components/page/workspace/editor/CaptionConfigPanel";
 import VideoPlayerPanel, {VideoPlayerHandle} from "@/components/page/workspace/editor/VideoPlayerPanel";
 import MusicPanel from "@/components/page/workspace/editor/MusicPanel";
-import MusicEditModal from "@/components/page/workspace/editor/MusicEditModal";
+import MusicEditPanel from "@/components/page/workspace/editor/MusicEditPanel";
 import {musicClientAPI} from "@/api/client/musicClientAPI";
 
 interface VideoData {
@@ -57,6 +57,13 @@ export interface CaptionConfigState {
     inactiveOutlineEnabled: boolean;
 }
 
+export interface MusicPlayConfig {
+    audioUrl?: string;
+    startSec: number;
+    duration :number;
+    volume: number
+}
+
 enum ConfigPanelType {
     Caption = 'caption',
     Music = 'music'
@@ -98,11 +105,18 @@ function WorkspaceEditorPageClient() {
     const videoPlayerRef = useRef<VideoPlayerHandle>(null);
 
     const [headerHeight, setHeaderHeight] = useState(0);
+    const [videoPanelHeight, setVideoPanelHeight] = useState(0);
     const [activeConfigPanel, setActiveConfigPanel] = useState<ConfigPanelType>(ConfigPanelType.Caption);
 
     const [isPublicDataLoading, setIsPublicDataLoading] = useState(true);
     const [isSceneSequencePanelLoading, setIsSceneSequencePanelLoading] = useState(true);
     const [isVideoPlayerPanelLoading, setIsVideoPlayerPanelLoading] = useState(true);
+
+    const musicEditPanelHeight = useMemo(() => {
+        return headerHeight !== 0 && videoPanelHeight !== 0
+            ? window.innerHeight - (headerHeight + videoPanelHeight)
+            : 0;
+    }, [headerHeight, videoPanelHeight]);
 
     const isLoading = useMemo(() => {
         return isPublicDataLoading || isSceneSequencePanelLoading || isVideoPlayerPanelLoading;
@@ -147,15 +161,31 @@ function WorkspaceEditorPageClient() {
             : 0
     }, [captionDataList]);
 
-    const [isMusicEditModalOpen, setIsMusicEditModalOpen] = useState(false);
-    const [editingMusicIndex, setEditingMusicIndex] = useState<number | null>(null);
+    const [editingMusicIndex, setEditingMusicIndex] = useState<number>(0);
     const editingMusicData = useMemo(() => {
-        return editingMusicIndex !== null ? musicDataList[editingMusicIndex] : null;
-    }, [editingMusicIndex, musicDataList]);
+        return musicDataList.length !== 0
+            ? musicDataList[editingMusicIndex]
+            : null;
+    }, [musicDataList, editingMusicIndex]);
+
+    const [musicStartSec, setMusicStartSec] = useState<number>(0);
+    const [musicVolume, setMusicVolume] = useState<number>(0);
+    const musicPlayConfig: MusicPlayConfig | null = useMemo(() => {
+        return editingMusicData ? {
+            audioUrl: editingMusicData.audioUrl,
+            startSec: musicStartSec,
+            duration: videoDuration,
+            volume: musicVolume,
+        } : null;
+    }, [editingMusicData, musicStartSec, videoDuration, musicVolume]);
 
     const onClickSceneSequence = useCallback((sceneStartSec: number) => {
         videoPlayerRef.current?.seekTo(sceneStartSec);
         setVideoCurrentTime(sceneStartSec);
+    }, []);
+    
+    const onChangeVideoPanelContainerHeight = useCallback((videoPanelContainerHeight: number) => {
+        setVideoPanelHeight(videoPanelContainerHeight);
     }, []);
 
     const onChangeCaptionConfigState = useCallback((captionConfig: CaptionConfigState) => {
@@ -178,25 +208,22 @@ function WorkspaceEditorPageClient() {
         });
     }, []);
 
+    const onChangeMusicStartSec = useCallback((newStartSec: number) => {
+        setMusicStartSec(newStartSec);
+    }, []);
+
+    const onChangeMusicVolume = useCallback((newVolume: number) => {
+        setMusicVolume(newVolume);
+    }, []);
+
     const onExportVideo = useCallback(async () => {
         console.log('Exporting video...');
         // Download or redirect logic
     }, []);
 
-    const onOpenMusicEditModal = useCallback((musicIndex: number) => {
+    const onSelectMusic = useCallback((musicIndex: number) => {
         setEditingMusicIndex(musicIndex);
-        setIsMusicEditModalOpen(true);
     }, []);
-
-    const onCloseMusicEditModal = useCallback(() => {
-        setIsMusicEditModalOpen(false);
-        setEditingMusicIndex(null);
-    }, []);
-
-    const onSaveMusicEdit = useCallback((startTime: number, volume: number) => {
-        console.log('Save music edit:', { musicIndex: editingMusicIndex, startTime, volume });
-        // TODO: 음악 설정 저장 로직
-    }, [editingMusicIndex]);
 
     useEffect(() => {
         if (taskId) {
@@ -339,70 +366,95 @@ function WorkspaceEditorPageClient() {
                     />
                 </div>}
 
-                {/* Config Panel */}
-                <div className="flex-[0.26] h-full bg-gray-900/30 backdrop-blur-sm border-r border-purple-500/20 flex flex-col">
-                    {/* Tab Navigation */}
-                    <div className="flex items-end px-4 pt-4">
-                        <button
-                            onClick={() => setActiveConfigPanel(ConfigPanelType.Caption)}
-                            className={`px-6 py-2 text-xl font-medium rounded-t-lg border-t border-l border-r transition-all relative ${
-                                activeConfigPanel === ConfigPanelType.Caption
-                                    ? 'text-purple-300 border-purple-400/50 bg-gray-900/30 -mb-px z-10'
-                                    : 'text-gray-400 border-transparent bg-gray-800/30 hover:text-purple-200 hover:border-purple-500/30'
-                            }`}
-                        >
-                            Caption
-                        </button>
-                        <button
-                            onClick={() => setActiveConfigPanel(ConfigPanelType.Music)}
-                            className={`px-6 py-2 text-xl font-medium rounded-t-lg border-t border-l border-r transition-all relative ${
-                                activeConfigPanel === ConfigPanelType.Music
-                                    ? 'text-purple-300 border-purple-400/50 bg-gray-900/30 -mb-px z-10'
-                                    : 'text-gray-400 border-transparent bg-gray-800/30 hover:text-purple-200 hover:border-purple-500/30'
-                            }`}
-                        >
-                            Music
-                        </button>
-                    </div>
+                {/* Config + Video + Music Edit Panel Column */}
+                <div className="flex-[0.76] h-full flex flex-col">
+                    {/* Config + Video Row */}
+                    {/*<div className="flex-[0.65] flex">*/}
+                    <div className="flex flex-[0.83] flex-row min-h-0">
+                        {/* Config Panel */}
+                        {/*<div className="flex-[0.34] h-full bg-gray-900/30 backdrop-blur-sm border-r border-purple-500/20 flex flex-col">*/}
+                        <div className="flex-[0.34] bg-gray-900/30 backdrop-blur-sm border-r border-purple-500/20 flex flex-col">
+                            {/* Tab Navigation */}
+                            <div className="flex items-end px-4 pt-4">
+                                <button
+                                    onClick={() => setActiveConfigPanel(ConfigPanelType.Caption)}
+                                    className={`px-6 py-2 text-xl font-medium rounded-t-lg border-t border-l border-r transition-all relative ${
+                                        activeConfigPanel === ConfigPanelType.Caption
+                                            ? 'text-purple-300 border-purple-400/50 bg-gray-900/30 -mb-px z-10'
+                                            : 'text-gray-400 border-transparent bg-gray-800/30 hover:text-purple-200 hover:border-purple-500/30'
+                                    }`}
+                                >
+                                    Caption
+                                </button>
+                                <button
+                                    onClick={() => setActiveConfigPanel(ConfigPanelType.Music)}
+                                    className={`px-6 py-2 text-xl font-medium rounded-t-lg border-t border-l border-r transition-all relative ${
+                                        activeConfigPanel === ConfigPanelType.Music
+                                            ? 'text-purple-300 border-purple-400/50 bg-gray-900/30 -mb-px z-10'
+                                            : 'text-gray-400 border-transparent bg-gray-800/30 hover:text-purple-200 hover:border-purple-500/30'
+                                    }`}
+                                >
+                                    Music
+                                </button>
+                            </div>
 
-                    {/* Tab Border Line */}
-                    <div className="border-t border-purple-400/50 mx-4"></div>
+                            {/* Tab Border Line */}
+                            <div className="border-t border-purple-400/50 mx-4"></div>
 
-                    {/* Panel Content */}
-                    <div className="flex-1 px-3 overflow-y-auto">
-                        {activeConfigPanel === ConfigPanelType.Caption && (
-                            <CaptionConfigPanel
+                            {/* Panel Content */}
+                            <div className="flex-1 px-3 overflow-y-auto">
+                                {activeConfigPanel === ConfigPanelType.Caption && (
+                                    <CaptionConfigPanel
+                                        captionConfigState={captionConfigState}
+                                        fontFamilyNameList={fontFamilyList.map(font => font.name)}
+                                        selectedFontFamilyWeightList={selectedFontFamilyWeightList}
+                                        selectedFontFamilyFullShape={selectedFontFamilyFullShape}
+                                        onChangeCaptionConfigState={onChangeCaptionConfigState}
+                                    />
+                                )}
+                                {activeConfigPanel === ConfigPanelType.Music && (
+                                    <MusicPanel
+                                        musicDataList={musicDataList}
+                                        videoDuration={videoDuration}
+                                        onSelectMusic={onSelectMusic}
+                                    />
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Video Player */}
+                        {/*{videoData && <div className="flex-[0.66] h-full">*/}
+                        {videoData && musicPlayConfig && <div className="flex-[0.66]">
+                            <VideoPlayerPanel
+                                ref={videoPlayerRef}
+                                videoUrl={videoData.videoUrl}
+                                currentTime={videoCurrentTime}
+                                captionDataList={captionDataList}
                                 captionConfigState={captionConfigState}
-                                fontFamilyNameList={fontFamilyList.map(font => font.name)}
-                                selectedFontFamilyWeightList={selectedFontFamilyWeightList}
+                                musicPlayConfig={musicPlayConfig}
                                 selectedFontFamilyFullShape={selectedFontFamilyFullShape}
+                                onChangeVideoPanelContainerHeight={onChangeVideoPanelContainerHeight}
                                 onChangeCaptionConfigState={onChangeCaptionConfigState}
+                                onChangeCurrentTime={onChangeVideoCurrentTime}
+                                onFinishLoading={onFinishVideoPlayerPanelLoading}
                             />
-                        )}
-                        {activeConfigPanel === ConfigPanelType.Music && (
-                            <MusicPanel
-                                musicDataList={musicDataList}
-                                videoDuration={videoDuration}
-                                onOpenEditModal={onOpenMusicEditModal}
-                            />
-                        )}
+                        </div>}
                     </div>
-                </div>
 
-                {/* Video Player */}
-                {videoData && <div className="flex-[0.50] h-full">
-                    <VideoPlayerPanel
-                        ref={videoPlayerRef}
-                        videoUrl={videoData.videoUrl}
-                        currentTime={videoCurrentTime}
-                        captionDataList={captionDataList}
-                        captionConfigState={captionConfigState}
-                        selectedFontFamilyFullShape={selectedFontFamilyFullShape}
-                        onChangeCaptionConfigState={onChangeCaptionConfigState}
-                        onChangeCurrentTime={onChangeVideoCurrentTime}
-                        onFinishLoading={onFinishVideoPlayerPanelLoading}
-                    />
-                </div>}
+                    {/* Music Edit Panel */}
+                    {musicEditPanelHeight && editingMusicData && <div
+                        className="flex-[0.17]"
+                        style={{ width: '100%', height: `${musicEditPanelHeight}px` }}
+                    >
+                        <MusicEditPanel
+                            musicData={editingMusicData}
+                            videoDuration={videoDuration}
+                            panelHeight={musicEditPanelHeight}
+                            onChangeMusicStartSec={onChangeMusicStartSec}
+                            onChangeMusicVolume={onChangeMusicVolume}
+                        />
+                    </div>}
+                </div>
             </div>
             {/* Loading Overlay */}
             {isLoading && (<div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50">
@@ -411,17 +463,6 @@ function WorkspaceEditorPageClient() {
                     <p className="text-gray-400">Loading your pure video...</p>
                 </div>
             </div>)}
-
-            {/* Music Edit Modal */}
-            {editingMusicData && (
-                <MusicEditModal
-                    musicData={editingMusicData}
-                    videoDuration={videoDuration}
-                    isOpen={isMusicEditModalOpen}
-                    onClose={onCloseMusicEditModal}
-                    onSave={onSaveMusicEdit}
-                />
-            )}
         </div>
     )
 }

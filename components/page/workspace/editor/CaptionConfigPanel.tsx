@@ -171,7 +171,8 @@ function CaptionConfigPanel({
     }, [isShadowEnabled]);
 
     return (
-        <div id="shadow-section" className="p-4 space-y-6">
+        // <div id="shadow-section" className="p-4 space-y-6">
+        <div id="shadow-section" className="flex-1 min-h-0 p-4 space-y-6 overflow-y-auto">
             {/*<div className="text-purple-300 text-2xl font-medium mb-4">Caption</div>*/}
 
             {/* Font Section */}

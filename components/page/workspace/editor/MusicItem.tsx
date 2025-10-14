@@ -201,14 +201,14 @@ function MusicItem({
                             </svg>
                         )}
                     </button>
-                    {isSelected && (
-                        <button
-                            className="flex-shrink-0 px-3 py-2 rounded-lg bg-purple-500/50 hover:bg-purple-500/70 transition-colors text-white text-sm font-medium"
-                            onClick={onClickEditButton}
-                        >
-                            Edit Music
-                        </button>
-                    )}
+                    {/*{isSelected && (*/}
+                    {/*    <button*/}
+                    {/*        className="flex-shrink-0 px-3 py-2 rounded-lg bg-purple-500/50 hover:bg-purple-500/70 transition-colors text-white text-sm font-medium"*/}
+                    {/*        onClick={onClickEditButton}*/}
+                    {/*    >*/}
+                    {/*        Edit Music*/}
+                    {/*    </button>*/}
+                    {/*)}*/}
                 </div>
             </div>
         </div>

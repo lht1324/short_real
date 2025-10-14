@@ -2,7 +2,11 @@
 
 import {memo, useCallback, useEffect, useMemo, useRef, useState, MouseEvent, ChangeEvent, forwardRef, useImperativeHandle} from "react";
 import {Eye, EyeOff, Play, Pause, RotateCcw} from "lucide-react";
-import {CaptionConfigState, CaptionData} from "@/components/page/workspace/editor/WorkspaceEditorPageClient";
+import {
+    CaptionConfigState,
+    CaptionData,
+    MusicPlayConfig
+} from "@/components/page/workspace/editor/WorkspaceEditorPageClient";
 
 interface PairedSegment {
     word: string;
@@ -23,6 +27,8 @@ interface VideoPlayerPanelProps {
     captionDataList: CaptionData[];
     captionConfigState: CaptionConfigState;
     selectedFontFamilyFullShape: string;
+    musicPlayConfig: MusicPlayConfig;
+    onChangeVideoPanelContainerHeight: (containerHeight: number) => void;
     onChangeCaptionConfigState: (captionConfigState: CaptionConfigState) => void;
     onChangeCurrentTime: (currentTime: number) => void;
     onFinishLoading: () => void;
@@ -34,14 +40,18 @@ const VideoPlayerPanel = forwardRef<VideoPlayerHandle, VideoPlayerPanelProps>(({
     captionDataList,
     captionConfigState,
     selectedFontFamilyFullShape,
+    musicPlayConfig,
+    onChangeVideoPanelContainerHeight,
     onChangeCaptionConfigState,
     onChangeCurrentTime,
     onFinishLoading,
 }, ref) => {
     // 첫 자막 0초에 안 걸려도 보이게 해 주기
+    const containerRef = useRef<HTMLDivElement>(null);
     const videoRef = useRef<HTMLVideoElement>(null);
     const captionRef = useRef<HTMLParagraphElement>(null);
     const timelineRef = useRef<HTMLDivElement>(null);
+    const audioRef = useRef<HTMLAudioElement>(null);
 
     const [isPlayingVideo, setIsPlayingVideo] = useState<boolean>(false);
     const [isVideoEnded, setIsVideoEnded] = useState(false);
@@ -253,6 +263,8 @@ const VideoPlayerPanel = forwardRef<VideoPlayerHandle, VideoPlayerPanelProps>(({
                 const calculatedHeight = Math.round((videoNaturalHeight / videoNaturalWidth) * standardWidth);
                 setVideoContainerWidth(standardWidth);
                 setVideoContainerHeight(calculatedHeight);
+                // setVideoContainerWidth(standardWidth * 0.9);
+                // setVideoContainerHeight(calculatedHeight * 0.9);
             }
         }
         onFinishLoading();
@@ -427,10 +439,129 @@ const VideoPlayerPanel = forwardRef<VideoPlayerHandle, VideoPlayerPanelProps>(({
         };
     }, [isPlayingVideo, onChangeCurrentTime]);
 
+    useEffect(() => {
+        if (containerRef.current) {
+            onChangeVideoPanelContainerHeight(containerRef.current.offsetHeight);
+        }
+    }, [onChangeVideoPanelContainerHeight]);
+
+    // 메인 useEffect - startSec, duration만 관리
+    useEffect(() => {
+        const audio = audioRef.current;
+        const video = videoRef.current;
+        if (!audio || !video) return;
+
+        const startSec = musicPlayConfig.startSec;
+        const endSec = startSec + musicPlayConfig.duration;
+
+        // ✅ video가 재생 중이면 즉시 audio 위치 업데이트
+        if (!video.paused && !video.ended) {
+            audio.currentTime = video.currentTime + startSec;
+            if (audio.paused) {
+                audio.play().catch(err => console.error('Audio play failed:', err));
+            }
+        }
+
+        // video 이벤트 핸들러
+        const handlePlay = () => {
+            audio.currentTime = video.currentTime + startSec;
+            audio.play().catch(err => console.error('Audio play failed:', err));
+        };
+
+        const handlePause = () => {
+            audio.pause();
+        };
+
+        const handleSeeked = () => {
+            audio.currentTime = video.currentTime + startSec;
+        };
+
+        // audio 구간 재생 제한
+        const handleAudioTimeUpdate = () => {
+            if (audio.currentTime >= endSec) {
+                audio.pause();
+            }
+        };
+
+        video.addEventListener('play', handlePlay);
+        video.addEventListener('pause', handlePause);
+        video.addEventListener('seeked', handleSeeked);
+        audio.addEventListener('timeupdate', handleAudioTimeUpdate);
+
+        return () => {
+            video.removeEventListener('play', handlePlay);
+            video.removeEventListener('pause', handlePause);
+            video.removeEventListener('seeked', handleSeeked);
+            audio.removeEventListener('timeupdate', handleAudioTimeUpdate);
+        };
+    }, [musicPlayConfig.startSec, musicPlayConfig.duration]); // ✅ volume 제거
+
+    // 별도 useEffect - volume만 관리
+    useEffect(() => {
+        const audio = audioRef.current;
+        if (!audio || musicPlayConfig.volume === undefined) return;
+
+        audio.volume = musicPlayConfig.volume; // ✅ 단순 property 변경만
+    }, [musicPlayConfig.volume]);
+    // useEffect(() => {
+    //     const audio = audioRef.current;
+    //     const video = videoRef.current;
+    //     if (!audio || !video) return;
+    //
+    //     const startSec = musicPlayConfig.startSec;
+    //     const endSec = startSec + musicPlayConfig.duration;
+    //
+    //     if (musicPlayConfig.volume !== undefined) {
+    //         audio.volume = musicPlayConfig.volume;
+    //     }
+    //
+    //     // ✅ video가 재생 중이면 즉시 audio 위치 업데이트
+    //     if (!video.paused && !video.ended) {
+    //         audio.currentTime = video.currentTime + startSec;  // 10 + 40 = 50
+    //         if (audio.paused) {
+    //             audio.play().catch(err => console.error('Audio play failed:', err));
+    //         }
+    //     }
+    //
+    //     // video 이벤트 핸들러
+    //     const handlePlay = () => {
+    //         audio.currentTime = video.currentTime + startSec;
+    //         audio.play().catch(err => console.error('Audio play failed:', err));
+    //     };
+    //
+    //     const handlePause = () => {
+    //         audio.pause();
+    //     };
+    //
+    //     const handleSeeked = () => {
+    //         audio.currentTime = video.currentTime + startSec;
+    //     };
+    //
+    //     // audio 구간 재생 제한
+    //     const handleAudioTimeUpdate = () => {
+    //         if (audio.currentTime >= endSec) {
+    //             audio.pause();
+    //         }
+    //     };
+    //
+    //     video.addEventListener('play', handlePlay);
+    //     video.addEventListener('pause', handlePause);
+    //     video.addEventListener('seeked', handleSeeked);
+    //     audio.addEventListener('timeupdate', handleAudioTimeUpdate);
+    //
+    //     return () => {
+    //         video.removeEventListener('play', handlePlay);
+    //         video.removeEventListener('pause', handlePause);
+    //         video.removeEventListener('seeked', handleSeeked);
+    //         audio.removeEventListener('timeupdate', handleAudioTimeUpdate);
+    //     };
+    // }, [musicPlayConfig.startSec, musicPlayConfig.duration, musicPlayConfig.volume]);
+
     return (
         <div
             className="h-full bg-black flex flex-col relative"
             style={{ pointerEvents: isDraggingTimeline ? 'none' : 'auto' }}
+            ref={containerRef}
         >
             {/* Vaporwave Background Effects */}
             <div className="absolute inset-0 opacity-10" style={{ pointerEvents: 'none' }}>
@@ -530,6 +661,15 @@ const VideoPlayerPanel = forwardRef<VideoPlayerHandle, VideoPlayerPanelProps>(({
                                     onLoadedMetadata={onLoadedMetadata}
                                     onEnded={onVideoEnded}
                                 />
+
+                                {musicPlayConfig.audioUrl && (
+                                    <audio
+                                        ref={audioRef}
+                                        src={musicPlayConfig.audioUrl}
+                                        preload="auto"
+                                    />
+                                )}
+
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent pointer-events-none"></div>
 
                                 {/* Caption Overlay */}
@@ -609,13 +749,6 @@ const VideoPlayerPanel = forwardRef<VideoPlayerHandle, VideoPlayerPanelProps>(({
                         )}
                     </div>
                 </div>
-            </div>
-            <div className="p-6 border-t border-purple-500/20 bg-gray-900/50 backdrop-blur-sm relative z-10">
-                <p className="text-purple-300 text-sm text-center">
-                    <span className="bg-gradient-to-r from-pink-400 to-purple-500 bg-clip-text text-transparent font-medium">
-                        Video generation complete!
-                    </span>
-                </p>
             </div>
         </div>
     );
