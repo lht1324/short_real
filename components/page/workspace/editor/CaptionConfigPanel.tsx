@@ -35,15 +35,18 @@ function CaptionConfigPanel({
     }, [captionConfigState.fontWeight]);
 
     // Shadow settings state
-    const isShadowEnabled = useMemo(() => {
-        return captionConfigState.isShadowEnabled;
-    }, [captionConfigState.isShadowEnabled]);
-    const shadowIntensity = useMemo(() => {
-        return captionConfigState.shadowIntensity;
-    }, [captionConfigState.shadowIntensity]);
-    const shadowThickness = useMemo(() => {
-        return captionConfigState.shadowThickness;
-    }, [captionConfigState.shadowThickness]);
+    // const isShadowEnabled = useMemo(() => {
+    //     return captionConfigState.isShadowEnabled;
+    // }, [captionConfigState.isShadowEnabled]);
+    // const shadowIntensity = useMemo(() => {
+    //     return captionConfigState.shadowIntensity;
+    // }, [captionConfigState.shadowIntensity]);
+    // const shadowThickness = useMemo(() => {
+    //     return captionConfigState.shadowThickness;
+    // }, [captionConfigState.shadowThickness]);
+    // const is3DShadowEnabled = useMemo(() => {
+    //     return captionConfigState.is3DTextEnabled;
+    // }, [captionConfigState.is3DTextEnabled]);
 
     // Color settings state
     const activeColor = useMemo(() => {
@@ -65,11 +68,11 @@ function CaptionConfigPanel({
         return captionConfigState.inactiveOutlineThickness;
     }, [captionConfigState.inactiveOutlineThickness]);
     const activeOutlineEnabled = useMemo(() => {
-        return captionConfigState.activeOutlineEnabled;
-    }, [captionConfigState.activeOutlineEnabled]);
+        return captionConfigState.isActiveOutlineEnabled;
+    }, [captionConfigState.isActiveOutlineEnabled]);
     const inactiveOutlineEnabled = useMemo(() => {
-        return captionConfigState.inactiveOutlineEnabled;
-    }, [captionConfigState.inactiveOutlineEnabled]);
+        return captionConfigState.isInactiveOutlineEnabled;
+    }, [captionConfigState.isInactiveOutlineEnabled]);
 
     // Font settings state
     const onChangeFontFamilyName = useCallback((newFontFamilyName: string) => {
@@ -92,24 +95,30 @@ function CaptionConfigPanel({
     }, [captionConfigState, onChangeCaptionConfigState]);
 
     // Shadow settings state
-    const onChangeIsShadowEnabled = useCallback((isEnabled: boolean) => {
-        onChangeCaptionConfigState({
-            ...captionConfigState,
-            isShadowEnabled: isEnabled,
-        })
-    }, [captionConfigState, onChangeCaptionConfigState]);
-    const onChangeShadowIntensity = useCallback((newShadowIntensity: number) => {
-        onChangeCaptionConfigState({
-            ...captionConfigState,
-            shadowIntensity: newShadowIntensity,
-        })
-    }, [captionConfigState, onChangeCaptionConfigState]);
-    const onChangeShadowThickness = useCallback((newShadowThickness: number) => {
-        onChangeCaptionConfigState({
-            ...captionConfigState,
-            shadowThickness: newShadowThickness,
-        })
-    }, [captionConfigState, onChangeCaptionConfigState]);
+    // const onChangeIsShadowEnabled = useCallback((isEnabled: boolean) => {
+    //     onChangeCaptionConfigState({
+    //         ...captionConfigState,
+    //         isShadowEnabled: isEnabled,
+    //     })
+    // }, [captionConfigState, onChangeCaptionConfigState]);
+    // const onChangeShadowIntensity = useCallback((newShadowIntensity: number) => {
+    //     onChangeCaptionConfigState({
+    //         ...captionConfigState,
+    //         shadowIntensity: newShadowIntensity,
+    //     })
+    // }, [captionConfigState, onChangeCaptionConfigState]);
+    // const onChangeShadowThickness = useCallback((newShadowThickness: number) => {
+    //     onChangeCaptionConfigState({
+    //         ...captionConfigState,
+    //         shadowThickness: newShadowThickness,
+    //     })
+    // }, [captionConfigState, onChangeCaptionConfigState]);
+    // const onChangeIs3DShadowEnabled = useCallback((isEnabled: boolean) => {
+    //     onChangeCaptionConfigState({
+    //         ...captionConfigState,
+    //         is3DTextEnabled: isEnabled,
+    //     })
+    // }, [captionConfigState, onChangeCaptionConfigState]);
 
     // Color settings state
     const onChangeActiveColor = useCallback((newColor: string) => {
@@ -151,24 +160,24 @@ function CaptionConfigPanel({
     const onChangeActiveOutlineEnabled = useCallback((isEnabled: boolean) => {
         onChangeCaptionConfigState({
             ...captionConfigState,
-            activeOutlineEnabled: isEnabled,
+            isActiveOutlineEnabled: isEnabled,
         })
     }, [captionConfigState, onChangeCaptionConfigState]);
     const onChangeInactiveOutlineEnabled = useCallback((isEnabled: boolean) => {
         onChangeCaptionConfigState({
             ...captionConfigState,
-            inactiveOutlineEnabled: isEnabled,
+            isInactiveOutlineEnabled: isEnabled,
         })
     }, [captionConfigState, onChangeCaptionConfigState]);
 
-    useEffect(() => {
-        if (isShadowEnabled) {
-            document.getElementById("shadow-section")?.scrollIntoView({
-                behavior: "smooth",
-                block: "end",
-            })
-        }
-    }, [isShadowEnabled]);
+    // useEffect(() => {
+    //     if (isShadowEnabled) {
+    //         document.getElementById("shadow-section")?.scrollIntoView({
+    //             behavior: "smooth",
+    //             block: "end",
+    //         })
+    //     }
+    // }, [isShadowEnabled]);
 
     return (
         // <div id="shadow-section" className="p-4 space-y-6">
@@ -523,112 +532,129 @@ function CaptionConfigPanel({
                 </div>
             </AccordionSection>
 
+            {/* 현재 기술로는 <svg/>, Canvas API 사용 안 하면 Outline + Shadow 양립 불가 */}
             {/* Shadow Section */}
-            <AccordionSection id="shadow" title="Shadow" defaultExpanded={false}>
-                <div className="flex items-center space-x-3">
-                    <label className="text-white text-base">Enable Shadow</label>
-                    <label className="relative inline-flex items-center cursor-pointer">
-                        <input
-                            type="checkbox"
-                            checked={isShadowEnabled}
-                            onChange={(e) => onChangeIsShadowEnabled(e.target.checked)}
-                            className="sr-only peer"
-                        />
-                        <div className="w-11 h-6 bg-gray-800 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-purple-400 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all border border-purple-500/30 peer-checked:bg-gradient-to-r peer-checked:from-pink-500 peer-checked:to-purple-600"></div>
-                    </label>
-                </div>
+            {/*<AccordionSection id="shadow" title="Shadow" defaultExpanded={false}>*/}
+            {/*    <div className="flex items-center space-x-3">*/}
+            {/*        <label className="text-white text-base">Enable Shadow</label>*/}
+            {/*        <label className="relative inline-flex items-center cursor-pointer">*/}
+            {/*            <input*/}
+            {/*                type="checkbox"*/}
+            {/*                checked={isShadowEnabled}*/}
+            {/*                onChange={(e) => onChangeIsShadowEnabled(e.target.checked)}*/}
+            {/*                className="sr-only peer"*/}
+            {/*            />*/}
+            {/*            <div className="w-11 h-6 bg-gray-800 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-purple-400 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all border border-purple-500/30 peer-checked:bg-gradient-to-r peer-checked:from-pink-500 peer-checked:to-purple-600"></div>*/}
+            {/*        </label>*/}
+            {/*    </div>*/}
 
-                {isShadowEnabled && (
-                    <div className="space-y-4 pl-4">
-                        {/* Intensity */}
-                        <div className="space-y-2">
-                            <label className="text-white text-base font-medium">Intensity</label>
-                            <div className="flex items-center space-x-4">
-                                <div className="flex items-center space-x-2">
-                                    <input
-                                        type="number"
-                                        min="0"
-                                        max="100"
-                                        value={shadowIntensity}
-                                        onInput={(e) => {
-                                            const input = e.target as HTMLInputElement;
-                                            let inputValue = input.value;
+            {/*    {isShadowEnabled && (*/}
+            {/*        <div className="space-y-4 pl-4">*/}
+            {/*            /!* Intensity *!/*/}
+            {/*            <div className="space-y-2">*/}
+            {/*                <label className="text-white text-base font-medium">Intensity</label>*/}
+            {/*                <div className="flex items-center space-x-4">*/}
+            {/*                    <div className="flex items-center space-x-2">*/}
+            {/*                        <input*/}
+            {/*                            type="number"*/}
+            {/*                            min="0"*/}
+            {/*                            max="100"*/}
+            {/*                            value={shadowIntensity}*/}
+            {/*                            onInput={(e) => {*/}
+            {/*                                const input = e.target as HTMLInputElement;*/}
+            {/*                                let inputValue = input.value;*/}
 
-                                            // Remove leading zeros except for just "0"
-                                            if (inputValue.length > 1 && inputValue.startsWith('0')) {
-                                                inputValue = inputValue.replace(/^0+/, '');
-                                                if (inputValue === '') inputValue = '0';
-                                                input.value = inputValue;
-                                            }
+            {/*                                // Remove leading zeros except for just "0"*/}
+            {/*                                if (inputValue.length > 1 && inputValue.startsWith('0')) {*/}
+            {/*                                    inputValue = inputValue.replace(/^0+/, '');*/}
+            {/*                                    if (inputValue === '') inputValue = '0';*/}
+            {/*                                    input.value = inputValue;*/}
+            {/*                                }*/}
 
-                                            // Allow empty or 0 values, but limit max to 100
-                                            if (inputValue === '') {
-                                                onChangeShadowIntensity(0);
-                                            } else {
-                                                const numValue = parseInt(inputValue) || 0;
-                                                onChangeShadowIntensity(Math.min(100, numValue));
-                                            }
-                                        }}
-                                        className="w-20 bg-gray-800/50 border border-purple-500/30 rounded-lg px-3 py-2 text-white text-base focus:border-purple-400 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                                    />
-                                    <span className="text-gray-400 text-base">%</span>
-                                </div>
-                                <input
-                                    type="range"
-                                    min="0"
-                                    max="100"
-                                    value={shadowIntensity}
-                                    onChange={(e) => onChangeShadowIntensity(parseInt(e.target.value))}
-                                    className="flex-1 accent-purple-500"
-                                />
-                            </div>
-                        </div>
+            {/*                                // Allow empty or 0 values, but limit max to 100*/}
+            {/*                                if (inputValue === '') {*/}
+            {/*                                    onChangeShadowIntensity(0);*/}
+            {/*                                } else {*/}
+            {/*                                    const numValue = parseInt(inputValue) || 0;*/}
+            {/*                                    onChangeShadowIntensity(Math.min(100, numValue));*/}
+            {/*                                }*/}
+            {/*                            }}*/}
+            {/*                            className="w-20 bg-gray-800/50 border border-purple-500/30 rounded-lg px-3 py-2 text-white text-base focus:border-purple-400 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"*/}
+            {/*                        />*/}
+            {/*                        <span className="text-gray-400 text-base">%</span>*/}
+            {/*                    </div>*/}
+            {/*                    <input*/}
+            {/*                        type="range"*/}
+            {/*                        min="0"*/}
+            {/*                        max="100"*/}
+            {/*                        value={shadowIntensity}*/}
+            {/*                        onChange={(e) => onChangeShadowIntensity(parseInt(e.target.value))}*/}
+            {/*                        className="flex-1 accent-purple-500"*/}
+            {/*                    />*/}
+            {/*                </div>*/}
+            {/*            </div>*/}
 
-                        {/* Thickness */}
-                        <div className="space-y-2">
-                            <label className="text-white text-base font-medium">Thickness</label>
-                            <div className="flex items-center space-x-4">
-                                <div className="flex items-center space-x-2">
-                                    <input
-                                        type="number"
-                                        min="0"
-                                        max="100"
-                                        value={shadowThickness}
-                                        onInput={(e) => {
-                                            const input = e.target as HTMLInputElement;
-                                            let inputValue = input.value;
+            {/*            /!* Thickness *!/*/}
+            {/*            <div className="space-y-2">*/}
+            {/*                <label className="text-white text-base font-medium">Thickness</label>*/}
+            {/*                <div className="flex items-center space-x-4">*/}
+            {/*                    <div className="flex items-center space-x-2">*/}
+            {/*                        <input*/}
+            {/*                            type="number"*/}
+            {/*                            min="0"*/}
+            {/*                            max="100"*/}
+            {/*                            value={shadowThickness}*/}
+            {/*                            onInput={(e) => {*/}
+            {/*                                const input = e.target as HTMLInputElement;*/}
+            {/*                                let inputValue = input.value;*/}
 
-                                            // Remove leading zeros except for just "0"
-                                            if (inputValue.length > 1 && inputValue.startsWith('0')) {
-                                                inputValue = inputValue.replace(/^0+/, '');
-                                                if (inputValue === '') inputValue = '0';
-                                                input.value = inputValue;
-                                            }
+            {/*                                // Remove leading zeros except for just "0"*/}
+            {/*                                if (inputValue.length > 1 && inputValue.startsWith('0')) {*/}
+            {/*                                    inputValue = inputValue.replace(/^0+/, '');*/}
+            {/*                                    if (inputValue === '') inputValue = '0';*/}
+            {/*                                    input.value = inputValue;*/}
+            {/*                                }*/}
 
-                                            // Allow empty or 0 values, but limit max to 100
-                                            if (inputValue === '') {
-                                                onChangeShadowThickness(0);
-                                            } else {
-                                                const numValue = parseInt(inputValue) || 0;
-                                                onChangeShadowThickness(Math.min(100, numValue));
-                                            }
-                                        }}
-                                        className="w-20 bg-gray-800/50 border border-purple-500/30 rounded-lg px-3 py-2 text-white text-base focus:border-purple-400 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                                    />
-                                </div>
-                                <input
-                                    type="range"
-                                    min="0"
-                                    max="100"
-                                    value={shadowThickness}
-                                    onChange={(e) => onChangeShadowThickness(parseInt(e.target.value))}
-                                    className="flex-1 accent-purple-500"
-                                />
-                            </div>
-                        </div>
-                    </div>
-                )}
-            </AccordionSection>
+            {/*                                // Allow empty or 0 values, but limit max to 100*/}
+            {/*                                if (inputValue === '') {*/}
+            {/*                                    onChangeShadowThickness(0);*/}
+            {/*                                } else {*/}
+            {/*                                    const numValue = parseInt(inputValue) || 0;*/}
+            {/*                                    onChangeShadowThickness(Math.min(100, numValue));*/}
+            {/*                                }*/}
+            {/*                            }}*/}
+            {/*                            className="w-20 bg-gray-800/50 border border-purple-500/30 rounded-lg px-3 py-2 text-white text-base focus:border-purple-400 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"*/}
+            {/*                        />*/}
+            {/*                    </div>*/}
+            {/*                    <input*/}
+            {/*                        type="range"*/}
+            {/*                        min="0"*/}
+            {/*                        max="100"*/}
+            {/*                        value={shadowThickness}*/}
+            {/*                        onChange={(e) => onChangeShadowThickness(parseInt(e.target.value))}*/}
+            {/*                        className="flex-1 accent-purple-500"*/}
+            {/*                    />*/}
+            {/*                </div>*/}
+            {/*            </div>*/}
+
+            {/*            /!* 3D *!/*/}
+            {/*            <div className="space-y-2">*/}
+            {/*                <div className="flex items-center space-x-3">*/}
+            {/*                    <label className="text-white text-base">3D Effect</label>*/}
+            {/*                    <label className="relative inline-flex items-center cursor-pointer">*/}
+            {/*                        <input*/}
+            {/*                            type="checkbox"*/}
+            {/*                            checked={is3DShadowEnabled}*/}
+            {/*                            onChange={(e) => onChangeIs3DShadowEnabled(e.target.checked)}*/}
+            {/*                            className="sr-only peer"*/}
+            {/*                        />*/}
+            {/*                        <div className="w-11 h-6 bg-gray-800 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-purple-400 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all border border-purple-500/30 peer-checked:bg-gradient-to-r peer-checked:from-pink-500 peer-checked:to-purple-600"></div>*/}
+            {/*                    </label>*/}
+            {/*                </div>*/}
+            {/*            </div>*/}
+            {/*        </div>*/}
+            {/*    )}*/}
+            {/*</AccordionSection>*/}
         </div>
     )
 }

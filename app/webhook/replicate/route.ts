@@ -5,10 +5,7 @@ import {videoServerAPI} from "@/api/server/videoServerAPI";
 import {SceneGenerationStatus} from "@/api/types/supabase/VideoGenerationTasks";
 import {createSupabaseServiceRoleClient} from "@/lib/supabaseServiceRole";
 import {getErrorMessage} from "@/utils/ErrorUtils";
-import {MasterNegativePrompts} from "@/lib/MasterNegativePrompts";
-import {sunoAPIServerAPI} from "@/api/server/sunoAPIServerAPI";
 import {openAIServerAPI} from "@/api/server/openAIServerAPI";
-import {musicServerAPI} from "@/api/server/musicServerAPI";
 
 // import { adjustVideoSpeedAndUpload } from "@/lib/services/videoService"; // (추천) 실제 로직은 이렇게 분리
 

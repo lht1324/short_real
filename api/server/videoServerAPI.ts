@@ -166,6 +166,52 @@ export const videoServerAPI = {
         }
     },
 
+    async postVideoMergeCaption(
+        videoUrl: string,
+        assContent: string,
+        videoGenerationTaskId: string,
+    ) {
+        const replicate = new Replicate({
+            auth: process.env.REPLICATE_API_TOKEN,
+        });
+
+        // 웹훅 URL 생성
+        const baseUrl = process.env.BASE_URL;
+        if (!baseUrl) {
+            throw new Error('BASE_URL is not set');
+        }
+
+        const webhookUrl = `${baseUrl}/webhook/replicate/caption?videoGenerationTaskId=${videoGenerationTaskId}`;
+
+        try {
+            const prediction = await replicate.predictions.create({
+                version: "lht1324/ffmpeg-caption-burner:c23aaebf0d3f5bcd3411059a8b9b2a7bba6b71d0268d8cc1c0e96cc4f912be71",
+                // version: "lht1324/video-caption-burner:13fc73a5240b19bb4b491950ca7c909d6aaff567ccc9bdaaa01f310415fb46da",
+                input: {
+                    video_url: videoUrl,
+                    ass_content: assContent,
+                },
+                webhook: webhookUrl,
+                webhook_events_filter: ["completed"],
+            });
+
+            if (prediction.error || prediction.status === "failed") {
+                throw new Error(`Subtitle burn-in failed: ${prediction.error}`);
+            }
+
+            console.log(`[Subtitle Burn-in] Prediction ID: ${prediction.id}`);
+            return prediction.id;
+
+        } catch (error) {
+            console.error("[Subtitle Burn-in] Error:", error);
+            throw error;
+        }
+    },
+
+    async postVideoMergeMusic() {
+
+    },
+
     async postFinalVideo(generationTaskId: string) {
         const supabase = createSupabaseServiceRoleClient();
         const falAIClient = new FalAIClient();

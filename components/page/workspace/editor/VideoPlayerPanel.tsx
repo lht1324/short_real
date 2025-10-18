@@ -7,8 +7,14 @@ import {
     CaptionData,
     MusicPlayConfig
 } from "@/components/page/workspace/editor/WorkspaceEditorPageClient";
+import {Properties} from "csstype";
 
-interface PairedSegment {
+const CAPTION_AREA_LINE_TOGGLE_BUTTON_SIZE = 24;
+const CAPTION_AREA_LINE_HEIGHT = 2;
+const CAPTION_POSITION_SLIDER_TRACK_SIZE_PX = 20;
+const CAPTION_POSITION_SLIDER_PADDING_PX = 2;
+
+export interface PairedSegment {
     word: string;
     startSec: number;
     endSec: number;
@@ -85,67 +91,74 @@ const VideoPlayerPanel = forwardRef<VideoPlayerHandle, VideoPlayerPanelProps>(({
     }, [captionHeight, captionLineCount]);
 
     const captionAreaHeight = useMemo(() => {
-        const lineAreaHeight = 24;
+        const captionAreaLineHeight = 2;
+        const captionAreaVerticalPadding = 10;
+        const topLineAreaHeight = captionAreaLineHeight + captionAreaVerticalPadding;
+        const bottomLineAreaHeight = captionAreaVerticalPadding + captionAreaLineHeight;
 
-        return lineAreaHeight + twoLineTextHeight + lineAreaHeight;
+        return topLineAreaHeight + twoLineTextHeight + bottomLineAreaHeight;
     }, [twoLineTextHeight]);
-
-    const captionAreaTop = useMemo(() => {
-        return (captionConfigState.captionPosition / 100) * (videoContainerHeight - captionAreaHeight);
-    }, [captionConfigState.captionPosition, videoContainerHeight, captionAreaHeight]);
 
     const sliderHeight = useMemo(() => {
         return videoContainerHeight - captionAreaHeight;
     }, [videoContainerHeight, captionAreaHeight]);
     const prevSliderHeightRef = useRef(sliderHeight);
 
+    const captionAreaTop = useMemo(() => {
+        const captionPosition = (captionConfigState.captionPosition / 100.0);
+        const trackSize = CAPTION_POSITION_SLIDER_TRACK_SIZE_PX;
+        const sliderPadding = CAPTION_POSITION_SLIDER_PADDING_PX;
+        const lineHeight = CAPTION_AREA_LINE_HEIGHT;
+
+        return captionPosition * (sliderHeight - (trackSize + sliderPadding * 2 - lineHeight))
+            + (sliderPadding + trackSize / 2 - lineHeight / 2)
+            - 1;
+    }, [captionConfigState.captionPosition, sliderHeight]);
+
     const captionStyle = useMemo(() => {
         return {
             fontFamily: selectedFontFamilyFullShape,
             fontSize: `${captionConfigState.fontSize * 0.7}px`,
             fontWeight: captionConfigState.fontWeight,
-            textShadow: captionConfigState.isShadowEnabled
-                ? `2px 2px ${(captionConfigState.shadowThickness / 100) * 8}px rgba(0,0,0,${captionConfigState.shadowIntensity / 100})`
-                : 'none'
         }
     }, [
         selectedFontFamilyFullShape,
         captionConfigState.fontSize,
         captionConfigState.fontWeight,
-        captionConfigState.isShadowEnabled,
-        captionConfigState.shadowThickness,
-        captionConfigState.shadowIntensity,
     ]);
 
     const getPairedCaptionStyle = useCallback((isActive: boolean) => {
         const activeColor = captionConfigState.activeColor;
         const inactiveColor = captionConfigState.inactiveColor;
-        const activeOutlineEnabled = captionConfigState.activeOutlineEnabled;
-        const inactiveOutlineEnabled = captionConfigState.inactiveOutlineEnabled;
+        const activeOutlineEnabled = captionConfigState.isActiveOutlineEnabled;
+        const inactiveOutlineEnabled = captionConfigState.isInactiveOutlineEnabled;
         const activeOutlineColor = captionConfigState.activeOutlineColor;
         const inactiveOutlineColor = captionConfigState.inactiveOutlineColor;
         const activeOutlineThickness = captionConfigState.activeOutlineThickness;
         const inactiveOutlineThickness = captionConfigState.inactiveOutlineThickness;
 
         return {
+            position: 'relative',
             color: isActive ? activeColor : inactiveColor,
+            // Stroke를 두 배로 설정 (절반이 Fill에 가려지므로)
             WebkitTextStroke: isActive
                 ? activeOutlineEnabled
-                    ? `${(activeOutlineThickness / 100) * 4}px ${activeOutlineColor}`
+                    ? `${(activeOutlineThickness / 100) * 12}px ${activeOutlineColor}`
                     : '0px transparent'
                 : inactiveOutlineEnabled
-                    ? `${(inactiveOutlineThickness / 100) * 4}px ${inactiveOutlineColor}`
+                    ? `${(inactiveOutlineThickness / 100) * 12}px ${inactiveOutlineColor}`
                     : '0px transparent',
-        }
+            paintOrder: 'stroke fill',
+        } as Properties
     }, [
         captionConfigState.activeColor,
         captionConfigState.inactiveColor,
-        captionConfigState.activeOutlineEnabled,
-        captionConfigState.inactiveOutlineEnabled,
+        captionConfigState.isActiveOutlineEnabled,
+        captionConfigState.isInactiveOutlineEnabled,
         captionConfigState.activeOutlineColor,
         captionConfigState.inactiveOutlineColor,
         captionConfigState.activeOutlineThickness,
-        captionConfigState.inactiveOutlineThickness
+        captionConfigState.inactiveOutlineThickness,
     ]);
 
     const currentPairedSegmentDataList = useMemo(() => {
@@ -263,8 +276,6 @@ const VideoPlayerPanel = forwardRef<VideoPlayerHandle, VideoPlayerPanelProps>(({
                 const calculatedHeight = Math.round((videoNaturalHeight / videoNaturalWidth) * standardWidth);
                 setVideoContainerWidth(standardWidth);
                 setVideoContainerHeight(calculatedHeight);
-                // setVideoContainerWidth(standardWidth * 0.9);
-                // setVideoContainerHeight(calculatedHeight * 0.9);
             }
         }
         onFinishLoading();
@@ -373,6 +384,7 @@ const VideoPlayerPanel = forwardRef<VideoPlayerHandle, VideoPlayerPanelProps>(({
             const maxSliderPercentage = (sliderHeight / videoContainerHeight) * 100;
 
             if (captionPosition > maxSliderPercentage) {
+                console.log(`captionPosition = ${captionPosition}, maxSliderPercentage = ${maxSliderPercentage}`)
                 onChangeCaptionPosition(100);
             }
 
@@ -503,59 +515,6 @@ const VideoPlayerPanel = forwardRef<VideoPlayerHandle, VideoPlayerPanelProps>(({
 
         audio.volume = musicPlayConfig.volume; // ✅ 단순 property 변경만
     }, [musicPlayConfig.volume]);
-    // useEffect(() => {
-    //     const audio = audioRef.current;
-    //     const video = videoRef.current;
-    //     if (!audio || !video) return;
-    //
-    //     const startSec = musicPlayConfig.startSec;
-    //     const endSec = startSec + musicPlayConfig.duration;
-    //
-    //     if (musicPlayConfig.volume !== undefined) {
-    //         audio.volume = musicPlayConfig.volume;
-    //     }
-    //
-    //     // ✅ video가 재생 중이면 즉시 audio 위치 업데이트
-    //     if (!video.paused && !video.ended) {
-    //         audio.currentTime = video.currentTime + startSec;  // 10 + 40 = 50
-    //         if (audio.paused) {
-    //             audio.play().catch(err => console.error('Audio play failed:', err));
-    //         }
-    //     }
-    //
-    //     // video 이벤트 핸들러
-    //     const handlePlay = () => {
-    //         audio.currentTime = video.currentTime + startSec;
-    //         audio.play().catch(err => console.error('Audio play failed:', err));
-    //     };
-    //
-    //     const handlePause = () => {
-    //         audio.pause();
-    //     };
-    //
-    //     const handleSeeked = () => {
-    //         audio.currentTime = video.currentTime + startSec;
-    //     };
-    //
-    //     // audio 구간 재생 제한
-    //     const handleAudioTimeUpdate = () => {
-    //         if (audio.currentTime >= endSec) {
-    //             audio.pause();
-    //         }
-    //     };
-    //
-    //     video.addEventListener('play', handlePlay);
-    //     video.addEventListener('pause', handlePause);
-    //     video.addEventListener('seeked', handleSeeked);
-    //     audio.addEventListener('timeupdate', handleAudioTimeUpdate);
-    //
-    //     return () => {
-    //         video.removeEventListener('play', handlePlay);
-    //         video.removeEventListener('pause', handlePause);
-    //         video.removeEventListener('seeked', handleSeeked);
-    //         audio.removeEventListener('timeupdate', handleAudioTimeUpdate);
-    //     };
-    // }, [musicPlayConfig.startSec, musicPlayConfig.duration, musicPlayConfig.volume]);
 
     return (
         <div
@@ -570,62 +529,36 @@ const VideoPlayerPanel = forwardRef<VideoPlayerHandle, VideoPlayerPanelProps>(({
                 <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-48 h-48 bg-gradient-to-r from-indigo-500 to-cyan-500 rounded-full blur-3xl"></div>
             </div>
 
-            <div className="flex-1 flex items-center justify-center p-8 relative z-10">
-                <div className="flex items-start space-x-6 relative">
-                    {fontSize > 0 && <div
-                        className="absolute flex flex-col z-20"
+            <div className="flex flex-row p-8 justify-center z-10">
+                {/* Caption Position Slider */}
+                {/* w-6 + w-2 + w-6 */}
+                <div
+                    className="w-14 relative z-30"
+                    style={{ height: `${sliderHeight}px` }}
+                >
+                    {/* Caption Position Toggle Button */}
+                    <button
+                        onClick={onToggleShowCaptionLine}
+                        className="absolute flex w-6 h-6 rounded-full bg-gray-800/50 hover:bg-gray-700/70 border border-gray-600/50 items-center justify-center transition-none"
+                        title={showCaptionLine ? "Hide caption guideline" : "Show caption guideline"}
                         style={{
-                            top: `${captionAreaTop}px`,
-                            left: '-24px',
-                            right: '-20px',
-                            height: 'fit-content',
+                            top: `${captionAreaTop - (CAPTION_POSITION_SLIDER_PADDING_PX + CAPTION_POSITION_SLIDER_TRACK_SIZE_PX / 2)}px`,
+                            left: 0,
                         }}
                     >
-                        {/* Row: 버튼 + 윗줄 */}
-                        <div className="flex flex-row items-center w-full relative">
-                            {/* Caption Position Toggle Button */}
-                            <button
-                                onClick={onToggleShowCaptionLine}
-                                className="flex-shrink-0 z-30 p-[5px] rounded-full bg-gray-800/50 hover:bg-gray-700/70 border border-gray-600/50 transition-all mr-2"
-                                title={showCaptionLine ? "Hide caption guideline" : "Show caption guideline"}
-                            >
-                                {showCaptionLine ? (
-                                    <Eye size={12} className="text-gray-300" />
-                                ) : (
-                                    <EyeOff size={12} className="text-gray-500" />
-                                )}
-                            </button>
-
-                            {/* Caption Position Line (첫 줄) */}
-                            {showCaptionLine && (
-                                <div className="flex-1 border-t-2 border-dashed border-gray-300/80"/>
-                            )}
-                        </div>
-                        <div style={{ height: `${twoLineTextHeight}px` }} />
-                        {/* 두 줄 텍스트 영역 표시선 */}
-                        {showCaptionLine && <div className="pt-[11px] pb-[11px]">
-                            <div
-                                className="border-t-2 border-dashed border-gray-300/50"
-                                style={{
-                                    // Eye + Eye's margin right
-                                    marginLeft: `${22 + 8}px`,
-                                }}
-                            />
-                        </div>}
-                    </div>}
-
-                    {/* Caption Position Slider */}
-                    <div
-                        className={`relative`}
-                        style={{ height: `${sliderHeight}px` }}
-                    >
-                        <input
-                            type="range"
-                            min="0"
-                            max="100"
-                            value={100 - captionPosition} // Inverted: top of slider = top of video
-                            onChange={onChangeCaptionPositionSlider}
-                            className="w-6 h-full cursor-grab active:cursor-grabbing
+                        {showCaptionLine ? (
+                            <Eye size={14} className="text-gray-300" />
+                        ) : (
+                            <EyeOff size={14} className="text-gray-500" />
+                        )}
+                    </button>
+                    <input
+                        type="range"
+                        min="0"
+                        max="100"
+                        value={100 - captionPosition} // Inverted: top of slider = top of video
+                        onChange={onChangeCaptionPositionSlider}
+                        className="absolute w-6 h-full cursor-grab active:cursor-grabbing
                                 [&::-webkit-slider-runnable-track]:px-0.5
                                 [&::-webkit-slider-runnable-track]:py-0.5
                                 [&::-webkit-slider-runnable-track]:bg-white
@@ -635,20 +568,28 @@ const VideoPlayerPanel = forwardRef<VideoPlayerHandle, VideoPlayerPanelProps>(({
                                 [&::-moz-range-track]:bg-white
                                 [&::-moz-range-track]:rounded-md
                             "
-                            style={{
-                                writingMode: 'vertical-lr',
-                                direction: 'rtl',
-                                accentColor: "#A855F7",
-                            }}
-                        />
-                    </div>
-
+                        style={{
+                            top: 0,
+                            left: CAPTION_AREA_LINE_TOGGLE_BUTTON_SIZE + 8,
+                            writingMode: 'vertical-lr',
+                            direction: 'rtl',
+                            accentColor: "#A855F7",
+                        }}
+                    />
+                </div>
+                <div className="w-8"/>
+                <div
+                    className="flex justify-center relative"
+                    style={{
+                        width: `${videoContainerWidth}px`
+                    }}
+                >
+                    {/* Video Area */}
                     <div
                         className="relative bg-gradient-to-br from-gray-900 to-black rounded-2xl border border-purple-500/30 overflow-hidden shadow-2xl"
                         style={{
                             width: `${videoContainerWidth}px`,
                             height: `${videoContainerHeight}px`
-                            // aspectRatio: '9/16'
                         }}
                     >
                         {videoUrl ? (
@@ -671,32 +612,6 @@ const VideoPlayerPanel = forwardRef<VideoPlayerHandle, VideoPlayerPanelProps>(({
                                 )}
 
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent pointer-events-none"></div>
-
-                                {/* Caption Overlay */}
-                                {currentPairedSegmentData && fontSize > 0 && (
-                                    <div
-                                        className="absolute left-4 right-4 z-20"
-                                        style={{
-                                            // Eye button size
-                                            top: `${captionAreaTop + 24}px`
-                                        }}
-                                    >
-                                        <p
-                                            ref={setCaptionRef}
-                                            className="text-center leading-tight px-2 cursor-default"
-                                            style={captionStyle}
-                                        >
-                                            {currentPairedSegmentData.map((pairedSegmentData, index) => {
-                                                return <span
-                                                    key={index}
-                                                    style={getPairedCaptionStyle(pairedSegmentData.isActive)}
-                                                >
-                                                    {pairedSegmentData.word}{(index + 1) % 2 === 1 ? ' ' : ''}
-                                                </span>
-                                            })}
-                                        </p>
-                                    </div>
-                                )}
                                 <div className="absolute inset-0 flex items-center justify-center z-30 pointer-events-none">
                                     <button
                                         onClick={isVideoEnded ? onClickReplay : onClickPlayAndPause}
@@ -748,6 +663,52 @@ const VideoPlayerPanel = forwardRef<VideoPlayerHandle, VideoPlayerPanelProps>(({
                             </div>
                         )}
                     </div>
+
+                    {/* Caption Area */}
+                    {fontSize > 0 && <div
+                        className="absolute flex flex-col z-20"
+                        style={{
+                            top: `${captionAreaTop}px`,
+                            left: '-24px',
+                            right: '-20px',
+                            height: 'fit-content',
+                        }}
+                    >
+                        {/* 두 줄 텍스트 영역 표시선 */}
+                        {showCaptionLine ? <div className="pb-2.5">
+                            <div className="border-t-2 border-dashed border-gray-300/50"/>
+                        </div> : <div className="h-6"/>}
+                        {/* Caption Overlay */}
+                        {currentPairedSegmentData ? (
+                            <div
+                                className="z-20"
+                                style={{
+                                    height: `${twoLineTextHeight}px`
+                                }}
+                            >
+                                <p
+                                    ref={setCaptionRef}
+                                    className="text-center leading-tight px-2 cursor-default"
+                                    style={captionStyle}
+                                >
+                                    {currentPairedSegmentData.map((pairedSegmentData, index) => {
+                                        return <span
+                                            key={index}
+                                            style={{
+                                                ...getPairedCaptionStyle(pairedSegmentData.isActive),
+                                            }}
+                                        >
+                                            {pairedSegmentData.word}{(index + 1) % 2 === 1 ? ' ' : ''}
+                                        </span>
+                                    })}
+                                </p>
+                            </div>
+                        ) : <div style={{ height: `${twoLineTextHeight}px` }} />}
+                        {/* 두 줄 텍스트 영역 표시선 */}
+                        {showCaptionLine ? <div className="pt-2.5">
+                            <div className="border-t-2 border-dashed border-gray-300/50"/>
+                        </div> : <div className="h-6"/>}
+                    </div>}
                 </div>
             </div>
         </div>

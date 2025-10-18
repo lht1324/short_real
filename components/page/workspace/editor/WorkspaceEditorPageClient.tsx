@@ -15,6 +15,7 @@ import VideoPlayerPanel, {VideoPlayerHandle} from "@/components/page/workspace/e
 import MusicPanel from "@/components/page/workspace/editor/MusicPanel";
 import MusicEditPanel from "@/components/page/workspace/editor/MusicEditPanel";
 import {musicClientAPI} from "@/api/client/musicClientAPI";
+import {PostVideoMergeCaptionRequest} from "@/api/types/api/video/merge/caption/PostVideoMergeCaptionRequest";
 
 interface VideoData {
     title: string;
@@ -42,9 +43,9 @@ export interface CaptionConfigState {
     showCaptionLine: boolean;
 
     // Shadow settings state
-    isShadowEnabled: boolean;
-    shadowIntensity: number; // 0-100 (maps to opacity)
-    shadowThickness: number; // 0-100 (maps to blur-radius)
+    // isShadowEnabled: boolean;
+    // shadowIntensity: number; // 0-100 (maps to opacity)
+    // shadowThickness: number; // 0-100 (maps to blur-radius)
 
     // Color settings state
     activeColor: string;
@@ -53,8 +54,9 @@ export interface CaptionConfigState {
     inactiveOutlineColor: string;
     activeOutlineThickness: number; // 0-100 (maps to stroke width)
     inactiveOutlineThickness: number; // 0-100 (maps to stroke width)
-    activeOutlineEnabled: boolean;
-    inactiveOutlineEnabled: boolean;
+    isActiveOutlineEnabled: boolean;
+    isInactiveOutlineEnabled: boolean;
+    is3DTextEnabled: boolean;
 }
 
 export interface MusicPlayConfig {
@@ -71,8 +73,8 @@ enum ConfigPanelType {
 
 const INITIAL_CAPTION_CONFIG_STATE: CaptionConfigState = {
     // Font settings state
-    fontFamilyName: "Roboto",
-    fontSize: 60,
+    fontFamilyName: "Poppins",
+    fontSize: 64,
     fontWeight: 900,
 
     // Caption settings state
@@ -81,20 +83,48 @@ const INITIAL_CAPTION_CONFIG_STATE: CaptionConfigState = {
     showCaptionLine: true,
 
     // Shadow settings state
-    isShadowEnabled: true,
-    shadowIntensity: 80,
-    shadowThickness: 50,
+    // isShadowEnabled: true,
+    // shadowIntensity: 80,
+    // shadowThickness: 50,
 
     // Color settings state
-    activeColor:'#FFFFFF',
+    activeColor:'#FF0000',
     inactiveColor:'#A0A0A0',
-    activeOutlineEnabled: false,
-    activeOutlineColor:'#000000',
-    activeOutlineThickness: 50,
-    inactiveOutlineEnabled:false,
+    isActiveOutlineEnabled: true,
+    activeOutlineColor:'#FFFFFF',
+    activeOutlineThickness: 60,
+    isInactiveOutlineEnabled:false,
     inactiveOutlineColor:'#404040',
     inactiveOutlineThickness: 50,
+    is3DTextEnabled: false,
 }
+
+// const INITIAL_CAPTION_CONFIG_STATE: CaptionConfigState = {
+//     // Font settings state
+//     fontFamilyName: "Roboto",
+//     fontSize: 60,
+//     fontWeight: 900,
+//
+//     // Caption settings state
+//     captionPosition: 80,
+//     captionHeight: 0,
+//     showCaptionLine: true,
+//
+//     // Shadow settings state
+//     // isShadowEnabled: true,
+//     // shadowIntensity: 80,
+//     // shadowThickness: 50,
+//
+//     // Color settings state
+//     activeColor:'#FFFFFF',
+//     inactiveColor:'#A0A0A0',
+//     isActiveOutlineEnabled: false,
+//     activeOutlineColor:'#000000',
+//     activeOutlineThickness: 50,
+//     isInactiveOutlineEnabled: false,
+//     inactiveOutlineColor:'#404040',
+//     inactiveOutlineThickness: 50,
+// }
 
 function WorkspaceEditorPageClient() {
     const router = useRouter();
@@ -178,6 +208,43 @@ function WorkspaceEditorPageClient() {
             volume: musicVolume,
         } : null;
     }, [editingMusicData, musicStartSec, videoDuration, musicVolume]);
+
+    const postVideoMergeCaptionRequest: PostVideoMergeCaptionRequest | null = useMemo(() => {
+        if (videoData?.videoUrl && captionDataList.length !== 0 && taskId) {
+            return {
+                videoUrl: videoData.videoUrl,
+                captionDataList: captionDataList,
+                captionConfigState: captionConfigState,
+                videoHeight: 594, // 나중에 제대로 넣어주기
+                videoGenerationTaskId: taskId,
+            }
+        } else {
+            return null;
+        }
+    }, [captionConfigState, captionDataList, taskId, videoData?.videoUrl]);
+
+    const onClickMergeCaptionTest = useCallback(async () => {
+        if (postVideoMergeCaptionRequest) {
+            const response = await fetch('/api/video/merge/caption', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(postVideoMergeCaptionRequest),
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                console.log('자막 burn-in 요청 성공:', result.predictionId);
+                // UI에 처리 중 상태 표시
+            } else {
+                console.error('자막 burn-in 요청 실패:', result.error);
+            }
+
+            return;
+        } else {
+            return;
+        }
+    }, [postVideoMergeCaptionRequest]);
 
     const onClickSceneSequence = useCallback((sceneStartSec: number) => {
         videoPlayerRef.current?.seekTo(sceneStartSec);
@@ -343,7 +410,8 @@ function WorkspaceEditorPageClient() {
                         </button>
                     </div>
                     <button 
-                        onClick={onExportVideo}
+                        // onClick={onExportVideo}
+                        onClick={onClickMergeCaptionTest}
                         className="bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all"
                     >
                         Export / Share
