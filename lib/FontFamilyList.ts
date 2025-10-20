@@ -63,10 +63,7 @@ const FONT_FAMILY_LIST: FontFamily[] = [
         weightList: [
             { weight: 300, isItalicSupported: true },
             { weight: 400, isItalicSupported: true },
-            { weight: 500, isItalicSupported: true },
-            { weight: 600, isItalicSupported: true },
             { weight: 700, isItalicSupported: true },
-            { weight: 800, isItalicSupported: true },
             { weight: 900, isItalicSupported: true }
         ]
     },
@@ -170,13 +167,10 @@ const FONT_FAMILY_LIST: FontFamily[] = [
         generic: "sans-serif",
         weightList: [
             { weight: 100, isItalicSupported: true },
-            { weight: 200, isItalicSupported: true },
             { weight: 300, isItalicSupported: true },
             { weight: 400, isItalicSupported: true },
             { weight: 500, isItalicSupported: true },
-            { weight: 600, isItalicSupported: true },
             { weight: 700, isItalicSupported: true },
-            { weight: 800, isItalicSupported: true },
             { weight: 900, isItalicSupported: true }
         ]
     },

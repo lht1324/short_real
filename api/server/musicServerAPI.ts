@@ -3,6 +3,7 @@ import { BackgroundMusic } from "@/api/types/supabase/BackgroundMusics";
 import { PostgrestResponse } from "@supabase/supabase-js";
 import {createSupabaseServiceRoleClient} from "@/lib/supabaseServiceRole";
 import {MusicData} from "@/api/types/supabase/VideoGenerationTasks";
+import Replicate from "replicate";
 
 export const musicServerAPI = {
     async getBackgroundMusics(): Promise<BackgroundMusic[]> {
@@ -167,6 +168,51 @@ export const musicServerAPI = {
         } catch (error) {
             console.error('Unexpected error in getMusicDatas:', error);
             return [];
+        }
+    },
+
+    async postMusicModifying(
+        audioUrl: string,
+        cuttingAreaStartSec: number,
+        cuttingAreaEndSec: number,
+        volumePercentage: number,
+        videoGenerationTaskId: string
+    ) {
+        const replicate = new Replicate({
+            auth: process.env.REPLICATE_API_TOKEN,
+        });
+
+        // 웹훅 URL 생성
+        const baseUrl = process.env.BASE_URL;
+        if (!baseUrl) {
+            throw new Error('BASE_URL is not set');
+        }
+
+        const webhookUrl = `${baseUrl}/webhook/replicate/music?videoGenerationTaskId=${videoGenerationTaskId}`;
+
+        try {
+            const prediction = await replicate.predictions.create({
+                version: "lht1324/ffmpeg-audio-modifier:8706bda5af3fa52e103a0d441e3d6cb981d1aef7a23f22248ff1de6f557a0763",
+                input: {
+                    audio_url: audioUrl,
+                    cutting_area_start_sec: cuttingAreaStartSec,
+                    cutting_area_end_sec: cuttingAreaEndSec,
+                    volume_percentage: volumePercentage,
+                },
+                webhook: webhookUrl,
+                webhook_events_filter: ["completed"],
+            });
+
+            if (prediction.error || prediction.status === "failed") {
+                throw new Error(`Subtitle burn-in failed: ${prediction.error}`);
+            }
+
+            console.log(`[Subtitle Burn-in] Prediction ID: ${prediction.id}`);
+            return prediction.id;
+
+        } catch (error) {
+            console.error("[Subtitle Burn-in] Error:", error);
+            throw error;
         }
     }
 }

@@ -24,6 +24,7 @@ export default function ApiPreloader() {
                     '/api/video/merge',
                     '/api/video/merge/caption',
                     // '/api/video/merge/music',
+                    '/api/music/modifying',
                     '/webhook/replicate',
                     '/webhook/suno-api'
                 ];

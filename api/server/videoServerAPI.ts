@@ -181,12 +181,13 @@ export const videoServerAPI = {
             throw new Error('BASE_URL is not set');
         }
 
+        console.log("assContent: ", assContent);
+
         const webhookUrl = `${baseUrl}/webhook/replicate/caption?videoGenerationTaskId=${videoGenerationTaskId}`;
 
         try {
             const prediction = await replicate.predictions.create({
-                version: "lht1324/ffmpeg-caption-burner:c23aaebf0d3f5bcd3411059a8b9b2a7bba6b71d0268d8cc1c0e96cc4f912be71",
-                // version: "lht1324/video-caption-burner:13fc73a5240b19bb4b491950ca7c909d6aaff567ccc9bdaaa01f310415fb46da",
+                version: "lht1324/ffmpeg-caption-burner:8baa73455e00995485ad5e8e62077c04fc3a4f9ece3096911e1bc100427cda33",
                 input: {
                     video_url: videoUrl,
                     ass_content: assContent,
@@ -208,7 +209,13 @@ export const videoServerAPI = {
         }
     },
 
-    async postVideoMergeMusic() {
+    async postVideoMergeMusic(
+        audioUrl: string,
+        cuttingAreaStartSec: number,
+        cuttingAreaEndSec: number,
+        volumePercentage: number,
+        videoGenerationTaskId: string
+    ) {
 
     },
 

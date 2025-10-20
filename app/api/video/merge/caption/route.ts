@@ -9,7 +9,11 @@ export async function POST(request: NextRequest) {
             videoUrl,
             captionDataList,
             captionConfigState,
+            videoWidth,
             videoHeight,
+            captionAreaTop,
+            captionAreaVerticalPadding,
+            captionOneLineHeight,
             videoGenerationTaskId
         }: PostVideoMergeCaptionRequest = await request.json();
 
@@ -17,7 +21,11 @@ export async function POST(request: NextRequest) {
         const assContent = generateASSContent(
             captionDataList,
             captionConfigState,
-            videoHeight || 1080
+            videoWidth,
+            videoHeight,
+            captionAreaTop,
+            captionAreaVerticalPadding,
+            captionOneLineHeight,
         );
 
         // Replicate API 호출 (비동기)

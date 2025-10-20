@@ -5,7 +5,7 @@ import {Eye, EyeOff, Play, Pause, RotateCcw} from "lucide-react";
 import {
     CaptionConfigState,
     CaptionData,
-    MusicPlayConfig
+    MusicPlayConfig, VideoPlayerUIData
 } from "@/components/page/workspace/editor/WorkspaceEditorPageClient";
 import {Properties} from "csstype";
 
@@ -36,6 +36,7 @@ interface VideoPlayerPanelProps {
     musicPlayConfig: MusicPlayConfig;
     onChangeVideoPanelContainerHeight: (containerHeight: number) => void;
     onChangeCaptionConfigState: (captionConfigState: CaptionConfigState) => void;
+    onChangeVideoPlayerUIData: (uiData: VideoPlayerUIData) => void;
     onChangeCurrentTime: (currentTime: number) => void;
     onFinishLoading: () => void;
 }
@@ -49,6 +50,7 @@ const VideoPlayerPanel = forwardRef<VideoPlayerHandle, VideoPlayerPanelProps>(({
     musicPlayConfig,
     onChangeVideoPanelContainerHeight,
     onChangeCaptionConfigState,
+    onChangeVideoPlayerUIData,
     onChangeCurrentTime,
     onFinishLoading,
 }, ref) => {
@@ -331,6 +333,7 @@ const VideoPlayerPanel = forwardRef<VideoPlayerHandle, VideoPlayerPanelProps>(({
             if (lineCount === 1 || lineCount === 2) {
                 setCaptionLineCount(lineCount);
             }
+
             onChangeCaptionHeight(node.offsetHeight);
         }
     }, [onChangeCaptionHeight]);
@@ -515,6 +518,18 @@ const VideoPlayerPanel = forwardRef<VideoPlayerHandle, VideoPlayerPanelProps>(({
 
         audio.volume = musicPlayConfig.volume; // ✅ 단순 property 변경만
     }, [musicPlayConfig.volume]);
+
+    useEffect(() => {
+        onChangeVideoPlayerUIData({
+            videoWidth: videoContainerWidth,
+            videoHeight: videoContainerHeight,
+            captionAreaTop: captionAreaTop,
+            captionAreaVerticalPadding: 10,
+            captionOneLineHeight: captionLineCount === 1
+                ? captionHeight
+                : captionHeight / 2,
+        })
+    }, [videoContainerWidth, videoContainerHeight, captionAreaTop, captionLineCount, captionHeight, onChangeVideoPlayerUIData]);
 
     return (
         <div

@@ -1,14 +1,14 @@
 'use client'
 
-import {memo, useCallback, useEffect, useMemo, useRef} from "react";
-import {getFontWeightName} from "@/utils/fontUtils";
+import {memo, useCallback, useMemo, useRef} from "react";
 import {CaptionConfigState} from "@/components/page/workspace/editor/WorkspaceEditorPageClient";
 import {FontVariant} from "@/api/types/google-fonts/GoogleFont";
 import {AccordionSection} from "@/components/public/Accordion";
+import {FontFamily} from "@/lib/FontFamilyList";
 
 interface CaptionConfigPanelProps {
     captionConfigState: CaptionConfigState;
-    fontFamilyNameList: string[];
+    fontFamilyList: FontFamily[];
     selectedFontFamilyWeightList: FontVariant[];
     selectedFontFamilyFullShape: string;
     onChangeCaptionConfigState: (captionConfigState: CaptionConfigState) => void;
@@ -16,12 +16,18 @@ interface CaptionConfigPanelProps {
 
 function CaptionConfigPanel({
     captionConfigState,
-    fontFamilyNameList,
+    fontFamilyList,
     selectedFontFamilyWeightList,
     selectedFontFamilyFullShape,
     onChangeCaptionConfigState,
 }: CaptionConfigPanelProps) {
     const fontSizeInputRef = useRef<HTMLInputElement>(null);
+
+    const fontFamilyNameList = useMemo(() => {
+        return fontFamilyList.map((fontFamily) => {
+            return fontFamily.name;
+        });
+    }, [fontFamilyList]);
 
     // Font settings state
     const fontFamilyName = useMemo(() => {
@@ -76,11 +82,45 @@ function CaptionConfigPanel({
 
     // Font settings state
     const onChangeFontFamilyName = useCallback((newFontFamilyName: string) => {
-        onChangeCaptionConfigState({
-            ...captionConfigState,
-            fontFamilyName: newFontFamilyName,
-        })
-    }, [captionConfigState, onChangeCaptionConfigState]);
+        const newFontFamily = fontFamilyList.find((fontFamily) => {
+            return fontFamily.name === newFontFamilyName;
+        });
+
+        // 어차피 undefined라면 시작부터 잘못된 거니 바꾸는 의미가 없음
+        if (newFontFamily) {
+            // 현재 fontWeight이 새 폰트에 존재하는지 확인
+            const hasCurrentWeight = newFontFamily.weightList.some(
+                variant => variant.weight === fontWeight
+            );
+
+            // 존재하지 않으면 가장 가까운 값 찾기 (거리가 같으면 더 큰 값 선택)
+            if (!hasCurrentWeight && newFontFamily.weightList.length > 0) {
+                const newFontWeight = newFontFamily.weightList.reduce((closest, variant) => {
+                    const currentDiff = Math.abs(variant.weight - fontWeight);
+                    const closestDiff = Math.abs(closest.weight - fontWeight);
+
+                    if (currentDiff < closestDiff) {
+                        return variant;
+                    } else if (currentDiff === closestDiff) {
+                        // 거리가 같으면 더 큰 값 선택
+                        return variant.weight > closest.weight ? variant : closest;
+                    }
+                    return closest;
+                }).weight;
+
+                onChangeCaptionConfigState({
+                    ...captionConfigState,
+                    fontFamilyName: newFontFamilyName,
+                    fontWeight: newFontWeight,
+                });
+            } else {
+                onChangeCaptionConfigState({
+                    ...captionConfigState,
+                    fontFamilyName: newFontFamilyName,
+                });
+            }
+        }
+    }, [captionConfigState, fontFamilyList, fontWeight, onChangeCaptionConfigState]);
     const onChangeFontSize = useCallback((newFontSize: number) => {
         onChangeCaptionConfigState({
             ...captionConfigState,

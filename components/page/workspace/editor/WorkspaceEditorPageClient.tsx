@@ -16,6 +16,7 @@ import MusicPanel from "@/components/page/workspace/editor/MusicPanel";
 import MusicEditPanel from "@/components/page/workspace/editor/MusicEditPanel";
 import {musicClientAPI} from "@/api/client/musicClientAPI";
 import {PostVideoMergeCaptionRequest} from "@/api/types/api/video/merge/caption/PostVideoMergeCaptionRequest";
+import {PostMusicModifyingRequest} from "@/api/types/api/music/modifying/PostMusicModifyingRequest";
 
 interface VideoData {
     title: string;
@@ -57,6 +58,14 @@ export interface CaptionConfigState {
     isActiveOutlineEnabled: boolean;
     isInactiveOutlineEnabled: boolean;
     is3DTextEnabled: boolean;
+}
+
+export interface VideoPlayerUIData {
+    videoWidth: number;
+    videoHeight: number;
+    captionAreaTop: number;
+    captionAreaVerticalPadding: number;
+    captionOneLineHeight: number; // 실질적 fontSize
 }
 
 export interface MusicPlayConfig {
@@ -175,6 +184,8 @@ function WorkspaceEditorPageClient() {
         return nextFont ? nextFont.style.fontFamily : `'${selectedFontFamily?.name}', '${selectedFontFamily?.generic}'`;
     }, [selectedFontFamily]);
 
+
+    const [videoPlayerUIData, setVideoPlayerUIData] = useState<VideoPlayerUIData | null>(null);
     const [videoCurrentTime, setVideoCurrentTime] = useState<number>(0.0);
     const currentSceneIndex = useMemo(() => {
         return captionDataList.findIndex((captionData, index) => {
@@ -210,18 +221,22 @@ function WorkspaceEditorPageClient() {
     }, [editingMusicData, musicStartSec, videoDuration, musicVolume]);
 
     const postVideoMergeCaptionRequest: PostVideoMergeCaptionRequest | null = useMemo(() => {
-        if (videoData?.videoUrl && captionDataList.length !== 0 && taskId) {
+        if (videoData?.videoUrl && captionDataList.length !== 0 && taskId && videoPlayerUIData) {
             return {
                 videoUrl: videoData.videoUrl,
                 captionDataList: captionDataList,
                 captionConfigState: captionConfigState,
-                videoHeight: 594, // 나중에 제대로 넣어주기
+                videoWidth: videoPlayerUIData.videoWidth,
+                videoHeight: videoPlayerUIData.videoHeight,
+                captionAreaTop: videoPlayerUIData.captionAreaTop,
+                captionAreaVerticalPadding: videoPlayerUIData.captionAreaVerticalPadding,
+                captionOneLineHeight: videoPlayerUIData.captionOneLineHeight,
                 videoGenerationTaskId: taskId,
             }
         } else {
             return null;
         }
-    }, [captionConfigState, captionDataList, taskId, videoData?.videoUrl]);
+    }, [captionConfigState, captionDataList, taskId, videoData?.videoUrl, videoPlayerUIData]);
 
     const onClickMergeCaptionTest = useCallback(async () => {
         if (postVideoMergeCaptionRequest) {
@@ -246,6 +261,47 @@ function WorkspaceEditorPageClient() {
         }
     }, [postVideoMergeCaptionRequest]);
 
+    // useMemo - postMusicModifyingRequest 생성
+    const postMusicModifyingRequest: PostMusicModifyingRequest | null = useMemo(() => {
+        if (editingMusicData?.audioUrl && videoDuration > 0 && taskId) {
+            const endSec = musicStartSec + videoDuration;
+
+            return {
+                audioUrl: editingMusicData.audioUrl,
+                cuttingAreaStartSec: musicStartSec,
+                cuttingAreaEndSec: endSec,
+                volumePercentage: Math.round(musicVolume * 100), // 0.0~1.0 → 0~100
+                videoGenerationTaskId: taskId,
+            };
+        } else {
+            return null;
+        }
+    }, [editingMusicData?.audioUrl, musicStartSec, videoDuration, musicVolume, taskId]);
+
+    // useCallback - onClickMusicModifying 핸들러
+    const onClickMusicModifying = useCallback(async () => {
+        if (postMusicModifyingRequest) {
+            const response = await fetch('/api/music/modifying', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(postMusicModifyingRequest),
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                console.log('오디오 처리 요청 성공:', result.predictionId);
+                // UI에 처리 중 상태 표시
+            } else {
+                console.error('오디오 처리 요청 실패:', result.error);
+            }
+
+            return;
+        } else {
+            return;
+        }
+    }, [postMusicModifyingRequest]);
+
     const onClickSceneSequence = useCallback((sceneStartSec: number) => {
         videoPlayerRef.current?.seekTo(sceneStartSec);
         setVideoCurrentTime(sceneStartSec);
@@ -257,6 +313,10 @@ function WorkspaceEditorPageClient() {
 
     const onChangeCaptionConfigState = useCallback((captionConfig: CaptionConfigState) => {
         setCaptionConfigState(captionConfig);
+    }, []);
+
+    const onChangeVideoPlayerUIData = useCallback((uiData: VideoPlayerUIData) => {
+        setVideoPlayerUIData(uiData);
     }, []);
 
     const onFinishSceneSequencePanelLoading = useCallback(() => {
@@ -412,6 +472,7 @@ function WorkspaceEditorPageClient() {
                     <button 
                         // onClick={onExportVideo}
                         onClick={onClickMergeCaptionTest}
+                        // onClick={onClickMusicModifying}
                         className="bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all"
                     >
                         Export / Share
@@ -474,7 +535,7 @@ function WorkspaceEditorPageClient() {
                                 {activeConfigPanel === ConfigPanelType.Caption && (
                                     <CaptionConfigPanel
                                         captionConfigState={captionConfigState}
-                                        fontFamilyNameList={fontFamilyList.map(font => font.name)}
+                                        fontFamilyList={fontFamilyList}
                                         selectedFontFamilyWeightList={selectedFontFamilyWeightList}
                                         selectedFontFamilyFullShape={selectedFontFamilyFullShape}
                                         onChangeCaptionConfigState={onChangeCaptionConfigState}
@@ -503,6 +564,7 @@ function WorkspaceEditorPageClient() {
                                 selectedFontFamilyFullShape={selectedFontFamilyFullShape}
                                 onChangeVideoPanelContainerHeight={onChangeVideoPanelContainerHeight}
                                 onChangeCaptionConfigState={onChangeCaptionConfigState}
+                                onChangeVideoPlayerUIData={onChangeVideoPlayerUIData}
                                 onChangeCurrentTime={onChangeVideoCurrentTime}
                                 onFinishLoading={onFinishVideoPlayerPanelLoading}
                             />

@@ -6,7 +6,11 @@ import { CaptionData, CaptionConfigState } from '@/components/page/workspace/edi
 export function generateASSContent(
     captionDataList: CaptionData[],
     captionConfig: CaptionConfigState,
-    videoHeight: number
+    videoWidth: number,
+    videoHeight: number,
+    captionAreaTop: number,
+    captionAreaVerticalPadding: number,
+    captionOneLineHeight: number,
 ): string {
     // 색상을 BGR 포맷으로 변환 (ASS 포맷 요구사항)
     const hexToASSColor = (hex: string): string => {
@@ -16,43 +20,20 @@ export function generateASSContent(
         return `&H00${b.toString(16).padStart(2, '0').toUpperCase()}${g.toString(16).padStart(2, '0').toUpperCase()}${r.toString(16).padStart(2, '0').toUpperCase()}`;
     };
 
-    const videoWidth = Math.round(videoHeight * 9 / 16);
-
-    // 폰트 사이즈 그대로 사용
-    const fontSize = Math.round(captionConfig.fontSize * 0.7);
+    // ASS는 lineHeight을 폰트 사이즈로 사용함
+    const fontSize = captionOneLineHeight;
 
     // VideoPlayerPanel과 동일한 Y 위치 계산
-    const estimatedCaptionHeight = Math.round(fontSize * 1.2);
-    const lineAreaHeight = 24;
-    const captionAreaHeight = lineAreaHeight + estimatedCaptionHeight * 2 + lineAreaHeight;
-
-    // top 기준 픽셀 위치
-    const captionAreaTop = Math.round((captionConfig.captionPosition / 100) * (videoHeight - captionAreaHeight));
-
-    // ASS MarginV: 기존 위치에서 11px 아래로
-    const captionAreaDashedBorderHeight = 2;
-    const lineAreaVerticalPadding = (lineAreaHeight - captionAreaDashedBorderHeight) / 2; // 11
-    // const marginV = captionAreaTop + lineAreaHeight - lineAreaVerticalPadding;
-    const marginV = captionAreaTop + lineAreaHeight;
+    const marginV = captionAreaTop + captionAreaVerticalPadding;
 
     // Active Outline thickness
     const activeOutline = captionConfig.isActiveOutlineEnabled
-        ? Math.round((captionConfig.activeOutlineThickness / 100) * fontSize * 0.15)
+        ? Math.round((captionConfig.activeOutlineThickness / 100) * 12)
         : 0;
 
     // Inactive Outline thickness
     const inactiveOutline = captionConfig.isInactiveOutlineEnabled
-        ? Math.round((captionConfig.inactiveOutlineThickness / 100) * fontSize * 0.15)
-        : 0;
-
-    // Active Shadow thickness (isShadowEnabled 체크)
-    const activeShadow = captionConfig.isShadowEnabled
-        ? Math.round((captionConfig.shadowThickness / 100) * fontSize * 0.2)
-        : 0;
-
-    // Inactive Shadow thickness (isShadowEnabled 체크)
-    const inactiveShadow = captionConfig.isShadowEnabled
-        ? Math.round((captionConfig.shadowThickness / 100) * fontSize * 0.2)
+        ? Math.round((captionConfig.inactiveOutlineThickness / 100) * 12)
         : 0;
 
     // Font info를 JSON으로 직렬화 (주석으로 포함)
@@ -62,7 +43,12 @@ export function generateASSContent(
         weights: [captionConfig.fontWeight]
     };
 
-    // ASS 헤더 (FONT_INFO 주석 추가)
+    const fontWeightName = getStandardFontWeightNameByValue(captionConfig.fontWeight);
+    const fontName = !(fontWeightName === "Regular" || fontWeightName === "Bold")
+        ? `${captionConfig.fontFamilyName} ${fontWeightName}`
+        : `${captionConfig.fontFamilyName}`;
+
+    // ASS 헤더 - 단일 Default 스타일 (공통 요소만)
     const header = `[Script Info]
 Title: Generated Subtitles
 ScriptType: v4.00+
@@ -72,8 +58,7 @@ PlayResY: ${videoHeight}
 
 [V4+ Styles]
 Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
-Style: Active,${captionConfig.fontFamilyName},${fontSize},${hexToASSColor(captionConfig.activeColor)},&H000000FF,${hexToASSColor(captionConfig.activeOutlineColor)},&H00000000,${captionConfig.fontWeight >= 700 ? 1 : 0},0,0,0,100,100,0,0,1,${activeOutline},${activeShadow},8,10,10,${marginV},1
-Style: Inactive,${captionConfig.fontFamilyName},${fontSize},${hexToASSColor(captionConfig.inactiveColor)},&H000000FF,${hexToASSColor(captionConfig.inactiveOutlineColor)},&H00000000,${captionConfig.fontWeight >= 700 ? 1 : 0},0,0,0,100,100,0,0,1,${inactiveOutline},${inactiveShadow},8,10,10,${marginV},1
+Style: Default,${fontName},${fontSize},&H00FFFFFF,&H000000FF,&H00000000,&H00000000,${fontWeightName === "Bold" ? 1 : 0},0,0,0,100,100,0,0,1,0,0,8,10,10,${marginV},1
 
 [Events]
 Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
@@ -88,7 +73,7 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
         return `${h}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}.${cs.toString().padStart(2, '0')}`;
     };
 
-    // 두 단어씩 묶어서 Dialogue 생성
+    // 두 단어씩 묶어서 Dialogue 생성 (\bord 오버라이드 사용)
     const dialogues: string[] = [];
     captionDataList.forEach(caption => {
         const segments = caption.subtitleSegmentationList;
@@ -98,24 +83,44 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
             const secondWord = segments[i + 1];
 
             if (secondWord) {
+                // firstWord Active 구간
                 const firstActiveStart = formatTime(firstWord.startSec);
                 const firstActiveEnd = formatTime(firstWord.endSec);
+
                 dialogues.push(
-                    `Dialogue: 0,${firstActiveStart},${firstActiveEnd},Active,,0,0,0,,{\\c${hexToASSColor(captionConfig.activeColor)}}${firstWord.word} {\\c${hexToASSColor(captionConfig.inactiveColor)}}${secondWord.word}`
+                    `Dialogue: 0,${firstActiveStart},${firstActiveEnd},Default,,0,0,0,,{\\bord${activeOutline}\\c${hexToASSColor(captionConfig.activeColor)}\\3c${hexToASSColor(captionConfig.activeOutlineColor)}}${firstWord.word} {\\bord${inactiveOutline}\\c${hexToASSColor(captionConfig.inactiveColor)}\\3c${hexToASSColor(captionConfig.inactiveOutlineColor)}}${secondWord.word}`
                 );
 
+                // secondWord Active 구간
                 const secondActiveStart = formatTime(secondWord.startSec);
                 const secondActiveEnd = formatTime(secondWord.endSec);
+
                 dialogues.push(
-                    `Dialogue: 0,${secondActiveStart},${secondActiveEnd},Active,,0,0,0,,{\\c${hexToASSColor(captionConfig.inactiveColor)}}${firstWord.word} {\\c${hexToASSColor(captionConfig.activeColor)}}${secondWord.word}`
+                    `Dialogue: 0,${secondActiveStart},${secondActiveEnd},Default,,0,0,0,,{\\bord${inactiveOutline}\\c${hexToASSColor(captionConfig.inactiveColor)}\\3c${hexToASSColor(captionConfig.inactiveOutlineColor)}}${firstWord.word} {\\bord${activeOutline}\\c${hexToASSColor(captionConfig.activeColor)}\\3c${hexToASSColor(captionConfig.activeOutlineColor)}}${secondWord.word}`
                 );
             } else {
+                // 단어가 하나만 있는 경우
                 const start = formatTime(firstWord.startSec);
                 const end = formatTime(firstWord.endSec);
-                dialogues.push(`Dialogue: 0,${start},${end},Active,,0,0,0,,${firstWord.word}`);
+                dialogues.push(`Dialogue: 0,${start},${end},Default,,0,0,0,,{\\bord${activeOutline}\\c${hexToASSColor(captionConfig.activeColor)}\\3c${hexToASSColor(captionConfig.activeOutlineColor)}}${firstWord.word}`);
             }
         }
     });
 
     return header + dialogues.join('\n');
+}
+
+function getStandardFontWeightNameByValue(weightValue: number) {
+    switch (weightValue) {
+        case 100: return "Thin";
+        case 200: return "ExtraLight";
+        case 300: return "Light";
+        case 400: return "Regular";
+        case 500: return "Medium";
+        case 600: return "SemiBold";
+        case 700: return "Bold";
+        case 800: return "ExtraBold";
+        case 900: return "Black";
+        default: return "Regular";
+    }
 }
