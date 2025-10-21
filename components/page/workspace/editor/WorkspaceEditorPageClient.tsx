@@ -17,6 +17,7 @@ import MusicEditPanel from "@/components/page/workspace/editor/MusicEditPanel";
 import {musicClientAPI} from "@/api/client/musicClientAPI";
 import {PostVideoMergeCaptionRequest} from "@/api/types/api/video/merge/caption/PostVideoMergeCaptionRequest";
 import {PostMusicModifyingRequest} from "@/api/types/api/music/modifying/PostMusicModifyingRequest";
+import {PostVideoMergeFinalRequest} from "@/api/types/api/video/merge/final/PostVideoMergeFinalRequest";
 
 interface VideoData {
     title: string;
@@ -57,7 +58,6 @@ export interface CaptionConfigState {
     inactiveOutlineThickness: number; // 0-100 (maps to stroke width)
     isActiveOutlineEnabled: boolean;
     isInactiveOutlineEnabled: boolean;
-    is3DTextEnabled: boolean;
 }
 
 export interface VideoPlayerUIData {
@@ -82,8 +82,8 @@ enum ConfigPanelType {
 
 const INITIAL_CAPTION_CONFIG_STATE: CaptionConfigState = {
     // Font settings state
-    fontFamilyName: "Poppins",
-    fontSize: 64,
+    fontFamilyName: "Montserrat",
+    fontSize: 60,
     fontWeight: 900,
 
     // Caption settings state
@@ -98,14 +98,13 @@ const INITIAL_CAPTION_CONFIG_STATE: CaptionConfigState = {
 
     // Color settings state
     activeColor:'#FF0000',
-    inactiveColor:'#A0A0A0',
+    inactiveColor:'#BB0000',
     isActiveOutlineEnabled: true,
     activeOutlineColor:'#FFFFFF',
-    activeOutlineThickness: 60,
-    isInactiveOutlineEnabled:false,
-    inactiveOutlineColor:'#404040',
-    inactiveOutlineThickness: 50,
-    is3DTextEnabled: false,
+    activeOutlineThickness: 100,
+    isInactiveOutlineEnabled: true,
+    inactiveOutlineColor:'#BBBBBB',
+    inactiveOutlineThickness: 70,
 }
 
 // const INITIAL_CAPTION_CONFIG_STATE: CaptionConfigState = {
@@ -302,6 +301,51 @@ function WorkspaceEditorPageClient() {
         }
     }, [postMusicModifyingRequest]);
 
+    const postVideoMergeFinalRequest: PostVideoMergeFinalRequest | null = useMemo(() => {
+        if (videoData?.videoUrl && captionDataList.length !== 0 && editingMusicData?.audioUrl && taskId && videoPlayerUIData && videoDuration > 0) {
+            return {
+                videoGenerationTaskId: taskId,
+                videoUrl: videoData.videoUrl,
+                captionDataList: captionDataList,
+                captionConfigState: captionConfigState,
+                videoWidth: videoPlayerUIData.videoWidth,
+                videoHeight: videoPlayerUIData.videoHeight,
+                captionAreaTop: videoPlayerUIData.captionAreaTop,
+                captionAreaVerticalPadding: videoPlayerUIData.captionAreaVerticalPadding,
+                captionOneLineHeight: videoPlayerUIData.captionOneLineHeight,
+                audioUrl: editingMusicData.audioUrl,
+                cuttingAreaStartSec: musicStartSec,
+                cuttingAreaEndSec: musicStartSec + videoDuration,
+                volumePercentage: Math.round(musicVolume * 100),
+            };
+        } else {
+            return null;
+        }
+    }, [videoData?.videoUrl, captionDataList, editingMusicData?.audioUrl, taskId, videoPlayerUIData, videoDuration, captionConfigState, musicStartSec, musicVolume]);
+
+    const onClickFinish = useCallback(async () => {
+        if (postVideoMergeFinalRequest) {
+            const response = await fetch('/api/video/merge/final', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(postVideoMergeFinalRequest),
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                console.log('최종 병합 요청 성공:', result.predictionId);
+                // UI에 처리 중 상태 표시
+            } else {
+                console.error('최종 병합 요청 실패:', result.error);
+            }
+
+            return;
+        } else {
+            return;
+        }
+    }, [postVideoMergeFinalRequest]);
+
     const onClickSceneSequence = useCallback((sceneStartSec: number) => {
         videoPlayerRef.current?.seekTo(sceneStartSec);
         setVideoCurrentTime(sceneStartSec);
@@ -341,11 +385,6 @@ function WorkspaceEditorPageClient() {
 
     const onChangeMusicVolume = useCallback((newVolume: number) => {
         setMusicVolume(newVolume);
-    }, []);
-
-    const onExportVideo = useCallback(async () => {
-        console.log('Exporting video...');
-        // Download or redirect logic
     }, []);
 
     const onSelectMusic = useCallback((musicIndex: number) => {
@@ -469,13 +508,13 @@ function WorkspaceEditorPageClient() {
                             <div className="w-4 h-4 bg-gradient-to-r from-pink-500 to-purple-600 rounded-full absolute top-1 right-1"></div>
                         </button>
                     </div>
-                    <button 
-                        // onClick={onExportVideo}
-                        onClick={onClickMergeCaptionTest}
+                    <button
+                        onClick={onClickFinish}
+                        // onClick={onClickMergeCaptionTest}
                         // onClick={onClickMusicModifying}
                         className="bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all"
                     >
-                        Export / Share
+                        Finish
                     </button>
                 </div>
             </div>

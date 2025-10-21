@@ -202,6 +202,10 @@ export async function POST(request: NextRequest) {
         if (isAllScenesProcessed) {
             console.log(`모든 Scene 처리 완료. 최종 병합을 시작합니다: ${generationTask.id}`);
 
+            if (!generationTask.master_style_positive_prompt) {
+                throw new Error("Master style prompt is invalid.");
+            }
+
             const postMusicGenerationDataResult = await openAIServerAPI.postMusicGenerationData(
                 generationTask.video_main_subject as string,
                 generationTask.narration_script,

@@ -33,7 +33,7 @@ export const videoServerAPI = {
         }
 
         // ---- [추가] generationTaskId를 포함한 동적 웹훅 URL 생성 ----
-        const webhookUrl = `${baseUrl}/webhook/replicate?generationTaskId=${generationTaskId}`;
+        const webhookUrl = `${baseUrl}/webhook/replicate/video?generationTaskId=${generationTaskId}`;
 
 
         // Base64를 Data URL로 변환
@@ -181,9 +181,7 @@ export const videoServerAPI = {
             throw new Error('BASE_URL is not set');
         }
 
-        console.log("assContent: ", assContent);
-
-        const webhookUrl = `${baseUrl}/webhook/replicate/caption?videoGenerationTaskId=${videoGenerationTaskId}`;
+        const webhookUrl = `${baseUrl}/webhook/replicate/video/merge/caption?videoGenerationTaskId=${videoGenerationTaskId}`;
 
         try {
             const prediction = await replicate.predictions.create({
@@ -210,13 +208,97 @@ export const videoServerAPI = {
     },
 
     async postVideoMergeMusic(
-        audioUrl: string,
-        cuttingAreaStartSec: number,
-        cuttingAreaEndSec: number,
-        volumePercentage: number,
         videoGenerationTaskId: string
     ) {
+        const supabase = createSupabaseServiceRoleClient();
+        const replicate = new Replicate({
+            auth: process.env.REPLICATE_API_TOKEN,
+        });
 
+        // 웹훅 URL 생성
+        const baseUrl = process.env.BASE_URL;
+        if (!baseUrl) {
+            throw new Error('BASE_URL is not set');
+        }
+
+        const webhookUrl = `${baseUrl}/webhook/replicate/video/merge/music?videoGenerationTaskId=${videoGenerationTaskId}`;
+        console.log(`[Video-Music Merge] Webhook URL: ${webhookUrl}`);
+
+        try {
+            console.log(`[Video-Music Merge] Task 데이터 조회 시작: ${videoGenerationTaskId}`);
+
+            // 1. Task 데이터 조회
+            const videoGenerationTask = await videoGenerationTasksServerAPI.getVideoGenerationTaskById(videoGenerationTaskId);
+            if (!videoGenerationTask) {
+                console.error(`[Video-Music Merge] Task를 찾을 수 없음: ${videoGenerationTaskId}`);
+                throw new Error("Task not found.");
+            }
+            console.log(`[Video-Music Merge] Task 조회 완료`);
+
+            // 2. Supabase Storage에서 Signed URL 생성
+            console.log(`[Video-Music Merge] Caption 영상 Signed URL 생성 시작`);
+            const captionVideoPath = `${videoGenerationTaskId}/${videoGenerationTaskId}_caption_added.mp4`;
+            const { data: captionVideoData, error: captionVideoError } = await supabase.storage
+                .from('processed_video_storage')
+                .createSignedUrl(captionVideoPath, 86400);
+
+            if (captionVideoError || !captionVideoData?.signedUrl) {
+                console.error(`[Video-Music Merge] Caption 영상 URL 생성 실패:`, captionVideoError);
+                throw new Error(`Caption 영상 Signed URL 생성 실패: ${captionVideoError?.message}`);
+            }
+            console.log(`[Video-Music Merge] Caption 영상 URL 생성 완료`);
+
+            console.log(`[Video-Music Merge] 음악 Signed URL 생성 시작`);
+            const modifiedMusicPath = `${videoGenerationTaskId}/${videoGenerationTaskId}_processed_audio.mp3`;
+            const { data: modifiedMusicData, error: modifiedMusicError } = await supabase.storage
+                .from('video_music_temp_storage')
+                .createSignedUrl(modifiedMusicPath, 86400);
+
+            if (modifiedMusicError || !modifiedMusicData?.signedUrl) {
+                console.error(`[Video-Music Merge] 음악 URL 생성 실패:`, modifiedMusicError);
+                throw new Error(`음악 Signed URL 생성 실패: ${modifiedMusicError?.message}`);
+            }
+            console.log(`[Video-Music Merge] 음악 URL 생성 완료`);
+
+            const captionVideoUrl = captionVideoData.signedUrl;
+            const modifiedMusicUrl = modifiedMusicData.signedUrl;
+
+            console.log(`[Video-Music Merge] Caption Video URL: ${captionVideoUrl}`);
+            console.log(`[Video-Music Merge] Modified Music URL: ${modifiedMusicUrl}`);
+
+            // 3. Replicate로 영상에 음악 병합 요청
+            console.log(`[Video-Music Merge] Replicate prediction 생성 시작`);
+            const prediction = await replicate.predictions.create({
+                version: "lht1324/ffmpeg-merge-video-audio:a3d58bc87983f123a8eb63cd3d6ab516bd92e0504ab5e7d830395dcd2663f735",
+                input: {
+                    video_url: captionVideoUrl,
+                    audio_url: modifiedMusicUrl,
+                },
+                webhook: webhookUrl,
+                webhook_events_filter: ["completed"],
+            });
+
+            console.log(`[Video-Music Merge] Prediction 생성 응답:`, prediction);
+
+            if (prediction.error || prediction.status === "failed") {
+                console.error(`[Video-Music Merge] Prediction 생성 실패:`, prediction.error);
+                throw new Error(`Video-Music merge failed: ${prediction.error}`);
+            }
+
+            console.log(`[Video-Music Merge] Prediction ID: ${prediction.id}, Status: ${prediction.status}`);
+            return prediction.id;
+
+        } catch (error) {
+            console.error(`[Video-Music Merge] 병합 중 에러:`, error);
+
+            // 실패 시 Task 상태 'failed'로 업데이트
+            await videoGenerationTasksServerAPI.patchVideoGenerationTaskStatus(
+                videoGenerationTaskId,
+                VideoGenerationTaskStatus.FAILED
+            );
+
+            throw error;
+        }
     },
 
     async postFinalVideo(generationTaskId: string) {

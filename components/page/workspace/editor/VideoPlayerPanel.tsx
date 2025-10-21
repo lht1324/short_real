@@ -691,13 +691,14 @@ const VideoPlayerPanel = forwardRef<VideoPlayerHandle, VideoPlayerPanelProps>(({
                     >
                         {/* 두 줄 텍스트 영역 표시선 */}
                         {showCaptionLine ? <div className="pb-2.5">
-                            <div className="border-t-2 border-dashed border-gray-300/50"/>
-                        </div> : <div className="h-6"/>}
+                            <div className="border-b-[2px] border-dashed border-gray-300/50"/>
+                        </div> : <div className="h-3"/>}
                         {/* Caption Overlay */}
                         {currentPairedSegmentData ? (
                             <div
-                                className="z-20"
+                                className="mx-auto z-20"
                                 style={{
+                                    width: `${videoContainerWidth}px`,
                                     height: `${twoLineTextHeight}px`
                                 }}
                             >
@@ -721,8 +722,8 @@ const VideoPlayerPanel = forwardRef<VideoPlayerHandle, VideoPlayerPanelProps>(({
                         ) : <div style={{ height: `${twoLineTextHeight}px` }} />}
                         {/* 두 줄 텍스트 영역 표시선 */}
                         {showCaptionLine ? <div className="pt-2.5">
-                            <div className="border-t-2 border-dashed border-gray-300/50"/>
-                        </div> : <div className="h-6"/>}
+                            <div className="border-t-[2px] border-dashed border-gray-300/50"/>
+                        </div> : <div className="h-3"/>}
                     </div>}
                 </div>
             </div>

@@ -188,7 +188,7 @@ export const musicServerAPI = {
             throw new Error('BASE_URL is not set');
         }
 
-        const webhookUrl = `${baseUrl}/webhook/replicate/music?videoGenerationTaskId=${videoGenerationTaskId}`;
+        const webhookUrl = `${baseUrl}/webhook/replicate/music/modifying?videoGenerationTaskId=${videoGenerationTaskId}`;
 
         try {
             const prediction = await replicate.predictions.create({

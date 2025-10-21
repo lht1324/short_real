@@ -117,5 +117,25 @@ export const videoClientAPI = {
             console.error('Failed to get video URL:', error);
             return null;
         }
+    },
+
+    async postVideoMergeFinal(taskId: string) {
+        try {
+            const response = await getFetch(`/api/video/merge/final?taskId=${taskId}`);
+
+            if (!response.ok) {
+                if (response.status === 404) {
+                    console.warn(`Video not found for task: ${taskId}`);
+                    return null;
+                }
+                throw Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            return data.url;
+        } catch (error) {
+            console.error('Failed to get video URL:', error);
+            return null;
+        }
     }
 }
