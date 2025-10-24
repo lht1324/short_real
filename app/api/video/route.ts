@@ -1,19 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { PostVideoRequest } from "@/api/types/api/video/PostVideoRequest";
-import { PostVideoProcessRequest } from "@/api/types/api/video/process/PostVideoProcessRequest";
 
 export async function POST(request: NextRequest) {
     try {
-        const body: PostVideoRequest = await request.json();
-
-        const processRequest: PostVideoProcessRequest = {
-            userId: body.userId,
-            script: body.narrationScript,
-            style: body.style,
-            voiceId: body.voiceId,
-            sceneDataList: body.sceneDataList,
-            videoMainSubject: body.videoMainSubject,
-        };
+        const processRequest: PostVideoRequest = await request.json();
 
         // fire and forget
         fetch(`${process.env.BASE_URL}/api/video/process`, {

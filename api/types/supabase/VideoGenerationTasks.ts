@@ -4,7 +4,6 @@ import {MasterStyleInfo} from "@/api/server/MasterStyleInfo";
 export interface VideoGenerationTask {
     id?: string; // uuid
     user_id: string; // uuid
-    title?: string; // varchar(255), nullable
     status?: VideoGenerationTaskStatus; // varchar(50), default 'pending'
     video_prompt?: string; // text, nullable
     narration_script: string; // text, not null
@@ -15,9 +14,11 @@ export interface VideoGenerationTask {
     video_main_subject?: string;
     processed_scene_count?: number;
     music_data_list?: MusicData[];
-    selected_music_id?: string; // varchar(100), nullable
     selected_style_id?: string; // varchar(100), nullable
     selected_voice_id?: string; // varchar(100), nullable
+    caption_completed?: boolean; // boolean, default false - 자막 번인 완료 여부
+    music_completed?: boolean; // boolean, default false - 음악 편집 완료 여부
+    merge_started?: boolean; // boolean, default false - 최종 병합 시작 여부
     created_at?: string; // timestamp with time zone, default CURRENT_TIMESTAMP
     updated_at?: string;
 }
@@ -28,22 +29,26 @@ export enum VideoGenerationTaskStatus {
     DRAFTING = 'drafting',
     // 음성 생성
     GENERATING_VOICE = 'generating_voice',
+
+    // 단순 엔드포인트 취소
     // 마스터 스타일 프롬프트 생성
     GENERATING_MASTER_STYLE_PROMPT = 'generating_master_style_prompt',
     // 이미지 생성용 프롬프트 생성
     GENERATING_IMAGE_PROMPT = 'generating_image_prompt',
     // 영상 생성용 프롬프트 생성
     GENERATING_VIDEO_PROMPT = 'generating_video_prompt',
+
+    // Replicate 취소
     // 영상 생성
     GENERATING_VIDEO = 'generating_video',
-    // 영상 병합
+    // 영상 병합 (영상 병합 + 음성 병합) -> GENERATING_VOICE로 수정? (성우의 음성 녹음)
     STITCHING_VIDEOS = 'stitching_videos',
-    // 영상과 음성 병합
-    MERGING_VIDEO_AND_AUDIO = 'merging_video_and_audio',
     // 작곡
     COMPOSING_MUSIC = 'composing_music',
     // 편집
     EDITOR = "editor",
+    // 최종 편집
+    FINALIZING = "finalizing",
     // 완료
     COMPLETED = 'completed',
     // 실패

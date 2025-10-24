@@ -3,13 +3,14 @@
 import {memo, useCallback, useEffect, useMemo, useState} from "react";
 import Link from "next/link";
 import {ListTodo, Plus} from 'lucide-react';
-import {VideoGenerationTaskStatus} from "@/api/types/supabase/VideoGenerationTasks";
+import {VideoGenerationTask, VideoGenerationTaskStatus} from "@/api/types/supabase/VideoGenerationTasks";
 import Image from "next/image";
 import {videoClientAPI} from "@/api/client/videoClientAPI";
 import {useAuth} from "@/context/AuthContext";
 import {useRouter} from "next/navigation";
 import DashboardItem from "@/components/page/workspace/dashboard/DashboardItem";
 import DefaultModal from "@/components/public/DefaultModal";
+import {createBrowserClient} from "@supabase/ssr";
 
 export interface TaskData {
     id: string;
@@ -75,15 +76,15 @@ function WorkspaceDashboardPageClient() {
         // 정상 플로우 순서 정의
         const processingSteps = [
             VideoGenerationTaskStatus.DRAFTING,
-            VideoGenerationTaskStatus.GENERATING_VOICE,
+            // VideoGenerationTaskStatus.GENERATING_VOICE,
             VideoGenerationTaskStatus.GENERATING_MASTER_STYLE_PROMPT,
             VideoGenerationTaskStatus.GENERATING_IMAGE_PROMPT,
             VideoGenerationTaskStatus.GENERATING_VIDEO_PROMPT,
             VideoGenerationTaskStatus.GENERATING_VIDEO,
             VideoGenerationTaskStatus.STITCHING_VIDEOS,
-            VideoGenerationTaskStatus.MERGING_VIDEO_AND_AUDIO,
             VideoGenerationTaskStatus.EDITOR,
             VideoGenerationTaskStatus.COMPOSING_MUSIC,
+            VideoGenerationTaskStatus.FINALIZING,
             VideoGenerationTaskStatus.COMPLETED,
         ];
 
@@ -111,13 +112,39 @@ function WorkspaceDashboardPageClient() {
         };
     }, []);
 
+    // VideoGenerationTask를 TaskData로 변환하는 헬퍼 함수
+    const convertToTaskData = useCallback((task: VideoGenerationTask): TaskData | null => {
+        if (!task.id || !task.status || !task.created_at || !task.updated_at) {
+            return null;
+        }
+
+        const status = task.status as VideoGenerationTaskStatus;
+        const {progress, currentStep, totalStep} = calculateProgress(status);
+
+        return {
+            id: task.id,
+            title: task.video_main_subject,
+            status: status,
+            sceneCount: task.scene_breakdown_list.length,
+            processedSceneCount: task.processed_scene_count,
+            progress: progress,
+            currentStep: currentStep,
+            totalStep: totalStep,
+            createdAt: new Date(task.created_at),
+            updatedAt: new Date(task.updated_at),
+            selectedVoiceId: task.selected_voice_id,
+            selectedStyleId: task.selected_style_id,
+        };
+    }, [calculateProgress]);
+
     useEffect(() => {
         if (user?.id) {
-            // 10초 타임아웃 설정
+            // 타임아웃 설정
             const timeout = setTimeout(() => {
                 setIsLoading(false);
             }, 15000);
 
+            // 초기 데이터 로드
             const loadData = async () => {
                 try {
                     const videoGenerationTaskList = await videoClientAPI.getVideoTasksByUserId(user?.id);
@@ -126,48 +153,89 @@ function WorkspaceDashboardPageClient() {
                         throw new Error("Cannot read videoGenerationTaskList. Try again.");
                     }
 
-                    setTaskDataList(videoGenerationTaskList.filter((task) => {
-                        return !!task.id && !!task.status && !!task.created_at && !!task.updated_at;
-                    }).map((task): TaskData => {
-                        const status = task.status as VideoGenerationTaskStatus;
-                        const {
-                            progress,
-                            currentStep,
-                            totalStep,
-                        } = calculateProgress(status);
+                    const taskList = videoGenerationTaskList
+                        .map((task) => convertToTaskData(task))
+                        .filter((task): task is TaskData => task !== null);
 
-                        console.log(`[${task.id}]: ${task.scene_breakdown_list.length}`)
-                        return {
-                            id: task.id as string,
-                            title: task.video_main_subject,
-                            status: status,
-                            sceneCount: task.scene_breakdown_list.length,
-                            processedSceneCount: task.processed_scene_count,
-                            progress: progress,
-                            currentStep: currentStep,
-                            totalStep: totalStep,
-                            createdAt: new Date(task.created_at as string),
-                            updatedAt: new Date(task.updated_at as string),
-                            selectedVoiceId: task.selected_voice_id,
-                            selectedStyleId: task.selected_style_id,
-                        }
-                    }))
-
-                    setIsLoading(false);
+                    setTaskDataList(taskList);
                 } catch (error) {
                     console.error("WorkspaceDashboardPage: ", error);
                     setIsLoading(false);
                     router.push("/");
                 }
-            }
+            };
 
-            loadData().then();
+            loadData().then(() => {
+                setIsLoading(false);
+            });
+
+            // Supabase Realtime 구독 설정
+            const supabase = createBrowserClient(
+                process.env.NEXT_PUBLIC_SUPABASE_URL!,
+                process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+            );
+
+            console.log('[Realtime] 구독 시작, user.id:', user.id);
+
+            const channel = supabase
+                .channel('video_generation_tasks_changes')
+                .on(
+                    'postgres_changes',
+                    {
+                        event: '*', // INSERT, UPDATE, DELETE 모두 수신
+                        schema: 'public',
+                        table: 'video_generation_tasks',
+                        filter: `user_id=eq.${user.id}` // 현재 사용자의 task만 필터링
+                    },
+                    (payload) => {
+                        console.log('[Realtime] 이벤트 수신:', payload);
+
+                        switch (payload.eventType) {
+                            case 'INSERT': {
+                                // 새로운 task 추가
+                                const newTask = payload.new as VideoGenerationTask;
+                                const taskData = convertToTaskData(newTask);
+                                if (taskData) {
+                                    setTaskDataList((prev) => [taskData, ...prev]);
+                                }
+                                return;
+                            }
+                            case 'UPDATE': {
+                                // 기존 task 업데이트
+                                const updatedTask = payload.new as VideoGenerationTask;
+                                const taskData = convertToTaskData(updatedTask);
+                                if (taskData) {
+                                    setTaskDataList((prev) =>
+                                        prev.map((task) =>
+                                            task.id === taskData.id ? taskData : task
+                                        )
+                                    );
+                                }
+                                return;
+                            }
+                            case 'DELETE': {
+                                // task 삭제
+                                const deletedTask = payload.old as VideoGenerationTask;
+                                if (deletedTask.id) {
+                                    setTaskDataList((prev) =>
+                                        prev.filter((task) => task.id !== deletedTask.id)
+                                    );
+                                }
+                                return;
+                            }
+                        }
+                    }
+                )
+                .subscribe((status) => {
+                    console.log('[Realtime] 구독 상태:', status);
+                });
 
             return () => {
                 clearTimeout(timeout);
-            }
+                channel.unsubscribe();
+            };
         }
-    }, [router, user?.id, calculateProgress]);
+    }, [router, user?.id, convertToTaskData]);
 
     return (
         <div className="min-h-screen bg-black text-white">

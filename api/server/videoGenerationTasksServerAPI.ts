@@ -5,7 +5,7 @@ import {createSupabaseServiceRoleClient} from "@/lib/supabaseServiceRole";
 export const videoGenerationTasksServerAPI = {
     // POST - 새로운 영상 생성 작업 생성
     async postVideoGenerationTask(taskData: Partial<VideoGenerationTask>): Promise<VideoGenerationTask> {
-        const supabase = await createSupabaseServer("mutate");
+        const supabase = createSupabaseServiceRoleClient();
         
         const { data, error } = await supabase
             .from('video_generation_tasks')
@@ -79,7 +79,7 @@ export const videoGenerationTasksServerAPI = {
 
     // PATCH - 작업 데이터 업데이트
     async patchVideoGenerationTask(taskId: string, videoGenerationTask: Partial<VideoGenerationTask>): Promise<VideoGenerationTask> {
-        const supabase = await createSupabaseServer("mutate");
+        const supabase = createSupabaseServiceRoleClient();
 
         const { data, error } = await supabase
             .from('video_generation_tasks')
@@ -96,8 +96,8 @@ export const videoGenerationTasksServerAPI = {
     },
 
     // PATCH - 작업 상태만 업데이트
-    async updateTaskStatus(taskId: string, status: 'pending' | 'in_progress' | 'completed' | 'failed'): Promise<VideoGenerationTask> {
-        const supabase = await createSupabaseServer("mutate");
+    async updateTaskStatus(taskId: string, status: VideoGenerationTaskStatus): Promise<VideoGenerationTask> {
+        const supabase = createSupabaseServiceRoleClient();
         
         const { data, error } = await supabase
             .from('video_generation_tasks')
@@ -115,11 +115,12 @@ export const videoGenerationTasksServerAPI = {
 
     // PATCH - 작업 상태만 업데이트
     async patchVideoGenerationTaskStatus(taskId: string, status: VideoGenerationTaskStatus): Promise<VideoGenerationTask> {
-        const supabase = await createSupabaseServer("mutate");
+        const supabase = createSupabaseServiceRoleClient();
+        console.log(`patchTaskId = ${taskId}`)
 
         const { data, error } = await supabase
             .from('video_generation_tasks')
-            .update({ status })
+            .update({ status: status } as Partial<VideoGenerationTask>)
             .eq('id', taskId)
             .select()
             .single();

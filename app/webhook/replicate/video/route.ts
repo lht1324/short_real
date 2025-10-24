@@ -2,7 +2,7 @@ import {NextRequest, NextResponse} from "next/server";
 import {Prediction} from "replicate";
 import {videoGenerationTasksServerAPI} from "@/api/server/videoGenerationTasksServerAPI";
 import {videoServerAPI} from "@/api/server/videoServerAPI";
-import {SceneGenerationStatus} from "@/api/types/supabase/VideoGenerationTasks";
+import {SceneGenerationStatus, VideoGenerationTaskStatus} from "@/api/types/supabase/VideoGenerationTasks";
 import {createSupabaseServiceRoleClient} from "@/lib/supabaseServiceRole";
 import {getErrorMessage} from "@/utils/ErrorUtils";
 import {openAIServerAPI} from "@/api/server/openAIServerAPI";
@@ -200,6 +200,8 @@ export async function POST(request: NextRequest) {
 
         // 8. 모든 Scene 처리가 완료되었으면, 병합 엔드포인트 호출
         if (isAllScenesProcessed) {
+            await videoGenerationTasksServerAPI.patchVideoGenerationTaskStatus(generationTaskId, VideoGenerationTaskStatus.STITCHING_VIDEOS);
+
             console.log(`모든 Scene 처리 완료. 최종 병합을 시작합니다: ${generationTask.id}`);
 
             if (!generationTask.master_style_positive_prompt) {

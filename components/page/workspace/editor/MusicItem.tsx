@@ -29,7 +29,7 @@ function MusicItem({
 }: MusicItemProps) {
     const formattedDuration = useMemo(() => {
         const minutes = Math.floor(musicData.duration / 60);
-        const seconds = musicData.duration % 60;
+        const seconds = Math.floor(parseFloat((musicData.duration % 60).toFixed(0)));
         return `${minutes}:${seconds.toString().padStart(2, '0')}`;
     }, [musicData.duration]);
 
@@ -201,14 +201,6 @@ function MusicItem({
                             </svg>
                         )}
                     </button>
-                    {/*{isSelected && (*/}
-                    {/*    <button*/}
-                    {/*        className="flex-shrink-0 px-3 py-2 rounded-lg bg-purple-500/50 hover:bg-purple-500/70 transition-colors text-white text-sm font-medium"*/}
-                    {/*        onClick={onClickEditButton}*/}
-                    {/*    >*/}
-                    {/*        Edit Music*/}
-                    {/*    </button>*/}
-                    {/*)}*/}
                 </div>
             </div>
         </div>

@@ -28,14 +28,12 @@ import {PostVideoRequest} from "@/api/types/api/video/PostVideoRequest";
 import {useSearchParams} from "next/navigation";
 import {PostOpenAISceneRequest} from "@/api/types/api/open-ai/scene/PostOpenAISceneRequest";
 import DefaultModal from "@/components/public/DefaultModal";
+import {useAuth} from "@/context/AuthContext";
 
 function WorkspaceCreatePageClient() {
-    // 음성, 음악 선택 기능 추가
-    // 음성은 영상 생성할 때 함께 생성한 뒤, 에디터에서 뺀다
-    // 음악은 선택한 거 그대로 에디터에서 틀어주고, 실시간으로 바꾸는 것처럼 만들어준다.
-    // 자막은 캡션 폰트, 크기, 색상, 위치 정도만.
-    // 다 지정됐으면 생성된 영상 + 생성된 음성 + 에디터 최종 음악 + 에디터 최종 자막을 합쳐준다.
     const searchParams = useSearchParams();
+
+    const { user } = useAuth();
 
     const [isVoiceLoading, setIsVoiceLoading] = useState(true);
     const [isGenerationTaskLoading, setIsGenerationTaskLoading] = useState(true);
@@ -320,18 +318,15 @@ function WorkspaceCreatePageClient() {
                 return style.id === selectedStyleId;
             });
 
-            if (!selectedStyle || !selectedVoiceId) {
-                throw new Error("Selected style or voice was not found.");
+            if (!taskId || !selectedStyle || !user?.id) {
+                throw new Error("User Id or Task Id or selected style was not found.");
             }
 
             // VideoData API 요청 데이터 구성
             const requestData: PostVideoRequest = {
-                userId: "",
-                narrationScript: script,
+                userId: user.id,
+                taskId: taskId,
                 style: selectedStyle,
-                voiceId: selectedVoiceId,
-                sceneDataList: sceneDataList,
-                videoMainSubject: videoMainSubject ?? undefined,
             };
 
             console.log('Creating video project with data:', requestData);
@@ -344,8 +339,8 @@ function WorkspaceCreatePageClient() {
                 // setVideoDataResponse(result.data);
                 
                 // 성공 시 대시보드로 이동
-                alert('비디오 프로젝트 생성이 완료되었습니다!');
-                // window.location.href = '/workspace/dashboard';
+                alert('Your video is now being generated!');
+                window.location.href = '/workspace/dashboard';
             } else {
                 console.error('Video data generation failed.');
                 alert('비디오 프로젝트 생성에 실패했습니다. 다시 시도해주세요.');
@@ -358,7 +353,7 @@ function WorkspaceCreatePageClient() {
         } finally {
             setIsSubmitting(false);
         }
-    }, [script, selectedStyleId, selectedVoiceId, styleList, sceneDataList, videoMainSubject]);
+    }, [script, styleList, taskId, user?.id, selectedStyleId]);
 
     const onClickSaveDraft = useCallback(async () => {
         setIsSaving(true);

@@ -367,10 +367,10 @@ export const videoServerAPI = {
 
             console.log(`[Merge Service] 최종 영상 병합 완료`);
 
-            // 5. Task 상태 'completed'로 업데이트
-            await videoGenerationTasksServerAPI.updateTaskStatus(generationTaskId, VideoGenerationTaskStatus.COMPLETED);
+            // 5. Task 상태 'EDITOR'로 업데이트
+            await videoGenerationTasksServerAPI.updateTaskStatus(generationTaskId, VideoGenerationTaskStatus.EDITOR);
 
-            // 5.5. Rendi에서 최종 병합된 영상을 다운로드하여 Supabase Storage에 업로드
+            // 5.5. Fal AI에서 최종 병합된 영상을 다운로드하여 Supabase Storage에 업로드
             const finalVideoUrl = mergeVideoAndAudioResult.video.url;
             const finalVideoResponse = await fetch(finalVideoUrl);
 
@@ -406,7 +406,6 @@ export const videoServerAPI = {
             // 실패 시 Task 상태 'failed'로 업데이트
 
             if (generationTaskId) {
-                const supabase = createSupabaseServiceRoleClient();
                 const generationTask = await videoGenerationTasksServerAPI.getVideoGenerationTaskById(generationTaskId);
 
                 if (generationTask) {

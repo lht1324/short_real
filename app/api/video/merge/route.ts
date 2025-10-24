@@ -1,5 +1,7 @@
-import { NextRequest, NextResponse } from "next/server";
-import { videoServerAPI } from "@/api/server/videoServerAPI";
+import {NextRequest, NextResponse} from "next/server";
+import {videoServerAPI} from "@/api/server/videoServerAPI";
+import {videoGenerationTasksServerAPI} from "@/api/server/videoGenerationTasksServerAPI";
+import {VideoGenerationTaskStatus} from "@/api/types/supabase/VideoGenerationTasks";
 
 export async function POST(request: NextRequest) {
     try {

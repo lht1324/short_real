@@ -1,3 +1,4 @@
+// components/public/ApiPreloader.tsx
 'use client'
 
 import { useEffect } from 'react';
@@ -15,44 +16,63 @@ export default function ApiPreloader() {
             try {
                 console.log('Pre-compiling API routes...');
 
-                // 모든 API 라우트들을 병렬로 프리컴파일
+                // 3001 포트 API 서버 URL (환경변수 사용)
+                const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+
+                // 모든 API 라우트 (tree 구조 기반)
                 const apiRoutes = [
-                    '/api/open-ai/script',
-                    '/api/open-ai/scene',
+                    // image
+                    '/api/image',
+
+                    // music
                     '/api/music',
+                    '/api/music/data',
+                    '/api/music/modifying',
+
+                    // open-ai
+                    '/api/open-ai/scene',
+                    '/api/open-ai/script',
+
+                    // user (동적 라우트는 제외 - 실제 사용 시 컴파일됨)
+                    // '/api/user/[userId]',
+
+                    // video
                     '/api/video',
                     '/api/video/merge',
                     '/api/video/merge/caption',
                     '/api/video/merge/final',
                     '/api/video/merge/music',
+                    '/api/video/merge/voice',
                     '/api/video/process',
-                    '/api/music/modifying',
-                    '/webhook/replicate/music/modifying',
-                    '/webhook/replicate/video',
-                    '/webhook/replicate/video/merge/caption',
-                    '/webhook/replicate/video/merge/music',
-                    '/webhook/replicate/video/process',
-                    '/webhook/suno-api'
+                    '/api/video/task',
+                    '/api/video/url',
+                    // 동적 라우트 제외:
+                    // '/api/video/task/user/[userId]',
+                    // '/api/video/task/[taskId]',
+
+                    // voice
+                    '/api/voice',
                 ];
 
+                // 병렬로 HEAD 요청하여 프리컴파일
                 const precompilePromises = apiRoutes.map(route =>
-                    fetch(route, {
-                        method: 'OPTIONS',
+                    fetch(`${API_BASE}${route}`, {
+                        method: 'HEAD',
                         headers: { 'Content-Type': 'application/json' }
-                    }).catch(() => {}) // 에러 무시
+                    }).catch(() => {}) // 에러 무시 (404나 405 응답도 컴파일은 트리거됨)
                 );
 
                 await Promise.all(precompilePromises);
-                console.log('All API routes pre-compiled');
+                console.log('✓ API routes pre-compiled successfully');
             } catch (error) {
-                console.log('API pre-compilation completed:', error);
+                console.error('Failed to pre-compile APIs:', error);
             }
         };
 
-        // 즉시 실행
-        precompileAPIs().then();
+        // 약간의 딜레이 후 실행 (초기 렌더링 방해 안 하도록)
+        const timer = setTimeout(precompileAPIs, 100);
+        return () => clearTimeout(timer);
     }, []);
 
-    // UI 없음 (단순히 로직만 실행)
     return null;
 }

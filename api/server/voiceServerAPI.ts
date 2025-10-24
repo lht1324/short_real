@@ -9,6 +9,7 @@ import {
 } from "@/api/types/eleven-labs/Voice";
 import {SubtitleSegment} from "@/api/types/supabase/VideoGenerationTasks";
 import {createSupabaseServer} from "@/lib/supabaseServer";
+import {createSupabaseServiceRoleClient} from "@/lib/supabaseServiceRole";
 
 export const voiceServerAPI = {
     // GET /voices - 사용 가능한 음성 목록 조회
@@ -144,7 +145,7 @@ export const voiceServerAPI = {
         taskId: string,
     ) {
         // Supabase Storage에 저장
-        const supabase = await createSupabaseServer("mutate");
+        const supabase = await createSupabaseServiceRoleClient();
         const fileName = `${taskId}.mp3`;
 
         const { data, error: uploadError } = await supabase.storage

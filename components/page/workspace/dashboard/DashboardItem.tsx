@@ -3,10 +3,11 @@
 import {memo, useCallback, useMemo} from "react";
 import {TaskData} from "@/components/page/workspace/dashboard/WorkspaceDashboardPageClient";
 import {VideoGenerationTaskStatus} from "@/api/types/supabase/VideoGenerationTasks";
-import {Calendar, Clock, FileVideo, Download, X, Edit, AlertCircle, Loader2} from "lucide-react";
+import {AlertCircle, Calendar, Clock, Download, Edit, FileVideo, Loader2, X} from "lucide-react";
 import Link from "next/link";
 
 enum StatusGroup {
+    CREATING = 'creating',
     PROCESSING = 'processing',
     EDITING = 'editing',
     COMPLETED = 'completed',
@@ -30,15 +31,16 @@ function DashboardItem({
     // ==================== 상태 그룹핑 ====================
     const statusGroup = useMemo(() => {
         switch (taskData.status) {
-            case VideoGenerationTaskStatus.DRAFTING:
             case VideoGenerationTaskStatus.GENERATING_VOICE:
+            case VideoGenerationTaskStatus.DRAFTING:
+                return StatusGroup.CREATING;
             case VideoGenerationTaskStatus.GENERATING_MASTER_STYLE_PROMPT:
             case VideoGenerationTaskStatus.GENERATING_IMAGE_PROMPT:
             case VideoGenerationTaskStatus.GENERATING_VIDEO_PROMPT:
             case VideoGenerationTaskStatus.GENERATING_VIDEO:
             case VideoGenerationTaskStatus.STITCHING_VIDEOS:
-            case VideoGenerationTaskStatus.MERGING_VIDEO_AND_AUDIO:
             case VideoGenerationTaskStatus.COMPOSING_MUSIC:
+            case VideoGenerationTaskStatus.FINALIZING:
                 return StatusGroup.PROCESSING;
             case VideoGenerationTaskStatus.EDITOR:
                 return StatusGroup.EDITING;
@@ -61,16 +63,16 @@ function DashboardItem({
         const processedSceneCount = taskData.processedSceneCount;
 
         switch (status) {
-            case VideoGenerationTaskStatus.DRAFTING: return {
+            case VideoGenerationTaskStatus.DRAFTING, VideoGenerationTaskStatus.GENERATING_VOICE: return {
                 tailWindGradient: 'from-purple-500 to-pink-500',
                 description: 'Drafting script...',
                 emoji: '📝'
             };
-            case VideoGenerationTaskStatus.GENERATING_VOICE: return {
-                tailWindGradient: 'from-blue-500 to-indigo-500',
-                description: 'Voice actor is recording narration',
-                emoji: '🎤'
-            };
+            // case VideoGenerationTaskStatus.GENERATING_VOICE: return {
+            //     tailWindGradient: 'from-blue-500 to-indigo-500',
+            //     description: 'Voice actor is recording narration',
+            //     emoji: '🎤'
+            // };
             case VideoGenerationTaskStatus.GENERATING_MASTER_STYLE_PROMPT: return {
                 tailWindGradient: 'from-violet-500 to-purple-600',
                 description: 'Art director is crafting style guide',
@@ -91,15 +93,15 @@ function DashboardItem({
                 description: `Director is shooting scenes (${processedSceneCount}/${sceneCount})`,
                 emoji: '🎥'
             };
+            // case VideoGenerationTaskStatus.STITCHING_VIDEOS: return {
+            //     tailWindGradient: 'from-teal-500 to-emerald-500',
+            //     description: 'Editor is stitching clips and voice together',
+            //     emoji: '📼'
+            // };
             case VideoGenerationTaskStatus.STITCHING_VIDEOS: return {
-                tailWindGradient: 'from-teal-500 to-emerald-500',
-                description: 'Editor is stitching clips together',
-                emoji: '📼'
-            };
-            case VideoGenerationTaskStatus.MERGING_VIDEO_AND_AUDIO: return {
-                tailWindGradient: 'from-amber-500 to-orange-500',
-                description: 'Sound engineer is mixing audio',
-                emoji: '🎧'
+                tailWindGradient: 'from-blue-500 to-indigo-500',
+                description: 'Voice actor is recording into video',
+                emoji: '🎤'
             };
             case VideoGenerationTaskStatus.COMPOSING_MUSIC: return {
                 tailWindGradient: 'from-rose-500 to-red-500',
@@ -110,6 +112,11 @@ function DashboardItem({
                 tailWindGradient: 'from-cyan-500 to-blue-500',
                 description: 'Ready for editing',
                 emoji: '💻'
+            };
+            case VideoGenerationTaskStatus.FINALIZING: return {
+                tailWindGradient: 'from-violet-500 to-purple-500',
+                description: 'Producer is putting finishing touches',
+                emoji: '✨'
             };
             case VideoGenerationTaskStatus.COMPLETED: return {
                 tailWindGradient: 'from-green-500 to-emerald-500',
@@ -153,6 +160,10 @@ function DashboardItem({
 
     // ==================== 이벤트 핸들러 ====================
     const handleCancel = useCallback(() => {
+        // 초안: row 제거, voice mp3 제거
+        // /api/video/process: endpoint 취소
+        // Editor: voice mp3, video mp4, music mp3, row 제거
+        // Finalizing: voice mp3, video mp4, music mp3, row 제거, endpoint 취소
         if (onClickCancel) {
             onClickCancel(taskData.id);
         }
@@ -266,8 +277,20 @@ function DashboardItem({
 
                 {/* ==================== 오른쪽: 액션 버튼 영역 ==================== */}
                 <div className="flex items-center space-x-3 ml-6">
+                    {/* Drafting 상태: Continue Draft 버튼 */}
+                    {taskData.status === VideoGenerationTaskStatus.DRAFTING && taskData.id && (
+                        <Link
+                            href={`/workspace/create?taskId=${taskData.id}`}
+                            className="group bg-gradient-to-r from-purple-500 to-pink-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:from-purple-600 hover:to-pink-700 transition-all duration-300 transform hover:scale-105 shadow-lg shadow-purple-500/25 flex items-center space-x-2"
+                        >
+                            <Edit size={14} />
+                            <span>Continue Draft</span>
+                        </Link>
+                    )}
+
                     {/* Editing 상태: Edit 버튼 */}
-                    {statusGroup === StatusGroup.EDITING && (
+                    {/*{statusGroup === StatusGroup.EDITING && (*/}
+                    {taskData.status === VideoGenerationTaskStatus.EDITOR && (
                         <Link
                             href={`/workspace/editor?taskId=${taskData.id}`}
                             className="group bg-gradient-to-r from-green-500 to-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:from-green-600 hover:to-emerald-700 transition-all duration-300 transform hover:scale-105 shadow-lg shadow-green-500/25 flex items-center space-x-2"
@@ -291,7 +314,7 @@ function DashboardItem({
                     )}
 
                     {/* Processing/Editing 상태: Cancel 버튼 */}
-                    {(statusGroup === StatusGroup.PROCESSING || statusGroup === StatusGroup.EDITING) && (
+                    {(statusGroup === StatusGroup.CREATING || statusGroup === StatusGroup.PROCESSING || statusGroup === StatusGroup.EDITING) && (
                         <button
                             onClick={() => {
                                 onClickCancel(taskData.id);

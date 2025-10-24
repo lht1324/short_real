@@ -59,22 +59,36 @@ export async function POST(request: NextRequest) {
                     try {
                         // audio_url에서 파일 다운로드
                         const musicFileList: Blob[] = [];
+                        const musicMetadataList = webhookData.data;
 
-                        for (const musicData of webhookData.data) {
-                            if (musicData.audio_url) {
-                                const response = await fetch(musicData.audio_url);
+                        for (const musicMetaData of musicMetadataList) {
+                            if (musicMetaData.audio_url) {
+                                const response = await fetch(musicMetaData.audio_url);
                                 if (response.ok) {
                                     const musicBlob = await response.blob();
                                     musicFileList.push(musicBlob);
                                 } else {
-                                    console.error(`Failed to download music from ${musicData.audio_url}`);
+                                    console.error(`Failed to download music from ${musicMetaData.audio_url}`);
                                 }
                             }
                         }
 
                         if (musicFileList.length > 0) {
                             // Supabase Storage에 업로드
-                            const uploadResult = await musicServerAPI.postMusic(generationTaskId, musicFileList);
+                            const uploadResult = await musicServerAPI.postMusic(
+                                generationTaskId,
+                                musicFileList,
+                                musicMetadataList.map((musicMetaData) => {
+                                    return {
+                                        title: musicMetaData.title,
+                                        tagList: musicMetaData.tags.split(", "),
+                                        audioUrl: musicMetaData.source_audio_url,
+                                        // imageUrl: musicMetaData.source_image_url,
+                                        imageUrl: musicMetaData.image_url,
+                                        duration: musicMetaData.duration,
+                                    }
+                                }),
+                            );
 
                             if (uploadResult.success) {
                                 console.log(`Successfully uploaded ${musicFileList.length} music files for task: ${generationTaskId}`);
