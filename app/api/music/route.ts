@@ -2,7 +2,7 @@ import {NextRequest, NextResponse} from "next/server";
 import {sunoAPIServerAPI} from "@/api/server/sunoAPIServerAPI";
 import {PostGenerateRequest, SunoModelType} from "@/api/types/suno-api/SunoAPIRequests";
 import {videoGenerationTasksServerAPI} from "@/api/server/videoGenerationTasksServerAPI";
-import {VideoGenerationTaskStatus} from "@/api/types/supabase/VideoGenerationTasks";
+import {taskCheckAndCleanupIfCancelled} from "@/app/api/video/process/taskCheckAndCleaupIfCancelled";
 
 export async function POST(request: NextRequest) {
     try {
@@ -15,6 +15,17 @@ export async function POST(request: NextRequest) {
                 { error: 'Missing required query param: generationTaskId' },
                 { status: 400 }
             );
+        }
+
+        const videoGenerationTask = await videoGenerationTasksServerAPI.getVideoGenerationTaskById(generationTaskId);
+        if (!videoGenerationTask) {
+            throw new Error("Task not found.");
+        }
+
+        const checkingInitialResult = await taskCheckAndCleanupIfCancelled(videoGenerationTask);
+
+        if (checkingInitialResult) {
+            return checkingInitialResult;
         }
 
         const {
@@ -34,8 +45,6 @@ export async function POST(request: NextRequest) {
                 { status: 400 }
             );
         }
-
-        await videoGenerationTasksServerAPI.patchVideoGenerationTaskStatus(generationTaskId, VideoGenerationTaskStatus.COMPOSING_MUSIC);
 
         const baseUrl = process.env.BASE_URL;
 

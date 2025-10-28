@@ -17,7 +17,7 @@ enum StatusGroup {
 
 interface DashboardItemProps {
     taskData: TaskData;
-    onClickCancel: (taskId: string) => void;
+    onClickCancel: (taskId: string, status: VideoGenerationTaskStatus) => void;
     onClickDownload: (taskId: string) => void;
     onClickRetry: (taskId: string) => void;
 }
@@ -63,16 +63,13 @@ function DashboardItem({
         const processedSceneCount = taskData.processedSceneCount;
 
         switch (status) {
-            case VideoGenerationTaskStatus.DRAFTING, VideoGenerationTaskStatus.GENERATING_VOICE: return {
+            // 의도됨
+            case VideoGenerationTaskStatus.DRAFTING:
+            case VideoGenerationTaskStatus.GENERATING_VOICE: return {
                 tailWindGradient: 'from-purple-500 to-pink-500',
                 description: 'Drafting script...',
                 emoji: '📝'
             };
-            // case VideoGenerationTaskStatus.GENERATING_VOICE: return {
-            //     tailWindGradient: 'from-blue-500 to-indigo-500',
-            //     description: 'Voice actor is recording narration',
-            //     emoji: '🎤'
-            // };
             case VideoGenerationTaskStatus.GENERATING_MASTER_STYLE_PROMPT: return {
                 tailWindGradient: 'from-violet-500 to-purple-600',
                 description: 'Art director is crafting style guide',
@@ -93,11 +90,7 @@ function DashboardItem({
                 description: `Director is shooting scenes (${processedSceneCount}/${sceneCount})`,
                 emoji: '🎥'
             };
-            // case VideoGenerationTaskStatus.STITCHING_VIDEOS: return {
-            //     tailWindGradient: 'from-teal-500 to-emerald-500',
-            //     description: 'Editor is stitching clips and voice together',
-            //     emoji: '📼'
-            // };
+            // 의도됨
             case VideoGenerationTaskStatus.STITCHING_VIDEOS: return {
                 tailWindGradient: 'from-blue-500 to-indigo-500',
                 description: 'Voice actor is recording into video',
@@ -160,14 +153,8 @@ function DashboardItem({
 
     // ==================== 이벤트 핸들러 ====================
     const handleCancel = useCallback(() => {
-        // 초안: row 제거, voice mp3 제거
-        // /api/video/process: endpoint 취소
-        // Editor: voice mp3, video mp4, music mp3, row 제거
-        // Finalizing: voice mp3, video mp4, music mp3, row 제거, endpoint 취소
-        if (onClickCancel) {
-            onClickCancel(taskData.id);
-        }
-    }, [taskData.id, onClickCancel]);
+        onClickCancel(taskData.id, taskData.status);
+    }, [taskData.id, taskData.status, onClickCancel]);
 
     const handleDownload = useCallback(() => {
         if (onClickDownload) {
@@ -222,26 +209,24 @@ function DashboardItem({
                     </div>
 
                     {/* ==================== Processing 상태: 진행률 바 ==================== */}
-                    {statusGroup === StatusGroup.PROCESSING && (
-                        <div className="mt-4">
-                            <div className="flex items-center justify-between mb-1">
+                    <div className="mt-4">
+                        <div className="flex items-center justify-between mb-1">
                                 <span className="text-xs text-gray-400">
                                     {taskData.currentStep} / {taskData.totalStep}
                                 </span>
-                                <span className="text-xs text-gray-400">
+                            <span className="text-xs text-gray-400">
                                     {taskData.progress}%
                                 </span>
-                            </div>
-                            <div className="w-full bg-gray-700/50 rounded-full h-2 overflow-hidden relative">
-                                <div
-                                    className={`bg-gradient-to-r ${statusData.tailWindGradient} rounded-full h-full transition-all duration-500 relative overflow-hidden`}
-                                    style={{ width: `${taskData.progress}%` }}
-                                >
-                                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer" />
-                                </div>
+                        </div>
+                        <div className="w-full bg-gray-700/50 rounded-full h-2 overflow-hidden relative">
+                            <div
+                                className={`bg-gradient-to-r ${statusData.tailWindGradient} rounded-full h-full transition-all duration-500 relative overflow-hidden`}
+                                style={{ width: `${taskData.progress}%` }}
+                            >
+                                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer" />
                             </div>
                         </div>
-                    )}
+                    </div>
 
                     {/* ==================== Failed 상태: 에러 메시지 ==================== */}
                     {statusGroup === StatusGroup.FAILED && (
@@ -257,22 +242,22 @@ function DashboardItem({
                     )}
 
                     {/* ==================== Completed 상태: 선택된 옵션 표시 ==================== */}
-                    {statusGroup === StatusGroup.COMPLETED && (taskData.selectedVoiceId || taskData.selectedStyleId) && (
-                        <div className="mt-4 flex items-center space-x-4">
-                            <div className="flex items-center space-x-2 text-xs text-gray-400">
-                                {taskData.selectedVoiceId && (
-                                    <span className="px-2 py-1 bg-purple-500/20 rounded border border-purple-500/30">
-                                        Voice
-                                    </span>
-                                )}
-                                {taskData.selectedStyleId && (
-                                    <span className="px-2 py-1 bg-pink-500/20 rounded border border-pink-500/30">
-                                        Style
-                                    </span>
-                                )}
-                            </div>
-                        </div>
-                    )}
+                    {/*{statusGroup === StatusGroup.COMPLETED && (taskData.selectedVoiceId || taskData.selectedStyleId) && (*/}
+                    {/*    <div className="mt-4 flex items-center space-x-4">*/}
+                    {/*        <div className="flex items-center space-x-2 text-xs text-gray-400">*/}
+                    {/*            {taskData.selectedVoiceId && (*/}
+                    {/*                <span className="px-2 py-1 bg-purple-500/20 rounded border border-purple-500/30">*/}
+                    {/*                    Voice*/}
+                    {/*                </span>*/}
+                    {/*            )}*/}
+                    {/*            {taskData.selectedStyleId && (*/}
+                    {/*                <span className="px-2 py-1 bg-pink-500/20 rounded border border-pink-500/30">*/}
+                    {/*                    Style*/}
+                    {/*                </span>*/}
+                    {/*            )}*/}
+                    {/*        </div>*/}
+                    {/*    </div>*/}
+                    {/*)}*/}
                 </div>
 
                 {/* ==================== 오른쪽: 액션 버튼 영역 ==================== */}
@@ -313,19 +298,6 @@ function DashboardItem({
                         </button>
                     )}
 
-                    {/* Processing/Editing 상태: Cancel 버튼 */}
-                    {(statusGroup === StatusGroup.CREATING || statusGroup === StatusGroup.PROCESSING || statusGroup === StatusGroup.EDITING) && (
-                        <button
-                            onClick={() => {
-                                onClickCancel(taskData.id);
-                            }}
-                            className="group bg-gradient-to-r from-red-500 to-pink-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:from-red-600 hover:to-pink-700 transition-all duration-300 transform hover:scale-105 shadow-lg shadow-red-500/25 flex items-center space-x-2"
-                        >
-                            <X size={14} />
-                            <span>Cancel</span>
-                        </button>
-                    )}
-
                     {/* Failed 상태: Retry 버튼 */}
                     {statusGroup === StatusGroup.FAILED && (
                         <button
@@ -336,6 +308,18 @@ function DashboardItem({
                         >
                             <Loader2 size={14} />
                             <span>Retry</span>
+                        </button>
+                    )}
+
+                    {/* Processing/Editing 상태: Cancel 버튼 */}
+                    {/*{(statusGroup === StatusGroup.CREATING || statusGroup === StatusGroup.PROCESSING || statusGroup === StatusGroup.EDITING) && (*/}
+                    {statusGroup !== StatusGroup.COMPLETED && (
+                        <button
+                            onClick={handleCancel}
+                            className="group bg-gradient-to-r from-red-500 to-pink-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:from-red-600 hover:to-pink-700 transition-all duration-300 transform hover:scale-105 shadow-lg shadow-red-500/25 flex items-center space-x-2"
+                        >
+                            <X size={14} />
+                            <span>Cancel</span>
                         </button>
                     )}
                 </div>

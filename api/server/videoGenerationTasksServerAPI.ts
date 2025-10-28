@@ -133,16 +133,68 @@ export const videoGenerationTasksServerAPI = {
     },
 
     // DELETE - 작업 삭제
-    async deleteTask(taskId: string): Promise<void> {
-        const supabase = await createSupabaseServer("mutate");
-        
-        const { error } = await supabase
-            .from('video_generation_tasks')
-            .delete()
-            .eq('id', taskId);
+    async deleteVideoGenerationTask(taskId: string): Promise<boolean> {
+        const supabase = createSupabaseServiceRoleClient();
 
-        if (error) {
-            throw new Error(`Failed to delete video generation task: ${error.message}`);
+        try {
+            const existingTask = await videoGenerationTasksServerAPI.getVideoGenerationTaskById(taskId);
+
+            if (!existingTask) throw new Error("Task not found.");
+
+            // 1. narration_voice_storage 삭제
+            const { error: voiceError } = await supabase.storage
+                .from('narration_voice_storage')
+                .remove([`${taskId}.mp3`]);
+            if (voiceError) console.error('Storage delete error (narration_voice):', voiceError.message);
+
+            // 2. processed_video_storage 삭제
+            const processedVideoPaths = [
+                `${taskId}/${taskId}.mp4`,
+                `${taskId}/${taskId}_caption_added.mp4`,
+                `${taskId}/${taskId}_final.mp4`,
+                ...existingTask.scene_breakdown_list.map(scene => `${taskId}/${scene.requestId}.mp4`)
+            ];
+            const { error: processedVideoError } = await supabase.storage
+                .from('processed_video_storage')
+                .remove(processedVideoPaths);
+            if (processedVideoError) console.error('Storage delete error (processed_video):', processedVideoError.message);
+
+            // 3. scene_image_temp_storage 삭제
+            const sceneImagePaths = existingTask.scene_breakdown_list.map(
+                scene => `${taskId}/${scene.sceneNumber}.jpeg`
+            );
+            const { error: sceneImageError } = await supabase.storage
+                .from('scene_image_temp_storage')
+                .remove(sceneImagePaths);
+            if (sceneImageError) console.error('Storage delete error (scene_image):', sceneImageError.message);
+
+            // 4. video_music_temp_storage 삭제
+            const musicPaths = [
+                `${taskId}/${taskId}_0.jpeg`,
+                `${taskId}/${taskId}_0.mp3`,
+                `${taskId}/${taskId}_1.jpeg`,
+                `${taskId}/${taskId}_1.mp3`,
+                `${taskId}/${taskId}_processed_audio.mp3`
+            ];
+            const { error: musicError } = await supabase.storage
+                .from('video_music_temp_storage')
+                .remove(musicPaths);
+            if (musicError) console.error('Storage delete error (video_music):', musicError.message);
+
+            // DB에서 작업 레코드 삭제
+            const { error } = await supabase
+                .from('video_generation_tasks')
+                .delete()
+                .eq('id', taskId);
+
+            if (error) {
+                throw new Error(`Failed to delete video generation task: ${error.message}`);
+            }
+
+            return true;
+        } catch (error) {
+            console.error(error);
+            return false;
         }
     },
 

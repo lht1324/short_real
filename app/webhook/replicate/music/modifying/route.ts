@@ -1,11 +1,31 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createSupabaseServiceRoleClient } from '@/lib/supabaseServiceRole';
+import {videoGenerationTasksServerAPI} from "@/api/server/videoGenerationTasksServerAPI";
+import {taskCheckAndCleanupIfCancelled} from "@/app/api/video/process/taskCheckAndCleaupIfCancelled";
 
 export async function POST(request: NextRequest) {
+    const supabase = createSupabaseServiceRoleClient();
+
     try {
         const body = await request.json();
         const { searchParams } = new URL(request.url);
         const generationTaskId = searchParams.get('videoGenerationTaskId');
+
+        if (!generationTaskId) {
+            return NextResponse.json({ error: "generationTaskId is required" }, { status: 400 });
+        }
+
+        const videoGenerationTask = await videoGenerationTasksServerAPI.getVideoGenerationTaskById(generationTaskId);
+
+        if (!videoGenerationTask) {
+            throw new Error("Task not found.");
+        }
+
+        const checkingInitialResult = await taskCheckAndCleanupIfCancelled(videoGenerationTask);
+
+        if (checkingInitialResult) {
+            return checkingInitialResult;
+        }
 
         console.log(`[Webhook Audio] Status: ${body.status}`);
         console.log(`[Webhook Audio] Task ID: ${generationTaskId}`);
@@ -15,7 +35,6 @@ export async function POST(request: NextRequest) {
             console.log(`[Webhook Audio] Result URL: ${processedAudioUrl}`);
 
             // Supabase Storage에 다운로드 및 저장
-            const supabase = createSupabaseServiceRoleClient();
             const audioResponse = await fetch(processedAudioUrl);
 
             if (!audioResponse.ok) {
@@ -112,7 +131,6 @@ export async function POST(request: NextRequest) {
             console.error(`[Webhook Audio] Failed:`, body.error);
 
             // 에러 상태 DB 업데이트
-            const supabase = createSupabaseServiceRoleClient();
             await supabase
                 .from('video_generation_tasks')
                 .update({

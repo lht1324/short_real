@@ -11,6 +11,7 @@ import {useRouter} from "next/navigation";
 import DashboardItem from "@/components/page/workspace/dashboard/DashboardItem";
 import DefaultModal from "@/components/public/DefaultModal";
 import {createBrowserClient} from "@supabase/ssr";
+import TaskDeleteLoadingModal from "@/components/page/workspace/dashboard/TaskDeleteLoadingModal";
 
 export interface TaskData {
     id: string;
@@ -43,8 +44,9 @@ function WorkspaceDashboardPageClient() {
     const [pendingCancelTaskId, setPendingCancelTaskId] = useState<string | null>(null);
 
     const [showCancelConfirmModal, setShowCancelConfirmModal] = useState(false);
+    const [showCancelLoadingModal, setShowCancelLoadingModal] = useState(false);
 
-    const onClickCancel = useCallback((taskId: string) => {
+    const onClickCancel = useCallback((taskId: string, status: VideoGenerationTaskStatus) => {
         setPendingCancelTaskId(taskId);
         setShowCancelConfirmModal(true);
     }, []);
@@ -59,9 +61,37 @@ function WorkspaceDashboardPageClient() {
     }, []);
 
     const cancelVideoGenerationTask = useCallback(async () => {
-        // Row 삭제, Replicate 취소 요청, ...
         try {
+            setShowCancelLoadingModal(true);
 
+            if (!pendingCancelTaskId) throw new Error("Cancelled Task is not selected.");
+
+            const currentCancelledTaskData = await videoClientAPI.getVideoTaskByTaskId(pendingCancelTaskId);
+
+            if (!currentCancelledTaskData || !currentCancelledTaskData.status) throw new Error("Task not found.");
+
+            const taskStatus = currentCancelledTaskData.status;
+
+            // UI 상에서 지워주는 것도 추가해야 함
+
+            switch (taskStatus) {
+                case VideoGenerationTaskStatus.DRAFTING:
+                case VideoGenerationTaskStatus.GENERATING_VOICE:
+                case VideoGenerationTaskStatus.EDITOR: {
+                    await videoClientAPI.deleteVideoTaskByTaskId(pendingCancelTaskId);
+
+                    setShowCancelLoadingModal(false);
+                    return;
+                }
+                default: {
+                    await videoClientAPI.patchVideoTaskByTaskId(pendingCancelTaskId, {
+                        is_user_cancelled_task: true,
+                    });
+
+                    setShowCancelLoadingModal(false);
+                    return;
+                }
+            }
         } catch (error) {
 
         }
@@ -153,9 +183,13 @@ function WorkspaceDashboardPageClient() {
                         throw new Error("Cannot read videoGenerationTaskList. Try again.");
                     }
 
-                    const taskList = videoGenerationTaskList
-                        .map((task) => convertToTaskData(task))
-                        .filter((task): task is TaskData => task !== null);
+                    const taskList = videoGenerationTaskList.filter((videoGenerationTask) => {
+                        return !(videoGenerationTask.is_user_cancelled_task);
+                    }).map((videoGenerationTask) => {
+                        return convertToTaskData(videoGenerationTask);
+                    }).filter((taskData) => {
+                        return taskData !== null;
+                    });
 
                     setTaskDataList(taskList);
                 } catch (error) {
@@ -194,21 +228,28 @@ function WorkspaceDashboardPageClient() {
                             case 'INSERT': {
                                 // 새로운 task 추가
                                 const newTask = payload.new as VideoGenerationTask;
-                                const taskData = convertToTaskData(newTask);
-                                if (taskData) {
-                                    setTaskDataList((prev) => [taskData, ...prev]);
+                                const newTaskData = convertToTaskData(newTask);
+                                if (newTaskData) {
+                                    setTaskDataList((prevTaskDataList) => {
+                                        return [newTaskData, ...prevTaskDataList]
+                                    });
                                 }
                                 return;
                             }
                             case 'UPDATE': {
                                 // 기존 task 업데이트
                                 const updatedTask = payload.new as VideoGenerationTask;
-                                const taskData = convertToTaskData(updatedTask);
-                                if (taskData) {
-                                    setTaskDataList((prev) =>
-                                        prev.map((task) =>
-                                            task.id === taskData.id ? taskData : task
-                                        )
+                                const newTaskData = convertToTaskData(updatedTask);
+                                if (newTaskData) {
+                                    setTaskDataList((prevTaskDataList) =>
+                                        prevTaskDataList.filter((prevTaskData) => {
+                                            return prevTaskData.id !== newTaskData.id
+                                                || (prevTaskData.id === newTaskData.id && !updatedTask.is_user_cancelled_task);
+                                        }).map((prevTaskData) => {
+                                            return prevTaskData.id === newTaskData.id
+                                                ? newTaskData
+                                                : prevTaskData;
+                                        })
                                     );
                                 }
                                 return;
@@ -217,8 +258,10 @@ function WorkspaceDashboardPageClient() {
                                 // task 삭제
                                 const deletedTask = payload.old as VideoGenerationTask;
                                 if (deletedTask.id) {
-                                    setTaskDataList((prev) =>
-                                        prev.filter((task) => task.id !== deletedTask.id)
+                                    setTaskDataList((prevTaskDataList) =>
+                                        prevTaskDataList.filter((prevTaskData) => {
+                                            return prevTaskData.id !== deletedTask.id;
+                                        })
                                     );
                                 }
                                 return;
@@ -342,12 +385,17 @@ function WorkspaceDashboardPageClient() {
                 "⚠️ Warning: Credits used for this task will not be refunded."}
                 confirmText="Yes"
                 cancelText="No"
-                onClickConfirm={() => {}}
+                onClickConfirm={async () => {
+                    await cancelVideoGenerationTask();
+                    setShowCancelConfirmModal(false);
+                }}
                 onClickCancel={() => {
                     setPendingCancelTaskId(null);
                     setShowCancelConfirmModal(false);
                 }}
             />}
+
+            {showCancelLoadingModal && <TaskDeleteLoadingModal/>}
 
             {/* Loading Overlay */}
             {isLoading && (

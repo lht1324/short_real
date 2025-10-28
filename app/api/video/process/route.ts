@@ -8,6 +8,7 @@ import {createSupabaseServiceRoleClient} from "@/lib/supabaseServiceRole";
 import {findOptimalVideoParameters} from "@/utils/videoUtils";
 import {MasterStyleInfo} from "@/api/server/MasterStyleInfo";
 import {PostVideoRequest} from "@/api/types/api/video/PostVideoRequest";
+import {taskCheckAndCleanupIfCancelled} from "@/app/api/video/process/taskCheckAndCleaupIfCancelled";
 
 export async function POST(request: NextRequest) {
     const supabase = createSupabaseServiceRoleClient();
@@ -38,10 +39,23 @@ export async function POST(request: NextRequest) {
             );
         }
 
+        const checkResultInitialResult = await taskCheckAndCleanupIfCancelled(videoGenerationTask);
+
+        if (checkResultInitialResult) {
+            return checkResultInitialResult;
+        }
+
         const sceneDataList = videoGenerationTask.scene_breakdown_list;
         const videoMainSubject = videoGenerationTask.video_main_subject;
 
-        await videoGenerationTasksServerAPI.patchVideoGenerationTaskStatus(taskId, VideoGenerationTaskStatus.GENERATING_MASTER_STYLE_PROMPT);
+        const patchVideoGenerationTaskStatusMasterStylePromptResult = await videoGenerationTasksServerAPI.patchVideoGenerationTaskStatus(taskId, VideoGenerationTaskStatus.GENERATING_MASTER_STYLE_PROMPT);
+
+        const checkResultGeneratingMasterStylePromptResult = await taskCheckAndCleanupIfCancelled(patchVideoGenerationTaskStatusMasterStylePromptResult);
+
+        if (checkResultGeneratingMasterStylePromptResult) {
+            return checkResultGeneratingMasterStylePromptResult;
+        }
+
         // 2. openAIServerAPI로 비디오 Scene 분리 데이터, 마스터 스타일 프롬프트 생성 요청
         const postMasterStylePromptResult = await openAIServerAPI.postMasterStylePrompt(style)
 
@@ -55,11 +69,17 @@ export async function POST(request: NextRequest) {
         const masterStylePositivePromptInfo: MasterStyleInfo = postMasterStylePromptResult.masterStylePositivePromptInfo;
         const masterStyleNegativePrompt = postMasterStylePromptResult.masterStyleNegativePrompt;
 
-        await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, {
+        const patchVideoGenerationTaskStatusImagePromptResult = await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, {
             status: VideoGenerationTaskStatus.GENERATING_IMAGE_PROMPT,
             master_style_positive_prompt: masterStylePositivePromptInfo,
             master_style_negative_prompt: masterStyleNegativePrompt,
-        })
+        });
+
+        const checkResultGeneratingImagePromptResult = await taskCheckAndCleanupIfCancelled(patchVideoGenerationTaskStatusImagePromptResult);
+
+        if (checkResultGeneratingImagePromptResult) {
+            return checkResultGeneratingImagePromptResult;
+        }
 
         // 4. openAIServerAPI로 이미지 생성용, 영상 생성용 프롬프트 생성 요청
         const sceneDataWithImageGenPromptPromiseList: Promise<SceneData>[] = sceneDataList.map(async (sceneData) => {
@@ -103,8 +123,13 @@ export async function POST(request: NextRequest) {
             }
         }
 
+        const patchVideoGenerationTaskStatusVideoPromptResult = await videoGenerationTasksServerAPI.patchVideoGenerationTaskStatus(taskId, VideoGenerationTaskStatus.GENERATING_VIDEO_PROMPT);
 
-        await videoGenerationTasksServerAPI.patchVideoGenerationTaskStatus(taskId, VideoGenerationTaskStatus.GENERATING_VIDEO_PROMPT);
+        const checkResultGeneratingVideoPromptResult = await taskCheckAndCleanupIfCancelled(patchVideoGenerationTaskStatusVideoPromptResult);
+
+        if (checkResultGeneratingVideoPromptResult) {
+            return checkResultGeneratingVideoPromptResult;
+        }
 
         const sceneDataWithVideoGenPromptPromiseList: Promise<SceneData>[] = sceneDataWithImageGenPromptList.map(async (sceneData) => {
             const { data: imageData, error: imageError } = await supabase.storage
@@ -156,7 +181,13 @@ export async function POST(request: NextRequest) {
 
 
         // 7. videoServerAPI로 Scene별 영상 동시 생성 요청 (이미지 + 자막 데이터 포함)
-        await videoGenerationTasksServerAPI.patchVideoGenerationTaskStatus(taskId, VideoGenerationTaskStatus.GENERATING_VIDEO);
+        const patchVideoGenerationTaskStatusVideoResult = await videoGenerationTasksServerAPI.patchVideoGenerationTaskStatus(taskId, VideoGenerationTaskStatus.GENERATING_VIDEO);
+
+        const checkResultGeneratingVideoResult = await taskCheckAndCleanupIfCancelled(patchVideoGenerationTaskStatusVideoResult);
+
+        if (checkResultGeneratingVideoResult) {
+            return checkResultGeneratingVideoResult;
+        }
 
         const finalSceneDataList: SceneData[] = await Promise.all(
             sceneDataWithVideoGenPromptList.map(async (sceneData): Promise<SceneData> => {
@@ -181,6 +212,12 @@ export async function POST(request: NextRequest) {
 
         if (!updatedVideoGenerationTask.id || !updatedVideoGenerationTask.created_at) {
             throw Error('Failed to update video generation task');
+        }
+
+        const checkResultFinal = await taskCheckAndCleanupIfCancelled(updatedVideoGenerationTask);
+
+        if (checkResultFinal) {
+            return checkResultFinal;
         }
 
         return NextResponse.json({

@@ -58,3 +58,33 @@ export async function PATCH(
         );
     }
 }
+
+export async function DELETE(
+    request: NextRequest,
+    { params }: { params: Promise<{ taskId: string }> }
+) {
+    try {
+        const { taskId } = await params;
+
+        // Task 삭제
+        const deleteVideoGenerationTaskResult = await videoGenerationTasksServerAPI.deleteVideoGenerationTask(taskId);
+
+        if (!deleteVideoGenerationTaskResult) {
+            return NextResponse.json(
+                { error: "Task not found" },
+                { status: 404 }
+            );
+        }
+
+        return NextResponse.json(
+            { message: "Task deleted successfully" },
+            { status: 200 }
+        );
+    } catch (error) {
+        console.error("Error in DELETE /api/video/task/[taskId]:", error);
+        return NextResponse.json(
+            { error: "Failed to delete task" },
+            { status: 500 }
+        );
+    }
+}

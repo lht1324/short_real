@@ -1,4 +1,9 @@
-import {SceneData, SceneGenerationStatus, VideoGenerationTaskStatus} from '@/api/types/supabase/VideoGenerationTasks';
+import {
+    SceneData,
+    SceneGenerationStatus,
+    VideoGenerationTask,
+    VideoGenerationTaskStatus
+} from '@/api/types/supabase/VideoGenerationTasks';
 import {findOptimalVideoParameters} from "@/utils/videoUtils";
 import {
     ReplicateInput,
@@ -14,6 +19,7 @@ import {createSupabaseServiceRoleClient} from "@/lib/supabaseServiceRole";
 import {ALL_FORMATS, Input, UrlSource} from "mediabunny";
 import {FalAIClient} from "@/lib/fal-ai/FalAIClient";
 import {FalAIService} from "@/lib/fal-ai/FalAIService";
+import {taskCheckAndCleanupIfCancelled} from "@/app/api/video/process/taskCheckAndCleaupIfCancelled";
 
 export const videoServerAPI = {
     // POST /videos - Scene별 image-to-video 생성 요청 제출
@@ -301,19 +307,13 @@ export const videoServerAPI = {
         }
     },
 
-    async postFinalVideo(generationTaskId: string) {
+    async postFinalVideo(generationTaskId: string, videoGenerationTask: VideoGenerationTask) {
         const supabase = createSupabaseServiceRoleClient();
         const falAIClient = new FalAIClient();
         const falAIService = new FalAIService(falAIClient);
 
         try {
             // 1. 필요한 데이터 조회 (영상 리스트, 음성 URL)
-            console.log(`[Merge Service] Task 데이터 조회: ${generationTaskId}`);
-            const videoGenerationTask = await videoGenerationTasksServerAPI.getVideoGenerationTaskById(generationTaskId);
-            if (!videoGenerationTask) {
-                throw new Error("Task not found.");
-            }
-
             console.log(`[Merge Service] 음성 파일 URL 조회`);
             const { data: audioData, error: audioError } = await supabase.storage
                 .from('narration_voice_storage')
@@ -367,9 +367,6 @@ export const videoServerAPI = {
 
             console.log(`[Merge Service] 최종 영상 병합 완료`);
 
-            // 5. Task 상태 'EDITOR'로 업데이트
-            await videoGenerationTasksServerAPI.updateTaskStatus(generationTaskId, VideoGenerationTaskStatus.EDITOR);
-
             // 5.5. Fal AI에서 최종 병합된 영상을 다운로드하여 Supabase Storage에 업로드
             const finalVideoUrl = mergeVideoAndAudioResult.video.url;
             const finalVideoResponse = await fetch(finalVideoUrl);
@@ -393,14 +390,7 @@ export const videoServerAPI = {
                 throw new Error(`최종 영상 Supabase Storage 업로드 실패: ${uploadError.message}`);
             }
 
-            // Supabase Storage의 public URL 생성
-            const { data: { publicUrl } } = supabase.storage
-                .from('processed_video_storage')
-                .getPublicUrl(finalFilePath);
-
-            // 6. 최종 결과 URL 반환 (Supabase Storage URL)
-            return publicUrl;
-
+            return true;
         } catch (error) {
             console.error(`[Merge Service] 최종 영상 병합 중 에러:`, error);
             // 실패 시 Task 상태 'failed'로 업데이트
@@ -439,7 +429,7 @@ export const videoServerAPI = {
                 }
             }
             await videoGenerationTasksServerAPI.patchVideoGenerationTaskStatus(generationTaskId, VideoGenerationTaskStatus.FAILED);
-            throw error;
+            return false;
         }
     },
 

@@ -66,16 +66,6 @@ export async function POST(request: NextRequest) {
             captionOneLineHeight,
         );
 
-        // TODO: DB에 작업 상태 저장
-        // await db.update({
-        //     videoGenerationTaskId,
-        //     caption_started: true,
-        //     music_cut_started: true,
-        //     caption_completed: false,
-        //     music_cut_completed: false,
-        //     merge_started: false
-        // });
-
         // 1. Caption 번인 2. Music 편집을 병렬 실행
         const [captionPredictionId, musicPredictionId] = await Promise.all([
             videoServerAPI.postVideoMergeCaption(

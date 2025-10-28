@@ -19,6 +19,7 @@ export interface VideoGenerationTask {
     caption_completed?: boolean; // boolean, default false - 자막 번인 완료 여부
     music_completed?: boolean; // boolean, default false - 음악 편집 완료 여부
     merge_started?: boolean; // boolean, default false - 최종 병합 시작 여부
+    is_user_cancelled_task?: boolean; // boolean, default false - 유저 도중 취소 여부 (status와 더불어 판단함)
     created_at?: string; // timestamp with time zone, default CURRENT_TIMESTAMP
     updated_at?: string;
 }
@@ -45,6 +46,7 @@ export enum VideoGenerationTaskStatus {
     STITCHING_VIDEOS = 'stitching_videos',
     // 작곡
     COMPOSING_MUSIC = 'composing_music',
+
     // 편집
     EDITOR = "editor",
     // 최종 편집

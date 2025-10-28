@@ -1,6 +1,6 @@
 import {PostVideoRequest} from "@/api/types/api/video/PostVideoRequest";
 import {PostVideoResponse} from "@/api/types/api/video/PostVideoResponse";
-import {getFetch, patchFetch, postFetch} from '@/api/client/baseFetch';
+import {deleteFetch, getFetch, patchFetch, postFetch} from '@/api/client/baseFetch';
 import {VideoGenerationTask} from "@/api/types/supabase/VideoGenerationTasks";
 
 export const videoClientAPI = {
@@ -96,6 +96,25 @@ export const videoClientAPI = {
         } catch (error) {
             console.error('Failed to get video task:', error);
             return null;
+        }
+    },
+
+    async deleteVideoTaskByTaskId(taskId: string): Promise<boolean> {
+        try {
+            const response = await deleteFetch(`/api/video/task/${taskId}`);
+
+            if (!response.ok) {
+                if (response.status === 404) {
+                    console.warn(`Task not found: ${taskId}`);
+                    return false;
+                }
+                throw Error(`HTTP error! status: ${response.status}`);
+            }
+
+            return true;
+        } catch (error) {
+            console.error('Failed to delete video task:', error);
+            return false;
         }
     },
 

@@ -6,6 +6,7 @@ import {SceneGenerationStatus, VideoGenerationTaskStatus} from "@/api/types/supa
 import {createSupabaseServiceRoleClient} from "@/lib/supabaseServiceRole";
 import {getErrorMessage} from "@/utils/ErrorUtils";
 import {openAIServerAPI} from "@/api/server/openAIServerAPI";
+import {taskCheckAndCleanupIfCancelled} from "@/app/api/video/process/taskCheckAndCleaupIfCancelled";
 
 // import { adjustVideoSpeedAndUpload } from "@/lib/services/videoService"; // (추천) 실제 로직은 이렇게 분리
 
@@ -28,6 +29,12 @@ export async function POST(request: NextRequest) {
         if (!generationTask) {
             console.log("Task not found: ", generationTaskId);
             return NextResponse.json({ error: "Task not found" }, { status: 404 });
+        }
+
+        const checkResultInitialResult = await taskCheckAndCleanupIfCancelled(generationTask);
+
+        if (checkResultInitialResult) {
+            return checkResultInitialResult;
         }
 
         // 3. Prediction ID와 일치하는 Scene 찾기
@@ -200,34 +207,15 @@ export async function POST(request: NextRequest) {
 
         // 8. 모든 Scene 처리가 완료되었으면, 병합 엔드포인트 호출
         if (isAllScenesProcessed) {
-            await videoGenerationTasksServerAPI.patchVideoGenerationTaskStatus(generationTaskId, VideoGenerationTaskStatus.STITCHING_VIDEOS);
+            const patchVideoGenerationTaskStatusStitchingVideosResult = await videoGenerationTasksServerAPI.patchVideoGenerationTaskStatus(generationTaskId, VideoGenerationTaskStatus.STITCHING_VIDEOS);
+
+            const checkStitchingVideosResult = await taskCheckAndCleanupIfCancelled(patchVideoGenerationTaskStatusStitchingVideosResult);
+
+            if (checkStitchingVideosResult) {
+                return checkStitchingVideosResult;
+            }
 
             console.log(`모든 Scene 처리 완료. 최종 병합을 시작합니다: ${generationTask.id}`);
-
-            if (!generationTask.master_style_positive_prompt) {
-                throw new Error("Master style prompt is invalid.");
-            }
-
-            const postMusicGenerationDataResult = await openAIServerAPI.postMusicGenerationData(
-                generationTask.video_main_subject as string,
-                generationTask.narration_script,
-                generationTask.master_style_positive_prompt,
-                updatedSceneList,
-            )
-
-            if (!postMusicGenerationDataResult.success || !postMusicGenerationDataResult.data) {
-                throw new Error("Failed to create music generation data.");
-            }
-
-            fetch(new URL(`${process.env.BASE_URL}/api/music?generationTaskId=${generationTaskId}`, request.url).toString(), {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    // 필요하다면 내부 인증을 위한 시크릿 키 등을 추가할 수 있습니다.
-                    // 'Authorization': `Bearer ${process.env.INTERNAL_SECRET_KEY}`
-                },
-                body: JSON.stringify(postMusicGenerationDataResult.data),
-            });
 
             // 현재 요청의 기본 URL을 사용하여 병합 엔드포인트의 전체 URL을 생성
             const mergeEndpointUrl = new URL(`${process.env.BASE_URL}/api/video/merge`, request.url);

@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { musicServerAPI } from '@/api/server/musicServerAPI';
 import {PostMusicModifyingRequest} from "@/api/types/api/music/modifying/PostMusicModifyingRequest";
+import {videoGenerationTasksServerAPI} from "@/api/server/videoGenerationTasksServerAPI";
+import {taskCheckAndCleanupIfCancelled} from "@/app/api/video/process/taskCheckAndCleaupIfCancelled";
 
 export async function POST(request: NextRequest) {
     try {
@@ -21,6 +23,22 @@ export async function POST(request: NextRequest) {
                 },
                 { status: 400 }
             );
+        }
+
+        if (!videoGenerationTaskId) {
+            return NextResponse.json({ error: "generationTaskId is required" }, { status: 400 });
+        }
+
+        const videoGenerationTask = await videoGenerationTasksServerAPI.getVideoGenerationTaskById(videoGenerationTaskId);
+
+        if (!videoGenerationTask) {
+            throw new Error("Task not found.");
+        }
+
+        const checkingInitialResult = await taskCheckAndCleanupIfCancelled(videoGenerationTask);
+
+        if (checkingInitialResult) {
+            return checkingInitialResult;
         }
 
         if (cuttingAreaEndSec <= cuttingAreaStartSec) {

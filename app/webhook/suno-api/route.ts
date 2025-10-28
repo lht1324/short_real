@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { BaseSunoAPIResponse, PostGenerateWebhookPayload, PostGenerateWebhookType } from "@/api/types/suno-api/SunoAPIResponses";
 import { musicServerAPI } from "@/api/server/musicServerAPI";
+import {videoGenerationTasksServerAPI} from "@/api/server/videoGenerationTasksServerAPI";
+import {taskCheckAndCleanupIfCancelled} from "@/app/api/video/process/taskCheckAndCleaupIfCancelled";
+import {VideoGenerationTaskStatus} from "@/api/types/supabase/VideoGenerationTasks";
 
 export async function POST(request: NextRequest) {
     try {
@@ -13,6 +16,17 @@ export async function POST(request: NextRequest) {
                 { error: 'Missing required query param: generationTaskId' },
                 { status: 400 }
             );
+        }
+
+        const videoGenerationTask = await videoGenerationTasksServerAPI.getVideoGenerationTaskById(generationTaskId);
+        if (!videoGenerationTask) {
+            throw new Error("Task not found.");
+        }
+
+        const checkingInitialResult = await taskCheckAndCleanupIfCancelled(videoGenerationTask);
+
+        if (checkingInitialResult) {
+            return checkingInitialResult;
         }
 
         const body = await request.json() as BaseSunoAPIResponse<PostGenerateWebhookPayload>;
@@ -92,6 +106,9 @@ export async function POST(request: NextRequest) {
 
                             if (uploadResult.success) {
                                 console.log(`Successfully uploaded ${musicFileList.length} music files for task: ${generationTaskId}`);
+
+                                // Task 상태 'EDITOR'로 업데이트
+                                await videoGenerationTasksServerAPI.updateTaskStatus(generationTaskId, VideoGenerationTaskStatus.EDITOR);
                             } else {
                                 console.error(`Failed to upload music files for task: ${generationTaskId}`, uploadResult.error);
                             }
