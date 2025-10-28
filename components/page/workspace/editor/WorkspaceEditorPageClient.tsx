@@ -8,7 +8,7 @@ import { RotateCcw, ChevronLeft } from 'lucide-react';
 import { fontMap, type FontName } from "@/lib/fonts";
 import FONT_FAMILY_LIST, {FontFamily} from "@/lib/FontFamilyList";
 import {videoClientAPI} from "@/api/client/videoClientAPI";
-import {MusicData, SubtitleSegment} from "@/api/types/supabase/VideoGenerationTasks";
+import {MusicData, SubtitleSegment, VideoGenerationTaskStatus} from "@/api/types/supabase/VideoGenerationTasks";
 import SceneSequencePanel from "@/components/page/workspace/editor/SceneSequencePanel";
 import CaptionConfigPanel from "@/components/page/workspace/editor/CaptionConfigPanel";
 import VideoPlayerPanel, {VideoPlayerHandle} from "@/components/page/workspace/editor/VideoPlayerPanel";
@@ -393,67 +393,90 @@ function WorkspaceEditorPageClient() {
 
     useEffect(() => {
         if (taskId) {
-            try {
-                const loadData = async () => {
-                    setIsPublicDataLoading(true);
+            const loadData = async () => {
+                setIsPublicDataLoading(true);
 
-                    // Font Initialization
-                    const newFamilyList = FONT_FAMILY_LIST.sort((a, b) => {
-                        return a.name.localeCompare(b.name);
-                    });
-                    setFontFamilyList(newFamilyList);
+                // Font Initialization
+                const newFamilyList = FONT_FAMILY_LIST.sort((a, b) => {
+                    return a.name.localeCompare(b.name);
+                });
+                setFontFamilyList(newFamilyList);
 
-                    // Task Data Initialization
-                    const [taskVideoUrl, videoGenerationTask] = await Promise.all([
-                        videoClientAPI.getVideoUrl(taskId),
-                        videoClientAPI.getVideoTaskByTaskId(taskId)
-                    ]);
+                // Task Data Initialization
+                const [taskVideoUrl, videoGenerationTask] = await Promise.all([
+                    videoClientAPI.getVideoUrl(taskId),
+                    videoClientAPI.getVideoTaskByTaskId(taskId)
+                ]);
 
-                    if (!taskVideoUrl || !videoGenerationTask) {
-                        throw new Error("There is no video generation task");
-                    }
-
-                    // 각 씬의 시작/종료 시간 및 자막 세그먼트 계산
-                    let accumulatedTime = 0;
-                    const captionDataList = videoGenerationTask.scene_breakdown_list.map((sceneData) => {
-                        const subtitleSegmentationList = sceneData.sceneSubtitleSegments ?? [];
-                        const startSec = subtitleSegmentationList[0].startSec ?? accumulatedTime;
-                        const endSec = subtitleSegmentationList[subtitleSegmentationList.length - 1].endSec;
-
-                        accumulatedTime = endSec;
-
-                        return {
-                            sceneNumber: sceneData.sceneNumber,
-                            script: sceneData.narration,
-                            startSec: startSec,
-                            endSec: endSec,
-                            subtitleSegmentationList: subtitleSegmentationList
-                        }
-                    });
-
-                    setVideoData({
-                        title: videoGenerationTask.video_main_subject ?? "",
-                        videoUrl: taskVideoUrl,
-                        captionDataList: captionDataList,
-                    });
-
-
-                    const musicDataList = await musicClientAPI.getMusicData(taskId);
-
-                    if (!musicDataList) {
-                        throw new Error(`Failed to load music data for task: ${taskId}`);
-                    }
-
-                    setMusicDataList(musicDataList);
+                if (!taskVideoUrl || !videoGenerationTask) {
+                    throw new Error("There is no video generation task");
                 }
 
-                loadData().then(() => {
-                    setIsPublicDataLoading(false);
+                if (videoGenerationTask.status !== VideoGenerationTaskStatus.EDITOR) {
+                    throw new Error("Invalid task status for editor")
+                }
+
+                // 각 씬의 시작/종료 시간 및 자막 세그먼트 계산
+                let accumulatedTime = 0;
+                const captionDataList = videoGenerationTask.scene_breakdown_list.map((sceneData) => {
+                    const subtitleSegmentationList = sceneData.sceneSubtitleSegments ?? [];
+                    const startSec = subtitleSegmentationList[0].startSec ?? accumulatedTime;
+                    const endSec = subtitleSegmentationList[subtitleSegmentationList.length - 1].endSec;
+
+                    accumulatedTime = endSec;
+
+                    return {
+                        sceneNumber: sceneData.sceneNumber,
+                        script: sceneData.narration,
+                        startSec: startSec,
+                        endSec: endSec,
+                        subtitleSegmentationList: subtitleSegmentationList
+                    }
                 });
-            } catch (error) {
-                console.error(error);
+
+                setVideoData({
+                    title: videoGenerationTask.video_main_subject ?? "",
+                    videoUrl: taskVideoUrl,
+                    captionDataList: captionDataList,
+                });
+
+
+                const musicDataList = await musicClientAPI.getMusicData(taskId);
+
+                if (!musicDataList) {
+                    throw new Error(`Failed to load music data for task: ${taskId}`);
+                }
+
+                setMusicDataList(musicDataList);
+            }
+
+            loadData().then(() => {
                 setIsPublicDataLoading(false);
-                router.back();
+            }).catch((error) => {
+                console.error(error);
+                // setIsPublicDataLoading(false);
+                // setIsSceneSequencePanelLoading(false);
+                // setIsVideoPlayerPanelLoading(false);
+
+                if (window.history.length > 1) {
+                    console.log("back")
+                    window.history.back()
+                } else {
+                    console.log("href")
+                    window.location.href = '/workspace/dashboard'
+                }
+            });
+        } else {
+            // setIsPublicDataLoading(false);
+            // setIsSceneSequencePanelLoading(false);
+            // setIsVideoPlayerPanelLoading(false);
+
+            if (window.history.length > 1) {
+                console.log("back")
+                window.history.back()
+            } else {
+                console.log("href")
+                window.location.href = '/workspace/dashboard'
             }
         }
     }, [router, taskId]);

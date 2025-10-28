@@ -3,22 +3,11 @@
 import {memo, useCallback, useEffect, useMemo, useState} from "react";
 import Link from "next/link";
 import Image from "next/image";
-import {
-    AlertTriangle,
-    X,
-    Sparkles,
-    ListTodo,
-    Plus,
-    Play,
-    ChevronDown,
-    ChevronRight,
-    Film,
-    Save,
-} from 'lucide-react';
-import { openAIClientAPI } from '@/api/client/openAIClientAPI';
+import {AlertTriangle, ChevronDown, ChevronRight, Film, ListTodo, Play, Plus, Save, Sparkles, X,} from 'lucide-react';
+import {openAIClientAPI} from '@/api/client/openAIClientAPI';
 import {ScriptGenerationRequest} from "@/api/types/open-ai/ScriptGeneration";
 import {Style} from "@/api/types/supabase/Styles";
-import {SceneData, VideoGenerationTask} from "@/api/types/supabase/VideoGenerationTasks";
+import {SceneData, VideoGenerationTask, VideoGenerationTaskStatus} from "@/api/types/supabase/VideoGenerationTasks";
 import {videoClientAPI} from "@/api/client/videoClientAPI";
 import {postFetch} from "@/api/client/baseFetch";
 import {StoryboardData} from "@/api/types/api/open-ai/scene/PostOpenAISceneResponse";
@@ -450,7 +439,7 @@ function WorkspaceCreatePageClient() {
             const getVideoTaskByTaskId = async () => {
                 const videoGenerationTask = await videoClientAPI.getVideoTaskByTaskId(taskId);
 
-                if (videoGenerationTask) {
+                if (videoGenerationTask && (videoGenerationTask.status === VideoGenerationTaskStatus.DRAFTING || videoGenerationTask.status === VideoGenerationTaskStatus.GENERATING_VOICE)) {
                     const script = videoGenerationTask.narration_script;
                     const sceneDataList = videoGenerationTask.scene_breakdown_list;
                     const videoMainSubject = videoGenerationTask.video_main_subject;
@@ -466,6 +455,11 @@ function WorkspaceCreatePageClient() {
                     setIsGenerationTaskLoading(false);
                 } else {
                     setIsGenerationTaskLoading(false);
+
+                    // URL에서 taskId 파라미터만 제거 (리렌더링 없이)
+                    const url = new URL(window.location.href);
+                    url.searchParams.delete('taskId');
+                    window.history.replaceState({}, '', url.toString());
                 }
             }
 
