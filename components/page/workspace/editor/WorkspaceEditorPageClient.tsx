@@ -404,7 +404,7 @@ function WorkspaceEditorPageClient() {
 
                 // Task Data Initialization
                 const [taskVideoUrl, videoGenerationTask] = await Promise.all([
-                    videoClientAPI.getVideoUrl(taskId),
+                    videoClientAPI.getVideoVoiceUrl(taskId),
                     videoClientAPI.getVideoTaskByTaskId(taskId)
                 ]);
 

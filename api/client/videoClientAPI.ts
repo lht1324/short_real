@@ -118,9 +118,29 @@ export const videoClientAPI = {
         }
     },
 
-    async getVideoUrl(taskId: string): Promise<string | null> {
+    async getVideoVoiceUrl(taskId: string): Promise<string | null> {
         try {
-            const response = await getFetch(`/api/video/url?taskId=${taskId}`);
+            const response = await getFetch(`/api/video/url/voice?taskId=${taskId}`);
+
+            if (!response.ok) {
+                if (response.status === 404) {
+                    console.warn(`Video not found for task: ${taskId}`);
+                    return null;
+                }
+                throw Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            return data.url;
+        } catch (error) {
+            console.error('Failed to get video URL:', error);
+            return null;
+        }
+    },
+
+    async getVideoFinalUrl(taskId: string): Promise<string | null> {
+        try {
+            const response = await getFetch(`/api/video/url/final?taskId=${taskId}`);
 
             if (!response.ok) {
                 if (response.status === 404) {

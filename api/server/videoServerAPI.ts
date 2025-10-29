@@ -298,10 +298,9 @@ export const videoServerAPI = {
             console.error(`[Video-Music Merge] 병합 중 에러:`, error);
 
             // 실패 시 Task 상태 'failed'로 업데이트
-            await videoGenerationTasksServerAPI.patchVideoGenerationTaskStatus(
-                videoGenerationTaskId,
-                VideoGenerationTaskStatus.FAILED
-            );
+            await videoGenerationTasksServerAPI.patchVideoGenerationTask(videoGenerationTaskId, {
+                is_generation_failed: true,
+            });
 
             throw error;
         }
@@ -428,17 +427,19 @@ export const videoServerAPI = {
 
                 }
             }
-            await videoGenerationTasksServerAPI.patchVideoGenerationTaskStatus(generationTaskId, VideoGenerationTaskStatus.FAILED);
+            await videoGenerationTasksServerAPI.patchVideoGenerationTask(generationTaskId, {
+                is_generation_failed: true,
+            })
             return false;
         }
     },
 
-    async getVideoSignedUrl(filePath: string) {
+    async getVideoSignedUrl(filePath: string, expiresIn: number = 60 * 60 * 24) {
         const supabase = createSupabaseServiceRoleClient();
 
         const { data, error } = await supabase.storage
             .from('processed_video_storage')
-            .createSignedUrl(filePath, 60 * 60 * 24);
+            .createSignedUrl(filePath, expiresIn);
 
         if (error || !data?.signedUrl) {
             throw new Error(error?.message || `There is no image data.`);

@@ -72,10 +72,9 @@ export async function POST(request: NextRequest) {
             console.error(`[Webhook Video-Music Merge] Failed:`, body.error);
 
             if (generationTaskId) {
-                await videoGenerationTasksServerAPI.patchVideoGenerationTaskStatus(
-                    generationTaskId,
-                    VideoGenerationTaskStatus.FAILED
-                );
+                await videoGenerationTasksServerAPI.patchVideoGenerationTask(generationTaskId, {
+                    is_generation_failed: true,
+                });
             }
         }
 

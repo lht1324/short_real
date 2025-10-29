@@ -20,6 +20,7 @@ export interface VideoGenerationTask {
     music_completed?: boolean; // boolean, default false - 음악 편집 완료 여부
     merge_started?: boolean; // boolean, default false - 최종 병합 시작 여부
     is_user_cancelled_task?: boolean; // boolean, default false - 유저 도중 취소 여부 (status와 더불어 판단함)
+    is_generation_failed?: boolean; // boolean, default false - 실패 여부 (Retry 시 기존 status 조회하기)
     created_at?: string; // timestamp with time zone, default CURRENT_TIMESTAMP
     updated_at?: string;
 }
@@ -53,8 +54,8 @@ export enum VideoGenerationTaskStatus {
     FINALIZING = "finalizing",
     // 완료
     COMPLETED = 'completed',
-    // 실패
-    FAILED = 'failed',
+    // // 실패
+    // FAILED = 'failed',
 }
 
 export interface SceneData {

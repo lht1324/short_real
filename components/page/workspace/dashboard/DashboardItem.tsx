@@ -11,7 +11,7 @@ enum StatusGroup {
     PROCESSING = 'processing',
     EDITING = 'editing',
     COMPLETED = 'completed',
-    FAILED = 'failed',
+    // FAILED = 'failed',
     UNKNOWN = 'unknown',
 }
 
@@ -46,8 +46,8 @@ function DashboardItem({
                 return StatusGroup.EDITING;
             case VideoGenerationTaskStatus.COMPLETED:
                 return StatusGroup.COMPLETED;
-            case VideoGenerationTaskStatus.FAILED:
-                return StatusGroup.FAILED;
+            // case VideoGenerationTaskStatus.FAILED:
+            //     return StatusGroup.FAILED;
             default:
                 return StatusGroup.UNKNOWN;
         }
@@ -62,69 +62,72 @@ function DashboardItem({
         const sceneCount = taskData.sceneCount;
         const processedSceneCount = taskData.processedSceneCount;
 
-        switch (status) {
-            // 의도됨
-            case VideoGenerationTaskStatus.DRAFTING:
-            case VideoGenerationTaskStatus.GENERATING_VOICE: return {
-                tailWindGradient: 'from-purple-500 to-pink-500',
-                description: 'Drafting script...',
-                emoji: '📝'
-            };
-            case VideoGenerationTaskStatus.GENERATING_MASTER_STYLE_PROMPT: return {
-                tailWindGradient: 'from-violet-500 to-purple-600',
-                description: 'Art director is crafting style guide',
-                emoji: '🎨'
-            };
-            case VideoGenerationTaskStatus.GENERATING_IMAGE_PROMPT: return {
-                tailWindGradient: 'from-fuchsia-500 to-pink-600',
-                description: 'Storyboard artist is designing scenes',
-                emoji: '🖼️'
-            };
-            case VideoGenerationTaskStatus.GENERATING_VIDEO_PROMPT: return {
-                tailWindGradient: 'from-indigo-500 to-blue-600',
-                description: 'Cinematographer is planning camera work',
-                emoji: '🎬'
-            };
-            case VideoGenerationTaskStatus.GENERATING_VIDEO: return {
-                tailWindGradient: 'from-sky-500 to-cyan-500',
-                description: `Director is shooting scenes (${processedSceneCount}/${sceneCount})`,
-                emoji: '🎥'
-            };
-            // 의도됨
-            case VideoGenerationTaskStatus.STITCHING_VIDEOS: return {
-                tailWindGradient: 'from-blue-500 to-indigo-500',
-                description: 'Voice actor is recording into video',
-                emoji: '🎤'
-            };
-            case VideoGenerationTaskStatus.COMPOSING_MUSIC: return {
-                tailWindGradient: 'from-rose-500 to-red-500',
-                description: 'Composer is creating background music',
-                emoji: '🎹'
-            };
-            case VideoGenerationTaskStatus.EDITOR: return {
-                tailWindGradient: 'from-cyan-500 to-blue-500',
-                description: 'Ready for editing',
-                emoji: '💻'
-            };
-            case VideoGenerationTaskStatus.FINALIZING: return {
-                tailWindGradient: 'from-violet-500 to-purple-500',
-                description: 'Producer is putting finishing touches',
-                emoji: '✨'
-            };
-            case VideoGenerationTaskStatus.COMPLETED: return {
-                tailWindGradient: 'from-green-500 to-emerald-500',
-                description: 'Completed',
-                emoji: '✅'
-            };
-            case VideoGenerationTaskStatus.FAILED: return {
+        if (!taskData.isGenerationFailed) {
+            switch (status) {
+                // 의도됨
+                case VideoGenerationTaskStatus.DRAFTING:
+                case VideoGenerationTaskStatus.GENERATING_VOICE: return {
+                    tailWindGradient: 'from-purple-500 to-pink-500',
+                    description: 'Drafting script...',
+                    emoji: '📝'
+                };
+                case VideoGenerationTaskStatus.GENERATING_MASTER_STYLE_PROMPT: return {
+                    tailWindGradient: 'from-violet-500 to-purple-600',
+                    description: 'Art director is crafting style guide',
+                    emoji: '🎨'
+                };
+                case VideoGenerationTaskStatus.GENERATING_IMAGE_PROMPT: return {
+                    tailWindGradient: 'from-fuchsia-500 to-pink-600',
+                    description: 'Storyboard artist is designing scenes',
+                    emoji: '🖼️'
+                };
+                case VideoGenerationTaskStatus.GENERATING_VIDEO_PROMPT: return {
+                    tailWindGradient: 'from-indigo-500 to-blue-600',
+                    description: 'Cinematographer is planning camera work',
+                    emoji: '🎬'
+                };
+                case VideoGenerationTaskStatus.GENERATING_VIDEO: return {
+                    tailWindGradient: 'from-sky-500 to-cyan-500',
+                    description: `Director is shooting scenes (${processedSceneCount}/${sceneCount})`,
+                    emoji: '🎥'
+                };
+                // 의도됨
+                case VideoGenerationTaskStatus.STITCHING_VIDEOS: return {
+                    tailWindGradient: 'from-blue-500 to-indigo-500',
+                    description: 'Voice actor is recording into video',
+                    emoji: '🎤'
+                };
+                case VideoGenerationTaskStatus.COMPOSING_MUSIC: return {
+                    tailWindGradient: 'from-rose-500 to-red-500',
+                    description: 'Composer is creating background music',
+                    emoji: '🎹'
+                };
+                case VideoGenerationTaskStatus.EDITOR: return {
+                    tailWindGradient: 'from-cyan-500 to-blue-500',
+                    description: 'Ready for editing',
+                    emoji: '💻'
+                };
+                case VideoGenerationTaskStatus.FINALIZING: return {
+                    tailWindGradient: 'from-violet-500 to-purple-500',
+                    description: 'Producer is putting finishing touches',
+                    emoji: '✨'
+                };
+                case VideoGenerationTaskStatus.COMPLETED: return {
+                    tailWindGradient: 'from-green-500 to-emerald-500',
+                    description: 'Completed',
+                    emoji: '✅'
+                };
+                default: return {
+                    tailWindGradient: 'from-gray-500 to-gray-600',
+                    description: 'Unknown status',
+                    emoji: '❓'
+                };
+            }
+        } else {
+            return {
                 tailWindGradient: 'from-red-500 to-pink-600',
                 description: 'Failed',
                 emoji: '❌'
-            };
-            default: return {
-                tailWindGradient: 'from-gray-500 to-gray-600',
-                description: 'Unknown status',
-                emoji: '❓'
             };
         }
     }, [taskData]);
@@ -229,7 +232,8 @@ function DashboardItem({
                     </div>
 
                     {/* ==================== Failed 상태: 에러 메시지 ==================== */}
-                    {statusGroup === StatusGroup.FAILED && (
+                    {/*{statusGroup === StatusGroup.FAILED && (*/}
+                    {taskData.isGenerationFailed && (
                         <div className="mt-4 flex items-start space-x-2 bg-red-500/10 border border-red-500/30 rounded-lg p-3">
                             <AlertCircle size={16} className="text-red-400 mt-0.5 flex-shrink-0" />
                             <div className="flex-1">
@@ -299,7 +303,8 @@ function DashboardItem({
                     )}
 
                     {/* Failed 상태: Retry 버튼 */}
-                    {statusGroup === StatusGroup.FAILED && (
+                    {/*{statusGroup === StatusGroup.FAILED && (*/}
+                    {taskData.isGenerationFailed && (
                         <button
                             onClick={() => {
                                 onClickRetry(taskData.id);

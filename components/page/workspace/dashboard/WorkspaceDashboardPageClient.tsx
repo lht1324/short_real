@@ -26,6 +26,7 @@ export interface TaskData {
     updatedAt?: Date;
     selectedVoiceId?: string;
     selectedStyleId?: string;
+    isGenerationFailed: boolean;
 }
 
 function WorkspaceDashboardPageClient() {
@@ -51,12 +52,51 @@ function WorkspaceDashboardPageClient() {
         setShowCancelConfirmModal(true);
     }, []);
 
-    const onClickDownload = useCallback((taskId: string) => {
-        // base URL로 래핑해서 video/download/[taskId] path 열어주고 거기서 보이게 하기
-        console.log('Download video:', taskId);
+    const onClickDownload = useCallback(async (taskId: string) => {
+        try {
+            // videoClientAPI로 영상 URL 가져오기
+            const url = await videoClientAPI.getVideoFinalUrl(taskId);
+
+            if (!url) {
+                console.error('Failed to get video URL for task:', taskId);
+                return;
+            }
+
+            const videoGenerationTask = await videoClientAPI.getVideoTaskByTaskId(taskId);
+
+            if (!videoGenerationTask || !videoGenerationTask.video_main_subject) {
+                console.error('Failed to get video generation task data:', taskId);
+                return;
+            }
+
+            // Blob으로 받아서 다운로드 (CORS 우회)
+            const response = await fetch(url);
+
+            if (!response.ok) {
+                throw new Error(`Failed to fetch video: ${response.status}`);
+            }
+
+            const blob = await response.blob();
+            const blobUrl = window.URL.createObjectURL(blob);
+
+            // 임시 <a> 태그 생성해서 다운로드 트리거
+            const a = document.createElement('a');
+            a.href = blobUrl;
+            a.download = `${videoGenerationTask.video_main_subject}-${new Date().toLocaleTimeString()}.mp4`.replaceAll(" ", "_");
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+
+            // 메모리 해제
+            window.URL.revokeObjectURL(blobUrl);
+        } catch (error) {
+            console.error('Download failed:', error);
+        }
     }, []);
 
     const onClickRetry = useCallback((taskId: string) => {
+        // status 확인하고 적절한 엔드포인트 요청하기
+        // 시발
         console.log('Retry generation:', taskId);
     }, []);
 
@@ -144,7 +184,7 @@ function WorkspaceDashboardPageClient() {
 
     // VideoGenerationTask를 TaskData로 변환하는 헬퍼 함수
     const convertToTaskData = useCallback((task: VideoGenerationTask): TaskData | null => {
-        if (!task.id || !task.status || !task.created_at || !task.updated_at) {
+        if (!task.id || !task.status || !task.created_at || !task.updated_at || task.is_generation_failed === undefined) {
             return null;
         }
 
@@ -164,6 +204,7 @@ function WorkspaceDashboardPageClient() {
             updatedAt: new Date(task.updated_at),
             selectedVoiceId: task.selected_voice_id,
             selectedStyleId: task.selected_style_id,
+            isGenerationFailed: task.is_generation_failed,
         };
     }, [calculateProgress]);
 
