@@ -160,15 +160,11 @@ function DashboardItem({
     }, [taskData.id, taskData.status, onClickCancel]);
 
     const handleDownload = useCallback(() => {
-        if (onClickDownload) {
-            onClickDownload(taskData.id);
-        }
+        onClickDownload(taskData.id);
     }, [taskData.id, onClickDownload]);
 
     const handleRetry = useCallback(() => {
-        if (onClickRetry) {
-            onClickRetry(taskData.id);
-        }
+        onClickRetry(taskData.id);
     }, [taskData.id, onClickRetry]);
 
     return (
@@ -244,24 +240,6 @@ function DashboardItem({
                             </div>
                         </div>
                     )}
-
-                    {/* ==================== Completed 상태: 선택된 옵션 표시 ==================== */}
-                    {/*{statusGroup === StatusGroup.COMPLETED && (taskData.selectedVoiceId || taskData.selectedStyleId) && (*/}
-                    {/*    <div className="mt-4 flex items-center space-x-4">*/}
-                    {/*        <div className="flex items-center space-x-2 text-xs text-gray-400">*/}
-                    {/*            {taskData.selectedVoiceId && (*/}
-                    {/*                <span className="px-2 py-1 bg-purple-500/20 rounded border border-purple-500/30">*/}
-                    {/*                    Voice*/}
-                    {/*                </span>*/}
-                    {/*            )}*/}
-                    {/*            {taskData.selectedStyleId && (*/}
-                    {/*                <span className="px-2 py-1 bg-pink-500/20 rounded border border-pink-500/30">*/}
-                    {/*                    Style*/}
-                    {/*                </span>*/}
-                    {/*            )}*/}
-                    {/*        </div>*/}
-                    {/*    </div>*/}
-                    {/*)}*/}
                 </div>
 
                 {/* ==================== 오른쪽: 액션 버튼 영역 ==================== */}
@@ -279,7 +257,7 @@ function DashboardItem({
 
                     {/* Editing 상태: Edit 버튼 */}
                     {/*{statusGroup === StatusGroup.EDITING && (*/}
-                    {taskData.status === VideoGenerationTaskStatus.EDITOR && (
+                    {taskData.status === VideoGenerationTaskStatus.EDITOR && !taskData.isGenerationFailed && (
                         <Link
                             href={`/workspace/editor?taskId=${taskData.id}`}
                             className="group bg-gradient-to-r from-green-500 to-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:from-green-600 hover:to-emerald-700 transition-all duration-300 transform hover:scale-105 shadow-lg shadow-green-500/25 flex items-center space-x-2"
@@ -292,9 +270,7 @@ function DashboardItem({
                     {/* Completed 상태: Download 버튼 */}
                     {statusGroup === StatusGroup.COMPLETED && (
                         <button
-                            onClick={() => {
-                                onClickDownload(taskData.id);
-                            }}
+                            onClick={handleDownload}
                             className="group bg-gradient-to-r from-indigo-500 to-purple-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:from-indigo-600 hover:to-purple-700 transition-all duration-300 transform hover:scale-105 shadow-lg shadow-purple-500/25 flex items-center space-x-2"
                         >
                             <Download size={14} />
@@ -306,9 +282,7 @@ function DashboardItem({
                     {/*{statusGroup === StatusGroup.FAILED && (*/}
                     {taskData.isGenerationFailed && (
                         <button
-                            onClick={() => {
-                                onClickRetry(taskData.id);
-                            }}
+                            onClick={handleRetry}
                             className="group bg-gradient-to-r from-orange-500 to-yellow-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:from-orange-600 hover:to-yellow-700 transition-all duration-300 transform hover:scale-105 shadow-lg shadow-orange-500/25 flex items-center space-x-2"
                         >
                             <Loader2 size={14} />
@@ -317,7 +291,6 @@ function DashboardItem({
                     )}
 
                     {/* Processing/Editing 상태: Cancel 버튼 */}
-                    {/*{(statusGroup === StatusGroup.CREATING || statusGroup === StatusGroup.PROCESSING || statusGroup === StatusGroup.EDITING) && (*/}
                     {statusGroup !== StatusGroup.COMPLETED && (
                         <button
                             onClick={handleCancel}

@@ -2,13 +2,9 @@ import {NextRequest, NextResponse} from "next/server";
 import {videoServerAPI} from "@/api/server/videoServerAPI";
 import {videoGenerationTasksServerAPI} from "@/api/server/videoGenerationTasksServerAPI";
 import {VideoGenerationTaskStatus} from "@/api/types/supabase/VideoGenerationTasks";
-import {createSupabaseServiceRoleClient} from "@/lib/supabaseServiceRole";
 import {taskCheckAndCleanupIfCancelled} from "@/app/api/video/process/taskCheckAndCleaupIfCancelled";
-import {openAIServerAPI} from "@/api/server/openAIServerAPI";
 
 export async function POST(request: NextRequest) {
-    const supabase = createSupabaseServiceRoleClient();
-
     try {
         // 1. 요청 Body에서 generationTaskId 추출
         const { generationTaskId } = await request.json();
@@ -19,7 +15,7 @@ export async function POST(request: NextRequest) {
         console.log(`[Merge Service] Task 데이터 조회: ${generationTaskId}`);
         const videoGenerationTask = await videoGenerationTasksServerAPI.getVideoGenerationTaskById(generationTaskId);
         if (!videoGenerationTask) {
-            throw new Error("Task not found.");
+            return NextResponse.json({ error: "Task not found." }, { status: 404 });
         }
 
         const checkingInitialResult = await taskCheckAndCleanupIfCancelled(videoGenerationTask);
@@ -50,25 +46,14 @@ export async function POST(request: NextRequest) {
             return checkingFinalResult;
         }
 
-        if (!patchStatusComposingMusicResult.master_style_positive_prompt) {
-            throw new Error("Master style prompt is invalid.");
-        }
-
-        const postMusicGenerationDataResult = await openAIServerAPI.postMusicGenerationData(
-            patchStatusComposingMusicResult.video_main_subject as string,
-            patchStatusComposingMusicResult.narration_script,
-            patchStatusComposingMusicResult.master_style_positive_prompt,
-            patchStatusComposingMusicResult.scene_breakdown_list,
-        )
-
+        // /api/music 엔드포인트 호출 (Fire and Forget)
         fetch(new URL(`${process.env.BASE_URL}/api/music?generationTaskId=${generationTaskId}`, request.url).toString(), {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                // 필요하다면 내부 인증을 위한 시크릿 키 등을 추가할 수 있습니다.
-                // 'Authorization': `Bearer ${process.env.INTERNAL_SECRET_KEY}`
             },
-            body: JSON.stringify(postMusicGenerationDataResult.data),
+        }).catch(error => {
+            console.error('Fire and forget /api//music call failed:', error);
         });
 
         // 3. 성공 응답 반환

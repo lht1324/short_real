@@ -8,16 +8,18 @@ import { RotateCcw, ChevronLeft } from 'lucide-react';
 import { fontMap, type FontName } from "@/lib/fonts";
 import FONT_FAMILY_LIST, {FontFamily} from "@/lib/FontFamilyList";
 import {videoClientAPI} from "@/api/client/videoClientAPI";
-import {MusicData, SubtitleSegment, VideoGenerationTaskStatus} from "@/api/types/supabase/VideoGenerationTasks";
+import {
+    FinalVideoMergeData,
+    MusicData,
+    SubtitleSegment,
+    VideoGenerationTaskStatus
+} from "@/api/types/supabase/VideoGenerationTasks";
 import SceneSequencePanel from "@/components/page/workspace/editor/SceneSequencePanel";
 import CaptionConfigPanel from "@/components/page/workspace/editor/CaptionConfigPanel";
 import VideoPlayerPanel, {VideoPlayerHandle} from "@/components/page/workspace/editor/VideoPlayerPanel";
 import MusicPanel from "@/components/page/workspace/editor/MusicPanel";
 import MusicEditPanel from "@/components/page/workspace/editor/MusicEditPanel";
 import {musicClientAPI} from "@/api/client/musicClientAPI";
-import {PostVideoMergeCaptionRequest} from "@/api/types/api/video/merge/caption/PostVideoMergeCaptionRequest";
-import {PostMusicModifyingRequest} from "@/api/types/api/music/modifying/PostMusicModifyingRequest";
-import {PostVideoMergeFinalRequest} from "@/api/types/api/video/merge/final/PostVideoMergeFinalRequest";
 
 interface VideoData {
     title: string;
@@ -80,36 +82,9 @@ enum ConfigPanelType {
     Music = 'music'
 }
 
-const INITIAL_CAPTION_CONFIG_STATE: CaptionConfigState = {
-    // Font settings state
-    fontFamilyName: "Montserrat",
-    fontSize: 60,
-    fontWeight: 900,
-
-    // Caption settings state
-    captionPosition: 80,
-    captionHeight: 0,
-    showCaptionLine: true,
-
-    // Shadow settings state
-    // isShadowEnabled: true,
-    // shadowIntensity: 80,
-    // shadowThickness: 50,
-
-    // Color settings state
-    activeColor:'#FF0000',
-    inactiveColor:'#BB0000',
-    isActiveOutlineEnabled: true,
-    activeOutlineColor:'#FFFFFF',
-    activeOutlineThickness: 100,
-    isInactiveOutlineEnabled: true,
-    inactiveOutlineColor:'#BBBBBB',
-    inactiveOutlineThickness: 70,
-}
-
 // const INITIAL_CAPTION_CONFIG_STATE: CaptionConfigState = {
 //     // Font settings state
-//     fontFamilyName: "Roboto",
+//     fontFamilyName: "Montserrat",
 //     fontSize: 60,
 //     fontWeight: 900,
 //
@@ -124,15 +99,42 @@ const INITIAL_CAPTION_CONFIG_STATE: CaptionConfigState = {
 //     // shadowThickness: 50,
 //
 //     // Color settings state
-//     activeColor:'#FFFFFF',
-//     inactiveColor:'#A0A0A0',
-//     isActiveOutlineEnabled: false,
-//     activeOutlineColor:'#000000',
-//     activeOutlineThickness: 50,
-//     isInactiveOutlineEnabled: false,
-//     inactiveOutlineColor:'#404040',
-//     inactiveOutlineThickness: 50,
+//     activeColor:'#FF0000',
+//     inactiveColor:'#BB0000',
+//     isActiveOutlineEnabled: true,
+//     activeOutlineColor:'#FFFFFF',
+//     activeOutlineThickness: 100,
+//     isInactiveOutlineEnabled: true,
+//     inactiveOutlineColor:'#BBBBBB',
+//     inactiveOutlineThickness: 70,
 // }
+
+const INITIAL_CAPTION_CONFIG_STATE: CaptionConfigState = {
+    // Font settings state
+    fontFamilyName: "Roboto",
+    fontSize: 60,
+    fontWeight: 900,
+
+    // Caption settings state
+    captionPosition: 80,
+    captionHeight: 0,
+    showCaptionLine: true,
+
+    // Shadow settings state
+    // isShadowEnabled: true,
+    // shadowIntensity: 80,
+    // shadowThickness: 50,
+
+    // Color settings state
+    activeColor:'#FFFFFF',
+    inactiveColor:'#A0A0A0',
+    isActiveOutlineEnabled: false,
+    activeOutlineColor:'#000000',
+    activeOutlineThickness: 50,
+    isInactiveOutlineEnabled: false,
+    inactiveOutlineColor:'#404040',
+    inactiveOutlineThickness: 50,
+}
 
 function WorkspaceEditorPageClient() {
     const router = useRouter();
@@ -219,10 +221,9 @@ function WorkspaceEditorPageClient() {
         } : null;
     }, [editingMusicData, musicStartSec, videoDuration, musicVolume]);
 
-    const postVideoMergeCaptionRequest: PostVideoMergeCaptionRequest | null = useMemo(() => {
-        if (videoData?.videoUrl && captionDataList.length !== 0 && taskId && videoPlayerUIData) {
+    const finalVideoMergeData: FinalVideoMergeData | null = useMemo(() => {
+        if (captionDataList.length !== 0 && taskId && videoPlayerUIData && videoDuration > 0) {
             return {
-                videoUrl: videoData.videoUrl,
                 captionDataList: captionDataList,
                 captionConfigState: captionConfigState,
                 videoWidth: videoPlayerUIData.videoWidth,
@@ -230,90 +231,8 @@ function WorkspaceEditorPageClient() {
                 captionAreaTop: videoPlayerUIData.captionAreaTop,
                 captionAreaVerticalPadding: videoPlayerUIData.captionAreaVerticalPadding,
                 captionOneLineHeight: videoPlayerUIData.captionOneLineHeight,
-                videoGenerationTaskId: taskId,
-            }
-        } else {
-            return null;
-        }
-    }, [captionConfigState, captionDataList, taskId, videoData?.videoUrl, videoPlayerUIData]);
-
-    const onClickMergeCaptionTest = useCallback(async () => {
-        if (postVideoMergeCaptionRequest) {
-            const response = await fetch('/api/video/merge/caption', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(postVideoMergeCaptionRequest),
-            });
-
-            const result = await response.json();
-
-            if (result.success) {
-                console.log('자막 burn-in 요청 성공:', result.predictionId);
-                // UI에 처리 중 상태 표시
-            } else {
-                console.error('자막 burn-in 요청 실패:', result.error);
-            }
-
-            return;
-        } else {
-            return;
-        }
-    }, [postVideoMergeCaptionRequest]);
-
-    // useMemo - postMusicModifyingRequest 생성
-    const postMusicModifyingRequest: PostMusicModifyingRequest | null = useMemo(() => {
-        if (editingMusicData?.audioUrl && videoDuration > 0 && taskId) {
-            const endSec = musicStartSec + videoDuration;
-
-            return {
-                audioUrl: editingMusicData.audioUrl,
-                cuttingAreaStartSec: musicStartSec,
-                cuttingAreaEndSec: endSec,
-                volumePercentage: Math.round(musicVolume * 100), // 0.0~1.0 → 0~100
-                videoGenerationTaskId: taskId,
-            };
-        } else {
-            return null;
-        }
-    }, [editingMusicData?.audioUrl, musicStartSec, videoDuration, musicVolume, taskId]);
-
-    // useCallback - onClickMusicModifying 핸들러
-    const onClickMusicModifying = useCallback(async () => {
-        if (postMusicModifyingRequest) {
-            const response = await fetch('/api/music/modifying', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(postMusicModifyingRequest),
-            });
-
-            const result = await response.json();
-
-            if (result.success) {
-                console.log('오디오 처리 요청 성공:', result.predictionId);
-                // UI에 처리 중 상태 표시
-            } else {
-                console.error('오디오 처리 요청 실패:', result.error);
-            }
-
-            return;
-        } else {
-            return;
-        }
-    }, [postMusicModifyingRequest]);
-
-    const postVideoMergeFinalRequest: PostVideoMergeFinalRequest | null = useMemo(() => {
-        if (videoData?.videoUrl && captionDataList.length !== 0 && editingMusicData?.audioUrl && taskId && videoPlayerUIData && videoDuration > 0) {
-            return {
-                videoGenerationTaskId: taskId,
-                videoUrl: videoData.videoUrl,
-                captionDataList: captionDataList,
-                captionConfigState: captionConfigState,
-                videoWidth: videoPlayerUIData.videoWidth,
-                videoHeight: videoPlayerUIData.videoHeight,
-                captionAreaTop: videoPlayerUIData.captionAreaTop,
-                captionAreaVerticalPadding: videoPlayerUIData.captionAreaVerticalPadding,
-                captionOneLineHeight: videoPlayerUIData.captionOneLineHeight,
-                audioUrl: editingMusicData.audioUrl,
+                
+                musicIndex: editingMusicIndex,
                 cuttingAreaStartSec: musicStartSec,
                 cuttingAreaEndSec: musicStartSec + videoDuration,
                 volumePercentage: Math.round(musicVolume * 100),
@@ -321,30 +240,35 @@ function WorkspaceEditorPageClient() {
         } else {
             return null;
         }
-    }, [videoData?.videoUrl, captionDataList, editingMusicData?.audioUrl, taskId, videoPlayerUIData, videoDuration, captionConfigState, musicStartSec, musicVolume]);
+    }, [captionDataList, taskId, videoPlayerUIData, videoDuration, captionConfigState, editingMusicIndex, musicStartSec, musicVolume]);
 
     const onClickFinish = useCallback(async () => {
-        if (postVideoMergeFinalRequest) {
-            const response = await fetch('/api/video/merge/final', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(postVideoMergeFinalRequest),
-            });
+        try {
+            if (finalVideoMergeData) {
+                if (!taskId) {
+                    throw Error("taskId must be provided");
+                }
 
-            const result = await response.json();
+                await videoClientAPI.patchVideoTaskByTaskId(taskId, {
+                    final_video_merge_data: finalVideoMergeData,
+                })
+                const result = await videoClientAPI.postVideoMergeFinal(taskId);
 
-            if (result.success) {
-                console.log('최종 병합 요청 성공:', result.predictionId);
-                // UI에 처리 중 상태 표시
+                if (result && result.success) {
+                    console.log('최종 병합 요청 성공:', result.captionPredictionId);
+                    window.location.href = '/workspace/dashboard';
+                } else {
+                    console.error('최종 병합 요청 실패:', result?.error);
+                }
+
+                return;
             } else {
-                console.error('최종 병합 요청 실패:', result.error);
+                return;
             }
-
-            return;
-        } else {
-            return;
+        } catch (error) {
+            console.error(error);
         }
-    }, [postVideoMergeFinalRequest]);
+    }, [taskId, finalVideoMergeData]);
 
     const onClickSceneSequence = useCallback((sceneStartSec: number) => {
         videoPlayerRef.current?.seekTo(sceneStartSec);
@@ -454,9 +378,6 @@ function WorkspaceEditorPageClient() {
                 setIsPublicDataLoading(false);
             }).catch((error) => {
                 console.error(error);
-                // setIsPublicDataLoading(false);
-                // setIsSceneSequencePanelLoading(false);
-                // setIsVideoPlayerPanelLoading(false);
 
                 if (window.history.length > 1) {
                     console.log("back")
@@ -467,10 +388,6 @@ function WorkspaceEditorPageClient() {
                 }
             });
         } else {
-            // setIsPublicDataLoading(false);
-            // setIsSceneSequencePanelLoading(false);
-            // setIsVideoPlayerPanelLoading(false);
-
             if (window.history.length > 1) {
                 console.log("back")
                 window.history.back()

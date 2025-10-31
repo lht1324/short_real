@@ -1,5 +1,6 @@
 // video_generation_tasks 테이블 타입 정의
 import {MasterStyleInfo} from "@/api/server/MasterStyleInfo";
+import {CaptionConfigState, CaptionData} from "@/components/page/workspace/editor/WorkspaceEditorPageClient";
 
 export interface VideoGenerationTask {
     id?: string; // uuid
@@ -14,6 +15,7 @@ export interface VideoGenerationTask {
     video_main_subject?: string;
     processed_scene_count?: number;
     music_data_list?: MusicData[];
+    final_video_merge_data?: FinalVideoMergeData;
     selected_style_id?: string; // varchar(100), nullable
     selected_voice_id?: string; // varchar(100), nullable
     caption_completed?: boolean; // boolean, default false - 자막 번인 완료 여부
@@ -89,4 +91,21 @@ export interface MusicData {
     audioUrl?: string;
     imageUrl?: string;
     duration: number; // sec
+}
+
+export interface FinalVideoMergeData {
+    // Caption 병합용
+    captionDataList: CaptionData[];
+    captionConfigState: CaptionConfigState;
+    videoWidth: number;
+    videoHeight: number;
+    captionAreaTop: number;
+    captionAreaVerticalPadding: number;
+    captionOneLineHeight: number;
+
+    // Music 자르기용
+    musicIndex: number;
+    cuttingAreaStartSec: number;
+    cuttingAreaEndSec: number;
+    volumePercentage: number;
 }

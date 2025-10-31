@@ -147,39 +147,31 @@ export const videoGenerationTasksServerAPI = {
                 .remove([`${taskId}.mp3`]);
             if (voiceError) console.error('Storage delete error (narration_voice):', voiceError.message);
 
-            // 2. processed_video_storage 삭제
-            const processedVideoPaths = [
-                `${taskId}/${taskId}.mp4`,
-                `${taskId}/${taskId}_caption_added.mp4`,
-                `${taskId}/${taskId}_final.mp4`,
-                ...existingTask.scene_breakdown_list.map(scene => `${taskId}/${scene.requestId}.mp4`)
+            // 2-4. 나머지 버킷들 (폴더 기반 - taskId 폴더 내 모든 파일 조회 후 삭제)
+            const folderBasedBuckets = [
+                'processed_video_storage',
+                'scene_image_temp_storage',
+                'video_music_temp_storage'
             ];
-            const { error: processedVideoError } = await supabase.storage
-                .from('processed_video_storage')
-                .remove(processedVideoPaths);
-            if (processedVideoError) console.error('Storage delete error (processed_video):', processedVideoError.message);
 
-            // 3. scene_image_temp_storage 삭제
-            const sceneImagePaths = existingTask.scene_breakdown_list.map(
-                scene => `${taskId}/${scene.sceneNumber}.jpeg`
-            );
-            const { error: sceneImageError } = await supabase.storage
-                .from('scene_image_temp_storage')
-                .remove(sceneImagePaths);
-            if (sceneImageError) console.error('Storage delete error (scene_image):', sceneImageError.message);
+            for (const bucketName of folderBasedBuckets) {
+                const { data: files, error: listError } = await supabase.storage
+                    .from(bucketName)
+                    .list(taskId);
 
-            // 4. video_music_temp_storage 삭제
-            const musicPaths = [
-                `${taskId}/${taskId}_0.jpeg`,
-                `${taskId}/${taskId}_0.mp3`,
-                `${taskId}/${taskId}_1.jpeg`,
-                `${taskId}/${taskId}_1.mp3`,
-                `${taskId}/${taskId}_processed_audio.mp3`
-            ];
-            const { error: musicError } = await supabase.storage
-                .from('video_music_temp_storage')
-                .remove(musicPaths);
-            if (musicError) console.error('Storage delete error (video_music):', musicError.message);
+                if (listError) {
+                    console.error(`Failed to list files in ${bucketName}:`, listError.message);
+                    continue;
+                }
+
+                if (files && files.length > 0) {
+                    const filePaths = files.map(file => `${taskId}/${file.name}`);
+                    const { error: removeError } = await supabase.storage
+                        .from(bucketName)
+                        .remove(filePaths);
+                    if (removeError) console.error(`Storage delete error (${bucketName}):`, removeError.message);
+                }
+            }
 
             // DB에서 작업 레코드 삭제
             const { error } = await supabase

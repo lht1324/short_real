@@ -3,6 +3,7 @@ import {sunoAPIServerAPI} from "@/api/server/sunoAPIServerAPI";
 import {PostGenerateRequest, SunoModelType} from "@/api/types/suno-api/SunoAPIRequests";
 import {videoGenerationTasksServerAPI} from "@/api/server/videoGenerationTasksServerAPI";
 import {taskCheckAndCleanupIfCancelled} from "@/app/api/video/process/taskCheckAndCleaupIfCancelled";
+import {openAIServerAPI} from "@/api/server/openAIServerAPI";
 
 export async function POST(request: NextRequest) {
     try {
@@ -18,6 +19,7 @@ export async function POST(request: NextRequest) {
         }
 
         const videoGenerationTask = await videoGenerationTasksServerAPI.getVideoGenerationTaskById(generationTaskId);
+
         if (!videoGenerationTask) {
             throw new Error("Task not found.");
         }
@@ -28,6 +30,39 @@ export async function POST(request: NextRequest) {
             return checkingInitialResult;
         }
 
+        // 필수 데이터 검증
+        if (!videoGenerationTask.video_main_subject) {
+            return NextResponse.json(
+                { error: 'video_main_subject is missing from task' },
+                { status: 400 }
+            );
+        }
+
+        if (!videoGenerationTask.master_style_positive_prompt) {
+            return NextResponse.json(
+                { error: 'master_style_positive_prompt is missing from task' },
+                { status: 400 }
+            );
+        }
+
+        // OpenAI로 Music Generation Data 생성
+        const postMusicGenerationDataResult = await openAIServerAPI.postMusicGenerationData(
+            videoGenerationTask.video_main_subject,
+            videoGenerationTask.narration_script,
+            videoGenerationTask.master_style_positive_prompt,
+            videoGenerationTask.scene_breakdown_list,
+        );
+
+        if (!postMusicGenerationDataResult.success || !postMusicGenerationDataResult.data) {
+            return NextResponse.json(
+                {
+                    error: 'Failed to generate music data',
+                    details: postMusicGenerationDataResult.error
+                },
+                { status: 500 }
+            );
+        }
+
         const {
             prompt,
             style,
@@ -36,7 +71,7 @@ export async function POST(request: NextRequest) {
             // styleWeight,
             // weirdnessConstraint,
             // audioWeight,
-        }: Partial<PostGenerateRequest> = await request.json();
+        } = postMusicGenerationDataResult.data;
 
         // 필수 파라미터 검증
         if (!prompt || !style || !title) {

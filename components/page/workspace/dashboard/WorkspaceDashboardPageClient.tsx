@@ -47,6 +47,8 @@ function WorkspaceDashboardPageClient() {
     const [showCancelConfirmModal, setShowCancelConfirmModal] = useState(false);
     const [showCancelLoadingModal, setShowCancelLoadingModal] = useState(false);
 
+    const [showRetryLoadingModal, setShowRetryLoadingModal] = useState(false);
+
     const onClickCancel = useCallback((taskId: string, status: VideoGenerationTaskStatus) => {
         setPendingCancelTaskId(taskId);
         setShowCancelConfirmModal(true);
@@ -94,9 +96,21 @@ function WorkspaceDashboardPageClient() {
         }
     }, []);
 
-    const onClickRetry = useCallback((taskId: string) => {
-        // status 확인하고 적절한 엔드포인트 요청하기
-        // 시발
+    const onClickRetry = useCallback(async (taskId: string) => {
+        try {
+            setShowRetryLoadingModal(true);
+
+            await videoClientAPI.postVideoTaskRetryByTaskId(taskId);
+
+            setShowRetryLoadingModal(false);
+        } catch (error) {
+            console.error(error);
+
+            await videoClientAPI.patchVideoTaskByTaskId(taskId, {
+                is_user_cancelled_task: true,
+            })
+            setShowRetryLoadingModal(false);
+        }
         console.log('Retry generation:', taskId);
     }, []);
 
@@ -437,6 +451,8 @@ function WorkspaceDashboardPageClient() {
             />}
 
             {showCancelLoadingModal && <TaskDeleteLoadingModal/>}
+
+            {showRetryLoadingModal && <TaskDeleteLoadingModal message="Retrying task..."/>}
 
             {/* Loading Overlay */}
             {isLoading && (

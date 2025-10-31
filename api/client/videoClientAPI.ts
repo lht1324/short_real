@@ -2,6 +2,7 @@ import {PostVideoRequest} from "@/api/types/api/video/PostVideoRequest";
 import {PostVideoResponse} from "@/api/types/api/video/PostVideoResponse";
 import {deleteFetch, getFetch, patchFetch, postFetch} from '@/api/client/baseFetch';
 import {VideoGenerationTask} from "@/api/types/supabase/VideoGenerationTasks";
+import {PostVideoMergeFinalResponse} from "@/api/types/api/video/merge/final/PostVideoMergeFinalResponse";
 
 export const videoClientAPI = {
     /**
@@ -158,9 +159,9 @@ export const videoClientAPI = {
         }
     },
 
-    async postVideoMergeFinal(taskId: string) {
+    async postVideoMergeFinal(taskId: string): Promise<PostVideoMergeFinalResponse | null> {
         try {
-            const response = await getFetch(`/api/video/merge/final?taskId=${taskId}`);
+            const response = await postFetch(`/api/video/merge/final?taskId=${taskId}`);
 
             if (!response.ok) {
                 if (response.status === 404) {
@@ -170,11 +171,29 @@ export const videoClientAPI = {
                 throw Error(`HTTP error! status: ${response.status}`);
             }
 
-            const data = await response.json();
-            return data.url;
+            return await response.json();
         } catch (error) {
             console.error('Failed to get video URL:', error);
             return null;
+        }
+    },
+
+    async postVideoTaskRetryByTaskId(taskId: string): Promise<void> {
+        try {
+            const response = await postFetch(`/api/video/task/${taskId}/retry`);
+
+            if (!response.ok) {
+                throw Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const result = await response.json();
+
+            if (!result.success) {
+                throw Error(`[${result.status}]: ${result.message}`);
+            }
+        } catch (error) {
+            console.error('Failed to get video URL:', error);
+            throw error;
         }
     }
 }

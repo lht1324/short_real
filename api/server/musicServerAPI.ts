@@ -205,5 +205,19 @@ export const musicServerAPI = {
             console.error("[Subtitle Burn-in] Error:", error);
             throw error;
         }
+    },
+
+    async getMusicSignedUrl(filePath: string, expiresIn: number = 60 * 60 * 24) {
+        const supabase = createSupabaseServiceRoleClient();
+
+        const { data, error } = await supabase.storage
+            .from('video_music_temp_storage')
+            .createSignedUrl(filePath, expiresIn);
+
+        if (error || !data?.signedUrl) {
+            throw new Error(error?.message || `There is no image data.`);
+        }
+
+        return data.signedUrl;
     }
 }
