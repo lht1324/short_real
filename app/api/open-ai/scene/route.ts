@@ -23,14 +23,12 @@ export async function POST(request: NextRequest): Promise<NextResponse<PostOpenA
         }: PostOpenAISceneRequest = await request.json();
 
         // 필수 필드 검증
-        if (!narrationScript || !voiceId) {
+        if (!taskId || !narrationScript || !voiceId) {
             return NextResponse.json({
                 success: false,
-                error: {
-                    message: 'narrationScript and voiceId is required.',
-                    code: 'MISSING_REQUIRED_FIELDS'
-                }
-            }, { status: 400 });
+                status: 400,
+                error: 'Missing query field: taskId, narrationScript, voiceId',
+            });
         }
 
         const testUserId = randomUUID(); // OAuth 없이 테스트용 UUID 생성
@@ -50,11 +48,9 @@ export async function POST(request: NextRequest): Promise<NextResponse<PostOpenA
         if (!videoGenerationTask || !videoGenerationTask.id) {
             return NextResponse.json({
                 success: false,
-                error: {
-                    message: 'Failed to insert row into video generation task table.',
-                    code: 'SCENE_SEGMENTATION_FAILED'
-                }
-            }, { status: 500 });
+                status: 500,
+                error: 'Failed to insert row into video generation task table.'
+            });
         }
 
         const voiceGenerationResult = await voiceServerAPI.postVoice(
@@ -66,18 +62,17 @@ export async function POST(request: NextRequest): Promise<NextResponse<PostOpenA
 
         // OpenAI API를 통해 Scene 분리 처리
         const postSceneSegmentationResult = await openAIServerAPI.postSceneSegmentation(
+            taskId,
             narrationScript,
             voiceGenerationResult.subtitleSegmentList
         );
 
-        if (!postSceneSegmentationResult.success || !postSceneSegmentationResult.sceneDataList || !postSceneSegmentationResult.videoMainSubject) {
+        if (!postSceneSegmentationResult) {
             return NextResponse.json({
                 success: false,
-                error: {
-                    message: postSceneSegmentationResult.error?.message || 'Failed to generate scene segmentation',
-                    code: postSceneSegmentationResult.error?.code || 'SCENE_SEGMENTATION_FAILED'
-                }
-            }, { status: 500 });
+                status: 500,
+                error: 'Failed to generate scene segmentation'
+            });
         }
 
         // 3. 각 Scene의 자막 데이터 분리
@@ -153,11 +148,9 @@ export async function POST(request: NextRequest): Promise<NextResponse<PostOpenA
         if (!patchVideoGenerationTaskResult || !patchVideoGenerationTaskResult.id) {
             return NextResponse.json({
                 success: false,
-                error: {
-                    message: postSceneSegmentationResult.error?.message || 'Failed to insert row into video generation task table.',
-                    code: postSceneSegmentationResult.error?.code || 'SCENE_SEGMENTATION_FAILED'
-                }
-            }, { status: 500 });
+                status: 500,
+                error: 'Failed to insert row into video generation task table.'
+            });
         }
 
         // 9. 음성 파일을 Supabase Storage에 저장
@@ -172,6 +165,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<PostOpenA
 
         return NextResponse.json({
             success: true,
+            status: 200,
             data: {
                 taskId: videoGenerationTask.id,
                 sceneDataList: postSceneSegmentationResult.sceneDataList || [],
@@ -184,10 +178,8 @@ export async function POST(request: NextRequest): Promise<NextResponse<PostOpenA
 
         return NextResponse.json({
             success: false,
-            error: {
-                message: 'An error occurred during scene segmentation processing.',
-                code: 'INTERNAL_SERVER_ERROR'
-            }
-        }, { status: 500 });
+            status: 500,
+            error: error instanceof Error ? error.message : 'Failed to generate scene segmentation data.'
+        });
     }
 }

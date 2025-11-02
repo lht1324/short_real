@@ -43,26 +43,26 @@ export async function POST(
 
         const getRetryPathAndRestType = (): RetryPathData | null => {
             switch (taskStatus) {
-                case VideoGenerationTaskStatus.GENERATING_MASTER_STYLE_PROMPT:
-                case VideoGenerationTaskStatus.GENERATING_IMAGE_PROMPT:
+                case VideoGenerationTaskStatus.GENERATING_MASTER_STYLE_PROMPT: {
+                    return {
+                        path: "/api/video/process/master-style",
+                        restType: "POST",
+                        body: undefined,
+                    }
+                }
+                case VideoGenerationTaskStatus.GENERATING_IMAGE_PROMPT: {
+                    return {
+                        path: "/api/video/process/image",
+                        restType: "POST",
+                        body: undefined,
+                    }
+                }
                 case VideoGenerationTaskStatus.GENERATING_VIDEO_PROMPT:
                 case VideoGenerationTaskStatus.GENERATING_VIDEO: {
-                    // Style 객체 찾기
-                    const style = STYLE_DATA_LIST.find(s => s.id === videoGenerationTask.selected_style_id);
-
-                    if (!style) {
-                        console.error(`Style not found: ${videoGenerationTask.selected_style_id}`);
-                        return null;
-                    }
-
                     return {
-                        path: "/api/video/process",
+                        path: "/api/video/process/video",
                         restType: 'POST',
-                        body: {
-                            userId: videoGenerationTask.user_id,
-                            taskId: taskId,
-                            style: style,
-                        }
+                        body: undefined,
                     };
                 }
                 case VideoGenerationTaskStatus.STITCHING_VIDEOS: {
@@ -101,7 +101,7 @@ export async function POST(
 
         if (!retryPathData) {
             return NextResponse.json({
-                status: 400,
+                status: 500,
                 success: false,
                 message: `Cannot retry from status: ${taskStatus}`
             });
@@ -111,10 +111,7 @@ export async function POST(
         await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, {
             // VIDEO/PROCESS
             ...((
-                taskStatus === VideoGenerationTaskStatus.GENERATING_MASTER_STYLE_PROMPT
-                || taskStatus === VideoGenerationTaskStatus.GENERATING_IMAGE_PROMPT
-                || taskStatus === VideoGenerationTaskStatus.GENERATING_VIDEO_PROMPT
-                || taskStatus === VideoGenerationTaskStatus.GENERATING_VIDEO
+                taskStatus === VideoGenerationTaskStatus.GENERATING_VIDEO_PROMPT || taskStatus === VideoGenerationTaskStatus.GENERATING_VIDEO
             ) && {
                 processed_scene_count: 0,
             }),

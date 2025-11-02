@@ -95,18 +95,14 @@ function WorkspaceCreatePageClient() {
             // OpenAI API 호출
             const result = await openAIClientAPI.postOpenAIScript(requestData);
 
-            if (result && result.success && result.data) {
-                console.log("Script generation result", result);
-                console.log('Script generated successfully:', result.data);
-                setScript(result.data.script);
-                setIsGeneratingScript(false);
-                setShowAIModal(false);
-                setAiPrompt('');
-            } else {
-                console.error('Script generation failed:', result?.error);
-                alert(result?.error?.message || 'Failed to generate script. Please try again.');
-                setIsGeneratingScript(false);
+            if (!result.data) {
+                throw new Error("Failed to generate script.");
             }
+
+            setScript(result.data.script);
+            setIsGeneratingScript(false);
+            setShowAIModal(false);
+            setAiPrompt('');
 
         } catch (error) {
             console.error('Error generating script:', error);

@@ -127,9 +127,6 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({
             success: true,
             status: 200,
-            data: {
-                taskId: patchVideoGenerationTaskResult.id,
-            },
             message: `${finalSceneDataList.length} scene's video generation requests completed. Task ID: ${patchVideoGenerationTaskResult.id}`
         });
     } catch (error) {

@@ -1,12 +1,8 @@
 import { SceneData } from "@/api/types/supabase/VideoGenerationTasks";
+import {BaseResponse} from "@/api/types/api/BaseResponse";
 
-export interface PostOpenAISceneResponse {
-    success: boolean;
+export interface PostOpenAISceneResponse extends BaseResponse {
     data?: StoryboardData;
-    error?: {
-        message: string;
-        code: string;
-    };
 }
 
 export interface StoryboardData {

@@ -13,11 +13,9 @@ export async function POST(request: NextRequest) {
         if (!userPrompt) {
             return NextResponse.json({
                 success: false,
-                error: {
-                    message: 'Prompt is required',
-                    code: 'MISSING_PROMPT'
-                }
-            }, { status: 400 });
+                status: 400,
+                error: 'Prompt is required'
+            });
         }
 
         // OpenAI API를 통해 스크립트 생성
@@ -25,16 +23,13 @@ export async function POST(request: NextRequest) {
 
         // 결과 반환
         return NextResponse.json(result);
-
     } catch (error) {
         console.error('Error in script generation route:', error);
         
         return NextResponse.json({
             success: false,
-            error: {
-                message: 'Internal server error',
-                code: 'INTERNAL_ERROR'
-            }
-        }, { status: 500 });
+            status: 500,
+            error: error instanceof Error ? error.message : 'Failed to generate script.'
+        });
     }
 }

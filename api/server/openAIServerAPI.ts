@@ -7,6 +7,7 @@ import {SceneData, SubtitleSegment} from "@/api/types/supabase/VideoGenerationTa
 import {PostGenerateRequest} from "@/api/types/suno-api/SunoAPIRequests";
 import {MasterStyleInfo} from "@/api/types/supabase/MasterStyleInfo";
 import {VIDEO_ASPECT_RATIOS, VideoAspectRatio} from "@/lib/ReplicateData";
+import {PostOpenAISceneResponse, StoryboardData} from "@/api/types/api/open-ai/scene/PostOpenAISceneResponse";
 
 enum OpenAIModel {
     GPT_4O_MINI = "gpt-4o-mini-2024-07-18",
@@ -21,10 +22,8 @@ export const openAIServerAPI = {
             if (!apiKey) {
                 return {
                     success: false,
-                    error: {
-                        message: 'OpenAI API key is not configured',
-                        code: 'MISSING_API_KEY'
-                    }
+                    status: 400,
+                    error: 'OpenAI API key is not configured',
                 };
             }
 
@@ -92,14 +91,10 @@ Follow the 3-phase workflow systematically to generate an original short-form vi
             if (!generatedScript) {
                 return {
                     success: false,
-                    error: {
-                        message: 'No script generated from OpenAI',
-                        code: 'EMPTY_RESPONSE'
-                    }
+                    status: 500,
+                    error: 'No script generated from OpenAI'
                 };
             }
-
-            console.log(`script token usage = ${completion.usage?.total_tokens}`)
 
             // 스크립트 분석
             const wordCount = generatedScript.split(' ').length;
@@ -107,22 +102,20 @@ Follow the 3-phase workflow systematically to generate an original short-form vi
 
             return {
                 success: true,
+                status: 200,
                 data: {
                     script: generatedScript,
                     wordCount: wordCount,
                     estimatedDuration: estimatedDuration,
                     prompt: userPrompt
-                },
-                usage: completion.usage
+                }
             };
 
         } catch (error) {
             return {
                 success: false,
-                error: {
-                    message: error instanceof Error ? error.message : 'Unknown error occurred',
-                    code: 'INTERNAL_ERROR'
-                }
+                status: 500,
+                error: error instanceof Error ? error.message : 'Unknown error occurred'
             };
         }
     },
@@ -403,20 +396,15 @@ Based on the following style, generate the master style prompt.
 
     // o4-mini-2025-04-16, entire narration based
     async postSceneSegmentation(
+        taskId: string,
         narrationScript: string,
         subtitleSegments: SubtitleSegment[]
-    ): Promise<{ success: boolean; sceneDataList?: SceneData[]; videoMainSubject?: string; error?: { message: string; code: string } }> {
+    ): Promise<StoryboardData | null> {
         try {
             // OpenAI API 키 확인
             const apiKey = process.env.OPENAI_API_KEY;
             if (!apiKey) {
-                return {
-                    success: false,
-                    error: {
-                        message: 'OpenAI API key is not configured',
-                        code: 'MISSING_API_KEY'
-                    }
-                };
+                return null;
             }
 
             const systemMessage = `You are an elite scene director.
@@ -491,13 +479,7 @@ Provide JSON output with sceneDataList and videoMainSubject.`;
             console.log("Scene segmentation result:", generatedContent);
 
             if (!generatedContent) {
-                return {
-                    success: false,
-                    error: {
-                        message: 'No scene segmentation generated from OpenAI',
-                        code: 'EMPTY_RESPONSE'
-                    }
-                };
+                return null;
             }
 
             try {
@@ -515,29 +497,17 @@ Provide JSON output with sceneDataList and videoMainSubject.`;
                 const videoMainSubject: string = parsedData.videoMainSubject;
 
                 return {
-                    success: true,
+                    taskId: taskId,
                     sceneDataList: sceneDataList,
-                    videoMainSubject: videoMainSubject
+                    videoMainSubject: videoMainSubject,
                 };
             } catch (parseError) {
                 console.error('Failed to parse scene segmentation JSON response:', parseError);
-                return {
-                    success: false,
-                    error: {
-                        message: 'Failed to parse scene segmentation response',
-                        code: 'PARSE_ERROR'
-                    }
-                };
+                return null;
             }
 
         } catch (error) {
-            return {
-                success: false,
-                error: {
-                    message: error instanceof Error ? error.message : 'Unknown error occurred',
-                    code: 'INTERNAL_ERROR'
-                }
-            };
+            return null;
         }
     },
 
