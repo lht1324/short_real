@@ -67,18 +67,16 @@ export async function POST(
                 }
                 case VideoGenerationTaskStatus.STITCHING_VIDEOS: {
                     return {
-                        path: "/api/video/merge",
+                        path: `/api/video/merge?taskId=${taskId}`,
                         restType: 'POST',
-                        body: {
-                            generationTaskId: taskId
-                        }
+                        body: undefined,
                     };
                 }
                 case VideoGenerationTaskStatus.COMPOSING_MUSIC: {
                     return {
-                        path: `/api/music?generationTaskId=${taskId}`,
+                        path: `/api/music?taskId=${taskId}`,
                         restType: 'POST',
-                        body: undefined
+                        body: undefined,
                     };
                 }
                 case VideoGenerationTaskStatus.FINALIZING: {

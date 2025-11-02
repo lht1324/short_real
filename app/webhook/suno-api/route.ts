@@ -2,25 +2,30 @@ import { NextRequest, NextResponse } from "next/server";
 import { BaseSunoAPIResponse, PostGenerateWebhookPayload, PostGenerateWebhookType } from "@/api/types/suno-api/SunoAPIResponses";
 import { musicServerAPI } from "@/api/server/musicServerAPI";
 import {videoGenerationTasksServerAPI} from "@/api/server/videoGenerationTasksServerAPI";
-import {taskCheckAndCleanupIfCancelled} from "@/app/api/video/process/taskCheckAndCleaupIfCancelled";
+import {taskCheckAndCleanupIfCancelled} from "@/utils/taskCheckAndCleanupIfCancelled";
 import {VideoGenerationTaskStatus} from "@/api/types/supabase/VideoGenerationTasks";
 
 export async function POST(request: NextRequest) {
+    // URL에서 파라미터 추출
+    const { searchParams } = new URL(request.url);
+    const taskId = searchParams.get('taskId');
+
+    if (!taskId) {
+        return NextResponse.json({
+            success: false,
+            status: 400,
+            error: 'Missing required query param: taskId'
+        });
+    }
+
     try {
-        // URL에서 파라미터 추출
-        const { searchParams } = new URL(request.url);
-        const generationTaskId = searchParams.get('generationTaskId');
-
-        if (!generationTaskId) {
-            return NextResponse.json(
-                { error: 'Missing required query param: generationTaskId' },
-                { status: 400 }
-            );
-        }
-
-        const videoGenerationTask = await videoGenerationTasksServerAPI.getVideoGenerationTaskById(generationTaskId);
+        const videoGenerationTask = await videoGenerationTasksServerAPI.getVideoGenerationTaskById(taskId);
         if (!videoGenerationTask) {
-            throw new Error("Task not found.");
+            return NextResponse.json({
+                success: false,
+                status: 404,
+                error: "Task not found",
+            });
         }
 
         const checkingInitialResult = await taskCheckAndCleanupIfCancelled(videoGenerationTask);
@@ -33,20 +38,24 @@ export async function POST(request: NextRequest) {
 
         // 요청 검증
         if (!body || !body.data) {
-            return NextResponse.json(
-                { error: 'Invalid webhook payload' },
-                { status: 400 }
-            );
+            await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
+            return NextResponse.json({
+                success: false,
+                status: 400,
+                error: 'Invalid webhook payload'
+            });
         }
 
         const webhookData = body.data;
 
         // 필수 필드 검증
         if (!webhookData.callbackType || !webhookData.task_id) {
-            return NextResponse.json(
-                { error: 'Missing required fields: callbackType, task_id' },
-                { status: 400 }
-            );
+            await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
+            return NextResponse.json({
+                success: false,
+                status: 400,
+                error: 'Missing required fields: callbackType, task_id'
+            });
         }
 
         console.log('Suno API Webhook received:', {
@@ -90,7 +99,7 @@ export async function POST(request: NextRequest) {
                         if (musicFileList.length > 0) {
                             // Supabase Storage에 업로드
                             const uploadResult = await musicServerAPI.postMusic(
-                                generationTaskId,
+                                taskId,
                                 musicFileList,
                                 musicMetadataList.map((musicMetaData) => {
                                     return {
@@ -105,12 +114,12 @@ export async function POST(request: NextRequest) {
                             );
 
                             if (uploadResult.success) {
-                                console.log(`Successfully uploaded ${musicFileList.length} music files for task: ${generationTaskId}`);
+                                console.log(`Successfully uploaded ${musicFileList.length} music files for task: ${taskId}`);
 
                                 // Task 상태 'EDITOR'로 업데이트
-                                await videoGenerationTasksServerAPI.updateTaskStatus(generationTaskId, VideoGenerationTaskStatus.EDITOR);
+                                await videoGenerationTasksServerAPI.patchVideoGenerationTaskStatus(taskId, VideoGenerationTaskStatus.EDITOR);
                             } else {
-                                console.error(`Failed to upload music files for task: ${generationTaskId}`, uploadResult.error);
+                                console.error(`Failed to upload music files for task: ${taskId}`, uploadResult.error);
                             }
                         } else {
                             console.warn('No valid music files to upload');
@@ -135,9 +144,12 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ success: true });
     } catch (error) {
         console.error('Error in POST /webhook/suno-api:', error);
-        return NextResponse.json(
-            { error: 'Failed to process webhook' },
-            { status: 500 }
-        );
+
+        await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
+        return NextResponse.json({
+            success: false,
+            status: 500,
+            error: 'Failed to process webhook'
+        });
     }
 }

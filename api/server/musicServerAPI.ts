@@ -167,7 +167,7 @@ export const musicServerAPI = {
         cuttingAreaStartSec: number,
         cuttingAreaEndSec: number,
         volumePercentage: number,
-        videoGenerationTaskId: string
+        taskId: string
     ) {
         const replicate = new Replicate({
             auth: process.env.REPLICATE_API_TOKEN,
@@ -179,7 +179,7 @@ export const musicServerAPI = {
             throw new Error('BASE_URL is not set');
         }
 
-        const webhookUrl = `${baseUrl}/webhook/replicate/music/modifying?videoGenerationTaskId=${videoGenerationTaskId}`;
+        const webhookUrl = `${baseUrl}/webhook/replicate/music/modifying?taskId=${taskId}`;
 
         try {
             const prediction = await replicate.predictions.create({

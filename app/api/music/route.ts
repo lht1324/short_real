@@ -2,26 +2,31 @@ import {NextRequest, NextResponse} from "next/server";
 import {sunoAPIServerAPI} from "@/api/server/sunoAPIServerAPI";
 import {PostGenerateRequest, SunoModelType} from "@/api/types/suno-api/SunoAPIRequests";
 import {videoGenerationTasksServerAPI} from "@/api/server/videoGenerationTasksServerAPI";
-import {taskCheckAndCleanupIfCancelled} from "@/app/api/video/process/taskCheckAndCleaupIfCancelled";
+import {taskCheckAndCleanupIfCancelled} from "@/utils/taskCheckAndCleanupIfCancelled";
 import {openAIServerAPI} from "@/api/server/openAIServerAPI";
 
 export async function POST(request: NextRequest) {
+    // URL에서 파라미터 추출
+    const { searchParams } = new URL(request.url);
+    const taskId = searchParams.get('taskId');
+
+    if (!taskId) {
+        return NextResponse.json({
+            success: false,
+            status: 400,
+            error: 'Missing required query param: taskId'
+        });
+    }
+
     try {
-        // URL에서 파라미터 추출
-        const { searchParams } = new URL(request.url);
-        const generationTaskId = searchParams.get('generationTaskId');
-
-        if (!generationTaskId) {
-            return NextResponse.json(
-                { error: 'Missing required query param: generationTaskId' },
-                { status: 400 }
-            );
-        }
-
-        const videoGenerationTask = await videoGenerationTasksServerAPI.getVideoGenerationTaskById(generationTaskId);
+        const videoGenerationTask = await videoGenerationTasksServerAPI.getVideoGenerationTaskById(taskId);
 
         if (!videoGenerationTask) {
-            throw new Error("Task not found.");
+            return NextResponse.json({
+                success: false,
+                status: 404,
+                error: "Task not found",
+            });
         }
 
         const checkingInitialResult = await taskCheckAndCleanupIfCancelled(videoGenerationTask);
@@ -32,17 +37,21 @@ export async function POST(request: NextRequest) {
 
         // 필수 데이터 검증
         if (!videoGenerationTask.video_main_subject) {
-            return NextResponse.json(
-                { error: 'video_main_subject is missing from task' },
-                { status: 400 }
-            );
+            await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
+            return NextResponse.json({
+                success: false,
+                status: 404,
+                error: 'video_main_subject is missing from task'
+            });
         }
 
         if (!videoGenerationTask.master_style_positive_prompt) {
-            return NextResponse.json(
-                { error: 'master_style_positive_prompt is missing from task' },
-                { status: 400 }
-            );
+            await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
+            return NextResponse.json({
+                success: false,
+                status: 404,
+                error: 'master_style_positive_prompt is missing from task'
+            });
         }
 
         // OpenAI로 Music Generation Data 생성
@@ -54,13 +63,12 @@ export async function POST(request: NextRequest) {
         );
 
         if (!postMusicGenerationDataResult.success || !postMusicGenerationDataResult.data) {
-            return NextResponse.json(
-                {
-                    error: 'Failed to generate music data',
-                    details: postMusicGenerationDataResult.error
-                },
-                { status: 500 }
-            );
+            await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
+            return NextResponse.json({
+                success: false,
+                status: 500,
+                error: postMusicGenerationDataResult.error ?? 'Failed to generate music data',
+            });
         }
 
         const {
@@ -75,10 +83,12 @@ export async function POST(request: NextRequest) {
 
         // 필수 파라미터 검증
         if (!prompt || !style || !title) {
-            return NextResponse.json(
-                { error: 'Missing required parameters: prompt, style, title' },
-                { status: 400 }
-            );
+            await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
+            return NextResponse.json({
+                success: false,
+                status: 500,
+                error: 'Failed to generate music generation data: prompt, style, title'
+            });
         }
 
         const baseUrl = process.env.BASE_URL;
@@ -93,18 +103,35 @@ export async function POST(request: NextRequest) {
             styleWeight: 0.65,
             weirdnessConstraint: 0.65,
             audioWeight: 0.65,
-            callBackUrl: `${baseUrl}/webhook/suno-api?generationTaskId=${generationTaskId}`,
+            callBackUrl: `${baseUrl}/webhook/suno-api?taskId=${taskId}`,
         }
 
         // Suno API를 통한 음악 생성 요청
         const result = await sunoAPIServerAPI.postGenerate(fullRequest);
 
-        return NextResponse.json(result);
+        if (!result) {
+            await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
+
+            return NextResponse.json({
+                success: false,
+                status: 500,
+                error: 'Failed to request music generation.'
+            });
+        }
+
+        return NextResponse.json({
+            success: true,
+            status: 200,
+            message: "Requested generation music successfully.",
+        });
     } catch (error) {
         console.error('Error in POST /api/music:', error);
-        return NextResponse.json(
-            { error: 'Failed to generate music' },
-            { status: 500 }
-        );
+
+        await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
+        return NextResponse.json({
+            success: false,
+            status: 500,
+            error: 'Failed to generate music.'
+        });
     }
 }

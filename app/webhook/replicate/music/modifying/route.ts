@@ -1,24 +1,34 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createSupabaseServiceRoleClient } from '@/lib/supabaseServiceRole';
 import {videoGenerationTasksServerAPI} from "@/api/server/videoGenerationTasksServerAPI";
-import {taskCheckAndCleanupIfCancelled} from "@/app/api/video/process/taskCheckAndCleaupIfCancelled";
+import {taskCheckAndCleanupIfCancelled} from "@/utils/taskCheckAndCleanupIfCancelled";
 
 export async function POST(request: NextRequest) {
     const supabase = createSupabaseServiceRoleClient();
 
+    const { searchParams } = new URL(request.url);
+    const taskId = searchParams.get('taskId');
+
+    if (!taskId) {
+        return NextResponse.json({
+            success: false,
+            status: 400,
+            error: 'Missing required query param: taskId',
+        });
+    }
+
     try {
         const body = await request.json();
-        const { searchParams } = new URL(request.url);
-        const generationTaskId = searchParams.get('videoGenerationTaskId');
 
-        if (!generationTaskId) {
-            return NextResponse.json({ error: "generationTaskId is required" }, { status: 400 });
-        }
-
-        const videoGenerationTask = await videoGenerationTasksServerAPI.getVideoGenerationTaskById(generationTaskId);
+        const videoGenerationTask = await videoGenerationTasksServerAPI.getVideoGenerationTaskById(taskId);
 
         if (!videoGenerationTask) {
-            throw new Error("Task not found.");
+            await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
+            return NextResponse.json({
+                success: false,
+                status: 404,
+                error: 'Task not found'
+            });
         }
 
         const checkingInitialResult = await taskCheckAndCleanupIfCancelled(videoGenerationTask);
@@ -28,7 +38,7 @@ export async function POST(request: NextRequest) {
         }
 
         console.log(`[Webhook Audio] Status: ${body.status}`);
-        console.log(`[Webhook Audio] Task ID: ${generationTaskId}`);
+        console.log(`[Webhook Audio] Task ID: ${taskId}`);
 
         if (body.status === 'succeeded') {
             const processedAudioUrl = body.output; // 처리된 오디오 URL
@@ -42,7 +52,7 @@ export async function POST(request: NextRequest) {
             }
 
             const audioBuffer = await audioResponse.arrayBuffer();
-            const filePath = `${generationTaskId}/${generationTaskId}_processed_audio.mp3`; // 어차피 하나만 선택해 처리하니 index 불필요
+            const filePath = `${taskId}/${taskId}_processed_audio.mp3`; // 어차피 하나만 선택해 처리하니 index 불필요
 
             const { error: uploadError } = await supabase.storage
                 .from('video_music_temp_storage')
@@ -68,20 +78,20 @@ export async function POST(request: NextRequest) {
                 .update({
                     music_completed: true
                 })
-                .eq('id', generationTaskId);
+                .eq('id', taskId);
 
             if (updateError) {
                 throw new Error(`DB 업데이트 실패: ${updateError.message}`);
             }
 
-            console.log(`[Webhook Audio] DB updated for task: ${generationTaskId}`);
+            console.log(`[Webhook Audio] DB updated for task: ${taskId}`);
 
             // RPC 호출: 병합 시작 가능 여부 확인
-            console.log(`[Webhook Audio] RPC 호출 시작 - task_id: ${generationTaskId}, merge_type: music`);
+            console.log(`[Webhook Audio] RPC 호출 시작 - task_id: ${taskId}, merge_type: music`);
             const { data: canStartMerge, error: rpcError } = await supabase.rpc(
                 'try_start_final_merge',
                 {
-                    task_id: generationTaskId,
+                    task_id: taskId,
                     merge_type: 'music'
                 }
             );
@@ -91,14 +101,14 @@ export async function POST(request: NextRequest) {
             if (rpcError) {
                 console.error(`[Webhook Audio] RPC 호출 실패:`, rpcError);
             } else if (canStartMerge) {
-                console.log(`[Webhook Audio] 최종 병합 시작 조건 충족: ${generationTaskId}`);
+                console.log(`[Webhook Audio] 최종 병합 시작 조건 충족: ${taskId}`);
 
                 // 최종 병합 API 호출 (fire-and-forget)
                 const baseUrl = process.env.BASE_URL;
                 console.log(`[Webhook Audio] BASE_URL: ${baseUrl}`);
 
                 if (baseUrl) {
-                    const apiUrl = `${baseUrl}/api/video/merge/music`;
+                    const apiUrl = `${baseUrl}/api/video/merge/music?taskId=${taskId}`;
                     console.log(`[Webhook Audio] 최종 병합 API 호출: ${apiUrl}`);
 
                     fetch(apiUrl, {
@@ -106,9 +116,6 @@ export async function POST(request: NextRequest) {
                         headers: {
                             'Content-Type': 'application/json',
                         },
-                        body: JSON.stringify({
-                            videoGenerationTaskId: generationTaskId
-                        }),
                     })
                     .then(res => {
                         console.log(`[Webhook Audio] API 응답 상태: ${res.status}`);
@@ -124,7 +131,7 @@ export async function POST(request: NextRequest) {
                     console.error(`[Webhook Audio] BASE_URL이 설정되지 않았습니다.`);
                 }
             } else {
-                console.log(`[Webhook Audio] 자막 처리 대기 중 (canStartMerge = false): ${generationTaskId}`);
+                console.log(`[Webhook Audio] 자막 처리 대기 중 (canStartMerge = false): ${taskId}`);
             }
 
         } else if (body.status === 'failed') {
@@ -137,16 +144,17 @@ export async function POST(request: NextRequest) {
                     music_completed: false,
                     // 필요시 에러 메시지 저장 필드 추가 가능
                 })
-                .eq('id', generationTaskId);
+                .eq('id', taskId);
         }
 
         return NextResponse.json({ received: true });
 
     } catch (error) {
         console.error('[Webhook Audio] Error:', error);
-        return NextResponse.json(
-            { error: 'Webhook processing failed' },
-            { status: 500 }
-        );
+        return NextResponse.json({
+            success: false,
+            status: 500,
+            error: 'Webhook processing failed'
+        });
     }
 }

@@ -5,7 +5,7 @@ import {
 import {Style} from "@/api/types/supabase/Styles";
 import {SceneData, SubtitleSegment} from "@/api/types/supabase/VideoGenerationTasks";
 import {PostGenerateRequest} from "@/api/types/suno-api/SunoAPIRequests";
-import {MasterStyleInfo} from "@/api/server/MasterStyleInfo";
+import {MasterStyleInfo} from "@/api/types/supabase/MasterStyleInfo";
 import {VIDEO_ASPECT_RATIOS, VideoAspectRatio} from "@/lib/ReplicateData";
 
 enum OpenAIModel {

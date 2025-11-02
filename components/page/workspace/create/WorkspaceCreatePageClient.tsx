@@ -9,7 +9,6 @@ import {ScriptGenerationRequest} from "@/api/types/open-ai/ScriptGeneration";
 import {Style} from "@/api/types/supabase/Styles";
 import {SceneData, VideoGenerationTask, VideoGenerationTaskStatus} from "@/api/types/supabase/VideoGenerationTasks";
 import {videoClientAPI} from "@/api/client/videoClientAPI";
-import {postFetch} from "@/api/client/baseFetch";
 import {StoryboardData} from "@/api/types/api/open-ai/scene/PostOpenAISceneResponse";
 import StoryboardItem from "@/components/page/workspace/create/StoryboardItem";
 import VoiceSelectionPanel from "@/components/page/workspace/create/VoiceSelectionPanel";
@@ -293,47 +292,6 @@ function WorkspaceCreatePageClient() {
         setPendingVoiceId(null);
         setShowVoiceChangeWarningModal(false);
     }, []);
-
-    const requestIdList = useMemo(() => {
-        return [
-            "3fstybtmjhrm80cs8cevx5g1r0",
-            "dnje5ptmd1rme0cs8cer2f29sr",
-            "5bmpfvtmr5rme0cs8ces82rt9r",
-            "x8yrzd2khsrmc0cs8cev8zjc3m",
-            "zthtr9tkm5rmc0cs8cesqzj08m"
-        ]
-    }, []);
-
-    const videoUrlList = useMemo(() => {
-        return [
-            "https://tbgymsmwuljvewatnvqg.supabase.co/storage/v1/object/sign/processed_video_storage/jhebnme2v1rm80csbbptfpqber.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9iZjk2NWFiNi1hYmE4LTRkYTEtYTM5Yy0yMDk3ZmQ1ZGU1MGEiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJwcm9jZXNzZWRfdmlkZW9fc3RvcmFnZS9qaGVibm1lMnYxcm04MGNzYmJwdGZwcWJlci5tcDQiLCJpYXQiOjE3NTgyNzk1MTgsImV4cCI6MTc4OTgxNTUxOH0.pf1J1oCPsZFVcUFOtnjZp7JMrNvEsOev1BsRf7U198w",
-            "https://tbgymsmwuljvewatnvqg.supabase.co/storage/v1/object/sign/processed_video_storage/n5h5k5e2zdrma0csbbptq7xcq0.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9iZjk2NWFiNi1hYmE4LTRkYTEtYTM5Yy0yMDk3ZmQ1ZGU1MGEiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJwcm9jZXNzZWRfdmlkZW9fc3RvcmFnZS9uNWg1azVlMnpkcm1hMGNzYmJwdHE3eGNxMC5tcDQiLCJpYXQiOjE3NTgyNzk1MjgsImV4cCI6MTc4OTgxNTUyOH0.ARTmGkgTsSvbflZb7orYGmnwMonz-ZPff9WAR9Kfhig",
-            "https://tbgymsmwuljvewatnvqg.supabase.co/storage/v1/object/sign/processed_video_storage/24qj3ve2vxrme0csbbpre22aew.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9iZjk2NWFiNi1hYmE4LTRkYTEtYTM5Yy0yMDk3ZmQ1ZGU1MGEiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJwcm9jZXNzZWRfdmlkZW9fc3RvcmFnZS8yNHFqM3ZlMnZ4cm1lMGNzYmJwcmUyMmFldy5tcDQiLCJpYXQiOjE3NTgyNzk1NjcsImV4cCI6MTc4OTgxNTU2N30.PoZ8hpqBHiG0w0JBZLbu6HEBAO0gga70A0iFmwgfUGE",
-            "https://tbgymsmwuljvewatnvqg.supabase.co/storage/v1/object/sign/processed_video_storage/ejtpsvy2x5rmc0csbbpte50q0m.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9iZjk2NWFiNi1hYmE4LTRkYTEtYTM5Yy0yMDk3ZmQ1ZGU1MGEiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJwcm9jZXNzZWRfdmlkZW9fc3RvcmFnZS9lanRwc3Z5Mng1cm1jMGNzYmJwdGU1MHEwbS5tcDQiLCJpYXQiOjE3NTgyNzk1NzYsImV4cCI6MTc4OTgxNTU3Nn0.i5ys7M2cAdwsDOzgXw_aWc_E8Yd1kBV9bgSdJFI9Xjw",
-            "https://tbgymsmwuljvewatnvqg.supabase.co/storage/v1/object/sign/processed_video_storage/w59ebwe2vdrmc0csbbprhab7qw.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9iZjk2NWFiNi1hYmE4LTRkYTEtYTM5Yy0yMDk3ZmQ1ZGU1MGEiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJwcm9jZXNzZWRfdmlkZW9fc3RvcmFnZS93NTllYndlMnZkcm1jMGNzYmJwcmhhYjdxdy5tcDQiLCJpYXQiOjE3NTgyNzk1ODgsImV4cCI6MTc4OTgxNTU4OH0.GMPY4WHyWD1N0hHRBmqfo5TeMw6A-QWyz03fpQ_wPXs"
-        ]
-    }, []);
-    const onTestWebhook = useCallback(async () => {
-        for (let i = 0; i < requestIdList.length; i++) {
-            try {
-                await postFetch(`/webhook/replicate?generationTaskId=1519017a-1f2f-4c59-8ef1-4b8d692e7905`, {
-                    id: requestIdList[i],
-                    output: videoUrlList[i],
-                    // "starting" | "processing" | "succeeded" | "failed" | "canceled" | "aborted"
-                    status: "succeeded",
-                    error: undefined,
-                });
-
-                // 마지막 요청이 아닌 경우에만 딜레이 적용
-                if (i < requestIdList.length - 1) {
-                    await new Promise(resolve => setTimeout(resolve, 5000));
-                }
-                console.log(`Webhook test ${i + 1} succeeded.`);
-            } catch (error) {
-                console.error(`Webhook test ${i + 1} failed:`, error);
-            }
-        }
-    }, [requestIdList, videoUrlList]);
 
     // 페이지 로드 시: taskId 있으면 데이터 복원
     useEffect(() => {

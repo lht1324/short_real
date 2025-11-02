@@ -4,35 +4,40 @@ import {musicServerAPI} from '@/api/server/musicServerAPI';
 import {generateASSContent} from "@/utils/captionUtils";
 import {videoGenerationTasksServerAPI} from "@/api/server/videoGenerationTasksServerAPI";
 import {FinalVideoMergeData, VideoGenerationTaskStatus} from "@/api/types/supabase/VideoGenerationTasks";
-import {taskCheckAndCleanupIfCancelled} from "@/app/api/video/process/taskCheckAndCleaupIfCancelled";
+import {taskCheckAndCleanupIfCancelled} from "@/utils/taskCheckAndCleanupIfCancelled";
 
 export async function POST(request: NextRequest) {
+    // URL에서 파라미터 추출
+    const { searchParams } = new URL(request.url);
+    const taskId = searchParams.get('taskId');
+
+    if (!taskId) {
+        return NextResponse.json({
+            success: false,
+            status: 400,
+            error: 'Missing required query param: taskId',
+        });
+    }
+
     try {
-        // URL에서 파라미터 추출
-        const { searchParams } = new URL(request.url);
-        const taskId = searchParams.get('taskId');
-
-        if (!taskId) {
-            return NextResponse.json(
-                { error: 'Missing required query param: taskId' },
-                { status: 400 }
-            );
-        }
-
         const videoGenerationTask = await videoGenerationTasksServerAPI.getVideoGenerationTaskById(taskId);
 
         if (!videoGenerationTask) {
-            return NextResponse.json(
-                { error: 'Missing required query param: generationTaskId' },
-                { status: 404 }
-            );
+            await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
+            return NextResponse.json({
+                success: false,
+                status: 404,
+                error: 'Task not found'
+            });
         }
 
         if (!videoGenerationTask.final_video_merge_data) {
-            return NextResponse.json(
-                { error: 'Missing required field of task: final_video_merge_data' },
-                { status: 404 }
-            );
+            await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
+            return NextResponse.json({
+                success: false,
+                status: 404,
+                error: 'Missing required field of task: final_video_merge_data'
+            });
         }
 
 
@@ -54,23 +59,21 @@ export async function POST(request: NextRequest) {
         }: FinalVideoMergeData = videoGenerationTask.final_video_merge_data;
 
         if (cuttingAreaEndSec <= cuttingAreaStartSec) {
-            return NextResponse.json(
-                {
-                    success: false,
-                    error: 'cuttingAreaEndSec must be greater than cuttingAreaStartSec'
-                },
-                { status: 400 }
-            );
+            await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
+            return NextResponse.json({
+                success: false,
+                status: 400,
+                error: 'cuttingAreaEndSec must be greater than cuttingAreaStartSec'
+            });
         }
 
         if (volumePercentage < 0 || volumePercentage > 100) {
-            return NextResponse.json(
-                {
-                    success: false,
-                    error: 'volumePercentage must be between 0 and 100'
-                },
-                { status: 400 }
-            );
+            await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
+            return NextResponse.json({
+                success: false,
+                status: 400,
+                error: 'volumePercentage must be between 0 and 100'
+            });
         }
 
         const videoUrl = await videoServerAPI.getVideoSignedUrl(`${taskId}/${taskId}.mp4`, 60 * 60);
@@ -116,18 +119,18 @@ export async function POST(request: NextRequest) {
 
         return NextResponse.json({
             success: true,
-            captionPredictionId,
-            musicPredictionId
+            status: 200,
+            message: `Requested merging caption and modifying music successfully. caption: ${captionPredictionId}, music: ${musicPredictionId}}`,
         });
 
     } catch (error) {
         console.error('[API Final] Error:', error);
-        return NextResponse.json(
-            {
-                success: false,
-                error: error instanceof Error ? error.message : 'Unknown error'
-            },
-            { status: 500 }
-        );
+
+        await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
+        return NextResponse.json({
+            success: false,
+            status: 500,
+            error: error instanceof Error ? error.message : 'Unknown error'
+        });
     }
 }

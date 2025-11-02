@@ -1,41 +1,41 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { videoServerAPI } from '@/api/server/videoServerAPI';
+import {videoGenerationTasksServerAPI} from "@/api/server/videoGenerationTasksServerAPI";
 
 export async function POST(request: NextRequest) {
+    const { searchParams } = new URL(request.url);
+    const taskId = searchParams.get('taskId');
+
+    if (!taskId) {
+        return NextResponse.json({
+            success: false,
+            status: 400,
+            error: 'Missing required query param: taskId',
+        });
+    }
+
     try {
-        const { videoGenerationTaskId } = await request.json();
-
-        // 필수 값 검증
-        if (!videoGenerationTaskId) {
-            return NextResponse.json(
-                {
-                    success: false,
-                    error: 'videoGenerationTaskId is required'
-                },
-                { status: 400 }
-            );
-        }
-
-        console.log(`[API Video-Music Merge] 병합 요청 시작: ${videoGenerationTaskId}`);
+        console.log(`[API Video-Music Merge] 병합 요청 시작: ${taskId}`);
 
         // postVideoMergeMusic() 호출 - Replicate prediction 생성
-        const predictionId = await videoServerAPI.postVideoMergeMusic(videoGenerationTaskId);
+        const predictionId = await videoServerAPI.postVideoMergeMusic(taskId);
 
         console.log(`[API Video-Music Merge] Prediction 생성 완료: ${predictionId}`);
 
         return NextResponse.json({
             success: true,
-            predictionId
+            status: 200,
+            message: `Requested merging music and video successfully: ${predictionId}`,
         });
 
     } catch (error) {
         console.error('[API Video-Music Merge] Error:', error);
-        return NextResponse.json(
-            {
-                success: false,
-                error: error instanceof Error ? error.message : 'Unknown error'
-            },
-            { status: 500 }
-        );
+
+        await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
+        return NextResponse.json({
+            success: false,
+            status: 500,
+            error: error instanceof Error ? error.message : 'Unknown error'
+        });
     }
 }

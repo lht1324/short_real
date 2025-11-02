@@ -2,24 +2,34 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createSupabaseServiceRoleClient } from '@/lib/supabaseServiceRole';
 import { videoGenerationTasksServerAPI } from '@/api/server/videoGenerationTasksServerAPI';
 import { VideoGenerationTaskStatus } from '@/api/types/supabase/VideoGenerationTasks';
-import {taskCheckAndCleanupIfCancelled} from "@/app/api/video/process/taskCheckAndCleaupIfCancelled";
+import {taskCheckAndCleanupIfCancelled} from "@/utils/taskCheckAndCleanupIfCancelled";
 
 export async function POST(request: NextRequest) {
     const supabase = createSupabaseServiceRoleClient();
 
+    const { searchParams } = new URL(request.url);
+    const taskId = searchParams.get('taskId');
+
+    if (!taskId) {
+        return NextResponse.json({
+            success: false,
+            status: 400,
+            error: 'Missing required query param: taskId',
+        });
+    }
+
     try {
         const body = await request.json();
-        const { searchParams } = new URL(request.url);
-        const generationTaskId = searchParams.get('videoGenerationTaskId');
 
-        if (!generationTaskId) {
-            return NextResponse.json({ error: "generationTaskId is required" }, { status: 400 });
-        }
-
-        const videoGenerationTask = await videoGenerationTasksServerAPI.getVideoGenerationTaskById(generationTaskId);
+        const videoGenerationTask = await videoGenerationTasksServerAPI.getVideoGenerationTaskById(taskId);
 
         if (!videoGenerationTask) {
-            throw new Error("Task not found.");
+            await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
+            return NextResponse.json({
+                success: false,
+                status: 404,
+                error: 'Task not found'
+            });
         }
 
         const checkingInitialResult = await taskCheckAndCleanupIfCancelled(videoGenerationTask);
@@ -29,7 +39,7 @@ export async function POST(request: NextRequest) {
         }
 
         console.log(`[Webhook Video-Music Merge] Status: ${body.status}`);
-        console.log(`[Webhook Video-Music Merge] Task ID: ${generationTaskId}`);
+        console.log(`[Webhook Video-Music Merge] Task ID: ${taskId}`);
 
         if (body.status === 'succeeded') {
             const finalVideoUrl = body.output;
@@ -42,7 +52,7 @@ export async function POST(request: NextRequest) {
             }
 
             const videoBuffer = await videoResponse.arrayBuffer();
-            const filePath = `${generationTaskId}/${generationTaskId}_final.mp4`;
+            const filePath = `${taskId}/${taskId}_final.mp4`;
 
             const { error: uploadError } = await supabase.storage
                 .from('processed_video_storage')
@@ -61,30 +71,28 @@ export async function POST(request: NextRequest) {
 
             console.log(`[Webhook Video-Music Merge] Saved to: ${publicUrl}`);
 
-            await videoGenerationTasksServerAPI.updateTaskStatus(
-                generationTaskId!,
-                VideoGenerationTaskStatus.COMPLETED
-            );
+            await videoGenerationTasksServerAPI.patchVideoGenerationTaskStatus(taskId, VideoGenerationTaskStatus.COMPLETED);
 
-            console.log(`[Webhook Video-Music Merge] Task status updated: ${generationTaskId}`);
+            console.log(`[Webhook Video-Music Merge] Task status updated: ${taskId}`);
 
         } else if (body.status === 'failed') {
             console.error(`[Webhook Video-Music Merge] Failed:`, body.error);
 
-            if (generationTaskId) {
-                await videoGenerationTasksServerAPI.patchVideoGenerationTask(generationTaskId, {
-                    is_generation_failed: true,
-                });
-            }
+            await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
         }
 
-        return NextResponse.json({ received: true });
+        return NextResponse.json({
+            success: true,
+            status: 200,
+            message: 'Merging music webhook received successfully.',
+        });
 
     } catch (error) {
         console.error('[Webhook Video-Music Merge] Error:', error);
-        return NextResponse.json(
-            { error: 'Webhook processing failed' },
-            { status: 500 }
-        );
+        return NextResponse.json({
+            success: false,
+            status: 500,
+            error: 'Webhook processing failed'
+        });
     }
 }

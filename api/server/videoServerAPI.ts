@@ -19,13 +19,13 @@ import {createSupabaseServiceRoleClient} from "@/lib/supabaseServiceRole";
 import {ALL_FORMATS, Input, UrlSource} from "mediabunny";
 import {FalAIClient} from "@/lib/fal-ai/FalAIClient";
 import {FalAIService} from "@/lib/fal-ai/FalAIService";
-import {taskCheckAndCleanupIfCancelled} from "@/app/api/video/process/taskCheckAndCleaupIfCancelled";
+import {taskCheckAndCleanupIfCancelled} from "@/utils/taskCheckAndCleanupIfCancelled";
 
 export const videoServerAPI = {
     // POST /videos - Scene별 image-to-video 생성 요청 제출
     async postVideo(
         sceneData: SceneData,
-        generationTaskId: string,
+        taskId: string,
         aspectRatio: VideoAspectRatio = VIDEO_ASPECT_RATIOS.PORTRAIT_9_16,
         videoResolution: VideoResolution = VIDEO_RESOLUTIONS.RES_720P,
     ) {
@@ -39,7 +39,7 @@ export const videoServerAPI = {
         }
 
         // ---- [추가] generationTaskId를 포함한 동적 웹훅 URL 생성 ----
-        const webhookUrl = `${baseUrl}/webhook/replicate/video?generationTaskId=${generationTaskId}`;
+        const webhookUrl = `${baseUrl}/webhook/replicate/video?taskId=${taskId}`;
 
 
         // Base64를 Data URL로 변환
@@ -50,7 +50,7 @@ export const videoServerAPI = {
         // Signed URL 생성 (1시간 유효)
         const { data, error } = await supabase.storage
             .from('scene_image_temp_storage')
-            .createSignedUrl(`${generationTaskId}/${sceneData.sceneNumber}.jpeg`, 60 * 60 * 24);
+            .createSignedUrl(`${taskId}/${sceneData.sceneNumber}.jpeg`, 60 * 60 * 24);
 
         // if (!imageUrl) {
         //     throw new Error(`Scene ${sceneData.sceneNumber}: 이미지 데이터가 없습니다.`);
@@ -175,7 +175,7 @@ export const videoServerAPI = {
     async postVideoMergeCaption(
         videoUrl: string,
         assContent: string,
-        videoGenerationTaskId: string,
+        taskId: string,
     ) {
         const replicate = new Replicate({
             auth: process.env.REPLICATE_API_TOKEN,
@@ -187,7 +187,7 @@ export const videoServerAPI = {
             throw new Error('BASE_URL is not set');
         }
 
-        const webhookUrl = `${baseUrl}/webhook/replicate/video/merge/caption?videoGenerationTaskId=${videoGenerationTaskId}`;
+        const webhookUrl = `${baseUrl}/webhook/replicate/video/merge/caption?taskId=${taskId}`;
 
         try {
             const prediction = await replicate.predictions.create({
@@ -214,7 +214,7 @@ export const videoServerAPI = {
     },
 
     async postVideoMergeMusic(
-        videoGenerationTaskId: string
+        taskId: string
     ) {
         const supabase = createSupabaseServiceRoleClient();
         const replicate = new Replicate({
@@ -227,23 +227,23 @@ export const videoServerAPI = {
             throw new Error('BASE_URL is not set');
         }
 
-        const webhookUrl = `${baseUrl}/webhook/replicate/video/merge/music?videoGenerationTaskId=${videoGenerationTaskId}`;
+        const webhookUrl = `${baseUrl}/webhook/replicate/video/merge/music?taskId=${taskId}`;
         console.log(`[Video-Music Merge] Webhook URL: ${webhookUrl}`);
 
         try {
-            console.log(`[Video-Music Merge] Task 데이터 조회 시작: ${videoGenerationTaskId}`);
+            console.log(`[Video-Music Merge] Task 데이터 조회 시작: ${taskId}`);
 
             // 1. Task 데이터 조회
-            const videoGenerationTask = await videoGenerationTasksServerAPI.getVideoGenerationTaskById(videoGenerationTaskId);
+            const videoGenerationTask = await videoGenerationTasksServerAPI.getVideoGenerationTaskById(taskId);
             if (!videoGenerationTask) {
-                console.error(`[Video-Music Merge] Task를 찾을 수 없음: ${videoGenerationTaskId}`);
+                console.error(`[Video-Music Merge] Task를 찾을 수 없음: ${taskId}`);
                 throw new Error("Task not found.");
             }
             console.log(`[Video-Music Merge] Task 조회 완료`);
 
             // 2. Supabase Storage에서 Signed URL 생성
             console.log(`[Video-Music Merge] Caption 영상 Signed URL 생성 시작`);
-            const captionVideoPath = `${videoGenerationTaskId}/${videoGenerationTaskId}_caption_added.mp4`;
+            const captionVideoPath = `${taskId}/${taskId}_caption_added.mp4`;
             const { data: captionVideoData, error: captionVideoError } = await supabase.storage
                 .from('processed_video_storage')
                 .createSignedUrl(captionVideoPath, 86400);
@@ -255,7 +255,7 @@ export const videoServerAPI = {
             console.log(`[Video-Music Merge] Caption 영상 URL 생성 완료`);
 
             console.log(`[Video-Music Merge] 음악 Signed URL 생성 시작`);
-            const modifiedMusicPath = `${videoGenerationTaskId}/${videoGenerationTaskId}_processed_audio.mp3`;
+            const modifiedMusicPath = `${taskId}/${taskId}_processed_audio.mp3`;
             const { data: modifiedMusicData, error: modifiedMusicError } = await supabase.storage
                 .from('video_music_temp_storage')
                 .createSignedUrl(modifiedMusicPath, 86400);
@@ -298,7 +298,7 @@ export const videoServerAPI = {
             console.error(`[Video-Music Merge] 병합 중 에러:`, error);
 
             // 실패 시 Task 상태 'failed'로 업데이트
-            await videoGenerationTasksServerAPI.patchVideoGenerationTask(videoGenerationTaskId, {
+            await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, {
                 is_generation_failed: true,
             });
 

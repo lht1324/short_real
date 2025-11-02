@@ -6,46 +6,57 @@ import {SceneGenerationStatus, VideoGenerationTaskStatus} from "@/api/types/supa
 import {createSupabaseServiceRoleClient} from "@/lib/supabaseServiceRole";
 import {getErrorMessage} from "@/utils/ErrorUtils";
 import {openAIServerAPI} from "@/api/server/openAIServerAPI";
-import {taskCheckAndCleanupIfCancelled} from "@/app/api/video/process/taskCheckAndCleaupIfCancelled";
+import {taskCheckAndCleanupIfCancelled} from "@/utils/taskCheckAndCleanupIfCancelled";
 
 // import { adjustVideoSpeedAndUpload } from "@/lib/services/videoService"; // (추천) 실제 로직은 이렇게 분리
 
 export async function POST(request: NextRequest) {
     const supabase = createSupabaseServiceRoleClient();
 
-    try {
-        // 1. Replicate Prediction 객체와 URL Param(generationTaskId) 받기
-        const prediction: Prediction = await request.json();
-        const { searchParams } = new URL(request.url);
-        const generationTaskId = searchParams.get('generationTaskId');
+    const { searchParams } = new URL(request.url);
+    const taskId = searchParams.get('taskId');
 
-        if (!generationTaskId) {
-            return NextResponse.json({ error: "generationTaskId is required" }, { status: 400 });
-        }
+    if (!taskId) {
+        return NextResponse.json({
+            success: false,
+            status: 400,
+            error: "taskId is required"
+        });
+    }
+
+    try {
+        // 1. Replicate Prediction 객체와 URL Param(taskId) 받기
+        const prediction: Prediction = await request.json();
 
         // 2. Supabase에서 해당 row(Task) 데이터 갖고 오기
-        const generationTask = await videoGenerationTasksServerAPI.getVideoGenerationTaskById(generationTaskId);
-
-        if (!generationTask) {
-            console.log("Task not found: ", generationTaskId);
-            return NextResponse.json({ error: "Task not found" }, { status: 404 });
+        const videoGenerationTask = await videoGenerationTasksServerAPI.getVideoGenerationTaskById(taskId);
+        if (!videoGenerationTask) {
+            return NextResponse.json({
+                success: false,
+                status: 404,
+                error: "Task not found",
+            });
         }
 
-        const checkResultInitialResult = await taskCheckAndCleanupIfCancelled(generationTask);
+        const checkResultInitialResult = await taskCheckAndCleanupIfCancelled(videoGenerationTask);
 
         if (checkResultInitialResult) {
             return checkResultInitialResult;
         }
 
         // 3. Prediction ID와 일치하는 Scene 찾기
-        const originalSceneDataList = generationTask.scene_breakdown_list
+        const originalSceneDataList = videoGenerationTask.scene_breakdown_list
         const sceneToProcess = originalSceneDataList.find(
             (scene) => scene.requestId === prediction.id
         );
 
         if (!sceneToProcess) {
-            console.log(`Scene with requestId ${prediction.id} not found in task`);
-            return NextResponse.json({ error: `Scene with requestId ${prediction.id} not found in task` }, { status: 404 });
+            await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
+            return NextResponse.json({
+                success: false,
+                status: 404,
+                error: `Scene with requestId '${prediction.id}' not found in task.`
+            });
         }
 
         // 4. 실패한 요청인지 확인
@@ -70,7 +81,7 @@ export async function POST(request: NextRequest) {
                 // 테스트 금지, 이미지 생성 시 Supabase Storage에 저장하는 로직 추가 후 다시 해야 함. 현재 sceneToProcess에는 imageBase64가 없음.
                 const { data, error } = await supabase.storage
                     .from('scene_image_temp_storage')
-                    .createSignedUrl(`${generationTaskId}/${sceneToProcess.sceneNumber}.jpeg`, 3600);
+                    .createSignedUrl(`${taskId}/${sceneToProcess.sceneNumber}.jpeg`, 3600);
 
                 if (!data || !data?.signedUrl || error) {
                     throw new Error(error?.message || `Scene ${sceneToProcess.sceneNumber}: 이미지 데이터가 없습니다.`);
@@ -78,11 +89,11 @@ export async function POST(request: NextRequest) {
 
                 const newRequestId = await videoServerAPI.postVideo(
                     sceneToProcess,
-                    generationTaskId,
+                    taskId,
                 );
 
                 const patchVideoGenerationTaskResult = await videoGenerationTasksServerAPI.patchVideoGenerationTask(
-                    generationTaskId,
+                    taskId,
                     {
                         scene_breakdown_list: originalSceneDataList.map((sceneData) => {
                             return sceneData.requestId === sceneToProcess.requestId
@@ -106,7 +117,7 @@ export async function POST(request: NextRequest) {
                 console.log(`[Permanent Failure] Non-CUDA error for prediction ${prediction.id}. Not retrying.`);
 
                 await videoGenerationTasksServerAPI.patchVideoGenerationTask(
-                    generationTaskId,
+                    taskId,
                     {
                         scene_breakdown_list: originalSceneDataList.map((sceneData) => {
                             return sceneData.sceneNumber === sceneToProcess?.sceneNumber
@@ -156,7 +167,7 @@ export async function POST(request: NextRequest) {
         const postProcessedVideoResult = await videoServerAPI.postProcessedVideo(
             replicateVideoUrl,
             targetDuration,
-            `${generationTaskId}/${prediction.id}.mp4`,
+            `${taskId}/${prediction.id}.mp4`,
         );
 
         if (!postProcessedVideoResult.success) {
@@ -164,7 +175,7 @@ export async function POST(request: NextRequest) {
         }
 
         // 7. DB 업데이트: 처리된 영상 URL과 상태를 Scene 데이터에 반영
-        const updatedSceneList = generationTask.scene_breakdown_list.map((sceneData) => {
+        const updatedSceneList = videoGenerationTask.scene_breakdown_list.map((sceneData) => {
             if (sceneData.requestId && prediction.id && sceneData.requestId === prediction.id) {
                 return {
                     ...sceneData,
@@ -175,7 +186,7 @@ export async function POST(request: NextRequest) {
         });
 
         await videoGenerationTasksServerAPI.patchVideoGenerationTask(
-            generationTaskId,
+            taskId,
             {
                 scene_breakdown_list: updatedSceneList,
             }
@@ -186,7 +197,7 @@ export async function POST(request: NextRequest) {
         // ==================================================================
         const { data: countResult, error: rpcError } = await supabase.rpc(
             "increment_and_get_scene_count",
-            { task_id: generationTask.id }
+            { task_id: videoGenerationTask.id }
         )
 
         const processedCountFromDB = countResult.processed_count;
@@ -196,7 +207,7 @@ export async function POST(request: NextRequest) {
         // (안전장치) DB에 기록된 total_count가 실제 리스트 길이와 일치하는지 확인
         if (totalCountFromDB !== totalCountFromList) {
             // 이 경우, 데이터가 잘못 기록된 것이므로 심각한 에러로 로깅
-            console.error(`CRITICAL: Data inconsistency for task ${generationTaskId}. DB total: ${totalCountFromDB}, DB processed: ${processedCountFromDB} List length: ${totalCountFromList}`);
+            console.error(`CRITICAL: Data inconsistency for task ${taskId}. DB total: ${totalCountFromDB}, DB processed: ${processedCountFromDB} List length: ${totalCountFromList}`);
         }
 
         // 모든 조건이 만족할 때만 병합 실행
@@ -207,7 +218,7 @@ export async function POST(request: NextRequest) {
 
         // 8. 모든 Scene 처리가 완료되었으면, 병합 엔드포인트 호출
         if (isAllScenesProcessed) {
-            const patchVideoGenerationTaskStatusStitchingVideosResult = await videoGenerationTasksServerAPI.patchVideoGenerationTaskStatus(generationTaskId, VideoGenerationTaskStatus.STITCHING_VIDEOS);
+            const patchVideoGenerationTaskStatusStitchingVideosResult = await videoGenerationTasksServerAPI.patchVideoGenerationTaskStatus(taskId, VideoGenerationTaskStatus.STITCHING_VIDEOS);
 
             const checkStitchingVideosResult = await taskCheckAndCleanupIfCancelled(patchVideoGenerationTaskStatusStitchingVideosResult);
 
@@ -215,10 +226,10 @@ export async function POST(request: NextRequest) {
                 return checkStitchingVideosResult;
             }
 
-            console.log(`모든 Scene 처리 완료. 최종 병합을 시작합니다: ${generationTask.id}`);
+            console.log(`모든 Scene 처리 완료. 최종 병합을 시작합니다: ${videoGenerationTask.id}`);
 
             // 현재 요청의 기본 URL을 사용하여 병합 엔드포인트의 전체 URL을 생성
-            const mergeEndpointUrl = new URL(`${process.env.BASE_URL}/api/video/merge`, request.url);
+            const mergeEndpointUrl = new URL(`${process.env.BASE_URL}/api/video/merge?taskId=${taskId}`, request.url);
 
             // ★★★ 서버 사이드에서 직접 POST 요청을 보냄 ★★★
             // 이 fetch의 응답을 기다릴 필요 없으므로 await를 사용하지 않음 ("Fire and Forget")
@@ -229,18 +240,24 @@ export async function POST(request: NextRequest) {
                     // 필요하다면 내부 인증을 위한 시크릿 키 등을 추가할 수 있습니다.
                     // 'Authorization': `Bearer ${process.env.INTERNAL_SECRET_KEY}`
                 },
-                body: JSON.stringify({
-                    generationTaskId: generationTask.id
-                }),
             });
         }
 
         // 8. Replicate에 성공 응답 전달
-        return NextResponse.json({ success: true, message: "Webhook received and scene processing initiated." });
+        return NextResponse.json({
+            success: true,
+            status: 200,
+            message: "Webhook received and scene processing initiated."
+        });
 
     } catch (error) {
         console.error("Webhook processing error:", error);
-        // 에러 발생 시 500 상태 코드와 함께 응답
-        return NextResponse.json({ error: "Webhook processing error" }, { status: 500 });
+
+        await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
+        return NextResponse.json({
+            success: false,
+            status: 500,
+            error: "Webhook processing error"
+        });
     }
 }

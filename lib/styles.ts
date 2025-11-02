@@ -1,4 +1,6 @@
-export const STYLE_DATA_LIST = [
+import {Style} from "@/api/types/supabase/Styles";
+
+export const STYLE_DATA_LIST: Style[] = [
     {
         id: 'realistic',
         name: 'Realistic',

@@ -6,9 +6,9 @@ import {SceneData, VideoGenerationTaskStatus,} from "@/api/types/supabase/VideoG
 import {imageServerAPI} from "@/api/server/imageServerAPI";
 import {createSupabaseServiceRoleClient} from "@/lib/supabaseServiceRole";
 import {findOptimalVideoParameters} from "@/utils/videoUtils";
-import {MasterStyleInfo} from "@/api/server/MasterStyleInfo";
+import {MasterStyleInfo} from "@/api/types/supabase/MasterStyleInfo";
 import {PostVideoRequest} from "@/api/types/api/video/PostVideoRequest";
-import {taskCheckAndCleanupIfCancelled} from "@/app/api/video/process/taskCheckAndCleaupIfCancelled";
+import {taskCheckAndCleanupIfCancelled} from "@/utils/taskCheckAndCleanupIfCancelled";
 
 export async function POST(request: NextRequest) {
     const supabase = createSupabaseServiceRoleClient();

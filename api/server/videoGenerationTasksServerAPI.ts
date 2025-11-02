@@ -96,12 +96,12 @@ export const videoGenerationTasksServerAPI = {
     },
 
     // PATCH - 작업 상태만 업데이트
-    async updateTaskStatus(taskId: string, status: VideoGenerationTaskStatus): Promise<VideoGenerationTask> {
+    async patchVideoGenerationTaskStatus(taskId: string, status: VideoGenerationTaskStatus): Promise<VideoGenerationTask> {
         const supabase = createSupabaseServiceRoleClient();
-        
+
         const { data, error } = await supabase
             .from('video_generation_tasks')
-            .update({ status })
+            .update({ status: status } as Partial<VideoGenerationTask>)
             .eq('id', taskId)
             .select()
             .single();
@@ -113,14 +113,12 @@ export const videoGenerationTasksServerAPI = {
         return data;
     },
 
-    // PATCH - 작업 상태만 업데이트
-    async patchVideoGenerationTaskStatus(taskId: string, status: VideoGenerationTaskStatus): Promise<VideoGenerationTask> {
+    async patchVideoGenerationTaskFailed(taskId: string, isFailed: boolean = true): Promise<VideoGenerationTask> {
         const supabase = createSupabaseServiceRoleClient();
-        console.log(`patchTaskId = ${taskId}`)
 
         const { data, error } = await supabase
             .from('video_generation_tasks')
-            .update({ status: status } as Partial<VideoGenerationTask>)
+            .update({ is_generation_failed: isFailed } as Partial<VideoGenerationTask>)
             .eq('id', taskId)
             .select()
             .single();

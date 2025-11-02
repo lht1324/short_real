@@ -1,5 +1,5 @@
 // video_generation_tasks 테이블 타입 정의
-import {MasterStyleInfo} from "@/api/server/MasterStyleInfo";
+import {MasterStyleInfo} from "@/api/types/supabase/MasterStyleInfo";
 import {CaptionConfigState, CaptionData} from "@/components/page/workspace/editor/WorkspaceEditorPageClient";
 
 export interface VideoGenerationTask {
