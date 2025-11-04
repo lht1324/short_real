@@ -7,13 +7,13 @@ import MusicItem from "@/components/page/workspace/editor/MusicItem";
 interface MusicPanelProps {
     musicDataList: MusicData[];
     videoDuration: number;
-    onOpenEditModal?: (musicIndex: number) => void;
+    onSelectMusic: (musicIndex: number) => void;
 }
 
 function MusicPanel({
     musicDataList,
     videoDuration,
-    onOpenEditModal,
+    onSelectMusic,
 }: MusicPanelProps) {
     // Audio 인스턴스는 ref로 관리
     const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -91,13 +91,14 @@ function MusicPanel({
             });
     }, [cleanupAudio, handleAudioEnded, handleAudioError, handleTimeUpdate]);
 
-    const onClickItem = useCallback((index: number) => {
+    const onClickMusicItem = useCallback((index: number) => {
         setSelectedItemIndex(index);
+        onSelectMusic(index);
         
         if (isMusicPlaying) {
             cleanupAudio();
         }
-    }, [isMusicPlaying, cleanupAudio]);
+    }, [onSelectMusic, isMusicPlaying, cleanupAudio]);
 
     // 재생/일시정지 토글 핸들러
     const onToggleMusicPlay = useCallback((musicIndex: number) => {
@@ -185,9 +186,9 @@ function MusicPanel({
 
     const onClickOpenEditModalForIndex = useCallback((index: number) => {
         return () => {
-            onOpenEditModal?.(index);
+            onSelectMusic(index);
         };
-    }, [onOpenEditModal]);
+    }, [onSelectMusic]);
 
     // 컴포넌트 언마운트 시 오디오 정리
     useEffect(() => {
@@ -213,7 +214,7 @@ function MusicPanel({
                         isSelected={isSelected}
                         isPlaying={isSelected && isMusicPlaying}
                         progress={isSelected ? musicProgress : 0}
-                        onClickItem={() => onClickItem(index)}
+                        onClickItem={() => onClickMusicItem(index)}
                         onClickPlayButton={() => onToggleMusicPlay(index)}
                         onClickOpenEditModal={onClickOpenEditModalForIndex(index)}
                         onSeek={(timeInSeconds) => onSeekMusic(index, timeInSeconds)}

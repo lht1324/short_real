@@ -4,16 +4,21 @@ import {memo, useCallback, useEffect, useMemo, useRef, useState} from "react";
 import Link from "next/link";
 import Image from "next/image";
 import {useRouter, useSearchParams} from 'next/navigation';
-import { Image as ImageIcon, Type, Music, RotateCcw, ChevronLeft } from 'lucide-react';
+import { RotateCcw, ChevronLeft } from 'lucide-react';
 import { fontMap, type FontName } from "@/lib/fonts";
 import FONT_FAMILY_LIST, {FontFamily} from "@/lib/FontFamilyList";
 import {videoClientAPI} from "@/api/client/videoClientAPI";
-import {MusicData, SubtitleSegment} from "@/api/types/supabase/VideoGenerationTasks";
+import {
+    FinalVideoMergeData,
+    MusicData,
+    SubtitleSegment,
+    VideoGenerationTaskStatus
+} from "@/api/types/supabase/VideoGenerationTasks";
 import SceneSequencePanel from "@/components/page/workspace/editor/SceneSequencePanel";
 import CaptionConfigPanel from "@/components/page/workspace/editor/CaptionConfigPanel";
 import VideoPlayerPanel, {VideoPlayerHandle} from "@/components/page/workspace/editor/VideoPlayerPanel";
 import MusicPanel from "@/components/page/workspace/editor/MusicPanel";
-import MusicEditModal from "@/components/page/workspace/editor/MusicEditModal";
+import MusicEditPanel from "@/components/page/workspace/editor/MusicEditPanel";
 import {musicClientAPI} from "@/api/client/musicClientAPI";
 
 interface VideoData {
@@ -42,9 +47,9 @@ export interface CaptionConfigState {
     showCaptionLine: boolean;
 
     // Shadow settings state
-    isShadowEnabled: boolean;
-    shadowIntensity: number; // 0-100 (maps to opacity)
-    shadowThickness: number; // 0-100 (maps to blur-radius)
+    // isShadowEnabled: boolean;
+    // shadowIntensity: number; // 0-100 (maps to opacity)
+    // shadowThickness: number; // 0-100 (maps to blur-radius)
 
     // Color settings state
     activeColor: string;
@@ -53,14 +58,56 @@ export interface CaptionConfigState {
     inactiveOutlineColor: string;
     activeOutlineThickness: number; // 0-100 (maps to stroke width)
     inactiveOutlineThickness: number; // 0-100 (maps to stroke width)
-    activeOutlineEnabled: boolean;
-    inactiveOutlineEnabled: boolean;
+    isActiveOutlineEnabled: boolean;
+    isInactiveOutlineEnabled: boolean;
+}
+
+export interface VideoPlayerUIData {
+    videoWidth: number;
+    videoHeight: number;
+    captionAreaTop: number;
+    captionAreaVerticalPadding: number;
+    captionOneLineHeight: number; // 실질적 fontSize
+}
+
+export interface MusicPlayConfig {
+    audioUrl?: string;
+    startSec: number;
+    duration :number;
+    volume: number
 }
 
 enum ConfigPanelType {
     Caption = 'caption',
     Music = 'music'
 }
+
+// const INITIAL_CAPTION_CONFIG_STATE: CaptionConfigState = {
+//     // Font settings state
+//     fontFamilyName: "Montserrat",
+//     fontSize: 60,
+//     fontWeight: 900,
+//
+//     // Caption settings state
+//     captionPosition: 80,
+//     captionHeight: 0,
+//     showCaptionLine: true,
+//
+//     // Shadow settings state
+//     // isShadowEnabled: true,
+//     // shadowIntensity: 80,
+//     // shadowThickness: 50,
+//
+//     // Color settings state
+//     activeColor:'#FF0000',
+//     inactiveColor:'#BB0000',
+//     isActiveOutlineEnabled: true,
+//     activeOutlineColor:'#FFFFFF',
+//     activeOutlineThickness: 100,
+//     isInactiveOutlineEnabled: true,
+//     inactiveOutlineColor:'#BBBBBB',
+//     inactiveOutlineThickness: 70,
+// }
 
 const INITIAL_CAPTION_CONFIG_STATE: CaptionConfigState = {
     // Font settings state
@@ -74,17 +121,17 @@ const INITIAL_CAPTION_CONFIG_STATE: CaptionConfigState = {
     showCaptionLine: true,
 
     // Shadow settings state
-    isShadowEnabled: true,
-    shadowIntensity: 80,
-    shadowThickness: 50,
+    // isShadowEnabled: true,
+    // shadowIntensity: 80,
+    // shadowThickness: 50,
 
     // Color settings state
     activeColor:'#FFFFFF',
     inactiveColor:'#A0A0A0',
-    activeOutlineEnabled: false,
+    isActiveOutlineEnabled: false,
     activeOutlineColor:'#000000',
     activeOutlineThickness: 50,
-    inactiveOutlineEnabled:false,
+    isInactiveOutlineEnabled: false,
     inactiveOutlineColor:'#404040',
     inactiveOutlineThickness: 50,
 }
@@ -98,11 +145,18 @@ function WorkspaceEditorPageClient() {
     const videoPlayerRef = useRef<VideoPlayerHandle>(null);
 
     const [headerHeight, setHeaderHeight] = useState(0);
+    const [videoPanelHeight, setVideoPanelHeight] = useState(0);
     const [activeConfigPanel, setActiveConfigPanel] = useState<ConfigPanelType>(ConfigPanelType.Caption);
 
     const [isPublicDataLoading, setIsPublicDataLoading] = useState(true);
     const [isSceneSequencePanelLoading, setIsSceneSequencePanelLoading] = useState(true);
     const [isVideoPlayerPanelLoading, setIsVideoPlayerPanelLoading] = useState(true);
+
+    const musicEditPanelHeight = useMemo(() => {
+        return headerHeight !== 0 && videoPanelHeight !== 0
+            ? window.innerHeight - (headerHeight + videoPanelHeight)
+            : 0;
+    }, [headerHeight, videoPanelHeight]);
 
     const isLoading = useMemo(() => {
         return isPublicDataLoading || isSceneSequencePanelLoading || isVideoPlayerPanelLoading;
@@ -131,6 +185,8 @@ function WorkspaceEditorPageClient() {
         return nextFont ? nextFont.style.fontFamily : `'${selectedFontFamily?.name}', '${selectedFontFamily?.generic}'`;
     }, [selectedFontFamily]);
 
+
+    const [videoPlayerUIData, setVideoPlayerUIData] = useState<VideoPlayerUIData | null>(null);
     const [videoCurrentTime, setVideoCurrentTime] = useState<number>(0.0);
     const currentSceneIndex = useMemo(() => {
         return captionDataList.findIndex((captionData, index) => {
@@ -147,19 +203,88 @@ function WorkspaceEditorPageClient() {
             : 0
     }, [captionDataList]);
 
-    const [isMusicEditModalOpen, setIsMusicEditModalOpen] = useState(false);
-    const [editingMusicIndex, setEditingMusicIndex] = useState<number | null>(null);
+    const [editingMusicIndex, setEditingMusicIndex] = useState<number>(0);
     const editingMusicData = useMemo(() => {
-        return editingMusicIndex !== null ? musicDataList[editingMusicIndex] : null;
-    }, [editingMusicIndex, musicDataList]);
+        return musicDataList.length !== 0
+            ? musicDataList[editingMusicIndex]
+            : null;
+    }, [musicDataList, editingMusicIndex]);
+
+    const [musicStartSec, setMusicStartSec] = useState<number>(0);
+    const [musicVolume, setMusicVolume] = useState<number>(0);
+    const musicPlayConfig: MusicPlayConfig | null = useMemo(() => {
+        return editingMusicData ? {
+            audioUrl: editingMusicData.audioUrl,
+            startSec: musicStartSec,
+            duration: videoDuration,
+            volume: musicVolume,
+        } : null;
+    }, [editingMusicData, musicStartSec, videoDuration, musicVolume]);
+
+    const finalVideoMergeData: FinalVideoMergeData | null = useMemo(() => {
+        if (captionDataList.length !== 0 && taskId && videoPlayerUIData && videoDuration > 0) {
+            return {
+                captionDataList: captionDataList,
+                captionConfigState: captionConfigState,
+                videoWidth: videoPlayerUIData.videoWidth,
+                videoHeight: videoPlayerUIData.videoHeight,
+                captionAreaTop: videoPlayerUIData.captionAreaTop,
+                captionAreaVerticalPadding: videoPlayerUIData.captionAreaVerticalPadding,
+                captionOneLineHeight: videoPlayerUIData.captionOneLineHeight,
+                
+                musicIndex: editingMusicIndex,
+                cuttingAreaStartSec: musicStartSec,
+                cuttingAreaEndSec: musicStartSec + videoDuration,
+                volumePercentage: Math.round(musicVolume * 100),
+            };
+        } else {
+            return null;
+        }
+    }, [captionDataList, taskId, videoPlayerUIData, videoDuration, captionConfigState, editingMusicIndex, musicStartSec, musicVolume]);
+
+    const onClickFinish = useCallback(async () => {
+        try {
+            if (finalVideoMergeData) {
+                if (!taskId) {
+                    throw Error("taskId must be provided");
+                }
+
+                await videoClientAPI.patchVideoTaskByTaskId(taskId, {
+                    final_video_merge_data: finalVideoMergeData,
+                })
+                const result = await videoClientAPI.postVideoMergeFinal(taskId);
+
+                if (result && result.success) {
+                    console.log('최종 병합 요청 성공:', result.captionPredictionId);
+                    window.location.href = '/workspace/dashboard';
+                } else {
+                    console.error('최종 병합 요청 실패:', result?.error);
+                }
+
+                return;
+            } else {
+                return;
+            }
+        } catch (error) {
+            console.error(error);
+        }
+    }, [taskId, finalVideoMergeData]);
 
     const onClickSceneSequence = useCallback((sceneStartSec: number) => {
         videoPlayerRef.current?.seekTo(sceneStartSec);
         setVideoCurrentTime(sceneStartSec);
     }, []);
+    
+    const onChangeVideoPanelContainerHeight = useCallback((videoPanelContainerHeight: number) => {
+        setVideoPanelHeight(videoPanelContainerHeight);
+    }, []);
 
     const onChangeCaptionConfigState = useCallback((captionConfig: CaptionConfigState) => {
         setCaptionConfigState(captionConfig);
+    }, []);
+
+    const onChangeVideoPlayerUIData = useCallback((uiData: VideoPlayerUIData) => {
+        setVideoPlayerUIData(uiData);
     }, []);
 
     const onFinishSceneSequencePanelLoading = useCallback(() => {
@@ -178,89 +303,97 @@ function WorkspaceEditorPageClient() {
         });
     }, []);
 
-    const onExportVideo = useCallback(async () => {
-        console.log('Exporting video...');
-        // Download or redirect logic
+    const onChangeMusicStartSec = useCallback((newStartSec: number) => {
+        setMusicStartSec(newStartSec);
     }, []);
 
-    const onOpenMusicEditModal = useCallback((musicIndex: number) => {
+    const onChangeMusicVolume = useCallback((newVolume: number) => {
+        setMusicVolume(newVolume);
+    }, []);
+
+    const onSelectMusic = useCallback((musicIndex: number) => {
         setEditingMusicIndex(musicIndex);
-        setIsMusicEditModalOpen(true);
     }, []);
-
-    const onCloseMusicEditModal = useCallback(() => {
-        setIsMusicEditModalOpen(false);
-        setEditingMusicIndex(null);
-    }, []);
-
-    const onSaveMusicEdit = useCallback((startTime: number, volume: number) => {
-        console.log('Save music edit:', { musicIndex: editingMusicIndex, startTime, volume });
-        // TODO: 음악 설정 저장 로직
-    }, [editingMusicIndex]);
 
     useEffect(() => {
         if (taskId) {
-            try {
-                const loadData = async () => {
-                    setIsPublicDataLoading(true);
+            const loadData = async () => {
+                setIsPublicDataLoading(true);
 
-                    // Font Initialization
-                    const newFamilyList = FONT_FAMILY_LIST.sort((a, b) => {
-                        return a.name.localeCompare(b.name);
-                    });
-                    setFontFamilyList(newFamilyList);
+                // Font Initialization
+                const newFamilyList = FONT_FAMILY_LIST.sort((a, b) => {
+                    return a.name.localeCompare(b.name);
+                });
+                setFontFamilyList(newFamilyList);
 
-                    // Task Data Initialization
-                    const [taskVideoUrl, videoGenerationTask] = await Promise.all([
-                        videoClientAPI.getVideoUrl(taskId),
-                        videoClientAPI.getVideoTaskByTaskId(taskId)
-                    ]);
+                // Task Data Initialization
+                const [taskVideoUrl, videoGenerationTask] = await Promise.all([
+                    videoClientAPI.getVideoVoiceUrl(taskId),
+                    videoClientAPI.getVideoTaskByTaskId(taskId)
+                ]);
 
-                    if (!taskVideoUrl || !videoGenerationTask) {
-                        throw new Error("There is no video generation task");
-                    }
-
-                    // 각 씬의 시작/종료 시간 및 자막 세그먼트 계산
-                    let accumulatedTime = 0;
-                    const captionDataList = videoGenerationTask.scene_breakdown_list.map((sceneData) => {
-                        const subtitleSegmentationList = sceneData.sceneSubtitleSegments ?? [];
-                        const startSec = subtitleSegmentationList[0].startSec ?? accumulatedTime;
-                        const endSec = subtitleSegmentationList[subtitleSegmentationList.length - 1].endSec;
-
-                        accumulatedTime = endSec;
-
-                        return {
-                            sceneNumber: sceneData.sceneNumber,
-                            script: sceneData.narration,
-                            startSec: startSec,
-                            endSec: endSec,
-                            subtitleSegmentationList: subtitleSegmentationList
-                        }
-                    });
-
-                    setVideoData({
-                        title: videoGenerationTask.video_main_subject ?? "",
-                        videoUrl: taskVideoUrl,
-                        captionDataList: captionDataList,
-                    });
-
-
-                    const musicDataList = await musicClientAPI.getMusicData(taskId);
-
-                    if (!musicDataList) {
-                        throw new Error(`Failed to load music data for task: ${taskId}`);
-                    }
-
-                    setMusicDataList(musicDataList);
+                if (!taskVideoUrl || !videoGenerationTask) {
+                    throw new Error("There is no video generation task");
                 }
 
-                loadData().then(() => {
-                    setIsPublicDataLoading(false);
+                if (videoGenerationTask.status !== VideoGenerationTaskStatus.EDITOR) {
+                    throw new Error("Invalid task status for editor")
+                }
+
+                // 각 씬의 시작/종료 시간 및 자막 세그먼트 계산
+                let accumulatedTime = 0;
+                const captionDataList = videoGenerationTask.scene_breakdown_list.map((sceneData) => {
+                    const subtitleSegmentationList = sceneData.sceneSubtitleSegments ?? [];
+                    const startSec = subtitleSegmentationList[0].startSec ?? accumulatedTime;
+                    const endSec = subtitleSegmentationList[subtitleSegmentationList.length - 1].endSec;
+
+                    accumulatedTime = endSec;
+
+                    return {
+                        sceneNumber: sceneData.sceneNumber,
+                        script: sceneData.narration,
+                        startSec: startSec,
+                        endSec: endSec,
+                        subtitleSegmentationList: subtitleSegmentationList
+                    }
                 });
-            } catch (error) {
-                console.error(error);
+
+                setVideoData({
+                    title: videoGenerationTask.video_main_subject ?? "",
+                    videoUrl: taskVideoUrl,
+                    captionDataList: captionDataList,
+                });
+
+
+                const musicDataList = await musicClientAPI.getMusicData(taskId);
+
+                if (!musicDataList) {
+                    throw new Error(`Failed to load music data for task: ${taskId}`);
+                }
+
+                setMusicDataList(musicDataList);
+            }
+
+            loadData().then(() => {
                 setIsPublicDataLoading(false);
-                router.back();
+            }).catch((error) => {
+                console.error(error);
+
+                if (window.history.length > 1) {
+                    console.log("back")
+                    window.history.back()
+                } else {
+                    console.log("href")
+                    window.location.href = '/workspace/dashboard'
+                }
+            });
+        } else {
+            if (window.history.length > 1) {
+                console.log("back")
+                window.history.back()
+            } else {
+                console.log("href")
+                window.location.href = '/workspace/dashboard'
             }
         }
     }, [router, taskId]);
@@ -315,11 +448,13 @@ function WorkspaceEditorPageClient() {
                             <div className="w-4 h-4 bg-gradient-to-r from-pink-500 to-purple-600 rounded-full absolute top-1 right-1"></div>
                         </button>
                     </div>
-                    <button 
-                        onClick={onExportVideo}
+                    <button
+                        onClick={onClickFinish}
+                        // onClick={onClickMergeCaptionTest}
+                        // onClick={onClickMusicModifying}
                         className="bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all"
                     >
-                        Export / Share
+                        Finish
                     </button>
                 </div>
             </div>
@@ -339,70 +474,96 @@ function WorkspaceEditorPageClient() {
                     />
                 </div>}
 
-                {/* Config Panel */}
-                <div className="flex-[0.26] h-full bg-gray-900/30 backdrop-blur-sm border-r border-purple-500/20 flex flex-col">
-                    {/* Tab Navigation */}
-                    <div className="flex items-end px-4 pt-4">
-                        <button
-                            onClick={() => setActiveConfigPanel(ConfigPanelType.Caption)}
-                            className={`px-6 py-2 text-xl font-medium rounded-t-lg border-t border-l border-r transition-all relative ${
-                                activeConfigPanel === ConfigPanelType.Caption
-                                    ? 'text-purple-300 border-purple-400/50 bg-gray-900/30 -mb-px z-10'
-                                    : 'text-gray-400 border-transparent bg-gray-800/30 hover:text-purple-200 hover:border-purple-500/30'
-                            }`}
-                        >
-                            Caption
-                        </button>
-                        <button
-                            onClick={() => setActiveConfigPanel(ConfigPanelType.Music)}
-                            className={`px-6 py-2 text-xl font-medium rounded-t-lg border-t border-l border-r transition-all relative ${
-                                activeConfigPanel === ConfigPanelType.Music
-                                    ? 'text-purple-300 border-purple-400/50 bg-gray-900/30 -mb-px z-10'
-                                    : 'text-gray-400 border-transparent bg-gray-800/30 hover:text-purple-200 hover:border-purple-500/30'
-                            }`}
-                        >
-                            Music
-                        </button>
-                    </div>
+                {/* Config + Video + Music Edit Panel Column */}
+                <div className="flex-[0.76] h-full flex flex-col">
+                    {/* Config + Video Row */}
+                    {/*<div className="flex-[0.65] flex">*/}
+                    <div className="flex flex-[0.83] flex-row min-h-0">
+                        {/* Config Panel */}
+                        {/*<div className="flex-[0.34] h-full bg-gray-900/30 backdrop-blur-sm border-r border-purple-500/20 flex flex-col">*/}
+                        <div className="flex-[0.34] bg-gray-900/30 backdrop-blur-sm border-r border-purple-500/20 flex flex-col">
+                            {/* Tab Navigation */}
+                            <div className="flex items-end px-4 pt-4">
+                                <button
+                                    onClick={() => setActiveConfigPanel(ConfigPanelType.Caption)}
+                                    className={`px-6 py-2 text-xl font-medium rounded-t-lg border-t border-l border-r transition-all relative ${
+                                        activeConfigPanel === ConfigPanelType.Caption
+                                            ? 'text-purple-300 border-purple-400/50 bg-gray-900/30 -mb-px z-10'
+                                            : 'text-gray-400 border-transparent bg-gray-800/30 hover:text-purple-200 hover:border-purple-500/30'
+                                    }`}
+                                >
+                                    Caption
+                                </button>
+                                <button
+                                    onClick={() => setActiveConfigPanel(ConfigPanelType.Music)}
+                                    className={`px-6 py-2 text-xl font-medium rounded-t-lg border-t border-l border-r transition-all relative ${
+                                        activeConfigPanel === ConfigPanelType.Music
+                                            ? 'text-purple-300 border-purple-400/50 bg-gray-900/30 -mb-px z-10'
+                                            : 'text-gray-400 border-transparent bg-gray-800/30 hover:text-purple-200 hover:border-purple-500/30'
+                                    }`}
+                                >
+                                    Music
+                                </button>
+                            </div>
 
-                    {/* Tab Border Line */}
-                    <div className="border-t border-purple-400/50 mx-4"></div>
+                            {/* Tab Border Line */}
+                            <div className="border-t border-purple-400/50 mx-4"></div>
 
-                    {/* Panel Content */}
-                    <div className="flex-1 px-3 overflow-y-auto">
-                        {activeConfigPanel === ConfigPanelType.Caption && (
-                            <CaptionConfigPanel
+                            {/* Panel Content */}
+                            <div className="flex-1 px-3 overflow-y-auto">
+                                {activeConfigPanel === ConfigPanelType.Caption && (
+                                    <CaptionConfigPanel
+                                        captionConfigState={captionConfigState}
+                                        fontFamilyList={fontFamilyList}
+                                        selectedFontFamilyWeightList={selectedFontFamilyWeightList}
+                                        selectedFontFamilyFullShape={selectedFontFamilyFullShape}
+                                        onChangeCaptionConfigState={onChangeCaptionConfigState}
+                                    />
+                                )}
+                                {activeConfigPanel === ConfigPanelType.Music && (
+                                    <MusicPanel
+                                        musicDataList={musicDataList}
+                                        videoDuration={videoDuration}
+                                        onSelectMusic={onSelectMusic}
+                                    />
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Video Player */}
+                        {/*{videoData && <div className="flex-[0.66] h-full">*/}
+                        {videoData && musicPlayConfig && <div className="flex-[0.66]">
+                            <VideoPlayerPanel
+                                ref={videoPlayerRef}
+                                videoUrl={videoData.videoUrl}
+                                currentTime={videoCurrentTime}
+                                captionDataList={captionDataList}
                                 captionConfigState={captionConfigState}
-                                fontFamilyNameList={fontFamilyList.map(font => font.name)}
-                                selectedFontFamilyWeightList={selectedFontFamilyWeightList}
+                                musicPlayConfig={musicPlayConfig}
                                 selectedFontFamilyFullShape={selectedFontFamilyFullShape}
+                                onChangeVideoPanelContainerHeight={onChangeVideoPanelContainerHeight}
                                 onChangeCaptionConfigState={onChangeCaptionConfigState}
+                                onChangeVideoPlayerUIData={onChangeVideoPlayerUIData}
+                                onChangeCurrentTime={onChangeVideoCurrentTime}
+                                onFinishLoading={onFinishVideoPlayerPanelLoading}
                             />
-                        )}
-                        {activeConfigPanel === ConfigPanelType.Music && (
-                            <MusicPanel
-                                musicDataList={musicDataList}
-                                videoDuration={videoDuration}
-                                onOpenEditModal={onOpenMusicEditModal}
-                            />
-                        )}
+                        </div>}
                     </div>
-                </div>
 
-                {/* Video Player */}
-                {videoData && <div className="flex-[0.50] h-full">
-                    <VideoPlayerPanel
-                        ref={videoPlayerRef}
-                        videoUrl={videoData.videoUrl}
-                        currentTime={videoCurrentTime}
-                        captionDataList={captionDataList}
-                        captionConfigState={captionConfigState}
-                        selectedFontFamilyFullShape={selectedFontFamilyFullShape}
-                        onChangeCaptionConfigState={onChangeCaptionConfigState}
-                        onChangeCurrentTime={onChangeVideoCurrentTime}
-                        onFinishLoading={onFinishVideoPlayerPanelLoading}
-                    />
-                </div>}
+                    {/* Music Edit Panel */}
+                    {musicEditPanelHeight && editingMusicData && <div
+                        className="flex-[0.17]"
+                        style={{ width: '100%', height: `${musicEditPanelHeight}px` }}
+                    >
+                        <MusicEditPanel
+                            musicData={editingMusicData}
+                            videoDuration={videoDuration}
+                            panelHeight={musicEditPanelHeight}
+                            onChangeMusicStartSec={onChangeMusicStartSec}
+                            onChangeMusicVolume={onChangeMusicVolume}
+                        />
+                    </div>}
+                </div>
             </div>
             {/* Loading Overlay */}
             {isLoading && (<div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50">
@@ -411,17 +572,6 @@ function WorkspaceEditorPageClient() {
                     <p className="text-gray-400">Loading your pure video...</p>
                 </div>
             </div>)}
-
-            {/* Music Edit Modal */}
-            {editingMusicData && (
-                <MusicEditModal
-                    musicData={editingMusicData}
-                    videoDuration={videoDuration}
-                    isOpen={isMusicEditModalOpen}
-                    onClose={onCloseMusicEditModal}
-                    onSave={onSaveMusicEdit}
-                />
-            )}
         </div>
     )
 }

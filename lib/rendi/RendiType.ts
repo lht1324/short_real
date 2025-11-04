@@ -41,7 +41,7 @@ export interface PollCommandResponse {
     output_files?: Record<string, OutputFile>;
     error_status?: string;
     error_message?: string;
-    original_request: any;
+    original_request: RunFfmpegCommandRequest | RunChainedFfmpegCommandsRequest | unknown;
 }
 
 export interface StoreFileRequest {

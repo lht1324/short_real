@@ -1,5 +1,6 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { usersServerAPI } from "@/api/server/usersServerAPI";
+import {getNextBaseResponse} from "@/utils/getNextBaseResponse";
 
 export async function GET(
     request: NextRequest,
@@ -11,18 +12,27 @@ export async function GET(
         const user = await usersServerAPI.getUserByUserId(userId);
 
         if (!user) {
-            return NextResponse.json(
-                { error: "User not found" },
-                { status: 404 }
-            );
+            return getNextBaseResponse({
+                success: false,
+                status: 404,
+                error: "User not found"
+            });
         }
 
-        return NextResponse.json(user, { status: 200 });
+        return getNextBaseResponse({
+            success: true,
+            status: 200,
+            data: {
+                user: user,
+            },
+            message: "Fetched user data successfully."
+        });
     } catch (error) {
         console.error("Error in GET /api/user/[userId]:", error);
-        return NextResponse.json(
-            { error: "Failed to get user" },
-            { status: 500 }
-        );
+        return getNextBaseResponse({
+            success: false,
+            status: 500,
+            error: error instanceof Error ? error.message : "Failed to get user data."
+        });
     }
 }

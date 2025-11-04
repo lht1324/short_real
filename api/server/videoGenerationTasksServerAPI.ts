@@ -5,7 +5,7 @@ import {createSupabaseServiceRoleClient} from "@/lib/supabaseServiceRole";
 export const videoGenerationTasksServerAPI = {
     // POST - 새로운 영상 생성 작업 생성
     async postVideoGenerationTask(taskData: Partial<VideoGenerationTask>): Promise<VideoGenerationTask> {
-        const supabase = await createSupabaseServer("mutate");
+        const supabase = createSupabaseServiceRoleClient();
         
         const { data, error } = await supabase
             .from('video_generation_tasks')
@@ -79,7 +79,7 @@ export const videoGenerationTasksServerAPI = {
 
     // PATCH - 작업 데이터 업데이트
     async patchVideoGenerationTask(taskId: string, videoGenerationTask: Partial<VideoGenerationTask>): Promise<VideoGenerationTask> {
-        const supabase = await createSupabaseServer("mutate");
+        const supabase = createSupabaseServiceRoleClient();
 
         const { data, error } = await supabase
             .from('video_generation_tasks')
@@ -96,12 +96,12 @@ export const videoGenerationTasksServerAPI = {
     },
 
     // PATCH - 작업 상태만 업데이트
-    async updateTaskStatus(taskId: string, status: 'pending' | 'in_progress' | 'completed' | 'failed'): Promise<VideoGenerationTask> {
-        const supabase = await createSupabaseServer("mutate");
-        
+    async patchVideoGenerationTaskStatus(taskId: string, status: VideoGenerationTaskStatus): Promise<VideoGenerationTask> {
+        const supabase = createSupabaseServiceRoleClient();
+
         const { data, error } = await supabase
             .from('video_generation_tasks')
-            .update({ status })
+            .update({ status: status } as Partial<VideoGenerationTask>)
             .eq('id', taskId)
             .select()
             .single();
@@ -113,13 +113,12 @@ export const videoGenerationTasksServerAPI = {
         return data;
     },
 
-    // PATCH - 작업 상태만 업데이트
-    async patchVideoGenerationTaskStatus(taskId: string, status: VideoGenerationTaskStatus): Promise<VideoGenerationTask> {
-        const supabase = await createSupabaseServer("mutate");
+    async patchVideoGenerationTaskFailed(taskId: string, isFailed: boolean = true): Promise<VideoGenerationTask> {
+        const supabase = createSupabaseServiceRoleClient();
 
         const { data, error } = await supabase
             .from('video_generation_tasks')
-            .update({ status })
+            .update({ is_generation_failed: isFailed } as Partial<VideoGenerationTask>)
             .eq('id', taskId)
             .select()
             .single();
@@ -132,16 +131,60 @@ export const videoGenerationTasksServerAPI = {
     },
 
     // DELETE - 작업 삭제
-    async deleteTask(taskId: string): Promise<void> {
-        const supabase = await createSupabaseServer("mutate");
-        
-        const { error } = await supabase
-            .from('video_generation_tasks')
-            .delete()
-            .eq('id', taskId);
+    async deleteVideoGenerationTask(taskId: string): Promise<boolean> {
+        const supabase = createSupabaseServiceRoleClient();
 
-        if (error) {
-            throw new Error(`Failed to delete video generation task: ${error.message}`);
+        try {
+            const existingTask = await videoGenerationTasksServerAPI.getVideoGenerationTaskById(taskId);
+
+            if (!existingTask) throw new Error("Task not found.");
+
+            // 1. narration_voice_storage 삭제
+            const { error: voiceError } = await supabase.storage
+                .from('narration_voice_storage')
+                .remove([`${taskId}.mp3`]);
+            if (voiceError) console.error('Storage delete error (narration_voice):', voiceError.message);
+
+            // 2-4. 나머지 버킷들 (폴더 기반 - taskId 폴더 내 모든 파일 조회 후 삭제)
+            const folderBasedBuckets = [
+                'processed_video_storage',
+                'scene_image_temp_storage',
+                'video_music_temp_storage'
+            ];
+
+            for (const bucketName of folderBasedBuckets) {
+                const { data: files, error: listError } = await supabase.storage
+                    .from(bucketName)
+                    .list(taskId);
+
+                if (listError) {
+                    console.error(`Failed to list files in ${bucketName}:`, listError.message);
+                    continue;
+                }
+
+                if (files && files.length > 0) {
+                    const filePaths = files.map(file => `${taskId}/${file.name}`);
+                    const { error: removeError } = await supabase.storage
+                        .from(bucketName)
+                        .remove(filePaths);
+                    if (removeError) console.error(`Storage delete error (${bucketName}):`, removeError.message);
+                }
+            }
+
+            // DB에서 작업 레코드 삭제
+            const { error } = await supabase
+                .from('video_generation_tasks')
+                .delete()
+                .eq('id', taskId);
+
+            if (error) {
+                throw new Error(`Failed to delete video generation task: ${error.message}`);
+            }
+
+            return true;
+        } catch (error) {
+            console.error(error);
+            return false;
         }
     },
 

@@ -3,24 +3,12 @@
 import {memo, useCallback, useEffect, useMemo, useState} from "react";
 import Link from "next/link";
 import Image from "next/image";
-import {
-    AlertTriangle,
-    X,
-    Sparkles,
-    ListTodo,
-    Plus,
-    Play,
-    ChevronDown,
-    ChevronRight,
-    Film,
-    Save,
-} from 'lucide-react';
-import { openAIClientAPI } from '@/api/client/openAIClientAPI';
+import {AlertTriangle, ChevronDown, ChevronRight, Film, ListTodo, Play, Plus, Save, Sparkles, X,} from 'lucide-react';
+import {openAIClientAPI} from '@/api/client/openAIClientAPI';
 import {ScriptGenerationRequest} from "@/api/types/open-ai/ScriptGeneration";
 import {Style} from "@/api/types/supabase/Styles";
-import {SceneData, VideoGenerationTask} from "@/api/types/supabase/VideoGenerationTasks";
+import {SceneData, VideoGenerationTask, VideoGenerationTaskStatus} from "@/api/types/supabase/VideoGenerationTasks";
 import {videoClientAPI} from "@/api/client/videoClientAPI";
-import {postFetch} from "@/api/client/baseFetch";
 import {StoryboardData} from "@/api/types/api/open-ai/scene/PostOpenAISceneResponse";
 import StoryboardItem from "@/components/page/workspace/create/StoryboardItem";
 import VoiceSelectionPanel from "@/components/page/workspace/create/VoiceSelectionPanel";
@@ -28,14 +16,13 @@ import {PostVideoRequest} from "@/api/types/api/video/PostVideoRequest";
 import {useSearchParams} from "next/navigation";
 import {PostOpenAISceneRequest} from "@/api/types/api/open-ai/scene/PostOpenAISceneRequest";
 import DefaultModal from "@/components/public/DefaultModal";
+import {useAuth} from "@/context/AuthContext";
+import {STYLE_DATA_LIST} from "@/lib/styles";
 
 function WorkspaceCreatePageClient() {
-    // 음성, 음악 선택 기능 추가
-    // 음성은 영상 생성할 때 함께 생성한 뒤, 에디터에서 뺀다
-    // 음악은 선택한 거 그대로 에디터에서 틀어주고, 실시간으로 바꾸는 것처럼 만들어준다.
-    // 자막은 캡션 폰트, 크기, 색상, 위치 정도만.
-    // 다 지정됐으면 생성된 영상 + 생성된 음성 + 에디터 최종 음악 + 에디터 최종 자막을 합쳐준다.
     const searchParams = useSearchParams();
+
+    const { user } = useAuth();
 
     const [isVoiceLoading, setIsVoiceLoading] = useState(true);
     const [isGenerationTaskLoading, setIsGenerationTaskLoading] = useState(true);
@@ -84,106 +71,7 @@ function WorkspaceCreatePageClient() {
     const [isStyleExpanded, setIsStyleExpanded] = useState(true);
 
     // Style examples for preview
-    const styleList = useMemo((): Style[] => [
-        {
-            id: 'realistic',
-            name: 'Realistic',
-            description: 'Photorealistic rendering with high detail and lifelike accuracy.',
-            stylePrompt: 'photorealistic, DSLR quality, professional photography, high detail, natural lighting, lifelike textures, 8K resolution, sharp focus',
-            thumbnailUrl: '/api/placeholder/200/356'
-        },
-        {
-            id: 'cinematic',
-            name: 'Cinematic',
-            description: 'Film-like quality with dramatic lighting and professional color grading.',
-            stylePrompt: 'cinematic lighting, film grain, dramatic shadows, professional color grading, movie still, widescreen aspect ratio, depth of field',
-            thumbnailUrl: '/api/placeholder/200/356'
-        },
-        {
-            id: 'vintage',
-            name: 'Vintage',
-            description: 'Emulates the look of old film stock with grain, light leaks, and faded colors.',
-            stylePrompt: 'vintage photography, film grain, retro colors, aged paper texture, light leaks, faded colors, nostalgic mood, old film aesthetic',
-            thumbnailUrl: '/api/placeholder/200/356'
-        },
-        {
-            id: 'line_art',
-            name: 'Line Art',
-            description: 'Clean, minimalist style focusing on outlines and contours with little to no shading.',
-            stylePrompt: 'line art, clean lineart, minimalist design, black and white, simple outlines, no shading, vector style, contour drawing',
-            thumbnailUrl: '/api/placeholder/200/356'
-        },
-        {
-            id: 'cartoon',
-            name: 'Cartoon',
-            description: 'Stylized with exaggerated features, bold outlines, and vibrant, flat colors.',
-            stylePrompt: 'cartoon style, bold outlines, flat colors, exaggerated features, vibrant colors, cell shading, animated style, colorful',
-            thumbnailUrl: '/api/placeholder/200/356'
-        },
-        {
-            id: 'anime',
-            name: 'Anime',
-            description: 'Japanese animation style, characterized by large expressive eyes and vibrant scenes.',
-            stylePrompt: 'anime style, manga art, cel-shading, vibrant colors, Japanese animation, large expressive eyes, clean lineart, anime aesthetic',
-            thumbnailUrl: '/api/placeholder/200/356'
-        },
-        {
-            id: 'pop_art',
-            name: 'Pop Art',
-            description: 'Inspired by Andy Warhol, featuring bold, saturated colors and comic book aesthetics.',
-            stylePrompt: 'pop art, Andy Warhol style, bold saturated colors, comic book aesthetic, halftone dots, high contrast, retro poster style',
-            thumbnailUrl: '/api/placeholder/200/356'
-        },
-        {
-            id: 'pixel_art',
-            name: 'Pixel Art',
-            description: 'Retro digital art made of visible pixels, reminiscent of 8-bit and 16-bit video games.',
-            stylePrompt: 'pixel art, 8-bit style, 16-bit graphics, retro gaming, visible pixels, low resolution, pixelated, retro digital art',
-            thumbnailUrl: '/api/placeholder/200/356'
-        },
-        {
-            id: 'concept_art',
-            name: 'Concept Art',
-            description: 'Painterly and atmospheric style used in film and game development to visualize ideas.',
-            stylePrompt: 'concept art, digital painting, atmospheric lighting, painterly style, matte painting, cinematic concept, detailed artwork',
-            thumbnailUrl: '/api/placeholder/200/356'
-        },
-        {
-            id: 'steampunk',
-            name: 'Steampunk',
-            description: 'A retrofuturistic style combining Victorian-era aesthetics with industrial steam-powered machinery.',
-            stylePrompt: 'steampunk aesthetic, Victorian era, brass machinery, industrial design, steam-powered, gears and cogs, retrofuturistic, copper tones',
-            thumbnailUrl: '/api/placeholder/200/356'
-        },
-        {
-            id: 'neon_synth',
-            name: 'Neon Synth',
-            description: 'An 80s retro-futuristic aesthetic with glowing neon grids, vibrant pinks, and purples.',
-            stylePrompt: 'synthwave aesthetic, neon lights, 80s retro, glowing grids, vibrant pinks and purples, cyberpunk neon, retrowave, vaporwave',
-            thumbnailUrl: '/api/placeholder/200/356'
-        },
-        {
-            id: 'cyberpunk',
-            name: 'Cyberpunk',
-            description: 'A dystopian futuristic setting with neon-drenched cityscapes and advanced technology.',
-            stylePrompt: 'cyberpunk aesthetic, neon-drenched cityscape, futuristic technology, dark atmosphere, sci-fi, dystopian future, holographic displays',
-            thumbnailUrl: '/api/placeholder/200/356'
-        },
-        {
-            id: 'fantasy',
-            name: 'Fantasy',
-            description: 'Epic and magical settings featuring mythical creatures, castles, and enchanted forests.',
-            stylePrompt: 'fantasy art, magical atmosphere, mythical creatures, enchanted forest, medieval castles, epic landscape, mystical lighting, magical realism',
-            thumbnailUrl: '/api/placeholder/200/356'
-        },
-        {
-            id: 'gothic',
-            name: 'Gothic',
-            description: 'A dark, mysterious, and moody style with macabre themes and ornate architecture.',
-            stylePrompt: 'gothic architecture, dark atmosphere, mysterious mood, ornate details, dramatic shadows, macabre themes, medieval gothic, dark romanticism',
-            thumbnailUrl: '/api/placeholder/200/356'
-        }
-    ], []);
+    const styleList = useMemo((): Style[] => STYLE_DATA_LIST, []);
 
     // Virtual tabs for navigation consistency
     const virtualTabs = useMemo(() => [
@@ -207,18 +95,14 @@ function WorkspaceCreatePageClient() {
             // OpenAI API 호출
             const result = await openAIClientAPI.postOpenAIScript(requestData);
 
-            if (result && result.success && result.data) {
-                console.log("Script generation result", result);
-                console.log('Script generated successfully:', result.data);
-                setScript(result.data.script);
-                setIsGeneratingScript(false);
-                setShowAIModal(false);
-                setAiPrompt('');
-            } else {
-                console.error('Script generation failed:', result?.error);
-                alert(result?.error?.message || 'Failed to generate script. Please try again.');
-                setIsGeneratingScript(false);
+            if (!result.data) {
+                throw new Error("Failed to generate script.");
             }
+
+            setScript(result.data.script);
+            setIsGeneratingScript(false);
+            setShowAIModal(false);
+            setAiPrompt('');
 
         } catch (error) {
             console.error('Error generating script:', error);
@@ -247,9 +131,9 @@ function WorkspaceCreatePageClient() {
                 styleId: selectedStyleId,
                 voiceId: selectedVoiceId,
             }
-            const result = await openAIClientAPI.postOpenAIScene(request);
+            const storyboardData = await openAIClientAPI.postOpenAIScene(request);
             
-            if (!result || !result.taskId || !result.sceneDataList || !result.videoMainSubject) {
+            if (!storyboardData) {
                 throw new Error("Storyboard generation is failed.")
             }
 
@@ -257,7 +141,7 @@ function WorkspaceCreatePageClient() {
                 taskId: newTaskId,
                 sceneDataList: newSceneDataList,
                 videoMainSubject: newVideoMainSubject,
-            }: StoryboardData = result;
+            }: StoryboardData = storyboardData;
 
             window.history.pushState(null, "", `/workspace/create?taskId=${newTaskId}`);
             setSceneDataList(newSceneDataList);
@@ -294,10 +178,12 @@ function WorkspaceCreatePageClient() {
     }, []);
 
     const closeAIModal = useCallback(() => {
-        setShowAIModal(false);
-        setAiPrompt('');
-        setIsGeneratingScript(false);
-    }, []);
+        if (!isGeneratingScript) {
+            setShowAIModal(false);
+            setAiPrompt('');
+            setIsGeneratingScript(false);
+        }
+    }, [isGeneratingScript]);
 
     // 예상 영상 시간 계산 (2.5단어/초 기준)
     const estimatedDuration = useMemo(() => {
@@ -320,32 +206,28 @@ function WorkspaceCreatePageClient() {
                 return style.id === selectedStyleId;
             });
 
-            if (!selectedStyle || !selectedVoiceId) {
-                throw new Error("Selected style or voice was not found.");
+            if (!taskId || !selectedStyle || !user?.id) {
+                throw new Error("User Id or Task Id or selected style was not found.");
             }
 
             // VideoData API 요청 데이터 구성
-            const requestData: PostVideoRequest = {
-                userId: "",
-                narrationScript: script,
-                style: selectedStyle,
-                voiceId: selectedVoiceId,
-                sceneDataList: sceneDataList,
-                videoMainSubject: videoMainSubject ?? undefined,
-            };
-
-            console.log('Creating video project with data:', requestData);
+            // const requestData: PostVideoRequest = {
+            //     userId: user.id,
+            //     style: selectedStyle,
+            // };
+            //
+            // console.log('Creating video project with data:', requestData);
 
             // Video API 호출
-            const result = await videoClientAPI.postVideo(requestData);
+            const result = await videoClientAPI.postVideo(taskId);
 
             if (result) {
                 console.log('Video data generation succeed.');
                 // setVideoDataResponse(result.data);
                 
                 // 성공 시 대시보드로 이동
-                alert('비디오 프로젝트 생성이 완료되었습니다!');
-                // window.location.href = '/workspace/dashboard';
+                alert('Your video is now being generated!');
+                window.location.href = '/workspace/dashboard';
             } else {
                 console.error('Video data generation failed.');
                 alert('비디오 프로젝트 생성에 실패했습니다. 다시 시도해주세요.');
@@ -358,7 +240,7 @@ function WorkspaceCreatePageClient() {
         } finally {
             setIsSubmitting(false);
         }
-    }, [script, selectedStyleId, selectedVoiceId, styleList, sceneDataList, videoMainSubject]);
+    }, [script, styleList, taskId, user?.id, selectedStyleId]);
 
     const onClickSaveDraft = useCallback(async () => {
         setIsSaving(true);
@@ -408,54 +290,13 @@ function WorkspaceCreatePageClient() {
         setShowVoiceChangeWarningModal(false);
     }, []);
 
-    const requestIdList = useMemo(() => {
-        return [
-            "3fstybtmjhrm80cs8cevx5g1r0",
-            "dnje5ptmd1rme0cs8cer2f29sr",
-            "5bmpfvtmr5rme0cs8ces82rt9r",
-            "x8yrzd2khsrmc0cs8cev8zjc3m",
-            "zthtr9tkm5rmc0cs8cesqzj08m"
-        ]
-    }, []);
-
-    const videoUrlList = useMemo(() => {
-        return [
-            "https://tbgymsmwuljvewatnvqg.supabase.co/storage/v1/object/sign/processed_video_storage/jhebnme2v1rm80csbbptfpqber.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9iZjk2NWFiNi1hYmE4LTRkYTEtYTM5Yy0yMDk3ZmQ1ZGU1MGEiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJwcm9jZXNzZWRfdmlkZW9fc3RvcmFnZS9qaGVibm1lMnYxcm04MGNzYmJwdGZwcWJlci5tcDQiLCJpYXQiOjE3NTgyNzk1MTgsImV4cCI6MTc4OTgxNTUxOH0.pf1J1oCPsZFVcUFOtnjZp7JMrNvEsOev1BsRf7U198w",
-            "https://tbgymsmwuljvewatnvqg.supabase.co/storage/v1/object/sign/processed_video_storage/n5h5k5e2zdrma0csbbptq7xcq0.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9iZjk2NWFiNi1hYmE4LTRkYTEtYTM5Yy0yMDk3ZmQ1ZGU1MGEiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJwcm9jZXNzZWRfdmlkZW9fc3RvcmFnZS9uNWg1azVlMnpkcm1hMGNzYmJwdHE3eGNxMC5tcDQiLCJpYXQiOjE3NTgyNzk1MjgsImV4cCI6MTc4OTgxNTUyOH0.ARTmGkgTsSvbflZb7orYGmnwMonz-ZPff9WAR9Kfhig",
-            "https://tbgymsmwuljvewatnvqg.supabase.co/storage/v1/object/sign/processed_video_storage/24qj3ve2vxrme0csbbpre22aew.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9iZjk2NWFiNi1hYmE4LTRkYTEtYTM5Yy0yMDk3ZmQ1ZGU1MGEiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJwcm9jZXNzZWRfdmlkZW9fc3RvcmFnZS8yNHFqM3ZlMnZ4cm1lMGNzYmJwcmUyMmFldy5tcDQiLCJpYXQiOjE3NTgyNzk1NjcsImV4cCI6MTc4OTgxNTU2N30.PoZ8hpqBHiG0w0JBZLbu6HEBAO0gga70A0iFmwgfUGE",
-            "https://tbgymsmwuljvewatnvqg.supabase.co/storage/v1/object/sign/processed_video_storage/ejtpsvy2x5rmc0csbbpte50q0m.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9iZjk2NWFiNi1hYmE4LTRkYTEtYTM5Yy0yMDk3ZmQ1ZGU1MGEiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJwcm9jZXNzZWRfdmlkZW9fc3RvcmFnZS9lanRwc3Z5Mng1cm1jMGNzYmJwdGU1MHEwbS5tcDQiLCJpYXQiOjE3NTgyNzk1NzYsImV4cCI6MTc4OTgxNTU3Nn0.i5ys7M2cAdwsDOzgXw_aWc_E8Yd1kBV9bgSdJFI9Xjw",
-            "https://tbgymsmwuljvewatnvqg.supabase.co/storage/v1/object/sign/processed_video_storage/w59ebwe2vdrmc0csbbprhab7qw.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9iZjk2NWFiNi1hYmE4LTRkYTEtYTM5Yy0yMDk3ZmQ1ZGU1MGEiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJwcm9jZXNzZWRfdmlkZW9fc3RvcmFnZS93NTllYndlMnZkcm1jMGNzYmJwcmhhYjdxdy5tcDQiLCJpYXQiOjE3NTgyNzk1ODgsImV4cCI6MTc4OTgxNTU4OH0.GMPY4WHyWD1N0hHRBmqfo5TeMw6A-QWyz03fpQ_wPXs"
-        ]
-    }, []);
-    const onTestWebhook = useCallback(async () => {
-        for (let i = 0; i < requestIdList.length; i++) {
-            try {
-                await postFetch(`/webhook/replicate?generationTaskId=1519017a-1f2f-4c59-8ef1-4b8d692e7905`, {
-                    id: requestIdList[i],
-                    output: videoUrlList[i],
-                    // "starting" | "processing" | "succeeded" | "failed" | "canceled" | "aborted"
-                    status: "succeeded",
-                    error: undefined,
-                });
-
-                // 마지막 요청이 아닌 경우에만 딜레이 적용
-                if (i < requestIdList.length - 1) {
-                    await new Promise(resolve => setTimeout(resolve, 5000));
-                }
-                console.log(`Webhook test ${i + 1} succeeded.`);
-            } catch (error) {
-                console.error(`Webhook test ${i + 1} failed:`, error);
-            }
-        }
-    }, [requestIdList, videoUrlList]);
-
     // 페이지 로드 시: taskId 있으면 데이터 복원
     useEffect(() => {
         if (taskId) {
             const getVideoTaskByTaskId = async () => {
                 const videoGenerationTask = await videoClientAPI.getVideoTaskByTaskId(taskId);
 
-                if (videoGenerationTask) {
+                if (videoGenerationTask && (videoGenerationTask.status === VideoGenerationTaskStatus.DRAFTING || videoGenerationTask.status === VideoGenerationTaskStatus.GENERATING_VOICE)) {
                     const script = videoGenerationTask.narration_script;
                     const sceneDataList = videoGenerationTask.scene_breakdown_list;
                     const videoMainSubject = videoGenerationTask.video_main_subject;
@@ -471,6 +312,11 @@ function WorkspaceCreatePageClient() {
                     setIsGenerationTaskLoading(false);
                 } else {
                     setIsGenerationTaskLoading(false);
+
+                    // URL에서 taskId 파라미터만 제거 (리렌더링 없이)
+                    const url = new URL(window.location.href);
+                    url.searchParams.delete('taskId');
+                    window.history.replaceState({}, '', url.toString());
                 }
             }
 
@@ -949,12 +795,12 @@ function WorkspaceCreatePageClient() {
                                     <h3 className="text-xl font-semibold text-purple-300">
                                         Generate Script with AI
                                     </h3>
-                                    <button
+                                    {!isGeneratingScript && <button
                                         onClick={closeAIModal}
                                         className="text-gray-400 hover:text-pink-400 transition-colors p-1 rounded-lg hover:bg-gray-800/50"
                                     >
                                         <X size={18} />
-                                    </button>
+                                    </button>}
                                 </div>
 
                                 <div className="space-y-4">

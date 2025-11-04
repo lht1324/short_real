@@ -20,7 +20,7 @@ export class RendiClient {
     private async makeRequest<T>(
         endpoint: string,
         method: 'GET' | 'POST' | 'DELETE' = 'GET',
-        body?: any
+        body?: RunFfmpegCommandRequest | RunChainedFfmpegCommandsRequest,
     ): Promise<T> {
         if (!this.apiKey) {
             throw Error("Invalid Rendi token")

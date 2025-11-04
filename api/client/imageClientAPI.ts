@@ -9,13 +9,13 @@ export const imageClientAPI = {
                 throw Error(`HTTP error! status: ${response.status}`);
             }
 
-            const data = await response.json();
+            const getImagesResult = await response.json();
 
-            if (!data.success || !data.imageUrls) {
+            if (!getImagesResult.success || !getImagesResult.data?.imageUrls) {
                 throw Error('Failed to get image URLs');
             }
 
-            return data.imageUrls;
+            return getImagesResult.data.imageUrls;
         } catch (error) {
             console.error('Get images API call failed:', error);
             return [];

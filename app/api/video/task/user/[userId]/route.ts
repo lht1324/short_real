@@ -1,5 +1,6 @@
 import {NextRequest, NextResponse} from 'next/server';
 import {videoGenerationTasksServerAPI} from '@/api/server/videoGenerationTasksServerAPI';
+import {getNextBaseResponse} from "@/utils/getNextBaseResponse";
 
 export async function GET(
     request: NextRequest,
@@ -9,20 +10,28 @@ export async function GET(
         const { userId } = await context.params;
 
         if (!userId) {
-            return NextResponse.json(
-                { error: 'User ID is required' },
-                { status: 400 }
-            );
+            return getNextBaseResponse({
+                success: false,
+                status: 400,
+                error: 'User ID is required'
+            });
         }
 
         const tasks = await videoGenerationTasksServerAPI.getVideoGenerationTasksByUserId(userId);
 
-        return NextResponse.json(tasks, { status: 200 });
+        return getNextBaseResponse({
+            success: true,
+            status: 200,
+            data: {
+                videoGenerationTaskList: tasks,
+            }
+        });
     } catch (error) {
         console.error('Failed to get user video tasks:', error);
-        return NextResponse.json(
-            { error: 'Failed to fetch video tasks' },
-            { status: 500 }
-        );
+        return getNextBaseResponse({
+            success: false,
+            status: 500,
+            error: error instanceof Error ? error.message : 'Failed to fetch video tasks'
+        });
     }
 }

@@ -29,7 +29,7 @@ export default function RootLayout({
                 className={`${defaultFont.className} antialiased`}
             >
                 <AuthProvider>
-                    <ApiPreloader />
+                    {/*<ApiPreloader />*/}
                     <div className="min-h-screen">
                         <ConditionalHeader/>
                         <ConditionalMain>

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { imageServerAPI } from '@/api/server/imageServerAPI';
+import {getNextBaseResponse} from "@/utils/getNextBaseResponse";
 
 export async function GET(request: NextRequest) {
     try {
@@ -8,19 +9,21 @@ export async function GET(request: NextRequest) {
         const sceneCountStr = searchParams.get('sceneCount');
 
         if (!taskId || !sceneCountStr) {
-            return NextResponse.json(
-                { error: 'taskId and sceneCount are required' },
-                { status: 400 }
-            );
+            return getNextBaseResponse({
+                success: false,
+                status: 400,
+                error: 'taskId and sceneCount are required'
+            });
         }
 
         const sceneCount = parseInt(sceneCountStr);
 
         if (isNaN(sceneCount) || sceneCount <= 0) {
-            return NextResponse.json(
-                { error: 'sceneCount must be a positive number' },
-                { status: 400 }
-            );
+            return getNextBaseResponse({
+                success: false,
+                status: 400,
+                error: 'sceneCount must be a positive number'
+            });
         }
 
         // sceneNumber는 1부터 시작
@@ -47,19 +50,21 @@ export async function GET(request: NextRequest) {
             return result.url;
         });
 
-        return NextResponse.json({
+        return getNextBaseResponse({
             success: true,
-            imageUrls: imageUrls
+            status: 200,
+            data: {
+                imageUrls: imageUrls
+            },
+            message: "Fetching image urls successfully."
         });
 
     } catch (error) {
         console.error('Error in GET /api/image:', error);
-        return NextResponse.json(
-            {
-                success: false,
-                error: error instanceof Error ? error.message : 'Unknown error occurred'
-            },
-            { status: 500 }
-        );
+        return getNextBaseResponse({
+            success: false,
+            status: 500,
+            error: error instanceof Error ? error.message : 'Unknown error occurred'
+        });
     }
 }

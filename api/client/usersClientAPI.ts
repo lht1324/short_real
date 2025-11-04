@@ -5,13 +5,13 @@ export const usersClientAPI = {
     async getUserByUserId(userId: string): Promise<User | null> {
         try {
             const response = await getFetch(`/api/user/${userId}`);
-            const user: User | null = await response.json();
+            const getUserByUserIdResult = await response.json();
 
-            if (!user) {
-                throw new Error('User not found');
+            if (!getUserByUserIdResult.success || !getUserByUserIdResult.data) {
+                throw new Error(getUserByUserIdResult.error ?? 'User not found');
             }
 
-            return user;
+            return getUserByUserIdResult.data.user;
         } catch (error) {
             console.error('Error fetching user by userId:', error);
             return null;

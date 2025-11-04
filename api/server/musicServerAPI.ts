@@ -1,57 +1,14 @@
-import { createSupabaseServer } from "@/lib/supabaseServer";
-import { BackgroundMusic } from "@/api/types/supabase/BackgroundMusics";
-import { PostgrestResponse } from "@supabase/supabase-js";
 import {createSupabaseServiceRoleClient} from "@/lib/supabaseServiceRole";
 import {MusicData} from "@/api/types/supabase/VideoGenerationTasks";
+import Replicate from "replicate";
+import {videoGenerationTasksServerAPI} from "@/api/server/videoGenerationTasksServerAPI";
 
 export const musicServerAPI = {
-    async getBackgroundMusics(): Promise<BackgroundMusic[]> {
-        const supabase = await createSupabaseServer();
-
-        try {
-            const { data, error }: PostgrestResponse<BackgroundMusic> = await supabase
-                .from('background_musics')
-                .select('*');
-
-            if (error) {
-                console.error('Error fetching background musics:', error);
-                throw error;
-            }
-
-            return data || [];
-        } catch (error) {
-            console.error('Unexpected error in getBackgroundMusics:', error);
-            return [];
-        }
-    },
-
-    async getBackgroundMusicSignedUrls(backgroundMusicNameList: string[]): Promise<{ path: string | null; signedUrl: string }[]> {
-        const supabase = await createSupabaseServer();
-
-        try {
-            const { data: signedUrlDataList, error } = await supabase
-                .storage
-                .from('background_music_storage')
-                .createSignedUrls(backgroundMusicNameList, 3600);
-
-            if (error) {
-                console.error('Error creating signed URLs:', error);
-                throw error;
-            }
-
-            return signedUrlDataList.map(({ path, signedUrl }) => {
-                return {
-                    path,
-                    signedUrl,
-                }
-            }) || [];
-        } catch (error) {
-            console.error('Unexpected error in getBackgroundMusicSignedUrls:', error);
-            return [];
-        }
-    },
-
-    async postMusic(generationTaskId: string, musicFileList: (File | Blob | ArrayBuffer)[]): Promise<{ success: boolean, error?: string }> {
+    async postMusic(
+        generationTaskId: string,
+        musicFileList: (File | Blob | ArrayBuffer)[],
+        musicDataList: MusicData[],
+    ): Promise<{ success: boolean, error?: string }> {
         const supabase = createSupabaseServiceRoleClient();
 
         try {
@@ -59,24 +16,59 @@ export const musicServerAPI = {
 
             for (let index = 0; index < musicFileList.length; index++) {
                 const musicFile = musicFileList[index];
+                const musicData = musicDataList[index];
 
-                const filePath = `${generationTaskId}/${generationTaskId}_${index}.mp3`;
+                // 1. mp3 파일 업로드
+                const audioFilePath = `${generationTaskId}/${generationTaskId}_${index}.mp3`;
 
-                const { error } = await supabase.storage
+                const { error: audioError } = await supabase.storage
                     .from('video_music_temp_storage')
-                    .upload(filePath, musicFile, {
+                    .upload(audioFilePath, musicFile, {
                         contentType: 'audio/mpeg',
                         upsert: true
                     });
 
-                if (error) {
-                    console.error('Error uploading music file to storage:', error);
+                if (audioError) {
+                    console.error('Error uploading music file to storage:', audioError);
+                    throw new Error(audioError.message);
+                }
 
-                    throw new Error(error.message);
+                // 2. 이미지 다운로드 및 업로드
+                if (musicData.imageUrl) {
+                    try {
+                        const imageResponse = await fetch(musicData.imageUrl);
+                        if (imageResponse.ok) {
+                            const imageBlob = await imageResponse.blob();
+                            const imageFilePath = `${generationTaskId}/${generationTaskId}_${index}.jpeg`;
+
+                            const { error: imageError } = await supabase.storage
+                                .from('video_music_temp_storage')
+                                .upload(imageFilePath, imageBlob, {
+                                    contentType: 'image/jpeg',
+                                    upsert: true
+                                });
+
+                            if (imageError) {
+                                console.error(`Error uploading image ${index}:`, imageError);
+                                // 이미지 업로드 실패는 치명적이지 않으므로 계속 진행
+                            }
+                        } else {
+                            console.error(`Failed to download image from ${musicData.imageUrl}`);
+                        }
+                    } catch (imageError) {
+                        console.error(`Error processing image ${index}:`, imageError);
+                        // 이미지 처리 실패는 치명적이지 않으므로 계속 진행
+                    }
                 }
 
                 uploadSuccessCount++;
             }
+
+            // 3. DB에 music_data_list 저장
+            await videoGenerationTasksServerAPI.patchVideoGenerationTask(
+                generationTaskId,
+                { music_data_list: musicDataList }
+            );
 
             return {
                 success: uploadSuccessCount === musicFileList.length,
@@ -91,7 +83,7 @@ export const musicServerAPI = {
     },
 
     async getMusicData(taskId: string): Promise<MusicData[]> {
-        const supabase = await createSupabaseServiceRoleClient();
+        const supabase = createSupabaseServiceRoleClient();
 
         try {
             // 1. video_generation_tasks 테이블에서 music_data_list 가져오기
@@ -168,5 +160,64 @@ export const musicServerAPI = {
             console.error('Unexpected error in getMusicDatas:', error);
             return [];
         }
+    },
+
+    async postMusicModifying(
+        audioUrl: string,
+        cuttingAreaStartSec: number,
+        cuttingAreaEndSec: number,
+        volumePercentage: number,
+        taskId: string
+    ) {
+        const replicate = new Replicate({
+            auth: process.env.REPLICATE_API_TOKEN,
+        });
+
+        // 웹훅 URL 생성
+        const baseUrl = process.env.BASE_URL;
+        if (!baseUrl) {
+            throw new Error('BASE_URL is not set');
+        }
+
+        const webhookUrl = `${baseUrl}/webhook/replicate/music/modifying?taskId=${taskId}`;
+
+        try {
+            const prediction = await replicate.predictions.create({
+                version: "lht1324/ffmpeg-audio-modifier:8706bda5af3fa52e103a0d441e3d6cb981d1aef7a23f22248ff1de6f557a0763",
+                input: {
+                    audio_url: audioUrl,
+                    cutting_area_start_sec: cuttingAreaStartSec,
+                    cutting_area_end_sec: cuttingAreaEndSec,
+                    volume_percentage: volumePercentage,
+                },
+                webhook: webhookUrl,
+                webhook_events_filter: ["completed"],
+            });
+
+            if (prediction.error || prediction.status === "failed") {
+                throw new Error(`Subtitle burn-in failed: ${prediction.error}`);
+            }
+
+            console.log(`[Subtitle Burn-in] Prediction ID: ${prediction.id}`);
+            return prediction.id;
+
+        } catch (error) {
+            console.error("[Subtitle Burn-in] Error:", error);
+            throw error;
+        }
+    },
+
+    async getMusicSignedUrl(filePath: string, expiresIn: number = 60 * 60 * 24) {
+        const supabase = createSupabaseServiceRoleClient();
+
+        const { data, error } = await supabase.storage
+            .from('video_music_temp_storage')
+            .createSignedUrl(filePath, expiresIn);
+
+        if (error || !data?.signedUrl) {
+            throw new Error(error?.message || `There is no image data.`);
+        }
+
+        return data.signedUrl;
     }
 }

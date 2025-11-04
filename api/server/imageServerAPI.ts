@@ -76,7 +76,6 @@ export const imageServerAPI = {
             return {
                 success: true,
             };
-
         } catch (error) {
             console.error('Image generation error:', error);
             return {

@@ -1,67 +1,75 @@
 import {NextRequest, NextResponse} from "next/server";
-import {musicServerAPI} from "@/api/server/musicServerAPI";
-import {BGMInfo, BGMType} from "@/api/types/supabase/BackgroundMusics";
 import {sunoAPIServerAPI} from "@/api/server/sunoAPIServerAPI";
 import {PostGenerateRequest, SunoModelType} from "@/api/types/suno-api/SunoAPIRequests";
-
-export async function GET(request: NextRequest) {
-    try {
-        // URL에서 type 파라미터 추출 (기본값: preview)
-        const { searchParams } = new URL(request.url);
-        const typeParam = searchParams.get('type') as BGMType;
-        const bgmType = Object.values(BGMType).includes(typeParam) ? typeParam : BGMType.Preview;
-
-        // 1. background_musics 테이블에서 음악 정보 조회
-        const backgroundMusics = await musicServerAPI.getBackgroundMusics();
-        
-        if (backgroundMusics.length === 0) {
-            return NextResponse.json({ bgmInfoList: [] });
-        }
-
-        // 2. 음악 제목을 가공해서 파일명 리스트 생성 (소문자-[type].mp3 형태)
-        const fileNameList = backgroundMusics.map(music => 
-            `${music.title.toLowerCase().replaceAll(" ", "_")}-${bgmType}.mp3`
-        );
-
-        // 3. 배치로 signed URL들 받아오기
-        const signedUrlDataList = await musicServerAPI.getBackgroundMusicSignedUrls(fileNameList);
-
-        // 4. BGMInfo 타입으로 매핑
-        const bgmInfoList: BGMInfo[] = backgroundMusics.map((music, index) => {
-            const signedUrlData = signedUrlDataList.find(
-                urlData => urlData.path === fileNameList[index]
-            );
-
-            return {
-                id: music.id,
-                title: music.title,
-                artist: music.artist,
-                themes: music.themes,
-                previewUrl: signedUrlData?.signedUrl || ''
-            };
-        });
-
-        return NextResponse.json({ bgmInfoList });
-    } catch (error) {
-        console.error('Error in GET /api/music:', error);
-        return NextResponse.json(
-            { error: 'Failed to fetch background musics' },
-            { status: 500 }
-        );
-    }
-}
+import {videoGenerationTasksServerAPI} from "@/api/server/videoGenerationTasksServerAPI";
+import {taskCheckAndCleanupIfCancelled} from "@/utils/taskCheckAndCleanupIfCancelled";
+import {openAIServerAPI} from "@/api/server/openAIServerAPI";
+import {getNextBaseResponse} from "@/utils/getNextBaseResponse";
 
 export async function POST(request: NextRequest) {
-    try {
-        // URL에서 파라미터 추출
-        const { searchParams } = new URL(request.url);
-        const generationTaskId = searchParams.get('generationTaskId');
+    // URL에서 파라미터 추출
+    const { searchParams } = new URL(request.url);
+    const taskId = searchParams.get('taskId');
 
-        if (!generationTaskId) {
-            return NextResponse.json(
-                { error: 'Missing required query param: generationTaskId' },
-                { status: 400 }
-            );
+    if (!taskId) {
+        return getNextBaseResponse({
+            success: false,
+            status: 400,
+            error: 'Missing required query param: taskId'
+        });
+    }
+
+    try {
+        const videoGenerationTask = await videoGenerationTasksServerAPI.getVideoGenerationTaskById(taskId);
+
+        if (!videoGenerationTask) {
+            return getNextBaseResponse({
+                success: false,
+                status: 404,
+                error: "Task not found",
+            });
+        }
+
+        const checkingInitialResult = await taskCheckAndCleanupIfCancelled(videoGenerationTask);
+
+        if (checkingInitialResult) {
+            return checkingInitialResult;
+        }
+
+        // 필수 데이터 검증
+        if (!videoGenerationTask.video_main_subject) {
+            await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
+            return getNextBaseResponse({
+                success: false,
+                status: 404,
+                error: 'video_main_subject is missing from task'
+            });
+        }
+
+        if (!videoGenerationTask.master_style_positive_prompt) {
+            await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
+            return getNextBaseResponse({
+                success: false,
+                status: 404,
+                error: 'master_style_positive_prompt is missing from task'
+            });
+        }
+
+        // OpenAI로 Music Generation Data 생성
+        const postMusicGenerationDataResult = await openAIServerAPI.postMusicGenerationData(
+            videoGenerationTask.video_main_subject,
+            videoGenerationTask.narration_script,
+            videoGenerationTask.master_style_positive_prompt,
+            videoGenerationTask.scene_breakdown_list,
+        );
+
+        if (!postMusicGenerationDataResult.success || !postMusicGenerationDataResult.data) {
+            await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
+            return getNextBaseResponse({
+                success: false,
+                status: 500,
+                error: postMusicGenerationDataResult.error ?? 'Failed to generate music data',
+            });
         }
 
         const {
@@ -72,14 +80,16 @@ export async function POST(request: NextRequest) {
             // styleWeight,
             // weirdnessConstraint,
             // audioWeight,
-        }: Partial<PostGenerateRequest> = await request.json();
+        } = postMusicGenerationDataResult.data;
 
         // 필수 파라미터 검증
         if (!prompt || !style || !title) {
-            return NextResponse.json(
-                { error: 'Missing required parameters: prompt, style, title' },
-                { status: 400 }
-            );
+            await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
+            return getNextBaseResponse({
+                success: false,
+                status: 500,
+                error: 'Failed to generate music generation data: prompt, style, title'
+            });
         }
 
         const baseUrl = process.env.BASE_URL;
@@ -91,25 +101,38 @@ export async function POST(request: NextRequest) {
             customMode: true,
             instrumental: true,
             model: SunoModelType.V4_5,
-            negativeTags: negativeTags,
-            // styleWeight: styleWeight,
-            // weirdnessConstraint: weirdnessConstraint,
-            // audioWeight: audioWeight,
             styleWeight: 0.65,
             weirdnessConstraint: 0.65,
             audioWeight: 0.65,
-            callBackUrl: `${baseUrl}/webhook/suno-api?generationTaskId=${generationTaskId}`,
+            callBackUrl: `${baseUrl}/webhook/suno-api?taskId=${taskId}`,
         }
 
         // Suno API를 통한 음악 생성 요청
         const result = await sunoAPIServerAPI.postGenerate(fullRequest);
 
-        return NextResponse.json(result);
+        if (!result) {
+            await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
+
+            return getNextBaseResponse({
+                success: false,
+                status: 500,
+                error: 'Failed to request music generation.'
+            });
+        }
+
+        return getNextBaseResponse({
+            success: true,
+            status: 200,
+            message: "Requested generation music successfully.",
+        });
     } catch (error) {
         console.error('Error in POST /api/music:', error);
-        return NextResponse.json(
-            { error: 'Failed to generate music' },
-            { status: 500 }
-        );
+
+        await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
+        return getNextBaseResponse({
+            success: false,
+            status: 500,
+            error: 'Failed to generate music.'
+        });
     }
 }

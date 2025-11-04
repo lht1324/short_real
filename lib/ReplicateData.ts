@@ -50,11 +50,11 @@ export interface ReplicatePrediction {
     id: string;
     model: string;
     version: string;
-    input: { [key: string]: any };
+    input: Record<string, unknown>;
     logs: string | null;
-    error: any | null;
+    error: unknown | null;
     status: VideoGenerationStatus;
-    output: any | null;
+    output: string | string[] | null;
     created_at: string;
     started_at: string | null;
     completed_at: string | null;

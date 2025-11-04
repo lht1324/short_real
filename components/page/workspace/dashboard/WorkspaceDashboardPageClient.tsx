@@ -3,13 +3,15 @@
 import {memo, useCallback, useEffect, useMemo, useState} from "react";
 import Link from "next/link";
 import {ListTodo, Plus} from 'lucide-react';
-import {VideoGenerationTaskStatus} from "@/api/types/supabase/VideoGenerationTasks";
+import {VideoGenerationTask, VideoGenerationTaskStatus} from "@/api/types/supabase/VideoGenerationTasks";
 import Image from "next/image";
 import {videoClientAPI} from "@/api/client/videoClientAPI";
 import {useAuth} from "@/context/AuthContext";
 import {useRouter} from "next/navigation";
 import DashboardItem from "@/components/page/workspace/dashboard/DashboardItem";
 import DefaultModal from "@/components/public/DefaultModal";
+import {createBrowserClient} from "@supabase/ssr";
+import TaskDeleteLoadingModal from "@/components/page/workspace/dashboard/TaskDeleteLoadingModal";
 
 export interface TaskData {
     id: string;
@@ -24,6 +26,7 @@ export interface TaskData {
     updatedAt?: Date;
     selectedVoiceId?: string;
     selectedStyleId?: string;
+    isGenerationFailed: boolean;
 }
 
 function WorkspaceDashboardPageClient() {
@@ -42,25 +45,107 @@ function WorkspaceDashboardPageClient() {
     const [pendingCancelTaskId, setPendingCancelTaskId] = useState<string | null>(null);
 
     const [showCancelConfirmModal, setShowCancelConfirmModal] = useState(false);
+    const [showCancelLoadingModal, setShowCancelLoadingModal] = useState(false);
 
-    const onClickCancel = useCallback((taskId: string) => {
+    const [showRetryLoadingModal, setShowRetryLoadingModal] = useState(false);
+
+    const onClickCancel = useCallback((taskId: string, status: VideoGenerationTaskStatus) => {
         setPendingCancelTaskId(taskId);
         setShowCancelConfirmModal(true);
     }, []);
 
-    const onClickDownload = useCallback((taskId: string) => {
-        // base URL로 래핑해서 video/download/[taskId] path 열어주고 거기서 보이게 하기
-        console.log('Download video:', taskId);
+    const onClickDownload = useCallback(async (taskId: string) => {
+        try {
+            // videoClientAPI로 영상 URL 가져오기
+            const url = await videoClientAPI.getVideoFinalUrl(taskId);
+
+            if (!url) {
+                console.error('Failed to get video URL for task:', taskId);
+                return;
+            }
+
+            const videoGenerationTask = await videoClientAPI.getVideoTaskByTaskId(taskId);
+
+            if (!videoGenerationTask || !videoGenerationTask.video_main_subject) {
+                console.error('Failed to get video generation task data:', taskId);
+                return;
+            }
+
+            // Blob으로 받아서 다운로드 (CORS 우회)
+            const response = await fetch(url);
+
+            if (!response.ok) {
+                throw new Error(`Failed to fetch video: ${response.status}`);
+            }
+
+            const blob = await response.blob();
+            const blobUrl = window.URL.createObjectURL(blob);
+
+            // 임시 <a> 태그 생성해서 다운로드 트리거
+            const a = document.createElement('a');
+            a.href = blobUrl;
+            a.download = `${videoGenerationTask.video_main_subject}-${new Date().toLocaleTimeString()}.mp4`.replaceAll(" ", "_");
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+
+            // 메모리 해제
+            window.URL.revokeObjectURL(blobUrl);
+        } catch (error) {
+            console.error('Download failed:', error);
+        }
     }, []);
 
-    const onClickRetry = useCallback((taskId: string) => {
+    const onClickRetry = useCallback(async (taskId: string) => {
+        try {
+            setShowRetryLoadingModal(true);
+
+            await videoClientAPI.postVideoTaskRetryByTaskId(taskId);
+
+            setShowRetryLoadingModal(false);
+        } catch (error) {
+            console.error(error);
+
+            await videoClientAPI.patchVideoTaskByTaskId(taskId, {
+                is_user_cancelled_task: true,
+            })
+            setShowRetryLoadingModal(false);
+        }
         console.log('Retry generation:', taskId);
     }, []);
 
     const cancelVideoGenerationTask = useCallback(async () => {
-        // Row 삭제, Replicate 취소 요청, ...
         try {
+            setShowCancelLoadingModal(true);
 
+            if (!pendingCancelTaskId) throw new Error("Cancelled Task is not selected.");
+
+            const currentCancelledTaskData = await videoClientAPI.getVideoTaskByTaskId(pendingCancelTaskId);
+
+            if (!currentCancelledTaskData || !currentCancelledTaskData.status) throw new Error("Task not found.");
+
+            const taskStatus = currentCancelledTaskData.status;
+
+            // UI 상에서 지워주는 것도 추가해야 함
+
+            switch (taskStatus) {
+                case VideoGenerationTaskStatus.DRAFTING:
+                case VideoGenerationTaskStatus.GENERATING_VOICE:
+                case VideoGenerationTaskStatus.EDITOR: {
+                    await videoClientAPI.deleteVideoTaskByTaskId(pendingCancelTaskId);
+
+                    setShowCancelLoadingModal(false);
+                    return;
+                }
+                default: {
+                    await videoClientAPI.patchVideoTaskByTaskId(pendingCancelTaskId, {
+                        is_user_cancelled_task: true,
+                    });
+
+                    setShowCancelLoadingModal(false);
+                    return;
+                }
+            }
         } catch (error) {
 
         }
@@ -75,15 +160,15 @@ function WorkspaceDashboardPageClient() {
         // 정상 플로우 순서 정의
         const processingSteps = [
             VideoGenerationTaskStatus.DRAFTING,
-            VideoGenerationTaskStatus.GENERATING_VOICE,
+            // VideoGenerationTaskStatus.GENERATING_VOICE,
             VideoGenerationTaskStatus.GENERATING_MASTER_STYLE_PROMPT,
             VideoGenerationTaskStatus.GENERATING_IMAGE_PROMPT,
             VideoGenerationTaskStatus.GENERATING_VIDEO_PROMPT,
             VideoGenerationTaskStatus.GENERATING_VIDEO,
             VideoGenerationTaskStatus.STITCHING_VIDEOS,
-            VideoGenerationTaskStatus.MERGING_VIDEO_AND_AUDIO,
             VideoGenerationTaskStatus.EDITOR,
             VideoGenerationTaskStatus.COMPOSING_MUSIC,
+            VideoGenerationTaskStatus.FINALIZING,
             VideoGenerationTaskStatus.COMPLETED,
         ];
 
@@ -111,13 +196,40 @@ function WorkspaceDashboardPageClient() {
         };
     }, []);
 
+    // VideoGenerationTask를 TaskData로 변환하는 헬퍼 함수
+    const convertToTaskData = useCallback((task: VideoGenerationTask): TaskData | null => {
+        if (!task.id || !task.status || !task.created_at || !task.updated_at || task.is_generation_failed === undefined) {
+            return null;
+        }
+
+        const status = task.status as VideoGenerationTaskStatus;
+        const {progress, currentStep, totalStep} = calculateProgress(status);
+
+        return {
+            id: task.id,
+            title: task.video_main_subject,
+            status: status,
+            sceneCount: task.scene_breakdown_list.length,
+            processedSceneCount: task.processed_scene_count,
+            progress: progress,
+            currentStep: currentStep,
+            totalStep: totalStep,
+            createdAt: new Date(task.created_at),
+            updatedAt: new Date(task.updated_at),
+            selectedVoiceId: task.selected_voice_id,
+            selectedStyleId: task.selected_style_id,
+            isGenerationFailed: task.is_generation_failed,
+        };
+    }, [calculateProgress]);
+
     useEffect(() => {
         if (user?.id) {
-            // 10초 타임아웃 설정
+            // 타임아웃 설정
             const timeout = setTimeout(() => {
                 setIsLoading(false);
             }, 15000);
 
+            // 초기 데이터 로드
             const loadData = async () => {
                 try {
                     const videoGenerationTaskList = await videoClientAPI.getVideoTasksByUserId(user?.id);
@@ -126,48 +238,102 @@ function WorkspaceDashboardPageClient() {
                         throw new Error("Cannot read videoGenerationTaskList. Try again.");
                     }
 
-                    setTaskDataList(videoGenerationTaskList.filter((task) => {
-                        return !!task.id && !!task.status && !!task.created_at && !!task.updated_at;
-                    }).map((task): TaskData => {
-                        const status = task.status as VideoGenerationTaskStatus;
-                        const {
-                            progress,
-                            currentStep,
-                            totalStep,
-                        } = calculateProgress(status);
+                    const taskList = videoGenerationTaskList.filter((videoGenerationTask) => {
+                        return !(videoGenerationTask.is_user_cancelled_task);
+                    }).map((videoGenerationTask) => {
+                        return convertToTaskData(videoGenerationTask);
+                    }).filter((taskData) => {
+                        return taskData !== null;
+                    });
 
-                        console.log(`[${task.id}]: ${task.scene_breakdown_list.length}`)
-                        return {
-                            id: task.id as string,
-                            title: task.video_main_subject,
-                            status: status,
-                            sceneCount: task.scene_breakdown_list.length,
-                            processedSceneCount: task.processed_scene_count,
-                            progress: progress,
-                            currentStep: currentStep,
-                            totalStep: totalStep,
-                            createdAt: new Date(task.created_at as string),
-                            updatedAt: new Date(task.updated_at as string),
-                            selectedVoiceId: task.selected_voice_id,
-                            selectedStyleId: task.selected_style_id,
-                        }
-                    }))
-
-                    setIsLoading(false);
+                    setTaskDataList(taskList);
                 } catch (error) {
                     console.error("WorkspaceDashboardPage: ", error);
                     setIsLoading(false);
                     router.push("/");
                 }
-            }
+            };
 
-            loadData().then();
+            loadData().then(() => {
+                setIsLoading(false);
+            });
+
+            // Supabase Realtime 구독 설정
+            const supabase = createBrowserClient(
+                process.env.NEXT_PUBLIC_SUPABASE_URL!,
+                process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+            );
+
+            console.log('[Realtime] 구독 시작, user.id:', user.id);
+
+            const channel = supabase
+                .channel('video_generation_tasks_changes')
+                .on(
+                    'postgres_changes',
+                    {
+                        event: '*', // INSERT, UPDATE, DELETE 모두 수신
+                        schema: 'public',
+                        table: 'video_generation_tasks',
+                        filter: `user_id=eq.${user.id}` // 현재 사용자의 task만 필터링
+                    },
+                    (payload) => {
+                        console.log('[Realtime] 이벤트 수신:', payload);
+
+                        switch (payload.eventType) {
+                            case 'INSERT': {
+                                // 새로운 task 추가
+                                const newTask = payload.new as VideoGenerationTask;
+                                const newTaskData = convertToTaskData(newTask);
+                                if (newTaskData) {
+                                    setTaskDataList((prevTaskDataList) => {
+                                        return [newTaskData, ...prevTaskDataList]
+                                    });
+                                }
+                                return;
+                            }
+                            case 'UPDATE': {
+                                // 기존 task 업데이트
+                                const updatedTask = payload.new as VideoGenerationTask;
+                                const newTaskData = convertToTaskData(updatedTask);
+                                if (newTaskData) {
+                                    setTaskDataList((prevTaskDataList) =>
+                                        prevTaskDataList.filter((prevTaskData) => {
+                                            return prevTaskData.id !== newTaskData.id
+                                                || (prevTaskData.id === newTaskData.id && !updatedTask.is_user_cancelled_task);
+                                        }).map((prevTaskData) => {
+                                            return prevTaskData.id === newTaskData.id
+                                                ? newTaskData
+                                                : prevTaskData;
+                                        })
+                                    );
+                                }
+                                return;
+                            }
+                            case 'DELETE': {
+                                // task 삭제
+                                const deletedTask = payload.old as VideoGenerationTask;
+                                if (deletedTask.id) {
+                                    setTaskDataList((prevTaskDataList) =>
+                                        prevTaskDataList.filter((prevTaskData) => {
+                                            return prevTaskData.id !== deletedTask.id;
+                                        })
+                                    );
+                                }
+                                return;
+                            }
+                        }
+                    }
+                )
+                .subscribe((status) => {
+                    console.log('[Realtime] 구독 상태:', status);
+                });
 
             return () => {
                 clearTimeout(timeout);
-            }
+                channel.unsubscribe();
+            };
         }
-    }, [router, user?.id, calculateProgress]);
+    }, [router, user?.id, convertToTaskData]);
 
     return (
         <div className="min-h-screen bg-black text-white">
@@ -274,12 +440,19 @@ function WorkspaceDashboardPageClient() {
                 "⚠️ Warning: Credits used for this task will not be refunded."}
                 confirmText="Yes"
                 cancelText="No"
-                onClickConfirm={() => {}}
+                onClickConfirm={async () => {
+                    await cancelVideoGenerationTask();
+                    setShowCancelConfirmModal(false);
+                }}
                 onClickCancel={() => {
                     setPendingCancelTaskId(null);
                     setShowCancelConfirmModal(false);
                 }}
             />}
+
+            {showCancelLoadingModal && <TaskDeleteLoadingModal/>}
+
+            {showRetryLoadingModal && <TaskDeleteLoadingModal message="Retrying task..."/>}
 
             {/* Loading Overlay */}
             {isLoading && (
