@@ -3,13 +3,14 @@ import {videoServerAPI} from "@/api/server/videoServerAPI";
 import {videoGenerationTasksServerAPI} from "@/api/server/videoGenerationTasksServerAPI";
 import {VideoGenerationTaskStatus} from "@/api/types/supabase/VideoGenerationTasks";
 import {taskCheckAndCleanupIfCancelled} from "@/utils/taskCheckAndCleanupIfCancelled";
+import {getNextBaseResponse} from "@/utils/getNextBaseResponse";
 
 export async function POST(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const taskId = searchParams.get('taskId');
 
     if (!taskId) {
-        return NextResponse.json({
+        return getNextBaseResponse({
             success: false,
             status: 400,
             error: "taskId is required"
@@ -20,7 +21,7 @@ export async function POST(request: NextRequest) {
         console.log(`[Merge Service] Task 데이터 조회: ${taskId}`);
         const videoGenerationTask = await videoGenerationTasksServerAPI.getVideoGenerationTaskById(taskId);
         if (!videoGenerationTask) {
-            return NextResponse.json({
+            return getNextBaseResponse({
                 success: false,
                 status: 404,
                 error: "Task not found",
@@ -66,7 +67,7 @@ export async function POST(request: NextRequest) {
         });
 
         // 3. 성공 응답 반환
-        return NextResponse.json({
+        return getNextBaseResponse({
             success: true,
             status: 200,
             message: "Final video merged and uploaded successfully.",
@@ -77,7 +78,7 @@ export async function POST(request: NextRequest) {
 
         await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
 
-        return NextResponse.json({
+        return getNextBaseResponse({
             success: false,
             status: 500,
             error: error instanceof Error ? error.message : "Failed to merge the final video.",

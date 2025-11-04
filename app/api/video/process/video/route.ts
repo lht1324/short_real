@@ -6,6 +6,7 @@ import {SceneData, VideoGenerationTaskStatus} from "@/api/types/supabase/VideoGe
 import {findOptimalVideoParameters} from "@/utils/videoUtils";
 import {openAIServerAPI} from "@/api/server/openAIServerAPI";
 import {videoServerAPI} from "@/api/server/videoServerAPI";
+import {getNextBaseResponse} from "@/utils/getNextBaseResponse";
 
 export async function POST(request: NextRequest) {
     const supabase = createSupabaseServiceRoleClient();
@@ -15,7 +16,7 @@ export async function POST(request: NextRequest) {
     const taskId = searchParams.get('taskId');
 
     if (!taskId) {
-        return NextResponse.json({
+        return getNextBaseResponse({
             success: false,
             status: 400,
             error: 'Missing required query param: taskId'
@@ -28,7 +29,7 @@ export async function POST(request: NextRequest) {
         if (!videoGenerationTask) {
             await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
 
-            return NextResponse.json({
+            return getNextBaseResponse({
                 success: false,
                 status: 404,
                 error: 'Video Generation Task not found.'
@@ -124,7 +125,7 @@ export async function POST(request: NextRequest) {
             return checkResultSecond;
         }
 
-        return NextResponse.json({
+        return getNextBaseResponse({
             success: true,
             status: 200,
             message: `${finalSceneDataList.length} scene's video generation requests completed. Task ID: ${patchVideoGenerationTaskResult.id}`
@@ -134,7 +135,7 @@ export async function POST(request: NextRequest) {
 
         await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
 
-        return NextResponse.json({
+        return getNextBaseResponse({
             success: false,
             status: 500,
             error: error instanceof Error ? error.message : "Failed to generate video base image.",

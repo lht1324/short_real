@@ -1029,16 +1029,19 @@ Apply the frame-fps optimization rules to create a motion prompt that precisely 
         fullNarrationScript: string,
         masterStylePositivePrompt: MasterStyleInfo,
         sceneDataList: SceneData[]
-    ): Promise<{ success: boolean; data?: Partial<PostGenerateRequest>; error?: { message: string; code: string } }> {
+    ): Promise<{
+        success: boolean;
+        status: number;
+        data?: Partial<PostGenerateRequest>;
+        error?: string
+    }> {
         try {
             const apiKey = process.env.OPENAI_API_KEY;
             if (!apiKey) {
                 return {
                     success: false,
-                    error: {
-                        message: 'OpenAI API key is not configured',
-                        code: 'MISSING_API_KEY'
-                    }
+                    status: 400,
+                    error: 'OpenAI API key is not configured',
                 };
             }
 
@@ -1228,7 +1231,11 @@ Now, provide the final JSON output.
             const generatedContent = completion.choices[0]?.message?.content;
 
             if (!generatedContent) {
-                return { success: false, error: { message: 'No music generation data from OpenAI', code: 'EMPTY_RESPONSE' } };
+                return {
+                    success: false,
+                    status: 500,
+                    error: 'No music generation data from OpenAI',
+                };
             }
 
             try {
@@ -1244,15 +1251,24 @@ Now, provide the final JSON output.
 
                 return {
                     success: true,
+                    status: 200,
                     data: parsedData
                 };
             } catch (parseError) {
                 console.error('Failed to parse music generation JSON response:', parseError);
-                return { success: false, error: { message: 'Failed to parse music generation response from AI', code: 'PARSE_ERROR' } };
+                return {
+                    success: false,
+                    status: 500,
+                    error: 'Failed to parse music generation response from AI',
+                };
             }
         } catch (error) {
             console.error('Music generation data error:', error);
-            return { success: false, error: { message: error instanceof Error ? error.message : 'Unknown error occurred', code: 'INTERNAL_ERROR' } };
+            return {
+                success: false,
+                status: 500,
+                error: error instanceof Error ? error.message : 'Unknown error occurred',
+            };
         }
     },
 }

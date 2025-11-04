@@ -1,12 +1,12 @@
-import {NextRequest, NextResponse} from "next/server";
+import {NextRequest} from "next/server";
 import {Prediction} from "replicate";
 import {videoGenerationTasksServerAPI} from "@/api/server/videoGenerationTasksServerAPI";
 import {videoServerAPI} from "@/api/server/videoServerAPI";
 import {SceneGenerationStatus, VideoGenerationTaskStatus} from "@/api/types/supabase/VideoGenerationTasks";
 import {createSupabaseServiceRoleClient} from "@/lib/supabaseServiceRole";
 import {getErrorMessage} from "@/utils/ErrorUtils";
-import {openAIServerAPI} from "@/api/server/openAIServerAPI";
 import {taskCheckAndCleanupIfCancelled} from "@/utils/taskCheckAndCleanupIfCancelled";
+import {getNextBaseResponse} from "@/utils/getNextBaseResponse";
 
 // import { adjustVideoSpeedAndUpload } from "@/lib/services/videoService"; // (추천) 실제 로직은 이렇게 분리
 
@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
     const taskId = searchParams.get('taskId');
 
     if (!taskId) {
-        return NextResponse.json({
+        return getNextBaseResponse({
             success: false,
             status: 400,
             error: "taskId is required"
@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
         // 2. Supabase에서 해당 row(Task) 데이터 갖고 오기
         const videoGenerationTask = await videoGenerationTasksServerAPI.getVideoGenerationTaskById(taskId);
         if (!videoGenerationTask) {
-            return NextResponse.json({
+            return getNextBaseResponse({
                 success: false,
                 status: 404,
                 error: "Task not found",
@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
 
         if (!sceneToProcess) {
             await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
-            return NextResponse.json({
+            return getNextBaseResponse({
                 success: false,
                 status: 404,
                 error: `Scene with requestId '${prediction.id}' not found in task.`
@@ -110,7 +110,11 @@ export async function POST(request: NextRequest) {
                     throw new Error(`Patching video generation task is failed.`);
                 }
 
-                return NextResponse.json({ success: true, message: "CUDA error detected. Retrying job." });
+                return getNextBaseResponse({
+                    success: false,
+                    status: 500,
+                    message: "CUDA error detected. Retrying job."
+                });
 
             } else {
                 // 3. CUDA가 아닌 다른 에러인 경우 (영구 실패 처리)
@@ -131,7 +135,11 @@ export async function POST(request: NextRequest) {
                 )
 
                 // Replicate에는 성공으로 응답하여 더 이상 웹훅을 받지 않도록 합니다.
-                return NextResponse.json({ success: true, message: "Non-CUDA failure acknowledged. No retry." });
+                return getNextBaseResponse({
+                    success: true,
+                    status: 200,
+                    message: "Non-CUDA failure acknowledged. No retry."
+                });
             }
         }
 
@@ -244,7 +252,7 @@ export async function POST(request: NextRequest) {
         }
 
         // 8. Replicate에 성공 응답 전달
-        return NextResponse.json({
+        return getNextBaseResponse({
             success: true,
             status: 200,
             message: "Webhook received and scene processing initiated."
@@ -254,7 +262,7 @@ export async function POST(request: NextRequest) {
         console.error("Webhook processing error:", error);
 
         await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
-        return NextResponse.json({
+        return getNextBaseResponse({
             success: false,
             status: 500,
             error: "Webhook processing error"

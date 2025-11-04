@@ -4,6 +4,7 @@ import {PostGenerateRequest, SunoModelType} from "@/api/types/suno-api/SunoAPIRe
 import {videoGenerationTasksServerAPI} from "@/api/server/videoGenerationTasksServerAPI";
 import {taskCheckAndCleanupIfCancelled} from "@/utils/taskCheckAndCleanupIfCancelled";
 import {openAIServerAPI} from "@/api/server/openAIServerAPI";
+import {getNextBaseResponse} from "@/utils/getNextBaseResponse";
 
 export async function POST(request: NextRequest) {
     // URL에서 파라미터 추출
@@ -11,7 +12,7 @@ export async function POST(request: NextRequest) {
     const taskId = searchParams.get('taskId');
 
     if (!taskId) {
-        return NextResponse.json({
+        return getNextBaseResponse({
             success: false,
             status: 400,
             error: 'Missing required query param: taskId'
@@ -22,7 +23,7 @@ export async function POST(request: NextRequest) {
         const videoGenerationTask = await videoGenerationTasksServerAPI.getVideoGenerationTaskById(taskId);
 
         if (!videoGenerationTask) {
-            return NextResponse.json({
+            return getNextBaseResponse({
                 success: false,
                 status: 404,
                 error: "Task not found",
@@ -38,7 +39,7 @@ export async function POST(request: NextRequest) {
         // 필수 데이터 검증
         if (!videoGenerationTask.video_main_subject) {
             await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
-            return NextResponse.json({
+            return getNextBaseResponse({
                 success: false,
                 status: 404,
                 error: 'video_main_subject is missing from task'
@@ -47,7 +48,7 @@ export async function POST(request: NextRequest) {
 
         if (!videoGenerationTask.master_style_positive_prompt) {
             await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
-            return NextResponse.json({
+            return getNextBaseResponse({
                 success: false,
                 status: 404,
                 error: 'master_style_positive_prompt is missing from task'
@@ -64,7 +65,7 @@ export async function POST(request: NextRequest) {
 
         if (!postMusicGenerationDataResult.success || !postMusicGenerationDataResult.data) {
             await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
-            return NextResponse.json({
+            return getNextBaseResponse({
                 success: false,
                 status: 500,
                 error: postMusicGenerationDataResult.error ?? 'Failed to generate music data',
@@ -84,7 +85,7 @@ export async function POST(request: NextRequest) {
         // 필수 파라미터 검증
         if (!prompt || !style || !title) {
             await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
-            return NextResponse.json({
+            return getNextBaseResponse({
                 success: false,
                 status: 500,
                 error: 'Failed to generate music generation data: prompt, style, title'
@@ -112,14 +113,14 @@ export async function POST(request: NextRequest) {
         if (!result) {
             await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
 
-            return NextResponse.json({
+            return getNextBaseResponse({
                 success: false,
                 status: 500,
                 error: 'Failed to request music generation.'
             });
         }
 
-        return NextResponse.json({
+        return getNextBaseResponse({
             success: true,
             status: 200,
             message: "Requested generation music successfully.",
@@ -128,7 +129,7 @@ export async function POST(request: NextRequest) {
         console.error('Error in POST /api/music:', error);
 
         await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
-        return NextResponse.json({
+        return getNextBaseResponse({
             success: false,
             status: 500,
             error: 'Failed to generate music.'

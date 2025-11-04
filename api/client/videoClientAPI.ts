@@ -1,4 +1,3 @@
-import {PostVideoRequest} from "@/api/types/api/video/PostVideoRequest";
 import {PostVideoResponse} from "@/api/types/api/video/PostVideoResponse";
 import {deleteFetch, getFetch, patchFetch, postFetch} from '@/api/client/baseFetch';
 import {VideoGenerationTask} from "@/api/types/supabase/VideoGenerationTasks";
@@ -9,9 +8,9 @@ export const videoClientAPI = {
      * 영상 생성 요청을 서버에 전송합니다.
      * 음성 생성 → OpenAI 분석 → Scene별 영상 생성 → DB 저장의 전체 플로우를 실행합니다.
      */
-    async postVideo(request: PostVideoRequest): Promise<PostVideoResponse | null> {
+    async postVideo(taskId: string): Promise<PostVideoResponse | null> {
         try {
-            const response = await postFetch('/api/video', request);
+            const response = await postFetch(`/api/video?taskId=${taskId}`);
 
             if (!response.ok) {
                 throw Error(`HTTP error! status: ${response.status}`);
@@ -36,7 +35,9 @@ export const videoClientAPI = {
                 throw Error(`HTTP error! status: ${response.status}`);
             }
 
-            return await response.json();
+            const postVideoTaskResponse = await response.json();
+
+            return postVideoTaskResponse.data;
         } catch (error) {
             console.error('Failed to get video task:', error);
             return null;
@@ -74,7 +75,13 @@ export const videoClientAPI = {
                 throw Error(`HTTP error! status: ${response.status}`);
             }
 
-            return await response.json();
+            const getVideoTaskByTaskIdResult = await response.json();
+
+            if (!getVideoTaskByTaskIdResult.success || !getVideoTaskByTaskIdResult.data) {
+                throw Error(getVideoTaskByTaskIdResult.error ?? 'Unknown error while fetching task data.');
+            }
+
+            return getVideoTaskByTaskIdResult.data.videoGenerationTask;
         } catch (error) {
             console.error('Failed to get video task:', error);
             return null;
@@ -93,7 +100,13 @@ export const videoClientAPI = {
                 throw Error(`HTTP error! status: ${response.status}`);
             }
 
-            return await response.json();
+            const patchVideoTaskByTaskIdResult = await response.json();
+
+            if (!patchVideoTaskByTaskIdResult.success || !patchVideoTaskByTaskIdResult.data) {
+                throw Error(patchVideoTaskByTaskIdResult.error ?? "Unknown error occurred while patching task.")
+            }
+
+            return patchVideoTaskByTaskIdResult.data.videoGenerationTask;
         } catch (error) {
             console.error('Failed to get video task:', error);
             return null;
@@ -131,8 +144,13 @@ export const videoClientAPI = {
                 throw Error(`HTTP error! status: ${response.status}`);
             }
 
-            const data = await response.json();
-            return data.url;
+            const getVideoVoiceUrlResult = await reponse.json();
+
+            if (!getVideoVoiceUrlResult.success || !getVideoVoiceUrlResult.data) {
+                throw Error(getVideoVoiceUrlResult.error ?? "Unknown error occurred while fetching video voice url.")
+            }
+
+            return getVideoVoiceUrlResult.data.url;
         } catch (error) {
             console.error('Failed to get video URL:', error);
             return null;
@@ -151,8 +169,13 @@ export const videoClientAPI = {
                 throw Error(`HTTP error! status: ${response.status}`);
             }
 
-            const data = await response.json();
-            return data.url;
+            const getVideoFinalUrlResult = await response.json();
+
+            if (!getVideoFinalUrlResult.success || !getVideoFinalUrlResult.data) {
+                throw Error(getVideoFinalUrlResult.error ?? "Unknown error occurred while fetching video final url.")
+            }
+
+            return getVideoFinalUrlResult.data.url;
         } catch (error) {
             console.error('Failed to get video URL:', error);
             return null;

@@ -1,7 +1,7 @@
 import {NextRequest, NextResponse} from "next/server";
 import {videoGenerationTasksServerAPI} from "@/api/server/videoGenerationTasksServerAPI";
 import {VideoGenerationTaskStatus} from "@/api/types/supabase/VideoGenerationTasks";
-import {STYLE_DATA_LIST} from "@/lib/styles";
+import {getNextBaseResponse} from "@/utils/getNextBaseResponse";
 
 interface RetryPathData {
     path: string;
@@ -12,11 +12,7 @@ interface RetryPathData {
 export async function POST(
     request: NextRequest,
     { params }: { params: Promise<{ taskId: string }> }
-): Promise<NextResponse<{
-    status: number;
-    success: boolean;
-    message: string;
-}>> {
+) {
     try {
         const { taskId } = await params;
 
@@ -24,7 +20,7 @@ export async function POST(
         const videoGenerationTask = await videoGenerationTasksServerAPI.getVideoGenerationTaskById(taskId);
 
         if (!videoGenerationTask) {
-            return NextResponse.json({
+            return getNextBaseResponse({
                 status: 404,
                 success: false,
                 message: `Task not found`
@@ -34,7 +30,7 @@ export async function POST(
         const taskStatus = videoGenerationTask.status;
 
         if (!taskStatus) {
-            return NextResponse.json({
+            return getNextBaseResponse({
                 status: 500,
                 success: false,
                 message: `Task status is not defined.`
@@ -100,7 +96,7 @@ export async function POST(
         const retryPathData = getRetryPathAndRestType();
 
         if (!retryPathData) {
-            return NextResponse.json({
+            return getNextBaseResponse({
                 status: 500,
                 success: false,
                 message: `Cannot retry from status: ${taskStatus}`
@@ -139,14 +135,14 @@ export async function POST(
         });
 
         // 즉시 응답
-        return NextResponse.json({
+        return getNextBaseResponse({
             status: 200,
             success: true,
             message: "Retry started successfully",
         });
     } catch (error) {
         console.error("Error in POST /api/video/task/[taskId]/retry:", error);
-        return NextResponse.json({
+        return getNextBaseResponse({
             status: 500,
             success: false,
             message: "Failed to retry task"

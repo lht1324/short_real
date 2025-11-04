@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { videoServerAPI } from "@/api/server/videoServerAPI";
+import {getNextBaseResponse} from "@/utils/getNextBaseResponse";
 
 export async function GET(request: NextRequest) {
     try {
@@ -7,24 +8,30 @@ export async function GET(request: NextRequest) {
         const taskId = searchParams.get("taskId");
 
         if (!taskId) {
-            return NextResponse.json(
-                { error: "taskId is required" },
-                { status: 400 }
-            );
+            return getNextBaseResponse({
+                success: false,
+                status: 400,
+                error: "taskId is required"
+            });
         }
 
         const filePath = `${taskId}/${taskId}.mp4`;
         const signedUrl = await videoServerAPI.getVideoSignedUrl(filePath);
 
-        return NextResponse.json(
-            { url: signedUrl },
-            { status: 200 }
-        );
+        return getNextBaseResponse({
+            success: true,
+            status: 200,
+            data: {
+                url: signedUrl,
+            },
+            message: "Fetched voice url successfully."
+        });
     } catch (error) {
         console.error("Error in GET /api/video/url:", error);
-        return NextResponse.json(
-            { error: error instanceof Error ? error.message : "Failed to get video URL" },
-            { status: 500 }
-        );
+        return getNextBaseResponse({
+            success: false,
+            status: 500,
+            error: error instanceof Error ? error.message : "Failed to get video URL"
+        });
     }
 }

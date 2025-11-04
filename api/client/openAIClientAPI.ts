@@ -16,18 +16,15 @@ export const openAIClientAPI = {
     },
 
     async postOpenAIScene(request: PostOpenAISceneRequest): Promise<StoryboardData | null> {
-        try {
-            const response = await postFetch('/api/open-ai/scene', request);
-            const result: PostOpenAISceneResponse = await response.json();
+        const response = await postFetch('/api/open-ai/scene', request);
+        const postOpenAISceneResponse: PostOpenAISceneResponse = await response.json();
 
-            if (!result || !result.success || !result.data) {
-                throw new Error('SceneDataList generation failed');
-            }
+        console.log("postOpenAISceneResponse: ", postOpenAISceneResponse);
 
-            return result.data;
-        } catch (error) {
-            console.error('Error generating SceneDataList:', error);
-            return null;
+        if (!postOpenAISceneResponse || !postOpenAISceneResponse.success || !postOpenAISceneResponse.data) {
+            throw new Error('SceneDataList generation failed');
         }
+
+        return postOpenAISceneResponse.data;
     }
 }

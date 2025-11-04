@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { openAIServerAPI } from '@/api/server/openAIServerAPI';
 import { ScriptGenerationRequest } from '@/api/types/open-ai/ScriptGeneration';
+import {getNextBaseResponse} from "@/utils/getNextBaseResponse";
 
 export async function POST(request: NextRequest) {
     try {
@@ -11,7 +12,7 @@ export async function POST(request: NextRequest) {
 
         // 필수 필드 검증
         if (!userPrompt) {
-            return NextResponse.json({
+            return getNextBaseResponse({
                 success: false,
                 status: 400,
                 error: 'Prompt is required'
@@ -22,11 +23,11 @@ export async function POST(request: NextRequest) {
         const result = await openAIServerAPI.postScript(userPrompt);
 
         // 결과 반환
-        return NextResponse.json(result);
+        return getNextBaseResponse(result);
     } catch (error) {
         console.error('Error in script generation route:', error);
         
-        return NextResponse.json({
+        return getNextBaseResponse({
             success: false,
             status: 500,
             error: error instanceof Error ? error.message : 'Failed to generate script.'

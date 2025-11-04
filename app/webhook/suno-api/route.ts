@@ -4,6 +4,7 @@ import { musicServerAPI } from "@/api/server/musicServerAPI";
 import {videoGenerationTasksServerAPI} from "@/api/server/videoGenerationTasksServerAPI";
 import {taskCheckAndCleanupIfCancelled} from "@/utils/taskCheckAndCleanupIfCancelled";
 import {VideoGenerationTaskStatus} from "@/api/types/supabase/VideoGenerationTasks";
+import {getNextBaseResponse} from "@/utils/getNextBaseResponse";
 
 export async function POST(request: NextRequest) {
     // URL에서 파라미터 추출
@@ -11,7 +12,7 @@ export async function POST(request: NextRequest) {
     const taskId = searchParams.get('taskId');
 
     if (!taskId) {
-        return NextResponse.json({
+        return getNextBaseResponse({
             success: false,
             status: 400,
             error: 'Missing required query param: taskId'
@@ -21,7 +22,7 @@ export async function POST(request: NextRequest) {
     try {
         const videoGenerationTask = await videoGenerationTasksServerAPI.getVideoGenerationTaskById(taskId);
         if (!videoGenerationTask) {
-            return NextResponse.json({
+            return getNextBaseResponse({
                 success: false,
                 status: 404,
                 error: "Task not found",
@@ -39,7 +40,7 @@ export async function POST(request: NextRequest) {
         // 요청 검증
         if (!body || !body.data) {
             await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
-            return NextResponse.json({
+            return getNextBaseResponse({
                 success: false,
                 status: 400,
                 error: 'Invalid webhook payload'
@@ -51,7 +52,7 @@ export async function POST(request: NextRequest) {
         // 필수 필드 검증
         if (!webhookData.callbackType || !webhookData.task_id) {
             await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
-            return NextResponse.json({
+            return getNextBaseResponse({
                 success: false,
                 status: 400,
                 error: 'Missing required fields: callbackType, task_id'
@@ -141,12 +142,16 @@ export async function POST(request: NextRequest) {
                 break;
         }
 
-        return NextResponse.json({ success: true });
+        return getNextBaseResponse({
+            success: true,
+            status: 200,
+            message: "Generated music with Suno-API successfully.",
+        });
     } catch (error) {
         console.error('Error in POST /webhook/suno-api:', error);
 
         await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
-        return NextResponse.json({
+        return getNextBaseResponse({
             success: false,
             status: 500,
             error: 'Failed to process webhook'

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { musicServerAPI } from "@/api/server/musicServerAPI";
+import {getNextBaseResponse} from "@/utils/getNextBaseResponse";
 
 export async function GET(request: NextRequest) {
     try {
@@ -7,23 +8,28 @@ export async function GET(request: NextRequest) {
         const taskId = searchParams.get("taskId");
 
         if (!taskId) {
-            return NextResponse.json(
-                { error: "taskId is required" },
-                { status: 400 }
-            );
+            return getNextBaseResponse({
+                success: false,
+                status: 400,
+                error: "taskId is required"
+            });
         }
 
         const musicDataList = await musicServerAPI.getMusicData(taskId);
 
-        return NextResponse.json(
-            musicDataList,
-            { status: 200 }
-        );
+        return getNextBaseResponse({
+            success: true,
+            status: 200,
+            data: {
+                musicDataList: musicDataList,
+            }
+        });
     } catch (error) {
         console.error("Error in GET /api/music/data:", error);
-        return NextResponse.json(
-            { error: error instanceof Error ? error.message : "Failed to get music data" },
-            { status: 500 }
-        );
+        return getNextBaseResponse({
+            success: false,
+            status: 500,
+            error: error instanceof Error ? error.message : "Failed to get music data"
+        });
     }
 }

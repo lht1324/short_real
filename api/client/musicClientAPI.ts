@@ -14,7 +14,13 @@ export const musicClientAPI = {
                 throw Error(`HTTP error! status: ${response.status}`);
             }
 
-            return await response.json();
+            const getMusicDataResult = await response.json();
+
+            if (!getMusicDataResult.success || !getMusicDataResult.data) {
+                throw Error(getMusicDataResult.error ?? "Unknown error occurred while fetching music data.");
+            }
+
+            return getMusicDataResult.data.musicDataList;
         } catch (error) {
             console.error('Failed to get music data:', error);
             return null;

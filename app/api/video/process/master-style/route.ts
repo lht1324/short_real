@@ -4,6 +4,7 @@ import {taskCheckAndCleanupIfCancelled} from "@/utils/taskCheckAndCleanupIfCance
 import {VideoGenerationTaskStatus} from "@/api/types/supabase/VideoGenerationTasks";
 import {openAIServerAPI} from "@/api/server/openAIServerAPI";
 import {STYLE_DATA_LIST} from "@/lib/styles";
+import {getNextBaseResponse} from "@/utils/getNextBaseResponse";
 
 export async function POST(request: NextRequest) {
     // URL에서 파라미터 추출
@@ -11,7 +12,7 @@ export async function POST(request: NextRequest) {
     const taskId = searchParams.get('taskId');
 
     if (!taskId) {
-        return NextResponse.json({
+        return getNextBaseResponse({
             success: false,
             status: 400,
             error: 'Missing required query param: taskId'
@@ -24,7 +25,7 @@ export async function POST(request: NextRequest) {
         if (!videoGenerationTask) {
             await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
 
-            return NextResponse.json({
+            return getNextBaseResponse({
                 success: false,
                 status: 404,
                 error: 'Video Generation Task not found.'
@@ -57,7 +58,7 @@ export async function POST(request: NextRequest) {
         if (!selectedStyle) {
             await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
 
-            return NextResponse.json({
+            return getNextBaseResponse({
                 success: false,
                 status: 404,
                 error: 'Style data not found.'
@@ -70,7 +71,7 @@ export async function POST(request: NextRequest) {
         if (!postMasterStylePromptResult.success || !postMasterStylePromptResult.masterStylePositivePromptInfo || !postMasterStylePromptResult.masterStyleNegativePrompt) {
             await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
 
-            return NextResponse.json({
+            return getNextBaseResponse({
                 success: false,
                 status: 500,
                 error: postMasterStylePromptResult?.error?.message || 'Failed to generate master style with OpenAI'
@@ -102,7 +103,7 @@ export async function POST(request: NextRequest) {
             console.error('[/api/video/process/master-style] Fire and forget fetch error:', error);
         });
 
-        return NextResponse.json({
+        return getNextBaseResponse({
             success: true,
             status: 200,
             message: "Master Style Prompt is successfully generated."
@@ -112,7 +113,7 @@ export async function POST(request: NextRequest) {
 
         await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
 
-        return NextResponse.json({
+        return getNextBaseResponse({
             success: false,
             status: 500,
             error: error instanceof Error ? error.message : "Failed to generate Master Style Prompt.",

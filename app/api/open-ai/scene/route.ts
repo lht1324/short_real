@@ -11,6 +11,7 @@ import {
     VideoGenerationTask,
     VideoGenerationTaskStatus
 } from "@/api/types/supabase/VideoGenerationTasks";
+import {getNextBaseResponse} from "@/utils/getNextBaseResponse";
 
 export async function POST(request: NextRequest): Promise<NextResponse<PostOpenAISceneResponse>> {
     try {
@@ -23,11 +24,11 @@ export async function POST(request: NextRequest): Promise<NextResponse<PostOpenA
         }: PostOpenAISceneRequest = await request.json();
 
         // 필수 필드 검증
-        if (!taskId || !narrationScript || !voiceId) {
-            return NextResponse.json({
+        if (!narrationScript || !voiceId) {
+            return getNextBaseResponse({
                 success: false,
                 status: 400,
-                error: 'Missing query field: taskId, narrationScript, voiceId',
+                error: 'Missing query field: narrationScript, voiceId',
             });
         }
 
@@ -46,7 +47,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<PostOpenA
 
         console.log(`newTaskId = ${videoGenerationTask.id}`);
         if (!videoGenerationTask || !videoGenerationTask.id) {
-            return NextResponse.json({
+            return getNextBaseResponse({
                 success: false,
                 status: 500,
                 error: 'Failed to insert row into video generation task table.'
@@ -62,13 +63,13 @@ export async function POST(request: NextRequest): Promise<NextResponse<PostOpenA
 
         // OpenAI API를 통해 Scene 분리 처리
         const postSceneSegmentationResult = await openAIServerAPI.postSceneSegmentation(
-            taskId,
+            taskId ?? videoGenerationTask.id,
             narrationScript,
             voiceGenerationResult.subtitleSegmentList
         );
 
         if (!postSceneSegmentationResult) {
-            return NextResponse.json({
+            return getNextBaseResponse({
                 success: false,
                 status: 500,
                 error: 'Failed to generate scene segmentation'
@@ -146,7 +147,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<PostOpenA
         const patchVideoGenerationTaskResult: VideoGenerationTask | null = await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId ?? videoGenerationTask.id, patchVideoGenerationTaskRequest);
 
         if (!patchVideoGenerationTaskResult || !patchVideoGenerationTaskResult.id) {
-            return NextResponse.json({
+            return getNextBaseResponse({
                 success: false,
                 status: 500,
                 error: 'Failed to insert row into video generation task table.'
@@ -163,7 +164,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<PostOpenA
             throw Error(`Failed to upload audio file to Supabase Storage: ${fileUploadResult.message}`);
         }
 
-        return NextResponse.json({
+        return getNextBaseResponse({
             success: true,
             status: 200,
             data: {
@@ -176,7 +177,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<PostOpenA
     } catch (error) {
         console.error('Scene segmentation API error:', error);
 
-        return NextResponse.json({
+        return getNextBaseResponse({
             success: false,
             status: 500,
             error: error instanceof Error ? error.message : 'Failed to generate scene segmentation data.'

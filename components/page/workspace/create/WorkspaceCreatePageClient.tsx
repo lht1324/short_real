@@ -131,9 +131,9 @@ function WorkspaceCreatePageClient() {
                 styleId: selectedStyleId,
                 voiceId: selectedVoiceId,
             }
-            const result = await openAIClientAPI.postOpenAIScene(request);
+            const storyboardData = await openAIClientAPI.postOpenAIScene(request);
             
-            if (!result || !result.taskId || !result.sceneDataList || !result.videoMainSubject) {
+            if (!storyboardData) {
                 throw new Error("Storyboard generation is failed.")
             }
 
@@ -141,7 +141,7 @@ function WorkspaceCreatePageClient() {
                 taskId: newTaskId,
                 sceneDataList: newSceneDataList,
                 videoMainSubject: newVideoMainSubject,
-            }: StoryboardData = result;
+            }: StoryboardData = storyboardData;
 
             window.history.pushState(null, "", `/workspace/create?taskId=${newTaskId}`);
             setSceneDataList(newSceneDataList);
@@ -178,10 +178,12 @@ function WorkspaceCreatePageClient() {
     }, []);
 
     const closeAIModal = useCallback(() => {
-        setShowAIModal(false);
-        setAiPrompt('');
-        setIsGeneratingScript(false);
-    }, []);
+        if (!isGeneratingScript) {
+            setShowAIModal(false);
+            setAiPrompt('');
+            setIsGeneratingScript(false);
+        }
+    }, [isGeneratingScript]);
 
     // 예상 영상 시간 계산 (2.5단어/초 기준)
     const estimatedDuration = useMemo(() => {
@@ -209,16 +211,15 @@ function WorkspaceCreatePageClient() {
             }
 
             // VideoData API 요청 데이터 구성
-            const requestData: PostVideoRequest = {
-                userId: user.id,
-                taskId: taskId,
-                style: selectedStyle,
-            };
-
-            console.log('Creating video project with data:', requestData);
+            // const requestData: PostVideoRequest = {
+            //     userId: user.id,
+            //     style: selectedStyle,
+            // };
+            //
+            // console.log('Creating video project with data:', requestData);
 
             // Video API 호출
-            const result = await videoClientAPI.postVideo(requestData);
+            const result = await videoClientAPI.postVideo(taskId);
 
             if (result) {
                 console.log('Video data generation succeed.');
@@ -794,12 +795,12 @@ function WorkspaceCreatePageClient() {
                                     <h3 className="text-xl font-semibold text-purple-300">
                                         Generate Script with AI
                                     </h3>
-                                    <button
+                                    {!isGeneratingScript && <button
                                         onClick={closeAIModal}
                                         className="text-gray-400 hover:text-pink-400 transition-colors p-1 rounded-lg hover:bg-gray-800/50"
                                     >
                                         <X size={18} />
-                                    </button>
+                                    </button>}
                                 </div>
 
                                 <div className="space-y-4">
