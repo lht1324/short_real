@@ -1,15 +1,15 @@
-import { NextResponse } from "next/server";
 import { voiceServerAPI } from '@/api/server/voiceServerAPI';
 import {getNextBaseResponse} from "@/utils/getNextBaseResponse";
 
 export async function GET() {
     try {
         const voices = await voiceServerAPI.getVoices();
+
         return getNextBaseResponse({
             success: true,
             status: 200,
             data: {
-                voices: voices,
+                voiceDataList: voices,
             },
             message: "Fetched music data successfully.",
         });
