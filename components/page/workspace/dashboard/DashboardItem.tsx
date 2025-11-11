@@ -10,13 +10,13 @@ import {
     Download,
     Edit,
     FileVideo,
-    Instagram,
     Loader2,
     Share2,
+    Wrench,
     X,
-    Youtube
 } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 
 enum StatusGroup {
     CREATING = 'creating',
@@ -311,21 +311,72 @@ function DashboardItem({
 
                             {showExportPopover && (
                                 <div className="absolute top-full right-0 pt-2 z-50">
-                                    <div className="bg-gray-800 border border-purple-500/30 rounded-lg shadow-xl overflow-hidden min-w-[180px]">
+                                    <div className="bg-gray-800 border border-purple-500/30 rounded-lg shadow-xl overflow-hidden min-w-[200px]">
+                                        {/* YouTube Shorts */}
                                         <button
-                                            className="w-full px-4 py-3 flex items-center space-x-3 text-white hover:bg-gray-700/50 transition-colors text-left"
+                                            className="w-full h-14 flex items-center text-white hover:bg-gray-700/50 transition-colors"
                                             onClick={() => { onClickExport(taskData.id, ExportPlatform.YOUTUBE); }}
                                         >
-                                            <Youtube size={16} className="text-red-500 flex-shrink-0" />
-                                            <span className="text-sm">YouTube Shorts</span>
+                                            <div className="w-14 h-14 flex items-center justify-center flex-shrink-0">
+                                                <Image
+                                                    src="/icons/youtube-logo.png"
+                                                    alt="YouTube"
+                                                    width={36}
+                                                    height={32}
+                                                    className="object-contain"
+                                                />
+                                            </div>
+                                            <span className="text-sm flex-1 text-left pl-2">YouTube Shorts</span>
                                         </button>
+
                                         <div className="border-t border-purple-500/20" />
+
+                                        {/* Instagram Reels */}
                                         <button
-                                            className="w-full px-4 py-3 flex items-center space-x-3 text-white hover:bg-gray-700/50 transition-colors text-left"
+                                            disabled={true}
+                                            className="w-full h-14 flex items-center text-white hover:bg-gray-700/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent"
                                             onClick={() => { onClickExport(taskData.id, ExportPlatform.INSTAGRAM); }}
                                         >
-                                            <Instagram size={16} className="text-pink-500 flex-shrink-0" />
-                                            <span className="text-sm">Instagram Reels</span>
+                                            <div className="w-14 h-14 flex items-center justify-center flex-shrink-0">
+                                                <Image
+                                                    src="/icons/instagram-logo.png"
+                                                    alt="Instagram"
+                                                    width={28}
+                                                    height={28}
+                                                    className="object-contain"
+                                                />
+                                            </div>
+                                            <span className="text-sm flex-1 text-left pl-2 flex items-center gap-2">
+                                                Instagram Reels
+                                                <span className="px-1.5 py-1 bg-gray-600/50 rounded-full flex items-center opacity-100">
+                                                    <Wrench size={12} className="text-yellow-300" />
+                                                </span>
+                                            </span>
+                                        </button>
+
+                                        <div className="border-t border-purple-500/20" />
+
+                                        {/* TikTok */}
+                                        <button
+                                            disabled={true}
+                                            className="w-full h-14 flex items-center text-white hover:bg-gray-700/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+                                            onClick={() => { onClickExport(taskData.id, ExportPlatform.TIKTOK); }}
+                                        >
+                                            <div className="w-14 h-14 flex items-center justify-center flex-shrink-0">
+                                                <Image
+                                                    src="/icons/tiktok-logo.svg"
+                                                    alt="TikTok"
+                                                    width={32}
+                                                    height={32}
+                                                    className="object-contain"
+                                                />
+                                            </div>
+                                            <span className="text-sm flex-1 text-left pl-2 flex items-center gap-2">
+                                                TikTok
+                                                <span className="px-1.5 py-1 bg-gray-600/50 rounded-full flex items-center opacity-100">
+                                                    <Wrench size={12} className="text-yellow-300" />
+                                                </span>
+                                            </span>
                                         </button>
                                     </div>
                                 </div>
