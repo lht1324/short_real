@@ -1,4 +1,4 @@
-import {NextRequest, NextResponse} from 'next/server';
+import {NextRequest} from 'next/server';
 import {videoServerAPI} from '@/api/server/videoServerAPI';
 import {musicServerAPI} from '@/api/server/musicServerAPI';
 import {generateASSContent} from "@/utils/captionUtils";

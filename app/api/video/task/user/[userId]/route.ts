@@ -24,7 +24,8 @@ export async function GET(
             status: 200,
             data: {
                 videoGenerationTaskList: tasks,
-            }
+            },
+            message: "Fetched video generation task list successfully.",
         });
     } catch (error) {
         console.error('Failed to get user video tasks:', error);

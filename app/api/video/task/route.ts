@@ -38,7 +38,9 @@ export async function POST(request: NextRequest) {
         return getNextBaseResponse({
             success: true,
             status: 200,
-            data: createdTask,
+            data: {
+                videoGenerationTask: createdTask,
+            },
             message: `Video generation task created`
         });
     } catch (error) {

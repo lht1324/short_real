@@ -13,6 +13,12 @@ import DefaultModal from "@/components/public/DefaultModal";
 import {createBrowserClient} from "@supabase/ssr";
 import TaskDeleteLoadingModal from "@/components/page/workspace/dashboard/TaskDeleteLoadingModal";
 
+export enum ExportPlatform {
+    YOUTUBE = "youtube",
+    INSTAGRAM = "instagram",
+    TIKTOK = "tiktok",
+}
+
 export interface TaskData {
     id: string;
     title?: string;
@@ -53,6 +59,34 @@ function WorkspaceDashboardPageClient() {
         setPendingCancelTaskId(taskId);
         setShowCancelConfirmModal(true);
     }, []);
+
+    const onClickExport = useCallback(async (taskId: string, exportPlatform: ExportPlatform) => {
+        try {
+            if (!user?.id) {
+                throw Error("User is invalid.");
+            }
+
+            const getPostExportByPlatformPromise = (exportPlatform: ExportPlatform) => {
+                switch (exportPlatform) {
+                    case ExportPlatform.YOUTUBE: return videoClientAPI.postVideoExportYoutube(user?.id, taskId);
+                    case ExportPlatform.INSTAGRAM: return videoClientAPI.postVideoExportInstagram(user?.id, taskId);
+                    case ExportPlatform.TIKTOK: return videoClientAPI.postVideoExportTikTok(user?.id, taskId);
+                }
+            }
+
+            const postExportByPlatformResult = await getPostExportByPlatformPromise(exportPlatform);
+
+            if (!postExportByPlatformResult) {
+                throw Error(`Failed to start exporting onto platform '${exportPlatform.toUpperCase()}'`);
+            }
+
+            // Temp logic (Maybe switch case)
+
+            window.location.href = postExportByPlatformResult;
+        } catch (error) {
+            console.error(error);
+        }
+    }, [user?.id]);
 
     const onClickDownload = useCallback(async (taskId: string) => {
         try {
@@ -233,6 +267,8 @@ function WorkspaceDashboardPageClient() {
             const loadData = async () => {
                 try {
                     const videoGenerationTaskList = await videoClientAPI.getVideoTasksByUserId(user?.id);
+
+                    console.log("videoGenerationTaskList: ", videoGenerationTaskList);
 
                     if (!videoGenerationTaskList) {
                         throw new Error("Cannot read videoGenerationTaskList. Try again.");
@@ -424,9 +460,10 @@ function WorkspaceDashboardPageClient() {
                                     return <DashboardItem
                                         key={taskData.id}
                                         taskData={taskData}
-                                        onClickCancel={onClickCancel}
                                         onClickDownload={onClickDownload}
+                                        onClickExport={onClickExport}
                                         onClickRetry={onClickRetry}
+                                        onClickCancel={onClickCancel}
                                     />
                                 })}
                             </div>

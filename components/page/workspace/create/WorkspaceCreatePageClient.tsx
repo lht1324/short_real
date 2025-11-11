@@ -219,9 +219,9 @@ function WorkspaceCreatePageClient() {
             // console.log('Creating video project with data:', requestData);
 
             // Video API 호출
-            const result = await videoClientAPI.postVideo(taskId);
+            const postVideoResult = await videoClientAPI.postVideo(taskId);
 
-            if (result) {
+            if (postVideoResult) {
                 console.log('Video data generation succeed.');
                 // setVideoDataResponse(result.data);
                 

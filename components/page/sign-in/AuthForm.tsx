@@ -22,7 +22,6 @@ function AuthForm({
     error = null,
     oAuthSignIn,
 }: AuthFormProps) {
-
     return (
         <div className="w-full h-fit max-w-md mx-auto bg-gray-800/30 backdrop-blur-sm rounded-2xl border border-purple-500/30 shadow-2xl p-8">
             <div className="text-center mb-8">
