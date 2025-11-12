@@ -14,7 +14,7 @@ export async function getFetch(route: string) {
     return response;
 }
 
-export async function postFetch(route: string, body?: any) {
+export async function postFetch(route: string, body?: unknown) {
     const response = await fetch(route, {
         method: 'POST',
         headers: {
@@ -31,7 +31,7 @@ export async function postFetch(route: string, body?: any) {
     return response;
 }
 
-export async function patchFetch(route: string, body?: any) {
+export async function patchFetch(route: string, body?: unknown) {
     const response = await fetch(route, {
         method: 'PATCH',
         headers: {

@@ -96,7 +96,7 @@ function LandingPageClient() {
             {/* Footer */}
             <footer className="py-8 px-4 sm:px-6 lg:px-8 border-t border-gray-800">
                 <div className="max-w-7xl mx-auto text-center text-gray-500">
-                    <p>&copy; 2025 ShortForm. All rights reserved.</p>
+                    <p>&copy; 2025 ShortReal. All rights reserved.</p>
                 </div>
             </footer>
         </div>

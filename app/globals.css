@@ -27,3 +27,29 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Custom Scrollbar Styles - matches theme */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(17, 24, 39, 0.5); /* gray-900/50 */
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(147, 51, 234, 0.6); /* purple-600/60 */
+  border-radius: 4px;
+  border: 1px solid rgba(147, 51, 234, 0.3); /* purple-600/30 */
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(168, 85, 247, 0.8); /* purple-500/80 */
+  border-color: rgba(168, 85, 247, 0.5); /* purple-500/50 */
+}
+
+::-webkit-scrollbar-corner {
+  background: rgba(17, 24, 39, 0.5); /* gray-900/50 */
+}
