@@ -3,7 +3,6 @@ import { ReactNode } from "react";
 import { Rajdhani } from "next/font/google";
 import ConditionalHeader from "@/components/public/ConditionalHeader";
 import ConditionalMain from "@/components/public/ConditionalMain";
-import ApiPreloader from "@/components/public/ApiPreloader";
 import { Analytics } from "@vercel/analytics/next";
 import {AuthProvider} from "@/context/AuthContext";
 import "./globals.css";
@@ -29,7 +28,6 @@ export default function RootLayout({
                 className={`${defaultFont.className} antialiased`}
             >
                 <AuthProvider>
-                    {/*<ApiPreloader />*/}
                     <div className="min-h-screen">
                         <ConditionalHeader/>
                         <ConditionalMain>
