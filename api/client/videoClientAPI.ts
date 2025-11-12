@@ -144,7 +144,7 @@ export const videoClientAPI = {
                 throw Error(`HTTP error! status: ${response.status}`);
             }
 
-            const getVideoVoiceUrlResult = await reponse.json();
+            const getVideoVoiceUrlResult = await response.json();
 
             if (!getVideoVoiceUrlResult.success || !getVideoVoiceUrlResult.data) {
                 throw Error(getVideoVoiceUrlResult.error ?? "Unknown error occurred while fetching video voice url.")
