@@ -1,13 +1,31 @@
 'use client'
 
-import {memo} from "react";
+import {memo, useEffect, useState} from "react";
 import HeroSection from "@/components/page/landing/HeroSection";
 import FeaturesSection from "@/components/page/landing/FeaturesSection";
 import HowItWorksSection from "@/components/page/landing/HowItWorksSection";
 import FinalCTASection from "@/components/page/landing/FinalCTASection";
 import PricingSection from "@/components/page/landing/PricingSection";
+import {ProductData} from "@/api/types/api/polar/products/ProductData";
+import {polarClientAPI} from "@/api/client/polarClientAPI";
 
 function LandingPageClient() {
+    const [productDataList, setProductDataList] = useState<ProductData[]>([]);
+
+    useEffect(() => {
+        const loadData = async () => {
+            const productDataList = await polarClientAPI.getPolarProducts();
+
+            if (!productDataList) {
+                throw Error("No polarProducts found");
+            }
+
+            setProductDataList(productDataList.sort((a, b) => a.price - b.price));
+        }
+
+        loadData().then();
+    }, []);
+
     return (
         <div className="min-h-screen bg-black text-white">
             {/* Hero Section */}
@@ -22,7 +40,9 @@ function LandingPageClient() {
             <HowItWorksSection />
 
             {/* Pricing Section */}
-            <PricingSection />
+            <PricingSection
+                productDataList={productDataList}
+            />
 
             {/* Final CTA Section */}
             <FinalCTASection />
