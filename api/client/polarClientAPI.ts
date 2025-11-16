@@ -1,5 +1,5 @@
 import { ProductData } from "@/api/types/api/polar/products/ProductData";
-import { getFetch } from "@/api/client/baseFetch";
+import { getFetch, postFetch } from "@/api/client/baseFetch";
 
 export const polarClientAPI = {
     async getPolarProducts(): Promise<ProductData[] | null> {
@@ -18,7 +18,29 @@ export const polarClientAPI = {
         }
     },
 
-    async postPolarCheckouts() {
+    async postPolarCheckouts(
+        productId: string,
+        userId: string,
+        customerEmail?: string,
+        customerName?: string,
+    ): Promise<string | null> {
+        try {
+            const response = await postFetch("/api/polar/checkouts", {
+                productId: productId,
+                userId: userId,
+                customerEmail: customerEmail,
+                customerName: customerName,
+            });
+            const result = await response.json();
 
+            if (!result.success || !result.data?.checkoutUrl) {
+                throw Error(result.error ?? "Unknown error occurred while creating checkout session.")
+            }
+
+            return result.data.checkoutUrl;
+        } catch (error) {
+            console.error("Error creating Polar checkout:", error);
+            return null;
+        }
     }
 }

@@ -45,5 +45,28 @@ export const usersServerAPI = {
             console.error('Unexpected error in postUsers:', error);
             return null;
         }
+    },
+
+    async patchUserByUserId(userId: string, user: Partial<User>): Promise<User | null> {
+        const supabase = createSupabaseServiceRoleClient();
+
+        try {
+            const { data, error } = await supabase
+                .from('users')
+                .update(user)
+                .eq('id', userId)
+                .select()
+                .single();
+
+            if (error) {
+                console.error('Error updating user:', error);
+                throw error;
+            }
+
+            return data;
+        } catch (error) {
+            console.error('Unexpected error in patchUserByUserId:', error);
+            return null;
+        }
     }
 }

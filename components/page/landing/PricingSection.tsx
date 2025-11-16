@@ -1,87 +1,18 @@
 'use client'
 
-import {memo, useMemo} from "react";
+import {memo, useCallback, useMemo} from "react";
 import PricingSectionItem from "./PricingSectionItem";
 import {ProductData} from "@/api/types/api/polar/products/ProductData";
 
-// 가라 데이터 (나중에 API에서 가져올 예정)
-const MOCK_PRICING_DATA = [
-    {
-        id: "daily-1",
-        name: "Daily × 1",
-        price: 4900, // $49.00
-        currency: "USD",
-        interval: "month" as const,
-        description: "Perfect for casual creators",
-        benefits: [
-            "1 video per day",
-            "HD video quality (720p)",
-            "Automated video generation",
-            "AI voice generation",
-            "Auto caption generation",
-            "AI-generated Background music",
-            "One click exporting to platform"
-        ],
-        isPopular: false,
-        videosPerDay: 1,
-    },
-    {
-        id: "daily-2",
-        name: "Daily × 2",
-        price: 8900, // $89.00
-        currency: "USD",
-        interval: "month" as const,
-        description: "Best for active creators",
-        benefits: [
-            "2 videos per day",
-            "All Daily × 1 features included"
-        ],
-        isPopular: true,
-        videosPerDay: 2,
-    },
-    {
-        id: "daily-3",
-        name: "Daily × 3",
-        price: 12900, // $129.00
-        currency: "USD",
-        interval: "month" as const,
-        description: "For serious content producers",
-        benefits: [
-            "3 videos per day",
-            "Same."
-        ],
-        isPopular: false,
-        videosPerDay: 3,
-    },
-    {
-        id: "daily-4",
-        name: "Daily × 4",
-        price: 16900, // $169.00
-        currency: "USD",
-        interval: "month" as const,
-        description: "Maximum production power",
-        benefits: [
-            "4 videos per day",
-            "Same. I don't wanna write this too."
-        ],
-        isPopular: false,
-        videosPerDay: 4,
-    },
-];
-
-
 export interface PricingSectionProps {
     productDataList: ProductData[];
+    onClickPurchasePlan: (productId: string) => void;
 }
 
 function PricingSection({
     productDataList,
-}) {
-    const onClickSubscribe = (planId: string) => {
-        console.log(`Subscribe clicked for plan: ${planId}`);
-        // TODO: Checkout 페이지로 이동 또는 모달 오픈
-    };
-
+    onClickPurchasePlan,
+}: PricingSectionProps) {
     const minimumPrice = useMemo(() => {
         return productDataList.map((productData) => {
             return productData.price;
@@ -91,6 +22,10 @@ function PricingSection({
                 : minValue;
         }, Number.MAX_VALUE);
     }, [productDataList]);
+
+    const onClickSubscribe = useCallback(async (productId: string) => {
+        onClickPurchasePlan(productId);
+    }, [onClickPurchasePlan]);
 
     return (
         <section className="py-24 px-4 sm:px-6 lg:px-8 relative">
@@ -125,7 +60,9 @@ function PricingSection({
                             isPopular={productData.isPopular}
                             videosPerDay={productData.videosPerDay}
                             minimumPrice={minimumPrice}
-                            onClickSubscribe={() => onClickSubscribe(productData.id)}
+                            onClickSubscribe={async () => {
+                                await onClickSubscribe(productData.id)
+                            }}
                         />
                     ))}
                 </div>

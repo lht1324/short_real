@@ -1,6 +1,6 @@
 'use client'
 
-import {memo, useEffect, useState} from "react";
+import {memo, useCallback, useEffect, useState} from "react";
 import HeroSection from "@/components/page/landing/HeroSection";
 import FeaturesSection from "@/components/page/landing/FeaturesSection";
 import HowItWorksSection from "@/components/page/landing/HowItWorksSection";
@@ -8,9 +8,43 @@ import FinalCTASection from "@/components/page/landing/FinalCTASection";
 import PricingSection from "@/components/page/landing/PricingSection";
 import {ProductData} from "@/api/types/api/polar/products/ProductData";
 import {polarClientAPI} from "@/api/client/polarClientAPI";
+import {useAuth} from "@/context/AuthContext";
+import {useRouter} from "next/navigation";
 
 function LandingPageClient() {
+    const router = useRouter();
+
+    const { user } = useAuth();
+
     const [productDataList, setProductDataList] = useState<ProductData[]>([]);
+
+    const onClickPurchasePlan = useCallback(async (productId: string) => {
+        try {
+            // 로그인되지 않은 경우 로그인 페이지로 이동
+            if (!user) {
+                router.push('/sign-in');
+                return;
+            }
+
+            // 체크아웃 세션 생성
+            const checkoutUrl = await polarClientAPI.postPolarCheckouts(
+                productId,
+                user.id,
+                user.email,
+                user.name,
+            );
+
+            // 체크아웃 URL로 리다이렉트
+            if (checkoutUrl) {
+                window.location.href = checkoutUrl;
+            } else {
+                throw new Error("Failed to create checkout session");
+            }
+        } catch (error) {
+            console.error("Error in onClickPurchasePlan:", error);
+            alert("Failed to proceed to checkout. Please try again.");
+        }
+    }, [user, router]);
 
     useEffect(() => {
         const loadData = async () => {
@@ -42,6 +76,7 @@ function LandingPageClient() {
             {/* Pricing Section */}
             <PricingSection
                 productDataList={productDataList}
+                onClickPurchasePlan={onClickPurchasePlan}
             />
 
             {/* Final CTA Section */}
