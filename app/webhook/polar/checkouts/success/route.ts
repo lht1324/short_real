@@ -4,8 +4,12 @@ import { Polar } from "@polar-sh/sdk";
 import { SubscriptionPlan } from "@/api/types/supabase/Users";
 import { usersServerAPI } from "@/api/server/usersServerAPI";
 
+const isProd = process.env.NODE_ENV === 'production';
 const polar = new Polar({
-    accessToken: process.env.POLAR_API_KEY ?? "",
+    server: isProd ? 'production' : 'sandbox',
+    accessToken: isProd
+        ? process.env.POLAR_API_KEY
+        : process.env.POLAR_DEV_API_KEY,
 });
 
 /**
@@ -25,7 +29,7 @@ export async function POST(request: NextRequest) {
         });
 
         // payload에서 productId 추출
-        const productId = payload.data?.productId;
+        const productId: string = payload.data?.product_id;
 
         if (!productId) {
             throw new Error("productId not found in webhook payload");
@@ -41,6 +45,8 @@ export async function POST(request: NextRequest) {
         }
 
         console.log("Found product:", product);
+
+        console.log("productList: ", productsResult);
 
         // Product metadata에서 플랜 정보 추출
         const {

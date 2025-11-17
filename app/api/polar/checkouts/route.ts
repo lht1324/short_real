@@ -2,8 +2,12 @@ import { NextRequest } from "next/server";
 import { getNextBaseResponse } from "@/utils/getNextBaseResponse";
 import { Polar } from "@polar-sh/sdk";
 
+const isProd = process.env.NODE_ENV === 'production';
 const polar = new Polar({
-    accessToken: process.env.POLAR_API_KEY ?? "",
+    server: isProd ? 'production' : 'sandbox',
+    accessToken: isProd
+        ? process.env.POLAR_API_KEY
+        : process.env.POLAR_DEV_API_KEY,
 });
 
 /**

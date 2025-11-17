@@ -26,7 +26,10 @@ function HowItWorksSection() {
     ], []);
 
     return (
-        <section className="py-24 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-transparent to-gray-900/50 relative">
+        <section
+            id="howitworks"
+            className="relative h-[calc(100vh-64px)] py-24 px-4 sm:px-6 lg:px-8 flex items-center"
+        >
             {/* Background Effects */}
             <div className="absolute inset-0 opacity-5 pointer-events-none">
                 <div className="absolute top-1/2 left-1/3 w-96 h-96 bg-gradient-to-r from-purple-500 to-pink-600 rounded-full blur-3xl"></div>

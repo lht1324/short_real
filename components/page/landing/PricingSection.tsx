@@ -28,7 +28,10 @@ function PricingSection({
     }, [onClickPurchasePlan]);
 
     return (
-        <section className="py-24 px-4 sm:px-6 lg:px-8 relative">
+        <section
+            id="pricing"
+            className="py-24 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-transparent to-gray-900/50 relative"
+        >
             {/* Background Effects */}
             <div className="absolute inset-0 opacity-5 pointer-events-none">
                 <div className="absolute top-1/3 left-1/4 w-96 h-96 bg-gradient-to-r from-pink-500 to-purple-600 rounded-full blur-3xl"></div>

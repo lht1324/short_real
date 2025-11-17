@@ -1,4 +1,4 @@
-import {memo, useMemo} from "react";
+import {memo, useCallback, useMemo} from "react";
 import {ArrowRight, Play} from "lucide-react";
 
 interface HeroSectionProps {
@@ -29,6 +29,14 @@ function HeroSection({
         }
     ], []);
 
+    const onClickGetStarted = useCallback((e) => {
+        e.preventDefault();
+        document.getElementById('pricing')?.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start'
+        });
+    }, []);
+
     return (
         <section className={`relative ${className} overflow-hidden`}>
             {/* Vaporwave Background Effects */}
@@ -55,13 +63,16 @@ function HeroSection({
                             </h1>
 
                             <p className="text-xl text-gray-300 max-w-2xl leading-relaxed">
-                                Here's what you looking for.
+                                Here&#39;s what you looking for.
                             </p>
                         </div>
 
                         {/* CTA Button */}
                         <div className="pt-4">
-                            <button className="group bg-gradient-to-r from-pink-500 to-purple-600 text-white px-8 py-4 rounded-xl text-lg font-semibold hover:from-pink-600 hover:to-purple-700 transition-all duration-300 transform hover:scale-105 flex items-center space-x-2 shadow-lg shadow-purple-500/25">
+                            <button
+                                className="group bg-gradient-to-r from-pink-500 to-purple-600 text-white px-8 py-4 rounded-xl text-lg font-semibold hover:from-pink-600 hover:to-purple-700 transition-all duration-300 transform hover:scale-105 flex items-center space-x-2 shadow-lg shadow-purple-500/25"
+                                onClick={onClickGetStarted}
+                            >
                                 <span>Get Started</span>
                                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                             </button>

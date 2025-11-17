@@ -3,9 +3,14 @@ import { getNextBaseResponse } from "@/utils/getNextBaseResponse";
 import { Polar } from "@polar-sh/sdk";
 import { Product } from "@polar-sh/sdk/models/components/product";
 import { ProductData } from "@/api/types/api/polar/products/ProductData";
+import {SubscriptionPlan} from "@/api/types/supabase/Users";
 
+const isProd = process.env.NODE_ENV === 'production';
 const polar = new Polar({
-    accessToken: process.env.POLAR_API_KEY ?? "",
+    server: isProd ? 'production' : 'sandbox',
+    accessToken: isProd
+        ? process.env.POLAR_API_KEY
+        : process.env.POLAR_DEV_API_KEY,
 });
 
 /**
@@ -44,19 +49,8 @@ export async function GET(request: NextRequest) {
                     }
                 }
 
-                // metadata에서 benefits를 JSON 파싱하여 배열로 변환
-                let benefits: string[] = [];
-                if (product.metadata?.benefits) {
-                    try {
-                        const parsedBenefits = typeof product.metadata.benefits === "string"
-                            ? JSON.parse(product.metadata.benefits)
-                            : product.metadata.benefits;
-                        benefits = Array.isArray(parsedBenefits) ? parsedBenefits : [];
-                    } catch (error) {
-                        console.error("Failed to parse benefits for product:", product.id, error);
-                        benefits = [];
-                    }
-                }
+                const benefits: string[] = JSON.parse(product.metadata.benefits.toString());
+                const planData: { creditCount: number, planId: SubscriptionPlan } = JSON.parse(product.metadata.planData.toString());
 
                 // metadata에서 isPopular와 videosPerDay 추출
                 const isPopular = product.metadata?.isPopular === true || product.metadata?.isPopular === "true";
@@ -72,6 +66,7 @@ export async function GET(request: NextRequest) {
                     interval: product.recurringInterval as "month" | "year",
                     description: product.description ?? "",
                     benefits: benefits,
+                    planData: planData,
                     isPopular: isPopular,
                     videosPerDay: videosPerDay,
                 } satisfies ProductData;

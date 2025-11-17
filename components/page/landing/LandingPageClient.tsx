@@ -4,7 +4,6 @@ import {memo, useCallback, useEffect, useState} from "react";
 import HeroSection from "@/components/page/landing/HeroSection";
 import FeaturesSection from "@/components/page/landing/FeaturesSection";
 import HowItWorksSection from "@/components/page/landing/HowItWorksSection";
-import FinalCTASection from "@/components/page/landing/FinalCTASection";
 import PricingSection from "@/components/page/landing/PricingSection";
 import {ProductData} from "@/api/types/api/polar/products/ProductData";
 import {polarClientAPI} from "@/api/client/polarClientAPI";
@@ -79,11 +78,8 @@ function LandingPageClient() {
                 onClickPurchasePlan={onClickPurchasePlan}
             />
 
-            {/* Final CTA Section */}
-            <FinalCTASection />
-
             {/* Footer */}
-            <footer className="py-12 px-4 sm:px-6 lg:px-8 border-t border-purple-500/20 bg-gray-900/30 backdrop-blur-sm">
+            <footer className="py-8 px-4 sm:px-6 lg:px-8 border-t border-purple-500/20 bg-gray-900/30 backdrop-blur-sm">
                 <div className="max-w-7xl mx-auto">
                     <div className="flex flex-col md:flex-row justify-between items-center space-y-6 md:space-y-0">
                         {/* Logo & Copyright */}

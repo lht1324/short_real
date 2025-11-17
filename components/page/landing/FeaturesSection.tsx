@@ -32,13 +32,16 @@ function FeaturesSection() {
     ], []);
 
     return (
-        <section className="py-24 px-4 sm:px-6 lg:px-8 relative">
+        <section
+            id="features"
+            className="relative h-[calc(100vh-64px)] py-24 px-4 sm:px-6 lg:px-8 flex items-center"
+        >
             {/* Background Effects */}
             <div className="absolute inset-0 opacity-5 pointer-events-none">
                 <div className="absolute top-1/3 right-1/4 w-96 h-96 bg-gradient-to-r from-cyan-500 to-blue-600 rounded-full blur-3xl"></div>
             </div>
 
-            <div className="max-w-7xl mx-auto relative">
+            <div className="relative max-w-7xl mx-auto">
                 {/* Section Header */}
                 <div className="text-center mb-16">
                     <h2 className="text-4xl sm:text-5xl font-bold mb-4">
