@@ -19,6 +19,11 @@ function Header() {
         return !!user;
     }, [user]);
 
+    const onClickProfile = useCallback(async () => {
+        setIsDropdownOpen(false);
+        router.push('/profile');
+    }, [router]);
+
     const onClickSignOut = useCallback(async () => {
         await signOut();
         setIsDropdownOpen(false);
@@ -99,10 +104,7 @@ function Header() {
                                             <span className="text-sm">Dashboard</span>
                                         </button>
                                         <button
-                                            onClick={() => {
-                                                // Profile onClick - leave empty as requested
-                                                setIsDropdownOpen(false);
-                                            }}
+                                            onClick={onClickProfile}
                                             className="w-full flex items-center space-x-3 px-4 py-3 text-gray-300 hover:bg-gray-800/50 hover:text-white transition-colors"
                                         >
                                             <UserIcon size={16} />

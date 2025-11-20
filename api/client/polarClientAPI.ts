@@ -1,5 +1,7 @@
 import { ProductData } from "@/api/types/api/polar/products/ProductData";
 import { getFetch, postFetch } from "@/api/client/baseFetch";
+import {OrderData} from "@/api/types/api/polar/orders/GetPolarOrdersResponse";
+import {SubscriptionData} from "@/api/types/api/polar/subscriptions/SubscriptionData";
 
 export const polarClientAPI = {
     async getPolarProducts(): Promise<ProductData[] | null> {
@@ -40,6 +42,38 @@ export const polarClientAPI = {
             return result.data.checkoutUrl;
         } catch (error) {
             console.error("Error creating Polar checkout:", error);
+            return null;
+        }
+    },
+
+    async getPolarOrders(userEmail: string): Promise<OrderData[] | null> {
+        try {
+            const response = await getFetch(`/api/polar/orders?email=${userEmail}`);
+            const getPolarOrdersResult = await response.json();
+
+            if (!getPolarOrdersResult.success && !getPolarOrdersResult.data?.orderList) {
+                throw Error(getPolarOrdersResult.error ?? "Unknown error occurred while fetching order data.");
+            }
+
+            return getPolarOrdersResult.data.orderList;
+        } catch (error) {
+            console.error("Error fetching Polar orders:", error);
+            return null;
+        }
+    },
+
+    async getPolarSubscriptionByEmail(userEmail: string): Promise<SubscriptionData | null> {
+        try {
+            const response = await getFetch(`/api/polar/subscriptions?email=${userEmail}`);
+            const getPolarSubscriptionsResult = await response.json();
+
+            if (!getPolarSubscriptionsResult.success && !getPolarSubscriptionsResult.data?.subscriptionData) {
+                throw Error(getPolarSubscriptionsResult.error ?? "Unknown error occurred while fetching subscription data.");
+            }
+
+            return getPolarSubscriptionsResult.data.subscriptionData;
+        } catch (error) {
+            console.error("Error fetching Polar subscription:", error);
             return null;
         }
     }

@@ -4,6 +4,7 @@ import { Polar } from "@polar-sh/sdk";
 import { Product } from "@polar-sh/sdk/models/components/product";
 import { ProductData } from "@/api/types/api/polar/products/ProductData";
 import {SubscriptionPlan} from "@/api/types/supabase/Users";
+import {LRUCache} from "lru-cache";
 
 const isProd = process.env.NODE_ENV === 'production';
 const polar = new Polar({
@@ -13,6 +14,51 @@ const polar = new Polar({
         : process.env.POLAR_DEV_API_KEY,
 });
 
+const productCache = new LRUCache<string, ProductData[]>({
+    max: 1,
+    ttl: 1000 * 60 * 60, // 1시간
+});
+
+// 제품 처리 로직을 별도 함수로 분리
+function processProducts(items: Product[]): ProductData[] {
+    return items.filter((product: Product) => {
+        return product.recurringInterval === "month" || product.recurringInterval === "year";
+    }).map((product: Product) => {
+        const firstPrice = product.prices[0];
+        let price = 0;
+        let currency = "USD";
+
+        if (firstPrice) {
+            if ('priceAmount' in firstPrice) {
+                price = firstPrice.priceAmount;
+            }
+            if ('priceCurrency' in firstPrice) {
+                currency = firstPrice.priceCurrency;
+            }
+        }
+
+        const benefits: string[] = JSON.parse(product.metadata.benefits.toString());
+        const planData: { creditCount: number, planId: SubscriptionPlan } = JSON.parse(product.metadata.planData.toString());
+        const isPopular = product.metadata?.isPopular === true || product.metadata?.isPopular === "true";
+        const videosPerDay = typeof product.metadata?.videosPerDay === "number"
+            ? product.metadata.videosPerDay
+            : parseInt(product.metadata?.videosPerDay as string) || 0;
+
+        return {
+            id: product.id,
+            name: product.name,
+            price: price,
+            currency: currency,
+            interval: product.recurringInterval as "month" | "year",
+            description: product.description ?? "",
+            benefits: benefits,
+            planData: planData,
+            isPopular: isPopular,
+            videosPerDay: videosPerDay,
+        } satisfies ProductData;
+    });
+}
+
 /**
  * GET /api/polar/products
  * Polar에서 현재 판매 중인 구독형 제품 목록을 조회합니다.
@@ -21,56 +67,35 @@ const polar = new Polar({
 export async function GET(request: NextRequest) {
     try {
         // Polar API 호출 - 활성 구독 제품만
+
+        // 캐시 확인
+        const cacheKey = 'products';
+        const cached = productCache.get(cacheKey);
+
+        if (cached) {
+            console.log('✅ Cache HIT - Products served from cache');
+            return getNextBaseResponse({
+                success: true,
+                status: 200,
+                data: {
+                    productList: cached,
+                },
+                message: "Successfully fetched products from cache."
+            });
+        }
+
+        console.log('❌ Cache MISS - Fetching from Polar API');
+
         const result = await polar.products.list({
             isArchived: false,
             isRecurring: true,
         });
 
-        const productList: ProductData[] = result.result.items
-            .filter((product: Product) => {
-                // month 또는 year 주기만 허용
-                return product.recurringInterval === "month" || product.recurringInterval === "year";
-            })
-            .map((product: Product) => {
-                // 첫 번째 가격 정보 가져오기
-                const firstPrice = product.prices[0];
+        const productList = processProducts(result.result.items);
 
-                // 가격과 통화 추출
-                let price = 0;
-                let currency = "USD";
-
-                if (firstPrice) {
-                    // amountType에 따라 가격 추출
-                    if ('priceAmount' in firstPrice) {
-                        price = firstPrice.priceAmount;
-                    }
-                    if ('priceCurrency' in firstPrice) {
-                        currency = firstPrice.priceCurrency;
-                    }
-                }
-
-                const benefits: string[] = JSON.parse(product.metadata.benefits.toString());
-                const planData: { creditCount: number, planId: SubscriptionPlan } = JSON.parse(product.metadata.planData.toString());
-
-                // metadata에서 isPopular와 videosPerDay 추출
-                const isPopular = product.metadata?.isPopular === true || product.metadata?.isPopular === "true";
-                const videosPerDay = typeof product.metadata?.videosPerDay === "number"
-                    ? product.metadata.videosPerDay
-                    : parseInt(product.metadata?.videosPerDay as string) || 0;
-
-                return {
-                    id: product.id,
-                    name: product.name,
-                    price: price,
-                    currency: currency,
-                    interval: product.recurringInterval as "month" | "year",
-                    description: product.description ?? "",
-                    benefits: benefits,
-                    planData: planData,
-                    isPopular: isPopular,
-                    videosPerDay: videosPerDay,
-                } satisfies ProductData;
-            });
+        // 캐시에 저장
+        productCache.set(cacheKey, productList);
+        console.log(`💾 Cached ${productList.length} products for 1 hour`);
 
         return getNextBaseResponse({
             success: true,
