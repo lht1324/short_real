@@ -1,6 +1,6 @@
 'use client'
 
-import {memo, useEffect, useMemo, useState} from "react";
+import {memo, useCallback, useEffect, useMemo, useState} from "react";
 import {User, SubscriptionPlan} from "@/api/types/supabase/Users";
 import {CreditCard, Crown, Calendar, Mail, User as UserIcon, Receipt, FileText, Settings} from "lucide-react";
 import {useAuth} from "@/context/AuthContext";
@@ -8,9 +8,12 @@ import {polarClientAPI} from "@/api/client/polarClientAPI";
 import {OrderData} from "@/api/types/api/polar/orders/GetPolarOrdersResponse";
 import OrderItem from "@/components/page/profile/OrderItem";
 import {SubscriptionData} from "@/api/types/api/polar/subscriptions/SubscriptionData";
+import ChangePlanModal from "@/components/page/profile/ChangePlanModal";
 
 function ProfilePageClient() {
     const { user } = useAuth();
+
+    const [showChangePlanModal, setShowChangePlanModal] = useState(false);
 
     const [orderList, setOrderList] = useState<OrderData[]>([]);
     const [subscriptionData, setSubscriptionData] = useState<SubscriptionData | null>(null);
@@ -111,6 +114,10 @@ function ProfilePageClient() {
             day: 'numeric'
         });
     }, [subscriptionData?.createdAt]);
+
+    const onClickChangePlan = useCallback(() => {
+        setShowChangePlanModal(true);
+    }, []);
 
     useEffect(() => {
         if (user?.email) {
@@ -381,7 +388,7 @@ function ProfilePageClient() {
                                 </div>
                                 <div className="space-y-3">
                                     <button
-                                        onClick={() => {}}
+                                        onClick={onClickChangePlan}
                                         className="w-full py-3 px-4 rounded-lg bg-gradient-to-r from-pink-500 to-purple-600 text-white font-semibold hover:from-pink-600 hover:to-purple-700 transition-all duration-300 transform hover:scale-[1.02]"
                                     >
                                         Change Plan
@@ -431,6 +438,13 @@ function ProfilePageClient() {
                     )}
                 </div>
             </div>
+            {showChangePlanModal && <ChangePlanModal
+                userCurrentProductName={subscriptionData?.productName ?? null}
+                onClickChangePlan={(productId: string) => {}}
+                onClickClose={() => {
+                    setShowChangePlanModal(false);
+                }}
+            />}
         </div>
     );
 }

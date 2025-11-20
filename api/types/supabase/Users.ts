@@ -5,8 +5,9 @@ export interface User {
     avatar_url: string;
     credit_count?: number;
     plan?: SubscriptionPlan;
-    created_at: string;ㅊ
+    created_at: string;
     updated_at: string;
+    last_subscribed_at: string;
 }
 
 export enum SubscriptionPlan {
