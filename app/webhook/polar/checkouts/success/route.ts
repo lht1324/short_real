@@ -65,6 +65,7 @@ export async function POST(request: NextRequest) {
         const updatedUser = await usersServerAPI.patchUserByUserId(userId, {
             plan: planId,
             credit_count: creditCount,
+            subscription_id: payload.data.id,
         });
 
         if (!updatedUser) {

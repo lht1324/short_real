@@ -76,5 +76,31 @@ export const polarClientAPI = {
             console.error("Error fetching Polar subscription:", error);
             return null;
         }
+    },
+
+    async postPolarSubscriptionsChange(
+        userId: string,
+        subscriptionId: string,
+        prevProductId: string,
+        newProductId: string,
+    ) {
+        try {
+            const response = await postFetch(`/api/polar/subscriptions/change`, {
+                userId,
+                subscriptionId,
+                prevProductId,
+                newProductId,
+            });
+            const postPolarSubscriptionsChangeResult = await response.json();
+
+            if (!postPolarSubscriptionsChangeResult.success) {
+                throw Error(postPolarSubscriptionsChangeResult.error ?? "Unknown error occurred while changing subscription plan.");
+            }
+
+            return true;
+        } catch (error) {
+            console.error("Error requesting Polar subscription change:", error);
+            return false;
+        }
     }
 }

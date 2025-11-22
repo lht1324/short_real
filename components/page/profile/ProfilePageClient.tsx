@@ -1,7 +1,7 @@
 'use client'
 
 import {memo, useCallback, useEffect, useMemo, useState} from "react";
-import {User, SubscriptionPlan} from "@/api/types/supabase/Users";
+import {SubscriptionPlan} from "@/api/types/supabase/Users";
 import {CreditCard, Crown, Calendar, Mail, User as UserIcon, Receipt, FileText, Settings} from "lucide-react";
 import {useAuth} from "@/context/AuthContext";
 import {polarClientAPI} from "@/api/client/polarClientAPI";
@@ -9,9 +9,14 @@ import {OrderData} from "@/api/types/api/polar/orders/GetPolarOrdersResponse";
 import OrderItem from "@/components/page/profile/OrderItem";
 import {SubscriptionData} from "@/api/types/api/polar/subscriptions/SubscriptionData";
 import ChangePlanModal from "@/components/page/profile/ChangePlanModal";
+import {useRouter} from "next/navigation";
 
 function ProfilePageClient() {
+    const router = useRouter();
+
     const { user } = useAuth();
+
+    const [isLoading, setIsLoading] = useState(true);
 
     const [showChangePlanModal, setShowChangePlanModal] = useState(false);
 
@@ -20,20 +25,6 @@ function ProfilePageClient() {
 
     const planDisplayName = useMemo(() => {
         return subscriptionData?.productName ?? "-";
-        // switch (user?.plan) {
-        //     case SubscriptionPlan.DAILY_1:
-        //         return "Daily 1 Video";
-        //     case SubscriptionPlan.DAILY_2:
-        //         return "Daily 2 Videos";
-        //     case SubscriptionPlan.DAILY_3:
-        //         return "Daily 3 Videos";
-        //     case SubscriptionPlan.DAILY_4:
-        //         return "Daily 4 Videos";
-        //     case SubscriptionPlan.NONE:
-        //     default:
-        //         return "Free Plan";
-        // }
-        // }, [user?.plan]);
     }, [subscriptionData]);
 
     const isPremiumPlan = useMemo(() => {
@@ -119,6 +110,57 @@ function ProfilePageClient() {
         setShowChangePlanModal(true);
     }, []);
 
+    const onConfirmChangePlan = useCallback(async (newProductId: string) => {
+        setIsLoading(true);
+
+        try {
+            const userId = user?.id;
+            const subscriptionId = subscriptionData?.id;
+            const prevProductId = subscriptionData?.productId;
+
+            // 필수 값 체크
+            if (!userId) {
+                alert("User information is missing. Please try logging in again.");
+                return;
+            }
+
+            if (!subscriptionId || !prevProductId) {
+                alert("Subscription information is missing. Please refresh the page and try again.");
+                return;
+            }
+
+            // API 호출
+            const postPolarSubscriptionsChangeResult = await polarClientAPI.postPolarSubscriptionsChange(
+                userId,
+                subscriptionId,
+                prevProductId,
+                newProductId
+            );
+
+            if (!postPolarSubscriptionsChangeResult) {
+                alert("Failed to change subscription plan. Please try again later.");
+                return;
+            }
+
+            // 성공 시 후처리
+            alert("Your subscription plan has been successfully updated!");
+
+            // 모달 닫기
+            setShowChangePlanModal(false);
+
+            // 구독 데이터 새로고침
+            if (user?.email) {
+                const updatedSubscriptionData = await polarClientAPI.getPolarSubscriptionByEmail(user.email);
+                setSubscriptionData(updatedSubscriptionData);
+            }
+        } catch (error) {
+            console.error("Error changing subscription plan:", error);
+            alert("An unexpected error occurred. Please try again later.");
+        } finally {
+            setIsLoading(false);
+        }
+    }, [user?.id, user?.email, subscriptionData?.id, subscriptionData?.productId]);
+
     useEffect(() => {
         if (user?.email) {
             const loadData = async () => {
@@ -203,9 +245,13 @@ function ProfilePageClient() {
                 setSubscriptionData(subscriptionData);
             }
 
-            loadData().then();
+            loadData().then(() => {
+                setIsLoading(false);
+            }).catch(() => {
+                router.refresh();
+            });
         }
-    }, [user?.email]);
+    }, [user?.email, router]);
 
     return (
         <div className="min-h-screen bg-black text-white">
@@ -440,11 +486,33 @@ function ProfilePageClient() {
             </div>
             {showChangePlanModal && <ChangePlanModal
                 userCurrentProductName={subscriptionData?.productName ?? null}
-                onClickChangePlan={(productId: string) => {}}
+                onConfirmChangePlan={onConfirmChangePlan}
                 onClickClose={() => {
                     setShowChangePlanModal(false);
                 }}
             />}
+
+            {/* Loading Overlay */}
+            {isLoading && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/92 backdrop-blur-lg">
+                    <div className="flex flex-col items-center gap-6">
+                        {/* Spinner */}
+                        <div className="relative w-20 h-20">
+                            <div className="absolute inset-0 rounded-full border-4 border-purple-500/20"></div>
+                            <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-purple-500 border-r-pink-500 animate-spin"></div>
+                        </div>
+                        {/* Loading Text */}
+                        <div className="text-center">
+                            <p className="text-xl font-semibold bg-gradient-to-r from-pink-400 to-purple-500 bg-clip-text text-transparent">
+                                Loading...
+                            </p>
+                            <p className="text-sm text-gray-400 mt-2">
+                                Please wait while we load your profile
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

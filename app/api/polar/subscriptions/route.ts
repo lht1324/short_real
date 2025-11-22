@@ -95,6 +95,7 @@ export async function GET(request: NextRequest) {
             status: subscription.status, // "incomplete" | "incomplete_expired" | "trialing" | "active" | "past_due" | "canceled" | "unpaid"
 
             // 상품
+            productId: subscription.product.id,
             productName: subscription.product.name,
             productDescription: subscription.product.description ?? undefined,
 

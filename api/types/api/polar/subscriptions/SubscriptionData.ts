@@ -7,6 +7,7 @@ export interface SubscriptionData {
     status: SubscriptionStatus;
 
     // 상품
+    productId: string;
     productName: string;
     productDescription?: string;
 

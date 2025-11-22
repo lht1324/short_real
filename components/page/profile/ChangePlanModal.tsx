@@ -4,35 +4,69 @@ import {memo, useCallback, useEffect, useMemo, useState, MouseEvent} from "react
 import {polarClientAPI} from "@/api/client/polarClientAPI";
 import {ProductData} from "@/api/types/api/polar/products/ProductData";
 import {X} from "lucide-react";
-import PricingSectionItem from "@/components/page/landing/PricingSectionItem";
 import ChangePlanModalPricingItem from "@/components/page/profile/ChangePlanModalPricingItem";
+import ChangePlanConfirmModal from "@/components/page/profile/ChangePlanConfirmModal";
 
 interface ChangePlanModalProps {
     userCurrentProductName: string | null;
-    onClickChangePlan: (productId: string) => void;
+    onConfirmChangePlan: (productId: string) => void;
     onClickClose: () => void;
 }
 
 function ChangePlanModal({
     userCurrentProductName,
-    onClickChangePlan,
+    onConfirmChangePlan,
     onClickClose,
 }: ChangePlanModalProps) {
     const [isLoading, setIsLoading] = useState<boolean>(true);
+    const [showChangePlanConfirmModal, setShowChangePlanConfirmModal] = useState<boolean>(false);
+
     const [productList, setProductList] = useState<ProductData[]>([]);
 
     const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
 
-    // 최소 가격 계산 (PricingSection과 동일)
-    const minimumPrice = useMemo(() => {
-        return productList.map((productData) => {
-            return productData.price;
-        }).reduce((minValue, price) => {
-            return minValue > price
-                ? price
-                : minValue;
-        }, Number.MAX_VALUE);
-    }, [productList]);
+    const currentProductData = useMemo(() => {
+        return productList.find((productData) => {
+            return productData.name === userCurrentProductName;
+        }) ?? null;
+    }, [userCurrentProductName, productList]);
+
+    const selectedProductData = useMemo(() => {
+        return productList.find((productData) => {
+            return productData.id === selectedProductId;
+        }) ?? null;
+    }, [productList, selectedProductId]);
+
+    const noticeText = useMemo(() => {
+        if (!selectedProductId) {
+            return "Select a plan to see details.";
+        }
+
+        if (!currentProductData || !selectedProductData) {
+            return "";
+        }
+
+        // 현재 플랜과 동일한 경우
+        if (selectedProductData.id === currentProductData.id) {
+            return "This is your current plan.";
+        }
+
+        // 다운그레이드 (더 저렴한 플랜)
+        if (selectedProductData.price < currentProductData.price) {
+            return "Your plan will change at the next billing cycle.";
+        }
+
+        // 업그레이드 (더 비싼 플랜)
+        return "Upgrade will be charged immediately and take effect right away.";
+    }, [currentProductData, selectedProductData, selectedProductId]);
+
+    // 버튼 활성화 조건
+    const isChangePlanEnabled = useMemo(() => {
+        if (!selectedProductId || !currentProductData || !selectedProductData) {
+            return false;
+        }
+        return selectedProductData.id !== currentProductData.id;
+    }, [selectedProductId, currentProductData, selectedProductData]);
 
     // 오버레이 클릭 핸들러
     const onClickOverlay = useCallback((e: MouseEvent<HTMLDivElement>) => {
@@ -42,9 +76,14 @@ function ChangePlanModal({
     }, [onClickClose]);
 
     // 플랜 선택 핸들러
-    const onClickSelectPlan = useCallback((productId: string) => {
-        onClickChangePlan(productId);
-    }, [onClickChangePlan]);
+    const onClickSelectPlan = useCallback(() => {
+        if (showChangePlanConfirmModal && selectedProductId) {
+            onConfirmChangePlan(selectedProductId);
+            setShowChangePlanConfirmModal(false);
+        } else {
+            setShowChangePlanConfirmModal(true);
+        }
+    }, [onConfirmChangePlan, selectedProductId, showChangePlanConfirmModal]);
 
     const onSelectPlan = useCallback((productId: string) => {
         setSelectedProductId((prevSelectedProductId) => {
@@ -129,31 +168,47 @@ function ChangePlanModal({
                                     selectedProductId={selectedProductId}
                                     onSelectPlan={onSelectPlan}
                                 />
-                                // <PricingSectionItem
-                                //     key={productData.id}
-                                //     name={productData.name}
-                                //     price={productData.price}
-                                //     currency={productData.currency}
-                                //     interval={productData.interval}
-                                //     description={productData.description}
-                                //     benefits={productData.benefits}
-                                //     isPopular={productData.isPopular}
-                                //     videosPerDay={productData.videosPerDay}
-                                //     minimumPrice={minimumPrice}
-                                //     onClickSubscribe={() => onClickSelectPlan(productData.id)}
-                                // />
                             ))}
                         </div>
                     )}
 
-                    {/* 하단 안내 문구 */}
+                    {/* 하단 안내 문구 및 버튼 */}
                     {!isLoading && (
-                        <div className="mt-12 text-center text-gray-400 text-sm">
-                            All plans include professional-grade output.
+                        <div className="mt-12 flex flex-col items-center gap-6">
+                            {noticeText && (
+                                <div className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-purple-500/10 border border-purple-500/30">
+                                    <p className="text-gray-300 text-sm font-medium">
+                                        {noticeText}
+                                    </p>
+                                </div>
+                            )}
+
+                            <button
+                                onClick={() => selectedProductId && onClickSelectPlan()}
+                                disabled={!isChangePlanEnabled}
+                                className={`
+                                    px-8 py-3 rounded-full font-semibold text-white transition-all duration-300
+                                    ${isChangePlanEnabled
+                                        ? 'bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 hover:scale-105 shadow-lg shadow-purple-500/50'
+                                        : 'bg-gray-700 cursor-not-allowed opacity-50'
+                                    }
+                                `}
+                            >
+                                Change Plan
+                            </button>
                         </div>
                     )}
                 </div>
             </div>
+            {showChangePlanConfirmModal && selectedProductData && currentProductData && <ChangePlanConfirmModal
+                planName={selectedProductData?.name}
+                price={selectedProductData.price}
+                isUpgrade={selectedProductData?.price > currentProductData.price}
+                onClickConfirm={onClickSelectPlan}
+                onClickCancel={() => {
+                    setShowChangePlanConfirmModal(false);
+                }}
+            />}
         </div>
     )
 }
