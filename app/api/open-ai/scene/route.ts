@@ -4,7 +4,6 @@ import {PostOpenAISceneRequest} from '@/api/types/api/open-ai/scene/PostOpenAISc
 import {PostOpenAISceneResponse} from '@/api/types/api/open-ai/scene/PostOpenAISceneResponse';
 import {voiceServerAPI} from "@/api/server/voiceServerAPI";
 import {videoGenerationTasksServerAPI} from "@/api/server/videoGenerationTasksServerAPI";
-import {randomUUID} from "crypto";
 import {
     SceneData, SceneGenerationStatus,
     SubtitleSegment,
@@ -12,11 +11,12 @@ import {
     VideoGenerationTaskStatus
 } from "@/api/types/supabase/VideoGenerationTasks";
 import {getNextBaseResponse} from "@/utils/getNextBaseResponse";
+import {usersServerAPI} from "@/api/server/usersServerAPI";
 
 export async function POST(request: NextRequest): Promise<NextResponse<PostOpenAISceneResponse>> {
     try {
         const {
-            // userId 추가
+            userId,
             taskId,
             narrationScript,
             voiceId,
@@ -24,7 +24,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<PostOpenA
         }: PostOpenAISceneRequest = await request.json();
 
         // 필수 필드 검증
-        if (!narrationScript || !voiceId) {
+        if (!userId || !narrationScript || !voiceId) {
             return getNextBaseResponse({
                 success: false,
                 status: 400,
@@ -32,20 +32,18 @@ export async function POST(request: NextRequest): Promise<NextResponse<PostOpenA
             });
         }
 
-        const testUserId = randomUUID(); // OAuth 없이 테스트용 UUID 생성
         const videoGenerationTaskRequest: Partial<VideoGenerationTask> = {
-            user_id: testUserId,
+            user_id: userId,
             status: VideoGenerationTaskStatus.GENERATING_VOICE,
             narration_script: narrationScript,
             selected_style_id: styleId,
             selected_voice_id: voiceId,
         }
-        console.log(`taskId = ${taskId}`);
+
         const videoGenerationTask: VideoGenerationTask | null = !taskId
             ? await videoGenerationTasksServerAPI.postVideoGenerationTask(videoGenerationTaskRequest)
             : await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, videoGenerationTaskRequest);
 
-        console.log(`newTaskId = ${videoGenerationTask.id}`);
         if (!videoGenerationTask || !videoGenerationTask.id) {
             return getNextBaseResponse({
                 success: false,
@@ -74,6 +72,18 @@ export async function POST(request: NextRequest): Promise<NextResponse<PostOpenA
                 status: 500,
                 error: 'Failed to generate scene segmentation'
             });
+        }
+
+        if (videoGenerationTask.scene_breakdown_list) {
+            const patchUserCreditCountResult = await usersServerAPI.patchUserCreditCountByUserId(userId, -30);
+
+            if (!patchUserCreditCountResult) {
+                return getNextBaseResponse({
+                    success: false,
+                    status: 500,
+                    error: 'Failed to patch user\'s credit count.'
+                });
+            }
         }
 
         // 3. 각 Scene의 자막 데이터 분리

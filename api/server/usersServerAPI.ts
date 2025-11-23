@@ -1,5 +1,5 @@
 import {User} from "@/api/types/supabase/Users";
-import {PostgrestSingleResponse} from "@supabase/supabase-js";
+import {PostgrestError, PostgrestSingleResponse} from "@supabase/supabase-js";
 import {createSupabaseServiceRoleClient} from "@/lib/supabaseServiceRole";
 
 export const usersServerAPI = {
@@ -66,6 +66,32 @@ export const usersServerAPI = {
             return data;
         } catch (error) {
             console.error('Unexpected error in patchUserByUserId:', error);
+            return null;
+        }
+    },
+
+    async patchUserCreditCountByUserId(userId: string, patchCreditAmount: number): Promise<User | null> {
+        const supabase = createSupabaseServiceRoleClient();
+
+        try {
+            const { data, error }: {
+                data: User | null;
+                error: PostgrestError | null;
+            } = await supabase
+                .rpc('increment_user_credit', {
+                    user_id: userId,
+                    credit_delta: patchCreditAmount
+                })
+                .single();
+
+            if (error) {
+                console.error('Error updating user credit:', error);
+                throw error;
+            }
+
+            return data;
+        } catch (error) {
+            console.error('Unexpected error in patchUserCreditCountByUserId:', error);
             return null;
         }
     }

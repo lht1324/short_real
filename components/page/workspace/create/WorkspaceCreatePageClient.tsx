@@ -113,6 +113,8 @@ function WorkspaceCreatePageClient() {
     
     const onClickGenerateStoryboard = useCallback(async () => {
         try {
+            if (!user?.id) return;
+
             if (!script && !selectedVoiceId) {
                 throw new Error("Write script and select voice first.")
             }
@@ -126,6 +128,7 @@ function WorkspaceCreatePageClient() {
             setIsGeneratingStoryboardData(true);
 
             const request: PostOpenAISceneRequest = {
+                userId: user?.id,
                 taskId: taskId,
                 narrationScript: script,
                 styleId: selectedStyleId,
@@ -153,7 +156,7 @@ function WorkspaceCreatePageClient() {
             alert(error instanceof Error ? error.message : 'Unknown error');
             setIsGeneratingStoryboardData(false);
         }
-    }, [taskId, script, selectedVoiceId, selectedStyleId]);
+    }, [user?.id, taskId, script, selectedVoiceId, selectedStyleId]);
     
     const onSelectVoice = useCallback((voiceId: string) => {
         if (voiceId !== selectedVoiceId) {
