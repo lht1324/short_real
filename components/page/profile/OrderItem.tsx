@@ -62,10 +62,6 @@ function OrderItem({
         }
     }, [orderData.status]);
 
-    useEffect(() => {
-        console.log("orderData: ", orderData);
-    }, [orderData]);
-
     return (
         <div className="grid grid-cols-4 gap-4 items-center p-4 rounded-lg border border-gray-700/50 bg-gray-800/30 hover:bg-gray-800/50 transition-all duration-300">
             {/* 제품명 */}

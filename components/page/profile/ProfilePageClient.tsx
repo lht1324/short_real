@@ -10,6 +10,7 @@ import OrderItem from "@/components/page/profile/OrderItem";
 import {SubscriptionData} from "@/api/types/api/polar/subscriptions/SubscriptionData";
 import ChangePlanModal from "@/components/page/profile/ChangePlanModal";
 import {useRouter} from "next/navigation";
+import {ProductData} from "@/api/types/api/polar/products/ProductData";
 
 function ProfilePageClient() {
     const router = useRouter();
@@ -23,6 +24,8 @@ function ProfilePageClient() {
     const [orderList, setOrderList] = useState<OrderData[]>([]);
     const [subscriptionData, setSubscriptionData] = useState<SubscriptionData | null>(null);
 
+    const [scheduledDowngradeProductData, setScheduledDowngradeProductData] = useState<ProductData | null>(null);
+
     const planDisplayName = useMemo(() => {
         return subscriptionData?.productName ?? "-";
     }, [subscriptionData]);
@@ -30,6 +33,10 @@ function ProfilePageClient() {
     const isPremiumPlan = useMemo(() => {
         return user?.plan && user.plan !== SubscriptionPlan.NONE;
     }, [user?.plan]);
+
+    const isDowngradeScheduled = useMemo(() => {
+        return !!user?.scheduled_downgrade_at && !!user?.downgrade_target_plan_id;
+    }, [user?.scheduled_downgrade_at, user?.downgrade_target_plan_id]);
 
     const formattedDate = useMemo(() => {
         return user?.created_at
@@ -105,6 +112,25 @@ function ProfilePageClient() {
             day: 'numeric'
         });
     }, [subscriptionData?.createdAt]);
+
+    const scheduledDowngradeDate = useMemo(() => {
+        if (!user?.scheduled_downgrade_at) return null;
+
+        return new Date(user.scheduled_downgrade_at).toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+    }, [user?.scheduled_downgrade_at]);
+
+    const scheduledDowngradePriceText = useMemo(() => {
+        if (!scheduledDowngradeProductData) return null;
+
+        const amount = (scheduledDowngradeProductData.price / 100).toFixed(2);
+        const currency = scheduledDowngradeProductData.currency.toUpperCase();
+
+        return `${currency} $${amount}`;
+    }, [scheduledDowngradeProductData]);
 
     const onClickChangePlan = useCallback(() => {
         setShowChangePlanModal(true);
@@ -253,6 +279,36 @@ function ProfilePageClient() {
         }
     }, [user?.email, router]);
 
+    useEffect(() => {
+        if (!user?.email) return;
+
+        const loadSubscriptionData = async () => {
+            const newSubscriptionData = await polarClientAPI.getPolarSubscriptionByEmail(user.email);
+
+            if (!newSubscriptionData) return;
+
+            setSubscriptionData(newSubscriptionData);
+        }
+
+        loadSubscriptionData().then();
+    }, [user?.downgrade_target_plan_id, user?.email]);
+
+    useEffect(() => {
+        if (isDowngradeScheduled) {
+            const loadProductDataList = async () => {
+                const newProductDataList = await polarClientAPI.getPolarProducts();
+
+                const scheduledProductData = newProductDataList?.find((productData) => {
+                    return productData.id === user?.downgrade_target_plan_id;
+                }) ?? null;
+
+                setScheduledDowngradeProductData(scheduledProductData);
+            }
+
+            loadProductDataList().then();
+        }
+    }, [isDowngradeScheduled, user?.downgrade_target_plan_id]);
+
     return (
         <div className="min-h-screen bg-black text-white">
             {/* Background Effects */}
@@ -358,7 +414,7 @@ function ProfilePageClient() {
                     {/* Left Column: Subscription Details & Manage */}
                     <div className="space-y-6 md:col-span-1">
                         {/* Cancel Warning Banner */}
-                        {isPremiumPlan && subscriptionData?.cancelAtPeriodEnd && (
+                        {isPremiumPlan && !isDowngradeScheduled && subscriptionData?.cancelAtPeriodEnd && (
                             <div className="p-4 rounded-xl border border-red-500/30 bg-red-500/10 backdrop-blur-sm">
                                 <div className="flex items-start gap-3">
                                     <div className="w-6 h-6 rounded-full bg-red-500 flex items-center justify-center flex-shrink-0 mt-0.5">
@@ -414,9 +470,35 @@ function ProfilePageClient() {
                                         </div>
                                     )}
                                     {subscriptionStartDate && (
-                                        <div className="flex justify-between items-center py-2">
+                                        <div className="flex justify-between items-center py-2 border-b border-gray-700/50">
                                             <span className="text-gray-400">Subscription Start</span>
                                             <span className="font-semibold">{subscriptionStartDate}</span>
+                                        </div>
+                                    )}
+
+                                    {/* 예약된 다운그레이드 정보 */}
+                                    {isDowngradeScheduled && scheduledDowngradeProductData && (
+                                        <div className="mt-4 p-4 rounded-lg border border-yellow-500/30 bg-yellow-500/10">
+                                            <div className="flex items-start gap-2 mb-3">
+                                                <div className="w-5 h-5 rounded-full bg-yellow-500 flex items-center justify-center flex-shrink-0 mt-0.5">
+                                                    <Calendar size={12} className="text-black" />
+                                                </div>
+                                                <h4 className="text-yellow-400 font-semibold text-sm">Scheduled Plan Change</h4>
+                                            </div>
+                                            <div className="space-y-2 text-sm ml-7">
+                                                <div className="flex justify-between items-center">
+                                                    <span className="text-yellow-300/80">Next Plan</span>
+                                                    <span className="font-semibold text-yellow-200">{scheduledDowngradeProductData.name}</span>
+                                                </div>
+                                                <div className="flex justify-between items-center">
+                                                    <span className="text-yellow-300/80">New Price</span>
+                                                    <span className="font-semibold text-yellow-200">{scheduledDowngradePriceText || '-'}</span>
+                                                </div>
+                                                <div className="flex justify-between items-center">
+                                                    <span className="text-yellow-300/80">Change Date</span>
+                                                    <span className="font-semibold text-yellow-200">{scheduledDowngradeDate || '-'}</span>
+                                                </div>
+                                            </div>
                                         </div>
                                     )}
                                 </div>

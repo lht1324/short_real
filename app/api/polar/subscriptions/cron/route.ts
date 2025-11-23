@@ -35,8 +35,26 @@ export async function GET(request: NextRequest) {
         .from('users')
         .select('*')
         .not('scheduled_downgrade_at', 'is', null)
-        .lte('scheduled_downgrade_at', targetDate.toISOString()) // 2시간 이내 만료 예정
+        // .lte('scheduled_downgrade_at', targetDate.toISOString()) // 3시간 이내 만료 예정
         .not('downgrade_target_plan_id', 'is', null);
+
+    if (targetUsers && targetUsers.length > 0) {
+        console.log(`[DEBUG] Found ${targetUsers.length} users with scheduled downgrades.`);
+
+        targetUsers.forEach((user) => {
+            if (!user.scheduled_downgrade_at) return;
+
+            const scheduledTime = new Date(user.scheduled_downgrade_at).getTime();
+            const now = new Date().getTime();
+            const hoursRemaining = (scheduledTime - now) / (1000 * 60 * 60);
+
+            console.log(
+                `[User: ${user.email}] Scheduled: ${user.scheduled_downgrade_at} | Remaining: ${hoursRemaining.toFixed(2)} hours`
+            );
+        });
+    } else {
+        console.log('[DEBUG] No users found matching the criteria.');
+    }
 
     if (error) {
         console.error('Error fetching scheduled downgrades:', error);
@@ -60,12 +78,19 @@ export async function GET(request: NextRequest) {
                 continue;
             }
 
-            // Polar Update (취소 철회 & 플랜 변경)
+            // Polar Update (취소 철회)
+            await polar.subscriptions.update({
+                id: subscriptionId,
+                subscriptionUpdate: {
+                    cancelAtPeriodEnd: false,
+                },
+            });
+
+            // Polar Update (플랜 변경)
             await polar.subscriptions.update({
                 id: subscriptionId,
                 subscriptionUpdate: {
                     productId: targetPlanId,
-                    cancelAtPeriodEnd: false,
                 },
             });
 
