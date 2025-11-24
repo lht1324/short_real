@@ -434,7 +434,10 @@ function WorkspaceDashboardPageClient() {
                         alt="Short Real"
                         width={64}
                         height={64}
-                        className="w-16 h-16"
+                        className="w-16 h-16 cursor-pointer"
+                        onClick={() => {
+                            router.push('/');
+                        }}
                     />
                     <div className="flex flex-col ml-4">
                         <span className="text-4xl font-bold bg-gradient-to-r from-pink-400 to-purple-500 bg-clip-text text-transparent">

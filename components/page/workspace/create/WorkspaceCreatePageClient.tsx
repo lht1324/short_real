@@ -12,14 +12,14 @@ import {videoClientAPI} from "@/api/client/videoClientAPI";
 import {StoryboardData} from "@/api/types/api/open-ai/scene/PostOpenAISceneResponse";
 import StoryboardItem from "@/components/page/workspace/create/StoryboardItem";
 import VoiceSelectionPanel from "@/components/page/workspace/create/VoiceSelectionPanel";
-import {PostVideoRequest} from "@/api/types/api/video/PostVideoRequest";
-import {useSearchParams} from "next/navigation";
+import {useRouter, useSearchParams} from "next/navigation";
 import {PostOpenAISceneRequest} from "@/api/types/api/open-ai/scene/PostOpenAISceneRequest";
 import DefaultModal from "@/components/public/DefaultModal";
 import {useAuth} from "@/context/AuthContext";
 import {STYLE_DATA_LIST} from "@/lib/styles";
 
 function WorkspaceCreatePageClient() {
+    const router = useRouter();
     const searchParams = useSearchParams();
 
     const { user } = useAuth();
@@ -377,7 +377,10 @@ function WorkspaceCreatePageClient() {
                         alt="Short Real"
                         width={64}
                         height={64}
-                        className="w-16 h-16"
+                        className="w-16 h-16 cursor-pointer"
+                        onClick={() => {
+                            router.push('/');
+                        }}
                     />
                     <div className="flex flex-col ml-4">
                         <span className="text-4xl font-bold bg-gradient-to-r from-pink-400 to-purple-500 bg-clip-text text-transparent cursor-default">

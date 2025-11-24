@@ -75,7 +75,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<PostOpenA
         }
 
         if (videoGenerationTask.scene_breakdown_list) {
-            const patchUserCreditCountResult = await usersServerAPI.patchUserCreditCountByUserId(userId, -30);
+            const patchUserCreditCountResult = await usersServerAPI.patchUserCreditCountByUserId(userId, -1);
 
             if (!patchUserCreditCountResult) {
                 return getNextBaseResponse({

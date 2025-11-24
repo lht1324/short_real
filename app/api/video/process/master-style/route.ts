@@ -87,7 +87,7 @@ export async function POST(request: NextRequest) {
             master_style_negative_prompt: masterStyleNegativePrompt,
         });
 
-        const patchUserCreditCountResult = await usersServerAPI.patchUserCreditCountByUserId(videoGenerationTask.user_id, -100);
+        const patchUserCreditCountResult = await usersServerAPI.patchUserCreditCountByUserId(videoGenerationTask.user_id, -(20 * videoGenerationTask.scene_breakdown_list.length));
 
         if (!patchUserCreditCountResult) {
             return getNextBaseResponse({
