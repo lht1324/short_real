@@ -424,7 +424,7 @@ function WorkspaceCreatePageClient() {
                 </div>
 
                 {/* Create Form Panel */}
-                <div className="flex-1 bg-gray-900/30 backdrop-blur-sm border-r border-purple-500/20 overflow-y-auto">
+                <div className="flex-[4] bg-gray-900/30 backdrop-blur-sm border-r border-purple-500/20 overflow-y-auto">
                     <div className="p-6">
                         <div className="text-purple-300 text-2xl font-medium mb-6">Create New Video</div>
                         
@@ -597,28 +597,6 @@ function WorkspaceCreatePageClient() {
                                     </div>
                                 )}
                             </div>
-
-                            {/* VideoData API Test Section */}
-                            {/*<div>*/}
-                            {/*    <label className="block text-xl font-medium text-white mb-3">*/}
-                            {/*        VideoData API Test*/}
-                            {/*    </label>*/}
-                            {/*    <div className="bg-gray-800/50 border border-purple-500/30 rounded-xl p-4">*/}
-                            {/*        <div className="flex items-center justify-between mb-3">*/}
-                            {/*            <span className="text-purple-300 text-sm font-medium">JSON Response</span>*/}
-                            {/*            <button*/}
-                            {/*                onClick={onTestWebhook}*/}
-                            {/*                type="button"*/}
-                            {/*                className="px-3 py-1.5 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-lg text-sm font-medium hover:from-blue-600 hover:to-cyan-600 transition-all duration-300"*/}
-                            {/*            >*/}
-                            {/*                Test VideoData API*/}
-                            {/*            </button>*/}
-                            {/*        </div>*/}
-                            {/*        <pre className="bg-gray-900/50 border border-gray-700/50 rounded-lg p-3 text-xs text-green-400 overflow-x-auto font-mono">*/}
-                            {/*            {`{ }`}*/}
-                            {/*        </pre>*/}
-                            {/*    </div>*/}
-                            {/*</div>*/}
                         </div>
                     </div>
                 </div>
@@ -631,7 +609,7 @@ function WorkspaceCreatePageClient() {
                 />
 
                 {/* Style Preview Panel */}
-                <div className="flex-1 bg-black flex flex-col relative">
+                <div className="flex-[3] bg-black flex flex-col relative">
                     {/* Vaporwave Background Effects */}
                     <div className="absolute inset-0 opacity-10">
                         <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-gradient-to-r from-pink-500 to-purple-600 rounded-full blur-3xl"></div>

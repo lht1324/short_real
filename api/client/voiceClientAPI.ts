@@ -1,5 +1,5 @@
+import { Voice } from "../types/deepgram/Voice";
 import { getFetch } from './baseFetch';
-import {Voice} from "@/api/types/eleven-labs/Voice";
 
 export const voiceClientAPI = {
     // GET /api/voice - 사용 가능한 음성 목록 조회
