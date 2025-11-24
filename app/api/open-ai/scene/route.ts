@@ -89,8 +89,8 @@ export async function POST(request: NextRequest): Promise<NextResponse<PostOpenA
         // 3. 각 Scene의 자막 데이터 분리
         const normalizeWord = (text: string) => {
             return text
-                .replace(/\W/g, "") // 알파벳과 숫자만 남기고 모든 구두점/공백 제거
-                .toLowerCase()
+                .toLowerCase()          // 소문자 통일
+                .replace(/[^\w\s]/g, "") // 알파벳/숫자/공백 외 제거 (콤마, 마침표 등 제거)
                 .trim();
         };
 

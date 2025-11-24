@@ -1,14 +1,14 @@
 'use client'
 
-import {memo, useCallback, useEffect, useMemo, useState} from "react";
-import {Play, Square} from "lucide-react";
-import {Voice} from "@/api/types/eleven-labs/Voice";
+import {memo, MouseEvent, useCallback, useEffect, useMemo, useState} from "react";
+import {Voice, VoiceGender} from "@/api/types/deepgram/Voice";
 import {voiceClientAPI} from "@/api/client/voiceClientAPI";
+import VoiceSelectionPanelItem from "@/components/page/workspace/create/VoiceSelectionPanelItem";
 
 interface VoiceSelectionPanelProps {
-    selectedVoiceId?: string,
-    onSelectVoice: (voiceId: string) => void,
-    onChangeIsLoading: (isVoiceLoading: boolean) => void,
+    selectedVoiceId?: string;
+    onSelectVoice: (voiceId: string) => void;
+    onChangeIsLoading: (isVoiceLoading: boolean) => void;
 }
 
 function VoiceSelectionPanel({
@@ -17,67 +17,88 @@ function VoiceSelectionPanel({
     onChangeIsLoading,
 }: VoiceSelectionPanelProps) {
     const [voiceList, setVoiceList] = useState<Voice[]>([]);
-    const [voiceGenderTagRecord, setVoiceGenderTagRecord] = useState<Record<string, boolean>>({ });
-    const [voiceAgeTagRecord, setVoiceAgeTagRecord] = useState<Record<string, boolean>>({ });
+    const [accentTagRecord, setAccentTagRecord] = useState<Record<string, boolean>>({});
+    const [ageTagRecord, setAgeTagRecord] = useState<Record<string, boolean>>({});
+    const [genderTagRecord, setGenderTagRecord] = useState<Record<string, boolean>>({});
+
     const isAllTagSelected = useMemo(() => {
-        return Object.values(voiceGenderTagRecord).every((isTagSelected) => isTagSelected) &&
-            Object.values(voiceAgeTagRecord).every((isTagSelected) => isTagSelected);
-    }, [voiceGenderTagRecord, voiceAgeTagRecord]);
+        return Object.values(accentTagRecord).every((isTagSelected) => isTagSelected) &&
+            Object.values(ageTagRecord).every((isTagSelected) => isTagSelected) &&
+            Object.values(genderTagRecord).every((isTagSelected) => isTagSelected);
+    }, [accentTagRecord, ageTagRecord, genderTagRecord]);
+
     const filteredVoiceList = useMemo(() => {
-        const anyGenderSelected = Object.values(voiceGenderTagRecord).some(v => v);
-        const anyAgeSelected = Object.values(voiceAgeTagRecord).some(v => v);
+        const anyAccentSelected = Object.values(accentTagRecord).some(v => v);
+        const anyAgeSelected = Object.values(ageTagRecord).some(v => v);
+        const anyGenderSelected = Object.values(genderTagRecord).some(v => v);
 
         return voiceList.filter((voice) => {
-            if (selectedVoiceId === voice.id && (!anyGenderSelected && !anyAgeSelected)) {
+            // 선택된 voice는 항상 표시
+            if (selectedVoiceId === voice.id && (!anyAccentSelected && !anyAgeSelected && !anyGenderSelected)) {
                 return true;
             }
 
-            if (!voice.labels?.gender || !voice.labels?.age || (!anyGenderSelected && !anyAgeSelected)) {
+            // 필터가 모두 비활성화되어 있으면 숨김
+            if (!anyAccentSelected && !anyAgeSelected && !anyGenderSelected) {
                 return false;
             }
 
-            const isEnabledGender = anyGenderSelected
-                ? voiceGenderTagRecord[voice.labels.gender]
+            const isEnabledAccent = anyAccentSelected
+                ? accentTagRecord[voice.accent]
                 : true;
             const isEnabledAge = anyAgeSelected
-                ? voiceAgeTagRecord[voice.labels.age]
+                ? ageTagRecord[voice.age]
+                : true;
+            const isEnabledGender = anyGenderSelected
+                ? genderTagRecord[voice.gender]
                 : true;
 
-            return isEnabledGender && isEnabledAge;
-        })
-    }, [selectedVoiceId, voiceList, voiceGenderTagRecord, voiceAgeTagRecord]);
+            return isEnabledAccent && isEnabledAge && isEnabledGender;
+        });
+    }, [selectedVoiceId, voiceList, accentTagRecord, ageTagRecord, genderTagRecord]);
 
     // Audio state management
     const [currentAudio, setCurrentAudio] = useState<HTMLAudioElement | null>(null);
     const [playingSoundId, setPlayingSoundId] = useState<string | null>(null);
 
-    const onToggleVoiceGenderTag = useCallback((tagName: string) => {
-        setVoiceGenderTagRecord(prev => ({
+    const onToggleAccentTag = useCallback((tagName: string) => {
+        setAccentTagRecord(prev => ({
             ...prev,
             [tagName]: !prev[tagName]
         }));
     }, []);
 
-    const onToggleVoiceAgeTag = useCallback((tagName: string) => {
-        // 1개, 2개 이상
-        // 1개 -> 기존 거 해제하고 다른 걸로
-        // 2개 ->
-        setVoiceAgeTagRecord(prev => ({
+    const onToggleAgeTag = useCallback((tagName: string) => {
+        setAgeTagRecord(prev => ({
+            ...prev,
+            [tagName]: !prev[tagName]
+        }));
+    }, []);
+
+    const onToggleGenderTag = useCallback((tagName: string) => {
+        setGenderTagRecord(prev => ({
             ...prev,
             [tagName]: !prev[tagName]
         }));
     }, []);
 
     const onClickSelectAllTag = useCallback(() => {
-        setVoiceGenderTagRecord((prev) => {
-            const newRecord: Record<string, boolean> = { };
+        setAccentTagRecord((prev) => {
+            const newRecord: Record<string, boolean> = {};
             Object.keys(prev).forEach((tagName) => {
                 newRecord[tagName] = !isAllTagSelected;
             });
             return newRecord;
         });
-        setVoiceAgeTagRecord((prev) => {
-            const newRecord: Record<string, boolean> = { };
+        setAgeTagRecord((prev) => {
+            const newRecord: Record<string, boolean> = {};
+            Object.keys(prev).forEach((tagName) => {
+                newRecord[tagName] = !isAllTagSelected;
+            });
+            return newRecord;
+        });
+        setGenderTagRecord((prev) => {
+            const newRecord: Record<string, boolean> = {};
             Object.keys(prev).forEach((tagName) => {
                 newRecord[tagName] = !isAllTagSelected;
             });
@@ -98,19 +119,16 @@ function VoiceSelectionPanel({
         if (soundPreviewUrl) {
             const audio = new Audio(soundPreviewUrl);
 
-            // 재생 종료 시 state 초기화 (해당 오디오만)
             audio.addEventListener('ended', () => {
                 setCurrentAudio((current) => {
                     if (current === audio) {
                         setPlayingSoundId(null);
                         return null;
                     }
-
                     return current;
                 });
             });
 
-            // 에러 처리 (해당 오디오만)
             audio.addEventListener('error', (error) => {
                 console.error('Audio playback error:', error);
                 setCurrentAudio((current) => {
@@ -129,7 +147,6 @@ function VoiceSelectionPanel({
                 console.error('Failed to play audio:', error);
                 setCurrentAudio(null);
                 setPlayingSoundId(null);
-                // 재생 실패 시에만 state 초기화 (기존 오디오는 그대로 유지)
             });
         } else {
             console.log('No preview URL available for:', soundId);
@@ -142,47 +159,59 @@ function VoiceSelectionPanel({
         setPlayingSoundId(null);
     }, [currentAudio]);
 
+    const onTogglePlay = useCallback((e: MouseEvent, voiceId: string, voicePreviewUrl: string) => {
+        e.stopPropagation();
+
+        if (!currentAudio || playingSoundId !== voiceId) {
+            onClickPlaySoundPreview(voiceId, voicePreviewUrl);
+        } else {
+            onClickStopSoundPreview();
+        }
+    }, [currentAudio, playingSoundId, onClickPlaySoundPreview, onClickStopSoundPreview]);
+
     useEffect(() => {
         const loadData = async () => {
             const voiceDataList = await voiceClientAPI.getVoices();
 
-            // 모든 gender와 age 값들을 수집
-            const genderTags = new Set<string>();
+            // accent와 age 값들을 수집
+            const accentTags = new Set<string>();
             const ageTags = new Set<string>();
+            const genderTags = new Set<string>();
 
             voiceDataList.forEach((voiceData) => {
-                const labels = voiceData.labels;
-                if (labels?.gender) {
-                    genderTags.add(labels.gender);
+                if (voiceData.accent) {
+                    accentTags.add(voiceData.accent);
                 }
-                if (labels?.age) {
-                    ageTags.add(labels.age);
+                if (voiceData.age) {
+                    ageTags.add(voiceData.age);
+                }
+                if (voiceData.gender) {
+                    genderTags.add(voiceData.gender);
                 }
             });
 
-            // 중복 제거된 태그들을 isSelected: true로 설정하여 배열로 변환
-            const uniqueGenderTagNameList = Array.from(genderTags).map((genderTagName) => {
-                return genderTagName;
-            });
-            const uniqueAgeTagNameList = Array.from(ageTags).map((ageTagName) => {
-                return ageTagName;
-            });
-            const uniqueGenderTagRecord: Record<string, boolean> = { }
-            const uniqueAgeTagRecord: Record<string, boolean> = { }
+            const uniqueAccentTagRecord: Record<string, boolean> = {};
+            const uniqueAgeTagRecord: Record<string, boolean> = {};
+            const uniqueGenderTagRecord: Record<string, boolean> = {};
 
-            uniqueGenderTagNameList.forEach((uniqueGenderTagName) => {
-                uniqueGenderTagRecord[uniqueGenderTagName] = true;
+            Array.from(accentTags).forEach((accentTag) => {
+                uniqueAccentTagRecord[accentTag] = true;
             });
-            uniqueAgeTagNameList.forEach((uniqueAgeTagName) => {
-                uniqueAgeTagRecord[uniqueAgeTagName] = true;
-            })
+
+            Array.from(ageTags).forEach((ageTag) => {
+                uniqueAgeTagRecord[ageTag] = true;
+            });
+
+            Array.from(genderTags).forEach((genderTag) => {
+                uniqueGenderTagRecord[genderTag] = true;
+            });
 
             setVoiceList(voiceDataList);
-
-            setVoiceGenderTagRecord(uniqueGenderTagRecord);
-            setVoiceAgeTagRecord(uniqueAgeTagRecord);
+            setAccentTagRecord(uniqueAccentTagRecord);
+            setAgeTagRecord(uniqueAgeTagRecord);
+            setGenderTagRecord(uniqueGenderTagRecord);
             onChangeIsLoading(false);
-        }
+        };
 
         loadData().then();
     }, [onChangeIsLoading]);
@@ -200,241 +229,133 @@ function VoiceSelectionPanel({
     }, [currentAudio]);
 
     return (
-        <div className="w-[400px] flex-shrink-0 bg-gray-900/30 backdrop-blur-sm border-r border-purple-500/20 overflow-y-auto">
-            <div className="p-6">
-                <div className="text-purple-300 text-2xl font-medium mb-4">Voice</div>
+        <div className="flex-[2.7] bg-gray-900/30 backdrop-blur-sm border-r border-purple-500/20 overflow-y-auto">
+            <div className="p-6 flex flex-col gap-4">
+                <h2 className="text-xl font-semibold text-purple-300">Voice</h2>
 
                 {/* Voice Filters */}
-                <div className="mb-6">
+                <div className="flex flex-col gap-4">
                     {/* Select All Button */}
-                    <div className="mb-3">
-                        <button
-                            onClick={onClickSelectAllTag}
-                            className={`text-sm px-3 py-1.5 rounded-lg border font-medium transition-all ${
-                                isAllTagSelected
-                                    ? "bg-indigo-500/20 text-indigo-300 border-indigo-400/30 hover:bg-indigo-500/30"
-                                    : "bg-gray-500/20 text-gray-400 border-gray-500/30 hover:bg-gray-500/30"
-                            }`}
-                        >
-                            Select All
-                        </button>
-                    </div>
+                    <button
+                        onClick={onClickSelectAllTag}
+                        className={`px-3 py-1.5 rounded-lg border font-medium transition-all text-sm ${
+                            isAllTagSelected
+                                ? 'bg-gradient-to-r from-pink-500/20 to-purple-500/20 text-purple-300 border-purple-400/30'
+                                : 'bg-gray-800/30 text-gray-400 border-purple-500/30 hover:border-purple-400/50'
+                        }`}
+                    >
+                        Select All
+                    </button>
 
-                    {/* Gender Filter */}
-                    <div className="flex flex-row space-x-2 mb-4">
-                        <div className="text-sm font-medium text-purple-300 mb-2">Gender</div>
+                    {/* Accent Filter */}
+                    <div className="flex flex-col gap-2">
+                        <h3 className="text-sm font-medium text-purple-300">Accent</h3>
                         <div className="flex flex-wrap gap-2">
-                            {Object.keys(voiceGenderTagRecord).map((tagName) => {
-                            const isActive = voiceGenderTagRecord[tagName];
-
-
-                            // Tailwind 동적 클래스 문제 해결: 조건문으로 전체 클래스 반환
-                            const getTagClasses = () => {
-                                if (!isActive) {
-                                    return "bg-gray-500/20 text-gray-400 border-gray-500/30 hover:bg-gray-500/30";
-                                }
-
-                                switch (tagName) {
-                                    case 'male': return "bg-blue-500/20 text-blue-300 border-blue-400/30";
-                                    case 'female': return "bg-red-500/20 text-red-300 border-red-400/30";
-                                    case 'neutral': return "bg-gray-500/20 text-gray-300 border-gray-400/30";
-                                    default: return "bg-gray-500/20 text-gray-400 border-gray-500/30";
-                                    }
-                                };
-
-                            // 표시할 라벨 결정
-                            const getDisplayLabel = () => {
-                                switch (tagName) {
-                                    case 'male': return 'Male';
-                                    case 'female': return 'Female';
-                                    case 'neutral': return 'Neutral';
-                                    default: return tagName;
-                                }
-                            };
-
-                            return (
-                                <button
-                                    key={tagName}
-                                    onClick={() => {
-                                        onToggleVoiceGenderTag(tagName);
-                                    }}
-                                    className={`text-xs px-2 py-1 rounded-full border font-medium transition-all ${getTagClasses()}`}
-                                >
-                                    {getDisplayLabel()}
-                                </button>
-                            );
-                        })}
+                            {Object.keys(accentTagRecord).sort((a, b) => {
+                                return a.localeCompare(b);
+                            }).map((tagName) => {
+                                const isActive = accentTagRecord[tagName];
+                                return (
+                                    <button
+                                        key={tagName}
+                                        onClick={() => onToggleAccentTag(tagName)}
+                                        className={`text-xs px-2 py-1 rounded-full border font-medium transition-all ${
+                                            isActive
+                                                ? 'bg-pink-500/20 text-pink-300 border-pink-400/30'
+                                                : 'bg-gray-800/30 text-gray-400 border-purple-500/30 hover:border-purple-400/50'
+                                        }`}
+                                    >
+                                        {tagName}
+                                    </button>
+                                );
+                            })}
                         </div>
                     </div>
 
                     {/* Age Filter */}
-                    <div className="flex flex-row space-x-2 items-center">
-                        <div className="text-sm font-medium text-purple-300 mb-2">Age</div>
+                    <div className="flex flex-col gap-2">
+                        <h3 className="text-sm font-medium text-purple-300">Age</h3>
                         <div className="flex flex-wrap gap-2">
-                            {Object.keys(voiceAgeTagRecord).map((tagName) => {
-                            const isActive = voiceAgeTagRecord[tagName];
-
-                            // Tailwind 동적 클래스 문제 해결: 조건문으로 전체 클래스 반환
-                            const getTagClasses = () => {
-                                if (!isActive) {
-                                    return "bg-gray-500/20 text-gray-400 border-gray-500/30 hover:bg-gray-500/30";
-                                }
-
-                                switch (tagName) {
-                                    case 'young': return "bg-green-500/20 text-green-300 border-green-400/30";
-                                    case 'middle_aged': return "bg-purple-500/20 text-purple-300 border-purple-400/30";
-                                    case 'old': return "bg-orange-500/20 text-orange-300 border-orange-400/30";
-                                    default: return "bg-gray-500/20 text-gray-400 border-gray-500/30";
-                                }
-                            };
-                            // 표시할 라벨 결정
-                            const getDisplayLabel = () => {
-                                switch (tagName) {
-                                    case 'young': return 'Young';
-                                    case 'middle_aged': return 'Adult';
-                                    case 'old': return 'Senior';
-                                    default: return tagName;
-                                }
-                            };
-
-                            return (
-                                <button
-                                    key={tagName}
-                                    onClick={() => {
-                                        onToggleVoiceAgeTag(tagName);
-                                    }}
-                                    className={`text-xs px-2 py-1 rounded-full border font-medium transition-all ${getTagClasses()}`}
-                                >
-                                    {getDisplayLabel()}
-                                </button>
-                            );
-                        })}
-                        </div>
-                    </div>
-                </div>
-
-                <div className="space-y-6">
-                    {/* Voice Selection */}
-                    <div>
-                        <div className="grid grid-cols-2 gap-3">
-                            {filteredVoiceList.map((voice) => {
-                                const getGenderColor = (gender?: string) => {
-                                    switch (gender) {
-                                        case "male": return "blue";
-                                        case "female": return "red";
-                                        case 'neutral': return "gray";
-                                        default: return "gray";
-                                    }
-                                }
-                                const getAgeColor = (age?: string) => {
-                                    switch (age) {
-                                        case "young": return "green";
-                                        case "middle_aged": return "purple";
-                                        case "old": return "orange";
-                                        default: return "gray";
-                                    }
-                                }
-                                const labels = voice.labels;
-                                const gender = labels?.gender;
-                                const age = labels?.age;
-                                const genderDisplay = gender === 'male'
-                                    ? 'Male'
-                                    : gender === 'female'
-                                        ? 'Female'
-                                        : gender === 'neutral'
-                                            ? 'Neutral'
-                                            : '';
-                                const ageDisplay = age === 'young'
-                                    ? 'Young'
-                                    : age === 'middle_aged'
-                                        ? 'Adult'
-                                        : age === 'old'
-                                            ? 'Senior'
-                                            : '';
-                                const genderColor = getGenderColor(gender);
-                                const ageColor = getAgeColor(age);
-
-                                // Voice 아이템 태그 클래스 생성 (동적 클래스 문제 해결)
-                                const getGenderTagClass = (color: string) => {
-                                    switch (color) {
-                                        case 'blue':
-                                            return 'text-xs px-2 py-1 rounded-full border font-medium bg-blue-500/20 text-blue-300 border-blue-400/30';
-                                        case 'red':
-                                            return 'text-xs px-2 py-1 rounded-full border font-medium bg-red-500/20 text-red-300 border-red-400/30';
-                                        default:
-                                            return 'text-xs px-2 py-1 rounded-full border font-medium bg-gray-500/20 text-gray-300 border-gray-400/30';
-                                    }
-                                };
-
-                                const getAgeTagClass = (color: string) => {
-                                    switch (color) {
-                                        case 'green':
-                                            return 'text-xs px-2 py-1 rounded-full border font-medium bg-green-500/20 text-green-300 border-green-400/30';
-                                        case 'purple':
-                                            return 'text-xs px-2 py-1 rounded-full border font-medium bg-purple-500/20 text-purple-300 border-purple-400/30';
-                                        case 'orange':
-                                            return 'text-xs px-2 py-1 rounded-full border font-medium bg-orange-500/20 text-orange-300 border-orange-400/30';
-                                        default:
-                                            return 'text-xs px-2 py-1 rounded-full border font-medium bg-gray-500/20 text-gray-300 border-gray-400/30';
-                                    }
-                                };
-
+                            {Object.keys(ageTagRecord).sort((a, b) => {
+                                return a.localeCompare(b);
+                            }).map((tagName) => {
+                                const isActive = ageTagRecord[tagName];
                                 return (
-                                    <div
-                                        key={voice.id}
-                                        onClick={() => onSelectVoice(voice.id)}
-                                        className={`pt-3 pr-3 pb-3 rounded-lg border transition-all text-left cursor-pointer ${
-                                            voice.id === selectedVoiceId
-                                                ? 'border-pink-500 bg-pink-500/10'
-                                                : 'border-purple-500/30 bg-gray-800/30 hover:border-purple-400/50'
+                                    <button
+                                        key={tagName}
+                                        onClick={() => onToggleAgeTag(tagName)}
+                                        className={`text-xs px-2 py-1 rounded-full border font-medium transition-all ${
+                                            isActive
+                                                ? 'bg-purple-500/20 text-purple-300 border-purple-400/30'
+                                                : 'bg-gray-800/30 text-gray-400 border-purple-500/30 hover:border-purple-400/50'
                                         }`}
                                     >
-                                        <div className="flex items-center justify-between">
-                                            <div className="min-w-0 flex-1">
-                                                <div className="flex flex-col gap-1.5">
-                                                    <div className="pl-3 text-white font-medium text-base">{voice.name}</div>
-                                                    <div className="flex pl-2 gap-1.5">
-                                                        {genderDisplay && (
-                                                            <span className={getGenderTagClass(genderColor)}>
-                                                                {genderDisplay}
-                                                            </span>
-                                                        )}
-                                                        {ageDisplay && (
-                                                            <span className={getAgeTagClass(ageColor)}>
-                                                                {ageDisplay}
-                                                            </span>
-                                                        )}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <button
-                                                className="p-1.5 rounded-full bg-gray-700/50 hover:bg-gray-600/50 transition-colors flex-shrink-0 ml-2"
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
+                                        {tagName}
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    </div>
 
-                                                    if (!currentAudio || playingSoundId !== voice.id) {
-                                                        onClickPlaySoundPreview(voice.id, voice.previewUrl);
-                                                    } else {
-                                                        onClickStopSoundPreview();
-                                                    }
-                                                }}
-                                            >
-                                                {playingSoundId === voice.id ? (
-                                                    <Square size={14} className="text-white" />
-                                                ) : (
-                                                    <Play size={14} className="text-white" />
-                                                )}
-                                            </button>
-                                        </div>
-                                    </div>
+                    {/* Gender Filter */}
+                    <div className="flex flex-col gap-2">
+                        <h3 className="text-sm font-medium text-purple-300">Gender</h3>
+                        <div className="flex flex-wrap gap-2">
+                            {Object.keys(genderTagRecord).sort((a, b) => {
+                                return a.localeCompare(b);
+                            }).map((tagName) => {
+                                const isActive = genderTagRecord[tagName];
+                                const isMale = tagName === VoiceGender.MALE;
+                                const isFemale = tagName === VoiceGender.FEMALE;
+
+                                // 활성 상태일 때 성별에 따라 색상 분리
+                                let activeClass = '';
+                                if (isActive) {
+                                    if (isMale) {
+                                        activeClass = 'bg-blue-500/20 text-blue-300 border-blue-400/30';
+                                    } else if (isFemale) {
+                                        activeClass = 'bg-red-500/20 text-red-300 border-red-400/30';
+                                    } else {
+                                        activeClass = 'bg-purple-500/20 text-purple-300 border-purple-400/30';
+                                    }
+                                }
+
+                                return (
+                                    <button
+                                        key={tagName}
+                                        onClick={() => onToggleGenderTag(tagName)}
+                                        className={`text-xs px-2 py-1 rounded-full border font-medium transition-all ${
+                                            isActive
+                                                ? activeClass
+                                                : 'bg-gray-800/30 text-gray-400 border-purple-500/30 hover:border-purple-400/50'
+                                        }`}
+                                    >
+                                        {tagName}
+                                    </button>
                                 );
                             })}
                         </div>
                     </div>
                 </div>
+
+                {/* Voice Selection */}
+                <div className="flex-1 overflow-y-auto pr-2 -mr-2">
+                    <div className="flex flex-col gap-3">
+                        {filteredVoiceList.map((voice) => (
+                            <VoiceSelectionPanelItem
+                                key={voice.id}
+                                voice={voice}
+                                isSelected={voice.id === selectedVoiceId}
+                                isPlaying={playingSoundId === voice.id}
+                                onSelect={() => onSelectVoice(voice.id)}
+                                onTogglePlay={onTogglePlay}
+                            />
+                        ))}
+                    </div>
+                </div>
             </div>
         </div>
-    )
+    );
 }
 
 export default memo(VoiceSelectionPanel);
