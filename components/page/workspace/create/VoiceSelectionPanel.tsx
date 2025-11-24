@@ -229,7 +229,7 @@ function VoiceSelectionPanel({
     }, [currentAudio]);
 
     return (
-        <div className="flex-[3] bg-gray-900/30 backdrop-blur-sm border-r border-purple-500/20 overflow-y-auto">
+        <div className="flex-[2.7] bg-gray-900/30 backdrop-blur-sm border-r border-purple-500/20 overflow-y-auto">
             <div className="p-6 flex flex-col gap-4">
                 <h2 className="text-xl font-semibold text-purple-300">Voice</h2>
 

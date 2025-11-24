@@ -8,6 +8,8 @@ import {createSupabaseServiceRoleClient} from "@/lib/supabaseServiceRole";
 import {VoiceGenerationModelId, VoiceGenerationOutputFormat, VoiceSettings} from "@/api/types/eleven-labs/Voice";
 import {DeepgramModel} from "@/api/types/deepgram/DeepgramModel";
 import {Voice, VoiceGender} from "@/api/types/deepgram/Voice";
+import {elevenLabsClient} from "@/lib/elevenLabsClient";
+import {SpeechToTextChunkResponseModel} from "@elevenlabs/elevenlabs-js/api/types/SpeechToTextChunkResponseModel";
 
 // 헬퍼 함수: Web ReadableStream을 Buffer로 변환
 async function streamToBuffer(stream: ReadableStream): Promise<Buffer> {
@@ -87,7 +89,7 @@ export const voiceServerAPI = {
     }> {
         try {
             // -------------------------------------------------------
-            // 1단계: TTS (Text-to-Speech) - 오디오 생성
+            // 1단계: TTS (Text-to-Speech) - 오디오 생성 (Deepgram)
             // -------------------------------------------------------
             const ttsResponse = await deepgramClient.speak.request(
                 { text },
@@ -106,23 +108,13 @@ export const voiceServerAPI = {
             const audioBuffer = await streamToBuffer(stream);
 
             // -------------------------------------------------------
-            // 2단계: STT (Speech-to-Text) - 타임스탬프(Alignment) 추출
+            // 2단계: STT (Speech-to-Text) - 타임스탬프(Alignment) 추출 (ElevenLabs)
             // -------------------------------------------------------
-            // 생성된 깨끗한 오디오를 다시 Deepgram STT로 보내 정확한 단어 타이밍을 얻습니다.
-            const { result, error } = await deepgramClient.listen.prerecorded.transcribeFile(
-                audioBuffer,
-                {
-                    model: "nova-2",       // 가장 정확하고 빠른 STT 모델
-                    smart_format: true,    // 구두점, 대소문자 자동 적용
-                    punctuate: true,       // 문장 부호 포함
-                    utterances: true,      // 문장 단위 분석
-                    language: "en",        // 언어 설정 (필요시 파라미터화 가능)
-                }
-            );
-
-            if (error || !result) {
-                throw new Error(`Deepgram STT timestamp extraction failed: ${error?.message}`);
-            }
+            const elevenLabsResponse = await elevenLabsClient.speechToText.convert({
+                file: audioBuffer,
+                modelId: "scribe_v1",
+                languageCode: "en",
+            }) as SpeechToTextChunkResponseModel;
 
             // -------------------------------------------------------
             // 3단계: 결과 매핑 (Deepgram Words -> SubtitleSegment)
@@ -130,15 +122,30 @@ export const voiceServerAPI = {
             const subtitleSegments: SubtitleSegment[] = [];
 
             // Deepgram 결과 구조에서 'words' 배열 추출
-            const words = result.results?.channels[0]?.alternatives[0]?.words || [];
+            const words = elevenLabsResponse.words;
 
-            for (const w of words) {
-                subtitleSegments.push({
-                    // punctuated_word가 있으면 사용(구두점 포함), 없으면 기본 word 사용
-                    word: w.punctuated_word || w.word,
-                    startSec: w.start,
-                    endSec: w.end,
-                });
+            for (let index = 0; index < words.length; index++) {
+                const currentWord = words[index];
+
+                // "현재가 단어(word)"일 때만 처리 (공백은 무시하고 넘어감)
+                if (currentWord.type === 'word' && currentWord.start && currentWord.end) {
+                    let finalText = currentWord.text;
+                    let finalStart = currentWord.start;
+                    const finalEnd = currentWord.end;
+
+                    // [안전 장치] 인덱스가 0이 아니고, 바로 앞이 공백(spacing)인 경우에만 합침
+                    if (index > 0 && words[index - 1].type === 'spacing') {
+                        const prevWord = words[index - 1];
+                        finalText = prevWord.text + finalText; // " " + "word"
+                        finalStart = prevWord.start ?? currentWord.start; // 시작 시간 앞당기기
+                    }
+
+                    subtitleSegments.push({
+                        word: finalText,
+                        startSec: finalStart,
+                        endSec: finalEnd
+                    });
+                }
             }
 
             return {

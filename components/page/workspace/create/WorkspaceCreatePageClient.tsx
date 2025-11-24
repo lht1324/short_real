@@ -424,7 +424,7 @@ function WorkspaceCreatePageClient() {
                 </div>
 
                 {/* Create Form Panel */}
-                <div className="flex-[4] bg-gray-900/30 backdrop-blur-sm border-r border-purple-500/20 overflow-y-auto">
+                <div className="flex-[4.3] bg-gray-900/30 backdrop-blur-sm border-r border-purple-500/20 overflow-y-auto">
                     <div className="p-6">
                         <div className="text-purple-300 text-2xl font-medium mb-6">Create New Video</div>
                         
