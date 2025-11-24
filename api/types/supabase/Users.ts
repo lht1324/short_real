@@ -7,12 +7,17 @@ export interface User {
     plan?: SubscriptionPlan;
     created_at: string;
     updated_at: string;
+
+    subscription_id?: string; // Polar 구독 웹훅에 추가
+    last_subscribed_at: string;
+    scheduled_downgrade_at?: string;
+    downgrade_target_plan_id?: string;
 }
 
 export enum SubscriptionPlan {
     NONE = "none",
-    DAILY = "daily",
-    CREATOR = "creator",
-    PRODUCER = "producer",
-    STUDIO = "studio",
+    DAILY_1 = "daily_1",
+    DAILY_2 = "daily_2",
+    DAILY_3 = "daily_3",
+    DAILY_4 = "daily_4",
 }

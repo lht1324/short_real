@@ -7,11 +7,20 @@ import {VideoGenerationTask, VideoGenerationTaskStatus} from "@/api/types/supaba
 import Image from "next/image";
 import {videoClientAPI} from "@/api/client/videoClientAPI";
 import {useAuth} from "@/context/AuthContext";
-import {useRouter} from "next/navigation";
+import {useRouter, useSearchParams} from "next/navigation";
 import DashboardItem from "@/components/page/workspace/dashboard/DashboardItem";
 import DefaultModal from "@/components/public/DefaultModal";
 import {createBrowserClient} from "@supabase/ssr";
 import TaskDeleteLoadingModal from "@/components/page/workspace/dashboard/TaskDeleteLoadingModal";
+import {Polar} from "@polar-sh/sdk";
+import {polarClientAPI} from "@/api/client/polarClientAPI";
+import CheckoutResultDialog, {CheckoutResultDialogData} from "@/components/page/workspace/dashboard/CheckoutResultDialog";
+
+export enum ExportPlatform {
+    YOUTUBE = "youtube",
+    INSTAGRAM = "instagram",
+    TIKTOK = "tiktok",
+}
 
 export interface TaskData {
     id: string;
@@ -32,9 +41,17 @@ export interface TaskData {
 function WorkspaceDashboardPageClient() {
     // Draft 마저 작성하는 버튼 추가
     const router = useRouter();
+    const searchParams = useSearchParams();
+
     const { user } = useAuth();
     const [taskDataList, setTaskDataList] = useState<TaskData[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+
+    const customerSessionToken = useMemo(() => {
+        return searchParams.get('customer_session_token');
+    }, [searchParams]);
+
+    const [checkoutResultDialogData, setCheckoutResultDialogData] = useState<CheckoutResultDialogData | null>(null);
 
     // Virtual tabs for navigation consistency
     const virtualTabs = useMemo(() => [
@@ -53,6 +70,34 @@ function WorkspaceDashboardPageClient() {
         setPendingCancelTaskId(taskId);
         setShowCancelConfirmModal(true);
     }, []);
+
+    const onClickExport = useCallback(async (taskId: string, exportPlatform: ExportPlatform) => {
+        try {
+            if (!user?.id) {
+                throw Error("User is invalid.");
+            }
+
+            const getPostExportByPlatformPromise = (exportPlatform: ExportPlatform) => {
+                switch (exportPlatform) {
+                    case ExportPlatform.YOUTUBE: return videoClientAPI.postVideoExportYoutube(user?.id, taskId);
+                    case ExportPlatform.INSTAGRAM: return videoClientAPI.postVideoExportInstagram(user?.id, taskId);
+                    case ExportPlatform.TIKTOK: return videoClientAPI.postVideoExportTikTok(user?.id, taskId);
+                }
+            }
+
+            const postExportByPlatformResult = await getPostExportByPlatformPromise(exportPlatform);
+
+            if (!postExportByPlatformResult) {
+                throw Error(`Failed to start exporting onto platform '${exportPlatform.toUpperCase()}'`);
+            }
+
+            // Temp logic (Maybe switch case)
+
+            window.location.href = postExportByPlatformResult;
+        } catch (error) {
+            console.error(error);
+        }
+    }, [user?.id]);
 
     const onClickDownload = useCallback(async (taskId: string) => {
         try {
@@ -234,6 +279,8 @@ function WorkspaceDashboardPageClient() {
                 try {
                     const videoGenerationTaskList = await videoClientAPI.getVideoTasksByUserId(user?.id);
 
+                    console.log("videoGenerationTaskList: ", videoGenerationTaskList);
+
                     if (!videoGenerationTaskList) {
                         throw new Error("Cannot read videoGenerationTaskList. Try again.");
                     }
@@ -335,6 +382,48 @@ function WorkspaceDashboardPageClient() {
         }
     }, [router, user?.id, convertToTaskData]);
 
+    useEffect(() => {
+        if (customerSessionToken) {
+            const polar = new Polar({
+                server: process.env.NODE_ENV === 'production'
+                    ? 'production'
+                    : 'sandbox',
+                accessToken: customerSessionToken,
+            });
+
+            const loadOrderData = async () => {
+                const orderList = await polar.customerPortal.orders.list(
+                    { customerSession: customerSessionToken },
+                    {
+                        limit: 1,
+                        sorting: ["-created_at"],
+                    },
+                    { }
+                );
+                const productDataList = await polarClientAPI.getPolarProducts();
+
+                const latestOrder = orderList.result.items[0];
+                const productId = latestOrder.product?.id;
+
+                const productData = productDataList?.find((productData) => {
+                    return productData.id === productId;
+                })
+
+                if (!productData) {
+                    throw new Error("Order data is invalid.");
+                }
+
+                setCheckoutResultDialogData({
+                    planName: productData.name,
+                    price: productData.price,
+                    creditCount: productData.planData.creditCount,
+                })
+            }
+
+            loadOrderData().then();
+        }
+    }, [customerSessionToken]);
+
     return (
         <div className="min-h-screen bg-black text-white">
             {/* Top Header - Same as Create */}
@@ -345,7 +434,10 @@ function WorkspaceDashboardPageClient() {
                         alt="Short Real"
                         width={64}
                         height={64}
-                        className="w-16 h-16"
+                        className="w-16 h-16 cursor-pointer"
+                        onClick={() => {
+                            router.push('/');
+                        }}
                     />
                     <div className="flex flex-col ml-4">
                         <span className="text-4xl font-bold bg-gradient-to-r from-pink-400 to-purple-500 bg-clip-text text-transparent">
@@ -424,9 +516,10 @@ function WorkspaceDashboardPageClient() {
                                     return <DashboardItem
                                         key={taskData.id}
                                         taskData={taskData}
-                                        onClickCancel={onClickCancel}
                                         onClickDownload={onClickDownload}
+                                        onClickExport={onClickExport}
                                         onClickRetry={onClickRetry}
+                                        onClickCancel={onClickCancel}
                                     />
                                 })}
                             </div>
@@ -464,6 +557,13 @@ function WorkspaceDashboardPageClient() {
                     </div>
                 </div>
             )}
+            {checkoutResultDialogData && (<CheckoutResultDialog
+                checkoutResultDialogData={checkoutResultDialogData}
+                onClose={() => {
+                    setCheckoutResultDialogData(null);
+                    // url param에서 새로고침 없이 customer_session_token 제거
+                }}
+            />)}
         </div>
     )
 }

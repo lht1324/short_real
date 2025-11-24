@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { ReactNode } from "react";
 import { Rajdhani } from "next/font/google";
-import ConditionalHeader from "@/components/public/ConditionalHeader";
+import ConditionalHeader from "@/components/public/header/ConditionalHeader";
 import ConditionalMain from "@/components/public/ConditionalMain";
 import { Analytics } from "@vercel/analytics/next";
 import {AuthProvider} from "@/context/AuthContext";

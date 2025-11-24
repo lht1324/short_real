@@ -75,7 +75,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             const { error } = await supabase.auth.signInWithOAuth({
                 provider: provider,
                 options: {
-                    redirectTo: `${window.location.origin}/auth/callback`,
+                    redirectTo: `${window.location.origin}/callback/auth`,
                     ...getOAuthOptionByProvider(provider),
                 }
             })
@@ -97,7 +97,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
             async (event, session) => {
                 console.log('Auth state change:', event, session?.user?.id);
-                
+
                 if (!isInitialized) {
                     setIsInitialized(true)
                 }
@@ -122,6 +122,37 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             subscription?.unsubscribe()
         }
     }, [fetchUserProfile, isInitialized]);
+
+    // Users 테이블 실시간 구독
+    useEffect(() => {
+        if (!user?.id) return;
+
+        console.log('Setting up realtime channel for user:', user.id);
+
+        const channel = supabase
+            .channel(`user-${user.id}`)
+            .on(
+                'postgres_changes',
+                {
+                    event: 'UPDATE',
+                    schema: 'public',
+                    table: 'users',
+                    filter: `id=eq.${user.id}`,
+                },
+                (payload) => {
+                    console.log('User data updated via realtime:', payload.new);
+                    setUser(payload.new as User);
+                }
+            )
+            .subscribe(() => {
+                console.log("user channel");
+            });
+
+        return () => {
+            console.log('Cleaning up realtime channel for user:', user.id);
+            supabase.removeChannel(channel);
+        };
+    }, [user?.id]);
 
     const value: AuthContextType = {
         user: user,

@@ -5,6 +5,7 @@ import {VideoGenerationTaskStatus} from "@/api/types/supabase/VideoGenerationTas
 import {openAIServerAPI} from "@/api/server/openAIServerAPI";
 import {STYLE_DATA_LIST} from "@/lib/styles";
 import {getNextBaseResponse} from "@/utils/getNextBaseResponse";
+import {usersServerAPI} from "@/api/server/usersServerAPI";
 
 export async function POST(request: NextRequest) {
     // URL에서 파라미터 추출
@@ -31,7 +32,6 @@ export async function POST(request: NextRequest) {
                 error: 'Video Generation Task not found.'
             });
         }
-
 
         const checkResultInitialResult = await taskCheckAndCleanupIfCancelled(videoGenerationTask);
 
@@ -86,6 +86,16 @@ export async function POST(request: NextRequest) {
             master_style_positive_prompt: masterStylePositivePromptInfo,
             master_style_negative_prompt: masterStyleNegativePrompt,
         });
+
+        const patchUserCreditCountResult = await usersServerAPI.patchUserCreditCountByUserId(videoGenerationTask.user_id, -(20 * videoGenerationTask.scene_breakdown_list.length));
+
+        if (!patchUserCreditCountResult) {
+            return getNextBaseResponse({
+                success: false,
+                status: 500,
+                error: 'Failed to patch user\'s credit count.'
+            });
+        }
 
         const checkFinalResult = await taskCheckAndCleanupIfCancelled(patchVideoGenerationTaskStatusFinalResult);
 

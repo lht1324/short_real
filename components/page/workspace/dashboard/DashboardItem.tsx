@@ -1,10 +1,22 @@
 'use client'
 
-import {memo, useCallback, useMemo} from "react";
-import {TaskData} from "@/components/page/workspace/dashboard/WorkspaceDashboardPageClient";
+import {memo, useCallback, useMemo, useState} from "react";
+import {ExportPlatform, TaskData} from "@/components/page/workspace/dashboard/WorkspaceDashboardPageClient";
 import {VideoGenerationTaskStatus} from "@/api/types/supabase/VideoGenerationTasks";
-import {AlertCircle, Calendar, Clock, Download, Edit, FileVideo, Loader2, X} from "lucide-react";
+import {
+    AlertCircle,
+    Calendar,
+    Clock,
+    Download,
+    Edit,
+    FileVideo,
+    Loader2,
+    Share2,
+    Wrench,
+    X,
+} from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 
 enum StatusGroup {
     CREATING = 'creating',
@@ -17,16 +29,18 @@ enum StatusGroup {
 
 interface DashboardItemProps {
     taskData: TaskData;
-    onClickCancel: (taskId: string, status: VideoGenerationTaskStatus) => void;
+    onClickExport: (taskId: string, platform: ExportPlatform) => void;
     onClickDownload: (taskId: string) => void;
     onClickRetry: (taskId: string) => void;
+    onClickCancel: (taskId: string, status: VideoGenerationTaskStatus) => void;
 }
 
 function DashboardItem({
     taskData,
-    onClickCancel,
+    onClickExport,
     onClickDownload,
     onClickRetry,
+    onClickCancel,
 }: DashboardItemProps) {
     // ==================== 상태 그룹핑 ====================
     const statusGroup = useMemo(() => {
@@ -154,6 +168,9 @@ function DashboardItem({
         return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
     }, []);
 
+    // ==================== 팝오버 상태 ====================
+    const [showExportPopover, setShowExportPopover] = useState(false);
+
     // ==================== 이벤트 핸들러 ====================
     const handleCancel = useCallback(() => {
         onClickCancel(taskData.id, taskData.status);
@@ -276,6 +293,95 @@ function DashboardItem({
                             <Download size={14} />
                             <span>Download</span>
                         </button>
+                    )}
+
+                    {/* Completed 상태: Export 버튼 */}
+                    {statusGroup === StatusGroup.COMPLETED && (
+                        <div
+                            className="relative"
+                            onMouseEnter={() => setShowExportPopover(true)}
+                            onMouseLeave={() => setShowExportPopover(false)}
+                        >
+                            <button
+                                className="group bg-gradient-to-r from-cyan-500 to-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:from-cyan-600 hover:to-blue-700 transition-all duration-300 transform hover:scale-105 shadow-lg shadow-cyan-500/25 flex items-center space-x-2"
+                            >
+                                <Share2 size={14} />
+                                <span>Export</span>
+                            </button>
+
+                            {showExportPopover && (
+                                <div className="absolute top-full right-0 pt-2 z-50">
+                                    <div className="bg-gray-800 border border-purple-500/30 rounded-lg shadow-xl overflow-hidden min-w-[200px]">
+                                        {/* YouTube Shorts */}
+                                        <button
+                                            className="w-full h-14 flex items-center text-white hover:bg-gray-700/50 transition-colors"
+                                            onClick={() => { onClickExport(taskData.id, ExportPlatform.YOUTUBE); }}
+                                        >
+                                            <div className="w-14 h-14 flex items-center justify-center flex-shrink-0">
+                                                <Image
+                                                    src="/icons/youtube-logo.png"
+                                                    alt="YouTube"
+                                                    width={36}
+                                                    height={32}
+                                                    className="object-contain"
+                                                />
+                                            </div>
+                                            <span className="text-sm flex-1 text-left pl-2">YouTube Shorts</span>
+                                        </button>
+
+                                        <div className="border-t border-purple-500/20" />
+
+                                        {/* Instagram Reels */}
+                                        <button
+                                            disabled={true}
+                                            className="w-full h-14 flex items-center text-white hover:bg-gray-700/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+                                            onClick={() => { onClickExport(taskData.id, ExportPlatform.INSTAGRAM); }}
+                                        >
+                                            <div className="w-14 h-14 flex items-center justify-center flex-shrink-0">
+                                                <Image
+                                                    src="/icons/instagram-logo.png"
+                                                    alt="Instagram"
+                                                    width={28}
+                                                    height={28}
+                                                    className="object-contain"
+                                                />
+                                            </div>
+                                            <span className="text-sm flex-1 text-left pl-2 flex items-center gap-2">
+                                                Instagram Reels
+                                                <span className="px-1.5 py-1 bg-gray-600/50 rounded-full flex items-center opacity-100">
+                                                    <Wrench size={12} className="text-yellow-300" />
+                                                </span>
+                                            </span>
+                                        </button>
+
+                                        <div className="border-t border-purple-500/20" />
+
+                                        {/* TikTok */}
+                                        <button
+                                            disabled={true}
+                                            className="w-full h-14 flex items-center text-white hover:bg-gray-700/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+                                            onClick={() => { onClickExport(taskData.id, ExportPlatform.TIKTOK); }}
+                                        >
+                                            <div className="w-14 h-14 flex items-center justify-center flex-shrink-0">
+                                                <Image
+                                                    src="/icons/tiktok-logo.svg"
+                                                    alt="TikTok"
+                                                    width={32}
+                                                    height={32}
+                                                    className="object-contain"
+                                                />
+                                            </div>
+                                            <span className="text-sm flex-1 text-left pl-2 flex items-center gap-2">
+                                                TikTok
+                                                <span className="px-1.5 py-1 bg-gray-600/50 rounded-full flex items-center opacity-100">
+                                                    <Wrench size={12} className="text-yellow-300" />
+                                                </span>
+                                            </span>
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
                     )}
 
                     {/* Failed 상태: Retry 버튼 */}

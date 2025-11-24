@@ -3,11 +3,13 @@
 import {memo, useCallback, useEffect, useMemo, useState} from 'react';
 import { Menu, LogOut, User as UserIcon, LayoutDashboard } from 'lucide-react';
 import Image from "next/image";
-import {useRouter} from "next/navigation";
+import {usePathname, useRouter} from "next/navigation";
 import {useAuth} from "@/context/AuthContext";
+import LandingPageNavigation from "@/components/public/header/LandingPageNavigation";
 
 function Header() {
     const router = useRouter();
+    const pathname = usePathname();
 
     const { user, signOut } = useAuth();
 
@@ -17,11 +19,23 @@ function Header() {
         return !!user;
     }, [user]);
 
+    const onClickProfile = useCallback(async () => {
+        setIsDropdownOpen(false);
+        router.push('/profile');
+    }, [router]);
+
     const onClickSignOut = useCallback(async () => {
         await signOut();
         setIsDropdownOpen(false);
         router.push('/');
     }, [signOut, router]);
+
+    const CenterComponent = useMemo(() => {
+        switch (pathname) {
+            case '/': return <LandingPageNavigation/>
+            default: return <div/>
+        }
+    }, [pathname])
 
     useEffect(() => {
         console.log("isLogin: ", isLogin);
@@ -36,7 +50,11 @@ function Header() {
                     <div
                         className="flex items-center space-x-2 cursor-pointer"
                         onClick={() => {
-                            router.push("/");
+                            if (pathname === '/') {
+                                window.scrollTo({ top: 0, behavior: 'smooth' });
+                            } else {
+                                router.push("/");
+                            }
                         }}
                     >
                         <Image
@@ -50,22 +68,7 @@ function Header() {
                     </div>
 
                     {/* Desktop Navigation */}
-                    <nav className="hidden md:flex items-center space-x-8">
-                        <a href="#pricing" className="text-gray-300 hover:text-pink-400 transition-colors">
-                            Pricing
-                        </a>
-                        <a href="#blog" className="text-gray-300 hover:text-pink-400 transition-colors">
-                            Blog
-                        </a>
-                        <div className="relative">
-                            <a href="#affiliate" className="text-gray-300 hover:text-pink-400 transition-colors flex items-center">
-                                Affiliate Program
-                                <span className="ml-1 px-2 py-0.5 text-xs bg-gradient-to-r from-pink-500 to-purple-600 text-white rounded-full">
-                                    New
-                                </span>
-                            </a>
-                        </div>
-                    </nav>
+                    {CenterComponent}
 
                     {/* Right Side Actions */}
                     <div className="flex items-center space-x-4">
@@ -101,10 +104,7 @@ function Header() {
                                             <span className="text-sm">Dashboard</span>
                                         </button>
                                         <button
-                                            onClick={() => {
-                                                // Profile onClick - leave empty as requested
-                                                setIsDropdownOpen(false);
-                                            }}
+                                            onClick={onClickProfile}
                                             className="w-full flex items-center space-x-3 px-4 py-3 text-gray-300 hover:bg-gray-800/50 hover:text-white transition-colors"
                                         >
                                             <UserIcon size={16} />
