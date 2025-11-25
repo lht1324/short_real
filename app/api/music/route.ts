@@ -37,12 +37,12 @@ export async function POST(request: NextRequest) {
         }
 
         // 필수 데이터 검증
-        if (!videoGenerationTask.video_main_subject) {
+        if (!videoGenerationTask.video_title || !videoGenerationTask.video_description) {
             await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
             return getNextBaseResponse({
                 success: false,
                 status: 404,
-                error: 'video_main_subject is missing from task'
+                error: 'video_title or video_description is missing from task'
             });
         }
 
@@ -57,7 +57,8 @@ export async function POST(request: NextRequest) {
 
         // OpenAI로 Music Generation Data 생성
         const postMusicGenerationDataResult = await openAIServerAPI.postMusicGenerationData(
-            videoGenerationTask.video_main_subject,
+            videoGenerationTask.video_title,
+            videoGenerationTask.video_description,
             videoGenerationTask.narration_script,
             videoGenerationTask.master_style_positive_prompt,
             videoGenerationTask.scene_breakdown_list,

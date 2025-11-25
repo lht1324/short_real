@@ -41,12 +41,13 @@ function WorkspaceCreatePageClient() {
     
     // Storyboard states
     const [sceneDataList, setSceneDataList] = useState<SceneData[]>([]);
-    const [videoMainSubject, setVideoMainSubject] = useState<string | null>(null);
+    const [videoTitle, setVideoTitle] = useState<string | null>(null);
+    const [videoDescription, setVideoDescription] = useState<string | null>(null);
 
     const isVideoGenerationEnabled = useMemo(() => {
         const isScriptNotEmpty = script.length !== 0;
         const isSceneDataListNotEmpty = sceneDataList.length !== 0;
-        const isVideoMainSubjectNotEmpty = !!videoMainSubject;
+        const isVideoMainSubjectNotEmpty = !!videoTitle;
         const isStyleSelected = selectedStyleId.length !== 0;
         const isVoiceSelected = selectedVoiceId.length !== 0;
         
@@ -55,7 +56,7 @@ function WorkspaceCreatePageClient() {
             isVideoMainSubjectNotEmpty &&
             isVoiceSelected &&
             isStyleSelected;
-    }, [script, sceneDataList, videoMainSubject, selectedVoiceId, selectedStyleId]);
+    }, [script, sceneDataList, videoTitle, selectedVoiceId, selectedStyleId]);
     
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isGeneratingScript, setIsGeneratingScript] = useState(false);
@@ -143,12 +144,14 @@ function WorkspaceCreatePageClient() {
             const {
                 taskId: newTaskId,
                 sceneDataList: newSceneDataList,
-                videoMainSubject: newVideoMainSubject,
+                videoTitle: newVideoTitle,
+                videoDescription: newVideoDescription,
             }: StoryboardData = storyboardData;
 
             window.history.pushState(null, "", `/workspace/create?taskId=${newTaskId}`);
             setSceneDataList(newSceneDataList);
-            setVideoMainSubject(newVideoMainSubject);
+            setVideoTitle(newVideoTitle);
+            setVideoDescription(newVideoDescription);
 
             setIsGeneratingStoryboardData(false);
         } catch (error) {
@@ -161,7 +164,7 @@ function WorkspaceCreatePageClient() {
     const onSelectVoice = useCallback((voiceId: string) => {
         if (voiceId !== selectedVoiceId) {
             // Storyboard가 생성된 상태에서 Voice 변경 시 경고
-            const isStoryboardGenerated = sceneDataList.length !== 0 && videoMainSubject && selectedVoiceId;
+            const isStoryboardGenerated = sceneDataList.length !== 0 && videoTitle && selectedVoiceId;
 
             if (isStoryboardGenerated) {
                 setPendingVoiceId(voiceId);
@@ -170,7 +173,7 @@ function WorkspaceCreatePageClient() {
                 setSelectedVoiceId(voiceId);
             }
         }
-    }, [sceneDataList, videoMainSubject, selectedVoiceId]);
+    }, [sceneDataList, videoTitle, selectedVoiceId]);
 
     const onChangeVoiceLoading = useCallback((isVoiceLoading: boolean) => {
         setIsVoiceLoading(isVoiceLoading);
@@ -204,12 +207,7 @@ function WorkspaceCreatePageClient() {
         setIsSubmitting(true);
         
         try {
-            // 선택된 스타일, 음성, 음악 정보 가져오기
-            const selectedStyle = styleList.find((style) => {
-                return style.id === selectedStyleId;
-            });
-
-            if (!taskId || !selectedStyle || !user?.id) {
+            if (!taskId || !selectedStyleId || !user?.id) {
                 throw new Error("User Id or Task Id or selected style was not found.");
             }
 
@@ -222,7 +220,7 @@ function WorkspaceCreatePageClient() {
             // console.log('Creating video project with data:', requestData);
 
             // Video API 호출
-            const postVideoResult = await videoClientAPI.postVideo(taskId);
+            const postVideoResult = await videoClientAPI.postVideo(taskId, selectedStyleId);
 
             if (postVideoResult) {
                 console.log('Video data generation succeed.');
@@ -243,7 +241,7 @@ function WorkspaceCreatePageClient() {
         } finally {
             setIsSubmitting(false);
         }
-    }, [script, styleList, taskId, user?.id, selectedStyleId]);
+    }, [script, taskId, user?.id, selectedStyleId]);
 
     const onClickSaveDraft = useCallback(async () => {
         setIsSaving(true);
@@ -252,7 +250,8 @@ function WorkspaceCreatePageClient() {
             const request: Partial<VideoGenerationTask> = {
                 narration_script: script.length !== 0 ? script : undefined,
                 scene_breakdown_list: sceneDataList.length !== 0 ? sceneDataList : undefined,
-                video_main_subject: videoMainSubject ?? undefined,
+                video_title: videoTitle ?? undefined,
+                video_description: videoDescription ?? undefined,
                 selected_style_id: selectedStyleId.length !== 0 ? selectedStyleId : undefined,
                 selected_voice_id: selectedVoiceId.length !== 0 ? selectedVoiceId : undefined,
             }
@@ -271,7 +270,7 @@ function WorkspaceCreatePageClient() {
         } finally {
             setIsSaving(false);
         }
-    }, [taskId, script, selectedStyleId, selectedVoiceId, sceneDataList, videoMainSubject]);
+    }, [taskId, script, selectedStyleId, selectedVoiceId, sceneDataList, videoTitle]);
 
     const onCloseSaveSuccessModal = useCallback(() => {
         setShowSaveSuccessModal(false);
@@ -302,13 +301,15 @@ function WorkspaceCreatePageClient() {
                 if (videoGenerationTask && (videoGenerationTask.status === VideoGenerationTaskStatus.DRAFTING || videoGenerationTask.status === VideoGenerationTaskStatus.GENERATING_VOICE)) {
                     const script = videoGenerationTask.narration_script;
                     const sceneDataList = videoGenerationTask.scene_breakdown_list;
-                    const videoMainSubject = videoGenerationTask.video_main_subject;
+                    const videoTitle = videoGenerationTask.video_title;
+                    const videoDescription = videoGenerationTask.video_description;
                     const voiceId = videoGenerationTask.selected_voice_id;
                     const styleId = videoGenerationTask.selected_style_id;
 
                     setScript(script);
                     setSceneDataList(sceneDataList);
-                    setVideoMainSubject(videoMainSubject ?? '');
+                    setVideoTitle(videoTitle ?? '');
+                    setVideoDescription(videoDescription ?? '');
                     setSelectedVoiceId(voiceId ?? '');
                     setSelectedStyleId(styleId ?? '');
 
@@ -479,7 +480,7 @@ function WorkspaceCreatePageClient() {
                                                 <div className="w-3 h-3 border border-white/30 border-t-white rounded-full animate-spin"></div>
                                                 <span>Generating...</span>
                                             </>
-                                        ) : sceneDataList.length === 0 && !videoMainSubject ? (
+                                        ) : sceneDataList.length === 0 && !videoTitle ? (
                                             <span>Generate Storyboard</span>
                                         ) : (
                                             <span>Regenerate Storyboard</span>
@@ -509,19 +510,47 @@ function WorkspaceCreatePageClient() {
                                     </div>
                                 </div>
 
-                                {/* Main Subject 표시 */}
-                                {videoMainSubject && (
-                                    <div className="mb-4 p-3 bg-purple-500/10 border border-purple-400/30 rounded-lg">
-                                        <div className="flex items-center space-x-2">
-                                            <div className="w-2 h-2 bg-purple-400 rounded-full"></div>
-                                            <span className="text-sm font-medium text-purple-300">Main Subject:</span>
-                                            <span className="text-sm text-white">{videoMainSubject}</span>
+                                {/* Video Metadata Section */}
+                                {videoTitle && videoDescription && (
+                                    <div className="mb-6 space-y-3">
+                                        {/* Title Card */}
+                                        <div className="group relative rounded-xl border border-purple-500/30 bg-gradient-to-r from-purple-500/5 via-pink-500/5 to-purple-500/5 p-4 backdrop-blur-sm transition-all hover:border-purple-400/50 hover:shadow-lg hover:shadow-purple-500/10">
+                                            <div className="flex items-start space-x-3">
+                                                <div className="flex-shrink-0 mt-0.5">
+                                                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center shadow-lg">
+                                                        <Film className="w-4 h-4 text-white" />
+                                                    </div>
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="text-xs font-medium text-purple-300 mb-1.5">Video Title</div>
+                                                    <h3 className="text-lg font-bold leading-snug text-white">
+                                                        {videoTitle}
+                                                    </h3>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Description Card */}
+                                        <div className="group relative rounded-xl border border-purple-500/30 bg-gradient-to-r from-pink-500/5 via-purple-500/5 to-pink-500/5 p-4 backdrop-blur-sm transition-all hover:border-purple-400/50 hover:shadow-lg hover:shadow-pink-500/10">
+                                            <div className="flex items-start space-x-3">
+                                                <div className="flex-shrink-0 mt-0.5">
+                                                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-600 to-pink-500 flex items-center justify-center shadow-lg">
+                                                        <Sparkles className="w-4 h-4 text-white" />
+                                                    </div>
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="text-xs font-medium text-purple-300 mb-1.5">Description</div>
+                                                    <p className="whitespace-pre-wrap text-sm leading-relaxed text-gray-300">
+                                                        {videoDescription}
+                                                    </p>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 )}
 
                                 {/* Storyboard 그리드 */}
-                                {sceneDataList.length !== 0 && videoMainSubject && (
+                                {sceneDataList.length !== 0 && videoTitle && (
                                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 max-w-4xl">
                                         {sceneDataList.sort((a, b) => {
                                             return a.sceneNumber - b.sceneNumber;
@@ -713,8 +742,8 @@ function WorkspaceCreatePageClient() {
                                                 </span>
                                             </div>
                                             <div className="flex items-center space-x-2 text-xs">
-                                                <span>{sceneDataList.length !== 0 && videoMainSubject ? '🟢' : '🔴'}</span>
-                                                <span className={sceneDataList.length !== 0 && videoMainSubject ? 'text-green-300' : 'text-gray-400'}>
+                                                <span>{sceneDataList.length !== 0 && videoTitle ? '🟢' : '🔴'}</span>
+                                                <span className={sceneDataList.length !== 0 && videoTitle ? 'text-green-300' : 'text-gray-400'}>
                                                     Storyboard generated
                                                 </span>
                                             </div>

@@ -359,11 +359,10 @@ function WorkspaceEditorPageClient() {
                 });
 
                 setVideoData({
-                    title: videoGenerationTask.video_main_subject ?? "",
+                    title: videoGenerationTask.video_title ?? "",
                     videoUrl: taskVideoUrl,
                     captionDataList: captionDataList,
                 });
-
 
                 const musicDataList = await musicClientAPI.getMusicData(taskId);
 

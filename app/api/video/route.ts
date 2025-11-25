@@ -8,6 +8,10 @@ export async function POST(request: NextRequest): Promise<NextResponse<BaseRespo
     const { searchParams } = new URL(request.url);
     const taskId = searchParams.get('taskId');
 
+    const {
+        selectedStyleId,
+    }: { selectedStyleId: string } = await request.json();
+
     if (!taskId) {
         return getNextBaseResponse({
             success: false,
@@ -17,6 +21,10 @@ export async function POST(request: NextRequest): Promise<NextResponse<BaseRespo
     }
 
     try {
+        await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, {
+            selected_style_id: selectedStyleId,
+        });
+
         // fire and forget
         fetch(`${process.env.BASE_URL}/api/video/process/master-style?taskId=${taskId}`, {
             method: "POST",

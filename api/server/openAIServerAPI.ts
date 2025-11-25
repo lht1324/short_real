@@ -12,7 +12,7 @@ import {
     POST_SCRIPT_PROMPT,
     POST_MASTER_STYLE_PROMPT,
     POST_IMAGE_GEN_PROMPT_PROMPT,
-    POST_VIDEO_GEN_PROMPT_PROMPT
+    POST_VIDEO_GEN_PROMPT_PROMPT, POST_SCENE_SEGMENTATION_PROMPT
 } from "@/api/server/OpenAIPrompts";
 
 enum OpenAIModel {
@@ -152,13 +152,7 @@ Based on the following style, generate the master style prompt.
 
                 // match가 있으면 추출된 JSON을 사용하고, 없으면 원본을 그대로 사용
                 const jsonString = match ? match[1] : generatedMasterStylePromptResult;
-                // ---- 추가된 부분 끝 ----
 
-                // JSON 파싱 시도 (정리된 문자열 사용)
-                // const parsedData: {
-                //     positivePrompt: string,
-                //     negativePrompt: string,
-                // } = JSON.parse(jsonString);
                 const parsedData: {
                     positivePromptInfo: MasterStyleInfo,
                     negativePrompt: string,
@@ -203,57 +197,21 @@ Based on the following style, generate the master style prompt.
                 return null;
             }
 
-            const systemMessage = `You are an elite scene director.
+            const systemMessage = POST_SCENE_SEGMENTATION_PROMPT;
 
-# PHASE 1 - INPUT ANALYSIS
-Parse narrationScript and subtitleSegments to identify natural scene boundaries
-Establish optimal scene count (3-6 scenes) with 2-5 second duration per scene
-Extract narrative flow markers and validate timing data continuity
-
-# PHASE 2 - SCENE CREATION
-Determine videoMainSubject through systematic analysis of complete narration
-Create scenes that preserve complete sentences and maintain narrative integrity
-Calculate precise scene duration using: lastSegment.endSec - firstSegment.startSec
-Generate style-agnostic visual descriptions for each scene
-
-# PHASE 3 - OUTPUT GENERATION
-Apply consistency checks across all scenes for subject coherence
-Optimize scene descriptions for AI video generation pipeline compatibility
-Generate validated JSON structure with proper timing and content alignment
-
-# CORE REQUIREMENTS
-
-1. **NARRATIVE INTEGRITY**: Keep complete sentences within single scenes
-2. **SUBJECT CONSISTENCY**: Ensure videoMainSubject appears consistently across scenes
-3. **TIMING PRECISION**: Use exact subtitle timing data for duration calculations
-4. **STYLE AGNOSTIC**: Describe WHAT to show, not HOW it looks (no colors, lighting, styles)
-5. **NO TEXT**: Never include visible text, letters, or numbers in scene descriptions
-
-# INPUT SPECIFICATION
-- narrationScript: Complete narrative text
-- subtitleSegments: Array of {text, startSec, endSec} timing data
-
-# OUTPUT SPECIFICATION
-- sceneDataList: Array of SceneData objects
-- videoMainSubject: Primary subject identifier string
-
-**SceneData Structure:**
-{
-  sceneNumber: number,        // Sequential identifier (1, 2, 3...)
-  narration: string,          // Complete scene narration content
-  sceneDuration: number,      // Precise duration in seconds
-  imageGenPromptDirective: string  // Style-agnostic visual description
-}
-
-# TASK
-Segment the provided narration into 3-6 scenes with natural boundaries, calculate precise timing using subtitle data, identify the main video subject, and generate style-agnostic visual descriptions. Output valid JSON only.
-`;
+            const currentDate = new Date().toLocaleDateString('en-US', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            }); // e.g., "Tuesday, November 25, 2025"
 
             const userMessage = `
+**Current Date:** ${currentDate}
 **narrationScript:** "${narrationScript}"
 **subtitleSegments:** ${JSON.stringify(subtitleSegments, null, 2)}
 
-Provide JSON output with sceneDataList and videoMainSubject.`;
+Provide JSON output with videoTitle and videoDescription and sceneDataList.`;
 
             // OpenAI SDK 클라이언트 초기화
             const client = new OpenAI({ apiKey });
@@ -286,16 +244,19 @@ Provide JSON output with sceneDataList and videoMainSubject.`;
 
                 const parsedData: {
                     sceneDataList: SceneData[];
-                    videoMainSubject: string;
+                    videoTitle: string;
+                    videoDescription: string;
                 } = JSON.parse(jsonString);
 
                 const sceneDataList: SceneData[] = parsedData.sceneDataList;
-                const videoMainSubject: string = parsedData.videoMainSubject;
+                const videoTitle: string = parsedData.videoTitle;
+                const videoDescription: string = parsedData.videoDescription;
 
                 return {
                     taskId: taskId,
                     sceneDataList: sceneDataList,
-                    videoMainSubject: videoMainSubject,
+                    videoTitle: videoTitle,
+                    videoDescription: videoDescription,
                 };
             } catch (parseError) {
                 console.error('Failed to parse scene segmentation JSON response:', parseError);
@@ -312,7 +273,8 @@ Provide JSON output with sceneDataList and videoMainSubject.`;
         // masterStylePrompt: string,
         masterStylePromptInfo: MasterStyleInfo,
         sceneNarration: string,
-        videoMainSubject: string,
+        videoTitle: string,
+        videoDescription: string,
     ): Promise<{ success: boolean; imageGenPrompt?: string; error?: { message: string; code: string } }> {
         try {
             const apiKey = process.env.OPENAI_API_KEY;
@@ -339,8 +301,11 @@ ${JSON.stringify(masterStylePromptInfo, null, 2)}
 **Current Scene Narration:**
 "${sceneNarration}"
 
-**Video Main Subject:**
-"${videoMainSubject}"
+**Video Title**
+"${videoTitle}"
+
+**Video Description**
+"${videoDescription}"
 
 Generate a prompt that visually represents this specific scene while ensuring the main subject is consistently and accurately depicted, following the style guide and content structure.`;
 
@@ -385,10 +350,7 @@ Generate a prompt that visually represents this specific scene while ensuring th
         imageGenPrompt: string,
         sceneNarration: string,
         imageBase64: string,
-        numFrames: number,
-        framesPerSecond: number,
-        videoActualDuration: number,
-        sceneExpectedDuration: number,
+        targetDuration: number,
     ): Promise<{
         success: boolean;
         videoGenPrompt?: string;
@@ -409,19 +371,15 @@ Generate a prompt that visually represents this specific scene while ensuring th
 
             const systemMessage = POST_VIDEO_GEN_PROMPT_PROMPT;
 
-            const speedRatio = videoActualDuration / sceneExpectedDuration;
             const userMessage = `
 Generate optimized motion prompt based on exact parameters:
 
 **Scene Narration:** ${sceneNarration}
 **Original Intent:** ${imageGenPrompt}
-**Target Frames:** ${numFrames}
-**Original FPS**: ${framesPerSecond}fps
-**Speed Ratio**: ${speedRatio}x playback)
-**Expected Duration:** ${sceneExpectedDuration.toFixed(3)}s
-**Calculated Duration:** ${videoActualDuration.toFixed(3)}s
+**Target Duration:** ${targetDuration} seconds
 
-Apply the frame-fps optimization rules to create a motion prompt that precisely matches these technical specifications.
+Create a concise 4-unit motion prompt (Establishing -> Action -> Atmosphere -> Polish).
+Focus on describing the visible subject in the image performing the action described in the narration.
 `;
 
             // OpenAI SDK 클라이언트 초기화 및 API 호출
@@ -440,7 +398,8 @@ Apply the frame-fps optimization rules to create a motion prompt that precisely 
                             {
                                 type: "image_url",
                                 image_url: {
-                                    url: `data:image/jpeg;base64,${imageBase64}`
+                                    url: `data:image/jpeg;base64,${imageBase64}`,
+                                    detail: "auto",
                                 }
                             }
                         ]
@@ -481,7 +440,8 @@ Apply the frame-fps optimization rules to create a motion prompt that precisely 
 
     // masterStylePositivePrompt 변경된 구조 맞춰 프롬프트 수정
     async postMusicGenerationData(
-        videoMainSubject: string,
+        videoTitle: string,
+        videoDescription: string,
         fullNarrationScript: string,
         masterStylePositivePrompt: MasterStyleInfo,
         sceneDataList: SceneData[]
@@ -515,9 +475,9 @@ Suno API provides access to Suno v4.5 (latest as of Sept 2025) with these capabi
 • Generation time scales proportionally with requested duration (typically 1-2x realtime)
 
 ## Critical Suno API Constraints
-• Descriptive prompts work better than technical musical notation
-• negativeTags parameter available for excluding unwanted elements
-• Instrumental specification should be explicit in both prompt and negativeTags
+• Descriptive, tag-rich prompts work better than technical musical notation
+• negativeTags parameter is available for excluding unwanted elements
+• Instrumental specification should be explicit in both prompt content and negativeTags
 • Style tags significantly influence overall generation approach
 • Generated music includes inaudible watermarking for content tracking
 • Commercial use requires appropriate Suno licensing compliance
@@ -525,98 +485,56 @@ Suno API provides access to Suno v4.5 (latest as of Sept 2025) with these capabi
 
 # REASONING FRAMEWORK
 
-Execute these three phases sequentially, showing your analytical process at each step.
+Execute these three phases **internally** and silently before producing the final JSON. Do NOT output your reasoning steps.
 
 ## PHASE 1: TEMPORAL STRUCTURE ANALYSIS
-• Calculate total video duration from scene timing data
-• Determine generation complexity based on duration (15-30s: simple structure, 30-60s: A-B-A, 60s+: multi-section)
-• Map scene duration patterns to dynamic progression
-• Plan musical architecture proportional to total length
-• Consider that generation time will scale with video duration
+• Use **videoTotalDuration** (seconds) to plan musical structure
+• For 15–30s: Immediate hook, simple structure, loop-friendly
+• For 30–60s: Clear A–B or A–B–A progression with no long intro
+• For 60s+: Multi-section structure with evolving dynamics
+• Map sceneDuration patterns (sceneDataList) to energy changes (build-ups, drops, transitions)
 
 ## PHASE 2: VISUAL-TO-AUDIO TRANSFORMATION
-• Extract emotional indicators from narration script
-• Convert visual style keywords to musical mood descriptors
-• Analyze scene visual intensity for dynamic mapping
-• Establish genre consistency with video subject matter
+• Use **videoTitle** and **videoDescription** to infer the core theme and emotional arc
+• Extract emotional indicators from fullNarrationScript
+• Translate masterStylePositivePrompt (visual style) into musical descriptors (genre, mood, texture)
+• Map visual intensity (from each scene’s imageGenPrompt and narration) to musical dynamics (calm vs intense, sparse vs dense)
+• Ensure genre and mood are consistent with the overall video concept
 
 ## PHASE 3: SUNO API OPTIMIZATION
-• Synthesize reasoning results into coherent parameters
-• Ensure instrumental-only specification (no vocals/lyrics)
-• Validate parameter consistency and musical logic
-• Generate final JSON output optimized for Suno API processing
+• Synthesize all analysis into:
+  – a short, catchy **title**
+  – a concise **style** string (comma-separated genre/mood/instrument tags)
+  – a detailed but compact **prompt** for the track’s feel and progression
+  – a strict **negativeTags** string for exclusions
+• Enforce instrumental-only behavior via both style/prompt wording and negativeTags
+• Validate that duration, energy curve, and genre all make sense together
 
 # CRITICAL REASONING GUIDELINES
 
-1. **SYSTEMATIC ANALYSIS** - Process each phase completely before proceeding
-2. **LOGICAL DEDUCTION** - Base every parameter decision on analyzed evidence
-3. **TEMPORAL AWARENESS** - Consider how music must evolve over video duration
-4. **COHERENCE VALIDATION** - Ensure all parameters work together harmoniously
-5. **SUNO OPTIMIZATION** - Embed all constraints positively in prompt descriptions
-
-# REASONING EXAMPLES
-
-## Example 1: Technology/Business Theme
-"Let me analyze this systematically:
-
-PHASE 1 - TEMPORAL ANALYSIS:
-Total duration is 47 seconds, suggesting a simple A-B-A structure...
-Scene durations show accelerating pace in middle section...
-
-PHASE 2 - VISUAL-TO-AUDIO MAPPING:
-Subject 'startup entrepreneur' suggests modern, optimistic tone...
-Style prompt mentions 'vibrant, clean aesthetic' → bright, uplifting musical elements...
-
-PHASE 3 - PARAMETER SYNTHESIS:
-Based on analysis, optimal approach is uplifting electronic with orchestral elements...
-47-second duration requires continuous energy without vocal breaks..."
-
-## Example 2: Nature/Documentary Theme
-"Let me analyze this systematically:
-
-PHASE 1 - TEMPORAL ANALYSIS:
-Total duration is 52 seconds, allowing for contemplative build...
-Scene timing shows gradual reveal pattern...
-
-PHASE 2 - VISUAL-TO-AUDIO MAPPING:
-Subject 'mountain wildlife' suggests organic, peaceful atmosphere...
-Visual cues indicate 'natural textures, earth tones' → acoustic instruments, ambient layers...
-
-PHASE 3 - PARAMETER SYNTHESIS:
-Ambient acoustic soundscape with subtle orchestral swells...
-Nature documentary requires non-intrusive, atmospheric support..."
-
-## Example 3: Lifestyle/Wellness Theme
-"Let me analyze this systematically:
-
-PHASE 1 - TEMPORAL ANALYSIS:
-Total duration is 38 seconds, needs warm, inviting progression...
-Consistent pacing suggests steady, calming rhythm...
-
-PHASE 2 - VISUAL-TO-AUDIO MAPPING:
-Subject 'morning yoga routine' suggests serene, centering mood...
-'Soft lighting, minimal aesthetic' → gentle acoustic, light percussion...
-
-PHASE 3 - PARAMETER SYNTHESIS:
-Meditative acoustic with subtle electronic elements...
-Wellness content requires soothing, non-distracting background..."
+1. **SYSTEMATIC ANALYSIS** – Process each phase mentally before answering
+2. **LOGICAL DEDUCTION** – Base every parameter decision on provided data
+3. **TEMPORAL AWARENESS** – Make the music evolve appropriately over the total duration
+4. **COHERENCE VALIDATION** – Ensure title, style, prompt, and negativeTags all point to the same musical idea
+5. **SUNO OPTIMIZATION** – Prefer clear genre/mood/instrument tags over vague language
 
 # INPUT DATA STRUCTURE
 
 You will receive a JSON object containing:
-• **totalDuration**: Total video length in seconds for musical structure planning
-• **videoMainSubject**: Primary subject/theme for genre and mood consistency
+• **videoTotalDuration**: Total video length in seconds for musical structure planning
+• **videoTitle**: Short, hooky title text representing the core topic of the video
+• **videoDescription**: Brief description of what the video is about and why it matters
 • **fullNarrationScript**: Complete narration for emotional progression analysis
-• **masterStylePositivePrompt**: Visual style guide for mood translation
-• **sceneDataList**: Array of core scene data for temporal analysis
+• **masterStylePositivePrompt**: Visual style guide to translate into musical aesthetics
+• **sceneDataList**: Array of core scene data for temporal and intensity analysis
 
 ## SceneData Structure (Essential Fields Only)
 Each scene object contains only the music-relevant data:
 {
   "sceneNumber": number,        // Sequential scene identifier
   "narration": string,          // Scene-specific emotional content
-  "sceneDuration": number,      // Individual scene timing
-  "imageGenPrompt": string      // Visual intensity for musical mapping
+  "sceneDuration": number,      // Individual scene timing in seconds
+  "imageGenPrompt": string      // Visual intensity/style cue for musical mapping
 }
 
 # OUTPUT REQUIREMENTS
@@ -625,10 +543,10 @@ Generate a valid JSON object with these exact fields:
 
 ## Required JSON Structure
 {
-  "title": "string - Short, catchy track title",
-  "style": "string - Genre and instrumentation description", 
-  "prompt": "string - Detailed instrumental music description paragraph",
-  "negativeTags": "string - Comma-separated elements to avoid (must include vocals, singing, lyrics, voice)"
+  "title": "string - Short, catchy track title (can be similar to videoTitle but music-oriented)",
+  "style": "string - Comma-separated genre/mood/instrument tags, e.g. 'instrumental, upbeat electronic, cinematic, modern, no vocals'", 
+  "prompt": "string - 1–3 sentences describing the instrumental track: mood, instrumentation, energy curve, and how it should support the video",
+  "negativeTags": "string - Comma-separated elements to avoid (must include: vocals, singing, vocal, lyrics, voice, choir)"
 }
 
 ## Critical Output Instructions
@@ -639,7 +557,7 @@ Generate a valid JSON object with these exact fields:
 
 # TASK EXECUTION
 
-Analyze the provided video data through systematic reasoning chains and generate optimal Suno API parameters for instrumental background music. 
+Analyze the provided video data through systematic reasoning and generate optimal Suno API parameters for **instrumental background music** that fits the video’s theme, pacing, and emotional journey.
 
 **Think through each phase systematically before providing your final JSON output.**`;
 
@@ -651,7 +569,8 @@ Analyze the provided video data through systematic reasoning chains and generate
                 }).reduce((acc, duration) => {
                     return acc + duration;
                 }, 0.0),
-                videoMainSubject: videoMainSubject,
+                videoTitle: videoTitle,
+                videoDescription: videoDescription,
                 fullNarrationScript: fullNarrationScript,
                 masterStylePositivePrompt: masterStylePositivePrompt,
                 sceneDataList: sceneDataList.map((sceneData) => {

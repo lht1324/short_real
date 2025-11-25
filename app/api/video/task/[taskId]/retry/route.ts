@@ -63,14 +63,14 @@ export async function POST(
                 }
                 case VideoGenerationTaskStatus.STITCHING_VIDEOS: {
                     return {
-                        path: `/api/video/merge?taskId=${taskId}`,
+                        path: `/api/video/merge`,
                         restType: 'POST',
                         body: undefined,
                     };
                 }
                 case VideoGenerationTaskStatus.COMPOSING_MUSIC: {
                     return {
-                        path: `/api/music?taskId=${taskId}`,
+                        path: `/api/music`,
                         restType: 'POST',
                         body: undefined,
                     };
@@ -82,7 +82,7 @@ export async function POST(
                     }
 
                     return {
-                        path: `/api/video/merge/final?taskId=${taskId}`,
+                        path: `/api/video/merge/final`,
                         restType: 'POST',
                         body: undefined
                     };
@@ -124,7 +124,7 @@ export async function POST(
 
         // Fire and Forget으로 재시작 엔드포인트 호출
         const baseUrl = process.env.BASE_URL || 'http://localhost:3000';
-        fetch(`${baseUrl}${retryPathData.path}`, {
+        fetch(`${baseUrl}${retryPathData.path}?taskId=${taskId}`, {
             method: retryPathData.restType,
             headers: {
                 'Content-Type': 'application/json',

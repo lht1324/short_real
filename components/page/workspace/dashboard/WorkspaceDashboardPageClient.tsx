@@ -111,7 +111,7 @@ function WorkspaceDashboardPageClient() {
 
             const videoGenerationTask = await videoClientAPI.getVideoTaskByTaskId(taskId);
 
-            if (!videoGenerationTask || !videoGenerationTask.video_main_subject) {
+            if (!videoGenerationTask || !videoGenerationTask.video_title) {
                 console.error('Failed to get video generation task data:', taskId);
                 return;
             }
@@ -129,7 +129,7 @@ function WorkspaceDashboardPageClient() {
             // 임시 <a> 태그 생성해서 다운로드 트리거
             const a = document.createElement('a');
             a.href = blobUrl;
-            a.download = `${videoGenerationTask.video_main_subject}-${new Date().toLocaleTimeString()}.mp4`.replaceAll(" ", "_");
+            a.download = `${videoGenerationTask.video_title}-${new Date().toLocaleTimeString()}.mp4`.replaceAll(" ", "_");
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
@@ -252,7 +252,7 @@ function WorkspaceDashboardPageClient() {
 
         return {
             id: task.id,
-            title: task.video_main_subject,
+            title: task.video_title,
             status: status,
             sceneCount: task.scene_breakdown_list.length,
             processedSceneCount: task.processed_scene_count,

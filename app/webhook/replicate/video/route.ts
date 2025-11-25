@@ -260,6 +260,7 @@ export async function POST(request: NextRequest) {
 
     } catch (error) {
         console.error("Webhook processing error:", error);
+        // 돌아가는데 지 혼자 Failed로 바뀌는 현상 발견. 잡아야 함. 씨발개같은거나ㅣㅈ걷ㄴ아ㅣ건ㄱ
 
         await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
         return getNextBaseResponse({

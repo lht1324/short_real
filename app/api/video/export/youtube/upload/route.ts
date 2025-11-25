@@ -133,7 +133,8 @@ export async function POST(request: NextRequest) {
         const boundary = 'boundary_shortreal_ai_youtube_upload';
         const multipartBody = createMultipartBody(
             buffer,
-            videoGenerationTask.video_main_subject ?? "ShortReal AI",
+            videoGenerationTask.video_title ?? "ShortReal AI",
+            videoGenerationTask.video_description ?? "ShortReal AI",
             boundary
         )
         const uploadResponse = await fetch(
@@ -184,12 +185,17 @@ export async function POST(request: NextRequest) {
 }
 
 // Multipart body 생성 (YouTube API 형식)
-function createMultipartBody(videoBuffer: ArrayBuffer, videoTitle: string, boundary: string): Uint8Array {
+function createMultipartBody(
+    videoBuffer: ArrayBuffer,
+    videoTitle: string,
+    videoDescription: string,
+    boundary: string
+): Uint8Array {
     const encoder = new TextEncoder();
     const metadataJson = JSON.stringify({
         snippet: {
             title: videoTitle,
-            description: 'Uploaded via API',
+            description: videoDescription,
             categoryId: '24',
             tags: ['shorts', 'ai', 'generated'],
         },

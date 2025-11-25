@@ -2,12 +2,10 @@ import {
     SceneData,
     SceneGenerationStatus,
     VideoGenerationTask,
-    VideoGenerationTaskStatus
 } from '@/api/types/supabase/VideoGenerationTasks';
-import {findOptimalVideoParameters} from "@/utils/videoUtils";
 import {
-    ReplicateInput,
-    VIDEO_ASPECT_RATIOS, VIDEO_GENERATION_STATUS,
+    VIDEO_ASPECT_RATIOS,
+    VIDEO_GENERATION_STATUS,
     VIDEO_RESOLUTIONS,
     VideoAspectRatio,
     VideoResolution
@@ -19,7 +17,6 @@ import {createSupabaseServiceRoleClient} from "@/lib/supabaseServiceRole";
 import {ALL_FORMATS, Input, UrlSource} from "mediabunny";
 import {FalAIClient} from "@/lib/fal-ai/FalAIClient";
 import {FalAIService} from "@/lib/fal-ai/FalAIService";
-import {taskCheckAndCleanupIfCancelled} from "@/utils/taskCheckAndCleanupIfCancelled";
 
 export const videoServerAPI = {
     // POST /videos - Scene별 image-to-video 생성 요청 제출
@@ -41,45 +38,39 @@ export const videoServerAPI = {
         // ---- [추가] generationTaskId를 포함한 동적 웹훅 URL 생성 ----
         const webhookUrl = `${baseUrl}/webhook/replicate/video?taskId=${taskId}`;
 
-
-        // Base64를 Data URL로 변환
-        // const imageUrl = sceneData.imageBase64
-        //     ? `data:image/png;base64,${sceneData.imageBase64}`
-        //     : '';
-
         // Signed URL 생성 (1시간 유효)
         const { data, error } = await supabase.storage
             .from('scene_image_temp_storage')
             .createSignedUrl(`${taskId}/${sceneData.sceneNumber}.jpeg`, 60 * 60 * 24);
-
-        // if (!imageUrl) {
-        //     throw new Error(`Scene ${sceneData.sceneNumber}: 이미지 데이터가 없습니다.`);
-        // }
 
         if (error || !data?.signedUrl) {
             throw new Error(error?.message || `Scene ${sceneData.sceneNumber}: 이미지 데이터가 없습니다.`);
         }
         const imageUrl = data.signedUrl;
 
-        // const frameRate = 24;
-        const videoParameters = findOptimalVideoParameters(sceneData.sceneDuration || 3);
+        const roundedDuration = Math.round(sceneData.sceneDuration);
+        const safeRoundedDuration = roundedDuration < 2
+            ? 2
+            : roundedDuration > 12
+                ? 12
+                : roundedDuration;
 
-        const inputData: ReplicateInput = {
+        const inputData = {
             image: imageUrl,
-            prompt: sceneData.videoGenPrompt || "",
-            num_inference_steps: 28,
-            num_frames: videoParameters.num_frames,
-            frames_per_second: videoParameters.frames_per_second,
-            enable_safety_checker: false,
+            fps: 24,
+            prompt: sceneData.videoGenPrompt ?? "A cinematic video",
+            duration: safeRoundedDuration, // 2-12
             resolution: videoResolution,
             aspect_ratio: aspectRatio,
-        };
+            camera_fixed: false,
+        }
+        console.log("inputData: ", inputData);
         const prediction = await replicate.predictions.create({
-            version: "wan-video/wan-2.2-i2v-fast",
+            version: "bytedance/seedance-1-pro-fast",
             input: inputData,
             webhook: webhookUrl,
             webhook_events_filter: ["completed"],
-        });
+        })
 
         if (prediction.error || prediction.status === (VIDEO_GENERATION_STATUS.FAILED || VIDEO_GENERATION_STATUS.CANCELED)) {
             throw Error(`Scene ${sceneData.sceneNumber}: ${prediction.error || prediction.status}`);

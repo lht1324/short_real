@@ -12,6 +12,8 @@ export async function POST(request: NextRequest) {
     const taskId = searchParams.get('taskId');
 
     if (!taskId) {
+        await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
+
         return getNextBaseResponse({
             success: false,
             status: 400,
@@ -39,11 +41,12 @@ export async function POST(request: NextRequest) {
         }
 
         const sceneDataList = videoGenerationTask.scene_breakdown_list;
-        const videoMainSubject = videoGenerationTask.video_main_subject;
+        const videoTitle = videoGenerationTask.video_title;
+        const videoDescription = videoGenerationTask.video_description;
         const masterStylePositivePromptInfo = videoGenerationTask.master_style_positive_prompt;
         const masterStyleNegativePrompt = videoGenerationTask.master_style_negative_prompt;
 
-        if (!sceneDataList || !videoMainSubject || !masterStylePositivePromptInfo || !masterStyleNegativePrompt) {
+        if (!sceneDataList || !videoTitle || !videoDescription || !masterStylePositivePromptInfo || !masterStyleNegativePrompt) {
             await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
 
             return getNextBaseResponse({
@@ -56,10 +59,10 @@ export async function POST(request: NextRequest) {
         const sceneDataWithImageGenPromptPromiseList: Promise<SceneData>[] = sceneDataList.map(async (sceneData) => {
             const postImageGenPromptResult = await openAIServerAPI.postImageGenPrompt(
                 sceneData.imageGenPromptDirective,
-                // masterStylePositivePrompt,
                 masterStylePositivePromptInfo,
                 sceneData.narration,
-                videoMainSubject,
+                videoTitle,
+                videoDescription,
             );
 
             if (!postImageGenPromptResult.success || !postImageGenPromptResult.imageGenPrompt) {
