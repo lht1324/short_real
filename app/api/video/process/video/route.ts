@@ -1,12 +1,12 @@
-import {NextRequest, NextResponse} from "next/server";
+import {NextRequest} from "next/server";
 import {createSupabaseServiceRoleClient} from "@/lib/supabaseServiceRole";
 import {videoGenerationTasksServerAPI} from "@/api/server/videoGenerationTasksServerAPI";
 import {taskCheckAndCleanupIfCancelled} from "@/utils/taskCheckAndCleanupIfCancelled";
 import {SceneData, VideoGenerationTaskStatus} from "@/api/types/supabase/VideoGenerationTasks";
-import {findOptimalVideoParameters} from "@/utils/videoUtils";
 import {openAIServerAPI} from "@/api/server/openAIServerAPI";
 import {videoServerAPI} from "@/api/server/videoServerAPI";
 import {getNextBaseResponse} from "@/utils/getNextBaseResponse";
+import {delay} from "@/utils/asyncUtils";
 
 export async function POST(request: NextRequest) {
     const supabase = createSupabaseServiceRoleClient();
@@ -64,19 +64,10 @@ export async function POST(request: NextRequest) {
             // ArrayBuffer를 Base64로 인코딩
             const imageBase64 = Buffer.from(imageArrayBuffer).toString('base64');
 
-            const {
-                num_frames: numFrames,
-                frames_per_second: framesPerSeconds,
-                resulting_duration: videoActualDuration,
-            } = findOptimalVideoParameters(sceneData.sceneDuration);
-
             const postVideoGenPromptResult = await openAIServerAPI.postVideoGenPrompt(
                 sceneData.imageGenPrompt as string,
                 sceneData.narration,
                 imageBase64,
-                numFrames,
-                framesPerSeconds,
-                videoActualDuration,
                 sceneData.sceneDuration,
             );
 
@@ -100,20 +91,21 @@ export async function POST(request: NextRequest) {
             return checkResultFirst;
         }
 
+        const finalSceneDataList: SceneData[] = [];
 
-        const finalSceneDataList: SceneData[] = await Promise.all(
-            sceneDataWithVideoGenPromptList.map(async (sceneData): Promise<SceneData> => {
-                const requestId = await videoServerAPI.postVideo(
-                    sceneData,
-                    taskId,
-                );
+        for (const sceneData of sceneDataWithVideoGenPromptList) {
+            const requestId = await videoServerAPI.postVideo(
+                sceneData,
+                taskId,
+            );
 
-                return {
-                    ...sceneData,
-                    requestId: requestId,
-                }
+            finalSceneDataList.push({
+                ...sceneData,
+                requestId: requestId,
             })
-        );
+
+            await delay(1000);
+        }
 
         const patchVideoGenerationTaskResult = await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, {
             scene_breakdown_list: finalSceneDataList,

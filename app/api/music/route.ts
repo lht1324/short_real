@@ -101,7 +101,7 @@ export async function POST(request: NextRequest) {
             title: title,
             customMode: true,
             instrumental: true,
-            model: SunoModelType.V4_5,
+            model: SunoModelType.V5,
             styleWeight: 0.65,
             weirdnessConstraint: 0.65,
             audioWeight: 0.65,

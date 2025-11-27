@@ -1,8 +1,17 @@
+function getRootPath() {
+    const isProd = process.env.NODE_ENV === 'production';
+    console.log(`isProd = ${isProd}`)
+
+    return isProd ? "" : `${process.env.NEXT_PUBLIC_BASE_URL!}`
+}
+
 export async function getFetch(route: string) {
-    const response = await fetch(route, {
+    const rootPath = getRootPath();
+    const response = await fetch(`${rootPath}${route}`, {
         method: 'GET',
         headers: {
             'Content-Type': 'application/json',
+            'ngrok-skip-browser-warning': '69420',
         },
     });
 
@@ -15,10 +24,12 @@ export async function getFetch(route: string) {
 }
 
 export async function postFetch(route: string, body?: unknown) {
-    const response = await fetch(route, {
+    const rootPath = getRootPath();
+    const response = await fetch(`${rootPath}${route}`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
+            'ngrok-skip-browser-warning': '69420',
         },
         body: body ? JSON.stringify(body) : undefined,
     });
@@ -32,10 +43,12 @@ export async function postFetch(route: string, body?: unknown) {
 }
 
 export async function patchFetch(route: string, body?: unknown) {
-    const response = await fetch(route, {
+    const rootPath = getRootPath();
+    const response = await fetch(`${rootPath}${route}`, {
         method: 'PATCH',
         headers: {
             'Content-Type': 'application/json',
+            'ngrok-skip-browser-warning': '69420',
         },
         body: body ? JSON.stringify(body) : undefined,
     });
@@ -49,10 +62,12 @@ export async function patchFetch(route: string, body?: unknown) {
 }
 
 export async function deleteFetch(route: string) {
-    const response = await fetch(route, {
+    const rootPath = getRootPath();
+    const response = await fetch(`${rootPath}${route}`, {
         method: 'DELETE',
         headers: {
             'Content-Type': 'application/json',
+            'ngrok-skip-browser-warning': '69420',
         },
     });
 

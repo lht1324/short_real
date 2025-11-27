@@ -8,8 +8,11 @@ import {getErrorMessage} from "@/utils/ErrorUtils";
 import {taskCheckAndCleanupIfCancelled} from "@/utils/taskCheckAndCleanupIfCancelled";
 import {getNextBaseResponse} from "@/utils/getNextBaseResponse";
 
-// import { adjustVideoSpeedAndUpload } from "@/lib/services/videoService"; // (추천) 실제 로직은 이렇게 분리
-
+/**
+ * 이 엔드포인트는 웹훅이 들어오는 엔드포인트
+ * 웹훅을 쏘는 서비스인 Replicate는 200 이외의 status가 들어올 때 재시도를 한 뒤 기존 id로 웹훅을 다시 쏜다
+ * 항상 유념할 것.
+ */
 export async function POST(request: NextRequest) {
     const supabase = createSupabaseServiceRoleClient();
 
@@ -18,8 +21,8 @@ export async function POST(request: NextRequest) {
 
     if (!taskId) {
         return getNextBaseResponse({
-            success: false,
-            status: 400,
+            success: true,
+            status: 200,
             error: "taskId is required"
         });
     }
@@ -32,8 +35,8 @@ export async function POST(request: NextRequest) {
         const videoGenerationTask = await videoGenerationTasksServerAPI.getVideoGenerationTaskById(taskId);
         if (!videoGenerationTask) {
             return getNextBaseResponse({
-                success: false,
-                status: 404,
+                success: true,
+                status: 200,
                 error: "Task not found",
             });
         }
@@ -53,8 +56,8 @@ export async function POST(request: NextRequest) {
         if (!sceneToProcess) {
             await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
             return getNextBaseResponse({
-                success: false,
-                status: 404,
+                success: true,
+                status: 200,
                 error: `Scene with requestId '${prediction.id}' not found in task.`
             });
         }
@@ -67,15 +70,18 @@ export async function POST(request: NextRequest) {
 
             // 1. 에러 내용 확인 및 CUDA 에러 여부 판단
             let isCudaError = false;
+            let isHttpxReadError = false;
+
             const errorMessage = getErrorMessage(prediction.error);
 
             if (errorMessage) {
                 // 에러 메시지에 'CUDA'가 포함되어 있는지 대소문자 구분 없이 확인
                 isCudaError = errorMessage.toUpperCase().includes('CUDA');
+                isHttpxReadError = errorMessage.toUpperCase().includes('READERROR');
             }
 
             // 2. CUDA 에러인 경우에만 재시도
-            if (isCudaError) {
+            if (isCudaError || isHttpxReadError) {
                 console.log(`[Retry] CUDA error detected for prediction ${prediction.id}. Retrying immediately...`);
                 // 즉시 재시도 요청
                 // 테스트 금지, 이미지 생성 시 Supabase Storage에 저장하는 로직 추가 후 다시 해야 함. 현재 sceneToProcess에는 imageBase64가 없음.
@@ -111,8 +117,8 @@ export async function POST(request: NextRequest) {
                 }
 
                 return getNextBaseResponse({
-                    success: false,
-                    status: 500,
+                    success: true,
+                    status: 200,
                     message: "CUDA error detected. Retrying job."
                 });
 
@@ -120,6 +126,7 @@ export async function POST(request: NextRequest) {
                 // 3. CUDA가 아닌 다른 에러인 경우 (영구 실패 처리)
                 console.log(`[Permanent Failure] Non-CUDA error for prediction ${prediction.id}. Not retrying.`);
 
+                await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
                 await videoGenerationTasksServerAPI.patchVideoGenerationTask(
                     taskId,
                     {
@@ -175,80 +182,12 @@ export async function POST(request: NextRequest) {
         const postProcessedVideoResult = await videoServerAPI.postProcessedVideo(
             replicateVideoUrl,
             targetDuration,
-            `${taskId}/${prediction.id}.mp4`,
+            taskId,
+            prediction.id
         );
 
         if (!postProcessedVideoResult.success) {
-            throw new Error(`Video processing failed: ${postProcessedVideoResult.error}`);
-        }
-
-        // 7. DB 업데이트: 처리된 영상 URL과 상태를 Scene 데이터에 반영
-        const updatedSceneList = videoGenerationTask.scene_breakdown_list.map((sceneData) => {
-            if (sceneData.requestId && prediction.id && sceneData.requestId === prediction.id) {
-                return {
-                    ...sceneData,
-                    status: SceneGenerationStatus.PROCESSED// 'processed' // Scene 처리 완료 상태 추가
-                };
-            }
-            return sceneData;
-        });
-
-        await videoGenerationTasksServerAPI.patchVideoGenerationTask(
-            taskId,
-            {
-                scene_breakdown_list: updatedSceneList,
-            }
-        );
-
-        // ==================================================================
-        //  ▲▲▲ 여기까지 영상 처리 로직 ▲▲▲
-        // ==================================================================
-        const { data: countResult, error: rpcError } = await supabase.rpc(
-            "increment_and_get_scene_count",
-            { task_id: videoGenerationTask.id }
-        )
-
-        const processedCountFromDB = countResult.processed_count;
-        const totalCountFromDB = countResult.total_count;
-        const totalCountFromList = updatedSceneList.length;
-
-        // (안전장치) DB에 기록된 total_count가 실제 리스트 길이와 일치하는지 확인
-        if (totalCountFromDB !== totalCountFromList) {
-            // 이 경우, 데이터가 잘못 기록된 것이므로 심각한 에러로 로깅
-            console.error(`CRITICAL: Data inconsistency for task ${taskId}. DB total: ${totalCountFromDB}, DB processed: ${processedCountFromDB} List length: ${totalCountFromList}`);
-        }
-
-        // 모든 조건이 만족할 때만 병합 실행
-        const isAllScenesProcessed =
-            totalCountFromList > 0 && // 0 === 0 방지
-            processedCountFromDB === totalCountFromList && // 처리된 개수 === 실제 총 개수
-            totalCountFromDB === totalCountFromList; // (안전장치) DB에 기록된 총 개수 === 실제 총 개수
-
-        // 8. 모든 Scene 처리가 완료되었으면, 병합 엔드포인트 호출
-        if (isAllScenesProcessed) {
-            const patchVideoGenerationTaskStatusStitchingVideosResult = await videoGenerationTasksServerAPI.patchVideoGenerationTaskStatus(taskId, VideoGenerationTaskStatus.STITCHING_VIDEOS);
-
-            const checkStitchingVideosResult = await taskCheckAndCleanupIfCancelled(patchVideoGenerationTaskStatusStitchingVideosResult);
-
-            if (checkStitchingVideosResult) {
-                return checkStitchingVideosResult;
-            }
-
-            console.log(`모든 Scene 처리 완료. 최종 병합을 시작합니다: ${videoGenerationTask.id}`);
-
-            // 현재 요청의 기본 URL을 사용하여 병합 엔드포인트의 전체 URL을 생성
-            const mergeEndpointUrl = new URL(`${process.env.BASE_URL}/api/video/merge?taskId=${taskId}`, request.url);
-
-            // ★★★ 서버 사이드에서 직접 POST 요청을 보냄 ★★★
-            // 이 fetch의 응답을 기다릴 필요 없으므로 await를 사용하지 않음 ("Fire and Forget")
-            fetch(mergeEndpointUrl.toString(), {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    // 필요하다면 내부 인증을 위한 시크릿 키 등을 추가할 수 있습니다.
-                    // 'Authorization': `Bearer ${process.env.INTERNAL_SECRET_KEY}`
-                },
-            });
+            throw new Error(`Video processing request failed.`);
         }
 
         // 8. Replicate에 성공 응답 전달
@@ -260,12 +199,11 @@ export async function POST(request: NextRequest) {
 
     } catch (error) {
         console.error("Webhook processing error:", error);
-        // 돌아가는데 지 혼자 Failed로 바뀌는 현상 발견. 잡아야 함. 씨발개같은거나ㅣㅈ걷ㄴ아ㅣ건ㄱ
 
         await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
         return getNextBaseResponse({
-            success: false,
-            status: 500,
+            success: true,
+            status: 200,
             error: "Webhook processing error"
         });
     }

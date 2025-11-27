@@ -12,8 +12,6 @@ export async function POST(request: NextRequest) {
     const taskId = searchParams.get('taskId');
 
     if (!taskId) {
-        await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
-
         return getNextBaseResponse({
             success: false,
             status: 400,

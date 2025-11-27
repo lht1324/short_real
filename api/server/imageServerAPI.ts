@@ -24,11 +24,26 @@ export const imageServerAPI = {
                     }
                 };
             }
+
+            // Dev ONLY!!!!!!
+
+            const isDev = process.env.NODE_ENV === 'development';
+            const credentials = isDev ? JSON.parse(process.env.GCP_CREDENTIALS_JSON!) : undefined;
+
             // 1. GoogleGenAI 클라이언트 초기화
             const ai = new GoogleGenAI(({
                 vertexai: true,
                 project: project,
                 location: location,
+                // DEV ONLY!!!!!
+                ...(isDev && credentials && {
+                    googleAuthOptions: {
+                        credentials: {
+                            ...credentials,
+                            private_key: credentials.private_key.replace(/\\n/g, '\n'),
+                        },
+                    }
+                })
             }))
 
             // 3. 이미지 생성 요청

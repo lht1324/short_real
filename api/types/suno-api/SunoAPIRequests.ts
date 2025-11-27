@@ -17,6 +17,8 @@ export enum SunoModelType {
     V3_5 = "V3_5",
     V4 = "V4",
     V4_5 = "V4_5",
+    V4_5PLUS = "V4_5PLUS",
+    V5 = "V5",
 }
 
 export enum SunoVoiceGenderType {
