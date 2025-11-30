@@ -7,6 +7,7 @@ import {
     AlertTriangle,
     ChevronDown,
     ChevronRight,
+    Coins,
     Film,
     ListTodo,
     Play,
@@ -89,6 +90,40 @@ function WorkspaceCreatePageClient() {
     
     // Collapse states for sections
     const [isStyleExpanded, setIsStyleExpanded] = useState(true);
+
+    const userCreditCount = useMemo(() => {
+        return user?.credit_count ?? 0;
+    }, [user?.credit_count]);
+
+    const expectedVideoTotalDuration = useMemo(() => {
+        // 시간
+        return sceneDataList.reduce((acc, sceneData) => {
+            return acc + sceneData.sceneDuration;
+        }, 0);
+    }, [sceneDataList]);
+
+    const expectedVideoSceneCount = useMemo(() => {
+        return sceneDataList.length;
+    }, [sceneDataList]);
+
+    const expectedCreditUsage = useMemo(() => {
+        // 장면 재분할 2
+        // 영상 5
+        // 장면 5
+        // 로직 추가
+
+        const exceededVideoTotalDuration = expectedVideoTotalDuration - 30;
+        const exceededVideoSceneCount = expectedVideoSceneCount - 6;
+
+        const exceededDurationUsage = exceededVideoTotalDuration > 0
+            ? exceededVideoTotalDuration * 5
+            : 0;
+        const exceededSceneCountUsage = exceededVideoSceneCount > 0
+            ? exceededVideoSceneCount * 5
+            : 0;
+
+        return 100 + (exceededDurationUsage + exceededSceneCountUsage);
+    }, [expectedVideoTotalDuration, expectedVideoSceneCount]);
 
     // Style examples for preview
     const styleList = useMemo((): Style[] => STYLE_DATA_LIST, []);
@@ -461,6 +496,14 @@ function WorkspaceCreatePageClient() {
                         </p>
                     </div>
                 </div>
+
+                <div className="flex items-center space-x-2 mr-6 px-4 py-2 bg-gray-900/50 border border-purple-500/30 rounded-lg backdrop-blur-sm hover:border-purple-400/50 transition-all">
+                    <Coins className="w-5 h-5 text-yellow-400" />
+                    <div className="flex flex-col">
+                        <span className="text-xs text-purple-300">Credits</span>
+                        <span className="text-lg font-bold text-yellow-400">{userCreditCount.toLocaleString()}</span>
+                    </div>
+                </div>
             </div>
 
             {/* Vaporwave Background Effects */}
@@ -553,25 +596,33 @@ function WorkspaceCreatePageClient() {
                                         )}
                                     </div>
                                     <div className="relative group">
-                                        <button
-                                            type="button"
-                                            onClick={async () => {
-                                                await onClickGenerateStoryboard(selectedVoiceId);
-                                            }}
-                                            disabled={isGeneratingStoryboardData || !script.trim() || !selectedVoiceId}
-                                            className="px-3 py-1.5 bg-gradient-to-r from-green-500 to-blue-500 text-white rounded-lg text-sm font-medium hover:from-green-600 hover:to-blue-600 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-1"
-                                        >
-                                        {isGeneratingStoryboardData ? (
-                                            <>
-                                                <div className="w-3 h-3 border border-white/30 border-t-white rounded-full animate-spin"></div>
-                                                <span>Generating...</span>
-                                            </>
-                                        ) : sceneDataList.length === 0 && !videoTitle ? (
-                                            <span>Generate Storyboard</span>
-                                        ) : (
-                                            <span>Regenerate Storyboard</span>
-                                        )}
-                                        </button>
+                                        <div className="flex flex-row space-x-2 items-center">
+                                            {sceneDataList.length > 0 && videoTitle && (
+                                                <div className="flex items-center space-x-1 px-2 py-1 bg-white/10 rounded-lg">
+                                                    <Coins className="w-3.5 h-3.5 text-yellow-400" />
+                                                    <span className="text-xs font-medium">-2</span>
+                                                </div>
+                                            )}
+                                            <button
+                                                type="button"
+                                                onClick={async () => {
+                                                    await onClickGenerateStoryboard(selectedVoiceId);
+                                                }}
+                                                disabled={isGeneratingStoryboardData || !script.trim() || !selectedVoiceId}
+                                                className="px-3 py-1.5 bg-gradient-to-r from-green-500 to-blue-500 text-white rounded-lg text-sm font-medium hover:from-green-600 hover:to-blue-600 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-1"
+                                            >
+                                                {isGeneratingStoryboardData ? (
+                                                    <>
+                                                        <div className="w-3 h-3 border border-white/30 border-t-white rounded-full animate-spin"></div>
+                                                        <span>Generating...</span>
+                                                    </>
+                                                ) : sceneDataList.length === 0 && !videoTitle ? (
+                                                    <span>Generate Storyboard</span>
+                                                ) : (
+                                                    <span>Regenerate Storyboard</span>
+                                                )}
+                                            </button>
+                                        </div>
 
                                         {/* 툴팁 오버레이 */}
                                         {(!script.trim() || !selectedVoiceId) && (
@@ -598,7 +649,7 @@ function WorkspaceCreatePageClient() {
 
                                 {/* Video Metadata Section */}
                                 {videoTitle && videoDescription && (
-                                    <div className="mb-6 space-y-3">
+                                    <div className="mb-4 space-y-3">
                                         {/* Title Card */}
                                         <div className="group relative rounded-xl border border-purple-500/30 bg-gradient-to-r from-purple-500/5 via-pink-500/5 to-purple-500/5 p-4 backdrop-blur-sm transition-all hover:border-purple-400/50 hover:shadow-lg hover:shadow-purple-500/10">
                                             <div className="flex items-start space-x-3">
@@ -608,7 +659,7 @@ function WorkspaceCreatePageClient() {
                                                     </div>
                                                 </div>
                                                 <div className="flex-1 min-w-0">
-                                                    <div className="text-xs font-medium text-purple-300 mb-1.5">Video Title</div>
+                                                    <div className="text-sm font-medium text-purple-300 mb-1.5">Video Title</div>
                                                     <h3 className="text-lg font-bold leading-snug text-white">
                                                         {videoTitle}
                                                     </h3>
@@ -625,8 +676,8 @@ function WorkspaceCreatePageClient() {
                                                     </div>
                                                 </div>
                                                 <div className="flex-1 min-w-0">
-                                                    <div className="text-xs font-medium text-purple-300 mb-1.5">Description</div>
-                                                    <p className="whitespace-pre-wrap text-sm leading-relaxed text-gray-300">
+                                                    <div className="text-sm font-medium text-purple-300 mb-1.5">Description</div>
+                                                    <p className="whitespace-pre-wrap text-base leading-relaxed text-gray-300">
                                                         {videoDescription}
                                                     </p>
                                                 </div>
@@ -634,6 +685,48 @@ function WorkspaceCreatePageClient() {
                                         </div>
                                     </div>
                                 )}
+
+                                {/* Credit Usage Card */}
+                                <div className="group relative mb-6 rounded-xl border border-purple-500/30 bg-gradient-to-r from-yellow-500/5 via-orange-500/5 to-yellow-500/5 p-4 backdrop-blur-sm transition-all hover:border-purple-400/50 hover:shadow-lg hover:shadow-yellow-500/10">
+                                    <div className="flex items-start space-x-3">
+                                        <div className="flex-shrink-0 mt-0.5">
+                                            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-yellow-500 to-orange-500 flex items-center justify-center shadow-lg">
+                                                <Coins className="w-4 h-4 text-white" />
+                                            </div>
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <div className="text-sm font-medium text-purple-300 mb-1.5">Estimated Credit Usage</div>
+                                            <div className="space-y-2">
+                                                <div className="flex items-center justify-between">
+                                                    <span className="text-base text-gray-300">Base (30s / 6 scenes)</span>
+                                                    <span className="text-base font-semibold text-white">100 credits</span>
+                                                </div>
+                                                <div className="border-t border-purple-500/20 my-2"></div>
+                                                <div className="flex items-center justify-between">
+                                                    <span className="text-sm text-gray-400">
+                                                        {`Extra Duration (+${expectedVideoTotalDuration > 30 ? Math.ceil(expectedVideoTotalDuration - 30) : 0}s)`}
+                                                    </span>
+                                                    <span className={`text-sm font-medium ${expectedVideoTotalDuration > 30 ? 'text-yellow-300' : 'text-gray-500'}`}>
+                                                        +{expectedVideoTotalDuration > 30 ? (expectedVideoTotalDuration - 30) * 5 : 0} credits
+                                                    </span>
+                                                </div>
+                                                <div className="flex items-center justify-between">
+                                                    <span className="text-sm text-gray-400">
+                                                        {`Extra Scenes (+${expectedVideoSceneCount > 6 ? expectedVideoSceneCount - 6 : 0})`}
+                                                    </span>
+                                                    <span className={`text-sm font-medium ${expectedVideoSceneCount > 6 ? 'text-yellow-300' : 'text-gray-500'}`}>
+                                                        +{expectedVideoSceneCount > 6 ? (expectedVideoSceneCount - 6) * 5 : 0} credits
+                                                    </span>
+                                                </div>
+                                                <div className="border-t border-purple-500/20 my-2"></div>
+                                                <div className="flex items-center justify-between">
+                                                    <span className="text-base font-semibold text-purple-300">Total</span>
+                                                    <span className="text-lg font-bold text-yellow-400">{expectedCreditUsage} credits</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
 
                                 {/* Storyboard 그리드 */}
                                 {sceneDataList.length !== 0 && videoTitle && (
@@ -820,6 +913,10 @@ function WorkspaceCreatePageClient() {
                                         </>
                                     ) : (
                                         <>
+                                            <div className="flex items-center space-x-1 px-2 py-1 bg-black/40 rounded-lg">
+                                                <Coins className="w-3.5 h-3.5 text-yellow-400" />
+                                                <span className="text-xs font-medium">-{expectedCreditUsage}</span>
+                                            </div>
                                             <span>Generate Video</span>
                                             <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />

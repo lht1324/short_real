@@ -103,7 +103,8 @@ export async function GET(request: NextRequest) {
 
         // 5. 성공 리다이렉트
         return NextResponse.redirect(
-            `${request.nextUrl.origin}/workspace/dashboard?export-result=${ExportResult.SUCCESS}`
+            // `${request.nextUrl.origin}/workspace/dashboard?export-result=${ExportResult.SUCCESS}`
+            `http://localhost:3000/workspace/dashboard?export-result=${ExportResult.SUCCESS}`
         );
 
     } catch (error) {
