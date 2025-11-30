@@ -5,6 +5,7 @@ import {videoGenerationTasksServerAPI} from "@/api/server/videoGenerationTasksSe
 import {taskCheckAndCleanupIfCancelled} from "@/utils/taskCheckAndCleanupIfCancelled";
 import {openAIServerAPI} from "@/api/server/openAIServerAPI";
 import {getNextBaseResponse} from "@/utils/getNextBaseResponse";
+import {MusicGenerationData} from "@/api/types/suno-api/MusicGenerationData";
 
 export async function POST(request: NextRequest) {
     // URL에서 파라미터 추출
@@ -78,10 +79,10 @@ export async function POST(request: NextRequest) {
             style,
             title,
             negativeTags,
-            // styleWeight,
-            // weirdnessConstraint,
-            // audioWeight,
-        } = postMusicGenerationDataResult.data;
+            styleWeight,
+            weirdnessConstraint,
+            audioWeight,
+        }: MusicGenerationData = postMusicGenerationDataResult.data;
 
         // 필수 파라미터 검증
         if (!prompt || !style || !title) {
@@ -99,12 +100,13 @@ export async function POST(request: NextRequest) {
             prompt: prompt,
             style: style,
             title: title,
+            negativeTags: negativeTags,
             customMode: true,
             instrumental: true,
             model: SunoModelType.V5,
-            styleWeight: 0.65,
-            weirdnessConstraint: 0.65,
-            audioWeight: 0.65,
+            styleWeight: styleWeight,
+            weirdnessConstraint: weirdnessConstraint,
+            audioWeight: audioWeight,
             callBackUrl: `${baseUrl}/webhook/suno-api?taskId=${taskId}`,
         }
 

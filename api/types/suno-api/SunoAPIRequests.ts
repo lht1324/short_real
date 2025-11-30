@@ -1,15 +1,15 @@
 export interface PostGenerateRequest {
-    prompt?: string;
-    style?: string;
-    title?: string;
+    prompt: string;
+    style: string;
+    title: string;
     customMode: boolean;
     instrumental: boolean;
     model: SunoModelType;
-    negativeTags?: string;
+    negativeTags: string;
     vocalGender?: SunoVoiceGenderType;
-    styleWeight?: number;
-    weirdnessConstraint?: number;
-    audioWeight?: number;
+    styleWeight: number;
+    weirdnessConstraint: number;
+    audioWeight: number;
     callBackUrl: string;
 }
 

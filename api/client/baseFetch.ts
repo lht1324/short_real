@@ -1,12 +1,13 @@
-function getRootPath() {
+function getRootPath(route: string) {
     const isProd = process.env.NODE_ENV === 'production';
-    console.log(`isProd = ${isProd}`)
 
-    return isProd ? "" : `${process.env.NEXT_PUBLIC_BASE_URL!}`
+    return isProd || route.includes("http") || route.includes("https")
+        ? ""
+        : `${process.env.NEXT_PUBLIC_BASE_URL!}`
 }
 
 export async function getFetch(route: string) {
-    const rootPath = getRootPath();
+    const rootPath = getRootPath(route);
     const response = await fetch(`${rootPath}${route}`, {
         method: 'GET',
         headers: {
@@ -24,7 +25,7 @@ export async function getFetch(route: string) {
 }
 
 export async function postFetch(route: string, body?: unknown) {
-    const rootPath = getRootPath();
+    const rootPath = getRootPath(route);
     const response = await fetch(`${rootPath}${route}`, {
         method: 'POST',
         headers: {
@@ -43,7 +44,7 @@ export async function postFetch(route: string, body?: unknown) {
 }
 
 export async function patchFetch(route: string, body?: unknown) {
-    const rootPath = getRootPath();
+    const rootPath = getRootPath(route);
     const response = await fetch(`${rootPath}${route}`, {
         method: 'PATCH',
         headers: {
@@ -62,7 +63,7 @@ export async function patchFetch(route: string, body?: unknown) {
 }
 
 export async function deleteFetch(route: string) {
-    const rootPath = getRootPath();
+    const rootPath = getRootPath(route);
     const response = await fetch(`${rootPath}${route}`, {
         method: 'DELETE',
         headers: {

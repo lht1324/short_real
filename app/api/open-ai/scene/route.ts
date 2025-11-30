@@ -99,58 +99,46 @@ export async function POST(request: NextRequest): Promise<NextResponse<PostOpenA
         console.log("fullList: ", fullSubtitleList);
 
         const sceneDataList: SceneData[] = postSceneSegmentationResult.sceneDataList.map((sceneData) => {
-            const sceneNarrationWords = sceneData.narration
-                // 1. 단어를 분리해야 하는 특수문자들을 '공백'으로 치환
-                .replace(/[—–]/g, " ")       // Dash류 (Em Dash, En Dash, Hyphen) -> 공백
-                .replace(/\//g, " ")          // 슬래시 (and/or -> and or) -> 공백
-                .replace(/…/g, " ")           // 말줄임표 (Wait…what -> Wait what) -> 공백
-
-                // 2. 소유격('s)이나 줄임말('ll, 've) 처리는 선택 사항
-                // 보통 STT는 "It's"를 "It's" 한 단어로 인식하므로, 여기서는 그대로 두는 게 낫습니다.
-                // 만약 STT가 "It"와 "is"로 쪼갠다면 여기서도 쪼개야 하지만, ElevenLabs/Whisper는 보통 뭉쳐서 줍니다.
-
-                // 3. 그 외 특수문자 제거 (콤마, 마침표, 따옴표 등)
-                .replace(/[^\w\s']/g, "")     // 알파벳, 숫자, 공백, 작은따옴표(') 제외하고 제거
-
-                // 4. 공백 기준 분리
-                .split(/\s+/)
-
-                // 5. 정규화 (소문자 + 작은따옴표 제거 등)
-                .map(w => w.toLowerCase().replace(/^'|'$/g, "")) // 앞뒤 따옴표만 제거 ('word' -> word)
-                .filter(w => w.length > 0);   // 빈 문자열 제거
+            // 1. Scene의 원본 문장을 정규화된 단어 배열로 만듭니다.
+            const sceneNarrationWords = sceneData.narration.split(/\s+/).map(normalizeWord).filter(w => w);
             const segmentsForScene: SubtitleSegment[] = [];
 
-            for (let i = 0; i < sceneNarrationWords.length; i++) {
-                const targetWord = sceneNarrationWords[i];
+            // 2. Scene의 각 단어(targetWord)를 순회합니다.
+            for (const targetWord of sceneNarrationWords) {
+                let assembledWord = "";
+                const tempSegments: SubtitleSegment[] = [];
+                let searchIndex = currentWordIndex;
 
-                // STT 리스트가 끝났으면 루프 종료 (안전장치)
-                if (currentWordIndex >= fullSubtitleList.length) break;
+                // 3. 자막 리스트에서 단어들을 조립하며 targetWord와 일치하는지 찾습니다.
+                while (searchIndex < fullSubtitleList.length) {
+                    const currentSegment = fullSubtitleList[searchIndex];
+                    const normalizedSegmentWord = normalizeWord(currentSegment.word);
 
-                const currentSttSegment = fullSubtitleList[currentWordIndex];
-                const normalizedSttWord = normalizeWord(currentSttSegment.word);
+                    // 현재 자막 조각을 임시로 추가합니다.
+                    tempSegments.push(currentSegment);
+                    assembledWord += normalizedSegmentWord;
+                    searchIndex++;
 
-                // 1. 정확히 일치하는 경우 (Happy Path)
-                if (normalizedSttWord === normalizeWord(targetWord)) {
-                    segmentsForScene.push({
-                        word: currentSttSegment.word, // or targetWord (상관없음)
-                        startSec: currentSttSegment.startSec,
-                        endSec: currentSttSegment.endSec,
-                    });
-                    currentWordIndex++;
-                }
-                // 2. 불일치 발생 -> "시간은 STT 거 쓰고, 단어는 대본 거 쓰자"
-                else {
-                    console.warn(`Mismatch: Target "${targetWord}" vs STT "${currentSttSegment.word}". Using Target word with STT time.`);
+                    // 4. 조립된 단어가 목표 단어(targetWord)와 일치하는지 확인합니다.
+                    if (assembledWord === targetWord) {
+                        // 일치! 임시 저장했던 자막 조각들을 최종 목록에 추가합니다.
+                        // segmentsForScene.push(...tempSegments);
+                        segmentsForScene.push({
+                            word: tempSegments.map(segment => segment.word).join(""),
+                            startSec: tempSegments[0].startSec,
+                            endSec: tempSegments[tempSegments.length - 1].endSec,
+                        })
+                        // 전체 자막 리스트의 시작 인덱스를 업데이트합니다.
+                        currentWordIndex = searchIndex;
+                        break; // 현재 targetWord 찾기 완료, 다음 targetWord로 넘어갑니다.
+                    }
 
-                    // ★ 핵심: 시간은 그대로, 단어만 교체
-                    segmentsForScene.push({
-                        word: targetWord, // 대본의 올바른 단어 강제 주입
-                        startSec: currentSttSegment.startSec,
-                        endSec: currentSttSegment.endSec,
-                    });
-
-                    // 다음 단어로 진행
-                    currentWordIndex++;
+                    // 5. 조립된 단어가 목표 단어의 일부와 일치하지 않으면 뭔가 잘못된 것이므로 루프를 중단합니다.
+                    if (!targetWord.startsWith(assembledWord)) {
+                        console.warn(`Mismatch detected for scene ${sceneData.sceneNumber}. Target: "${targetWord}", Assembled: "${assembledWord}".`);
+                        // tempSegments를 추가하지 않고 루프를 중단하여 불일치 조각이 포함되는 것을 방지합니다.
+                        break;
+                    }
                 }
             }
 
@@ -187,12 +175,14 @@ export async function POST(request: NextRequest): Promise<NextResponse<PostOpenA
             throw Error(`Failed to upload audio file to Supabase Storage: ${fileUploadResult.message}`);
         }
 
+        console.log("newSceneDataList: ", JSON.stringify(postSceneSegmentationResult.sceneDataList))
+
         return getNextBaseResponse({
             success: true,
             status: 200,
             data: {
                 taskId: videoGenerationTask.id,
-                sceneDataList: postSceneSegmentationResult.sceneDataList || [],
+                sceneDataList: sceneDataList,
                 videoTitle: postSceneSegmentationResult.videoTitle,
                 videoDescription: postSceneSegmentationResult.videoDescription,
             }

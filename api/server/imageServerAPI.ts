@@ -54,7 +54,8 @@ export const imageServerAPI = {
                     numberOfImages: 1,
                     aspectRatio: "9:16",
                     negativePrompt: negativePrompt,
-                    personGeneration: PersonGeneration.ALLOW_ALL
+                    personGeneration: PersonGeneration.ALLOW_ALL,
+                    enhancePrompt: false,
                 }
             });
 

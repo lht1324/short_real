@@ -4,16 +4,17 @@ import {
 } from "@/api/types/open-ai/ScriptGeneration";
 import {Style} from "@/api/types/supabase/Styles";
 import {SceneData, SubtitleSegment} from "@/api/types/supabase/VideoGenerationTasks";
-import {PostGenerateRequest} from "@/api/types/suno-api/SunoAPIRequests";
 import {MasterStyleInfo} from "@/api/types/supabase/MasterStyleInfo";
 import {VIDEO_ASPECT_RATIOS, VideoAspectRatio} from "@/lib/ReplicateData";
 import {StoryboardData} from "@/api/types/api/open-ai/scene/PostOpenAISceneResponse";
 import {
     POST_SCRIPT_PROMPT,
+    POST_SCENE_SEGMENTATION_PROMPT,
     POST_MASTER_STYLE_PROMPT,
     POST_IMAGE_GEN_PROMPT_PROMPT,
-    POST_VIDEO_GEN_PROMPT_PROMPT, POST_SCENE_SEGMENTATION_PROMPT
+    POST_VIDEO_GEN_PROMPT_PROMPT, POST_MUSIC_GENERATION_DATA_PROMPT
 } from "@/api/server/OpenAIPrompts";
+import {MusicGenerationData} from "@/api/types/suno-api/MusicGenerationData";
 
 enum OpenAIModel {
     GPT_4O_MINI = "gpt-4o-mini-2024-07-18",
@@ -47,7 +48,12 @@ export const openAIServerAPI = {
                     { role: 'system', content: systemMessage },
                     { role: 'user', content: userPrompt }
                 ],
-                max_completion_tokens: 4096,
+                // [핵심 1] 창의적 글쓰기: 0.7 ~ 0.9 권장 (리포트 4.1)
+                temperature: 0.8,
+                // [핵심 2] 반복 억제: 0.0 ~ 0.5 (리포트 4.3)
+                presence_penalty: 0.2,
+                frequency_penalty: 0.2,
+                max_completion_tokens: 3072,
             });
 
             const generatedScript = completion.choices[0]?.message?.content;
@@ -76,6 +82,7 @@ export const openAIServerAPI = {
             };
 
         } catch (error) {
+            console.error("Error occurred in postScript(): ", error)
             return {
                 success: false,
                 status: 500,
@@ -107,15 +114,17 @@ export const openAIServerAPI = {
                 };
             }
 
-            const systemMessage = POST_MASTER_STYLE_PROMPT;
+            const developerMessage = POST_MASTER_STYLE_PROMPT;
 
             const userMessage = `
-Based on the following style, generate the master style prompt.
+<input_data>
+    <style_name>${style.name}</style_name>
+    <style_description>${style.description}</style_description>
+    <style_prompt_guideline>${style.stylePrompt}</style_prompt_guideline>
+    <target_aspect_ratio>${aspectRatio}</target_aspect_ratio>
+</input_data>
 
-- Style Name: ${style.name}
-- Style Description: ${style.description}
-- Style Prompt Guideline: ${style.stylePrompt}
-- Aspect Ratio: ${aspectRatio}
+Instruction: Analyze the input style and generate the JSON output according to the schema.
 `;
 
             // OpenAI SDK 클라이언트 초기화
@@ -125,9 +134,13 @@ Based on the following style, generate the master style prompt.
             const completion = await client.chat.completions.create({
                 model: OpenAIModel.GPT_O4_MINI,
                 messages: [
-                    { role: 'system', content: systemMessage },
+                    { role: 'developer', content: developerMessage },
                     { role: 'user', content: userMessage }
                 ],
+                // [핵심] JSON 모드 활성화
+                response_format: { type: "json_object" },
+                // [핵심] 스타일 해석은 미묘한 작업이므로 medium 권장
+                reasoning_effort: 'medium',
                 max_completion_tokens: 4096,
             });
 
@@ -144,19 +157,11 @@ Based on the following style, generate the master style prompt.
             }
 
             try {
-                // JSON 파싱 시도
-                // ---- 추가된 부분 시작 ----
-                // Markdown 코드 블록(```json ... ```)이 포함된 경우 순수 JSON만 추출
-                const jsonRegex = /```json\s*([\s\S]*?)\s*```/;
-                const match = generatedMasterStylePromptResult.match(jsonRegex);
-
-                // match가 있으면 추출된 JSON을 사용하고, 없으면 원본을 그대로 사용
-                const jsonString = match ? match[1] : generatedMasterStylePromptResult;
-
+                // [핵심] 정규식 제거. 순수 JSON 파싱.
                 const parsedData: {
                     positivePromptInfo: MasterStyleInfo,
                     negativePrompt: string,
-                } = JSON.parse(jsonString);
+                } = JSON.parse(generatedMasterStylePromptResult);
 
                 return {
                     success: true,
@@ -197,7 +202,7 @@ Based on the following style, generate the master style prompt.
                 return null;
             }
 
-            const systemMessage = POST_SCENE_SEGMENTATION_PROMPT;
+            const developerMessage = POST_SCENE_SEGMENTATION_PROMPT;
 
             const currentDate = new Date().toLocaleDateString('en-US', {
                 weekday: 'long',
@@ -207,11 +212,16 @@ Based on the following style, generate the master style prompt.
             }); // e.g., "Tuesday, November 25, 2025"
 
             const userMessage = `
-**Current Date:** ${currentDate}
-**narrationScript:** "${narrationScript}"
-**subtitleSegments:** ${JSON.stringify(subtitleSegments, null, 2)}
+<input_data>
+    <current_date>${currentDate}</current_date>
+    <narration_script>${narrationScript}</narration_script>
+    <subtitle_segments>
+        ${JSON.stringify(subtitleSegments)}
+    </subtitle_segments>
+</input_data>
 
-Provide JSON output with videoTitle and videoDescription and sceneDataList.`;
+Instruction: Process the input data and return the JSON output according to the schema.
+`;
 
             // OpenAI SDK 클라이언트 초기화
             const client = new OpenAI({ apiKey });
@@ -220,12 +230,16 @@ Provide JSON output with videoTitle and videoDescription and sceneDataList.`;
             const completion = await client.chat.completions.create({
                 model: OpenAIModel.GPT_O4_MINI,
                 messages: [
-                    { role: 'system', content: systemMessage },
+                    { role: 'developer', content: developerMessage },
                     {
                         role: 'user',
                         content: userMessage,
                     }
                 ],
+                // [핵심 1] JSON 모드 활성화 (o-series 지원)
+                response_format: { type: "json_object" },
+                // [핵심 2] 복합 추론(타이밍 계산 + 창작)이므로 medium 유지
+                reasoning_effort: 'medium',
                 max_completion_tokens: 8192,
             });
 
@@ -237,20 +251,12 @@ Provide JSON output with videoTitle and videoDescription and sceneDataList.`;
             }
 
             try {
-                // JSON 파싱 시도
-                const jsonRegex = /```json\s*([\s\S]*?)\s*```/;
-                const match = generatedContent.match(jsonRegex);
-                const jsonString = match ? match[1] : generatedContent;
-
-                const parsedData: {
-                    sceneDataList: SceneData[];
-                    videoTitle: string;
-                    videoDescription: string;
-                } = JSON.parse(jsonString);
-
-                const sceneDataList: SceneData[] = parsedData.sceneDataList;
-                const videoTitle: string = parsedData.videoTitle;
-                const videoDescription: string = parsedData.videoDescription;
+                // [핵심 3] 정규식 불필요. JSON 모드는 순수 JSON만 반환함.
+                const {
+                    sceneDataList,
+                    videoTitle,
+                    videoDescription,
+                } = JSON.parse(generatedContent);
 
                 return {
                     taskId: taskId,
@@ -288,34 +294,38 @@ Provide JSON output with videoTitle and videoDescription and sceneDataList.`;
                 };
             }
 
-            const systemMessage = POST_IMAGE_GEN_PROMPT_PROMPT;
+            const developerMessage = POST_IMAGE_GEN_PROMPT_PROMPT;
 
-            const userMessage = `Create an image prompt that combines these elements:
+            const userMessage = `
+<input_data>
+    <master_style_guide>
+        ${JSON.stringify(masterStylePromptInfo, null, 2)}
+    </master_style_guide>
+    <scene_content>
+        ${imageGenPromptDirective}
+    </scene_content>
+    <current_narration>
+        ${sceneNarration}   
+    </current_narration>
+    <video_context>
+        Title: ${videoTitle}
+        Description: ${videoDescription}   
+    </video_context>
+</input_data>
 
-**Master Style Guide:**
-${JSON.stringify(masterStylePromptInfo, null, 2)}
-
-**Scene Content Description:**
-"${imageGenPromptDirective}"
-
-**Current Scene Narration:**
-"${sceneNarration}"
-
-**Video Title**
-"${videoTitle}"
-
-**Video Description**
-"${videoDescription}"
-
-Generate a prompt that visually represents this specific scene while ensuring the main subject is consistently and accurately depicted, following the style guide and content structure.`;
+Instruction: Generate the cinematic prompt based on <developer_instruction>
+`;
 
             const client = new OpenAI({ apiKey });
             const completion = await client.chat.completions.create({
                 model: OpenAIModel.GPT_O4_MINI,
                 messages: [
-                    { role: 'system', content: systemMessage },
+                    { role: 'developer', content: developerMessage },
                     { role: 'user', content: userMessage }
                 ],
+                // o-series 전용 파라미터.
+                // creative writing에는 'medium'이 적합하며, 비용 절감이 우선이면 'low' 테스트 필요.
+                reasoning_effort: 'medium',
                 max_completion_tokens: 4096,
             });
 
@@ -369,17 +379,16 @@ Generate a prompt that visually represents this specific scene while ensuring th
                 };
             }
 
-            const systemMessage = POST_VIDEO_GEN_PROMPT_PROMPT;
+            const developerMessage = POST_VIDEO_GEN_PROMPT_PROMPT;
 
             const userMessage = `
-Generate optimized motion prompt based on exact parameters:
+<input_data>
+  <scene_narration>${sceneNarration}</scene_narration>
+  <original_intent_context>${imageGenPrompt}</original_intent_context>
+  <target_duration>${targetDuration} seconds</target_duration>
+</input_data>
 
-**Scene Narration:** ${sceneNarration}
-**Original Intent:** ${imageGenPrompt}
-**Target Duration:** ${targetDuration} seconds
-
-Create a concise 4-unit motion prompt (Establishing -> Action -> Atmosphere -> Polish).
-Focus on describing the visible subject in the image performing the action described in the narration.
+Instruction: Analyze the attached image and generate the concise 4-unit motion prompt following <vision_logic> and <prompt_structure>.
 `;
 
             // OpenAI SDK 클라이언트 초기화 및 API 호출
@@ -387,7 +396,7 @@ Focus on describing the visible subject in the image performing the action descr
             const completion = await client.chat.completions.create({
                 model: OpenAIModel.GPT_O4_MINI,
                 messages: [
-                    { role: 'system', content: systemMessage },
+                    { role: 'developer', content: developerMessage },
                     {
                         role: 'user',
                         content: [
@@ -399,12 +408,13 @@ Focus on describing the visible subject in the image performing the action descr
                                 type: "image_url",
                                 image_url: {
                                     url: `data:image/jpeg;base64,${imageBase64}`,
-                                    detail: "auto",
+                                    detail: "high",
                                 }
                             }
                         ]
                     }
                 ],
+                reasoning_effort: 'high', // Vision 분석이 필요하므로 medium 권장
                 max_completion_tokens: 6144,
             });
 
@@ -443,12 +453,12 @@ Focus on describing the visible subject in the image performing the action descr
         videoTitle: string,
         videoDescription: string,
         fullNarrationScript: string,
-        masterStylePositivePrompt: MasterStyleInfo,
+        masterStyleInfo: MasterStyleInfo,
         sceneDataList: SceneData[]
     ): Promise<{
         success: boolean;
         status: number;
-        data?: Partial<PostGenerateRequest>;
+        data?: MusicGenerationData;
         error?: string
     }> {
         try {
@@ -461,105 +471,7 @@ Focus on describing the visible subject in the image performing the action descr
                 };
             }
 
-            const systemMessage = `You are a Music Reasoning Specialist powered by advanced reasoning capabilities.
-
-# SUNO API CHARACTERISTICS
-
-Suno API provides access to Suno v4.5 (latest as of Sept 2025) with these capabilities:
-• Professional-grade AI music generation with v4.5 enhanced audio quality
-• Advanced text-to-music conversion with detailed prompt interpretation
-• Instrumental-only mode with explicit vocal suppression
-• Duration flexibility from 15 seconds to 4+ minutes
-• Support for negativeTags parameter for element exclusion
-• Watermark-free output for commercial use (with proper licensing)
-• Generation time scales proportionally with requested duration (typically 1-2x realtime)
-
-## Critical Suno API Constraints
-• Descriptive, tag-rich prompts work better than technical musical notation
-• negativeTags parameter is available for excluding unwanted elements
-• Instrumental specification should be explicit in both prompt content and negativeTags
-• Style tags significantly influence overall generation approach
-• Generated music includes inaudible watermarking for content tracking
-• Commercial use requires appropriate Suno licensing compliance
-• Longer durations require more complex musical structure planning
-
-# REASONING FRAMEWORK
-
-Execute these three phases **internally** and silently before producing the final JSON. Do NOT output your reasoning steps.
-
-## PHASE 1: TEMPORAL STRUCTURE ANALYSIS
-• Use **videoTotalDuration** (seconds) to plan musical structure
-• For 15–30s: Immediate hook, simple structure, loop-friendly
-• For 30–60s: Clear A–B or A–B–A progression with no long intro
-• For 60s+: Multi-section structure with evolving dynamics
-• Map sceneDuration patterns (sceneDataList) to energy changes (build-ups, drops, transitions)
-
-## PHASE 2: VISUAL-TO-AUDIO TRANSFORMATION
-• Use **videoTitle** and **videoDescription** to infer the core theme and emotional arc
-• Extract emotional indicators from fullNarrationScript
-• Translate masterStylePositivePrompt (visual style) into musical descriptors (genre, mood, texture)
-• Map visual intensity (from each scene’s imageGenPrompt and narration) to musical dynamics (calm vs intense, sparse vs dense)
-• Ensure genre and mood are consistent with the overall video concept
-
-## PHASE 3: SUNO API OPTIMIZATION
-• Synthesize all analysis into:
-  – a short, catchy **title**
-  – a concise **style** string (comma-separated genre/mood/instrument tags)
-  – a detailed but compact **prompt** for the track’s feel and progression
-  – a strict **negativeTags** string for exclusions
-• Enforce instrumental-only behavior via both style/prompt wording and negativeTags
-• Validate that duration, energy curve, and genre all make sense together
-
-# CRITICAL REASONING GUIDELINES
-
-1. **SYSTEMATIC ANALYSIS** – Process each phase mentally before answering
-2. **LOGICAL DEDUCTION** – Base every parameter decision on provided data
-3. **TEMPORAL AWARENESS** – Make the music evolve appropriately over the total duration
-4. **COHERENCE VALIDATION** – Ensure title, style, prompt, and negativeTags all point to the same musical idea
-5. **SUNO OPTIMIZATION** – Prefer clear genre/mood/instrument tags over vague language
-
-# INPUT DATA STRUCTURE
-
-You will receive a JSON object containing:
-• **videoTotalDuration**: Total video length in seconds for musical structure planning
-• **videoTitle**: Short, hooky title text representing the core topic of the video
-• **videoDescription**: Brief description of what the video is about and why it matters
-• **fullNarrationScript**: Complete narration for emotional progression analysis
-• **masterStylePositivePrompt**: Visual style guide to translate into musical aesthetics
-• **sceneDataList**: Array of core scene data for temporal and intensity analysis
-
-## SceneData Structure (Essential Fields Only)
-Each scene object contains only the music-relevant data:
-{
-  "sceneNumber": number,        // Sequential scene identifier
-  "narration": string,          // Scene-specific emotional content
-  "sceneDuration": number,      // Individual scene timing in seconds
-  "imageGenPrompt": string      // Visual intensity/style cue for musical mapping
-}
-
-# OUTPUT REQUIREMENTS
-
-Generate a valid JSON object with these exact fields:
-
-## Required JSON Structure
-{
-  "title": "string - Short, catchy track title (can be similar to videoTitle but music-oriented)",
-  "style": "string - Comma-separated genre/mood/instrument tags, e.g. 'instrumental, upbeat electronic, cinematic, modern, no vocals'", 
-  "prompt": "string - 1–3 sentences describing the instrumental track: mood, instrumentation, energy curve, and how it should support the video",
-  "negativeTags": "string - Comma-separated elements to avoid (must include: vocals, singing, vocal, lyrics, voice, choir)"
-}
-
-## Critical Output Instructions
-- Follow the three-phase reasoning framework INTERNALLY
-- Your final response must contain ONLY the valid JSON object
-- Do not include explanations, reasoning process, or meta-commentary
-- Ensure the JSON is properly formatted and parseable
-
-# TASK EXECUTION
-
-Analyze the provided video data through systematic reasoning and generate optimal Suno API parameters for **instrumental background music** that fits the video’s theme, pacing, and emotional journey.
-
-**Think through each phase systematically before providing your final JSON output.**`;
+            const developerMessage = POST_MUSIC_GENERATION_DATA_PROMPT;
 
 
             // AI에 전달할 데이터를 명확한 구조로 재구성
@@ -568,28 +480,32 @@ Analyze the provided video data through systematic reasoning and generate optima
                     return sceneData.sceneDuration;
                 }).reduce((acc, duration) => {
                     return acc + duration;
-                }, 0.0),
+                }, 0.0), // 계산된 총 시간
                 videoTitle: videoTitle,
                 videoDescription: videoDescription,
-                fullNarrationScript: fullNarrationScript,
-                masterStylePositivePrompt: masterStylePositivePrompt,
-                sceneDataList: sceneDataList.map((sceneData) => {
+                fullNarrationScript: fullNarrationScript, // 감정 분석용
+                // 시각 정보 중 음악과 연관된 것만 선별
+                visualStyle: {
+                    genre: masterStyleInfo.STYLE_PREFIX,
+                    reference: masterStyleInfo.CINEMATIC_REFERENCE,
+                    mood: masterStyleInfo.EMOTIONAL_TONE,
+                    texture: masterStyleInfo.TEXTURE_ELEMENTS,
+                    color: masterStyleInfo.COLOR_PALETTE,
+                    finalMood: masterStyleInfo.FINAL_MOOD_DESCRIPTOR
+                },
+                // 구조 계산용 시간 리스트만 전달
+                sceneStructure: sceneDataList.map((sceneData) => {
                     return {
                         sceneNumber: sceneData.sceneNumber,
-                        narration: sceneData.narration,
                         sceneDuration: sceneData.sceneDuration,
-                        imageGenPrompt: sceneData.imageGenPrompt,
                     }
                 })
-            };
+            }
 
             const userMessage = `
-Based on the following video data, please generate the Suno API parameters in the required JSON format.
-
-**TASK DATA:**
-${JSON.stringify(musicPromptRequestData, null, 2)}
-
-Now, provide the final JSON output.
+<task_data>
+    ${JSON.stringify(musicPromptRequestData, null, 2)}
+</task_data>
 `;
 
             const client = new OpenAI({ apiKey });
@@ -597,10 +513,12 @@ Now, provide the final JSON output.
             const completion = await client.chat.completions.create({
                 model: OpenAIModel.GPT_O4_MINI,
                 messages: [
-                    { role: 'system', content: systemMessage },
+                    { role: 'developer', content: developerMessage },
                     { role: 'user', content: userMessage }
                 ],
-                max_completion_tokens: 3072,
+                reasoning_effort: 'medium',
+                response_format: { type: 'json_object' },
+                max_completion_tokens: 4096,
             });
 
             const generatedContent = completion.choices[0]?.message?.content;
@@ -614,11 +532,7 @@ Now, provide the final JSON output.
             }
 
             try {
-                const jsonRegex = /```json\s*([\s\S]*?)\s*```/;
-                const match = generatedContent.match(jsonRegex);
-                const jsonString = match ? match[1] : generatedContent;
-
-                const parsedData: Partial<PostGenerateRequest> = JSON.parse(jsonString);
+                const parsedData: MusicGenerationData = JSON.parse(generatedContent);
 
                 if (!parsedData.prompt || !parsedData.style || !parsedData.title) {
                     throw new Error("Missing one or more required fields: prompt, style, title");

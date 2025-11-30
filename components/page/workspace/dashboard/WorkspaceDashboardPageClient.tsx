@@ -116,6 +116,15 @@ function WorkspaceDashboardPageClient() {
                 return;
             }
 
+            // const videoBlob = await videoClientAPI.getVideoDownloadFinal(taskId);
+            //
+            // if (!videoBlob) return;
+            //
+            // console.log("1: ", JSON.stringify(videoBlob));
+            // console.log("2: ", videoBlob instanceof Blob)      // true 여야 함
+            // console.log("3: ", Object.prototype.toString.call(videoBlob)) // [object Blob] 여야 함
+            // console.log("4: ", videoBlob.type)                 // 'video/mp4' 권장
+            // console.log("5: ", videoBlob.size)                 // 0보다 커야 함
             // Blob으로 받아서 다운로드 (CORS 우회)
             const response = await fetch(url);
 
@@ -125,6 +134,7 @@ function WorkspaceDashboardPageClient() {
 
             const blob = await response.blob();
             const blobUrl = window.URL.createObjectURL(blob);
+            // const blobUrl = window.URL.createObjectURL(videoBlob);
 
             // 임시 <a> 태그 생성해서 다운로드 트리거
             const a = document.createElement('a');
@@ -211,8 +221,8 @@ function WorkspaceDashboardPageClient() {
             VideoGenerationTaskStatus.GENERATING_VIDEO_PROMPT,
             VideoGenerationTaskStatus.GENERATING_VIDEO,
             VideoGenerationTaskStatus.STITCHING_VIDEOS,
-            VideoGenerationTaskStatus.EDITOR,
             VideoGenerationTaskStatus.COMPOSING_MUSIC,
+            VideoGenerationTaskStatus.EDITOR,
             VideoGenerationTaskStatus.FINALIZING,
             VideoGenerationTaskStatus.COMPLETED,
         ];
@@ -278,8 +288,6 @@ function WorkspaceDashboardPageClient() {
             const loadData = async () => {
                 try {
                     const videoGenerationTaskList = await videoClientAPI.getVideoTasksByUserId(user?.id);
-
-                    console.log("videoGenerationTaskList: ", videoGenerationTaskList);
 
                     if (!videoGenerationTaskList) {
                         throw new Error("Cannot read videoGenerationTaskList. Try again.");

@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { openAIServerAPI } from '@/api/server/openAIServerAPI';
 import { ScriptGenerationRequest } from '@/api/types/open-ai/ScriptGeneration';
 import {getNextBaseResponse} from "@/utils/getNextBaseResponse";

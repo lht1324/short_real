@@ -1,9 +1,21 @@
 'use client'
 
-import {memo, useCallback, useEffect, useMemo, useState} from "react";
+import {memo, useCallback, useEffect, useMemo, useRef, useState} from "react";
 import Link from "next/link";
 import Image from "next/image";
-import {AlertTriangle, ChevronDown, ChevronRight, Film, ListTodo, Play, Plus, Save, Sparkles, X,} from 'lucide-react';
+import {
+    AlertTriangle,
+    ChevronDown,
+    ChevronRight,
+    Film,
+    ListTodo,
+    Play,
+    Plus,
+    Save,
+    Sparkles,
+    Square,
+    X,
+} from 'lucide-react';
 import {openAIClientAPI} from '@/api/client/openAIClientAPI';
 import {ScriptGenerationRequest} from "@/api/types/open-ai/ScriptGeneration";
 import {Style} from "@/api/types/supabase/Styles";
@@ -17,6 +29,7 @@ import {PostOpenAISceneRequest} from "@/api/types/api/open-ai/scene/PostOpenAISc
 import DefaultModal from "@/components/public/DefaultModal";
 import {useAuth} from "@/context/AuthContext";
 import {STYLE_DATA_LIST} from "@/lib/styles";
+import {voiceClientAPI} from "@/api/client/voiceClientAPI";
 
 function WorkspaceCreatePageClient() {
     const router = useRouter();
@@ -43,6 +56,12 @@ function WorkspaceCreatePageClient() {
     const [sceneDataList, setSceneDataList] = useState<SceneData[]>([]);
     const [videoTitle, setVideoTitle] = useState<string | null>(null);
     const [videoDescription, setVideoDescription] = useState<string | null>(null);
+    const [voiceUrl, setVoiceUrl] = useState<string | null>(null);
+    const [isPlayingVoice, setIsPlayingVoice] = useState<boolean>(false);
+    const [currentPlayTime, setCurrentPlayTime] = useState<number>(0);
+
+    // Audio ref for voice preview
+    const audioRef = useRef<HTMLAudioElement | null>(null);
 
     const isVideoGenerationEnabled = useMemo(() => {
         const isScriptNotEmpty = script.length !== 0;
@@ -112,28 +131,30 @@ function WorkspaceCreatePageClient() {
         }
     }, [aiPrompt]);
     
-    const onClickGenerateStoryboard = useCallback(async () => {
+    const onClickGenerateStoryboard = useCallback(async (voiceId?: string) => {
         try {
             if (!user?.id) return;
 
-            if (!script && !selectedVoiceId) {
+            if (!script && !voiceId) {
                 throw new Error("Write script and select voice first.")
             }
             if (!script) {
                 throw new Error("Write script first.")
             }
-            if (!selectedVoiceId) {
+            if (!voiceId) {
                 throw new Error("Select voice first.")
             }
 
             setIsGeneratingStoryboardData(true);
+            setSceneDataList([]);
 
+            console.log(`selectedVoice = ${voiceId}`)
             const request: PostOpenAISceneRequest = {
                 userId: user?.id,
                 taskId: taskId,
                 narrationScript: script,
                 styleId: selectedStyleId,
-                voiceId: selectedVoiceId,
+                voiceId: voiceId,
             }
             const storyboardData = await openAIClientAPI.postOpenAIScene(request);
             
@@ -153,13 +174,14 @@ function WorkspaceCreatePageClient() {
             setVideoTitle(newVideoTitle);
             setVideoDescription(newVideoDescription);
 
+            setPendingVoiceId(null);
             setIsGeneratingStoryboardData(false);
         } catch (error) {
             console.error('onClickGenerateStoryboard', error);
             alert(error instanceof Error ? error.message : 'Unknown error');
             setIsGeneratingStoryboardData(false);
         }
-    }, [user?.id, taskId, script, selectedVoiceId, selectedStyleId]);
+    }, [user?.id, taskId, script, selectedStyleId]);
     
     const onSelectVoice = useCallback((voiceId: string) => {
         if (voiceId !== selectedVoiceId) {
@@ -198,6 +220,44 @@ function WorkspaceCreatePageClient() {
         return Math.round(wordCount / 2.5);
     }, [script]);
 
+    const onClickPlayAndStopButton = useCallback(async () => {
+        if (!voiceUrl) return;
+
+        if (isPlayingVoice) {
+            // 재생 중일 때: 정지
+            if (audioRef.current) {
+                audioRef.current.pause();
+                audioRef.current.currentTime = 0;
+            }
+            setIsPlayingVoice(false);
+            setCurrentPlayTime(0);
+        } else {
+            // 재생 중이 아닐 때: 재생
+            if (!audioRef.current) {
+                audioRef.current = new Audio(voiceUrl);
+                audioRef.current.onended = () => {
+                    setIsPlayingVoice(false);
+                    setCurrentPlayTime(0);
+                };
+                audioRef.current.ontimeupdate = () => {
+                    if (audioRef.current) {
+                        setCurrentPlayTime(audioRef.current.currentTime);
+                    }
+                };
+            } else {
+                // voiceUrl이 변경되었을 수 있으므로 src 업데이트
+                audioRef.current.src = voiceUrl;
+                audioRef.current.currentTime = 0;
+            }
+            await audioRef.current.play();
+            setIsPlayingVoice(true);
+        }
+    }, [voiceUrl, isPlayingVoice]);
+
+    useEffect(() => {
+        console.log(`voiceUrl = ${voiceUrl}`)
+    }, [voiceUrl]);
+
     const onClickGenerateVideo = useCallback(async () => {
         if (!script.trim()) {
             alert('스크립트를 입력해주세요.');
@@ -210,14 +270,6 @@ function WorkspaceCreatePageClient() {
             if (!taskId || !selectedStyleId || !user?.id) {
                 throw new Error("User Id or Task Id or selected style was not found.");
             }
-
-            // VideoData API 요청 데이터 구성
-            // const requestData: PostVideoRequest = {
-            //     userId: user.id,
-            //     style: selectedStyle,
-            // };
-            //
-            // console.log('Creating video project with data:', requestData);
 
             // Video API 호출
             const postVideoResult = await videoClientAPI.postVideo(taskId, selectedStyleId);
@@ -270,7 +322,7 @@ function WorkspaceCreatePageClient() {
         } finally {
             setIsSaving(false);
         }
-    }, [taskId, script, selectedStyleId, selectedVoiceId, sceneDataList, videoTitle]);
+    }, [script, sceneDataList, videoTitle, videoDescription, selectedStyleId, selectedVoiceId, taskId]);
 
     const onCloseSaveSuccessModal = useCallback(() => {
         setShowSaveSuccessModal(false);
@@ -278,12 +330,15 @@ function WorkspaceCreatePageClient() {
 
     const onConfirmVoiceChange = useCallback(async () => {
         if (pendingVoiceId) {
-            setSelectedVoiceId(pendingVoiceId);
-            setPendingVoiceId(null);
+            setSelectedVoiceId((prev) => {
+                console.log(`prevVoice = ${prev}, newVoice = ${pendingVoiceId}`)
+                return pendingVoiceId;
+            });
+
             setShowVoiceChangeWarningModal(false);
 
             // Storyboard 재생성
-            await onClickGenerateStoryboard();
+            await onClickGenerateStoryboard(pendingVoiceId);
         }
     }, [pendingVoiceId, onClickGenerateStoryboard]);
 
@@ -329,6 +384,20 @@ function WorkspaceCreatePageClient() {
             setIsGenerationTaskLoading(false);
         }
     }, [taskId]);
+
+    useEffect(() => {
+        if (taskId && sceneDataList.length !== 0) {
+            const loadVoiceUrl = async () => {
+                const newVoiceUrl = await voiceClientAPI.getVoiceUrl(taskId);
+
+                setVoiceUrl(newVoiceUrl);
+            }
+
+            loadVoiceUrl().then();
+        } else {
+            setVoiceUrl(null);
+        }
+    }, [taskId, sceneDataList]);
 
     return (
         <div className="min-h-screen bg-black text-white">
@@ -465,13 +534,30 @@ function WorkspaceCreatePageClient() {
                             {/* Storyboard Section */}
                             <div>
                                 <div className="flex items-center justify-between mb-4">
-                                    <label className="block text-xl font-semibold text-purple-300">
-                                        Storyboard
-                                    </label>
+                                    <div className="flex items-center space-x-2">
+                                        <label className="block text-xl font-semibold text-purple-300">
+                                            Storyboard
+                                        </label>
+                                        {voiceUrl && (
+                                            <button
+                                                className="flex items-center space-x-1 px-2 py-1 rounded bg-purple-500/20 hover:bg-purple-500/30 transition-colors border border-purple-400/30"
+                                                onClick={onClickPlayAndStopButton}
+                                            >
+                                                {isPlayingVoice ? (
+                                                    <Square size={12} className="text-purple-300" />
+                                                ) : (
+                                                    <Play size={12} className="text-purple-300" />
+                                                )}
+                                                <span className="text-xs text-purple-300 font-medium">Preview</span>
+                                            </button>
+                                        )}
+                                    </div>
                                     <div className="relative group">
                                         <button
                                             type="button"
-                                            onClick={onClickGenerateStoryboard}
+                                            onClick={async () => {
+                                                await onClickGenerateStoryboard(selectedVoiceId);
+                                            }}
                                             disabled={isGeneratingStoryboardData || !script.trim() || !selectedVoiceId}
                                             className="px-3 py-1.5 bg-gradient-to-r from-green-500 to-blue-500 text-white rounded-lg text-sm font-medium hover:from-green-600 hover:to-blue-600 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-1"
                                         >
@@ -555,7 +641,19 @@ function WorkspaceCreatePageClient() {
                                         {sceneDataList.sort((a, b) => {
                                             return a.sceneNumber - b.sceneNumber;
                                         }).map((sceneData) => {
-                                            return <StoryboardItem key={sceneData.sceneNumber} sceneData={sceneData} />
+                                            const sceneSubtitleSegmentList = sceneData.sceneSubtitleSegments ?? [];
+                                            const isVoicePlayingScene = isPlayingVoice && sceneSubtitleSegmentList && sceneSubtitleSegmentList.length > 0
+                                                ? currentPlayTime >= sceneSubtitleSegmentList[0].startSec &&
+                                                  currentPlayTime <= sceneSubtitleSegmentList[sceneSubtitleSegmentList.length - 1].endSec
+                                                : false;
+
+                                            console.log(`currentTime = ${currentPlayTime}, isPlaying = ${isVoicePlayingScene}, start = ${sceneSubtitleSegmentList[0]?.startSec}, end = ${sceneSubtitleSegmentList[sceneSubtitleSegmentList.length - 1]?.endSec}`)
+
+                                            return <StoryboardItem
+                                                key={sceneData.sceneNumber}
+                                                sceneData={sceneData}
+                                                isVoicePlayingScene={isVoicePlayingScene}
+                                            />
                                         })}
                                     </div>
                                 )}

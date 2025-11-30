@@ -23,7 +23,7 @@ export const videoServerAPI = {
         sceneData: SceneData,
         taskId: string,
         aspectRatio: VideoAspectRatio = VIDEO_ASPECT_RATIOS.PORTRAIT_9_16,
-        videoResolution: VideoResolution = VIDEO_RESOLUTIONS.RES_720P,
+        videoResolution: VideoResolution = VIDEO_RESOLUTIONS.RES_720P, // nP란 가로세로 중 짧은 쪽의 비율을 따라감
     ) {
         const supabase = createSupabaseServiceRoleClient();
         const replicate = new Replicate();
@@ -59,11 +59,11 @@ export const videoServerAPI = {
             fps: 24,
             prompt: sceneData.videoGenPrompt ?? "A cinematic video",
             duration: safeRoundedDuration, // 2-12
-            resolution: "720p" as "480p" | "720p" | "1080p",
+            resolution: videoResolution as "480p" | "720p" | "1080p",
             aspect_ratio: aspectRatio,
             camera_fixed: false,
         }
-        console.log("inputData: ", inputData);
+
         const prediction = await replicate.predictions.create({
             version: "bytedance/seedance-1-pro-fast",
             input: inputData,
@@ -405,7 +405,7 @@ export const videoServerAPI = {
             .createSignedUrl(filePath, expiresIn);
 
         if (error || !data?.signedUrl) {
-            throw new Error(error?.message || `There is no image data.`);
+            throw new Error(error?.message || `There is no video data.`);
         }
 
         return data.signedUrl;

@@ -37,6 +37,7 @@ export async function POST(request: NextRequest) {
         const params = new URLSearchParams({
             client_id: process.env.GOOGLE_YOUTUBE_CLIENT_ID!,
             redirect_uri: `${process.env.BASE_URL}/callback/youtube`,
+            // redirect_uri: `http://localhost:3001/callback/youtube`,
             response_type: 'code',
             scope: 'https://www.googleapis.com/auth/youtube.upload',
             access_type: 'offline',

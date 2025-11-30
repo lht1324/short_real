@@ -3,13 +3,21 @@
 import {memo} from "react";
 import {SceneData} from "@/api/types/supabase/VideoGenerationTasks";
 
+interface StoryboardItemProps {
+    sceneData: SceneData;
+    isVoicePlayingScene: boolean;
+}
+
 function StoryboardItem({
     sceneData,
-}: {
-    sceneData: SceneData;
-}) {
+    isVoicePlayingScene,
+}: StoryboardItemProps) {
     return (
-        <div className="bg-black rounded-lg shadow-lg border border-gray-400 overflow-hidden hover:shadow-xl transition-shadow duration-300">
+        <div className={`bg-black rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 relative ${
+            isVoicePlayingScene
+                ? 'border border-red-500 animate-pulse shadow-red-500/50'
+                : 'border border-gray-400'
+        }`}>
             {/* 클래퍼보드 상단 - 클랩 스틱 부분 */}
             <div className="bg-gray-900 border-b-2 border-gray-400 relative overflow-hidden" style={{height: '40px'}}>
                 {/* 상단 줄무늬 - 오른쪽 향하는 대각선 */}
@@ -37,7 +45,7 @@ function StoryboardItem({
                 {/* 가로 구분선 - 중앙에 검은 선 */}
                 <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-black transform -translate-y-0.5 z-10"></div>
 
-                {/* 은색 동그라미 - 왼쪽 상단 */}
+                {/* 은색 동그라미 - 왼쪽 상단 (항상 표시) */}
                 <div className="absolute top-2 left-3 w-6 h-6 rounded-full z-20" style={{
                     background: `radial-gradient(circle at 30% 30%,
                         #ffffff 0%,
@@ -57,6 +65,19 @@ function StoryboardItem({
 
             {/* 클래퍼보드 메인 영역 - 검은색 배경 */}
             <div className="bg-black p-4 relative">
+                {/* LIVE 배지 - 우상단 (재생 중일 때만 표시) */}
+                {isVoicePlayingScene && (
+                    <div className="absolute top-2 right-2 z-30 flex items-center space-x-1 bg-red-600 px-2 py-1 rounded" style={{
+                        boxShadow: `
+                            0 0 10px rgba(220, 38, 38, 0.8),
+                            0 0 20px rgba(220, 38, 38, 0.5)
+                        `
+                    }}>
+                        <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+                        <span className="text-white text-xs font-bold">LIVE</span>
+                    </div>
+                )}
+
                 {/* 상단 영역: 좌상(Scene Number) + 우상(Narration) */}
                 <div className="flex">
                     {/* 좌상: Scene Number */}

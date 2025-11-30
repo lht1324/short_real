@@ -279,5 +279,17 @@ export const videoClientAPI = {
 
             return null;
         }
+    },
+
+    async getVideoDownloadFinal(taskId: string): Promise<Blob | null> {
+        try {
+            const response = await getFetch(`/api/video/download/final?taskId=${taskId}`)
+
+            return await response.blob();
+        } catch (error) {
+            console.error(error instanceof Error ? error.message : "Unexpected error while fetching final video.");
+
+            return null;
+        }
     }
 }
