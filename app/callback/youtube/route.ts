@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
 
         // 1. 에러 확인
         if (error) {
-            ExportResult
+            console.log("1")
             console.error(error);
             return NextResponse.redirect(
                 `${request.nextUrl.origin}/workspace/dashboard?export-result=${ExportResult.ERROR}`
@@ -24,6 +24,7 @@ export async function GET(request: NextRequest) {
         }
 
         if (!code || !state) {
+            console.log("2")
             if (!code) console.error("Missing required query param: code");
             if (!state) console.error("Missing required query param: state");
 
@@ -59,6 +60,7 @@ export async function GET(request: NextRequest) {
         const tokens = await tokenResponse.json();
 
         if (tokens.error) {
+            console.log("3")
             console.error('Token exchange error:', tokens.error);
             return NextResponse.redirect(
                 `${request.nextUrl.origin}/workspace/dashboard?export-result=${ExportResult.ERROR}`
@@ -101,10 +103,12 @@ export async function GET(request: NextRequest) {
 
         // 5. 성공 리다이렉트
         return NextResponse.redirect(
-            `${request.nextUrl.origin}/workspace/dashboard?export-result=${ExportResult.SUCCESS}`
+            // `${request.nextUrl.origin}/workspace/dashboard?export-result=${ExportResult.SUCCESS}`
+            `http://localhost:3000/workspace/dashboard?export-result=${ExportResult.SUCCESS}`
         );
 
     } catch (error) {
+        console.log("4")
         console.error('YouTube callback error:', error);
         return NextResponse.redirect(
             `${request.nextUrl.origin}/workspace/dashboard?export-result=${ExportResult.ERROR}`

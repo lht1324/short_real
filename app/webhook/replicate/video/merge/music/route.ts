@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { createSupabaseServiceRoleClient } from '@/lib/supabaseServiceRole';
 import { videoGenerationTasksServerAPI } from '@/api/server/videoGenerationTasksServerAPI';
 import { VideoGenerationTaskStatus } from '@/api/types/supabase/VideoGenerationTasks';
@@ -47,19 +47,26 @@ export async function POST(request: NextRequest) {
 
             console.log(`[Webhook Video-Music Merge] Result URL: ${finalVideoUrl}`);
 
-            const videoResponse = await fetch(finalVideoUrl);
+            const videoResponse = await fetch(finalVideoUrl, {
+                cache: 'no-store',
+            });
             if (!videoResponse.ok) {
                 throw new Error(`Failed to download final video: ${videoResponse.statusText}`);
             }
 
-            const videoBuffer = await videoResponse.arrayBuffer();
+            // const videoBlob = await videoResponse.blob();
+            const videoArrayBuffer = await videoResponse.arrayBuffer();
+            const videoNodeBuffer = Buffer.from(videoArrayBuffer);
             const filePath = `${taskId}/${taskId}_final.mp4`;
 
             const { error: uploadError } = await supabase.storage
                 .from('processed_video_storage')
-                .upload(filePath, videoBuffer, {
+                .upload(filePath, videoNodeBuffer, {
+                // .upload(filePath, videoBlob, {
+                // .upload(`temp/${taskId}_final.mp4`, videoBlob, {
                     contentType: 'video/mp4',
-                    upsert: true
+                    upsert: true,
+                    // duplex: 'half',
                 });
 
             if (uploadError) {

@@ -6,6 +6,7 @@ export async function GET(request: NextRequest) {
     try {
         const searchParams = request.nextUrl.searchParams;
         const taskId = searchParams.get("taskId");
+        const fileName = searchParams.get("fileName");
 
         if (!taskId) {
             return getNextBaseResponse({
@@ -16,7 +17,7 @@ export async function GET(request: NextRequest) {
         }
 
         const filePath = `${taskId}/${taskId}_final.mp4`;
-        const signedUrl = await videoServerAPI.getVideoSignedUrl(filePath, 60 * 60);
+        const signedUrl = await videoServerAPI.getVideoSignedUrl(filePath, 60 * 60, fileName ?? undefined);
 
         return getNextBaseResponse({
             success: true,

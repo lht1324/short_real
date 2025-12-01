@@ -1,4 +1,3 @@
-import {PostVideoResponse} from "@/api/types/api/video/PostVideoResponse";
 import {deleteFetch, getFetch, patchFetch, postFetch} from '@/api/client/baseFetch';
 import {VideoGenerationTask} from "@/api/types/supabase/VideoGenerationTasks";
 import {PostVideoMergeFinalResponse} from "@/api/types/api/video/merge/final/PostVideoMergeFinalResponse";
@@ -8,9 +7,11 @@ export const videoClientAPI = {
      * 영상 생성 요청을 서버에 전송합니다.
      * 음성 생성 → OpenAI 분석 → Scene별 영상 생성 → DB 저장의 전체 플로우를 실행합니다.
      */
-    async postVideo(taskId: string): Promise<boolean> {
+    async postVideo(taskId: string, selectedStyleId: string): Promise<boolean> {
         try {
-            const response = await postFetch(`/api/video?taskId=${taskId}`);
+            const response = await postFetch(`/api/video?taskId=${taskId}`, {
+                selectedStyleId: selectedStyleId,
+            });
 
             if (!response.ok) {
                 throw Error(`HTTP error! status: ${response.status}`);
@@ -173,9 +174,9 @@ export const videoClientAPI = {
         }
     },
 
-    async getVideoFinalUrl(taskId: string): Promise<string | null> {
+    async getVideoFinalUrl(taskId: string, fileName: string): Promise<string | null> {
         try {
-            const response = await getFetch(`/api/video/url/final?taskId=${taskId}`);
+            const response = await getFetch(`/api/video/url/final?taskId=${taskId}&fileName=${fileName}`);
 
             if (!response.ok) {
                 if (response.status === 404) {
@@ -278,5 +279,5 @@ export const videoClientAPI = {
 
             return null;
         }
-    }
+    },
 }

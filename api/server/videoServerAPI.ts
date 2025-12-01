@@ -2,24 +2,20 @@ import {
     SceneData,
     SceneGenerationStatus,
     VideoGenerationTask,
-    VideoGenerationTaskStatus
 } from '@/api/types/supabase/VideoGenerationTasks';
-import {findOptimalVideoParameters} from "@/utils/videoUtils";
 import {
-    ReplicateInput,
-    VIDEO_ASPECT_RATIOS, VIDEO_GENERATION_STATUS,
+    VIDEO_ASPECT_RATIOS,
+    VIDEO_GENERATION_STATUS,
     VIDEO_RESOLUTIONS,
     VideoAspectRatio,
     VideoResolution
 } from "@/lib/ReplicateData";
 import Replicate from "replicate";
 import {videoGenerationTasksServerAPI} from "@/api/server/videoGenerationTasksServerAPI";
-import {RendiClient} from "@/lib/rendi/RendiClient";
 import {createSupabaseServiceRoleClient} from "@/lib/supabaseServiceRole";
 import {ALL_FORMATS, Input, UrlSource} from "mediabunny";
 import {FalAIClient} from "@/lib/fal-ai/FalAIClient";
 import {FalAIService} from "@/lib/fal-ai/FalAIService";
-import {taskCheckAndCleanupIfCancelled} from "@/utils/taskCheckAndCleanupIfCancelled";
 
 export const videoServerAPI = {
     // POST /videos - Scene별 image-to-video 생성 요청 제출
@@ -27,7 +23,7 @@ export const videoServerAPI = {
         sceneData: SceneData,
         taskId: string,
         aspectRatio: VideoAspectRatio = VIDEO_ASPECT_RATIOS.PORTRAIT_9_16,
-        videoResolution: VideoResolution = VIDEO_RESOLUTIONS.RES_720P,
+        videoResolution: VideoResolution = VIDEO_RESOLUTIONS.RES_720P, // nP란 가로세로 중 짧은 쪽의 비율을 따라감
     ) {
         const supabase = createSupabaseServiceRoleClient();
         const replicate = new Replicate();
@@ -41,45 +37,39 @@ export const videoServerAPI = {
         // ---- [추가] generationTaskId를 포함한 동적 웹훅 URL 생성 ----
         const webhookUrl = `${baseUrl}/webhook/replicate/video?taskId=${taskId}`;
 
-
-        // Base64를 Data URL로 변환
-        // const imageUrl = sceneData.imageBase64
-        //     ? `data:image/png;base64,${sceneData.imageBase64}`
-        //     : '';
-
         // Signed URL 생성 (1시간 유효)
         const { data, error } = await supabase.storage
             .from('scene_image_temp_storage')
             .createSignedUrl(`${taskId}/${sceneData.sceneNumber}.jpeg`, 60 * 60 * 24);
-
-        // if (!imageUrl) {
-        //     throw new Error(`Scene ${sceneData.sceneNumber}: 이미지 데이터가 없습니다.`);
-        // }
 
         if (error || !data?.signedUrl) {
             throw new Error(error?.message || `Scene ${sceneData.sceneNumber}: 이미지 데이터가 없습니다.`);
         }
         const imageUrl = data.signedUrl;
 
-        // const frameRate = 24;
-        const videoParameters = findOptimalVideoParameters(sceneData.sceneDuration || 3);
+        const roundedDuration = Math.round(sceneData.sceneDuration);
+        const safeRoundedDuration = roundedDuration < 2
+            ? 2
+            : roundedDuration > 12
+                ? 12
+                : roundedDuration;
 
-        const inputData: ReplicateInput = {
+        const inputData = {
             image: imageUrl,
-            prompt: sceneData.videoGenPrompt || "",
-            num_inference_steps: 28,
-            num_frames: videoParameters.num_frames,
-            frames_per_second: videoParameters.frames_per_second,
-            enable_safety_checker: false,
-            resolution: videoResolution,
+            fps: 24,
+            prompt: sceneData.videoGenPrompt ?? "A cinematic video",
+            duration: safeRoundedDuration, // 2-12
+            resolution: videoResolution as "480p" | "720p" | "1080p",
             aspect_ratio: aspectRatio,
-        };
+            camera_fixed: false,
+        }
+
         const prediction = await replicate.predictions.create({
-            version: "wan-video/wan-2.2-i2v-fast",
+            version: "bytedance/seedance-1-pro-fast",
             input: inputData,
             webhook: webhookUrl,
             webhook_events_filter: ["completed"],
-        });
+        })
 
         if (prediction.error || prediction.status === (VIDEO_GENERATION_STATUS.FAILED || VIDEO_GENERATION_STATUS.CANCELED)) {
             throw Error(`Scene ${sceneData.sceneNumber}: ${prediction.error || prediction.status}`);
@@ -93,11 +83,21 @@ export const videoServerAPI = {
      * Supabase Storage에 업로드한 뒤 최종 URL을 반환합니다.
      * @param replicateVideoUrl - Replicate에서 받은 원본 영상 URL
      * @param targetDuration - 목표 영상 길이 (초)
-     * @param filePath - Storage에 저장할 파일 경로 ([taskId]/[requestId].mp4)
+     * @param taskId - 작업 Row ID
+     * @param requestId - 영상 생성 요청 ID
      */
-    async postProcessedVideo(replicateVideoUrl: string, targetDuration: number, filePath: string): Promise<{ success: boolean, processedVideoUrl?: string, error?: { message: string; code: string } }> {
-        const supabase = createSupabaseServiceRoleClient();
-        const rendiClient = new RendiClient();
+    async postProcessedVideo(
+        replicateVideoUrl: string,
+        targetDuration: number,
+        taskId: string,
+        requestId: string,
+    ): Promise<{
+        success: boolean,
+        predictionId?: string,
+    }> {
+        const replicate = new Replicate({
+            auth: process.env.REPLICATE_API_TOKEN,
+        });
 
         try {
             // 1. MediaBunny를 사용해 영상 정보 확인
@@ -110,64 +110,27 @@ export const videoServerAPI = {
 
             // 2. 속도 배율 계산 (소수점 6자리로 제한)
             const videoPtsRatio = parseFloat((targetDuration / actualDuration).toFixed(6));
-            console.log(`${filePath.split("/")[1]} actualDuration = ${actualDuration}`);
-            console.log(`${filePath.split("/")[1]} targetDuration = ${targetDuration}`);
-            console.log(`${filePath.split("/")[1]} videoRatio = ${videoPtsRatio}`);
 
-            const speedAdjustRequest = {
-                input_files: {
-                    "in_1": replicateVideoUrl,
+            const webhookUrl = `${process.env.BASE_URL!}/webhook/replicate/video/speed?taskId=${taskId}&requestId=${requestId}`
+            const prediction = await replicate.predictions.create({
+                version: "lht1324/ffmpeg-video-speed-modifier:2a804bdac8858f5d67e47360210214e5d97e6f572cb3621299b03dfe5a6555f0",
+                input: {
+                    video: replicateVideoUrl,
+                    pts_ratio: videoPtsRatio,
                 },
-                output_files: {
-                    // "out_1": `${filePath.split("/")[1]}`
-                    "out_1": "speed_adjusted_video.mp4",
-                },
-                ffmpeg_command: `-i {{in_1}} -vf "setpts=${videoPtsRatio}*PTS" {{out_1}}`
-            };
-
-            const speedAdjustResponse = await rendiClient.runFfmpegCommand(speedAdjustRequest);
-            const speedAdjustResult = await rendiClient.waitForCompletion(speedAdjustResponse.command_id);
-
-            // 3. Rendi에서 처리된 영상을 다운로드하여 Supabase Storage에 업로드
-            const processedVideoUrl = speedAdjustResult.out_1.storage_url;
-            const videoResponse = await fetch(processedVideoUrl);
-
-            if (!videoResponse.ok) {
-                throw new Error(`처리된 영상 다운로드 실패: ${videoResponse.statusText}`);
-            }
-
-            const videoBuffer = await videoResponse.arrayBuffer();
-
-            // Supabase Storage에 업로드
-            const { error: uploadError } = await supabase.storage
-                .from('processed_video_storage')
-                .upload(filePath, videoBuffer, {
-                    contentType: 'video/mp4',
-                    upsert: true
-                });
-
-            if (uploadError) {
-                throw new Error(`Supabase Storage 업로드 실패: ${uploadError.message}`);
-            }
-
-            // Supabase Storage의 public URL 생성
-            const { data: { publicUrl } } = supabase.storage
-                .from('processed_video_storage')
-                .getPublicUrl(filePath);
+                webhook: webhookUrl,
+                webhook_events_filter: ["completed"],
+            });
 
             return {
                 success: true,
-                processedVideoUrl: publicUrl
+                predictionId: prediction.id
             };
 
         } catch (error) {
             console.error("영상 처리 중 에러 발생:", error);
             return {
                 success: false,
-                error: {
-                    message: error instanceof Error ? error.message : 'Unknown error',
-                    code: 'VIDEO_PROCESSING_ERROR',
-                },
             };
         }
     },
@@ -434,15 +397,17 @@ export const videoServerAPI = {
         }
     },
 
-    async getVideoSignedUrl(filePath: string, expiresIn: number = 60 * 60 * 24) {
+    async getVideoSignedUrl(filePath: string, expiresIn: number = 60 * 60 * 24, fileName?: string) {
         const supabase = createSupabaseServiceRoleClient();
 
         const { data, error } = await supabase.storage
             .from('processed_video_storage')
-            .createSignedUrl(filePath, expiresIn);
+            .createSignedUrl(filePath, expiresIn, {
+                download: fileName ?? true,
+            });
 
         if (error || !data?.signedUrl) {
-            throw new Error(error?.message || `There is no image data.`);
+            throw new Error(error?.message || `There is no video data.`);
         }
 
         return data.signedUrl;

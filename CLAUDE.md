@@ -36,3 +36,14 @@
   * 기본적으로 모든 엔드포인트는 { success: boolean, status: number, message?: string, error?: string } 필드를 갖습니다.
   * 만약 엔드포인트에서 데이터를 내려줘야 하는 경우 data?: unknown 필드를 추가해 data 객체 내부에 적절한 필드명과 함께 넣어 래핑한 뒤 내려줍니다.
   * NextResponse.json()을 사용해야 하는 경우 getNextBaseResponse() 함수를 대신 사용하십시오. 경로는 '/utils/getNextBaseResponse'입니다. 이는 NextResponse.json()에 넣어야 하는 { status: number } 객체를 미리 넣어서 NextResponse.json()을 뽑아주는 함수입니다.
+
+## Windows에서 파일 편집 시 유의사항
+* ⚠️ 반드시 준수할 것: Windows의 경로에는 항상 백슬래시(\)를 사용하십시오.
+  Windows에서 Edit, MultiEdit 도구를 사용할 때, 경로에는 항상 백슬래시(\)를 사용하십시오. 슬래시(/)를 사용하면 안 됩니다.
+
+❌ WRONG - 에러 발생:
+Edit(file_path: "D:/repos/project/file.tsx", ...)
+MultiEdit(file_path: "D:/repos/project/file.tsx", ...)
+✅ CORRECT - 작동함:
+Edit(file_path: "D:\repos\project\file.tsx", ...)
+MultiEdit(file_path: "D:\repos\project\file.tsx", ...)

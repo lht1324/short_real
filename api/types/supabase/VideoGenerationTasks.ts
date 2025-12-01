@@ -12,7 +12,8 @@ export interface VideoGenerationTask {
     subtitle_segment_list: SubtitleSegment[]; // jsonb, not null
     master_style_positive_prompt?: MasterStyleInfo;
     master_style_negative_prompt?: string;
-    video_main_subject?: string;
+    video_title?: string;
+    video_description?: string;
     processed_scene_count?: number;
     music_data_list?: MusicData[];
     final_video_merge_data?: FinalVideoMergeData;

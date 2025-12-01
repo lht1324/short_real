@@ -1,15 +1,15 @@
 export interface PostGenerateRequest {
-    prompt?: string;
-    style?: string;
-    title?: string;
+    prompt: string;
+    style: string;
+    title: string;
     customMode: boolean;
     instrumental: boolean;
     model: SunoModelType;
-    negativeTags?: string;
+    negativeTags: string;
     vocalGender?: SunoVoiceGenderType;
-    styleWeight?: number;
-    weirdnessConstraint?: number;
-    audioWeight?: number;
+    styleWeight: number;
+    weirdnessConstraint: number;
+    audioWeight: number;
     callBackUrl: string;
 }
 
@@ -17,6 +17,8 @@ export enum SunoModelType {
     V3_5 = "V3_5",
     V4 = "V4",
     V4_5 = "V4_5",
+    V4_5PLUS = "V4_5PLUS",
+    V5 = "V5",
 }
 
 export enum SunoVoiceGenderType {

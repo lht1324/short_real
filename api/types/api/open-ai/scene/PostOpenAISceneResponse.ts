@@ -8,5 +8,6 @@ export interface PostOpenAISceneResponse extends BaseResponse {
 export interface StoryboardData {
     taskId: string;
     sceneDataList: SceneData[];
-    videoMainSubject: string;
+    videoTitle: string;
+    videoDescription: string;
 }

@@ -75,7 +75,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<PostOpenA
         }
 
         if (videoGenerationTask.scene_breakdown_list) {
-            const patchUserCreditCountResult = await usersServerAPI.patchUserCreditCountByUserId(userId, -1);
+            const patchUserCreditCountResult = await usersServerAPI.patchUserCreditCountByUserId(userId, -2);
 
             if (!patchUserCreditCountResult) {
                 return getNextBaseResponse({
@@ -152,7 +152,8 @@ export async function POST(request: NextRequest): Promise<NextResponse<PostOpenA
         const patchVideoGenerationTaskRequest: Partial<VideoGenerationTask> = {
             scene_breakdown_list: sceneDataList,
             subtitle_segment_list: voiceGenerationResult.subtitleSegmentList,
-            video_main_subject: postSceneSegmentationResult.videoMainSubject,
+            video_title: postSceneSegmentationResult.videoTitle,
+            video_description: postSceneSegmentationResult.videoDescription,
         }
         const patchVideoGenerationTaskResult: VideoGenerationTask | null = await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId ?? videoGenerationTask.id, patchVideoGenerationTaskRequest);
 
@@ -174,13 +175,16 @@ export async function POST(request: NextRequest): Promise<NextResponse<PostOpenA
             throw Error(`Failed to upload audio file to Supabase Storage: ${fileUploadResult.message}`);
         }
 
+        console.log("newSceneDataList: ", JSON.stringify(postSceneSegmentationResult.sceneDataList))
+
         return getNextBaseResponse({
             success: true,
             status: 200,
             data: {
                 taskId: videoGenerationTask.id,
-                sceneDataList: postSceneSegmentationResult.sceneDataList || [],
-                videoMainSubject: postSceneSegmentationResult.videoMainSubject || ''
+                sceneDataList: sceneDataList,
+                videoTitle: postSceneSegmentationResult.videoTitle,
+                videoDescription: postSceneSegmentationResult.videoDescription,
             }
         });
 

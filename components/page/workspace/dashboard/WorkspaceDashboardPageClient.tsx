@@ -2,7 +2,7 @@
 
 import {memo, useCallback, useEffect, useMemo, useState} from "react";
 import Link from "next/link";
-import {ListTodo, Plus} from 'lucide-react';
+import {Coins, ListTodo, Plus} from 'lucide-react';
 import {VideoGenerationTask, VideoGenerationTaskStatus} from "@/api/types/supabase/VideoGenerationTasks";
 import Image from "next/image";
 import {videoClientAPI} from "@/api/client/videoClientAPI";
@@ -50,6 +50,10 @@ function WorkspaceDashboardPageClient() {
     const customerSessionToken = useMemo(() => {
         return searchParams.get('customer_session_token');
     }, [searchParams]);
+
+    const userCreditCount = useMemo(() => {
+        return user?.credit_count ?? 0;
+    }, [user?.credit_count]);
 
     const [checkoutResultDialogData, setCheckoutResultDialogData] = useState<CheckoutResultDialogData | null>(null);
 
@@ -101,41 +105,32 @@ function WorkspaceDashboardPageClient() {
 
     const onClickDownload = useCallback(async (taskId: string) => {
         try {
+            const videoGenerationTask = await videoClientAPI.getVideoTaskByTaskId(taskId);
+
+            if (!videoGenerationTask || !videoGenerationTask.video_title) {
+                console.error('Failed to get video generation task data:', taskId);
+                return;
+            }
+
             // videoClientAPI로 영상 URL 가져오기
-            const url = await videoClientAPI.getVideoFinalUrl(taskId);
+            const fileName = `${videoGenerationTask.video_title}-${new Date().toLocaleTimeString()}.mp4`.replaceAll(" ", "-");
+            const url = await videoClientAPI.getVideoFinalUrl(taskId, fileName);
 
             if (!url) {
                 console.error('Failed to get video URL for task:', taskId);
                 return;
             }
 
-            const videoGenerationTask = await videoClientAPI.getVideoTaskByTaskId(taskId);
-
-            if (!videoGenerationTask || !videoGenerationTask.video_main_subject) {
-                console.error('Failed to get video generation task data:', taskId);
-                return;
-            }
-
-            // Blob으로 받아서 다운로드 (CORS 우회)
-            const response = await fetch(url);
-
-            if (!response.ok) {
-                throw new Error(`Failed to fetch video: ${response.status}`);
-            }
-
-            const blob = await response.blob();
-            const blobUrl = window.URL.createObjectURL(blob);
-
             // 임시 <a> 태그 생성해서 다운로드 트리거
             const a = document.createElement('a');
-            a.href = blobUrl;
-            a.download = `${videoGenerationTask.video_main_subject}-${new Date().toLocaleTimeString()}.mp4`.replaceAll(" ", "_");
+
+            a.href = url;
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
 
             // 메모리 해제
-            window.URL.revokeObjectURL(blobUrl);
+            // window.URL.revokeObjectURL(blobUrl);
         } catch (error) {
             console.error('Download failed:', error);
         }
@@ -211,8 +206,8 @@ function WorkspaceDashboardPageClient() {
             VideoGenerationTaskStatus.GENERATING_VIDEO_PROMPT,
             VideoGenerationTaskStatus.GENERATING_VIDEO,
             VideoGenerationTaskStatus.STITCHING_VIDEOS,
-            VideoGenerationTaskStatus.EDITOR,
             VideoGenerationTaskStatus.COMPOSING_MUSIC,
+            VideoGenerationTaskStatus.EDITOR,
             VideoGenerationTaskStatus.FINALIZING,
             VideoGenerationTaskStatus.COMPLETED,
         ];
@@ -252,7 +247,7 @@ function WorkspaceDashboardPageClient() {
 
         return {
             id: task.id,
-            title: task.video_main_subject,
+            title: task.video_title,
             status: status,
             sceneCount: task.scene_breakdown_list.length,
             processedSceneCount: task.processed_scene_count,
@@ -278,8 +273,6 @@ function WorkspaceDashboardPageClient() {
             const loadData = async () => {
                 try {
                     const videoGenerationTaskList = await videoClientAPI.getVideoTasksByUserId(user?.id);
-
-                    console.log("videoGenerationTaskList: ", videoGenerationTaskList);
 
                     if (!videoGenerationTaskList) {
                         throw new Error("Cannot read videoGenerationTaskList. Try again.");
@@ -448,14 +441,24 @@ function WorkspaceDashboardPageClient() {
                         </p>
                     </div>
                 </div>
-                <div className="pr-6">
-                    <Link 
-                        href="/workspace/create"
-                        className="group bg-gradient-to-r from-pink-500 to-purple-600 text-white px-6 py-3 rounded-xl text-lg font-semibold hover:from-pink-600 hover:to-purple-700 transition-all duration-300 transform hover:scale-105 flex items-center space-x-2 shadow-lg shadow-purple-500/25"
-                    >
-                        <Plus size={20} />
-                        <span>Start New Task</span>
-                    </Link>
+
+                <div className="flex flex-row w-fit items-center gap-2">
+                    <div className="flex items-center space-x-2 mr-6 px-4 py-2 bg-gray-900/50 border border-purple-500/30 rounded-lg backdrop-blur-sm hover:border-purple-400/50 transition-all">
+                        <Coins className="w-5 h-5 text-yellow-400" />
+                        <div className="flex flex-col">
+                            <span className="text-xs text-purple-300">Credits</span>
+                            <span className="text-lg font-bold text-yellow-400">{userCreditCount.toLocaleString()}</span>
+                        </div>
+                    </div>
+                    <div className="pr-6">
+                        <Link
+                            href="/workspace/create"
+                            className="group bg-gradient-to-r from-pink-500 to-purple-600 text-white px-6 py-3 rounded-xl text-lg font-semibold hover:from-pink-600 hover:to-purple-700 transition-all duration-300 transform hover:scale-105 flex items-center space-x-2 shadow-lg shadow-purple-500/25"
+                        >
+                            <Plus size={20} />
+                            <span>Start New Task</span>
+                        </Link>
+                    </div>
                 </div>
             </div>
 

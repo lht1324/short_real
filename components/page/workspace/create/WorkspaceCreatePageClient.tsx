@@ -1,9 +1,22 @@
 'use client'
 
-import {memo, useCallback, useEffect, useMemo, useState} from "react";
+import {memo, useCallback, useEffect, useMemo, useRef, useState} from "react";
 import Link from "next/link";
 import Image from "next/image";
-import {AlertTriangle, ChevronDown, ChevronRight, Film, ListTodo, Play, Plus, Save, Sparkles, X,} from 'lucide-react';
+import {
+    AlertTriangle,
+    ChevronDown,
+    ChevronRight,
+    Coins,
+    Film,
+    ListTodo,
+    Play,
+    Plus,
+    Save,
+    Sparkles,
+    Square,
+    X,
+} from 'lucide-react';
 import {openAIClientAPI} from '@/api/client/openAIClientAPI';
 import {ScriptGenerationRequest} from "@/api/types/open-ai/ScriptGeneration";
 import {Style} from "@/api/types/supabase/Styles";
@@ -17,6 +30,7 @@ import {PostOpenAISceneRequest} from "@/api/types/api/open-ai/scene/PostOpenAISc
 import DefaultModal from "@/components/public/DefaultModal";
 import {useAuth} from "@/context/AuthContext";
 import {STYLE_DATA_LIST} from "@/lib/styles";
+import {voiceClientAPI} from "@/api/client/voiceClientAPI";
 
 function WorkspaceCreatePageClient() {
     const router = useRouter();
@@ -36,17 +50,24 @@ function WorkspaceCreatePageClient() {
 
     // Section states
     const [script, setScript] = useState<string>('');
-    const [selectedStyleId, setSelectedStyleId] = useState<string>('');
+    const [selectedStyleId, setSelectedStyleId] = useState<string>('realistic');
     const [selectedVoiceId, setSelectedVoiceId] = useState<string>('');
     
     // Storyboard states
     const [sceneDataList, setSceneDataList] = useState<SceneData[]>([]);
-    const [videoMainSubject, setVideoMainSubject] = useState<string | null>(null);
+    const [videoTitle, setVideoTitle] = useState<string | null>(null);
+    const [videoDescription, setVideoDescription] = useState<string | null>(null);
+    const [voiceUrl, setVoiceUrl] = useState<string | null>(null);
+    const [isPlayingVoice, setIsPlayingVoice] = useState<boolean>(false);
+    const [currentPlayTime, setCurrentPlayTime] = useState<number>(0);
+
+    // Audio ref for voice preview
+    const audioRef = useRef<HTMLAudioElement | null>(null);
 
     const isVideoGenerationEnabled = useMemo(() => {
         const isScriptNotEmpty = script.length !== 0;
         const isSceneDataListNotEmpty = sceneDataList.length !== 0;
-        const isVideoMainSubjectNotEmpty = !!videoMainSubject;
+        const isVideoMainSubjectNotEmpty = !!videoTitle;
         const isStyleSelected = selectedStyleId.length !== 0;
         const isVoiceSelected = selectedVoiceId.length !== 0;
         
@@ -55,7 +76,7 @@ function WorkspaceCreatePageClient() {
             isVideoMainSubjectNotEmpty &&
             isVoiceSelected &&
             isStyleSelected;
-    }, [script, sceneDataList, videoMainSubject, selectedVoiceId, selectedStyleId]);
+    }, [script, sceneDataList, videoTitle, selectedVoiceId, selectedStyleId]);
     
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isGeneratingScript, setIsGeneratingScript] = useState(false);
@@ -70,12 +91,46 @@ function WorkspaceCreatePageClient() {
     // Collapse states for sections
     const [isStyleExpanded, setIsStyleExpanded] = useState(true);
 
+    const userCreditCount = useMemo(() => {
+        return user?.credit_count ?? 0;
+    }, [user?.credit_count]);
+
+    const expectedVideoTotalDuration = useMemo(() => {
+        // 시간
+        return sceneDataList.reduce((acc, sceneData) => {
+            return acc + sceneData.sceneDuration;
+        }, 0);
+    }, [sceneDataList]);
+
+    const expectedVideoSceneCount = useMemo(() => {
+        return sceneDataList.length;
+    }, [sceneDataList]);
+
+    const expectedDurationUsage = useMemo(() => {
+        const exceededVideoTotalDuration = expectedVideoTotalDuration - 30;
+        return exceededVideoTotalDuration > 0
+            ? Math.ceil(exceededVideoTotalDuration / 2) * 5
+            : 0;
+    }, [expectedVideoTotalDuration]);
+
+    const expectedSceneCountUsage = useMemo(() => {
+        const exceededVideoSceneCount = expectedVideoSceneCount - 6;
+
+        return exceededVideoSceneCount > 0
+            ? exceededVideoSceneCount * 5
+            : 0;
+    }, [expectedVideoSceneCount]);
+
+    const expectedCreditUsage = useMemo(() => {
+        return 100 + (expectedDurationUsage + expectedSceneCountUsage);
+    }, [expectedDurationUsage, expectedSceneCountUsage]);
+
     // Style examples for preview
     const styleList = useMemo((): Style[] => STYLE_DATA_LIST, []);
 
     // Virtual tabs for navigation consistency
     const virtualTabs = useMemo(() => [
-        { id: 'dashboard', icon: ListTodo, name: 'Tasks', href: '/workspace/dashboard' },
+        { id: 'dashboard', icon: ListTodo, name: 'Dashboard', href: '/workspace/dashboard' },
         { id: 'create', icon: Plus, name: 'Create', href: '/workspace/create', active: true }
     ], []);
 
@@ -111,28 +166,30 @@ function WorkspaceCreatePageClient() {
         }
     }, [aiPrompt]);
     
-    const onClickGenerateStoryboard = useCallback(async () => {
+    const onClickGenerateStoryboard = useCallback(async (voiceId?: string) => {
         try {
             if (!user?.id) return;
 
-            if (!script && !selectedVoiceId) {
+            if (!script && !voiceId) {
                 throw new Error("Write script and select voice first.")
             }
             if (!script) {
                 throw new Error("Write script first.")
             }
-            if (!selectedVoiceId) {
+            if (!voiceId) {
                 throw new Error("Select voice first.")
             }
 
             setIsGeneratingStoryboardData(true);
+            setSceneDataList([]);
 
+            console.log(`selectedVoice = ${voiceId}`)
             const request: PostOpenAISceneRequest = {
                 userId: user?.id,
                 taskId: taskId,
                 narrationScript: script,
                 styleId: selectedStyleId,
-                voiceId: selectedVoiceId,
+                voiceId: voiceId,
             }
             const storyboardData = await openAIClientAPI.postOpenAIScene(request);
             
@@ -143,25 +200,28 @@ function WorkspaceCreatePageClient() {
             const {
                 taskId: newTaskId,
                 sceneDataList: newSceneDataList,
-                videoMainSubject: newVideoMainSubject,
+                videoTitle: newVideoTitle,
+                videoDescription: newVideoDescription,
             }: StoryboardData = storyboardData;
 
             window.history.pushState(null, "", `/workspace/create?taskId=${newTaskId}`);
             setSceneDataList(newSceneDataList);
-            setVideoMainSubject(newVideoMainSubject);
+            setVideoTitle(newVideoTitle);
+            setVideoDescription(newVideoDescription);
 
+            setPendingVoiceId(null);
             setIsGeneratingStoryboardData(false);
         } catch (error) {
             console.error('onClickGenerateStoryboard', error);
             alert(error instanceof Error ? error.message : 'Unknown error');
             setIsGeneratingStoryboardData(false);
         }
-    }, [user?.id, taskId, script, selectedVoiceId, selectedStyleId]);
+    }, [user?.id, taskId, script, selectedStyleId]);
     
     const onSelectVoice = useCallback((voiceId: string) => {
         if (voiceId !== selectedVoiceId) {
             // Storyboard가 생성된 상태에서 Voice 변경 시 경고
-            const isStoryboardGenerated = sceneDataList.length !== 0 && videoMainSubject && selectedVoiceId;
+            const isStoryboardGenerated = sceneDataList.length !== 0 && videoTitle && selectedVoiceId;
 
             if (isStoryboardGenerated) {
                 setPendingVoiceId(voiceId);
@@ -170,7 +230,7 @@ function WorkspaceCreatePageClient() {
                 setSelectedVoiceId(voiceId);
             }
         }
-    }, [sceneDataList, videoMainSubject, selectedVoiceId]);
+    }, [sceneDataList, videoTitle, selectedVoiceId]);
 
     const onChangeVoiceLoading = useCallback((isVoiceLoading: boolean) => {
         setIsVoiceLoading(isVoiceLoading);
@@ -195,55 +255,80 @@ function WorkspaceCreatePageClient() {
         return Math.round(wordCount / 2.5);
     }, [script]);
 
+    const onClickPlayAndStopButton = useCallback(async () => {
+        if (!voiceUrl) return;
+
+        if (isPlayingVoice) {
+            // 재생 중일 때: 정지
+            if (audioRef.current) {
+                audioRef.current.pause();
+                audioRef.current.currentTime = 0;
+            }
+            setIsPlayingVoice(false);
+            setCurrentPlayTime(0);
+        } else {
+            // 재생 중이 아닐 때: 재생
+            if (!audioRef.current) {
+                audioRef.current = new Audio(voiceUrl);
+                audioRef.current.onended = () => {
+                    setIsPlayingVoice(false);
+                    setCurrentPlayTime(0);
+                };
+                audioRef.current.ontimeupdate = () => {
+                    if (audioRef.current) {
+                        setCurrentPlayTime(audioRef.current.currentTime);
+                    }
+                };
+            } else {
+                // voiceUrl이 변경되었을 수 있으므로 src 업데이트
+                audioRef.current.src = voiceUrl;
+                audioRef.current.currentTime = 0;
+            }
+            await audioRef.current.play();
+            setIsPlayingVoice(true);
+        }
+    }, [voiceUrl, isPlayingVoice]);
+
+    useEffect(() => {
+        console.log(`voiceUrl = ${voiceUrl}`)
+    }, [voiceUrl]);
+
     const onClickGenerateVideo = useCallback(async () => {
         if (!script.trim()) {
-            alert('스크립트를 입력해주세요.');
+            alert('Please enter a script.');
             return;
         }
 
         setIsSubmitting(true);
-        
-        try {
-            // 선택된 스타일, 음성, 음악 정보 가져오기
-            const selectedStyle = styleList.find((style) => {
-                return style.id === selectedStyleId;
-            });
 
-            if (!taskId || !selectedStyle || !user?.id) {
+        try {
+            if (!taskId || !selectedStyleId || !user?.id) {
                 throw new Error("User Id or Task Id or selected style was not found.");
             }
 
-            // VideoData API 요청 데이터 구성
-            // const requestData: PostVideoRequest = {
-            //     userId: user.id,
-            //     style: selectedStyle,
-            // };
-            //
-            // console.log('Creating video project with data:', requestData);
-
             // Video API 호출
-            const postVideoResult = await videoClientAPI.postVideo(taskId);
+            const postVideoResult = await videoClientAPI.postVideo(taskId, selectedStyleId);
 
             if (postVideoResult) {
                 console.log('Video data generation succeed.');
                 // setVideoDataResponse(result.data);
-                
+
                 // 성공 시 대시보드로 이동
                 alert('Your video is now being generated!');
                 window.location.href = '/workspace/dashboard';
             } else {
                 console.error('Video data generation failed.');
-                alert('비디오 프로젝트 생성에 실패했습니다. 다시 시도해주세요.');
+                alert('Failed to create video project. Please try again.');
                 throw Error('Video data generation failed.');
             }
 
         } catch (error) {
             console.error('Error creating video project:', error);
-            alert('비디오 프로젝트 생성 중 오류가 발생했습니다. 다시 시도해주세요.');
+            alert('An error occurred while creating the video project. Please try again.');
         } finally {
             setIsSubmitting(false);
         }
-    }, [script, styleList, taskId, user?.id, selectedStyleId]);
+    }, [script, taskId, user?.id, selectedStyleId]);
 
     const onClickSaveDraft = useCallback(async () => {
         setIsSaving(true);
@@ -252,7 +337,8 @@ function WorkspaceCreatePageClient() {
             const request: Partial<VideoGenerationTask> = {
                 narration_script: script.length !== 0 ? script : undefined,
                 scene_breakdown_list: sceneDataList.length !== 0 ? sceneDataList : undefined,
-                video_main_subject: videoMainSubject ?? undefined,
+                video_title: videoTitle ?? undefined,
+                video_description: videoDescription ?? undefined,
                 selected_style_id: selectedStyleId.length !== 0 ? selectedStyleId : undefined,
                 selected_voice_id: selectedVoiceId.length !== 0 ? selectedVoiceId : undefined,
             }
@@ -271,7 +357,7 @@ function WorkspaceCreatePageClient() {
         } finally {
             setIsSaving(false);
         }
-    }, [taskId, script, selectedStyleId, selectedVoiceId, sceneDataList, videoMainSubject]);
+    }, [script, sceneDataList, videoTitle, videoDescription, selectedStyleId, selectedVoiceId, taskId]);
 
     const onCloseSaveSuccessModal = useCallback(() => {
         setShowSaveSuccessModal(false);
@@ -279,12 +365,15 @@ function WorkspaceCreatePageClient() {
 
     const onConfirmVoiceChange = useCallback(async () => {
         if (pendingVoiceId) {
-            setSelectedVoiceId(pendingVoiceId);
-            setPendingVoiceId(null);
+            setSelectedVoiceId((prev) => {
+                console.log(`prevVoice = ${prev}, newVoice = ${pendingVoiceId}`)
+                return pendingVoiceId;
+            });
+
             setShowVoiceChangeWarningModal(false);
 
             // Storyboard 재생성
-            await onClickGenerateStoryboard();
+            await onClickGenerateStoryboard(pendingVoiceId);
         }
     }, [pendingVoiceId, onClickGenerateStoryboard]);
 
@@ -302,13 +391,15 @@ function WorkspaceCreatePageClient() {
                 if (videoGenerationTask && (videoGenerationTask.status === VideoGenerationTaskStatus.DRAFTING || videoGenerationTask.status === VideoGenerationTaskStatus.GENERATING_VOICE)) {
                     const script = videoGenerationTask.narration_script;
                     const sceneDataList = videoGenerationTask.scene_breakdown_list;
-                    const videoMainSubject = videoGenerationTask.video_main_subject;
+                    const videoTitle = videoGenerationTask.video_title;
+                    const videoDescription = videoGenerationTask.video_description;
                     const voiceId = videoGenerationTask.selected_voice_id;
                     const styleId = videoGenerationTask.selected_style_id;
 
                     setScript(script);
                     setSceneDataList(sceneDataList);
-                    setVideoMainSubject(videoMainSubject ?? '');
+                    setVideoTitle(videoTitle ?? '');
+                    setVideoDescription(videoDescription ?? '');
                     setSelectedVoiceId(voiceId ?? '');
                     setSelectedStyleId(styleId ?? '');
 
@@ -328,6 +419,20 @@ function WorkspaceCreatePageClient() {
             setIsGenerationTaskLoading(false);
         }
     }, [taskId]);
+
+    useEffect(() => {
+        if (taskId && sceneDataList.length !== 0) {
+            const loadVoiceUrl = async () => {
+                const newVoiceUrl = await voiceClientAPI.getVoiceUrl(taskId);
+
+                setVoiceUrl(newVoiceUrl);
+            }
+
+            loadVoiceUrl().then();
+        } else {
+            setVoiceUrl(null);
+        }
+    }, [taskId, sceneDataList]);
 
     return (
         <div className="min-h-screen bg-black text-white">
@@ -389,6 +494,14 @@ function WorkspaceCreatePageClient() {
                         <p className="text-gray-400 text-base pl-0.5 cursor-default">
                             Tell AI what you want to create.
                         </p>
+                    </div>
+                </div>
+
+                <div className="flex items-center space-x-2 mr-6 px-4 py-2 bg-gray-900/50 border border-purple-500/30 rounded-lg backdrop-blur-sm hover:border-purple-400/50 transition-all">
+                    <Coins className="w-5 h-5 text-yellow-400" />
+                    <div className="flex flex-col">
+                        <span className="text-xs text-purple-300">Credits</span>
+                        <span className="text-lg font-bold text-yellow-400">{userCreditCount.toLocaleString()}</span>
                     </div>
                 </div>
             </div>
@@ -464,27 +577,52 @@ function WorkspaceCreatePageClient() {
                             {/* Storyboard Section */}
                             <div>
                                 <div className="flex items-center justify-between mb-4">
-                                    <label className="block text-xl font-semibold text-purple-300">
-                                        Storyboard
-                                    </label>
-                                    <div className="relative group">
-                                        <button
-                                            type="button"
-                                            onClick={onClickGenerateStoryboard}
-                                            disabled={isGeneratingStoryboardData || !script.trim() || !selectedVoiceId}
-                                            className="px-3 py-1.5 bg-gradient-to-r from-green-500 to-blue-500 text-white rounded-lg text-sm font-medium hover:from-green-600 hover:to-blue-600 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-1"
-                                        >
-                                        {isGeneratingStoryboardData ? (
-                                            <>
-                                                <div className="w-3 h-3 border border-white/30 border-t-white rounded-full animate-spin"></div>
-                                                <span>Generating...</span>
-                                            </>
-                                        ) : sceneDataList.length === 0 && !videoMainSubject ? (
-                                            <span>Generate Storyboard</span>
-                                        ) : (
-                                            <span>Regenerate Storyboard</span>
+                                    <div className="flex items-center space-x-2">
+                                        <label className="block text-xl font-semibold text-purple-300">
+                                            Storyboard
+                                        </label>
+                                        {voiceUrl && (
+                                            <button
+                                                className="flex items-center space-x-1 px-2 py-1 rounded bg-purple-500/20 hover:bg-purple-500/30 transition-colors border border-purple-400/30"
+                                                onClick={onClickPlayAndStopButton}
+                                            >
+                                                {isPlayingVoice ? (
+                                                    <Square size={12} className="text-purple-300" />
+                                                ) : (
+                                                    <Play size={12} className="text-purple-300" />
+                                                )}
+                                                <span className="text-xs text-purple-300 font-medium">Preview</span>
+                                            </button>
                                         )}
-                                        </button>
+                                    </div>
+                                    <div className="relative group">
+                                        <div className="flex flex-row space-x-2 items-center">
+                                            {sceneDataList.length > 0 && videoTitle && (
+                                                <div className="flex items-center space-x-1 px-2 py-1 bg-white/10 rounded-lg">
+                                                    <Coins className="w-3.5 h-3.5 text-yellow-400" />
+                                                    <span className="text-xs font-medium">-2</span>
+                                                </div>
+                                            )}
+                                            <button
+                                                type="button"
+                                                onClick={async () => {
+                                                    await onClickGenerateStoryboard(selectedVoiceId);
+                                                }}
+                                                disabled={isGeneratingStoryboardData || !script.trim() || !selectedVoiceId}
+                                                className="px-3 py-1.5 bg-gradient-to-r from-green-500 to-blue-500 text-white rounded-lg text-sm font-medium hover:from-green-600 hover:to-blue-600 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-1"
+                                            >
+                                                {isGeneratingStoryboardData ? (
+                                                    <>
+                                                        <div className="w-3 h-3 border border-white/30 border-t-white rounded-full animate-spin"></div>
+                                                        <span>Generating...</span>
+                                                    </>
+                                                ) : sceneDataList.length === 0 && !videoTitle ? (
+                                                    <span>Generate Storyboard</span>
+                                                ) : (
+                                                    <span>Regenerate Storyboard</span>
+                                                )}
+                                            </button>
+                                        </div>
 
                                         {/* 툴팁 오버레이 */}
                                         {(!script.trim() || !selectedVoiceId) && (
@@ -509,24 +647,25 @@ function WorkspaceCreatePageClient() {
                                     </div>
                                 </div>
 
-                                {/* Main Subject 표시 */}
-                                {videoMainSubject && (
-                                    <div className="mb-4 p-3 bg-purple-500/10 border border-purple-400/30 rounded-lg">
-                                        <div className="flex items-center space-x-2">
-                                            <div className="w-2 h-2 bg-purple-400 rounded-full"></div>
-                                            <span className="text-sm font-medium text-purple-300">Main Subject:</span>
-                                            <span className="text-sm text-white">{videoMainSubject}</span>
-                                        </div>
-                                    </div>
-                                )}
-
                                 {/* Storyboard 그리드 */}
-                                {sceneDataList.length !== 0 && videoMainSubject && (
+                                {sceneDataList.length !== 0 && videoTitle && (
                                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 max-w-4xl">
                                         {sceneDataList.sort((a, b) => {
                                             return a.sceneNumber - b.sceneNumber;
                                         }).map((sceneData) => {
-                                            return <StoryboardItem key={sceneData.sceneNumber} sceneData={sceneData} />
+                                            const sceneSubtitleSegmentList = sceneData.sceneSubtitleSegments ?? [];
+                                            const isVoicePlayingScene = isPlayingVoice && sceneSubtitleSegmentList && sceneSubtitleSegmentList.length > 0
+                                                ? currentPlayTime >= sceneSubtitleSegmentList[0].startSec &&
+                                                  currentPlayTime <= sceneSubtitleSegmentList[sceneSubtitleSegmentList.length - 1].endSec
+                                                : false;
+
+                                            console.log(`currentTime = ${currentPlayTime}, isPlaying = ${isVoicePlayingScene}, start = ${sceneSubtitleSegmentList[0]?.startSec}, end = ${sceneSubtitleSegmentList[sceneSubtitleSegmentList.length - 1]?.endSec}`)
+
+                                            return <StoryboardItem
+                                                key={sceneData.sceneNumber}
+                                                sceneData={sceneData}
+                                                isVoicePlayingScene={isVoicePlayingScene}
+                                            />
                                         })}
                                     </div>
                                 )}
@@ -567,36 +706,36 @@ function WorkspaceCreatePageClient() {
                             </div>
 
                             {/* Visual Style Selection */}
-                            <div>
-                                <button
-                                    type="button"
-                                    onClick={() => setIsStyleExpanded(!isStyleExpanded)}
-                                    className="flex items-center text-xl font-semibold text-purple-300 mb-4 hover:text-purple-200 transition-colors"
-                                >
-                                    <span>Visual Style</span>
-                                    <span className="ml-2">
-                                        {isStyleExpanded ? <ChevronDown size={20} /> : <ChevronRight size={20} />}
-                                    </span>
-                                </button>
-                                {isStyleExpanded && (
-                                    <div className="grid grid-cols-2 gap-3">
-                                    {styleList.map((style) => (
-                                        <button
-                                            key={style.id}
-                                            onClick={() => { setSelectedStyleId(style.id); }}
-                                            className={`w-full p-3 rounded-lg border transition-all text-left ${
-                                                selectedStyleId === style.id
-                                                    ? 'border-pink-500 bg-pink-500/10'
-                                                    : 'border-purple-500/30 bg-gray-800/30 hover:border-purple-400/50'
-                                            }`}
-                                        >
-                                            <div className="text-white font-medium text-base">{style.name}</div>
-                                            <div className="text-gray-400 text-sm mt-1">{style.description}</div>
-                                        </button>
-                                    ))}
-                                    </div>
-                                )}
-                            </div>
+                            {/*<div>*/}
+                            {/*    <button*/}
+                            {/*        type="button"*/}
+                            {/*        onClick={() => setIsStyleExpanded(!isStyleExpanded)}*/}
+                            {/*        className="flex items-center text-xl font-semibold text-purple-300 mb-4 hover:text-purple-200 transition-colors"*/}
+                            {/*    >*/}
+                            {/*        <span>Visual Style</span>*/}
+                            {/*        <span className="ml-2">*/}
+                            {/*            {isStyleExpanded ? <ChevronDown size={20} /> : <ChevronRight size={20} />}*/}
+                            {/*        </span>*/}
+                            {/*    </button>*/}
+                            {/*    {isStyleExpanded && (*/}
+                            {/*        <div className="grid grid-cols-2 gap-3">*/}
+                            {/*        {styleList.map((style) => (*/}
+                            {/*            <button*/}
+                            {/*                key={style.id}*/}
+                            {/*                onClick={() => { setSelectedStyleId(style.id); }}*/}
+                            {/*                className={`w-full p-3 rounded-lg border transition-all text-left ${*/}
+                            {/*                    selectedStyleId === style.id*/}
+                            {/*                        ? 'border-pink-500 bg-pink-500/10'*/}
+                            {/*                        : 'border-purple-500/30 bg-gray-800/30 hover:border-purple-400/50'*/}
+                            {/*                }`}*/}
+                            {/*            >*/}
+                            {/*                <div className="text-white font-medium text-base">{style.name}</div>*/}
+                            {/*                <div className="text-gray-400 text-sm mt-1">{style.description}</div>*/}
+                            {/*            </button>*/}
+                            {/*        ))}*/}
+                            {/*        </div>*/}
+                            {/*    )}*/}
+                            {/*</div>*/}
                         </div>
                     </div>
                 </div>
@@ -608,7 +747,7 @@ function WorkspaceCreatePageClient() {
                     onChangeIsLoading={onChangeVoiceLoading}
                 />
 
-                {/* Style Preview Panel */}
+                {/* Result Panel */}
                 <div className="flex-[3] bg-black flex flex-col relative">
                     {/* Vaporwave Background Effects */}
                     <div className="absolute inset-0 opacity-10">
@@ -617,45 +756,129 @@ function WorkspaceCreatePageClient() {
                         <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-48 h-48 bg-gradient-to-r from-indigo-500 to-cyan-500 rounded-full blur-3xl"></div>
                     </div>
                     
-                    <div className="flex-1 flex items-center justify-center px-8 py-2 relative z-10">
-                        <div className="text-center">
-                            <h3 className="text-purple-300 text-2xl font-medium mb-6">
-                                Style Preview
-                            </h3>
-                            
-                            {/* Selected Style Preview */}
-                            <div className="w-[280px] bg-gradient-to-br from-gray-900 to-black rounded-2xl border border-purple-500/30 overflow-hidden shadow-2xl mx-auto" style={{aspectRatio: '9/16'}}>
-                                {selectedStyleId ? (
-                                    <div className="w-full h-full bg-gradient-to-br from-pink-400 via-purple-500 to-indigo-600 flex items-center justify-center relative">
-                                        <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent"></div>
-                                        
-                                        {/* Preview Content */}
-                                        <div className="text-center relative z-10">
-                                            <div className="w-16 h-16 bg-black/40 backdrop-blur-sm rounded-full flex items-center justify-center mx-auto border border-purple-400/50">
-                                                <Play size={24} className="text-white ml-1" />
+                    <div className="flex-1 flex p-8 items-center justify-center relative z-10">
+                        {(sceneDataList.length !== 0 && videoTitle && videoDescription) ? (<div>
+                            {/* Video Metadata Section */}
+                            <div className="mb-4 space-y-3">
+                                {/* Title Card */}
+                                <div className="group relative rounded-xl border border-purple-500/30 bg-gradient-to-r from-purple-500/5 via-pink-500/5 to-purple-500/5 p-4 backdrop-blur-sm transition-all hover:border-purple-400/50 hover:shadow-lg hover:shadow-purple-500/10">
+                                    <div className="flex items-start space-x-3">
+                                        <div className="flex-shrink-0 mt-0.5">
+                                            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center shadow-lg">
+                                                <Film className="w-4 h-4 text-white" />
+                                            </div>
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <div className="text-sm font-medium text-purple-300 mb-1.5">Video Title</div>
+                                            <h3 className="text-lg font-bold leading-snug text-white">
+                                                {videoTitle}
+                                            </h3>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Description Card */}
+                                <div className="group relative rounded-xl border border-purple-500/30 bg-gradient-to-r from-pink-500/5 via-purple-500/5 to-pink-500/5 p-4 backdrop-blur-sm transition-all hover:border-purple-400/50 hover:shadow-lg hover:shadow-pink-500/10">
+                                    <div className="flex items-start space-x-3">
+                                        <div className="flex-shrink-0 mt-0.5">
+                                            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-600 to-pink-500 flex items-center justify-center shadow-lg">
+                                                <Sparkles className="w-4 h-4 text-white" />
+                                            </div>
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <div className="text-sm font-medium text-purple-300 mb-1.5">Description</div>
+                                            <p className="whitespace-pre-wrap text-base leading-relaxed text-gray-300">
+                                                {videoDescription}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Credit Usage Card */}
+                            <div className="group relative mb-6 rounded-xl border border-purple-500/30 bg-gradient-to-r from-yellow-500/5 via-orange-500/5 to-yellow-500/5 p-4 backdrop-blur-sm transition-all hover:border-purple-400/50 hover:shadow-lg hover:shadow-yellow-500/10">
+                                <div className="flex items-start space-x-3">
+                                    <div className="flex-shrink-0 mt-0.5">
+                                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-yellow-500 to-orange-500 flex items-center justify-center shadow-lg">
+                                            <Coins className="w-4 h-4 text-white" />
+                                        </div>
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <div className="text-sm font-medium text-purple-300 mb-1.5">Estimated Credit Usage</div>
+
+                                        <div className="flex flex-col space-y-2">
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-base text-gray-300">Base (30s / 6 scenes)</span>
+                                                <div className="flex items-center space-x-1">
+                                                    <Coins className="w-4 h-4 text-white" />
+                                                    <span className="text-base font-semibold text-white">100</span>
+                                                </div>
+                                            </div>
+
+                                            <div className="border-t border-purple-500/20 my-2"></div>
+
+                                            <div className="flex items-center justify-between">
+                                                    <span className="text-sm text-gray-400">
+                                                        {`Extra Duration (+${expectedVideoTotalDuration > 30 ? Math.ceil(expectedVideoTotalDuration - 30) : 0}s)`}
+                                                    </span>
+                                                <div className="flex items-center space-x-1">
+                                                    <Coins className={`w-3.5 h-3.5 ${expectedVideoTotalDuration > 30 ? 'text-yellow-300' : 'text-gray-500'}`} />
+                                                    <span className={`text-sm font-medium ${expectedVideoTotalDuration > 30 ? 'text-yellow-300' : 'text-gray-500'}`}>
+                                                        +{expectedDurationUsage}
+                                                    </span>
+                                                </div>
+                                            </div>
+
+                                            <div className="flex items-center justify-between">
+                                                    <span className="text-sm text-gray-400">
+                                                        {`Extra Scenes (+${expectedVideoSceneCount > 6 ? expectedVideoSceneCount - 6 : 0})`}
+                                                    </span>
+                                                <div className="flex items-center space-x-1">
+                                                    <Coins className={`w-3.5 h-3.5 ${expectedVideoSceneCount > 6 ? 'text-yellow-300' : 'text-gray-500'}`} />
+                                                    <span className={`text-sm font-medium ${expectedVideoSceneCount > 6 ? 'text-yellow-300' : 'text-gray-500'}`}>
+                                                        +{expectedSceneCountUsage}
+                                                    </span>
+                                                </div>
+                                            </div>
+
+                                            <div className="border-t border-purple-500/20 my-2"></div>
+
+                                            {/* Policy Footnote */}
+                                            <div className="flex w-fit self-start items-center justify-between">
+                                                <span className="text-xs mr-2 text-gray-400">Overage Policy</span>
+                                                <div className="flex items-center space-x-2 text-xs text-gray-300">
+                                                    <div className="flex items-center space-x-1">
+                                                        <Coins className="w-3 h-3 text-yellow-400" />
+                                                        <span>5 / 2s</span>
+                                                    </div>
+                                                    <span className="text-gray-500">•</span>
+                                                    <div className="flex items-center space-x-1">
+                                                        <Coins className="w-3 h-3 text-yellow-400" />
+                                                        <span>5 / scene</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-base font-semibold text-purple-300">Total</span>
+                                                <div className="flex items-center space-x-1">
+                                                    <Coins className="w-5 h-5 text-yellow-400" />
+                                                    <span className="text-lg font-bold text-yellow-400">{expectedCreditUsage}</span>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
-                                ) : (
-                                    <div className="w-full h-full flex items-center justify-center text-gray-500 bg-gradient-to-br from-gray-800 to-gray-900">
-                                        <p className="text-sm">Style preview</p>
-                                    </div>
-                                )}
+                                </div>
                             </div>
-                            
-                            {/* Style Info */}
-                            <div className="mt-6 text-center">
-                                <p className="text-purple-300 text-base mb-1">
-                                    Selected: <span className="text-white font-medium text-lg">{styleList.find((style) => { return style.id === selectedStyleId; })?.name || selectedStyleId}</span>
-                                </p>
-                                <p className="text-gray-300 text-sm mb-3">
-                                    {styleList.find((style) => { return style.id === selectedStyleId; })?.description}
-                                </p>
-                                <p className="text-gray-400 text-sm">
-                                    This preview shows how your video will look with the selected visual style.
-                                </p>
+                        </div>) : (
+                            <div className="text-center">
+                                <div className="text-gray-400 mb-4">
+                                    <Sparkles className="w-16 h-16 mx-auto mb-3 opacity-50" />
+                                </div>
+                                <p className="text-base text-gray-400 font-medium">No results yet</p>
+                                <p className="text-sm text-gray-500 mt-1">Generate a storyboard to see your video details</p>
                             </div>
-                        </div>
+                        )}
                     </div>
                     
                     <div className="p-6 border-t border-purple-500/20 bg-gray-900/50 backdrop-blur-sm relative z-10">
@@ -693,6 +916,10 @@ function WorkspaceCreatePageClient() {
                                         </>
                                     ) : (
                                         <>
+                                            <div className="flex items-center space-x-1 px-2 py-1 bg-black/40 rounded-lg">
+                                                <Coins className="w-3.5 h-3.5 text-yellow-400" />
+                                                <span className="text-xs font-medium">-{expectedCreditUsage}</span>
+                                            </div>
                                             <span>Generate Video</span>
                                             <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
@@ -713,8 +940,8 @@ function WorkspaceCreatePageClient() {
                                                 </span>
                                             </div>
                                             <div className="flex items-center space-x-2 text-xs">
-                                                <span>{sceneDataList.length !== 0 && videoMainSubject ? '🟢' : '🔴'}</span>
-                                                <span className={sceneDataList.length !== 0 && videoMainSubject ? 'text-green-300' : 'text-gray-400'}>
+                                                <span>{sceneDataList.length !== 0 && videoTitle ? '🟢' : '🔴'}</span>
+                                                <span className={sceneDataList.length !== 0 && videoTitle ? 'text-green-300' : 'text-gray-400'}>
                                                     Storyboard generated
                                                 </span>
                                             </div>

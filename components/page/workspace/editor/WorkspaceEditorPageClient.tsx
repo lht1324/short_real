@@ -158,9 +158,11 @@ function WorkspaceEditorPageClient() {
             : 0;
     }, [headerHeight, videoPanelHeight]);
 
-    const isLoading = useMemo(() => {
+    const isInitialLoading = useMemo(() => {
         return isPublicDataLoading || isSceneSequencePanelLoading || isVideoPlayerPanelLoading;
     }, [isPublicDataLoading, isSceneSequencePanelLoading, isVideoPlayerPanelLoading]);
+
+    const [isFinishLoading, setIsFinishLoading] = useState(false);
 
     const [videoData, setVideoData] = useState<VideoData | null>(null);
 
@@ -243,6 +245,8 @@ function WorkspaceEditorPageClient() {
     }, [captionDataList, taskId, videoPlayerUIData, videoDuration, captionConfigState, editingMusicIndex, musicStartSec, musicVolume]);
 
     const onClickFinish = useCallback(async () => {
+        setIsFinishLoading(true);
+
         try {
             if (finalVideoMergeData) {
                 if (!taskId) {
@@ -261,12 +265,17 @@ function WorkspaceEditorPageClient() {
                     console.error('최종 병합 요청 실패:', result?.error);
                 }
 
+                setIsFinishLoading(false);
+
                 return;
             } else {
+                setIsFinishLoading(false);
+                alert('Failed to prepare video data. Please try again.');
                 return;
             }
         } catch (error) {
             console.error(error);
+            setIsFinishLoading(false);
         }
     }, [taskId, finalVideoMergeData]);
 
@@ -359,11 +368,10 @@ function WorkspaceEditorPageClient() {
                 });
 
                 setVideoData({
-                    title: videoGenerationTask.video_main_subject ?? "",
+                    title: videoGenerationTask.video_title ?? "",
                     videoUrl: taskVideoUrl,
                     captionDataList: captionDataList,
                 });
-
 
                 const musicDataList = await musicClientAPI.getMusicData(taskId);
 
@@ -409,9 +417,9 @@ function WorkspaceEditorPageClient() {
             {/* Top Header */}
             <div
                 ref={headerRef}
-                className="flex items-center justify-between py-4 border-b border-purple-500/20 bg-gray-900/50 backdrop-blur-sm"
+                className="flex items-center justify-between pl-3 pr-6 py-4 border-b border-purple-500/20 bg-gray-900/50 backdrop-blur-sm"
             >
-                <div className="flex items-center pl-3">
+                <div className="flex items-center">
                     <Link 
                         href="/workspace/dashboard"
                         className="text-gray-400 hover:text-pink-400 transition-colors"
@@ -438,28 +446,12 @@ function WorkspaceEditorPageClient() {
                         </p>
                     </div>
                 </div>
-                <div className="flex items-center space-x-4 px-6">
-                    <button className="text-gray-400 hover:text-pink-400 transition-colors">
-                        <RotateCcw size={20} />
-                    </button>
-                    <button className="text-gray-400 hover:text-pink-400 transition-colors">
-                        <RotateCcw size={20} className="transform scale-x-[-1]" />
-                    </button>
-                    <div className="flex items-center space-x-2 text-gray-400">
-                        <span className="text-sm">Watermark</span>
-                        <button className="w-10 h-6 bg-gray-800 rounded-full relative border border-purple-500/30">
-                            <div className="w-4 h-4 bg-gradient-to-r from-pink-500 to-purple-600 rounded-full absolute top-1 right-1"></div>
-                        </button>
-                    </div>
-                    <button
-                        onClick={onClickFinish}
-                        // onClick={onClickMergeCaptionTest}
-                        // onClick={onClickMusicModifying}
-                        className="bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all"
-                    >
-                        Finish
-                    </button>
-                </div>
+                <button
+                    onClick={onClickFinish}
+                    className="bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all"
+                >
+                    Finish
+                </button>
             </div>
 
             <div
@@ -568,11 +560,18 @@ function WorkspaceEditorPageClient() {
                     </div>}
                 </div>
             </div>
-            {/* Loading Overlay */}
-            {isLoading && (<div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50">
+            {/* Initial Loading Overlay */}
+            {isInitialLoading && (<div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50">
                 <div className="text-center">
                     <div className="w-8 h-8 border-2 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"/>
                     <p className="text-gray-400">Loading your pure video...</p>
+                </div>
+            </div>)}
+            {/* Final Loading Overlay */}
+            {isFinishLoading && (<div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50">
+                <div className="text-center">
+                    <div className="w-8 h-8 border-2 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"/>
+                    <p className="text-gray-400">Sending your video to the producer...</p>
                 </div>
             </div>)}
         </div>

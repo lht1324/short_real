@@ -1,136 +1,204 @@
-'use client'
+import {memo, useMemo, MouseEvent, useCallback} from "react";
+import {Play, Square} from "lucide-react";
+import {Voice} from "@/api/types/eleven-labs/Voice";
 
-import {memo, MouseEvent, useCallback, useMemo} from "react";
-import { Play, Square } from "lucide-react";
-import {Voice, VoiceGender} from "@/api/types/deepgram/Voice";
-import Image from "next/image";
+enum VoiceGender {
+    MALE = "Male",
+    FEMALE = "Female",
+    NEUTRAL = "Neutral",
+}
+
+enum VoiceAge {
+    YOUNG = "Young",
+    ADULT = "Adult",
+    SENIOR = "Senior",
+}
+
+enum VoiceAccent {
+    AMERICAN = "American",
+    BRITISH = "British",
+    AUSTRALIAN = "Australian",
+    STANDARD = "Standard"
+}
+
+enum VoiceUseCase {
+    SOCIAL_MEDIA = "Social Media",
+    ADVERTISEMENT = "Advertisement",
+    CHARACTERS = "Characters",
+    CONVERSATIONAL = "Conversational",
+    INFORMATIVE_EDUCATIONAL = "Informative Educational",
+    NARRATIVE_STORY = "Narrative Story",
+    ENTERTAINMENT = "Entertainment",
+    OTHER = "Other",
+}
 
 interface VoiceSelectionPanelItemProps {
     voice: Voice;
-    isSelected: boolean;
-    isPlaying: boolean;
-    onSelect: () => void;
-    onTogglePlay: (e: MouseEvent, voiceId: string, voicePreviewUrl: string) => void;
+    selectedVoiceId?: string;
+    playingSoundId: string | null;
+    onSelectVoice: (voiceId: string) => void;
+    onClickPlayAndPauseButton: (e: MouseEvent, voiceId: string, voicePreviewUrl?: string) => void;
 }
 
 function VoiceSelectionPanelItem({
     voice,
-    isSelected,
-    isPlaying,
-    onSelect,
-    onTogglePlay,
+    selectedVoiceId,
+    playingSoundId,
+    onSelectVoice,
+    onClickPlayAndPauseButton,
 }: VoiceSelectionPanelItemProps) {
-    const genderClassName = useMemo(() => {
-        const basicAttr = "text-xs px-2 py-1 rounded-full border font-medium"
-
+    const genderText = useMemo(() => {
         switch (voice.gender) {
-            case VoiceGender.MALE: return `${basicAttr} bg-blue-500/20 text-blue-300 border-blue-400/30`;
-            case VoiceGender.FEMALE: return `${basicAttr} bg-red-500/20 text-red-300 border-red-400/30`;
-            default: return `${basicAttr} bg-purple-500/20 text-purple-300 border-purple-400/30`;
+            case "male": return VoiceGender.MALE;
+            case "female": return VoiceGender.FEMALE;
+            default: return VoiceGender.NEUTRAL;
         }
     }, [voice.gender]);
 
-    const onClickPlayButton = useCallback((e: MouseEvent) => {
-        onTogglePlay(e, voice.id, voice.previewUrl ?? "");
-    }, [voice.id, voice.previewUrl, onTogglePlay]);
+    const ageText = useMemo(() => {
+        switch (voice.age) {
+            case "young": return VoiceAge.YOUNG;
+            case "middle_aged": return VoiceAge.ADULT;
+            default: return VoiceAge.SENIOR;
+        }
+    }, [voice.age]);
+
+    const accentText = useMemo(() => {
+        switch (voice.accent) {
+            case 'american': return VoiceAccent.AMERICAN;
+            case 'british': return VoiceAccent.BRITISH;
+            case 'australian': return VoiceAccent.AUSTRALIAN;
+            default: return VoiceAccent.STANDARD;
+        }
+    }, [voice.accent]);
+
+    const useCaseText = useMemo(() => {
+        switch (voice.useCase) {
+            case "social_media": return VoiceUseCase.SOCIAL_MEDIA;
+            case "advertisement": return VoiceUseCase.ADVERTISEMENT;
+            case "characters": return VoiceUseCase.CHARACTERS;
+            case "conversational": return VoiceUseCase.CONVERSATIONAL;
+            case "informative_educational": return VoiceUseCase.INFORMATIVE_EDUCATIONAL;
+            case "narrative_story": return VoiceUseCase.NARRATIVE_STORY;
+            case "entertainment": return VoiceUseCase.ENTERTAINMENT;
+            default: return VoiceUseCase.OTHER;
+        }
+    }, [voice.useCase]);
+
+    // Voice 아이템 태그 클래스 생성 (동적 클래스 문제 해결)
+    const genderTagClass = useMemo(() => {
+        const getGenderColor = (gender?: string) => {
+            switch (gender) {
+                case "male": return "blue";
+                case "female": return "red";
+                case 'neutral': return "gray";
+                default: return "gray";
+            }
+        }
+        const color = getGenderColor(voice.gender);
+
+        switch (color) {
+            case 'blue':
+                return 'text-xs px-2 py-1 rounded-full border font-medium bg-blue-500/20 text-blue-300 border-blue-400/30';
+            case 'red':
+                return 'text-xs px-2 py-1 rounded-full border font-medium bg-red-500/20 text-red-300 border-red-400/30';
+            default:
+                return 'text-xs px-2 py-1 rounded-full border font-medium bg-gray-500/20 text-gray-300 border-gray-400/30';
+        }
+    }, [voice.gender]);
+
+    const ageTagClass = useMemo(() => {
+        const getAgeColor = (age?: string) => {
+            switch (age) {
+                case "young": return "green";
+                case "middle_aged": return "purple";
+                case "old": return "orange";
+                default: return "gray";
+            }
+        }
+        const color = getAgeColor(voice.age);
+
+        switch (color) {
+            case 'green':
+                return 'text-xs px-2 py-1 rounded-full border font-medium bg-green-500/20 text-green-300 border-green-400/30';
+            case 'purple':
+                return 'text-xs px-2 py-1 rounded-full border font-medium bg-purple-500/20 text-purple-300 border-purple-400/30';
+            case 'orange':
+                return 'text-xs px-2 py-1 rounded-full border font-medium bg-orange-500/20 text-orange-300 border-orange-400/30';
+            default:
+                return 'text-xs px-2 py-1 rounded-full border font-medium bg-gray-500/20 text-gray-300 border-gray-400/30';
+        }
+    }, [voice.age]);
 
     return (
         <div
-            onClick={onSelect}
-            className={`p-4 rounded-lg border transition-all cursor-pointer
-                ${isSelected
+            onClick={() => onSelectVoice(voice.id)}
+            className={`pt-3 pr-3 pb-3 rounded-lg border transition-all text-left cursor-pointer ${
+                voice.id === selectedVoiceId
                     ? 'border-pink-500 bg-pink-500/10'
                     : 'border-purple-500/30 bg-gray-800/30 hover:border-purple-400/50'
-                }
-            `}
+            }`}
         >
-            <div className="flex items-start gap-4">
-                {/* Left: Image with colored border */}
-                <div className="flex-shrink-0">
-                    <div
-                        className="w-16 h-16 rounded-full flex items-center justify-center overflow-hidden"
-                        style={{
-                            border: `3px solid ${voice.color || '#8B5CF6'}`,
-                        }}
-                    >
-                        {voice.imageUrl ? (
-                            <Image
-                                src={voice.imageUrl}
-                                alt={voice.name}
-                                width={64}
-                                height={64}
-                                className="object-cover"
-                            />
-                        ) : (
-                            <div
-                                className="w-full h-full flex items-center justify-center text-white font-bold text-xl"
-                                style={{ backgroundColor: voice.color || '#8B5CF6' }}
-                            >
-                                {voice.name.charAt(0).toUpperCase()}
-                            </div>
-                        )}
-                    </div>
-                </div>
-
-                {/* Right: Voice info */}
-                <div className="flex-1 min-w-0">
-                    <div className="flex items-start justify-between gap-2">
-                        <div className="flex-1 min-w-0">
-                            {/* Name */}
-                            <h3 className="text-white font-medium text-base mb-2 capitalize">
-                                {voice.name}
-                            </h3>
-
-                            {/* Tags */}
-                            {voice.tags && voice.tags.length > 0 && (
-                                <div className="flex flex-wrap gap-1.5 mb-2">
-                                    {voice.tags.map((tag) => (
-                                        <span
-                                            key={tag}
-                                            className="text-xs px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 border border-purple-400/30"
-                                        >
-                                            {tag}
-                                        </span>
-                                    ))}
-                                </div>
+            <div className="flex items-center justify-between">
+                <div className="min-w-0 flex-1">
+                    <div className="flex flex-col gap-1.5">
+                        {/* Voice Name + Descriptive */}
+                        <div className="pl-3 text-white font-medium text-base flex items-center gap-2">
+                            <span>{voice.name}</span>
+                            {voice.descriptive && (
+                                <span className="text-purple-300 text-sm font-normal">
+                                    • {voice.descriptive.charAt(0).toUpperCase() + voice.descriptive.slice(1)}
+                                </span>
                             )}
-
-                            {/* Accent & Age & Gender */}
-                            <div className="flex flex-wrap gap-1.5">
-                                {voice.accent && (
-                                    <span className="text-xs px-2 py-1 rounded-full border font-medium bg-pink-500/20 text-pink-300 border-pink-400/30">
-                                        {voice.accent}
-                                    </span>
-                                )}
-                                {voice.age && (
-                                    <span className="text-xs px-2 py-1 rounded-full border font-medium bg-green-500/20 text-green-300 border-green-400/30">
-                                        {voice.age}
-                                    </span>
-                                )}
-                                {voice.gender && (
-                                    <span className={genderClassName}>
-                                        {voice.gender}
-                                    </span>
-                                )}
-                            </div>
+                            {voice.useCase && (
+                                <span className="text-purple-300 text-sm font-normal">
+                                    • {useCaseText}
+                                </span>
+                            )}
                         </div>
 
-                        {/* Play button */}
-                        <button
-                            onClick={onClickPlayButton}
-                            className="p-1.5 rounded-full bg-gray-700/50 hover:bg-gray-600/50 transition-colors flex-shrink-0"
-                        >
-                            {isPlaying ? (
-                                <Square size={14} className="text-white" />
-                            ) : (
-                                <Play size={14} className="text-white" />
+                        {/* Description */}
+                        {voice.description && (
+                            <div className="pl-3 text-gray-400 text-sm">
+                                {voice.description}
+                            </div>
+                        )}
+
+                        {/* Tags */}
+                        <div className="flex pl-2 gap-1.5 flex-wrap">
+                            {voice.gender && (
+                                <span className={genderTagClass}>
+                                    {genderText}
+                                </span>
                             )}
-                        </button>
+                            {voice.age && (
+                                <span className={ageTagClass}>
+                                    {ageText}
+                                </span>
+                            )}
+                            {voice.accent && (
+                                <span className="text-xs px-2 py-1 rounded-full border font-medium bg-cyan-500/20 text-cyan-300 border-cyan-400/30">
+                                    {accentText}
+                                </span>
+                            )}
+                        </div>
                     </div>
                 </div>
+                <button
+                    className="p-1.5 rounded-full bg-gray-700/50 hover:bg-gray-600/50 transition-colors flex-shrink-0 ml-2"
+                    onClick={(e) => {
+                        onClickPlayAndPauseButton(e, voice.id, voice.previewUrl);
+                    }}
+                >
+                    {playingSoundId === voice.id ? (
+                        <Square size={14} className="text-white" />
+                    ) : (
+                        <Play size={14} className="text-white" />
+                    )}
+                </button>
             </div>
         </div>
-    );
+    )
 }
 
 export default memo(VoiceSelectionPanelItem);

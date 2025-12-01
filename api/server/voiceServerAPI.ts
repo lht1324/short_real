@@ -1,171 +1,147 @@
-import {deepgramClient} from '@/lib/deepgramClient';
+import {elevenLabsClient} from '@/lib/elevenLabsClient';
+import {Voice as VoiceOrigin} from "@elevenlabs/elevenlabs-js/api";
+import {
+    Voice,
+    VoiceGenerationModelId,
+    VoiceGenerationOutputFormat,
+    VoiceGenerationResult,
+    VoiceSettings
+} from "@/api/types/eleven-labs/Voice";
 import {SubtitleSegment} from "@/api/types/supabase/VideoGenerationTasks";
 import {createSupabaseServer} from "@/lib/supabaseServer";
 import {createSupabaseServiceRoleClient} from "@/lib/supabaseServiceRole";
-
-// ElevenLabs 관련 타입은 호환성을 위해 남겨두거나, 필요 없다면 제거하셔도 됩니다.
-// 여기서는 함수 시그니처 유지를 위해 import만 유지합니다.
-import {VoiceGenerationModelId, VoiceGenerationOutputFormat, VoiceSettings} from "@/api/types/eleven-labs/Voice";
-import {DeepgramModel} from "@/api/types/deepgram/DeepgramModel";
-import {Voice, VoiceGender} from "@/api/types/deepgram/Voice";
-import {elevenLabsClient} from "@/lib/elevenLabsClient";
-import {SpeechToTextChunkResponseModel} from "@elevenlabs/elevenlabs-js/api/types/SpeechToTextChunkResponseModel";
-
-// 헬퍼 함수: Web ReadableStream을 Buffer로 변환
-async function streamToBuffer(stream: ReadableStream): Promise<Buffer> {
-    const reader = stream.getReader();
-    const chunks = [];
-
-    while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        chunks.push(value);
-    }
-
-    return Buffer.concat(chunks);
-}
+import {VoiceResponseModelCategory} from "@elevenlabs/elevenlabs-js/api/types/VoiceResponseModelCategory";
 
 export const voiceServerAPI = {
-    // ------------------------------------------------------------------
-    // GET /voices - Deepgram SDK (manage) 사용하여 모델 리스팅
-    // ------------------------------------------------------------------
+    // GET /voices - 사용 가능한 음성 목록 조회
     async getVoices(): Promise<Voice[]> {
-        try {
-            // const { result, error } = await deepgramClient.models.getAll();
-            const getDeepgramModelsResponse = await fetch("https://api.deepgram.com/v1/models", {
-                method: "GET",
-                headers: {
-                    'Authorization': `Token ${process.env.DEEPGRAM_API_KEY!}`
-                }
-            });
-            const getDeepgramModelsResult = await getDeepgramModelsResponse.json();
+        const response = await elevenLabsClient.voices.getAll({
+            showLegacy: false,
+        });
 
-            const ttsModels = getDeepgramModelsResult?.tts || [];
-
-            return ttsModels.filter((model: DeepgramModel) => {
-                return !!(model.languages?.find((language) => {
-                    return language.includes("en") || language.includes("US");
-                }));
-            }).map((model: DeepgramModel) => {
-                const tags = model.metadata?.tags || [];
-
-                return {
-                    id: model.canonical_name,
-                    name: model.name,
-                    accent: model.metadata?.accent || '',
-                    age: model.metadata?.age || '',
-                    gender: tags.includes("masculine")
-                        ? VoiceGender.MALE
-                        : tags.includes("feminine")
-                            ? VoiceGender.FEMALE
-                            : VoiceGender.NEUTRAL,
-                    previewUrl: model.metadata?.sample || '',
-                    color: model.metadata?.color || '',
-                    imageUrl: model.metadata?.image || '',
-                    tags: tags.filter((tag) => {
-                        return tag !== "masculine" && tag !== "feminine";
-                    }),
-                    useCases: model.metadata?.use_cases || [],
-                };
-            });
-        } catch (e) {
-            console.error('Failed to fetch Deepgram voices via SDK', e);
-            return [];
-        }
+        // return response.voices.filter(isVerifiedEnglishVoice).map((voice: VoiceOrigin) => {
+        return response.voices.filter((voice: VoiceOrigin) => {
+            return voice.category === VoiceResponseModelCategory.Premade &&
+                voice.labels?.language === "en";
+        }).map((voice: VoiceOrigin) => {
+            return {
+                id: voice.voiceId,
+                name: voice.name || 'Unknown',
+                description: voice.description || '',
+                gender: voice.labels?.gender || '',
+                age: voice.labels?.age || '',
+                accent: voice.labels?.accent || '',
+                descriptive: voice.labels?.descriptive,
+                useCase: voice.labels?.use_case || '',
+                previewUrl: voice.previewUrl || '',
+            }
+        }).sort((a: Voice, b: Voice) => {
+            return a.name.localeCompare(b.name)
+        });
     },
 
-    // POST /voices/narration/buffer - Deepgram TTS + STT 파이프라인
+    // POST /voices/narration/buffer - 나레이션 생성 후 Base64 인코딩
     async postVoice(
         text: string,
-        voiceId: string = "aura-asteria-en", // 기본값: Asteria
-        // 아래 파라미터들은 호환성을 위해 남겨두지만 Deepgram에서는 무시되거나 적절히 매핑합니다.
-        voiceSettings?: VoiceSettings,
-        voiceModelId?: VoiceGenerationModelId,
-        voiceOutputFormat?: VoiceGenerationOutputFormat,
-    ): Promise<{
-        audioBuffer: Buffer;
-        audioBase64: string;
-        subtitleSegmentList: SubtitleSegment[];
-    }> {
+        voiceId: string,
+        voiceSettings: VoiceSettings = {
+            stability: 0.5,
+            similarity_boost: 0.75,
+            style: 0.1,
+            use_speaker_boost: true,
+            speed: 1.1
+        },
+        voiceModelId: VoiceGenerationModelId = VoiceGenerationModelId.ELEVEN_FLASH_V2_5,
+        voiceOutputFormat: VoiceGenerationOutputFormat = VoiceGenerationOutputFormat.MP3_128,
+    ): Promise<VoiceGenerationResult> {
         try {
-            // -------------------------------------------------------
-            // 1단계: TTS (Text-to-Speech) - 오디오 생성 (Deepgram)
-            // -------------------------------------------------------
-            const ttsResponse = await deepgramClient.speak.request(
-                { text },
-                {
-                    model: voiceId,
-                    encoding: "mp3", // 기본 MP3
-                }
-            );
+            // ElevenLabs API 호출
+            const audioConvertResponse = await elevenLabsClient.textToSpeech.convertWithTimestamps(voiceId, {
+                text: text,
+                modelId: voiceModelId,
+                outputFormat: voiceOutputFormat,
+                voiceSettings: voiceSettings,
+                applyTextNormalization: "off",
+            });
 
-            const stream = await ttsResponse.getStream();
-            if (!stream) {
-                throw new Error("Deepgram TTS returned an empty stream.");
+            if (!audioConvertResponse || (!audioConvertResponse.audioBase64)) {
+                throw new Error('ElevenLabs API returned invalid audio stream');
             }
 
-            // 스트림을 버퍼로 변환
-            const audioBuffer = await streamToBuffer(stream);
+            if (!(audioConvertResponse.alignment) || !(audioConvertResponse.normalizedAlignment)) {
+                throw new Error('ElevenLabs API returned invalid timestamps');
+            }
 
-            // -------------------------------------------------------
-            // 2단계: STT (Speech-to-Text) - 타임스탬프(Alignment) 추출 (ElevenLabs)
-            // -------------------------------------------------------
-            const elevenLabsResponse = await elevenLabsClient.speechToText.convert({
-                file: audioBuffer,
-                modelId: "scribe_v1",
-                languageCode: "en",
-            }) as SpeechToTextChunkResponseModel;
-
-            // -------------------------------------------------------
-            // 3단계: 결과 매핑 (Deepgram Words -> SubtitleSegment)
-            // -------------------------------------------------------
+            // normalizedAlignment를 SubtitleSegment[]로 변환
             const subtitleSegments: SubtitleSegment[] = [];
+            const { characters, characterStartTimesSeconds, characterEndTimesSeconds } = audioConvertResponse.normalizedAlignment;
+            
+            let currentWord = '';
+            let wordStartTime = 0;
+            
+            for (let i = 0; i < characters.length; i++) {
+                const char = characters[i];
+                const startTime = characterStartTimesSeconds[i];
+                const endTime = characterEndTimesSeconds[i];
+                
+                // 단어의 첫 문자인 경우 시작 시간 기록
+                if (currentWord === '' && char.trim() !== '') {
+                    wordStartTime = startTime;
+                }
 
-            // Deepgram 결과 구조에서 'words' 배열 추출
-            const words = elevenLabsResponse.words;
+                // ★★★ [수정] 단어를 나누는 조건 변경 ★★★
+                // 공백 또는 특정 문장 부호(.,?!)를 만났을 때 단어 완성
+                const isWordBoundary = [' ', ',', '.', '?', '!'].includes(char);
+                const isLastCharacter = i === characters.length - 1;
 
-            for (let index = 0; index < words.length; index++) {
-                const currentWord = words[index];
-
-                // "현재가 단어(word)"일 때만 처리 (공백은 무시하고 넘어감)
-                if (currentWord.type === 'word' && currentWord.start && currentWord.end) {
-                    let finalText = currentWord.text;
-                    let finalStart = currentWord.start;
-                    const finalEnd = currentWord.end;
-
-                    // [안전 장치] 인덱스가 0이 아니고, 바로 앞이 공백(spacing)인 경우에만 합침
-                    if (index > 0 && words[index - 1].type === 'spacing') {
-                        const prevWord = words[index - 1];
-                        finalText = prevWord.text + finalText; // " " + "word"
-                        finalStart = prevWord.start ?? currentWord.start; // 시작 시간 앞당기기
+                if (isWordBoundary || isLastCharacter) {
+                    // 마지막 글자이면서 단어 경계가 아닌 경우, 해당 글자를 단어에 포함
+                    if (isLastCharacter && !isWordBoundary) {
+                        currentWord += char;
                     }
 
-                    subtitleSegments.push({
-                        word: finalText,
-                        startSec: finalStart,
-                        endSec: finalEnd
-                    });
+                    // 완성된 단어가 있으면 SubtitleSegment에 추가
+                    if (currentWord.trim() !== '') {
+                        // 단어 뒤에 붙는 문장 부호 처리
+                        let finalWord = currentWord.trim();
+                        if (['.', ',', '?', '!'].includes(char)) {
+                            finalWord += char;
+                        }
+
+                        subtitleSegments.push({
+                            word: finalWord,
+                            startSec: wordStartTime,
+                            endSec: endTime
+                        });
+                    }
+
+                    // 다음 단어를 위해 초기화
+                    currentWord = '';
+                } else {
+                    // 현재 문자를 단어에 추가 (이제 하이픈과 아포스트로피도 여기에 포함됨)
+                    currentWord += char;
                 }
             }
 
             return {
-                audioBuffer: audioBuffer,
-                audioBase64: audioBuffer.toString("base64"),
+                audioBuffer: Buffer.from(audioConvertResponse.audioBase64, 'base64'),
+                audioBase64: audioConvertResponse.audioBase64,
                 subtitleSegmentList: subtitleSegments,
             };
-
+            
         } catch (error) {
-            console.error("voiceServerAPI.postVoice error:", error);
+            console.error('postNarrationBase64 error:', error);
             throw error;
         }
     },
 
-    // POST /voices/narration/storage - Supabase 저장 (기존 로직 유지)
+    // POST /voices/narration/storage - 오디오 Buffer를 Supabase Storage에 저장
     async postNarrationBufferStream(
         audioBuffer: Buffer,
         taskId: string,
     ) {
-        const supabase = await createSupabaseServiceRoleClient();
+        // Supabase Storage에 저장
+        const supabase = createSupabaseServiceRoleClient();
         const fileName = `${taskId}.mp3`;
 
         const { data, error: uploadError } = await supabase.storage
@@ -185,17 +161,17 @@ export const voiceServerAPI = {
         };
     },
 
-    // GET /voices/narration/storage - URL 조회 (기존 로직 유지)
-    async getVoiceByTaskId(taskId: string) {
-        const supabase = await createSupabaseServer("mutate");
-        const { data: voiceData } = supabase.storage
-            .from('narration_voice_storage')
-            .getPublicUrl(`${taskId}.mp3`);
+    async getVoiceSignedUrl(taskId: string) {
+        const supabase = createSupabaseServiceRoleClient();
 
-        if (!voiceData || !voiceData.publicUrl) {
-            throw new Error('Voice data not found or public URL is missing');
+        const { data, error } = await supabase.storage
+            .from('narration_voice_storage')
+            .createSignedUrl(`${taskId}.mp3`, 60 * 60);
+
+        if (!data || !data.signedUrl) {
+            throw new Error(error instanceof Error ? error.message : "Unexpected error in getVoiceSignedUrl()");
         }
 
-        return voiceData.publicUrl;
+        return data.signedUrl;
     }
-};
+}

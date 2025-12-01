@@ -5,6 +5,7 @@ import {videoGenerationTasksServerAPI} from "@/api/server/videoGenerationTasksSe
 import {taskCheckAndCleanupIfCancelled} from "@/utils/taskCheckAndCleanupIfCancelled";
 import {VideoGenerationTaskStatus} from "@/api/types/supabase/VideoGenerationTasks";
 import {getNextBaseResponse} from "@/utils/getNextBaseResponse";
+import {waitUntil} from "@vercel/functions";
 
 export async function POST(request: NextRequest) {
     // URL에서 파라미터 추출
@@ -66,81 +67,90 @@ export async function POST(request: NextRequest) {
         });
 
         // 콜백 타입에 따른 비즈니스 로직 처리
-        switch (webhookData.callbackType) {
-            case PostGenerateWebhookType.TEXT:
-                console.log('가사 생성 완료');
-                break;
+        const processWebhookBackgroundJob = async () => {
+            try {
+                switch (webhookData.callbackType) {
+                    case PostGenerateWebhookType.TEXT:
+                        console.log('가사 생성 완료');
+                        break;
 
-            case PostGenerateWebhookType.FIRST:
-                console.log('첫 번째 오디오 생성 완료');
-                // TODO: 필요시 첫 번째 오디오 처리 로직 추가
-                break;
+                    case PostGenerateWebhookType.FIRST:
+                        console.log('첫 번째 오디오 생성 완료');
+                        // TODO: 필요시 첫 번째 오디오 처리 로직 추가
+                        break;
 
-            case PostGenerateWebhookType.COMPLETE:
-                console.log('모든 생성 완료 - 음악 파일 업로드 시작');
+                    case PostGenerateWebhookType.COMPLETE:
+                        console.log('모든 생성 완료 - 음악 파일 업로드 시작');
 
-                if (webhookData.data && webhookData.data.length > 0) {
-                    try {
-                        // audio_url에서 파일 다운로드
-                        const musicFileList: Blob[] = [];
-                        const musicMetadataList = webhookData.data;
+                        if (webhookData.data && webhookData.data.length > 0) {
+                            try {
+                                // audio_url에서 파일 다운로드
+                                const musicFileList: Blob[] = [];
+                                const musicMetadataList = webhookData.data;
 
-                        for (const musicMetaData of musicMetadataList) {
-                            if (musicMetaData.audio_url) {
-                                const response = await fetch(musicMetaData.audio_url);
-                                if (response.ok) {
-                                    const musicBlob = await response.blob();
-                                    musicFileList.push(musicBlob);
-                                } else {
-                                    console.error(`Failed to download music from ${musicMetaData.audio_url}`);
-                                }
-                            }
-                        }
-
-                        if (musicFileList.length > 0) {
-                            // Supabase Storage에 업로드
-                            const uploadResult = await musicServerAPI.postMusic(
-                                taskId,
-                                musicFileList,
-                                musicMetadataList.map((musicMetaData) => {
-                                    return {
-                                        title: musicMetaData.title,
-                                        tagList: musicMetaData.tags.split(", "),
-                                        audioUrl: musicMetaData.source_audio_url,
-                                        // imageUrl: musicMetaData.source_image_url,
-                                        imageUrl: musicMetaData.image_url,
-                                        duration: musicMetaData.duration,
+                                for (const musicMetaData of musicMetadataList) {
+                                    if (musicMetaData.audio_url) {
+                                        const response = await fetch(musicMetaData.audio_url);
+                                        if (response.ok) {
+                                            const musicBlob = await response.blob();
+                                            musicFileList.push(musicBlob);
+                                        } else {
+                                            console.error(`Failed to download music from ${musicMetaData.audio_url}`);
+                                        }
                                     }
-                                }),
-                            );
+                                }
 
-                            if (uploadResult.success) {
-                                console.log(`Successfully uploaded ${musicFileList.length} music files for task: ${taskId}`);
+                                if (musicFileList.length > 0) {
+                                    // Supabase Storage에 업로드
+                                    const uploadResult = await musicServerAPI.postMusic(
+                                        taskId,
+                                        musicFileList,
+                                        musicMetadataList.map((musicMetaData) => {
+                                            return {
+                                                title: musicMetaData.title,
+                                                tagList: musicMetaData.tags.split(", "),
+                                                audioUrl: musicMetaData.source_audio_url,
+                                                // imageUrl: musicMetaData.source_image_url,
+                                                imageUrl: musicMetaData.image_url,
+                                                duration: musicMetaData.duration,
+                                            }
+                                        }),
+                                    );
 
-                                // Task 상태 'EDITOR'로 업데이트
-                                await videoGenerationTasksServerAPI.patchVideoGenerationTaskStatus(taskId, VideoGenerationTaskStatus.EDITOR);
-                            } else {
-                                console.error(`Failed to upload music files for task: ${taskId}`, uploadResult.error);
+                                    if (uploadResult.success) {
+                                        console.log(`Successfully uploaded ${musicFileList.length} music files for task: ${taskId}`);
+
+                                        // Task 상태 'EDITOR'로 업데이트
+                                        await videoGenerationTasksServerAPI.patchVideoGenerationTaskStatus(taskId, VideoGenerationTaskStatus.EDITOR);
+                                    } else {
+                                        console.error(`Failed to upload music files for task: ${taskId}`, uploadResult.error);
+                                    }
+                                } else {
+                                    console.warn('No valid music files to upload');
+                                }
+                            } catch (error) {
+                                console.error('Error processing music files:', error);
                             }
                         } else {
-                            console.warn('No valid music files to upload');
+                            console.warn('No music data received in COMPLETE callback');
                         }
-                    } catch (error) {
-                        console.error('Error processing music files:', error);
-                    }
-                } else {
-                    console.warn('No music data received in COMPLETE callback');
+                        break;
+
+                    case PostGenerateWebhookType.ERROR:
+                        console.error('음악 생성 실패:', webhookData);
+                        break;
+
+                    default:
+                        console.warn('Unknown callback type:', webhookData.callbackType);
+                        break;
                 }
-                break;
-
-            case PostGenerateWebhookType.ERROR:
-                console.error('음악 생성 실패:', webhookData);
-                break;
-
-            default:
-                console.warn('Unknown callback type:', webhookData.callbackType);
-                break;
+            } catch (error) {
+                console.error('Error in POST /webhook/suno-api background job:', error);
+                await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
+            }
         }
+
+        waitUntil(processWebhookBackgroundJob())
 
         return getNextBaseResponse({
             success: true,

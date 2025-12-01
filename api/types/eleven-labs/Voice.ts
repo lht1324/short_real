@@ -3,21 +3,13 @@ import {SubtitleSegment} from "@/api/types/supabase/VideoGenerationTasks";
 export interface Voice {
     id: string;
     name: string;
-    description: string;
-    category: string;
-    language: string;
+    description?: string;
     gender: string;
     age: string;
     accent: string;
+    descriptive?: string;
+    useCase: string;
     previewUrl?: string;
-    labels?: {
-        accent?: string;
-        descriptive?: string;
-        age?: string;
-        gender?: string;
-        language?: string;
-        use_case?: string;
-    };
 }
 
 export interface VoiceGenerationResult {
