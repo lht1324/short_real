@@ -295,12 +295,12 @@ function WorkspaceCreatePageClient() {
 
     const onClickGenerateVideo = useCallback(async () => {
         if (!script.trim()) {
-            alert('스크립트를 입력해주세요.');
+            alert('Please enter a script.');
             return;
         }
 
         setIsSubmitting(true);
-        
+
         try {
             if (!taskId || !selectedStyleId || !user?.id) {
                 throw new Error("User Id or Task Id or selected style was not found.");
@@ -312,19 +312,19 @@ function WorkspaceCreatePageClient() {
             if (postVideoResult) {
                 console.log('Video data generation succeed.');
                 // setVideoDataResponse(result.data);
-                
+
                 // 성공 시 대시보드로 이동
                 alert('Your video is now being generated!');
                 window.location.href = '/workspace/dashboard';
             } else {
                 console.error('Video data generation failed.');
-                alert('비디오 프로젝트 생성에 실패했습니다. 다시 시도해주세요.');
+                alert('Failed to create video project. Please try again.');
                 throw Error('Video data generation failed.');
             }
 
         } catch (error) {
             console.error('Error creating video project:', error);
-            alert('비디오 프로젝트 생성 중 오류가 발생했습니다. 다시 시도해주세요.');
+            alert('An error occurred while creating the video project. Please try again.');
         } finally {
             setIsSubmitting(false);
         }

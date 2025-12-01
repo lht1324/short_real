@@ -2,7 +2,7 @@
 
 import {memo, useCallback, useEffect, useMemo, useState} from "react";
 import Link from "next/link";
-import {ListTodo, Plus} from 'lucide-react';
+import {Coins, ListTodo, Plus} from 'lucide-react';
 import {VideoGenerationTask, VideoGenerationTaskStatus} from "@/api/types/supabase/VideoGenerationTasks";
 import Image from "next/image";
 import {videoClientAPI} from "@/api/client/videoClientAPI";
@@ -50,6 +50,10 @@ function WorkspaceDashboardPageClient() {
     const customerSessionToken = useMemo(() => {
         return searchParams.get('customer_session_token');
     }, [searchParams]);
+
+    const userCreditCount = useMemo(() => {
+        return user?.credit_count ?? 0;
+    }, [user?.credit_count]);
 
     const [checkoutResultDialogData, setCheckoutResultDialogData] = useState<CheckoutResultDialogData | null>(null);
 
@@ -116,16 +120,6 @@ function WorkspaceDashboardPageClient() {
                 return;
             }
 
-            // const videoBlob = await videoClientAPI.getVideoDownloadFinal(taskId);
-            //
-            // if (!videoBlob) return;
-            //
-            // console.log("1: ", JSON.stringify(videoBlob));
-            // console.log("2: ", videoBlob instanceof Blob)      // true 여야 함
-            // console.log("3: ", Object.prototype.toString.call(videoBlob)) // [object Blob] 여야 함
-            // console.log("4: ", videoBlob.type)                 // 'video/mp4' 권장
-            // console.log("5: ", videoBlob.size)                 // 0보다 커야 함
-            // Blob으로 받아서 다운로드 (CORS 우회)
             const response = await fetch(url);
 
             if (!response.ok) {
@@ -456,14 +450,24 @@ function WorkspaceDashboardPageClient() {
                         </p>
                     </div>
                 </div>
-                <div className="pr-6">
-                    <Link 
-                        href="/workspace/create"
-                        className="group bg-gradient-to-r from-pink-500 to-purple-600 text-white px-6 py-3 rounded-xl text-lg font-semibold hover:from-pink-600 hover:to-purple-700 transition-all duration-300 transform hover:scale-105 flex items-center space-x-2 shadow-lg shadow-purple-500/25"
-                    >
-                        <Plus size={20} />
-                        <span>Start New Task</span>
-                    </Link>
+
+                <div className="flex flex-row w-fit items-center gap-2">
+                    <div className="flex items-center space-x-2 mr-6 px-4 py-2 bg-gray-900/50 border border-purple-500/30 rounded-lg backdrop-blur-sm hover:border-purple-400/50 transition-all">
+                        <Coins className="w-5 h-5 text-yellow-400" />
+                        <div className="flex flex-col">
+                            <span className="text-xs text-purple-300">Credits</span>
+                            <span className="text-lg font-bold text-yellow-400">{userCreditCount.toLocaleString()}</span>
+                        </div>
+                    </div>
+                    <div className="pr-6">
+                        <Link
+                            href="/workspace/create"
+                            className="group bg-gradient-to-r from-pink-500 to-purple-600 text-white px-6 py-3 rounded-xl text-lg font-semibold hover:from-pink-600 hover:to-purple-700 transition-all duration-300 transform hover:scale-105 flex items-center space-x-2 shadow-lg shadow-purple-500/25"
+                        >
+                            <Plus size={20} />
+                            <span>Start New Task</span>
+                        </Link>
+                    </div>
                 </div>
             </div>
 
