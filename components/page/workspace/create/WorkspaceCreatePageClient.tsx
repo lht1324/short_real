@@ -106,24 +106,29 @@ function WorkspaceCreatePageClient() {
         return sceneDataList.length;
     }, [sceneDataList]);
 
+    const expectedDurationUsage = useMemo(() => {
+        const exceededVideoTotalDuration = expectedVideoTotalDuration - 30;
+        return exceededVideoTotalDuration > 0
+            ? Math.ceil(exceededVideoTotalDuration / 2) * 5
+            : 0;
+    }, [expectedVideoTotalDuration]);
+
+    const expectedSceneCountUsage = useMemo(() => {
+        const exceededVideoSceneCount = expectedVideoSceneCount - 6;
+
+        return exceededVideoSceneCount > 0
+            ? exceededVideoSceneCount * 5
+            : 0;
+    }, [expectedVideoSceneCount]);
+
     const expectedCreditUsage = useMemo(() => {
         // 장면 재분할 2
-        // 영상 5
+        // 영상 2초 5
         // 장면 5
         // 로직 추가
 
-        const exceededVideoTotalDuration = expectedVideoTotalDuration - 30;
-        const exceededVideoSceneCount = expectedVideoSceneCount - 6;
-
-        const exceededDurationUsage = exceededVideoTotalDuration > 0
-            ? exceededVideoTotalDuration * 5
-            : 0;
-        const exceededSceneCountUsage = exceededVideoSceneCount > 0
-            ? exceededVideoSceneCount * 5
-            : 0;
-
-        return 100 + (exceededDurationUsage + exceededSceneCountUsage);
-    }, [expectedVideoTotalDuration, expectedVideoSceneCount]);
+        return 100 + (expectedDurationUsage + expectedSceneCountUsage);
+    }, [expectedDurationUsage, expectedSceneCountUsage]);
 
     // Style examples for preview
     const styleList = useMemo((): Style[] => STYLE_DATA_LIST, []);
@@ -647,87 +652,6 @@ function WorkspaceCreatePageClient() {
                                     </div>
                                 </div>
 
-                                {/* Video Metadata Section */}
-                                {videoTitle && videoDescription && (
-                                    <div className="mb-4 space-y-3">
-                                        {/* Title Card */}
-                                        <div className="group relative rounded-xl border border-purple-500/30 bg-gradient-to-r from-purple-500/5 via-pink-500/5 to-purple-500/5 p-4 backdrop-blur-sm transition-all hover:border-purple-400/50 hover:shadow-lg hover:shadow-purple-500/10">
-                                            <div className="flex items-start space-x-3">
-                                                <div className="flex-shrink-0 mt-0.5">
-                                                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center shadow-lg">
-                                                        <Film className="w-4 h-4 text-white" />
-                                                    </div>
-                                                </div>
-                                                <div className="flex-1 min-w-0">
-                                                    <div className="text-sm font-medium text-purple-300 mb-1.5">Video Title</div>
-                                                    <h3 className="text-lg font-bold leading-snug text-white">
-                                                        {videoTitle}
-                                                    </h3>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        {/* Description Card */}
-                                        <div className="group relative rounded-xl border border-purple-500/30 bg-gradient-to-r from-pink-500/5 via-purple-500/5 to-pink-500/5 p-4 backdrop-blur-sm transition-all hover:border-purple-400/50 hover:shadow-lg hover:shadow-pink-500/10">
-                                            <div className="flex items-start space-x-3">
-                                                <div className="flex-shrink-0 mt-0.5">
-                                                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-600 to-pink-500 flex items-center justify-center shadow-lg">
-                                                        <Sparkles className="w-4 h-4 text-white" />
-                                                    </div>
-                                                </div>
-                                                <div className="flex-1 min-w-0">
-                                                    <div className="text-sm font-medium text-purple-300 mb-1.5">Description</div>
-                                                    <p className="whitespace-pre-wrap text-base leading-relaxed text-gray-300">
-                                                        {videoDescription}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                )}
-
-                                {/* Credit Usage Card */}
-                                <div className="group relative mb-6 rounded-xl border border-purple-500/30 bg-gradient-to-r from-yellow-500/5 via-orange-500/5 to-yellow-500/5 p-4 backdrop-blur-sm transition-all hover:border-purple-400/50 hover:shadow-lg hover:shadow-yellow-500/10">
-                                    <div className="flex items-start space-x-3">
-                                        <div className="flex-shrink-0 mt-0.5">
-                                            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-yellow-500 to-orange-500 flex items-center justify-center shadow-lg">
-                                                <Coins className="w-4 h-4 text-white" />
-                                            </div>
-                                        </div>
-                                        <div className="flex-1 min-w-0">
-                                            <div className="text-sm font-medium text-purple-300 mb-1.5">Estimated Credit Usage</div>
-                                            <div className="space-y-2">
-                                                <div className="flex items-center justify-between">
-                                                    <span className="text-base text-gray-300">Base (30s / 6 scenes)</span>
-                                                    <span className="text-base font-semibold text-white">100 credits</span>
-                                                </div>
-                                                <div className="border-t border-purple-500/20 my-2"></div>
-                                                <div className="flex items-center justify-between">
-                                                    <span className="text-sm text-gray-400">
-                                                        {`Extra Duration (+${expectedVideoTotalDuration > 30 ? Math.ceil(expectedVideoTotalDuration - 30) : 0}s)`}
-                                                    </span>
-                                                    <span className={`text-sm font-medium ${expectedVideoTotalDuration > 30 ? 'text-yellow-300' : 'text-gray-500'}`}>
-                                                        +{expectedVideoTotalDuration > 30 ? (expectedVideoTotalDuration - 30) * 5 : 0} credits
-                                                    </span>
-                                                </div>
-                                                <div className="flex items-center justify-between">
-                                                    <span className="text-sm text-gray-400">
-                                                        {`Extra Scenes (+${expectedVideoSceneCount > 6 ? expectedVideoSceneCount - 6 : 0})`}
-                                                    </span>
-                                                    <span className={`text-sm font-medium ${expectedVideoSceneCount > 6 ? 'text-yellow-300' : 'text-gray-500'}`}>
-                                                        +{expectedVideoSceneCount > 6 ? (expectedVideoSceneCount - 6) * 5 : 0} credits
-                                                    </span>
-                                                </div>
-                                                <div className="border-t border-purple-500/20 my-2"></div>
-                                                <div className="flex items-center justify-between">
-                                                    <span className="text-base font-semibold text-purple-300">Total</span>
-                                                    <span className="text-lg font-bold text-yellow-400">{expectedCreditUsage} credits</span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
                                 {/* Storyboard 그리드 */}
                                 {sceneDataList.length !== 0 && videoTitle && (
                                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 max-w-4xl">
@@ -828,7 +752,7 @@ function WorkspaceCreatePageClient() {
                     onChangeIsLoading={onChangeVoiceLoading}
                 />
 
-                {/* Style Preview Panel */}
+                {/* Result Panel */}
                 <div className="flex-[3] bg-black flex flex-col relative">
                     {/* Vaporwave Background Effects */}
                     <div className="absolute inset-0 opacity-10">
@@ -837,45 +761,129 @@ function WorkspaceCreatePageClient() {
                         <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-48 h-48 bg-gradient-to-r from-indigo-500 to-cyan-500 rounded-full blur-3xl"></div>
                     </div>
                     
-                    <div className="flex-1 flex items-center justify-center px-8 py-2 relative z-10">
-                        <div className="text-center">
-                            <h3 className="text-purple-300 text-2xl font-medium mb-6">
-                                Style Preview
-                            </h3>
-                            
-                            {/* Selected Style Preview */}
-                            <div className="w-[280px] bg-gradient-to-br from-gray-900 to-black rounded-2xl border border-purple-500/30 overflow-hidden shadow-2xl mx-auto" style={{aspectRatio: '9/16'}}>
-                                {selectedStyleId ? (
-                                    <div className="w-full h-full bg-gradient-to-br from-pink-400 via-purple-500 to-indigo-600 flex items-center justify-center relative">
-                                        <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent"></div>
-                                        
-                                        {/* Preview Content */}
-                                        <div className="text-center relative z-10">
-                                            <div className="w-16 h-16 bg-black/40 backdrop-blur-sm rounded-full flex items-center justify-center mx-auto border border-purple-400/50">
-                                                <Play size={24} className="text-white ml-1" />
+                    <div className="flex-1 flex p-8 items-center justify-center relative z-10">
+                        {(sceneDataList.length !== 0 && videoTitle && videoDescription) ? (<div>
+                            {/* Video Metadata Section */}
+                            <div className="mb-4 space-y-3">
+                                {/* Title Card */}
+                                <div className="group relative rounded-xl border border-purple-500/30 bg-gradient-to-r from-purple-500/5 via-pink-500/5 to-purple-500/5 p-4 backdrop-blur-sm transition-all hover:border-purple-400/50 hover:shadow-lg hover:shadow-purple-500/10">
+                                    <div className="flex items-start space-x-3">
+                                        <div className="flex-shrink-0 mt-0.5">
+                                            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center shadow-lg">
+                                                <Film className="w-4 h-4 text-white" />
+                                            </div>
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <div className="text-sm font-medium text-purple-300 mb-1.5">Video Title</div>
+                                            <h3 className="text-lg font-bold leading-snug text-white">
+                                                {videoTitle}
+                                            </h3>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Description Card */}
+                                <div className="group relative rounded-xl border border-purple-500/30 bg-gradient-to-r from-pink-500/5 via-purple-500/5 to-pink-500/5 p-4 backdrop-blur-sm transition-all hover:border-purple-400/50 hover:shadow-lg hover:shadow-pink-500/10">
+                                    <div className="flex items-start space-x-3">
+                                        <div className="flex-shrink-0 mt-0.5">
+                                            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-600 to-pink-500 flex items-center justify-center shadow-lg">
+                                                <Sparkles className="w-4 h-4 text-white" />
+                                            </div>
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <div className="text-sm font-medium text-purple-300 mb-1.5">Description</div>
+                                            <p className="whitespace-pre-wrap text-base leading-relaxed text-gray-300">
+                                                {videoDescription}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Credit Usage Card */}
+                            <div className="group relative mb-6 rounded-xl border border-purple-500/30 bg-gradient-to-r from-yellow-500/5 via-orange-500/5 to-yellow-500/5 p-4 backdrop-blur-sm transition-all hover:border-purple-400/50 hover:shadow-lg hover:shadow-yellow-500/10">
+                                <div className="flex items-start space-x-3">
+                                    <div className="flex-shrink-0 mt-0.5">
+                                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-yellow-500 to-orange-500 flex items-center justify-center shadow-lg">
+                                            <Coins className="w-4 h-4 text-white" />
+                                        </div>
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <div className="text-sm font-medium text-purple-300 mb-1.5">Estimated Credit Usage</div>
+
+                                        <div className="flex flex-col space-y-2">
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-base text-gray-300">Base (30s / 6 scenes)</span>
+                                                <div className="flex items-center space-x-1">
+                                                    <Coins className="w-4 h-4 text-white" />
+                                                    <span className="text-base font-semibold text-white">100</span>
+                                                </div>
+                                            </div>
+
+                                            <div className="border-t border-purple-500/20 my-2"></div>
+
+                                            <div className="flex items-center justify-between">
+                                                    <span className="text-sm text-gray-400">
+                                                        {`Extra Duration (+${expectedVideoTotalDuration > 30 ? Math.ceil(expectedVideoTotalDuration - 30) : 0}s)`}
+                                                    </span>
+                                                <div className="flex items-center space-x-1">
+                                                    <Coins className={`w-3.5 h-3.5 ${expectedVideoTotalDuration > 30 ? 'text-yellow-300' : 'text-gray-500'}`} />
+                                                    <span className={`text-sm font-medium ${expectedVideoTotalDuration > 30 ? 'text-yellow-300' : 'text-gray-500'}`}>
+                                                        +{expectedDurationUsage}
+                                                    </span>
+                                                </div>
+                                            </div>
+
+                                            <div className="flex items-center justify-between">
+                                                    <span className="text-sm text-gray-400">
+                                                        {`Extra Scenes (+${expectedVideoSceneCount > 6 ? expectedVideoSceneCount - 6 : 0})`}
+                                                    </span>
+                                                <div className="flex items-center space-x-1">
+                                                    <Coins className={`w-3.5 h-3.5 ${expectedVideoSceneCount > 6 ? 'text-yellow-300' : 'text-gray-500'}`} />
+                                                    <span className={`text-sm font-medium ${expectedVideoSceneCount > 6 ? 'text-yellow-300' : 'text-gray-500'}`}>
+                                                        +{expectedSceneCountUsage}
+                                                    </span>
+                                                </div>
+                                            </div>
+
+                                            <div className="border-t border-purple-500/20 my-2"></div>
+
+                                            {/* Policy Footnote */}
+                                            <div className="flex w-fit self-start items-center justify-between">
+                                                <span className="text-xs mr-2 text-gray-400">Overage Policy</span>
+                                                <div className="flex items-center space-x-2 text-xs text-gray-300">
+                                                    <div className="flex items-center space-x-1">
+                                                        <Coins className="w-3 h-3 text-yellow-400" />
+                                                        <span>5 / 2s</span>
+                                                    </div>
+                                                    <span className="text-gray-500">•</span>
+                                                    <div className="flex items-center space-x-1">
+                                                        <Coins className="w-3 h-3 text-yellow-400" />
+                                                        <span>5 / scene</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-base font-semibold text-purple-300">Total</span>
+                                                <div className="flex items-center space-x-1">
+                                                    <Coins className="w-5 h-5 text-yellow-400" />
+                                                    <span className="text-lg font-bold text-yellow-400">{expectedCreditUsage}</span>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
-                                ) : (
-                                    <div className="w-full h-full flex items-center justify-center text-gray-500 bg-gradient-to-br from-gray-800 to-gray-900">
-                                        <p className="text-sm">Style preview</p>
-                                    </div>
-                                )}
+                                </div>
                             </div>
-                            
-                            {/* Style Info */}
-                            <div className="mt-6 text-center">
-                                <p className="text-purple-300 text-base mb-1">
-                                    Selected: <span className="text-white font-medium text-lg">{styleList.find((style) => { return style.id === selectedStyleId; })?.name || selectedStyleId}</span>
-                                </p>
-                                <p className="text-gray-300 text-sm mb-3">
-                                    {styleList.find((style) => { return style.id === selectedStyleId; })?.description}
-                                </p>
-                                <p className="text-gray-400 text-sm">
-                                    This preview shows how your video will look with the selected visual style.
-                                </p>
+                        </div>) : (
+                            <div className="text-center">
+                                <div className="text-gray-400 mb-4">
+                                    <Sparkles className="w-16 h-16 mx-auto mb-3 opacity-50" />
+                                </div>
+                                <p className="text-base text-gray-400 font-medium">No results yet</p>
+                                <p className="text-sm text-gray-500 mt-1">Generate a storyboard to see your video details</p>
                             </div>
-                        </div>
+                        )}
                     </div>
                     
                     <div className="p-6 border-t border-purple-500/20 bg-gray-900/50 backdrop-blur-sm relative z-10">
