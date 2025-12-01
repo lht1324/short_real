@@ -397,12 +397,14 @@ export const videoServerAPI = {
         }
     },
 
-    async getVideoSignedUrl(filePath: string, expiresIn: number = 60 * 60 * 24) {
+    async getVideoSignedUrl(filePath: string, expiresIn: number = 60 * 60 * 24, fileName?: string) {
         const supabase = createSupabaseServiceRoleClient();
 
         const { data, error } = await supabase.storage
             .from('processed_video_storage')
-            .createSignedUrl(filePath, expiresIn);
+            .createSignedUrl(filePath, expiresIn, {
+                download: fileName ?? true,
+            });
 
         if (error || !data?.signedUrl) {
             throw new Error(error?.message || `There is no video data.`);

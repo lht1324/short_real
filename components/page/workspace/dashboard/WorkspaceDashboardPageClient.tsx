@@ -105,14 +105,6 @@ function WorkspaceDashboardPageClient() {
 
     const onClickDownload = useCallback(async (taskId: string) => {
         try {
-            // videoClientAPI로 영상 URL 가져오기
-            const url = await videoClientAPI.getVideoFinalUrl(taskId);
-
-            if (!url) {
-                console.error('Failed to get video URL for task:', taskId);
-                return;
-            }
-
             const videoGenerationTask = await videoClientAPI.getVideoTaskByTaskId(taskId);
 
             if (!videoGenerationTask || !videoGenerationTask.video_title) {
@@ -120,26 +112,25 @@ function WorkspaceDashboardPageClient() {
                 return;
             }
 
-            const response = await fetch(url);
+            // videoClientAPI로 영상 URL 가져오기
+            const fileName = `${videoGenerationTask.video_title}-${new Date().toLocaleTimeString()}.mp4`.replaceAll(" ", "-");
+            const url = await videoClientAPI.getVideoFinalUrl(taskId, fileName);
 
-            if (!response.ok) {
-                throw new Error(`Failed to fetch video: ${response.status}`);
+            if (!url) {
+                console.error('Failed to get video URL for task:', taskId);
+                return;
             }
-
-            const blob = await response.blob();
-            const blobUrl = window.URL.createObjectURL(blob);
-            // const blobUrl = window.URL.createObjectURL(videoBlob);
 
             // 임시 <a> 태그 생성해서 다운로드 트리거
             const a = document.createElement('a');
-            a.href = blobUrl;
-            a.download = `${videoGenerationTask.video_title}-${new Date().toLocaleTimeString()}.mp4`.replaceAll(" ", "_");
+
+            a.href = url;
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
 
             // 메모리 해제
-            window.URL.revokeObjectURL(blobUrl);
+            // window.URL.revokeObjectURL(blobUrl);
         } catch (error) {
             console.error('Download failed:', error);
         }

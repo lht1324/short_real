@@ -174,9 +174,9 @@ export const videoClientAPI = {
         }
     },
 
-    async getVideoFinalUrl(taskId: string): Promise<string | null> {
+    async getVideoFinalUrl(taskId: string, fileName: string): Promise<string | null> {
         try {
-            const response = await getFetch(`/api/video/url/final?taskId=${taskId}`);
+            const response = await getFetch(`/api/video/url/final?taskId=${taskId}&fileName=${fileName}`);
 
             if (!response.ok) {
                 if (response.status === 404) {
@@ -280,16 +280,4 @@ export const videoClientAPI = {
             return null;
         }
     },
-
-    async getVideoDownloadFinal(taskId: string): Promise<Blob | null> {
-        try {
-            const response = await getFetch(`/api/video/download/final?taskId=${taskId}`)
-
-            return await response.blob();
-        } catch (error) {
-            console.error(error instanceof Error ? error.message : "Unexpected error while fetching final video.");
-
-            return null;
-        }
-    }
 }
