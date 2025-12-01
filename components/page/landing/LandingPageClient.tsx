@@ -9,6 +9,7 @@ import {ProductData} from "@/api/types/api/polar/products/ProductData";
 import {polarClientAPI} from "@/api/client/polarClientAPI";
 import {useAuth} from "@/context/AuthContext";
 import {useRouter} from "next/navigation";
+import ComparisonSection from "@/components/page/landing/ComparisonSection";
 
 function LandingPageClient() {
     const router = useRouter();
@@ -72,6 +73,7 @@ function LandingPageClient() {
             {/* How It Works Section */}
             <HowItWorksSection />
 
+            <ComparisonSection/>
             {/* Pricing Section */}
             <PricingSection
                 productDataList={productDataList}
