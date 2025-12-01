@@ -87,7 +87,19 @@ export async function POST(request: NextRequest) {
             master_style_negative_prompt: masterStyleNegativePrompt,
         });
 
-        const patchUserCreditCountResult = await usersServerAPI.patchUserCreditCountByUserId(videoGenerationTask.user_id, -(20 * videoGenerationTask.scene_breakdown_list.length));
+        const sceneDataList = videoGenerationTask.scene_breakdown_list;
+        const sceneCount = sceneDataList.length;
+        const totalDuration = sceneDataList.reduce((acc, sceneData) => {
+            return acc + sceneData.sceneDuration;
+        }, 0);
+        const additionalTotalDurationUsage = totalDuration > 30
+            ? Math.ceil((totalDuration - 30) / 2) * 5
+            : 0;
+        const additionalSceneCountUsage = sceneCount > 6
+            ? (sceneCount - 6) * 5
+            : 0;
+        const creditUsage = 100 + additionalTotalDurationUsage + additionalSceneCountUsage;
+        const patchUserCreditCountResult = await usersServerAPI.patchUserCreditCountByUserId(videoGenerationTask.user_id, -creditUsage);
 
         if (!patchUserCreditCountResult) {
             return getNextBaseResponse({

@@ -50,7 +50,7 @@ function WorkspaceCreatePageClient() {
 
     // Section states
     const [script, setScript] = useState<string>('');
-    const [selectedStyleId, setSelectedStyleId] = useState<string>('');
+    const [selectedStyleId, setSelectedStyleId] = useState<string>('realistic');
     const [selectedVoiceId, setSelectedVoiceId] = useState<string>('');
     
     // Storyboard states
@@ -122,11 +122,6 @@ function WorkspaceCreatePageClient() {
     }, [expectedVideoSceneCount]);
 
     const expectedCreditUsage = useMemo(() => {
-        // 장면 재분할 2
-        // 영상 2초 5
-        // 장면 5
-        // 로직 추가
-
         return 100 + (expectedDurationUsage + expectedSceneCountUsage);
     }, [expectedDurationUsage, expectedSceneCountUsage]);
 
@@ -135,7 +130,7 @@ function WorkspaceCreatePageClient() {
 
     // Virtual tabs for navigation consistency
     const virtualTabs = useMemo(() => [
-        { id: 'dashboard', icon: ListTodo, name: 'Tasks', href: '/workspace/dashboard' },
+        { id: 'dashboard', icon: ListTodo, name: 'Dashboard', href: '/workspace/dashboard' },
         { id: 'create', icon: Plus, name: 'Create', href: '/workspace/create', active: true }
     ], []);
 
@@ -711,36 +706,36 @@ function WorkspaceCreatePageClient() {
                             </div>
 
                             {/* Visual Style Selection */}
-                            <div>
-                                <button
-                                    type="button"
-                                    onClick={() => setIsStyleExpanded(!isStyleExpanded)}
-                                    className="flex items-center text-xl font-semibold text-purple-300 mb-4 hover:text-purple-200 transition-colors"
-                                >
-                                    <span>Visual Style</span>
-                                    <span className="ml-2">
-                                        {isStyleExpanded ? <ChevronDown size={20} /> : <ChevronRight size={20} />}
-                                    </span>
-                                </button>
-                                {isStyleExpanded && (
-                                    <div className="grid grid-cols-2 gap-3">
-                                    {styleList.map((style) => (
-                                        <button
-                                            key={style.id}
-                                            onClick={() => { setSelectedStyleId(style.id); }}
-                                            className={`w-full p-3 rounded-lg border transition-all text-left ${
-                                                selectedStyleId === style.id
-                                                    ? 'border-pink-500 bg-pink-500/10'
-                                                    : 'border-purple-500/30 bg-gray-800/30 hover:border-purple-400/50'
-                                            }`}
-                                        >
-                                            <div className="text-white font-medium text-base">{style.name}</div>
-                                            <div className="text-gray-400 text-sm mt-1">{style.description}</div>
-                                        </button>
-                                    ))}
-                                    </div>
-                                )}
-                            </div>
+                            {/*<div>*/}
+                            {/*    <button*/}
+                            {/*        type="button"*/}
+                            {/*        onClick={() => setIsStyleExpanded(!isStyleExpanded)}*/}
+                            {/*        className="flex items-center text-xl font-semibold text-purple-300 mb-4 hover:text-purple-200 transition-colors"*/}
+                            {/*    >*/}
+                            {/*        <span>Visual Style</span>*/}
+                            {/*        <span className="ml-2">*/}
+                            {/*            {isStyleExpanded ? <ChevronDown size={20} /> : <ChevronRight size={20} />}*/}
+                            {/*        </span>*/}
+                            {/*    </button>*/}
+                            {/*    {isStyleExpanded && (*/}
+                            {/*        <div className="grid grid-cols-2 gap-3">*/}
+                            {/*        {styleList.map((style) => (*/}
+                            {/*            <button*/}
+                            {/*                key={style.id}*/}
+                            {/*                onClick={() => { setSelectedStyleId(style.id); }}*/}
+                            {/*                className={`w-full p-3 rounded-lg border transition-all text-left ${*/}
+                            {/*                    selectedStyleId === style.id*/}
+                            {/*                        ? 'border-pink-500 bg-pink-500/10'*/}
+                            {/*                        : 'border-purple-500/30 bg-gray-800/30 hover:border-purple-400/50'*/}
+                            {/*                }`}*/}
+                            {/*            >*/}
+                            {/*                <div className="text-white font-medium text-base">{style.name}</div>*/}
+                            {/*                <div className="text-gray-400 text-sm mt-1">{style.description}</div>*/}
+                            {/*            </button>*/}
+                            {/*        ))}*/}
+                            {/*        </div>*/}
+                            {/*    )}*/}
+                            {/*</div>*/}
                         </div>
                     </div>
                 </div>
