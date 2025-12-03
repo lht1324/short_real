@@ -190,7 +190,7 @@ function ComparisonSection() {
                         <video
                             ref={badVideoRef}
                             src="/demo/bad_example.mp4"
-                            className="w-full h-full object-cover opacity-60 grayscale transition-all duration-500 group-hover:grayscale-0 group-hover:opacity-100"
+                            className="w-full h-full object-cover transition-all duration-500"
                             muted
                             loop
                             playsInline // [중요] iOS/모바일 메모리 최적화

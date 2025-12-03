@@ -10,7 +10,7 @@ import { ProductData } from "@/api/types/api/polar/products/ProductData";
 import HeroSection from "@/components/page/landing/hero-section/HeroSection";
 import FeaturesSection from "@/components/page/landing/features-section/FeaturesSection";
 import ComparisonSection from "@/components/page/landing/comparison-section/ComparisonSection";
-import HowItWorksSection from "@/components/page/landing/HowItWorksSection";
+import HowItWorksSection from "@/components/page/landing/how-it-works-section/HowItWorksSection";
 import PricingSection from "@/components/page/landing/PricingSection";
 
 function LandingPageClient() {
