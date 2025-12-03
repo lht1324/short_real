@@ -18,46 +18,6 @@ const productCache = new LRUCache<string, ProductData[]>({
     ttl: 1000 * 60 * 60, // 1시간
 });
 
-// 제품 처리 로직을 별도 함수로 분리
-// function processProducts(items: Product[]): ProductData[] {
-//     return items.filter((product: Product) => {
-//         return product.recurringInterval === "month" || product.recurringInterval === "year";
-//     }).map((product: Product) => {
-//         const firstPrice = product.prices[0];
-//         let price = 0;
-//         let currency = "USD";
-//
-//         if (firstPrice) {
-//             if ('priceAmount' in firstPrice) {
-//                 price = firstPrice.priceAmount;
-//             }
-//             if ('priceCurrency' in firstPrice) {
-//                 currency = firstPrice.priceCurrency;
-//             }
-//         }
-//
-//         const benefits: string[] = JSON.parse(product.metadata.benefits.toString());
-//         const planData: { creditCount: number, planId: SubscriptionPlan } = JSON.parse(product.metadata.planData.toString());
-//         const isPopular = product.metadata?.isPopular === true || product.metadata?.isPopular === "true";
-//         const videosPerDay = typeof product.metadata?.videosPerDay === "number"
-//             ? product.metadata.videosPerDay
-//             : parseInt(product.metadata?.videosPerDay as string) || 0;
-//
-//         return {
-//             id: product.id,
-//             name: product.name,
-//             price: price,
-//             currency: currency,
-//             interval: product.recurringInterval as "month" | "year",
-//             description: product.description ?? "",
-//             benefits: benefits,
-//             planData: planData,
-//             isPopular: isPopular,
-//             videosPerDay: videosPerDay,
-//         } satisfies ProductData;
-//     });
-// }
-
 /**
  * GET /api/polar/products
  * Polar에서 현재 판매 중인 구독형 제품 목록을 조회합니다.

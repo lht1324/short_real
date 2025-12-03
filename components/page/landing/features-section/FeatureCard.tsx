@@ -4,6 +4,7 @@
 import {memo, useCallback, useEffect, useRef, useState, MouseEvent} from "react";
 import {Volume2, VolumeX} from "lucide-react";
 import {Feature} from "@/components/page/landing/features-section/FeaturesSection";
+import {useVideoCleanup} from "@/hooks/videoHooks";
 
 function FeatureCard({ feature, index }: { feature: Feature, index: number }) {
     const videoRef = useRef<HTMLVideoElement>(null);
@@ -19,6 +20,8 @@ function FeatureCard({ feature, index }: { feature: Feature, index: number }) {
             setIsMuted(!isMuted);
         }
     }, [isMuted]);
+
+    useVideoCleanup(videoRef);
 
     // 타이핑 효과 로직
     useEffect(() => {

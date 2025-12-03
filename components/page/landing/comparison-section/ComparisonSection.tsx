@@ -1,8 +1,9 @@
 'use client'
 
-import { memo, useState, useRef, useEffect } from "react";
+import { memo, useState, useRef, useEffect, useCallback } from "react";
 import { AlertTriangle, CheckCircle2, Terminal, Loader2, Volume2, VolumeX } from "lucide-react";
 import TypeWriter from "@/components/page/landing/comparison-section/TypeWriter";
+import {useVideoCleanup} from "@/hooks/videoHooks";
 
 // 대본 데이터
 const scriptLines = [
@@ -19,6 +20,9 @@ function ComparisonSection() {
     const badVideoRef = useRef<HTMLVideoElement>(null);
     const goodVideoRef = useRef<HTMLVideoElement>(null);
 
+    // [최적화] requestAnimationFrame ID 관리용 Ref
+    const rafRef = useRef<number | null>(null);
+
     // 로딩 및 재생 상태
     const [isBadReady, setIsBadReady] = useState(false);
     const [isGoodReady, setIsGoodReady] = useState(false);
@@ -30,17 +34,51 @@ function ComparisonSection() {
     const [currentLine, setCurrentLine] = useState(scriptLines[0].text);
     const [progress, setProgress] = useState(0);
 
-    // 1. 동시 재생 로직
+    // [최적화] 안전하게 루프를 멈추는 함수
+    const stopLoop = useCallback(() => {
+        if (rafRef.current) {
+            cancelAnimationFrame(rafRef.current);
+            rafRef.current = null;
+        }
+    }, []);
+
+    useVideoCleanup(badVideoRef);
+    useVideoCleanup(goodVideoRef);
+
+    // [최적화] 탭 비활성화(백그라운드) 감지하여 재생/루프 중단 (메모리 누수 방지 핵심)
+    useEffect(() => {
+        const handleVisibilityChange = () => {
+            if (document.hidden) {
+                // 백그라운드로 가면 정지
+                stopLoop();
+                badVideoRef.current?.pause();
+                goodVideoRef.current?.pause();
+                setIsPlaying(false);
+            } else {
+                // 다시 돌아오면 재생 시도 (옵션, 원하면 자동 재생 가능)
+                // 여기서는 사용자가 다시 집중할 수 있게 정지 상태 유지
+            }
+        };
+
+        document.addEventListener("visibilitychange", handleVisibilityChange);
+        return () => {
+            document.removeEventListener("visibilitychange", handleVisibilityChange);
+            stopLoop(); // 언마운트 시 루프 확실히 제거
+        };
+    }, [stopLoop]);
+
+    // 1. 동시 재생 로직 (준비 완료 시 자동 재생)
     useEffect(() => {
         if (isBadReady && isGoodReady && !isPlaying) {
             const startTimeout = setTimeout(() => {
-                if (badVideoRef.current && goodVideoRef.current) {
+                // 문서가 보일 때만 재생 시작
+                if (!document.hidden && badVideoRef.current && goodVideoRef.current) {
                     Promise.all([
-                        badVideoRef.current.play(),
-                        goodVideoRef.current.play()
+                        badVideoRef.current.play().catch(() => {}),
+                        goodVideoRef.current.play().catch(() => {})
                     ]).then(() => {
                         setIsPlaying(true);
-                    }).catch(e => console.error("Playback failed", e));
+                    }).catch(e => console.warn("Playback failed", e));
                 }
             }, 500);
             return () => clearTimeout(startTimeout);
@@ -54,17 +92,26 @@ function ComparisonSection() {
         }
     }, [isMuted]);
 
-    // 2. 싱크 루프
+    // 2. 싱크 루프 (최적화됨)
     useEffect(() => {
-        if (!isPlaying) return;
-
-        const mainVideo = goodVideoRef.current;
-        const subVideo = badVideoRef.current;
-        if (!mainVideo || !subVideo) return;
+        if (!isPlaying) {
+            stopLoop();
+            return;
+        }
 
         const updateLoop = () => {
+            const mainVideo = goodVideoRef.current;
+            const subVideo = badVideoRef.current;
+
+            // 비디오가 없거나, 언마운트 된 경우 루프 종료
+            if (!mainVideo || !subVideo) {
+                stopLoop();
+                return;
+            }
+
             const currentTime = mainVideo.currentTime;
 
+            // UI 업데이트
             const percent = Math.min((currentTime / TOTAL_DURATION) * 100, 100);
             setProgress(percent);
 
@@ -76,28 +123,43 @@ function ComparisonSection() {
                 setCurrentLine(activeLine.text);
             }
 
-            if (Math.abs(mainVideo.currentTime - subVideo.currentTime) > 0.1) {
+            // Sync Correction (너무 잦은 보정 방지, 오차 범위 0.15로 완화)
+            if (Math.abs(mainVideo.currentTime - subVideo.currentTime) > 0.15) {
                 subVideo.currentTime = mainVideo.currentTime;
             }
 
+            // Loop Logic
             if (currentTime >= TOTAL_DURATION || mainVideo.ended) {
                 mainVideo.currentTime = 0;
                 subVideo.currentTime = 0;
-                mainVideo.play();
-                subVideo.play();
+                mainVideo.play().catch(() => {});
+                subVideo.play().catch(() => {});
             }
 
-            requestAnimationFrame(updateLoop);
+            // 재귀 호출
+            rafRef.current = requestAnimationFrame(updateLoop);
         };
 
-        const animationFrame = requestAnimationFrame(updateLoop);
-        return () => cancelAnimationFrame(animationFrame);
-    }, [currentLine, isPlaying]);
+        // 루프 시작
+        rafRef.current = requestAnimationFrame(updateLoop);
+
+        // Cleanup: 컴포넌트 언마운트나 isPlaying 변경 시 루프 정지
+        return () => stopLoop();
+    }, [currentLine, isPlaying, stopLoop]);
+
+    useEffect(() => {
+        if (badVideoRef.current) {
+            badVideoRef.current.load();
+        }
+        if (goodVideoRef.current) {
+            goodVideoRef.current.load();
+        }
+    }, []);
 
     return (
         <section
-            // [핵심 변경] bg-[#0b0b15] 제거 -> 투명 배경
-            className="relative py-24 px-4 sm:px-6 lg:px-8 overflow-hidden"
+            id="comparison"
+            className="relative py-16 px-4 sm:px-6 lg:px-8 overflow-hidden"
         >
             {/* Header */}
             <div className="text-center mb-16 relative z-10">
@@ -131,7 +193,7 @@ function ComparisonSection() {
                             className="w-full h-full object-cover opacity-60 grayscale transition-all duration-500 group-hover:grayscale-0 group-hover:opacity-100"
                             muted
                             loop
-                            playsInline
+                            playsInline // [중요] iOS/모바일 메모리 최적화
                             onCanPlayThrough={() => setIsBadReady(true)}
                         />
                         <div className="absolute top-4 left-1/2 -translate-x-1/2 px-3 py-1 bg-red-950/80 border border-red-500/50 rounded-full flex items-center gap-2 backdrop-blur-md z-30">
@@ -206,7 +268,7 @@ function ComparisonSection() {
                             className="w-full h-full object-cover"
                             muted={isMuted}
                             loop
-                            playsInline
+                            playsInline // [중요] iOS/모바일 메모리 최적화
                             onCanPlayThrough={() => setIsGoodReady(true)}
                         />
                         <div className="absolute top-4 left-1/2 -translate-x-1/2 px-3 py-1 bg-cyan-950/80 border border-cyan-500/50 rounded-full flex items-center gap-2 backdrop-blur-md z-30">

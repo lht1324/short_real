@@ -1,5 +1,6 @@
 import {useRef, useState, MouseEvent, useCallback, memo, CSSProperties} from "react";
 import {Volume2, VolumeX} from "lucide-react";
+import {useVideoCleanup} from "@/hooks/videoHooks";
 
 interface VideoCardProps {
     src: string;
@@ -24,6 +25,8 @@ function VideoCard({
             setIsMuted((prev) => !prev);
         }
     }, []);
+
+    useVideoCleanup(videoRef);
 
     return (
         <div

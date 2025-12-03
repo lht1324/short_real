@@ -58,13 +58,13 @@ function FeaturesSection() {
         <section
             id="features"
             // [수정] 배경색 제거 (투명), style 속성 제거
-            className="relative py-32 px-4 sm:px-6 lg:px-8 overflow-hidden"
+            className="relative py-8 px-4 sm:px-6 lg:px-8 overflow-hidden"
         >
             {/* [삭제] 상단 마스크, 그리드 패턴, 배경 조명 모두 삭제 */}
 
             <div className="max-w-[1400px] mx-auto relative z-10">
                 {/* Header */}
-                <div className="text-center mb-20">
+                <div className="text-center mb-12">
                     <h2 className="text-4xl sm:text-6xl font-black tracking-tight text-white mb-6">
                         Not Just a Wrapper. <br />
                         <span className="bg-gradient-to-r from-pink-500 to-purple-600 bg-clip-text text-transparent">
