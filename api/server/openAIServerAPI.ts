@@ -15,6 +15,7 @@ import {
     POST_VIDEO_GEN_PROMPT_PROMPT, POST_MUSIC_GENERATION_DATA_PROMPT
 } from "@/api/server/OpenAIPrompts";
 import {MusicGenerationData} from "@/api/types/suno-api/MusicGenerationData";
+import {ImageGenPrompt} from "@/api/types/open-ai/ImageGenPrompt";
 
 enum OpenAIModel {
     GPT_4O_MINI = "gpt-4o-mini-2024-07-18",
@@ -276,12 +277,18 @@ Instruction: Process the input data and return the JSON output according to the 
 
     async postImageGenPrompt(
         imageGenPromptDirective: string,
-        // masterStylePrompt: string,
         masterStylePromptInfo: MasterStyleInfo,
         sceneNarration: string,
         videoTitle: string,
         videoDescription: string,
-    ): Promise<{ success: boolean; imageGenPrompt?: string; error?: { message: string; code: string } }> {
+    ): Promise<{
+        success: boolean;
+        imageGenPrompt?: string;
+        error?: {
+            message: string;
+            code: string
+        }
+    }> {
         try {
             const apiKey = process.env.OPENAI_API_KEY;
             if (!apiKey) {
@@ -313,7 +320,7 @@ Instruction: Process the input data and return the JSON output according to the 
     </video_context>
 </input_data>
 
-Instruction: Generate the cinematic prompt based on <developer_instruction>
+Instruction: Generate the cinematic prompt based on the provided context and schema.
 `;
 
             const client = new OpenAI({ apiKey });
@@ -323,14 +330,15 @@ Instruction: Generate the cinematic prompt based on <developer_instruction>
                     { role: 'developer', content: developerMessage },
                     { role: 'user', content: userMessage }
                 ],
+                response_format: { type: 'json_object' },
                 // o-series 전용 파라미터.
                 // creative writing에는 'medium'이 적합하며, 비용 절감이 우선이면 'low' 테스트 필요.
                 reasoning_effort: 'medium',
                 max_completion_tokens: 4096,
             });
 
-            const generatedPrompt = completion.choices[0]?.message?.content;
-            if (!generatedPrompt) {
+            const generatedContent = completion.choices[0]?.message?.content;
+            if (!generatedContent) {
                 return {
                     success: false,
                     error: {
@@ -340,10 +348,29 @@ Instruction: Generate the cinematic prompt based on <developer_instruction>
                 };
             }
 
-            return {
-                success: true,
-                imageGenPrompt: generatedPrompt.trim()
-            };
+            // JSON 유효성 검증
+            try {
+                // 한 번 파싱해서 유효한지 확인하고, 공백 등을 제거한 콤팩트한 문자열로 다시 변환
+                const parsedJSON: ImageGenPrompt = JSON.parse(generatedContent);
+
+                // Imagen 4에 보낼 때는 문자열화된 JSON이 필요합니다.
+                // indent 없이 문자열로 만들어 토큰을 절약합니다.
+                const finalPromptString = JSON.stringify(parsedJSON);
+
+                return {
+                    success: true,
+                    imageGenPrompt: finalPromptString
+                };
+            } catch (jsonError) {
+                console.error('Failed to parse generated JSON:', jsonError);
+                return {
+                    success: false,
+                    error: {
+                        message: 'Generated content is not valid JSON',
+                        code: 'INVALID_JSON_OUTPUT'
+                    }
+                };
+            }
         } catch (error) {
             console.error('OpenAI image generation prompt error:', error);
             return {
