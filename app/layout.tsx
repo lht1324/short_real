@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { ReactNode } from "react";
 import { Rajdhani } from "next/font/google";
 import ConditionalHeader from "@/components/public/header/ConditionalHeader";
-import ConditionalMain from "@/components/public/ConditionalMain";
 import { Analytics } from "@vercel/analytics/next";
 import {AuthProvider} from "@/context/AuthContext";
 import "./globals.css";
@@ -30,9 +29,9 @@ export default function RootLayout({
                 <AuthProvider>
                     <div className="min-h-screen">
                         <ConditionalHeader/>
-                        <ConditionalMain>
+                        <main>
                             {children}
-                        </ConditionalMain>
+                        </main>
                     </div>
                 </AuthProvider>
                 <Analytics/>

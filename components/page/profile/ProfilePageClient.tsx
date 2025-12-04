@@ -310,7 +310,7 @@ function ProfilePageClient() {
     }, [isDowngradeScheduled, user?.downgrade_target_plan_id]);
 
     return (
-        <div className="min-h-screen bg-black text-white">
+        <div className="min-h-screen pt-16 bg-black text-white">
             {/* Background Effects */}
             <div className="absolute inset-0 opacity-10 pointer-events-none">
                 <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-gradient-to-r from-pink-500 to-purple-600 rounded-full blur-3xl"></div>

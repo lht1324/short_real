@@ -56,7 +56,7 @@ function LandingPageClient() {
 
     return (
         // 1. [Global Base] 전체 페이지 배경색 (#0b0b15) 및 기본 설정
-        <div className="relative min-h-screen bg-[#0b0b15] text-white selection:bg-pink-500/30 overflow-hidden">
+        <div className="relative min-h-screen pt-16 bg-[#0b0b15] text-white selection:bg-pink-500/30 overflow-hidden">
 
             {/* 2. [Global Texture] 고정된 그리드 패턴 (Fixed Position)
                 - 스크롤을 내려도 그리드는 배경에 박제되어 있어 고급스러운 깊이감을 줍니다.
