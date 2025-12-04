@@ -1,7 +1,7 @@
 'use client'
 
 import { memo, ForwardRefExoticComponent, RefAttributes } from "react";
-import { Video, Eye, Music, Sun, LucideProps } from "lucide-react";
+import { Atom, Scan, Aperture, CloudFog, LucideProps } from "lucide-react";
 import FeatureCard from "@/components/page/landing/features-section/FeatureCard";
 
 export interface Feature {
@@ -17,41 +17,50 @@ export interface Feature {
 const features: Feature[] = [
     {
         id: 1,
-        title: "True Motion",
-        description: "Authentic physics.\nForget about static slideshows.",
-        prompt: "A horse galloping through dusty desert, muscle movement, dust clouds rising, 4k",
+        title: "Physics",
+        description:
+            "Objects move with real weight.\nNot just pictures sliding around.",
+        prompt:
+            "A horse galloping through a dusty desert, realistic muscle movement, dust clouds rising, cinematic 4k",
         videoSrc: "/demo/demo_1.mp4",
-        icon: Video,
+        icon: Atom,
         color: "border-cyan-500/50 shadow-cyan-500/20",
     },
     {
         id: 2,
-        title: "Hyper Realism",
-        description: "Absolute photorealism.\nTrue to life.",
-        prompt: "Extreme close-up of human eye, iris details, reflection of city lights, macro photography",
+        title: "Framing",
+        description:
+            "The AI chooses how close to shoot.\nFrom close-ups to wide shots automatically.",
+        prompt:
+            "Extreme close-up of a human eye, detailed iris, reflection of city lights at night, ultra sharp macro photography",
         videoSrc: "/demo/demo_3.mp4",
-        icon: Eye,
+        icon: Scan,
         color: "border-pink-500/50 shadow-pink-500/20",
     },
     {
         id: 3,
-        title: "Dynamic Camera",
-        description: "Breathtaking angles.\nFrom FPV to cinematic drone shots.",
-        prompt: "FPV drone shot flying fast through a futuristic neon city, motion blur",
+        title: "Camera",
+        description:
+            "The engine adds cinematic camera moves.\nIt matches each scene's energy for you.",
+        prompt:
+            "FPV drone shot flying fast through a futuristic neon city at night, motion blur, smooth camera path",
         videoSrc: "/demo/demo_main.mp4",
-        icon: Music,
+        icon: Aperture,
         color: "border-purple-500/50 shadow-purple-500/20",
     },
     {
         id: 4,
-        title: "Cinematic Lighting",
-        description: "Studio-grade atmosphere.\nPerfect lighting every time.",
-        prompt: "Dark moody alleyway, rain on pavement, red neon sign reflection, volumetric fog, noir style",
+        title: "Atmosphere",
+        description:
+            "Rain, fog, and neon when your story needs it.\nWeather and light follow your script's tone.",
+        prompt:
+            "Dark moody alleyway at night, rain on pavement, red neon sign reflections, volumetric fog, noir style, high contrast",
         videoSrc: "/demo/demo_2.mp4",
-        icon: Sun,
+        icon: CloudFog,
         color: "border-yellow-500/50 shadow-yellow-500/20",
-    }
+    },
 ];
+
 
 function FeaturesSection() {
     return (
