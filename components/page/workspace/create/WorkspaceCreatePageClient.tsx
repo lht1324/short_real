@@ -289,10 +289,6 @@ function WorkspaceCreatePageClient() {
         }
     }, [voiceUrl, isPlayingVoice]);
 
-    useEffect(() => {
-        console.log(`voiceUrl = ${voiceUrl}`)
-    }, [voiceUrl]);
-
     const onClickGenerateVideo = useCallback(async () => {
         if (!script.trim()) {
             alert('Please enter a script.');

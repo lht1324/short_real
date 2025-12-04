@@ -1,6 +1,6 @@
 'use client'
 
-import {memo, useCallback, useEffect, useState} from "react";
+import {memo, useCallback, useEffect, useMemo, useState} from "react";
 import {useRouter, useSearchParams} from "next/navigation";
 import {OAuthProvider, useAuth} from "@/context/AuthContext";
 import AuthForm from "@/components/page/sign-in/AuthForm";
@@ -13,6 +13,10 @@ function SignInPageClient() {
 
     const [error, setError] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(false);
+
+    const redirectTo = useMemo(() => {
+        return searchParams.get("redirectTo");
+    }, [searchParams]);
 
     useEffect(() => {
         const urlError = searchParams.get('error')
@@ -34,7 +38,7 @@ function SignInPageClient() {
         setIsLoading(true)
 
         try {
-            const result = await signInWithOAuth(provider);
+            const result = await signInWithOAuth(provider, redirectTo ?? undefined);
             if (result.error) {
                 setError(result.error)
                 setIsLoading(false)
@@ -44,7 +48,7 @@ function SignInPageClient() {
             setError('Google 로그인 중 오류가 발생했습니다.')
             setIsLoading(false)
         }
-    }, [signInWithOAuth]);
+    }, [signInWithOAuth, redirectTo]);
 
     return (
         <div className="min-h-screen bg-black relative">

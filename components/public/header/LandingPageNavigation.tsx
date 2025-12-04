@@ -26,6 +26,24 @@ function LandingPageNavigation() {
                 onClick={(e) => {
                     e.preventDefault();
 
+                    const element = document.getElementById('comparison');
+                    const headerOffset = 64; // Header 높이
+                    const elementPosition = element?.getBoundingClientRect().top || 0;
+                    const offsetPosition = elementPosition + window.pageYOffset - headerOffset
+
+                    window.scrollTo({
+                        top: offsetPosition,
+                        behavior: 'smooth',
+                    });
+                }}
+            >
+                The Gap
+            </a>
+            <a
+                className="text-gray-300 hover:text-pink-400 transition-colors cursor-pointer"
+                onClick={(e) => {
+                    e.preventDefault();
+
                     const element = document.getElementById('howitworks');
                     const headerOffset = 64; // Header 높이
                     const elementPosition = element?.getBoundingClientRect().top || 0;

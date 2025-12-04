@@ -1,11 +1,13 @@
 'use client'
 
-import {memo, useCallback, useEffect, useMemo, useState} from 'react';
+import {memo, useCallback, useMemo, useState} from 'react';
 import { Menu, LogOut, User as UserIcon, LayoutDashboard } from 'lucide-react';
 import Image from "next/image";
 import {usePathname, useRouter} from "next/navigation";
 import {useAuth} from "@/context/AuthContext";
 import LandingPageNavigation from "@/components/public/header/LandingPageNavigation";
+import {AnimPresence} from "@/components/public/framerMotion/AnimPresence";
+import {MotionDiv} from "@/components/public/framerMotion/Motion";
 
 function Header() {
     const router = useRouter();
@@ -37,18 +39,13 @@ function Header() {
         }
     }, [pathname])
 
-    useEffect(() => {
-        console.log("isLogin: ", isLogin);
-        console.log("user: ", user);
-    }, [isLogin, user]);
-
     return (
-        <header className="fixed top-0 left-0 right-0 z-50 mb-16 bg-black backdrop-blur-sm border-b border-purple-500/20">
+        <header className="fixed top-0 left-0 right-0 z-50 bg-[#0b0b15]/70 backdrop-blur-xl border-b border-white/5 transition-all duration-300 supports-[backdrop-filter]:bg-[#0b0b15]/60">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex items-center justify-between h-16">
                     {/* Logo */}
                     <div
-                        className="flex items-center space-x-2 cursor-pointer"
+                        className="flex items-center space-x-3 cursor-pointer group"
                         onClick={() => {
                             if (pathname === '/') {
                                 window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -57,18 +54,23 @@ function Header() {
                             }
                         }}
                     >
-                        <Image
-                            src="/logo/logo-64.png"
-                            alt="Short Real"
-                            width={48}
-                            height={48}
-                            className="w-12 h-12"
-                        />
-                        <span className="text-white font-bold text-3xl">ShortReal</span>
+                        <div className="relative w-10 h-10 transition-transform duration-300 group-hover:scale-110">
+                            <Image
+                                src="/logo/logo-64.png"
+                                alt="Short Real"
+                                fill
+                                className="object-contain"
+                            />
+                        </div>
+                        <span className="font-black text-3xl bg-gradient-to-r from-pink-400 to-purple-500 bg-clip-text text-transparent tracking-tight">
+                            ShortReal
+                        </span>
                     </div>
 
                     {/* Desktop Navigation */}
-                    {CenterComponent}
+                    <div className="hidden md:block">
+                        {CenterComponent}
+                    </div>
 
                     {/* Right Side Actions */}
                     <div className="flex items-center space-x-4">
@@ -77,64 +79,82 @@ function Header() {
                             <div className="relative">
                                 <button
                                     onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                                    className="flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-gray-800/50 transition-colors"
+                                    className={`
+                                        flex items-center space-x-3 px-2 py-1.5 rounded-full border transition-all duration-200
+                                        ${isDropdownOpen 
+                                            ? 'bg-white/10 border-purple-500/50' 
+                                            : 'bg-white/5 border-transparent hover:bg-white/10 hover:border-white/10'}
+                                    `}
                                 >
                                     <Image
                                         src={user?.avatar_url || '/default-avatar.png'}
                                         alt={user?.name || 'User'}
                                         width={32}
                                         height={32}
-                                        className="w-8 h-8 rounded-full border border-purple-500/30"
+                                        className="w-8 h-8 rounded-full ring-2 ring-transparent group-hover:ring-purple-500/50"
                                     />
-                                    <span className="text-gray-300 text-sm font-medium hidden md:block">
+                                    <span className="text-gray-300 text-sm font-medium hidden md:block pr-2">
                                         {user?.name}
                                     </span>
                                 </button>
 
                                 {/* Dropdown Menu */}
-                                {isDropdownOpen && (
-                                    <div className="absolute right-0 mt-2 w-48 bg-gray-900/95 backdrop-blur-sm border border-purple-500/30 rounded-xl shadow-2xl overflow-hidden">
-                                        <button
-                                            onClick={() => {
-                                                router.push("/workspace/dashboard");
-                                            }}
-                                            className="w-full flex items-center space-x-3 px-4 py-3 text-gray-300 hover:bg-gray-800/50 hover:text-purple-400 transition-colors"
+                                <AnimPresence>
+                                    {isDropdownOpen && (
+                                        <MotionDiv
+                                            initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                                            exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                                            transition={{ duration: 0.2 }}
+                                            className="absolute right-0 mt-2 w-56 bg-[#181825] border border-white/10 rounded-xl shadow-2xl shadow-black/50 overflow-hidden ring-1 ring-white/5"
                                         >
-                                            <LayoutDashboard size={16} />
-                                            <span className="text-sm">Dashboard</span>
-                                        </button>
-                                        <button
-                                            onClick={onClickProfile}
-                                            className="w-full flex items-center space-x-3 px-4 py-3 text-gray-300 hover:bg-gray-800/50 hover:text-white transition-colors"
-                                        >
-                                            <UserIcon size={16} />
-                                            <span className="text-sm">Profile</span>
-                                        </button>
-                                        <button
-                                            onClick={onClickSignOut}
-                                            className="w-full flex items-center space-x-3 px-4 py-3 text-gray-300 hover:bg-gray-800/50 hover:text-red-400 transition-colors border-t border-purple-500/20"
-                                        >
-                                            <LogOut size={16} />
-                                            <span className="text-sm">Sign out</span>
-                                        </button>
-                                    </div>
-                                )}
+                                            <div className="p-1">
+                                                <button
+                                                    onClick={() => {
+                                                        router.push("/workspace/dashboard");
+                                                        setIsDropdownOpen(false);
+                                                    }}
+                                                    className="w-full flex items-center space-x-3 px-4 py-2.5 text-gray-400 hover:bg-white/5 hover:text-purple-400 rounded-lg transition-colors"
+                                                >
+                                                    <LayoutDashboard size={16} />
+                                                    <span className="text-sm font-medium">Dashboard</span>
+                                                </button>
+                                                <button
+                                                    onClick={onClickProfile}
+                                                    className="w-full flex items-center space-x-3 px-4 py-2.5 text-gray-400 hover:bg-white/5 hover:text-white rounded-lg transition-colors"
+                                                >
+                                                    <UserIcon size={16} />
+                                                    <span className="text-sm font-medium">Profile</span>
+                                                </button>
+                                                <div className="h-[1px] bg-white/5 my-1 mx-2" />
+                                                <button
+                                                    onClick={onClickSignOut}
+                                                    className="w-full flex items-center space-x-3 px-4 py-2.5 text-gray-400 hover:bg-red-500/10 hover:text-red-400 rounded-lg transition-colors"
+                                                >
+                                                    <LogOut size={16} />
+                                                    <span className="text-sm font-medium">Sign out</span>
+                                                </button>
+                                            </div>
+                                        </MotionDiv>
+                                    )}
+                                </AnimPresence>
                             </div>
                         ) : (
                             /* Get Started Button */
                             <button
-                                className="bg-gradient-to-r from-pink-500 to-purple-600 text-white px-4 py-2 rounded-lg hover:from-pink-600 hover:to-purple-700 transition-all duration-300 transform hover:scale-105"
+                                className="group relative px-5 py-2.5 rounded-xl font-bold text-white text-sm transition-all hover:scale-105 hover:shadow-[0_0_20px_-5px_rgba(236,72,153,0.4)]"
                                 onClick={() => {
-                                    router.push('/sign-in');
+                                    router.push('/sign-in?redirectTo=profile');
                                 }}
                             >
-                                Get Started
+                                <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 group-hover:from-purple-500 group-hover:to-pink-500 transition-colors" />
+                                <span className="relative">Get Started</span>
                             </button>
                         )}
 
-                        {/* Mobile Menu */}
-                        <button className="md:hidden p-2 text-gray-400 hover:text-pink-400 transition-colors">
-                            <Menu size={20} />
+                        {/* Mobile Menu (Placeholder style) */}
+                        <button className="md:hidden p-2 text-gray-400 hover:text-white transition-colors">
+                            <Menu size={24} />
                         </button>
                     </div>
                 </div>

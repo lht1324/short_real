@@ -1,4 +1,6 @@
-import {memo, useMemo, MouseEvent, useCallback} from "react";
+'use client'
+
+import {memo, useMemo, MouseEvent} from "react";
 import {Play, Square} from "lucide-react";
 import {Voice} from "@/api/types/eleven-labs/Voice";
 
