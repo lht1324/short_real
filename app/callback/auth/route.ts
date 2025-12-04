@@ -9,6 +9,7 @@ export async function GET(request: NextRequest) {
     try {
         const { searchParams } = new URL(request.url);
         const code = searchParams.get('code');
+        const redirectTo = searchParams.get('redirectTo');
         let user: User | null;
 
         if (code) {
@@ -52,10 +53,17 @@ export async function GET(request: NextRequest) {
             throw Error("Auth callback code is invalid");
         }
 
-        const redirectPath = user && user.plan === SubscriptionPlan.NONE
-            ? "/"
-            : "/workspace/dashboard"
-            // ? "/pricing"
+        if (!user) {
+            throw Error("User is invalid");
+        }
+
+        const redirectPath = redirectTo
+            ? redirectTo === "pricing"
+                ? "/#pricing"
+                : "/profile"
+            : user.plan === SubscriptionPlan.NONE
+                ? "/profile"
+                : "/workspace/dashboard"
 
         return NextResponse.redirect(new URL(redirectPath, request.url))
     } catch (error) {

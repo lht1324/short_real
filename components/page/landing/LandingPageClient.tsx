@@ -22,7 +22,7 @@ function LandingPageClient() {
     const onClickPurchasePlan = useCallback(async (productId: string) => {
         try {
             if (!user) {
-                router.push('/sign-in');
+                router.push('/sign-in?redirectTo=pricing');
                 return;
             }
             const checkoutUrl = await polarClientAPI.postPolarCheckouts(

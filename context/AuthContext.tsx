@@ -16,7 +16,7 @@ interface AuthContextType {
     supabaseUser: SupabaseUser | null
     session: Session | null
     isInitializingAuthContext: boolean
-    signInWithOAuth: (provider: OAuthProvider) => Promise<{ error?: string }>
+    signInWithOAuth: (provider: OAuthProvider, redirectTo?: string) => Promise<{ error?: string }>
     signOut: () => Promise<void>
     refreshUser: () => Promise<void>
 }
@@ -70,12 +70,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
     }, []);
     
-    const signInWithOAuth = useCallback(async (provider: OAuthProvider): Promise<{ error?: string }> => {
+    const signInWithOAuth = useCallback(async (provider: OAuthProvider, redirectTo?: string): Promise<{ error?: string }> => {
         try {
             const { error } = await supabase.auth.signInWithOAuth({
                 provider: provider,
                 options: {
-                    redirectTo: `${window.location.origin}/callback/auth`,
+                    redirectTo: `${window.location.origin}/callback/auth${redirectTo ? `?redirectTo=${redirectTo}` : ""}`,
                     ...getOAuthOptionByProvider(provider),
                 }
             })

@@ -125,7 +125,7 @@ function Header() {
                             <button
                                 className="bg-gradient-to-r from-pink-500 to-purple-600 text-white px-4 py-2 rounded-lg hover:from-pink-600 hover:to-purple-700 transition-all duration-300 transform hover:scale-105"
                                 onClick={() => {
-                                    router.push('/sign-in');
+                                    router.push('/sign-in?redirectTo=profile');
                                 }}
                             >
                                 Get Started
