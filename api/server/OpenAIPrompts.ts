@@ -194,10 +194,6 @@ Formatting re-enabled
 
 const SIJS_SCHEMA_DEFINITION = `
 export interface ImageGenPrompt {
-  meta_config: {
-    project_name?: string;
-    enhance_prompt: boolean; // MUST be false
-  };
   technical_specifications: {
     art_style: string;
     camera_settings: { angle: string; framing: string; focus: string; };
@@ -251,7 +247,7 @@ export const POST_IMAGE_GEN_PROMPT_PROMPT = `
     <core_philosophy>
         1. **Attribute Isolation**: NEVER mix attributes between subjects. Use the 'entity_manifest' array to strictly separate characters.
         2. **Logical Grouping**: Place lighting in 'environmental_context', and physical actions in 'interaction_logic'.
-        3. **Enhance Prompt**: Always set 'meta_config.enhance_prompt' to false. We need raw control.
+        3. Raw Mode Awareness: The system will run with enhance_prompt: false. You must provide complete, precise visual details because the AI will NOT rewrite or embellish your prompt. What you write is exactly what you get.
     </core_philosophy>
     
     <constraints>
@@ -289,8 +285,6 @@ export const POST_IMAGE_GEN_PROMPT_PROMPT = `
         Return ONLY a valid JSON object adhering to the 'ImageGenPrompt' interface. 
         Do not include Markdown code blocks like \`\`\`json. Just the raw JSON string.
     </output_format>
-
-    Formatting re-enabled
 </developer_instruction>
 `;
 

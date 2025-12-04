@@ -1,17 +1,9 @@
 /**
- * Google GenAI Imagen 4를 위한 구조적 프롬프트 스키마 (SIJS: Standardized Imagen JSON Schema)
- * 복합 객체의 속성 격리(Attribute Isolation)와 정밀 제어를 목적으로 함.
+ * Google GenAI Imagen 4를 위한 구조적 프롬프트 스키마 (SIJS)
+ * - 불필요한 메타데이터 삭제 (Token 절약)
+ * - 시각적 데이터(Visual Data)에만 집중
  */
 export interface ImageGenPrompt {
-    meta_config: {
-        project_name?: string;
-        /** * 구조적 제어의 정확성을 위해 false 권장.
-         * true일 경우 모델이 JSON을 무시하고 창의적으로 재해석할 위험이 있음.
-         */
-        enhance_prompt: boolean;
-        notes?: string;
-    };
-
     technical_specifications: {
         /** 예: 'Japanese Anime Style', 'Photorealistic', 'Oil Painting' */
         art_style: string;
@@ -68,35 +60,22 @@ export interface ImageGenPrompt {
     };
 }
 
-/** 개별 등장 요소 정의 */
+// Entity 인터페이스는 기존과 동일하게 유지
 export interface Entity {
-    /** 고유 ID (interaction_logic에서 참조용). 예: 'hero_girl', 'rusty_robot' */
     id: string;
-    /** 이미지 내 역할 가중치 */
     role: 'main_hero' | 'sub_character' | 'background_extra' | 'prop';
-    /** 객체 유형 */
     type: 'human' | 'creature' | 'object' | 'machine' | 'animal';
-
-    /** 인구통계학적 특성 (사람일 경우 필수). 예: 'Korean female, 20s' */
     demographics?: string;
-
     appearance: {
-        /** 의상, 스킨, 재질 등 시각적 묘사. 복잡한 패턴 지양. */
         clothing_or_material: string;
         hair?: string;
         accessories?: string[];
-        /** 신체적 특징 (흉터, 키 등) */
         body_features?: string;
     };
-
     state: {
-        /** 예: 'Standing tall', 'Sitting on bench' */
         pose: string;
-        /** 예: 'Smiling', 'Neutral', 'Mouth closed' */
         expression?: string;
     };
-
-    /** 텍스트 렌더링이 필요한 경우 사용 */
     text_render?: {
         content: string;
         style: string;
