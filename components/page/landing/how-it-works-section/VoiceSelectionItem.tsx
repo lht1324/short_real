@@ -1,7 +1,9 @@
+'use client'
+
 import {memo, MouseEvent} from "react";
 import {Play, Square} from "lucide-react";
-import {motion} from "framer-motion";
 import {VoiceProfile} from "@/components/page/landing/how-it-works-section/HowItWorksSection";
+import {MotionDiv} from "@/components/public/framerMotion/Motion";
 
 interface VoiceSelectionItemProps {
     voice: VoiceProfile;
@@ -75,7 +77,7 @@ function VoiceSelectionItem({
                 </div>
             </div>
             {isSelected && (
-                <motion.div
+                <MotionDiv
                     layoutId="active-voice"
                     className="absolute inset-0 rounded-xl border border-pink-500/30 pointer-events-none"
                     transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}

@@ -1,3 +1,5 @@
+'use client'
+
 import {Loader2, Mic} from "lucide-react";
 import {memo, useCallback, MouseEvent, useState, useRef, useEffect} from "react";
 import {VoiceProfile} from "@/components/page/landing/how-it-works-section/HowItWorksSection";

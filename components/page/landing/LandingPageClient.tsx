@@ -11,7 +11,7 @@ import HeroSection from "@/components/page/landing/hero-section/HeroSection";
 import FeaturesSection from "@/components/page/landing/features-section/FeaturesSection";
 import ComparisonSection from "@/components/page/landing/comparison-section/ComparisonSection";
 import HowItWorksSection from "@/components/page/landing/how-it-works-section/HowItWorksSection";
-import PricingSection from "@/components/page/landing/PricingSection";
+import PricingSection from "@/components/page/landing/pricing-section/PricingSection";
 
 function LandingPageClient() {
     const router = useRouter();
@@ -92,6 +92,7 @@ function LandingPageClient() {
 
                 <PricingSection
                     productDataList={productDataList}
+                    isLoggedIn={!!user}
                     onClickPurchasePlan={onClickPurchasePlan}
                 />
 

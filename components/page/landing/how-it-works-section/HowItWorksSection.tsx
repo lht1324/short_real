@@ -1,13 +1,14 @@
 'use client'
 
 import { memo, useState, useRef, useMemo, useCallback, useEffect } from "react";
-import { Sparkles, Mic, Play, Clapperboard, Clock, User, Wand2, ArrowDown, Loader2, ArrowRight, CheckCircle2, AlertCircle, XCircle, Square } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { Sparkles, Clapperboard, Clock, Wand2, ArrowDown, Loader2 } from "lucide-react";
 import { Voice } from "@/api/types/eleven-labs/Voice";
 import { voiceClientAPI } from "@/api/client/voiceClientAPI";
 import CTAModal from "@/components/page/landing/how-it-works-section/CTAModal";
 import GenerateActionPanel from "@/components/page/landing/how-it-works-section/GenerateActionPanel";
 import VoiceSelectionPanel from "@/components/page/landing/how-it-works-section/VoiceSelectionPanel";
+import {MotionDiv} from "@/components/public/framerMotion/Motion";
+import {AnimPresence} from "@/components/public/framerMotion/AnimPresence";
 
 // --- Types & Constants ---
 
@@ -276,9 +277,9 @@ function HowItWorksSection() {
                                 )}
 
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                    <AnimatePresence mode='popLayout'>
+                                    <AnimPresence mode='popLayout'>
                                         {scenes.map((scene) => (
-                                            <motion.div
+                                            <MotionDiv
                                                 key={scene.id}
                                                 layout
                                                 initial={{ opacity: 0, y: 20, scale: 0.95 }}
@@ -303,9 +304,9 @@ function HowItWorksSection() {
                                                 <p className="text-sm text-gray-300 leading-snug font-light break-words line-clamp-3">
                                                     {scene.text}
                                                 </p>
-                                            </motion.div>
+                                            </MotionDiv>
                                         ))}
-                                    </AnimatePresence>
+                                    </AnimPresence>
                                 </div>
                                 <div className="h-4" />
                             </div>

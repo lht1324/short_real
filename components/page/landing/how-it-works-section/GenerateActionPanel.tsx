@@ -1,6 +1,9 @@
+'use client'
+
 import {memo, useState} from "react";
 import {AlertCircle, Clapperboard, Sparkles, XCircle} from "lucide-react";
-import {AnimatePresence, motion} from "framer-motion";
+import {AnimPresence} from "@/components/public/framerMotion/AnimPresence";
+import {MotionDiv, MotionSpan} from "@/components/public/framerMotion/Motion";
 
 interface GenerateActionPanelProps {
     estimatedCost: number;
@@ -47,9 +50,9 @@ function GenerateActionPanel({
                             {isSystemReady ? "System Ready" : "Setup Required"}
                         </div>
 
-                        <AnimatePresence>
+                        <AnimPresence>
                             {showErrorTooltip && !isSystemReady && (
-                                <motion.div
+                                <MotionDiv
                                     initial={{ opacity: 0, y: 10, scale: 0.95 }}
                                     animate={{ opacity: 1, y: 0, scale: 1 }}
                                     exit={{ opacity: 0, y: 5, scale: 0.95 }}
@@ -69,9 +72,9 @@ function GenerateActionPanel({
                                         ))}
                                     </div>
                                     <div className="absolute -top-1.5 right-4 w-3 h-3 bg-[#1a1a24] border-t border-l border-red-500/30 rotate-45" />
-                                </motion.div>
+                                </MotionDiv>
                             )}
-                        </AnimatePresence>
+                        </AnimPresence>
                     </div>
                 </div>
 
@@ -100,12 +103,12 @@ function GenerateActionPanel({
                 <div className="relative z-10 flex items-center justify-center gap-2">
                     {isGenerating ? (
                         <>
-                            <motion.span
+                            <MotionSpan
                                 animate={{ rotate: 360 }}
                                 transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
                             >
                                 <Sparkles size={18} />
-                            </motion.span>
+                            </MotionSpan>
                             <span>Processing...</span>
                         </>
                     ) : (
