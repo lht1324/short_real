@@ -1,6 +1,7 @@
 // video_generation_tasks 테이블 타입 정의
 import {MasterStyleInfo} from "@/api/types/supabase/MasterStyleInfo";
 import {CaptionConfigState, CaptionData} from "@/components/page/workspace/editor/WorkspaceEditorPageClient";
+import {EntityManifestItem} from "@/api/types/open-ai/ImageGenPrompt";
 
 export interface VideoGenerationTask {
     id?: string; // uuid
@@ -12,6 +13,7 @@ export interface VideoGenerationTask {
     subtitle_segment_list: SubtitleSegment[]; // jsonb, not null
     master_style_positive_prompt?: MasterStyleInfo;
     master_style_negative_prompt?: string;
+    entity_manifest_list?: EntityManifestItem[];
     video_title?: string;
     video_description?: string;
     processed_scene_count?: number;

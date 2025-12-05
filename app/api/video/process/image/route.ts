@@ -43,8 +43,9 @@ export async function POST(request: NextRequest) {
         const videoDescription = videoGenerationTask.video_description;
         const masterStylePositivePromptInfo = videoGenerationTask.master_style_positive_prompt;
         const masterStyleNegativePrompt = videoGenerationTask.master_style_negative_prompt;
+        const entityManifestList = videoGenerationTask.entity_manifest_list;
 
-        if (!sceneDataList || !videoTitle || !videoDescription || !masterStylePositivePromptInfo || !masterStyleNegativePrompt) {
+        if (!sceneDataList || !videoTitle || !videoDescription || !masterStylePositivePromptInfo || !masterStyleNegativePrompt || !entityManifestList) {
             await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
 
             return getNextBaseResponse({
@@ -61,6 +62,7 @@ export async function POST(request: NextRequest) {
                 sceneData.narration,
                 videoTitle,
                 videoDescription,
+                entityManifestList,
             );
 
             if (!postImageGenPromptResult.success || !postImageGenPromptResult.imageGenPrompt) {

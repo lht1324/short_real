@@ -15,7 +15,8 @@ import {
     POST_VIDEO_GEN_PROMPT_PROMPT, POST_MUSIC_GENERATION_DATA_PROMPT
 } from "@/api/server/OpenAIPrompts";
 import {MusicGenerationData} from "@/api/types/suno-api/MusicGenerationData";
-import {ImageGenPrompt} from "@/api/types/open-ai/ImageGenPrompt";
+import {EntityManifestItem, ImageGenPrompt} from "@/api/types/open-ai/ImageGenPrompt";
+import {VideoGenPrompt} from "@/api/types/open-ai/VideoGenPrompt";
 
 enum OpenAIModel {
     GPT_4O_MINI = "gpt-4o-mini-2024-07-18",
@@ -88,104 +89,6 @@ export const openAIServerAPI = {
                 success: false,
                 status: 500,
                 error: error instanceof Error ? error.message : 'Unknown error occurred'
-            };
-        }
-    },
-
-    // async postMasterStylePrompt(style: Style): Promise<{ success: boolean; masterStylePositivePrompt?: string; masterStyleNegativePrompt?: string; error?: { message: string; code: string } }> {
-    async postMasterStylePrompt(style: Style, aspectRatio: VideoAspectRatio = VIDEO_ASPECT_RATIOS.PORTRAIT_9_16): Promise<{
-        success: boolean;
-        masterStylePositivePromptInfo?: MasterStyleInfo;
-        masterStyleNegativePrompt?: string;
-        error?: {
-            message: string;
-            code: string
-        }
-    }> {
-        try {
-            // OpenAI API 키 확인
-            const apiKey = process.env.OPENAI_API_KEY;
-            if (!apiKey) {
-                return {
-                    success: false,
-                    error: {
-                        message: 'OpenAI API key is not configured',
-                        code: 'MISSING_API_KEY'
-                    }
-                };
-            }
-
-            const developerMessage = POST_MASTER_STYLE_PROMPT;
-
-            const userMessage = `
-<input_data>
-    <style_name>${style.name}</style_name>
-    <style_description>${style.description}</style_description>
-    <style_prompt_guideline>${style.stylePrompt}</style_prompt_guideline>
-    <target_aspect_ratio>${aspectRatio}</target_aspect_ratio>
-</input_data>
-
-Instruction: Analyze the input style and generate the JSON output according to the schema.
-`;
-
-            // OpenAI SDK 클라이언트 초기화
-            const client = new OpenAI({ apiKey });
-
-            // OpenAI API 호출
-            const completion = await client.chat.completions.create({
-                model: OpenAIModel.GPT_O4_MINI,
-                messages: [
-                    { role: 'developer', content: developerMessage },
-                    { role: 'user', content: userMessage }
-                ],
-                // [핵심] JSON 모드 활성화
-                response_format: { type: "json_object" },
-                // [핵심] 스타일 해석은 미묘한 작업이므로 medium 권장
-                reasoning_effort: 'medium',
-                max_completion_tokens: 4096,
-            });
-
-            const generatedMasterStylePromptResult = completion.choices[0]?.message?.content;
-
-            if (!generatedMasterStylePromptResult) {
-                return {
-                    success: false,
-                    error: {
-                        message: 'No master style prompt generated from OpenAI',
-                        code: 'EMPTY_RESPONSE'
-                    }
-                };
-            }
-
-            try {
-                // [핵심] 정규식 제거. 순수 JSON 파싱.
-                const parsedData: {
-                    positivePromptInfo: MasterStyleInfo,
-                    negativePrompt: string,
-                } = JSON.parse(generatedMasterStylePromptResult);
-
-                return {
-                    success: true,
-                    masterStylePositivePromptInfo: parsedData.positivePromptInfo,
-                    masterStyleNegativePrompt: parsedData.negativePrompt,
-                };
-            } catch (parseError) {
-                console.error('Failed to parse master style prompt JSON response:', parseError);
-                return {
-                    success: false,
-                    error: {
-                        message: 'Failed to parse master style prompt response',
-                        code: 'PARSE_ERROR'
-                    }
-                };
-            }
-        } catch (error) {
-            return {
-                success: false,
-                error: {
-                    message: error instanceof Error ? error.message : 'Unknown error occurred',
-                    code: 'INTERNAL_ERROR'
-                }
             };
         }
     },
@@ -275,12 +178,127 @@ Instruction: Process the input data and return the JSON output according to the 
         }
     },
 
+    async postMasterStylePrompt(
+        style: Style,
+        scriptDataList: {
+            sceneNumber: number;
+            sceneNarration: string;
+        }[],
+        aspectRatio: VideoAspectRatio = VIDEO_ASPECT_RATIOS.PORTRAIT_9_16
+    ): Promise<{
+        success: boolean;
+        masterStylePositivePromptInfo?: MasterStyleInfo;
+        masterStyleNegativePrompt?: string;
+        // [수정 2] 리턴 타입에 entityManifest 추가
+        entityManifestList?: EntityManifestItem[];
+        error?: {
+            message: string;
+            code: string
+        }
+    }> {
+        try {
+            const apiKey = process.env.OPENAI_API_KEY;
+            if (!apiKey) {
+                return {
+                    success: false,
+                    error: {
+                        message: 'OpenAI API key is not configured',
+                        code: 'MISSING_API_KEY'
+                    }
+                };
+            }
+
+            // 수정한 프롬프트 (Pre-Production 역할)
+            const developerMessage = POST_MASTER_STYLE_PROMPT;
+
+            // [수정 3] scriptDataList를 JSON 문자열로 변환하여 컨텍스트 제공
+            const userMessage = `
+<input_data>
+    <style_name>${style.name}</style_name>
+    <style_description>${style.description}</style_description>
+    <style_prompt_guideline>${style.stylePrompt}</style_prompt_guideline>
+    <target_aspect_ratio>${aspectRatio}</target_aspect_ratio>
+
+    <full_script_context>
+        ${JSON.stringify(scriptDataList, null, 2)}
+    </full_script_context>
+</input_data>
+
+Instruction: Analyze the input style AND the full script context to generate the MasterStyle and EntityManifest JSON output.
+`;
+
+            const client = new OpenAI({ apiKey });
+
+            const completion = await client.chat.completions.create({
+                model: OpenAIModel.GPT_O4_MINI, // 복잡한 분석이므로 o4-mini 적합
+                messages: [
+                    { role: 'developer', content: developerMessage },
+                    { role: 'user', content: userMessage }
+                ],
+                response_format: { type: "json_object" },
+                reasoning_effort: 'medium',
+                max_completion_tokens: 8192, // [팁] Entity Manifest가 길어질 수 있으므로 토큰 한도를 넉넉히 늘렸습니다.
+            });
+
+            const generatedResult = completion.choices[0]?.message?.content;
+
+            if (!generatedResult) {
+                return {
+                    success: false,
+                    error: {
+                        message: 'No response generated from OpenAI',
+                        code: 'EMPTY_RESPONSE'
+                    }
+                };
+            }
+
+            try {
+                // [수정 4] 변경된 JSON 구조에 맞춰 파싱 (masterStyle + entityManifest)
+                // 프롬프트의 output_schema와 일치해야 함
+                const parsedData: {
+                    masterStyle: {
+                        positivePromptInfo: MasterStyleInfo;
+                        negativePrompt: string;
+                    };
+                    entityManifest: EntityManifestItem[];
+                } = JSON.parse(generatedResult);
+
+                return {
+                    success: true,
+                    // 구조 분해 할당
+                    masterStylePositivePromptInfo: parsedData.masterStyle.positivePromptInfo,
+                    masterStyleNegativePrompt: parsedData.masterStyle.negativePrompt,
+                    entityManifestList: parsedData.entityManifest, // 추출된 캐릭터 시트 반환
+                };
+
+            } catch (parseError) {
+                console.error('Failed to parse pre-production JSON response:', parseError);
+                return {
+                    success: false,
+                    error: {
+                        message: 'Failed to parse JSON response',
+                        code: 'PARSE_ERROR'
+                    }
+                };
+            }
+        } catch (error) {
+            return {
+                success: false,
+                error: {
+                    message: error instanceof Error ? error.message : 'Unknown error occurred',
+                    code: 'INTERNAL_ERROR'
+                }
+            };
+        }
+    },
+
     async postImageGenPrompt(
         imageGenPromptDirective: string,
         masterStylePromptInfo: MasterStyleInfo,
         sceneNarration: string,
         videoTitle: string,
         videoDescription: string,
+        entityManifestList: EntityManifestItem[],
     ): Promise<{
         success: boolean;
         imageGenPrompt?: string;
@@ -308,19 +326,26 @@ Instruction: Process the input data and return the JSON output according to the 
     <master_style_guide>
         ${JSON.stringify(masterStylePromptInfo, null, 2)}
     </master_style_guide>
+    
+    <entity_reference_manifest>
+        ${JSON.stringify(entityManifestList, null, 2)}
+    </entity_reference_manifest>
+    
     <scene_content>
         ${imageGenPromptDirective}
     </scene_content>
+    
     <current_narration>
         ${sceneNarration}   
     </current_narration>
+    
     <video_context>
         Title: ${videoTitle}
         Description: ${videoDescription}   
     </video_context>
 </input_data>
 
-Instruction: Generate the cinematic prompt based on the provided context and schema.
+Instruction: Generate the scene instruction JSON. strictly following ID matching and Biotype logic.
 `;
 
             const client = new OpenAI({ apiKey });
@@ -350,12 +375,34 @@ Instruction: Generate the cinematic prompt based on the provided context and sch
 
             // JSON 유효성 검증
             try {
-                // 한 번 파싱해서 유효한지 확인하고, 공백 등을 제거한 콤팩트한 문자열로 다시 변환
-                const parsedJSON: ImageGenPrompt = JSON.parse(generatedContent);
+                // 1. LLM이 생성한 '지시사항(Instruction)' 파싱 (ID + State 만 있음)
+                // 타입 단언을 사용하여 임시 구조체로 받음
+                const instructionJSON = JSON.parse(generatedContent) as ImageGenPrompt;
 
-                // Imagen 4에 보낼 때는 문자열화된 JSON이 필요합니다.
-                // indent 없이 문자열로 만들어 토큰을 절약합니다.
-                const finalPromptString = JSON.stringify(parsedJSON);
+                // [수정 3] ★ 핵심 로직: 병합 (Merging)
+                // LLM이 보낸 뼈대(ID, State)에 원본의 살점(Appearance, Type)을 붙여넣기
+                if (instructionJSON.entity_manifest && Array.isArray(instructionJSON.entity_manifest)) {
+                    instructionJSON.entity_manifest = instructionJSON.entity_manifest.map(instruction => {
+                        // ID로 원본 데이터 찾기
+                        const originalEntity = entityManifestList.find(e => e.id === instruction.id);
+
+                        if (!originalEntity) {
+                            // LLM이 없는 ID를 만들어냈을 경우에 대한 방어 로직 (로그 남기고 스킵하거나 에러 처리)
+                            console.warn(`Warning: LLM generated unknown ID '${instruction.id}'. Keeping as is.`);
+                            return instruction;
+                        }
+
+                        // 병합: 원본(Appearance, Type) + 지시사항(State)
+                        return {
+                            ...originalEntity,      // 외형, 타입, Biotype 복사
+                            state: instruction.state, // 이번 씬의 행동 덮어쓰기
+                            text_render: instruction.text_render // 텍스트 렌더링 정보가 있다면 유지
+                        };
+                    });
+                }
+
+                // 이제 instructionJSON은 완전한 Entity 정보를 가진 최종 Prompt가 됨
+                const finalPromptString = JSON.stringify(instructionJSON);
 
                 return {
                     success: true,
@@ -388,6 +435,7 @@ Instruction: Generate the cinematic prompt based on the provided context and sch
         sceneNarration: string,
         imageBase64: string,
         targetDuration: number,
+        entityManifest: EntityManifestItem[],
     ): Promise<{
         success: boolean;
         videoGenPrompt?: string;
@@ -409,13 +457,18 @@ Instruction: Generate the cinematic prompt based on the provided context and sch
             const developerMessage = POST_VIDEO_GEN_PROMPT_PROMPT;
 
             const userMessage = `
-<input_data>
+<input_context>
+  <entity_reference_manifest>
+    ${JSON.stringify(entityManifest, null, 2)}
+  </entity_reference_manifest>
   <scene_narration>${sceneNarration}</scene_narration>
-  <original_intent_context>${imageGenPrompt}</original_intent_context>
+  <original_intent>${imageGenPrompt}</original_intent>
   <target_duration>${targetDuration} seconds</target_duration>
-</input_data>
+</input_context>
 
-Instruction: Analyze the attached image and generate the concise 4-unit motion prompt following <vision_logic> and <prompt_structure>.
+Task: Analyze the attached image and the input context above. 
+Construct the strict 'VideoGenPrompt' JSON object according to the defined TypeScript schema.
+CRITICAL: Apply 'Biotype-Based Motion Logic'. If an entity is 'abiotic', ensure strictly mechanical/physical movement descriptions (NO breathing, NO blinking).
 `;
 
             // OpenAI SDK 클라이언트 초기화 및 API 호출
@@ -441,13 +494,12 @@ Instruction: Analyze the attached image and generate the concise 4-unit motion p
                         ]
                     }
                 ],
-                reasoning_effort: 'high', // Vision 분석이 필요하므로 medium 권장
+                reasoning_effort: 'high',
+                response_format: { type: 'json_object' },
                 max_completion_tokens: 6144,
             });
 
             const generatedContent = completion.choices[0]?.message?.content;
-
-            console.log(`generatedContent: ${generatedContent}`);
 
             if (!generatedContent) {
                 return {
@@ -455,6 +507,22 @@ Instruction: Analyze the attached image and generate the concise 4-unit motion p
                     error: {
                         message: 'No video generation prompt generated from OpenAI',
                         code: 'EMPTY_RESPONSE'
+                    }
+                };
+            }
+
+            // [선택 사항] 유효성 검사: JSON 파싱이 가능한지 미리 확인
+            try {
+                const parsedJson: VideoGenPrompt = JSON.parse(generatedContent);
+
+                console.log("videoGenPrompt: ", parsedJson);
+            } catch (parseError) {
+                console.error('JSON Parse Failed:', parseError);
+                return {
+                    success: false,
+                    error: {
+                        message: 'Invalid JSON format received from LLM',
+                        code: 'INVALID_JSON_FORMAT'
                     }
                 };
             }

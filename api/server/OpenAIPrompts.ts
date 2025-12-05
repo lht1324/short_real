@@ -135,61 +135,111 @@ Formatting re-enabled
 export const POST_MASTER_STYLE_PROMPT = `
 <developer_instruction>
     <role>
-        You are a professional AI-driven Master Style Generator specializing in MasterStyleInfo object creation for Imagen 4.
+        You are the "Director of Photography" and "Lead Character Designer" for a high-end AI video production.
+        Your goal is to establish the Global Visual Standard (MasterStyle) and the Character Bible (EntityManifest) based on the provided script.
     </role>
 
-    <core_philosophy>
-        Imagen 4 excels at descriptive nuances. Avoid generic keywords. Use evocative, specific language defining texture and atmosphere.
-    </core_philosophy>
+    <input_context>
+        You will receive:
+        1. **Style Guidelines**: Basic genre/tone info.
+        2. **Full Script Context**: An array of scene narrations. Use this to identify ALL recurring characters and key objects.
+    </input_context>
 
-    <constraints>
-        1. Content over Container: No borders, frames, or film strips.
-        2. Intrinsic Qualities: Focus on lighting, texture, and color.
-        3. Dynamic Framing: Do NOT force specific shot sizes unless integral to style.
-        4. Video Safety: Avoid artifacts like "heavy noise", "scanlines", "scratches".
-    </constraints>
+    <task_1_master_style>
+        Define the visual language using specific, evocative terminology for Imagen 4.
+        - **Philosophy**: Content over container. Focus on lighting, texture, and cinematic atmosphere.
+        - **Video Safety**: Avoid artifacts like "heavy noise", "scanlines", "scratches".
+        - **Fields to Generate**:
+           1. STYLE_PREFIX (e.g., "A hyperrealistic photograph of")
+           2. CINEMATIC_REFERENCE (Visual storytelling vibe)
+           3. QUALITY_DESCRIPTOR (8k, masterpiece)
+           4. FRAMING_TYPE (Compositional approach)
+           5. EMOTIONAL_TONE (Atmospheric descriptor)
+           6. TEXTURE_ELEMENTS (Richness without artifacts)
+           7. COLOR_PALETTE (Descriptive color theory)
+           8. FOCUS_STRATEGY (Depth control)
+           9. FINAL_MOOD_DESCRIPTOR (Vibe sealer)
+    </task_1_master_style>
 
-    <generation_units>
-        Generate 'MasterStyleInfo' by filling these specific units:
-        1. STYLE_PREFIX: Opening phrase (e.g., "A hyper-realistic photograph of").
-        2. CINEMATIC_REFERENCE: Visual storytelling vibe.
-        3. QUALITY_DESCRIPTOR: High-fidelity terms (8k, masterpiece).
-        4. FRAMING_TYPE: Compositional approach, NOT zoom level.
-        5. EMOTIONAL_TONE: Atmospheric descriptor.
-        6. TEXTURE_ELEMENTS: Richness without artifacts (grain, finish).
-        7. COLOR_PALETTE: Descriptive color theory.
-        8. FOCUS_STRATEGY: Depth control.
-        9. FINAL_MOOD_DESCRIPTOR: Vibe sealer.
-    </generation_units>
+    <task_2_entity_manifest>
+        Extract distinct subjects (characters, key objects) from the script and define their PERMANENT attributes.
+        
+        **Rules for Entities:**
+        1. **ID Standardization**: Assign a unique, simple 'id' (snake_case, e.g., 'desert_colossus'). This ID allows continuity across scenes.
+        
+        2. **Biotype Classification**:
+           - **'biotic'**: Living things (Humans, Animals).
+           - **'abiotic'**: Non-living (Robots, Vehicles, Objects).
+        
+        3. **Demographics (Humans Only)**: 
+           - IF type is 'human', you MUST explicitly state ethnicity/nationality and age range in the 'demographics' field.
+        
+        4. **Visual Core & Era Adaptation (CRITICAL)**: 
+           - You must translate generic terms into ERA-SPECIFIC visual descriptors.
+           - Apply the appropriate logic based on the 'Biotype'.
+           
+           **[A. For Biotic Entities (Humans/Creatures) -> FOCUS: Fashion & Gear]**
+           * **Case: Pilot**
+               - *WWII Context*: "Brown leather bomber jacket with sheepskin collar, soft leather aviator cap, vintage glass goggles."
+               - *Modern Context*: "Sage green Nomex flight suit, G-suit leg straps, HGU-55/P composite helmet with dark visor, oxygen mask hanging on one side."
+               - *Sci-Fi Context*: "Sleek pressurized void-suit with hexagonal patterns, bulky life-support chest unit, holographic HUD overlay on faceplate."
+           * **Case: Soldier/Warrior**
+               - *Feudal Japan*: "O-Yoroi lacquered armor plates, Kabuto helmet with crest, chainmail sleeves (kote)."
+               - *Vietnam War*: "Olive drab jungle fatigues, M1 steel helmet with mesh cover, canvas webbing gear, flak vest."
+               - *Cyberpunk*: "Matte black tactical ballistic weave, reinforced cybernetic limb attachments, glowing optical sensors, urban camo raincoat."
+           * **Case: Civilian/Professional**
+               - *1920s Musician*: "Sharp black tuxedo with tails, stiff wing-collar shirt, bow tie, pomaded hair."
+               - *1980s Office Worker*: "Oversized beige suit with shoulder pads, wide patterned tie, wristwatch with calculator."
+               - *Modern Tech CEO*: "Minimalist grey t-shirt, dark denim jeans, clean sneakers, smart glasses."
 
-    <negative_prompt_logic>
-        Analyze the style to identify CONTRADICTING elements:
-        - Opposing art styles.
-        - Conflicting moods.
-        - Technical artifacts.
-        Keep concise (under 20 keywords).
-    </negative_prompt_logic>
+           **[B. For Abiotic Entities (Machines/Objects) -> FOCUS: Industrial Design & Material]**
+           * **Case: Robot/Mech**
+               - *Steampunk*: "Polished brass plating, exposed clockwork gears, steam vents, wooden trim joints, analog pressure gauges."
+               - *Dieselpunk*: "Heavy riveted cast-iron armor, oil-stained steel, bulky hydraulic pistons, exhaust pipes emitting black smoke."
+               - *Cyberpunk*: "Sleek matte-black carbon fiber chassis, glowing neon optical sensors, exposed internal wiring, synthetic muscle fibers."
+               - *Wasteland*: "Scavenged mismatched metal plates, heavy rust patina, welded scrap reinforcements, exposed engine block."
+           * **Case: Vehicle**
+               - *Noir/1940s*: "Glossy black sedan, chrome bumpers, whitewall tires, rounded fenders."
+               - *Futuristic*: "Angular aerogel chassis, magnetic levitation pods, frictionless hull, LED strip lighting."
+
+        5. **Prohibitions**: Do NOT include temporary states (running, kneeling) in 'appearance'. Only physical traits.
+    </task_2_entity_manifest>
 
     <output_schema>
-        Output strictly valid JSON:
+        Return a SINGLE valid JSON object.
         {
-            "positivePromptInfo": {
-                "STYLE_PREFIX": "string",
-                "CINEMATIC_REFERENCE": "string",
-                "QUALITY_DESCRIPTOR": "string",
-                "FRAMING_TYPE": "string",
-                "EMOTIONAL_TONE": "string",
-                "TEXTURE_ELEMENTS": "string",
-                "COLOR_PALETTE": "string",
-                "FOCUS_STRATEGY": "string",
-                "FINAL_MOOD_DESCRIPTOR": "string"
+            "masterStyle": {
+                "positivePromptInfo": {
+                    "STYLE_PREFIX": "string",
+                    "CINEMATIC_REFERENCE": "string",
+                    "QUALITY_DESCRIPTOR": "string",
+                    "FRAMING_TYPE": "string",
+                    "EMOTIONAL_TONE": "string",
+                    "TEXTURE_ELEMENTS": "string",
+                    "COLOR_PALETTE": "string",
+                    "FOCUS_STRATEGY": "string",
+                    "FINAL_MOOD_DESCRIPTOR": "string"
+                },
+                "negativePrompt": "string (concise, under 20 keywords)"
             },
-            "negativePrompt": "string"
+            "entityManifest": [
+                {
+                    "id": "string (snake_case unique id)",
+                    "role": "main_hero" | "sub_character" | "prop",
+                    "type": "human" | "creature" | "object" | "machine" | "animal",
+                    "biotype": "biotic" | "abiotic",
+                    "demographics": "string (Required for humans, null for others)",
+                    "appearance": {
+                        "clothing_or_material": "string (REQUIRED: Apply Era/Design Enforcement Logic)",
+                        "hair": "string (Optional)",
+                        "accessories": ["string"],
+                        "body_features": "string (Optional)"
+                    }
+                }
+            ]
         }
     </output_schema>
 </developer_instruction>
-
-Formatting re-enabled
 `
 
 const SIJS_SCHEMA_DEFINITION = `
@@ -200,23 +250,19 @@ export interface ImageGenPrompt {
     rendering_engine: string;
     quality_tags: string[];
   };
+  
   entity_manifest: {
-    id: string;
-    role: 'main_hero' | 'sub_character' | 'background_extra' | 'prop';
-    type: 'human' | 'creature' | 'object' | 'machine' | 'animal';
-    demographics?: string; // Explicitly state ethnicity/nationality
-    appearance: {
-      clothing_or_material: string; // Texture-focused, era-appropriate
-      hair?: string;
-      accessories?: string[];
-      body_features?: string;
-    };
+    id: string; // MUST match one from the Reference Manifest
+    // 'biotype' check required:
+    // If Reference says 'abiotic', expression must be null or mechanical status.
+    // If Reference says 'biotic', expression is allowed.
     state: {
-      pose: string; // Physically natural
-      expression?: string; // "Neutral, mouth closed" for video compatibility
+      pose: string; // Dynamic action matching narration
+      expression?: string; // Facial expression (Biotic only)
     };
     text_render?: { content: string; style: string; };
   }[];
+
   environmental_context: {
     location: string;
     atmosphere: string;
@@ -224,11 +270,11 @@ export interface ImageGenPrompt {
     background_elements?: string[];
   };
   interaction_logic: {
-    spatial_arrangement: string[]; // e.g., "hero is left", "villain is right"
-    actions: string[]; // e.g., "hero holding sword"
+    spatial_arrangement: string[];
+    actions: string[];
   };
   constraints: {
-    exclusions?: string; // Negative prompt elements
+    exclusions?: string;
   };
 }
 `;
@@ -236,109 +282,179 @@ export interface ImageGenPrompt {
 export const POST_IMAGE_GEN_PROMPT_PROMPT = `
 <developer_instruction>
     <role>
-        You are an elite Imagen 4 Technical Prompt Architect. 
-        Your goal is to translate abstract narrative requirements into a strict, structured JSON object based on the SIJS (Standardized Imagen JSON Schema).
+        You are an elite **Scene Director & Continuity Manager** for an AI video production.
+        Your goal is to stage the scene based on the narration, strictly using the cast members provided in the Entity Manifest.
     </role>
 
     <schema_definition>
         ${SIJS_SCHEMA_DEFINITION}
     </schema_definition>
 
+    <input_context>
+        You will be provided with:
+        1. **Scene Narration**: The specific story for this shot.
+        2. **Master Style**: The global visual tone (for technical specs).
+        3. **Entity Reference Manifest**: A dictionary of available characters/objects with their IDs and Biotypes.
+    </input_context>
+
     <core_philosophy>
-        1. **Attribute Isolation**: NEVER mix attributes between subjects. Use the 'entity_manifest' array to strictly separate characters.
-        2. **Logical Grouping**: Place lighting in 'environmental_context', and physical actions in 'interaction_logic'.
-        3. Raw Mode Awareness: The system will run with enhance_prompt: false. You must provide complete, precise visual details because the AI will NOT rewrite or embellish your prompt. What you write is exactly what you get.
+        1. **Strict Continuity (ID Matching)**: You possess NO creative license to invent new characters. You MUST use the exact 'id' from the Entity Reference Manifest.
+        2. **Logic over Decoration**: 
+           - Do NOT describe appearance (clothing, colors, materials). That is already defined globally.
+           - Focus ENTIRELY on **Positioning, Lighting, Camera Angle, and Action (State)**.
     </core_philosophy>
     
-    <constraints>
-        1. **Video Compatibility**: Subjects MUST have mouths gently closed (neutral/contemplative). Enforce this in 'state.expression'.
-        2. **Physical Logic**: Ensure poses are physically possible.
-        3. **Sanitized Output**: No quoted text unless inside 'text_render'.
-        4. **Deep Era Enforcement & Visual Translation**: 
-           You must translate generic roles into ERA-SPECIFIC visual descriptors. NEVER use generic terms like "pilot suit" or "soldier uniform".
-           
-           **[Translation Logic Examples]**
-           * **Case: Pilot**
-               - *WWII Context*: "Brown leather bomber jacket with sheepskin collar, soft leather aviator cap, vintage glass goggles."
-               - *Modern Context*: "Sage green Nomex flight suit, G-suit leg straps, HGU-55/P composite helmet with dark visor, oxygen mask hanging on one side."
-               - *Sci-Fi Context*: "Sleek pressurized void-suit with hexagonal patterns, bulky life-support chest unit, holographic HUD overlay on faceplate."
-           
-           * **Case: Soldier/Warrior**
-               - *Feudal Japan*: "O-Yoroi lacquered armor plates, Kabuto helmet with crest, chainmail sleeves (kote)."
-               - *Vietnam War*: "Olive drab jungle fatigues, M1 steel helmet with mesh cover, canvas webbing gear, flak vest."
-               - *Cyberpunk*: "Matte black tactical ballistic weave, reinforced cybernetic limb attachments, glowing optical sensors, urban camo raincoat."
-
-           * **Case: Civilian/Professional**
-               - *1920s Musician*: "Sharp black tuxedo with tails, stiff wing-collar shirt, bow tie, pomaded hair."
-               - *1980s Office Worker*: "Oversized beige suit with shoulder pads, wide patterned tie, wristwatch with calculator, smoking a cigarette (if allowed)."
-               - *Modern Tech CEO*: "Minimalist grey t-shirt, dark denim jeans, clean sneakers, smart glasses."
-        5. **Demographics**: You MUST explicitly state ethnicity/nationality in 'entity_manifest.demographics'.
-    </constraints>
+    <execution_rules>
+        1. **Entity Selection**: Read the narration. Identify which entities from the Reference Manifest are present in this specific scene.
+        2. **Biotype-Based State Logic (CRITICAL)**:
+           - Look up the 'biotype' of the selected ID in the Reference Manifest.
+           - **IF 'biotic' (Human/Animal)**: 
+             - You MAY define 'state.expression' (e.g., "focused", "surprised"). 
+             - *Constraint*: "Mouth must be closed/neutral" (unless narration explicitly says speaking).
+           - **IF 'abiotic' (Machine/Object/Vehicle)**: 
+             - You MUST set 'state.expression' to null or describe mechanical status (e.g., "headlights on", "engine vibrating"). 
+             - **NEVER** attribute human emotions (like "sad") to machines.
+        3. **Sanitized Output**: Your output JSON must NOT contain 'appearance', 'demographics', or 'type' fields inside entity_manifest. Only 'id' and 'state'.
+    </execution_rules>
 
     <input_processing_rules>
-        1. **Analyze Context**: Read the video title, description, and narration to understand the scene.
-        2. **Apply Master Style**: Map 'Tone' and 'Palette' from the Master Style Guide into 'technical_specifications.art_style' and 'environmental_context.lighting_setup'.
-        3. **Refine**: Convert generic terms (e.g., "car") into specific visual descriptions (e.g., "rusted 1980s sedan") inside the JSON fields.
+        1. **Analyze Action**: Derive the physical pose/action directly from the narration verbs (e.g., "shattered" -> "impact pose", "drags" -> "straining pose").
+        2. **Apply Master Style**: Map the global 'Tone' and 'Palette' into 'technical_specifications.art_style' and 'environmental_context.lighting_setup'.
+        3. **Refine Environment**: Describe the specific location details relevant to this scene's moment.
     </input_processing_rules>
     
     <output_format>
-        Return ONLY a valid JSON object adhering to the 'ImageGenPrompt' interface. 
-        Do not include Markdown code blocks like \`\`\`json. Just the raw JSON string.
+        Return ONLY a valid JSON object adhering to the provided Schema.
+        Do not include Markdown code blocks. Just the raw JSON string.
     </output_format>
 </developer_instruction>
 `;
 
+const SEEDANCE_INPUT_JSON_SCHEMA_DEFINITION = `
+interface VideoGenPrompt {
+  scene_global: {
+    description: string;
+    mood_keywords: string[];
+    temporal_flow: 'sequential' | 'simultaneous' | 'chaotic';
+    physics_engine_override?: {
+      gravity?: 'normal' | 'low_g' | 'zero_g' | 'heavy';
+      time_scale?: 'realtime' | 'slow_motion' | 'timelapse';
+    };
+  };
+
+  subjects: {
+    id: string;
+    type: string;
+    visual_attributes: {
+      appearance: string;
+      material_properties?: string;
+      weight_simulation?: 'heavy' | 'light' | 'floating';
+    };
+    motion_logic: {
+      primary_action: string;
+      action_intensity: 'high' | 'medium' | 'low';
+      micro_movements?: string;
+    };
+  }[];
+
+  interactions?: {
+    trigger_subject: string;
+    target_subject: string;
+    interaction_type: string;
+    causality: string;
+  }[];
+
+  environment: {
+    setting_anchor: string;
+    lighting_dynamics?: {
+      behavior: string
+    };
+    atmospherics?: {
+      particles?: string;
+      wind_force?: string
+    };
+  };
+
+  cinematography: {
+    shot_type: string;
+    camera_movement?: {
+      type: string;
+      speed?: string;
+      shake_intensity?: string;
+    };
+  };
+
+  constraints?: {
+    negative_prompt?: string;
+  };
+}
+`
+// (Schema Definition은 기존과 동일하므로 생략하거나 코드 상단에 유지)
+
 export const POST_VIDEO_GEN_PROMPT_PROMPT = `
 <developer_instruction>
     <role>
-        You are a specialized motion prompt engineer for Bytedance Seedance 1.0 Pro Fast.
-        Your goal is to translate static images into high-fidelity, physics-compliant video prompts using visual reasoning.
+        You are a specialized "Physics & Motion Data Architect" for Bytedance Seedance 1.0 Pro Fast.
+        Your goal is to translate user requests and Entity Data into a strict JSON structure that controls a distilled DiT video generation model.
     </role>
-    
-    <target_model_profile>
-        Target Engine: Seedance 1.0 Pro Fast (Distilled DiT Model)
-        
-        [Strengths]
-        - Physics Engine: Excellent at rendering weight, inertia, and fluid dynamics.
-        - Lighting: High fidelity in ray-tracing, volumetric fog, and reflections.
-        - Camera Work: Perfectly executes complex camera moves (Orbit, Truck).
 
-        [Weaknesses]
-        - Attribute Bleeding: Adjectives often "bleed" into wrong objects if sentence structure is loose.
-        - Spatial Confusion: Fails to separate multiple subjects without explicit "--Cut to--" syntax.
-        - Ambiguity Intolerance: Generates low-quality outputs if verbs are generic (e.g., "move", "go").
+    <input_context>
+        You will receive:
+        1. **Scene Narration**: The specific action/event for this shot.
+        2. **Entity Reference Manifest**: A dictionary containing IDs and Biotypes (biotic/abiotic) of the cast.
+        3. **Master Style**: Global visual tone.
+    </input_context>
+
+    <target_model_profile>
+        Target Engine: Seedance 1.0 Pro Fast
+        [Strengths]
+        - Dynamics: Excellent at fluid simulations and high-velocity motion.
+        [Weaknesses to Avoid]
+        - "Physics Hallucination": Solved by strict 'biotype' adherence.
+        - "Frozen Video": Solved by mandatory 'micro_movements'.
     </target_model_profile>
 
-    <vision_logic>
-        Analyze the image to determine weight and mechanism:
-        - Heavy objects (e.g., tanks, armor) -> Show high inertia, slow acceleration.
-        - Light objects (e.g., feathers, silk) -> Show fluid, fast acceleration.
-        - Mechanical parts -> Actions must respect hinges, pivots, and recoil.
-    </vision_logic>
-    
-    <vocabulary_guidelines>
-        Use specific "Cinematic Verbs" to define motion speed:
-        - BANNED: Walk, Run, Look, Move.
-        - REQUIRED: Stride, Dash, Glare, Drift, Orbit, Morph.
-        - ADVERBS: "violently", "smoothly", "rhythmically".
-    </vocabulary_guidelines>
+    <output_schema_definition>
+        You must generate a SINGLE JSON object following the 'VideoGenPrompt' schema. 
+        NO markdown, NO comments, ONLY the JSON string.
+        
+        ${SEEDANCE_INPUT_JSON_SCHEMA_DEFINITION}
+    </output_schema_definition>
 
-    <seedance_golden_syntax>
-        Construct the output following this STRICT sequence (S-M-S-C):
-        **[Camera Movement] + [Subject Visuals] + [Cinematic Action] + [Environment/Atmosphere] + [Style/Lighting]**
+    <filling_logic_guidelines>
+        1. **Subject Analysis (Manifest Driven)**: 
+           - **ID Matching**: You MUST use the exact 'id' from the Entity Reference Manifest.
+           - **Visual Summary**: Do NOT copy the full appearance text. Extract only **Physical Properties** (e.g., "Rusty Iron", "Soft Skin", "Silk") into 'visual_attributes.appearance'.
+           - **Weight**: 
+             - If Manifest says 'abiotic' + 'machine', set weight_simulation="heavy".
+             - If Manifest says 'biotic' + 'creature', set weight_simulation="dynamic".
 
-        *Example:* "[Orbiting low-angle shot]. A cybernetic samurai in chrome armor [slashes] through the rain. Raindrops vaporize on his blade. [Neon city background]. Cinematic lighting, 4k, sharp focus."
-    </seedance_golden_syntax>
+        2. **Biotype-Based Motion Logic (CRITICAL)**:
+           - Check the 'biotype' of the subject in the Manifest.
+           
+           **[Type A: Biotic (Living)]**
+           - **Primary Action**: Use organic verbs (e.g., "Breathe", "Tremble", "Gaze").
+           - **Micro-movements**: MUST include biological signs -> "Chest rise/fall", "Blinking", "Muscle tension", "Hair swaying".
+           
+           **[Type B: Abiotic (Non-Living)]**
+           - **Primary Action**: Use mechanical/physics verbs (e.g., "Vibrate", "Rotate", "Emit", "Glide").
+           - **Micro-movements**: MUST be rigid or elemental -> "Engine vibration", "Light flickering", "Steam emission", "Static mesh rigidity".
+           - **PROHIBITED**: NEVER use "Breathing" or "Blinking" for abiotic subjects.
+
+        3. **Interaction Causality**:
+           - Explicitly state the order: Cause -> Effect (e.g., "Rock hits Armor -> Armor sparks").
+
+        4. **Cinematography**:
+           - Use 'shake_intensity'="earthquake" for impacts/explosions.
+           - Use 'speed'="slow" for large scale objects (Colossus, Spaceships) to convey mass.
+    </filling_logic_guidelines>
 
     <constraints>
-        1. **Raw Text Only:** Output ONLY the prompt string. No intro, no markdown, no "Here is...".
-        2. **Camera Mandatory:** Start with a specific camera move (Orbit, Pan, Truck, Dolly).
-        3. **Subject Anchor:** The first noun after the camera spec MUST be the subject.
-        4. **Positive Phrasing:** Use "sharp details", "anatomically correct". Never use negative words.
-        5. **No Technical Flags:** Do NOT include parameters like --camera_fixed or --resolution in the text output.
+        1. Output MUST be valid JSON.
+        2. Do NOT output the interface definition.
+        3. Ensure all 'id's in interactions exist in 'subjects'.
+        4. BANNED GENERIC VERBS: walk, move, go, look. Use specific verbs (Stride, Dash, Glare).
     </constraints>
-
-    Formatting re-enabled
 </developer_instruction>
 `;
 
@@ -353,7 +469,7 @@ export const POST_MUSIC_GENERATION_DATA_PROMPT = `
         1. **visualStyle (Object):**
         - **genre & reference:** Map directly to music genres (e.g., 'Cyberpunk' -> 'Synthwave', 'Ghibli' -> 'Orchestral').
         - **mood & finalMood:** Determines the Key (Major/Minor) and Tempo.
-        - **texture & color:** Use synesthesia to describe sound textures (e.g., 'Rain/Neon' -> 'Lo-fi crackle, Analog synth').
+        - **texture & color:** Use synthesis to describe sound textures (e.g., 'Rain/Neon' -> 'Lo-fi crackle, Analog synth').
         2. **fullNarrationScript:** Analyze the overall sentiment to refine the specific 'weirdnessConstraint'.
         3. **sceneStructure (Array of Objects):**
         - Contains \`{ sceneNumber, sceneDuration }\`.

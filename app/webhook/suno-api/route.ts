@@ -36,7 +36,12 @@ export async function POST(request: NextRequest) {
             return checkingInitialResult;
         }
 
-        const body = await request.json() as BaseSunoAPIResponse<PostGenerateWebhookPayload>;
+        const clonedRequest = request.clone();
+        const rawBody = await clonedRequest.text();
+        console.log("Suno Webhook request: ", rawBody);
+        const result = await request.json();
+        console.log("Suno Webhook Result: ", JSON.stringify(result));
+        const body = result as BaseSunoAPIResponse<PostGenerateWebhookPayload>;
 
         // 요청 검증
         if (!body || !body.data) {

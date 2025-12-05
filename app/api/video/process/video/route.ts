@@ -69,6 +69,7 @@ export async function POST(request: NextRequest) {
                 sceneData.narration,
                 imageBase64,
                 sceneData.sceneDuration,
+                videoGenerationTask.entity_manifest_list ?? [],
             );
 
             if (!postVideoGenPromptResult.success || !postVideoGenPromptResult.videoGenPrompt) {

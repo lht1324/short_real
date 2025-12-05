@@ -64,7 +64,11 @@ export interface ImageGenPrompt {
 export interface Entity {
     id: string;
     role: 'main_hero' | 'sub_character' | 'background_extra' | 'prop';
+
+    biotype: 'biotic' | 'abiotic';
+
     type: 'human' | 'creature' | 'object' | 'machine' | 'animal';
+
     demographics?: string;
     appearance: {
         clothing_or_material: string;
@@ -81,3 +85,9 @@ export interface Entity {
         style: string;
     };
 }
+
+export type EntityManifestItem = Omit<Entity, 'state' | 'text_render'>;
+
+export type SceneEntityInstruction = Pick<Entity, 'id' | 'state'> & {
+    text_render?: Entity['text_render']; // 필요하면 추가
+};

@@ -66,7 +66,15 @@ export async function POST(request: NextRequest) {
         }
 
         // 2. openAIServerAPI로 비디오 Scene 분리 데이터, 마스터 스타일 프롬프트 생성 요청
-        const postMasterStylePromptResult = await openAIServerAPI.postMasterStylePrompt(selectedStyle);
+        const postMasterStylePromptResult = await openAIServerAPI.postMasterStylePrompt(
+            selectedStyle,
+            patchVideoGenerationTaskStatusResult.scene_breakdown_list.map((sceneData) => {
+                return {
+                    sceneNumber: sceneData.sceneNumber,
+                    sceneNarration: sceneData.narration,
+                }
+            })
+        );
 
         if (!postMasterStylePromptResult.success || !postMasterStylePromptResult.masterStylePositivePromptInfo || !postMasterStylePromptResult.masterStyleNegativePrompt) {
             await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
@@ -80,11 +88,13 @@ export async function POST(request: NextRequest) {
 
         const masterStylePositivePromptInfo = postMasterStylePromptResult.masterStylePositivePromptInfo;
         const masterStyleNegativePrompt = postMasterStylePromptResult.masterStyleNegativePrompt;
+        const entityManifestList = postMasterStylePromptResult.entityManifestList;
 
         const patchVideoGenerationTaskStatusFinalResult = await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, {
             status: VideoGenerationTaskStatus.GENERATING_IMAGE_PROMPT,
             master_style_positive_prompt: masterStylePositivePromptInfo,
             master_style_negative_prompt: masterStyleNegativePrompt,
+            entity_manifest_list: entityManifestList,
         });
 
         const sceneDataList = videoGenerationTask.scene_breakdown_list;
