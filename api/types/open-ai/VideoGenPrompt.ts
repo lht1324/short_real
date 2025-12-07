@@ -6,60 +6,46 @@
 // ... (Enums 등은 그대로 유지) ...
 
 export interface VideoGenPrompt {
-    // model 필드는 보통 API 호출 코드에서 하드코딩하므로 프롬프트 JSON에는 없어도 됩니다.
-    // 필요하다면 남겨두세요.
-
+    // 1. Scene Context (전체 그림)
+    // 모델에게 "어떤 영상을 만들 것인가"에 대한 큰 그림을 제공합니다.
     scene_global: {
-        description: string;
-        mood_keywords: string[];
-        temporal_flow: 'sequential' | 'simultaneous' | 'chaotic';
-        // physics_engine_override는 모델 제어에 도움이 되므로 유지
-        physics_engine_override?: {
-            gravity?: 'normal' | 'low_g' | 'zero_g' | 'heavy';
-            time_scale?: 'realtime' | 'slow_motion' | 'timelapse';
-        };
+        description: string; // 전체 씬을 아우르는 소설 같은 묘사 (Verbose Narrative)
+        mood_keywords: string[]; // 분위기/속도감 제어 (e.g., "Fast-paced", "Gritty")
     };
 
+    // 2. Cast & Action (인물과 동작 - 핵심)
+    // 인물 외형은 고정하고, 동작은 흐름(Flow)으로 기술합니다.
     subjects: {
-        id: string;
-        type: string; // Enum 활용
+        id: string; // Entity Manifest와 매칭되는 고유 ID
         visual_attributes: {
-            appearance: string;
-            material_properties?: string;
-            weight_simulation?: 'heavy' | 'light' | 'floating'; // 중요
+            appearance: string; // "Black hoodie, curly hair..." (일관성 유지를 위한 외형 묘사)
+            weight_simulation: 'heavy' | 'light' | 'dynamic'; // 물리 엔진 힌트 (최소한의 제어)
         };
-        motion_logic: {
-            primary_action: string;
-            action_intensity: 'high' | 'medium' | 'low';
-            micro_movements?: string;
+        motion_frame: {
+            // 기존 primary_action을 대체. 시작-중간-끝이 있는 서사적 동작 기술.
+            // 예: "Explodes from crouch -> Sprints forward -> Leaps -> Lands smoothly"
+            narrative_sequence: string;
+            action_intensity: 'high' | 'medium' | 'low'; // 동작의 에너지 레벨
         };
-        // spatial_anchor는 필요 시 유지, 복잡하면 제거 가능
     }[];
 
-    // interactions는 다중 피사체일 때 매우 중요하므로 유지
-    interactions?: {
-        trigger_subject: string;
-        target_subject: string;
-        interaction_type: string;
-        causality: string;
-    }[];
-
+    // 3. Environment (무대 배경)
+    // 인물이 움직이는 공간을 고정하여 배경이 울렁거리는 것을 방지합니다.
     environment: {
-        setting_anchor: string;
-        lighting_dynamics?: { behavior: string }; // 간소화 가능
-        atmospherics?: { particles?: string; wind_force?: string };
+        setting_description: string; // "Graffiti-covered urban alley with wet asphalt"
+        lighting: string; // "High-contrast street lamps"
     };
 
+    // 4. Cinematography (카메라 연출)
+    // 영상의 역동성을 결정하는 카메라 워킹을 별도로 분리합니다.
     cinematography: {
-        shot_type: string;
-        camera_movement?: {
-            type: string;
-            speed?: string;
-            shake_intensity?: string; // 타격감 표현에 중요하므로 유지
-        };
+        shot_type: string; // "Low-angle tracking shot"
+        camera_movement: string; // "Follow subject at high speed"
+        shake_intensity?: 'stable' | 'handheld' | 'earthquake'; // 현장감 조절
     };
 
+    // 5. Safety & Quality (제약 조건)
     constraints?: {
-        negative_prompt?: string;
+        negative_prompt?: string; // "morphing, blurring, distortion"
     };
 }

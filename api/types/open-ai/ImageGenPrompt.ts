@@ -21,6 +21,29 @@ export interface ImageGenPrompt {
         quality_tags: string[];
     };
 
+    motion_vector: {
+        /** * The specific timing of the snapshot relative to the action.
+         * - 'preparation': Before movement (coiled, tense).
+         * - 'initiation': The moment of starting (explosive start).
+         * - 'peak_action': Mid-air or max velocity (frozen).
+         * - 'impact': Touching down or colliding (compression).
+         * - 'recovery': Aftermath (sliding, stabilizing).
+         */
+        time_phase: 'preparation' | 'initiation' | 'peak_action' | 'impact' | 'recovery';
+
+        /** * The primary direction of kinetic energy.
+         * Used for hair/clothing physics and muscle tension direction.
+         * e.g., "forward_and_down", "vertical_up", "rotational_spin"
+         */
+        force_direction: string;
+
+        /**
+         * Visual cues implying speed or tension.
+         * e.g., "hair blowing backwards", "muscles fully extended", "clothing rippling"
+         */
+        visual_evidence: string;
+    };
+
     /** * 등장하는 모든 인물, 사물, 동물 등을 정의.
      * 배열 구조를 통해 각 객체의 속성(색상, 옷 등)이 서로 섞이지 않게 격리함.
      */

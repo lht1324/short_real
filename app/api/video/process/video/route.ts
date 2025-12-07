@@ -67,8 +67,11 @@ export async function POST(request: NextRequest) {
             const postVideoGenPromptResult = await openAIServerAPI.postVideoGenPrompt(
                 sceneData.imageGenPrompt as string,
                 sceneData.narration,
+                sceneData.sceneNumber,
                 imageBase64,
                 sceneData.sceneDuration,
+                videoGenerationTask.video_title ?? '',
+                videoGenerationTask.video_description ?? '',
                 videoGenerationTask.entity_manifest_list ?? [],
             );
 

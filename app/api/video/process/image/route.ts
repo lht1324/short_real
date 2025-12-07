@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
             );
 
             if (!postImageGenPromptResult.success || !postImageGenPromptResult.imageGenPrompt) {
-                throw new Error("Failed to generate image gen prompt");
+                throw new Error(`Scene[${sceneData.sceneNumber}]: ${postImageGenPromptResult.error?.message ?? "Failed to generate image gen prompt"}`);
             }
 
             return {

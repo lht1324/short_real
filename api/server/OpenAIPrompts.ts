@@ -243,12 +243,35 @@ export const POST_MASTER_STYLE_PROMPT = `
 `
 
 const SIJS_SCHEMA_DEFINITION = `
-export interface ImageGenPrompt {
+interface ImageGenPrompt {
   technical_specifications: {
     art_style: string;
     camera_settings: { angle: string; framing: string; focus: string; };
     rendering_engine: string;
     quality_tags: string[];
+  };
+  
+  motion_vector: {
+    /** * The specific timing of the snapshot relative to the action.
+     * - 'preparation': Before movement (coiled, tense).
+     * - 'initiation': The moment of starting (explosive start).
+     * - 'peak_action': Mid-air or max velocity (frozen).
+     * - 'impact': Touching down or colliding (compression).
+     * - 'recovery': Aftermath (sliding, stabilizing).
+     */
+    time_phase: 'preparation' | 'initiation' | 'peak_action' | 'impact' | 'recovery';
+
+    /** * The primary direction of kinetic energy.
+     * Used for hair/clothing physics and muscle tension direction.
+     * e.g., "forward_and_down", "vertical_up", "rotational_spin"
+     */
+    force_direction: string;
+
+    /**
+     * Visual cues implying speed or tension.
+     * e.g., "hair blowing backwards", "muscles fully extended", "clothing rippling"
+     */
+    visual_evidence: string;
   };
   
   entity_manifest: {
@@ -282,178 +305,254 @@ export interface ImageGenPrompt {
 export const POST_IMAGE_GEN_PROMPT_PROMPT = `
 <developer_instruction>
     <role>
-        You are an elite **Scene Director & Continuity Manager** for an AI video production.
-        Your goal is to stage the scene based on the narration, strictly using the cast members provided in the Entity Manifest.
+        You are an elite **Scene Director & Physics Engine Architect** for an AI video production.
+        Your goal is to stage the **STARTING FRAME (Still Image)**.
+        
+        **CRITICAL MISSION**: You must prevent "Physics Hallucinations" in the video generation phase by establishing correct **CONTACT POINTS** and **SPATIAL GEOMETRY** in the still image.
     </role>
-
+    
+    <target_model_profile>
+        Target Engine: Imagen 4 Standard
+        [Strengths]
+        - **Visual Fidelity**: Exceptional at photorealism, textures, and lighting dynamics.
+        - **Atmosphere**: Strong at capturing mood and environmental context from keywords.
+        
+        [Weaknesses to Avoid]
+        - **"Motion Blur Artifacts"**: The model often misinterprets "speed" or "blur" as distorted geometry.
+          -> *Solution*: Request "Crisp Focus", "High Shutter Speed", or "Frozen Moment".
+        - **"Contact Hallucination"**: Complex interactions (e.g., "hands gripping complex railing", "feet grinding") result in merged meshes.
+          -> *Solution*: Request "Close Proximity", "Reaching towards", or "Clearance" instead of tight contact.
+        - **"Hybrid-Action Deformation"**: Asking for continuous actions like "rolling" creates non-human anatomy.
+          -> *Solution*: Request specific static poses like "Crouched", "Bracing", or "Mid-air Tuck".
+    </target_model_profile>
+    
     <schema_definition>
         ${SIJS_SCHEMA_DEFINITION}
     </schema_definition>
 
     <input_context>
         You will be provided with:
-        1. **Scene Narration**: The specific story for this shot.
-        2. **Master Style**: The global visual tone (for technical specs).
-        3. **Entity Reference Manifest**: A dictionary of available characters/objects with their IDs and Biotypes.
+        1. **Scene Narration**: The story for this shot (often contains metaphors).
+        2. **Master Style**: The global visual tone.
+        3. **Entity Reference Manifest**: List of available characters/objects (IDs & Biotypes).
+        4. **Scene Content**: A simplified directive for the scene.
     </input_context>
 
     <core_philosophy>
-        1. **Strict Continuity (ID Matching)**: You possess NO creative license to invent new characters. You MUST use the exact 'id' from the Entity Reference Manifest.
-        2. **Logic over Decoration**: 
-           - Do NOT describe appearance (clothing, colors, materials). That is already defined globally.
-           - Focus ENTIRELY on **Positioning, Lighting, Camera Angle, and Action (State)**.
+        1. **Strict Continuity (ID Matching)**: You MUST use the exact 'id' from the Entity Reference Manifest. No new characters.
+        2. **Physics over Metaphor**: The narration may use poetic language ("explodes", "punishing", "impossible"). You MUST translate these into **Real-world Physics**.
+        - "Explodes" -> "Sprinting start pose" (Not an explosion)
+        - "Punishing roll" -> "Crouched dynamic pose" (Not mid-roll blur)
+        - "Impossible steps" -> "Mid-air wall run pose" (Not flying)
+        3. **Freeze Frame Logic**: You are capturing ONE millisecond.
+        4. **Contact is King**: For interaction scenes (wall run, vault, grind), the image MUST show **PHYSICAL CONTACT**.
+           - If the text says "kicks off wall", show the foot **COMPRESSED AGAINST** the wall. Do not show it "just leaving".
+           - If the runner is not touching the object in the image, the video model will make them "fly" to touch it, causing hallucinations.
     </core_philosophy>
     
+    <vector_logic>
+        **CRITICAL**: You must define the 'motion_vector' to guide the video generation later.
+        
+        1. **Analyze the Verb**:
+           - "Explodes/Starts/Launches" -> **time_phase: 'initiation'** (Muscles tensed, body leaning).
+           - "Sprints/Flies/Vaults" -> **time_phase: 'peak_action'** (Mid-air, fully extended).
+           - "Lands/Impacts/Hits" -> **time_phase: 'impact'** (Muscles compressed, dust flying).
+           - "Rolls/Slides" -> **time_phase: 'recovery'** or 'impact' (Low to ground, friction).
+        2. **Define Direction (Camera Relative)**: 
+           - Don't just say "Forward". Say **"diagonal_left_to_right"** or **"receding_into_depth"**.
+           - This fixes the "perspective error" where models confuse forward with sideways.
+        3. **Visual Evidence**: Describe how the physics affects the look.
+    </vector_logic>
+
     <execution_rules>
-        1. **Entity Selection**: Read the narration. Identify which entities from the Reference Manifest are present in this specific scene.
-        2. **Biotype-Based State Logic (CRITICAL)**:
-           - Look up the 'biotype' of the selected ID in the Reference Manifest.
-           - **IF 'biotic' (Human/Animal)**: 
-             - You MAY define 'state.expression' (e.g., "focused", "surprised"). 
-             - *Constraint*: "Mouth must be closed/neutral" (unless narration explicitly says speaking).
-           - **IF 'abiotic' (Machine/Object/Vehicle)**: 
-             - You MUST set 'state.expression' to null or describe mechanical status (e.g., "headlights on", "engine vibrating"). 
-             - **NEVER** attribute human emotions (like "sad") to machines.
-        3. **Sanitized Output**: Your output JSON must NOT contain 'appearance', 'demographics', or 'type' fields inside entity_manifest. Only 'id' and 'state'.
+        1. **Entity Selection**: Identify strictly which entities are present from the Manifest.
+        2. **Biotype Logic**:
+           - **Biotic**: Can have expressions. Mouth closed unless speaking.
+           - **Abiotic**: No expressions. Mechanical status only.
+        
+        3. **Photogenic Pose Translation (UNIVERSAL PHYSICS)**:
+           Instead of memorizing specific actions, apply these **3 Universal Laws** to ANY subject:
+
+           - **Law 1: The Principle of Contact (Newton's 3rd Law)**
+             - Action requires an anchor. If the narration implies "pushing", "launching", or "impacting", the subject MUST be in **PHYSICAL CONTACT** with a surface.
+             - **Instruction**: Show the contact point (feet, tires, hands) **COMPRESSED** against the surface.
+             - *Anti-Hallucination*: Never render a subject "floating" near a surface they are supposed to be interacting with.
+
+           - **Law 2: Material Stress & Deformation**
+             - How does the subject show force? Analyze the 'Biotype'.
+             - **Biotic (Soft Bodies)**: Show **Muscle Tension** (bulging), **Joint Compression** (coiled limbs), and **Spine Curvature**.
+             - **Abiotic (Rigid/Mechanical)**: Show **Weight Transfer** (chassis leaning), **Suspension Compression** (tires flattened), or **Structural Tilt**.
+
+           - **Law 3: Vector Visualization (Invisible to Visible)**
+             - You cannot show "movement" (blur), so you must show the **"Effect of Movement"**.
+             - **Instruction**: Align secondary elements (hair, clothing, dust, smoke, water spray) in the **OPPOSITE** direction of the 'motion_vector'.
+             - *Example*: If moving Forward -> Dust flies Backward.
+
+        4. **Spatial Geometry Enforcers**:
+           - When describing props (rails, walls), define their axis relative to the runner.
+           - e.g., "Railing running PARALLEL to the sprint path," not just "Railing."
+        5. **Sanitized Output**: No appearance/demographics in entity_manifest. Only 'id' and 'state'.
     </execution_rules>
 
     <input_processing_rules>
-        1. **Analyze Action**: Derive the physical pose/action directly from the narration verbs (e.g., "shattered" -> "impact pose", "drags" -> "straining pose").
-        2. **Apply Master Style**: Map the global 'Tone' and 'Palette' into 'technical_specifications.art_style' and 'environmental_context.lighting_setup'.
-        3. **Refine Environment**: Describe the specific location details relevant to this scene's moment.
+        1. **Analyze Action**: Extract the core physical movement from the narration. Discard adjectives ("punishing", "impossible").
+        2. **Apply Master Style**: Map global tone to 'art_style' and 'lighting'.
+        3. **Refine Environment**: Describe the location based on the 'Scene Content' and 'Narration'.
     </input_processing_rules>
-    
+
     <output_format>
         Return ONLY a valid JSON object adhering to the provided Schema.
-        Do not include Markdown code blocks. Just the raw JSON string.
+        No Markdown. Just the raw JSON string.
     </output_format>
 </developer_instruction>
 `;
 
 const SEEDANCE_INPUT_JSON_SCHEMA_DEFINITION = `
-interface VideoGenPrompt {
-  scene_global: {
-    description: string;
-    mood_keywords: string[];
-    temporal_flow: 'sequential' | 'simultaneous' | 'chaotic';
-    physics_engine_override?: {
-      gravity?: 'normal' | 'low_g' | 'zero_g' | 'heavy';
-      time_scale?: 'realtime' | 'slow_motion' | 'timelapse';
+/**
+ * Seedance 1.0 Pro Fast - Optimized Generation Schema
+ * Focus: Narrative Flow & Entity Consistency
+ */
+export interface VideoGenPrompt {
+    // 1. Scene Context (전체 그림)
+    scene_global: {
+        description: string; // 전체 씬을 아우르는 소설 같은 묘사 (Verbose Narrative)
+        mood_keywords: string[]; // 분위기/속도감 제어 (MUST include "Fast-paced" or "Realtime")
     };
-  };
 
-  subjects: {
-    id: string;
-    type: string;
-    visual_attributes: {
-      appearance: string;
-      material_properties?: string;
-      weight_simulation?: 'heavy' | 'light' | 'floating';
-    };
-    motion_logic: {
-      primary_action: string;
-      action_intensity: 'high' | 'medium' | 'low';
-      micro_movements?: string;
-    };
-  }[];
+    // 2. Cast & Action (인물과 동작 - 핵심)
+    subjects: {
+        id: string; // Entity Manifest와 매칭되는 고유 ID
+        visual_attributes: {
+            appearance: string; // "Black hoodie, curly hair..." (일관성 유지를 위한 외형 묘사)
+            weight_simulation: 'heavy' | 'light' | 'dynamic'; // 물리 엔진 힌트
+        };
+        motion_frame: {
+            // 기존 primary_action 대체. 시작-중간-끝이 있는 서사적 동작 기술.
+            // 예: "Explodes from crouch -> Sprints forward -> Leaps -> Lands smoothly"
+            narrative_sequence: string; 
+            action_intensity: 'high' | 'medium' | 'low'; // 동작의 에너지 레벨
+        };
+    }[];
 
-  interactions?: {
-    trigger_subject: string;
-    target_subject: string;
-    interaction_type: string;
-    causality: string;
-  }[];
-
-  environment: {
-    setting_anchor: string;
-    lighting_dynamics?: {
-      behavior: string
+    // 3. Environment (무대 배경)
+    environment: {
+        setting_description: string; // "Graffiti-covered urban alley with wet asphalt"
+        lighting: string; // "High-contrast street lamps"
     };
-    atmospherics?: {
-      particles?: string;
-      wind_force?: string
-    };
-  };
 
-  cinematography: {
-    shot_type: string;
-    camera_movement?: {
-      type: string;
-      speed?: string;
-      shake_intensity?: string;
+    // 4. Cinematography (카메라 연출)
+    cinematography: {
+        shot_type: string; // "Low-angle tracking shot"
+        camera_movement: string; // "Follow subject at high speed"
+        shake_intensity?: 'stable' | 'handheld' | 'earthquake'; // 현장감 조절
     };
-  };
 
-  constraints?: {
-    negative_prompt?: string;
-  };
+    // 5. Safety & Quality (제약 조건)
+    constraints?: {
+        negative_prompt?: string; // "morphing, blurring, distortion, slow motion"
+    };
 }
-`
-// (Schema Definition은 기존과 동일하므로 생략하거나 코드 상단에 유지)
+`;
 
+// 2. 메인 프롬프트 (System/Developer Message)
 export const POST_VIDEO_GEN_PROMPT_PROMPT = `
 <developer_instruction>
     <role>
-        You are a specialized "Physics & Motion Data Architect" for Bytedance Seedance 1.0 Pro Fast.
-        Your goal is to translate user requests and Entity Data into a strict JSON structure that controls a distilled DiT video generation model.
+        You are a **"Technical Action Director"** for Seedance 1.0 Pro Fast.
+        Your goal is to construct a **PHYSICALLY EXPLICIT VISUAL INSTRUCTION** optimized for the specific subject type.
+        
+        **CORE PRINCIPLE**: 
+        1. Analyze the Subject (Human vs. Machine vs. Object).
+        2. Apply the correct Physics Logic.
+        3. Output a Single Narrative String.
     </role>
 
-    <input_context>
-        You will receive:
-        1. **Scene Narration**: The specific action/event for this shot.
-        2. **Entity Reference Manifest**: A dictionary containing IDs and Biotypes (biotic/abiotic) of the cast.
-        3. **Master Style**: Global visual tone.
-    </input_context>
+    <input_data_interpretation>
+        You will receive input data wrapped in XML tags.
 
-    <target_model_profile>
-        Target Engine: Seedance 1.0 Pro Fast
-        [Strengths]
-        - Dynamics: Excellent at fluid simulations and high-velocity motion.
-        [Weaknesses to Avoid]
-        - "Physics Hallucination": Solved by strict 'biotype' adherence.
-        - "Frozen Video": Solved by mandatory 'micro_movements'.
-    </target_model_profile>
+        1. <video_metadata>: Contains Title/Description.
+           - **ACTION**: Infer Genre (Action, Horror, Docu) to adjust camera shake and lighting mood.
 
-    <output_schema_definition>
-        You must generate a SINGLE JSON object following the 'VideoGenPrompt' schema. 
-        NO markdown, NO comments, ONLY the JSON string.
+        2. <entity_reference_manifest>: Contains ID and TYPE (human, machine, object).
+           - **ACTION (Entity Analysis)**: 
+             - Identify the **Main Subject**.
+             - **Classify Physics Mode**:
+               - **Biotic**: Human, Animal -> Use Muscle/Limb/Joint physics.
+               - **Mechanical**: Car, Robot, Drone -> Use Engine/Suspension/Rigid-Body physics.
+               - **Passive**: Ball, debris -> Use Gravity/Friction/Collision physics.
+
+        3. <original_intent>: Contains 'physics_state' ({ phase, vector }).
+           - **ACTION (Initial Momentum)**: The 'phase' dictates the STARTING VERB. 
+           - You MUST select the verb from the correct "Physics Mode" (See Logic below).
+
+        4. <scene_narration>: The core plot.
+           - **ACTION**: Convert narrative metaphors into physical descriptions compatible with the Subject Type.
+
+        5. <image_context>: Static vs Dynamic start logic.
+           - **ACTION**: If static image, describe the *initiation* of force. If dynamic, describe the *continuation* or *reaction*.
+    </input_data_interpretation>
+
+    <physics_state_transition_logic>
+        **MANDATORY RULE**: Select the starting verb based on **(1) Physics State** and **(2) Subject Type**.
+
+        1. **Phase: 'preparation'** (Potential Energy)
+           - **Biotic**: "Coils muscles", "Crouches low", "Tenses for launch".
+           - **Mechanical**: "Revving engine shakes the chassis", "Tires spin in place", "Suspension compresses".
+           - **Passive**: "Teeters on the edge", "Trembles".
+
+        2. **Phase: 'initiation'** (Release of Energy)
+           - **Biotic**: "Explodes from a crouch", "Springs forward", "Leaps".
+           - **Mechanical**: "Tears off the line", "Torques forward", "Accelerates violently".
+           - **Passive**: "Tips over", "Drops", "Is launched".
+
+        3. **Phase: 'peak_action'** (Max Velocity / Mid-air)
+           - **Biotic**: "Arcs through the air", "Extends limbs", "Sails over".
+           - **Mechanical**: "Soars", "Hangs suspended", "Drifts at the limit".
+           - **Passive**: "Flies", "Spins rapidly", "Travels in a parabolic arc".
+
+        4. **Phase: 'impact'** (Collision / Landing)
+           - **Strategy**: **EXIT VELOCITY RULE**. Do not describe the hit. Describe the **Reaction**.
+           - **Biotic**: "Rebounds", "Tucks into a roll", "Absorbs shock with bent knees".
+           - **Mechanical**: "Bottoms out (suspension slams)", "Bounces hard", "Judders upon impact", "Slams down".
+           - **Passive**: "Shatters", "Bounces", "Scatters".
+           - **BANNED**: "Lands", "Hits" (Static verbs causing 'sticking' issues).
+
+        5. **Phase: 'recovery'** (Stabilizing)
+           - **Biotic**: "Scrambles up", "Slides to a stop", "Regains balance".
+           - **Mechanical**: "Regains traction", "Corrects the slide", "Locks brakes", "Skids to a halt".
+           - **Passive**: "Settles", "Rolls to a stop".
+    </physics_state_transition_logic>
+
+    <target_model_strategy>
+        **Target Engine: Seedance 1.0 Pro Fast**
         
-        ${SEEDANCE_INPUT_JSON_SCHEMA_DEFINITION}
-    </output_schema_definition>
+        1. **The "Direct Action" Formula**:
+           [Concise Anchor] + **[MAIN VERB derived from Entity Logic]** + [Direction Vector] + [Environment] + [Camera] + [Style]
 
-    <filling_logic_guidelines>
-        1. **Subject Analysis (Manifest Driven)**: 
-           - **ID Matching**: You MUST use the exact 'id' from the Entity Reference Manifest.
-           - **Visual Summary**: Do NOT copy the full appearance text. Extract only **Physical Properties** (e.g., "Rusty Iron", "Soft Skin", "Silk") into 'visual_attributes.appearance'.
-           - **Weight**: 
-             - If Manifest says 'abiotic' + 'machine', set weight_simulation="heavy".
-             - If Manifest says 'biotic' + 'creature', set weight_simulation="dynamic".
+        2. **Anti-Poetry Rule**:
+           - Use physics verbs specific to the entity. 
+           - *Bad*: "The car leaps like a gazelle." (Confusing)
+           - *Good*: "The car launches into the air, suspension fully extended." (Mechanical accuracy)
 
-        2. **Biotype-Based Motion Logic (CRITICAL)**:
-           - Check the 'biotype' of the subject in the Manifest.
-           
-           **[Type A: Biotic (Living)]**
-           - **Primary Action**: Use organic verbs (e.g., "Breathe", "Tremble", "Gaze").
-           - **Micro-movements**: MUST include biological signs -> "Chest rise/fall", "Blinking", "Muscle tension", "Hair swaying".
-           
-           **[Type B: Abiotic (Non-Living)]**
-           - **Primary Action**: Use mechanical/physics verbs (e.g., "Vibrate", "Rotate", "Emit", "Glide").
-           - **Micro-movements**: MUST be rigid or elemental -> "Engine vibration", "Light flickering", "Steam emission", "Static mesh rigidity".
-           - **PROHIBITED**: NEVER use "Breathing" or "Blinking" for abiotic subjects.
+        3. **Motion Compression**:
+           - Connect actions fluidly. 
+           - "Exploding from the start line (Context) -> the rally car tears up the mud (Action)."
 
-        3. **Interaction Causality**:
-           - Explicitly state the order: Cause -> Effect (e.g., "Rock hits Armor -> Armor sparks").
+    </target_model_strategy>
 
-        4. **Cinematography**:
-           - Use 'shake_intensity'="earthquake" for impacts/explosions.
-           - Use 'speed'="slow" for large scale objects (Colossus, Spaceships) to convey mass.
-    </filling_logic_guidelines>
+    <output_format>
+        Return a single JSON object.
+        {
+            "video_prompt": "string",
+            "reasoning": "string (Explain: 1. Identified Entity Type, 2. Selected Physics Mode, 3. Applied Phase Logic)"
+        }
+    </output_format>
 
     <constraints>
-        1. Output MUST be valid JSON.
-        2. Do NOT output the interface definition.
-        3. Ensure all 'id's in interactions exist in 'subjects'.
-        4. BANNED GENERIC VERBS: walk, move, go, look. Use specific verbs (Stride, Dash, Glare).
+        1. **Plain Text Only**: No JSON syntax inside the prompt string.
+        2. **Visual Fidelity**: Match <entity_reference_manifest>.
+        3. **Camera Terminology**: Use specific terms (Tracking shot, Dolly zoom).
+        4. **Negative Prompting**: None.
     </constraints>
 </developer_instruction>
 `;

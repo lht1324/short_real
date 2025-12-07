@@ -345,7 +345,11 @@ Instruction: Analyze the input style AND the full script context to generate the
     </video_context>
 </input_data>
 
-Instruction: Generate the scene instruction JSON. strictly following ID matching and Biotype logic.
+Instruction: Generate the scene instruction JSON.
+**CRITICAL**: Translate any poetic/metaphorical narration into **Physically Accurate Static Poses**.
+- If narration says "Roll", output a "Crouched/Low" pose (not mid-roll).
+- If narration says "Grind", output a "Vault/Jump" pose (avoid awkward contact).
+- Strictly follow ID matching and Biotype logic.
 `;
 
             const client = new OpenAI({ apiKey });
@@ -358,12 +362,13 @@ Instruction: Generate the scene instruction JSON. strictly following ID matching
                 response_format: { type: 'json_object' },
                 // o-series 전용 파라미터.
                 // creative writing에는 'medium'이 적합하며, 비용 절감이 우선이면 'low' 테스트 필요.
-                reasoning_effort: 'medium',
-                max_completion_tokens: 4096,
+                reasoning_effort: 'high',
+                max_completion_tokens: 6144,
             });
 
             const generatedContent = completion.choices[0]?.message?.content;
             if (!generatedContent) {
+                console.log("Failed completion: ", JSON.stringify(completion));
                 return {
                     success: false,
                     error: {
@@ -433,8 +438,11 @@ Instruction: Generate the scene instruction JSON. strictly following ID matching
     async postVideoGenPrompt(
         imageGenPrompt: string,
         sceneNarration: string,
+        sceneNumber: number,
         imageBase64: string,
         targetDuration: number,
+        videoTitle: string,
+        videoDescription: string,
         entityManifest: EntityManifestItem[],
     ): Promise<{
         success: boolean;
@@ -456,19 +464,52 @@ Instruction: Generate the scene instruction JSON. strictly following ID matching
 
             const developerMessage = POST_VIDEO_GEN_PROMPT_PROMPT;
 
+            const imageGenPromptJSON: ImageGenPrompt = JSON.parse(imageGenPrompt);
+            const mappedImageGenPrompt = {
+                visual_style: {
+                    style: imageGenPromptJSON.technical_specifications.art_style,
+                    camera_angle: imageGenPromptJSON.technical_specifications.camera_settings.angle,
+                    lighting: imageGenPromptJSON.environmental_context.lighting_setup.global_light
+                },
+                physics_state: {
+                    phase: imageGenPromptJSON.motion_vector.time_phase,
+                    vector: imageGenPromptJSON.motion_vector.force_direction,
+                    visual_cues: imageGenPromptJSON.motion_vector.visual_evidence
+                },
+                entities: imageGenPromptJSON.entity_manifest.map((entity) => {
+                    return {
+                        id: entity.id,
+                        pose: entity.state.pose
+                    }
+                }),
+                location: imageGenPromptJSON.environmental_context.location
+            }
             const userMessage = `
 <input_context>
-  <entity_reference_manifest>
-    ${JSON.stringify(entityManifest, null, 2)}
-  </entity_reference_manifest>
-  <scene_narration>${sceneNarration}</scene_narration>
-  <original_intent>${imageGenPrompt}</original_intent>
-  <target_duration>${targetDuration} seconds</target_duration>
+    <video_metadata>
+        <title>${videoTitle}</title>
+        <description>${videoDescription}</description>
+    </video_metadata>
+    <entity_reference_manifest>
+        ${JSON.stringify(entityManifest, null, 2)}
+    </entity_reference_manifest>
+    <scene_narration>${sceneNarration}</scene_narration>
+    <original_intent>${JSON.stringify(mappedImageGenPrompt, null, 2)}</original_intent>
+    <target_duration>${targetDuration} seconds</target_duration>
+    <image_context>
+        The attached image represents the STARTING FRAME (t=0) of the video.
+        **CRITICAL INSTRUCTION**:
+        1. **Vision is Truth (Start Only)**: Use the image to determine the *starting* pose.
+           - If Image is **Static**: You MUST describe the transition from stillness to action.
+           - If Image is **Dynamic**: You MUST describe the continuation of the motion.
+        2. **Context-Driven Physics & Tone**: 
+           - **Analyze <video_metadata>** first. Infer the genre, mood, and world-rules from the Title and Description.
+           - If metadata implies **Action/SF**, prioritize speed, impact, and exaggerated physics.
+           - If metadata implies **Drama/Romance**, prioritize emotional subtlety, soft lighting, and micro-movements.
+           - If metadata implies **Dance/Music**, prioritize rhythm and full-body flow.
+        3. **Flow & Continuity**: The video MUST NOT STOP or BREAK PHYSICS. Every action must flow logically into the next.
+    </image_context>
 </input_context>
-
-Task: Analyze the attached image and the input context above. 
-Construct the strict 'VideoGenPrompt' JSON object according to the defined TypeScript schema.
-CRITICAL: Apply 'Biotype-Based Motion Logic'. If an entity is 'abiotic', ensure strictly mechanical/physical movement descriptions (NO breathing, NO blinking).
 `;
 
             // OpenAI SDK 클라이언트 초기화 및 API 호출
@@ -499,6 +540,7 @@ CRITICAL: Apply 'Biotype-Based Motion Logic'. If an entity is 'abiotic', ensure 
                 max_completion_tokens: 6144,
             });
 
+            console.log(`[${sceneNumber}] usage: `, JSON.stringify(completion.usage))
             const generatedContent = completion.choices[0]?.message?.content;
 
             if (!generatedContent) {
@@ -513,9 +555,17 @@ CRITICAL: Apply 'Biotype-Based Motion Logic'. If an entity is 'abiotic', ensure 
 
             // [선택 사항] 유효성 검사: JSON 파싱이 가능한지 미리 확인
             try {
-                const parsedJson: VideoGenPrompt = JSON.parse(generatedContent);
+                const parsedJson: {
+                    video_prompt: string;
+                    reasoning: string;
+                } = JSON.parse(generatedContent);
 
-                console.log("videoGenPrompt: ", parsedJson);
+                console.log(`Scene[${sceneNumber}] reasoning: ${parsedJson.reasoning}`)
+
+                return {
+                    success: true,
+                    videoGenPrompt: parsedJson.video_prompt,
+                }
             } catch (parseError) {
                 console.error('JSON Parse Failed:', parseError);
                 return {
@@ -525,11 +575,6 @@ CRITICAL: Apply 'Biotype-Based Motion Logic'. If an entity is 'abiotic', ensure 
                         code: 'INVALID_JSON_FORMAT'
                     }
                 };
-            }
-
-            return {
-                success: true,
-                videoGenPrompt: generatedContent,
             }
         } catch (error) {
             console.error('Video generation prompt error:', error);
