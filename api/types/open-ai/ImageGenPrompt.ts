@@ -83,26 +83,71 @@ export interface ImageGenPrompt {
     };
 }
 
+export interface PhysicsProfile {
+    /**
+     * Layer A: 형태학적 골격 (Morphology) - "어떤 구조로 움직이는가?"
+     * - 'articulated': 관절 기반 (인간, 로봇, 곤충) -> 관절 가동 범위 제한, 뼈대 유지.
+     * - 'wheeled': 바퀴 기반 (자동차, 자전거) -> 미끄러짐 방지(No Crabbing), 회전축 이동.
+     * - 'tracked': 무한궤도 (탱크, 불도저) -> 제자리 회전, 마찰력 극대화.
+     * - 'aerial_wing': 날개 기반 (새, 비행기) -> 양력, 뱅킹 턴.
+     * - 'aquatic': 수중 유선형 (물고기, 잠수함) -> 유체 저항, 꼬리 파동.
+     * - 'amorphous': 비정형 (슬라임, 연기, 물) -> 부피 보존, 자유 변형.
+     */
+    morphology: 'articulated' | 'wheeled' | 'tracked' | 'aerial_wing' | 'aquatic' | 'amorphous';
+
+    /**
+     * Layer B: 재료 역학 (Material Dynamics) - "충격에 어떻게 반응하는가?"
+     * - 'rigid': 강체 (금속, 바위, 뼈) -> 찌그러짐(Dent), 튕김(Bounce), 파편화(Shatter).
+     * - 'viscoelastic': 점탄성체 (피부, 고무, 근육) -> 출렁임(Ripple), 멍(Bruise), 충격 흡수.
+     * - 'brittle': 취성체 (유리, 얼음, 도자기) -> 산산조각(Crack/Shatter).
+     * - 'cloth': 직물 (옷, 머리카락) -> 펄럭임(Flutter), 주름(Fold), 항력.
+     * - 'fluid': 유체 (물, 피, 땀) -> 비산(Spray), 흐름(Flow).
+     */
+    material: 'rigid' | 'viscoelastic' | 'brittle' | 'cloth' | 'fluid' | 'elastoplastic' | 'granular';
+
+    /**
+     * Layer C: 행동 맥락 (Action Context) - "어떤 힘이 지배하는가?"
+     * - 'locomotion': 이동 (달리기, 주행) -> 마찰력, 관성, 무게 중심 이동.
+     * - 'combat': 전투 (타격, 피격) -> 비탄성 충돌(Snap), 충격파, 넉백.
+     * - 'interaction': 상호작용 (잡기, 조작) -> 미세 컨트롤, 파지력.
+     * - 'aerodynamics': 공기역학 (비행, 낙하) -> 양력, 항력, 중력 가속도.
+     * - 'passive': 수동적 상태 (정지, 밀려남) -> 외부 힘에 의한 반응.
+     */
+    action_context: 'locomotion' | 'combat' | 'interaction' | 'aerodynamics' | 'passive';
+}
+
 // Entity 인터페이스는 기존과 동일하게 유지
-export interface Entity {
-    id: string;
+export interface Entity {id: string;
     role: 'main_hero' | 'sub_character' | 'background_extra' | 'prop';
 
-    biotype: 'biotic' | 'abiotic';
+    /** * [New] 물리 엔진 라우팅을 위한 핵심 프로필
+     * 기존 'biotype'을 대체하며, 영상 생성 프롬프트 조립 시 Key로 사용됨.
+     */
+    physics_profile: PhysicsProfile;
 
-    type: 'human' | 'creature' | 'object' | 'machine' | 'animal';
+    /** 시각적/의미적 분류 (VLM 이해용 보조 태그) */
+    type: 'human' | 'creature' | 'object' | 'machine' | 'animal' | 'hybrid';
 
-    demographics?: string;
+    demographics?: string; // 예: "African American, 30s"
+
     appearance: {
+        /** * 재질감을 암시하는 텍스처 설명 (Deep Research - Dimension 2 반영)
+         * 예: "Glossy chrome plating" (Rigid 암시), "Sweat-drenched pores" (Viscoelastic 암시)
+         */
         clothing_or_material: string;
         hair?: string;
         accessories?: string[];
         body_features?: string;
     };
+
     state: {
+        /** * 정지 이미지(t=0)에서의 초기 자세
+         * 예: "Right fist fully extended", "Suspension compressed"
+         */
         pose: string;
         expression?: string;
     };
+
     text_render?: {
         content: string;
         style: string;

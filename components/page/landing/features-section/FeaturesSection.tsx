@@ -21,8 +21,8 @@ const features: Feature[] = [
         description:
             "Objects move with real weight.\nNot just pictures sliding around.",
         prompt:
-            "A horse galloping through a dusty desert, realistic muscle movement, dust clouds rising, cinematic 4k",
-        videoSrc: "/demo/demo_1.mp4",
+            "A continuous high-octane sequence of a monster truck: launching into a torque-heavy wheelie, drifting with visible tire deformation, crushing scrap cars with metal destruction physics, landing a massive jump with full suspension compression, and sliding to a smoky halt.",
+        videoSrc: "/demo/demo_physics.mp4",
         icon: Atom,
         color: "border-cyan-500/50 shadow-cyan-500/20",
     },

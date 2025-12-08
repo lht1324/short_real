@@ -13,10 +13,11 @@ import {
     POST_MASTER_STYLE_PROMPT,
     POST_IMAGE_GEN_PROMPT_PROMPT,
     POST_VIDEO_GEN_PROMPT_PROMPT, POST_MUSIC_GENERATION_DATA_PROMPT
-} from "@/api/server/OpenAIPrompts";
+} from "@/api/types/open-ai/OpenAIPrompts";
 import {MusicGenerationData} from "@/api/types/suno-api/MusicGenerationData";
 import {EntityManifestItem, ImageGenPrompt} from "@/api/types/open-ai/ImageGenPrompt";
 import {VideoGenPrompt} from "@/api/types/open-ai/VideoGenPrompt";
+import {PHYSICS_LIBRARY} from "@/api/types/open-ai/PhysicsPromptLibrary";
 
 enum OpenAIModel {
     GPT_4O_MINI = "gpt-4o-mini-2024-07-18",
@@ -323,6 +324,11 @@ Instruction: Analyze the input style AND the full script context to generate the
 
             const userMessage = `
 <input_data>
+    <video_context>
+        Title: ${videoTitle}
+        Description: ${videoDescription}   
+    </video_context>
+    
     <master_style_guide>
         ${JSON.stringify(masterStylePromptInfo, null, 2)}
     </master_style_guide>
@@ -331,25 +337,20 @@ Instruction: Analyze the input style AND the full script context to generate the
         ${JSON.stringify(entityManifestList, null, 2)}
     </entity_reference_manifest>
     
-    <scene_content>
-        ${imageGenPromptDirective}
-    </scene_content>
-    
     <current_narration>
         ${sceneNarration}   
     </current_narration>
     
-    <video_context>
-        Title: ${videoTitle}
-        Description: ${videoDescription}   
-    </video_context>
+    <scene_content>
+        ${imageGenPromptDirective}
+    </scene_content>
 </input_data>
 
 Instruction: Generate the scene instruction JSON.
-**CRITICAL**: Translate any poetic/metaphorical narration into **Physically Accurate Static Poses**.
-- If narration says "Roll", output a "Crouched/Low" pose (not mid-roll).
-- If narration says "Grind", output a "Vault/Jump" pose (avoid awkward contact).
-- Strictly follow ID matching and Biotype logic.
+**CRITICAL**: You are the Physics Architect.
+1. Populate 'physics_profile' based on the 3-Layer Logic.
+2. Enrich 'appearance' with visual cues that imply that physics (e.g., textures, damage).
+3. Define 'state' with a physically accurate pose.
 `;
 
             const client = new OpenAI({ apiKey });
@@ -360,10 +361,8 @@ Instruction: Generate the scene instruction JSON.
                     { role: 'user', content: userMessage }
                 ],
                 response_format: { type: 'json_object' },
-                // o-series 전용 파라미터.
-                // creative writing에는 'medium'이 적합하며, 비용 절감이 우선이면 'low' 테스트 필요.
                 reasoning_effort: 'high',
-                max_completion_tokens: 6144,
+                max_completion_tokens: 8192,
             });
 
             const generatedContent = completion.choices[0]?.message?.content;
@@ -380,34 +379,58 @@ Instruction: Generate the scene instruction JSON.
 
             // JSON 유효성 검증
             try {
-                // 1. LLM이 생성한 '지시사항(Instruction)' 파싱 (ID + State 만 있음)
-                // 타입 단언을 사용하여 임시 구조체로 받음
-                const instructionJSON = JSON.parse(generatedContent) as ImageGenPrompt;
+                const instructionJSON: {
+                    image_gen_prompt: string;
+                    updated_entity_manifest: {
+                        id: string;
+                        physics_profile: {
+                            morphology: "articulated" | "wheeled" | "tracked" | "aerial_wing" | "aquatic" | "amorphous";
+                            material: "rigid" | "viscoelastic" | "brittle" | "cloth" | "fluid" | "elastoplastic" | "granular";
+                            action_context: "locomotion" | "combat" | "interaction" | "aerodynamics" | "passive";
+                        },
+                        appearance: {
+                            clothing_or_material: string;
+                            body_features: string;
+                        },
+                        state: {
+                            pose: string;
+                            expression: string;
+                        }
+                    }[]
+                } = JSON.parse(generatedContent);
 
-                // [수정 3] ★ 핵심 로직: 병합 (Merging)
-                // LLM이 보낸 뼈대(ID, State)에 원본의 살점(Appearance, Type)을 붙여넣기
-                if (instructionJSON.entity_manifest && Array.isArray(instructionJSON.entity_manifest)) {
-                    instructionJSON.entity_manifest = instructionJSON.entity_manifest.map(instruction => {
-                        // ID로 원본 데이터 찾기
+                // [수정] 병합 로직 (Physics-Aware Merge)
+
+                if (!instructionJSON.updated_entity_manifest || !Array.isArray(instructionJSON.updated_entity_manifest)) {
+                    return {
+                        success: false,
+                        error: {
+                            message: 'Generated entities are invalid.',
+                            code: 'INVALID_CONTENT'
+                        }
+                    };
+                }
+
+                const finalPromptString = JSON.stringify({
+                    imageGenPrompt: instructionJSON.image_gen_prompt,
+                    entityManifestList: instructionJSON.updated_entity_manifest.map(instruction => {
                         const originalEntity = entityManifestList.find(e => e.id === instruction.id);
 
                         if (!originalEntity) {
-                            // LLM이 없는 ID를 만들어냈을 경우에 대한 방어 로직 (로그 남기고 스킵하거나 에러 처리)
                             console.warn(`Warning: LLM generated unknown ID '${instruction.id}'. Keeping as is.`);
                             return instruction;
                         }
 
-                        // 병합: 원본(Appearance, Type) + 지시사항(State)
                         return {
-                            ...originalEntity,      // 외형, 타입, Biotype 복사
-                            state: instruction.state, // 이번 씬의 행동 덮어쓰기
-                            text_render: instruction.text_render // 텍스트 렌더링 정보가 있다면 유지
-                        };
-                    });
-                }
+                            ...originalEntity, // 1. 원본의 기본 속성(role, demographics 등) 가져오기
 
-                // 이제 instructionJSON은 완전한 Entity 정보를 가진 최종 Prompt가 됨
-                const finalPromptString = JSON.stringify(instructionJSON);
+                            // 2. LLM이 생성한 핵심 물리/시각 데이터로 덮어쓰기
+                            physics_profile: instruction.physics_profile || originalEntity.physics_profile,
+                            appearance: instruction.appearance || originalEntity.appearance,
+                            state: instruction.state,
+                        };
+                    })
+                });
 
                 return {
                     success: true,
@@ -464,50 +487,87 @@ Instruction: Generate the scene instruction JSON.
 
             const developerMessage = POST_VIDEO_GEN_PROMPT_PROMPT;
 
-            const imageGenPromptJSON: ImageGenPrompt = JSON.parse(imageGenPrompt);
-            const mappedImageGenPrompt = {
-                visual_style: {
-                    style: imageGenPromptJSON.technical_specifications.art_style,
-                    camera_angle: imageGenPromptJSON.technical_specifications.camera_settings.angle,
-                    lighting: imageGenPromptJSON.environmental_context.lighting_setup.global_light
-                },
-                physics_state: {
-                    phase: imageGenPromptJSON.motion_vector.time_phase,
-                    vector: imageGenPromptJSON.motion_vector.force_direction,
-                    visual_cues: imageGenPromptJSON.motion_vector.visual_evidence
-                },
-                entities: imageGenPromptJSON.entity_manifest.map((entity) => {
-                    return {
-                        id: entity.id,
-                        pose: entity.state.pose
+            // 1. 이미지 프롬프트 파싱
+            const parsedImageGenPromptJSON: {
+                imageGenPrompt: string;
+                entityManifestList: {
+                    id: string;
+                    physics_profile: {
+                        morphology: "articulated" | "wheeled" | "tracked" | "aerial_wing" | "aquatic" | "amorphous";
+                        material: "rigid" | "viscoelastic" | "brittle" | "cloth" | "fluid" | "elastoplastic" | "granular";
+                        action_context: "locomotion" | "combat" | "interaction" | "aerodynamics" | "passive";
+                    },
+                    appearance: {
+                        clothing_or_material: string;
+                        body_features: string;
+                    },
+                    state: {
+                        pose: string;
+                        expression: string;
                     }
-                }),
-                location: imageGenPromptJSON.environmental_context.location
-            }
+                }[]
+            } = JSON.parse(imageGenPrompt);
+
+            // 2. [핵심] Physics Profile을 기반으로 물리 법칙 텍스트 생성 (Code Level Injection)
+            // 메인 히어로 또는 씬에 등장하는 주요 엔티티들의 물리 속성을 추출하여 문자열로 변환
+            const activeEntitiesPhysics = parsedImageGenPromptJSON.entityManifestList.map(entity => {
+                const { morphology, material, action_context } = entity.physics_profile;
+
+                // 라이브러리에서 텍스트 조회 (Safety check 포함)
+                const morphologyData = PHYSICS_LIBRARY.morphology[morphology];
+                const materialData = PHYSICS_LIBRARY.material[material];
+                const actionContextData = PHYSICS_LIBRARY.action_context[action_context];
+
+                if (!morphologyData || !materialData || !actionContextData) return null;
+
+                console.log(`Scene [${sceneNumber}] Entity '${entity.id}' morphologyData: `, JSON.stringify(morphologyData));
+                console.log(`Scene [${sceneNumber}] Entity '${entity.id}' materialData: `, JSON.stringify(materialData));
+                console.log(`Scene [${sceneNumber}] Entity '${entity.id}' actionContextData: `, JSON.stringify(actionContextData));
+
+                return `
+            [Entity: ${entity.id}]
+            - **Morphology (${morphology})**: ${morphologyData.motion_rules} (Constraint: ${morphologyData.negative_prompt})
+            - **Material (${material})**: Impact High -> "${materialData.impact_high}", Texture -> "${materialData.texture_desc}"
+            - **Context (${action_context})**: ${actionContextData.physics_law} (Cam: ${actionContextData.camera_behavior})
+            `;
+            }).filter(Boolean).join('\n');
+
+            // 4. User Message 구성 (physics_instruction_set 주입)
             const userMessage = `
 <input_context>
     <video_metadata>
         <title>${videoTitle}</title>
         <description>${videoDescription}</description>
     </video_metadata>
+    
+    <physics_instruction_set>
+        **MANDATORY PHYSICS RULES FOR THIS SCENE**:
+        The following rules are derived from the entity's physical structure. You MUST enforce these constraints in the prompt.
+        ${activeEntitiesPhysics}
+    </physics_instruction_set>
+    
+    <original_intent>
+        ${parsedImageGenPromptJSON.imageGenPrompt}
+    </original_intent> // 여기
+    
+    <scene_narration>${sceneNarration}</scene_narration>
+    
     <entity_reference_manifest>
         ${JSON.stringify(entityManifest, null, 2)}
     </entity_reference_manifest>
-    <scene_narration>${sceneNarration}</scene_narration>
-    <original_intent>${JSON.stringify(mappedImageGenPrompt, null, 2)}</original_intent>
+    
     <target_duration>${targetDuration} seconds</target_duration>
+
     <image_context>
         The attached image represents the STARTING FRAME (t=0) of the video.
         **CRITICAL INSTRUCTION**:
         1. **Vision is Truth (Start Only)**: Use the image to determine the *starting* pose.
-           - If Image is **Static**: You MUST describe the transition from stillness to action.
-           - If Image is **Dynamic**: You MUST describe the continuation of the motion.
-        2. **Context-Driven Physics & Tone**: 
-           - **Analyze <video_metadata>** first. Infer the genre, mood, and world-rules from the Title and Description.
-           - If metadata implies **Action/SF**, prioritize speed, impact, and exaggerated physics.
-           - If metadata implies **Drama/Romance**, prioritize emotional subtlety, soft lighting, and micro-movements.
-           - If metadata implies **Dance/Music**, prioritize rhythm and full-body flow.
-        3. **Flow & Continuity**: The video MUST NOT STOP or BREAK PHYSICS. Every action must flow logically into the next.
+           - If Image is **Static**: Describe the transition from stillness to action using the 'Physics Context' rules.
+           - If Image is **Dynamic**: Describe the continuation/reaction.
+        2. **Context-Driven Tone**: 
+           - Analyze <video_metadata> for genre.
+           - Combine Genre (e.g., Action) with Physics Context (e.g., Rigid Impact) to select the final verbs.
+        3. **Flow & Continuity**: The video MUST NOT STOP or BREAK PHYSICS.
     </image_context>
 </input_context>
 `;

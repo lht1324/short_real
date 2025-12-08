@@ -31,7 +31,7 @@ function FeatureCard({ feature, index }: { feature: Feature, index: number }) {
                 setTypedText(feature.prompt.substring(0, i + 1));
                 i++;
                 if (i === feature.prompt.length) clearInterval(typing);
-            }, 30);
+            }, 15);
             return () => clearInterval(typing);
         } else {
             setTypedText("");
