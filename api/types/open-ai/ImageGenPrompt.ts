@@ -117,18 +117,14 @@ export interface PhysicsProfile {
 }
 
 // Entity 인터페이스는 기존과 동일하게 유지
-export interface Entity {id: string;
+export interface Entity {
+    id: string;
     role: 'main_hero' | 'sub_character' | 'background_extra' | 'prop';
-
-    /** * [New] 물리 엔진 라우팅을 위한 핵심 프로필
-     * 기존 'biotype'을 대체하며, 영상 생성 프롬프트 조립 시 Key로 사용됨.
-     */
-    physics_profile: PhysicsProfile;
 
     /** 시각적/의미적 분류 (VLM 이해용 보조 태그) */
     type: 'human' | 'creature' | 'object' | 'machine' | 'animal' | 'hybrid';
 
-    demographics?: string; // 예: "African American, 30s"
+    demographics: string; // 예: "African American, 30s"
 
     appearance: {
         /** * 재질감을 암시하는 텍스처 설명 (Deep Research - Dimension 2 반영)
@@ -140,7 +136,7 @@ export interface Entity {id: string;
         body_features?: string;
     };
 
-    state: {
+    state?: {
         /** * 정지 이미지(t=0)에서의 초기 자세
          * 예: "Right fist fully extended", "Suspension compressed"
          */
@@ -148,14 +144,10 @@ export interface Entity {id: string;
         expression?: string;
     };
 
-    text_render?: {
-        content: string;
-        style: string;
-    };
+    /** * [New] 물리 엔진 라우팅을 위한 핵심 프로필
+     * 기존 'biotype'을 대체하며, 영상 생성 프롬프트 조립 시 Key로 사용됨.
+     */
+    physics_profile?: PhysicsProfile;
 }
 
-export type EntityManifestItem = Omit<Entity, 'state' | 'text_render'>;
-
-export type SceneEntityInstruction = Pick<Entity, 'id' | 'state'> & {
-    text_render?: Entity['text_render']; // 필요하면 추가
-};
+export type InitialEntityManifestItem = Omit<Entity, 'physics_profile' | 'state'>;

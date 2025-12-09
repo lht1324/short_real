@@ -72,7 +72,7 @@ export async function POST(request: NextRequest) {
                 sceneData.sceneDuration,
                 videoGenerationTask.video_title ?? '',
                 videoGenerationTask.video_description ?? '',
-                videoGenerationTask.entity_manifest_list ?? [],
+                sceneData.sceneEntityManifestList ?? [],
             );
 
             if (!postVideoGenPromptResult.success || !postVideoGenPromptResult.videoGenPrompt) {

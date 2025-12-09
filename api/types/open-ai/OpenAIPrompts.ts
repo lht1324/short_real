@@ -163,46 +163,45 @@ export const POST_MASTER_STYLE_PROMPT = `
 
     <task_2_entity_manifest>
         Extract distinct subjects (characters, key objects) from the script and define their PERMANENT attributes.
+        This manifest will be used to initialize the physics engine, so material accuracy is critical.
         
         **Rules for Entities:**
         1. **ID Standardization**: Assign a unique, simple 'id' (snake_case, e.g., 'desert_colossus'). This ID allows continuity across scenes.
         
-        2. **Biotype Classification**:
-           - **'biotic'**: Living things (Humans, Animals).
-           - **'abiotic'**: Non-living (Robots, Vehicles, Objects).
-        
-        3. **Demographics (Humans Only)**: 
-           - IF type is 'human', you MUST explicitly state ethnicity/nationality and age range in the 'demographics' field.
-        
-        4. **Visual Core & Era Adaptation (CRITICAL)**: 
+        2. **Type Classification (Strict)**:
+           - **'human'**: Humans only.
+           - **'creature'**: Fantasy beasts, aliens, monsters.
+           - **'animal'**: Real-world animals.
+           - **'machine'**: Robots, vehicles, mechs, appliances.
+           - **'object'**: Passive items, weapons, furniture.
+           - **'hybrid'**: Cyborgs, plant-people.
+
+        3. **Demographics Strategy**: 
+           - **IF 'human'**: MUST specify ethnicity, nationality, and exact age (e.g., "Korean American, late 20s").
+           - **IF 'machine'/'object'**: Specify Year/Model or Origin (e.g., "2077 Prototype", "Victorian Era").
+           - **IF others**: Use "N/A" or simple origin descriptor.
+
+        4. **Visual Core & Era Adaptation (Material-First Design)**: 
            - You must translate generic terms into ERA-SPECIFIC visual descriptors.
-           - Apply the appropriate logic based on the 'Biotype'.
+           - **CRITICAL**: The 'clothing_or_material' field acts as the seed for the Physics Engine. You must describe the **Texture and Hardness**.
            
-           **[A. For Biotic Entities (Humans/Creatures) -> FOCUS: Fashion & Gear]**
+           **[A. Humans/Hybrids -> FOCUS: Fashion & Fabric Weight]**
            * **Case: Pilot**
-               - *WWII Context*: "Brown leather bomber jacket with sheepskin collar, soft leather aviator cap, vintage glass goggles."
-               - *Modern Context*: "Sage green Nomex flight suit, G-suit leg straps, HGU-55/P composite helmet with dark visor, oxygen mask hanging on one side."
-               - *Sci-Fi Context*: "Sleek pressurized void-suit with hexagonal patterns, bulky life-support chest unit, holographic HUD overlay on faceplate."
-           * **Case: Soldier/Warrior**
-               - *Feudal Japan*: "O-Yoroi lacquered armor plates, Kabuto helmet with crest, chainmail sleeves (kote)."
-               - *Vietnam War*: "Olive drab jungle fatigues, M1 steel helmet with mesh cover, canvas webbing gear, flak vest."
-               - *Cyberpunk*: "Matte black tactical ballistic weave, reinforced cybernetic limb attachments, glowing optical sensors, urban camo raincoat."
-           * **Case: Civilian/Professional**
-               - *1920s Musician*: "Sharp black tuxedo with tails, stiff wing-collar shirt, bow tie, pomaded hair."
-               - *1980s Office Worker*: "Oversized beige suit with shoulder pads, wide patterned tie, wristwatch with calculator."
-               - *Modern Tech CEO*: "Minimalist grey t-shirt, dark denim jeans, clean sneakers, smart glasses."
+               - *WWII*: "Heavy brown leather bomber jacket (rigid shoulders), sheepskin collar, canvas straps." -> Implies Leather/Cloth physics.
+               - *Sci-Fi*: "Form-fitting pressurized void-suit with hexagonal glossy polymers, bulky life-support chest unit." -> Implies Synthetic/Rigid physics.
+           
+           **[B. Machines/Objects -> FOCUS: Surface Finish & Metal Type]**
+           * **Case: Robot/Vehicle**
+               - *Steampunk*: "Polished brass plating with oxidation spots, exposed copper wiring, heavy cast-iron joints." -> Implies Rigid Metal physics.
+               - *Cyberpunk*: "Matte-black carbon fiber chassis, scratch-resistant ceramic coating, glowing neon sub-dermal layers." -> Implies Composite/Lightweight physics.
+           
+           **[C. Creatures/Animals -> FOCUS: Skin Texture & Density]**
+               - *Beast*: "Matted coarse fur covered in mud, thick leathery hide underneath." -> Implies Cloth/Viscoelastic physics.
+               - *Alien*: "Translucent gelatinous skin, visible internal organs, slime-coated surface." -> Implies Fluid/Amorphous physics.
 
-           **[B. For Abiotic Entities (Machines/Objects) -> FOCUS: Industrial Design & Material]**
-           * **Case: Robot/Mech**
-               - *Steampunk*: "Polished brass plating, exposed clockwork gears, steam vents, wooden trim joints, analog pressure gauges."
-               - *Dieselpunk*: "Heavy riveted cast-iron armor, oil-stained steel, bulky hydraulic pistons, exhaust pipes emitting black smoke."
-               - *Cyberpunk*: "Sleek matte-black carbon fiber chassis, glowing neon optical sensors, exposed internal wiring, synthetic muscle fibers."
-               - *Wasteland*: "Scavenged mismatched metal plates, heavy rust patina, welded scrap reinforcements, exposed engine block."
-           * **Case: Vehicle**
-               - *Noir/1940s*: "Glossy black sedan, chrome bumpers, whitewall tires, rounded fenders."
-               - *Futuristic*: "Angular aerogel chassis, magnetic levitation pods, frictionless hull, LED strip lighting."
-
-        5. **Prohibitions**: Do NOT include temporary states (running, kneeling) in 'appearance'. Only physical traits.
+        5. **Prohibitions**: 
+           - Do NOT include temporary states (running, kneeling, bleeding) in 'appearance'. 
+           - Only define permanent physical traits.
     </task_2_entity_manifest>
 
     <output_schema>
@@ -225,12 +224,11 @@ export const POST_MASTER_STYLE_PROMPT = `
             "entityManifest": [
                 {
                     "id": "string (snake_case unique id)",
-                    "role": "main_hero" | "sub_character" | "prop",
-                    "type": "human" | "creature" | "object" | "machine" | "animal",
-                    "biotype": "biotic" | "abiotic",
-                    "demographics": "string (Required for humans, null for others)",
+                    "role": "main_hero" | "sub_character" | "background_extra" | "prop",
+                    "type": "human" | "creature" | "object" | "machine" | "animal" | "hybrid",
+                    "demographics": "string (Required. e.g. 'Caucasian, 30s' or 'N/A' or '2024 Model')",
                     "appearance": {
-                        "clothing_or_material": "string (REQUIRED: Apply Era/Design Enforcement Logic)",
+                        "clothing_or_material": "string (REQUIRED: Describe material density/texture for physics inference)",
                         "hair": "string (Optional)",
                         "accessories": ["string"],
                         "body_features": "string (Optional)"
@@ -241,62 +239,6 @@ export const POST_MASTER_STYLE_PROMPT = `
     </output_schema>
 </developer_instruction>
 `
-
-const SIJS_SCHEMA_DEFINITION = `
-interface ImageGenPrompt {
-  technical_specifications: {
-    art_style: string;
-    camera_settings: { angle: string; framing: string; focus: string; };
-    rendering_engine: string;
-    quality_tags: string[];
-  };
-  
-  motion_vector: {
-    time_phase: 'preparation' | 'initiation' | 'peak_action' | 'impact' | 'recovery';
-    force_direction: string;
-    visual_evidence: string;
-  };
-  
-  entity_manifest: {
-    id: string; // MUST match Reference Manifest
-    type: 'human' | 'creature' | 'object' | 'machine' | 'animal' | 'hybrid';
-    
-    // Physics Routing Profile
-    physics_profile: {
-      morphology: 'articulated' | 'wheeled' | 'tracked' | 'aerial_wing' | 'aquatic' | 'amorphous';
-      material: 'rigid' | 'viscoelastic' | 'brittle' | 'cloth' | 'fluid' | 'elastoplastic' | 'granular';
-      action_context: 'locomotion' | 'combat' | 'interaction' | 'aerodynamics' | 'passive';
-    };
-
-    appearance: {
-      clothing_or_material: string; 
-      hair?: string;
-      accessories?: string[];
-      body_features?: string;
-    };
-
-    state: {
-      pose: string;
-      expression?: string;
-    };
-    text_render?: { content: string; style: string; };
-  }[];
-
-  environmental_context: {
-    location: string;
-    atmosphere: string;
-    lighting_setup: { global_light: string; accent_light?: string; };
-    background_elements?: string[];
-  };
-  interaction_logic: {
-    spatial_arrangement: string[];
-    actions: string[];
-  };
-  constraints: {
-    exclusions?: string;
-  };
-}
-`;
 
 export const POST_IMAGE_GEN_PROMPT_PROMPT = `
 <developer_instruction>
@@ -469,15 +411,18 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
         Research shows 'Fast' models fail with complex constraints but thrive with **"Structural Constraint + Dynamic Release"**.
 
         **1. The Formula (Strictly Follow This Order):**
-        > **[Camera/Framing] + [Subject Handle] + [Action Terminology] + [Physics/Atmosphere] + [Style/Lighting] + ([Context Anchor])**
+        > **[Camera/Framing] + [Subject Handle] + [Action Terminology] + ([Target Connection]) + [Physics/Atmosphere] + [Style/Lighting] + ([Context Anchor])**
 
-        **2. Constraint vs. Release Strategy:**
-        - **CONSTRAIN (Be Specific)**: 
-          - **Camera**: "Low angle tracking shot", "Whip-pan". (Hard constraint).
-          - **Subject**: "The muscular boxer in white trunks". (Visual Anchor).
-        - **RELEASE (Be Natural)**: 
-          - **Motion**: Do NOT describe joints/angles ("Extension of elbow"). Use **Industry Terms** ("Snaps a Jab"). Let the model's prior knowledge handle the flow.
-          - **Physics**: Do NOT use negative prompts ("No distortion"). Use **Positive Visuals** ("Sweat explodes", "Muscles ripple").
+        **2. Component Guide:**
+        - **[Camera/Framing]**: Hard constraint. e.g., "Low angle tracking shot", "Whip-pan".
+        - **[Subject Handle]**: Visual description. e.g., "The muscular boxer in white trunks".
+        - **[Action Terminology]**: Use **Tier 1 Industry Terms**. e.g., "Snaps a Right Cross", "Backpedals".
+        - **([Target Connection])**: **CONDITIONAL**. Use ONLY if the action involves physical contact.
+          - *Rule*: If action is non-contact (e.g., Dodge, Shadowbox, Move), **OMIT this entirely**.
+          - *Format*: "...connecting with [Specific Part]" or "...impacting [Specific Part]".
+          - *Example*: "...connecting with the left jaw." (Light specification).
+        - **[Physics/Atmosphere]**: Positive visuals. e.g., "Sweat atomizes into mist."
+        - **[Context Anchor]**: Broad domain tag. e.g., "(Professional Boxing Match)".
 
     </seedance_optimization_strategy>
 
@@ -498,13 +443,23 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
         - *Reason*: This causes "Body Horror" in Fast models.
     </action_terminology_hierarchy>
 
+    <interaction_precision_protocol>
+        **Domain & Physics Constraints**:
+        1. **Domain Logic**: Respect the rules (e.g., Boxing = Hands only; Racing = Tires grip).
+        2. **Stability Rule**: 
+           - The Agent (Force Source) must **Maintain Balance/Anchor**.
+           - The Subject (Force Sink) absorbs the energy (e.g., Head snaps back, Car leans).
+           - *Goal*: Prevent "Double Fall" or "Entanglement" in the resulting video.
+    </interaction_precision_protocol>
+
     <output_format>
         Return a single JSON object.
         {
             "video_prompt": "string", 
-            // Example: "Low angle close-up. The sweat-drenched boxer snaps a sharp Left Jab. Sweat atomizes into mist upon impact, cheek compressing. High contrast stadium lighting, cinematic slow-mo. (Professional Boxing Match)"
+            // Example (Contact): "Low angle. The boxer snaps a Right Cross connecting with the jaw. Sweat explodes. (Boxing)"
+            // Example (Non-Contact): "Wide shot. The boxer backpedals rapidly. Canvas flexes underfoot. (Boxing)"
             "reasoning": "string" 
-            // Explain: "Chosen Term: 'Left Jab'. Strategy: Constrained Camera, Released Motion Flow."
+            // Explain: "Chosen Term: 'Backpedal'. Target: None (Movement only). Strategy: Released Flow."
         }
     </output_format>
 
@@ -512,6 +467,10 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
         1. **Safety Filter**: NO blood, gore, open wounds. Use "Sweat explosion", "Deformation", "Shockwave".
         2. **No IDs**: 'boxer_hero' must be converted to visual description.
         3. **Positive Assertion**: Do not use "No blur" or "No slide". Describe what IS happening ("Crisp focus", "Firm grip").
+        4. **The Law of Structural Inheritance**:
+           - **Principle**: Examples provided in this prompt are **Structural Vectors**, NOT content.
+           - **Rule**: Inherit the **SYNTAX** (Form) of the examples, but strictly derive the **SEMANTICS** (Content) from the <scene_narration>.
+           - *Failure Condition*: If the scene is about "Soccer" but you write "Right Cross" because it was in the example, you have failed the law.
     </constraints>
 </developer_instruction>
 `;

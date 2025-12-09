@@ -15,8 +15,7 @@ import {
     POST_VIDEO_GEN_PROMPT_PROMPT, POST_MUSIC_GENERATION_DATA_PROMPT
 } from "@/api/types/open-ai/OpenAIPrompts";
 import {MusicGenerationData} from "@/api/types/suno-api/MusicGenerationData";
-import {EntityManifestItem, ImageGenPrompt} from "@/api/types/open-ai/ImageGenPrompt";
-import {VideoGenPrompt} from "@/api/types/open-ai/VideoGenPrompt";
+import {Entity, InitialEntityManifestItem, PhysicsProfile} from "@/api/types/open-ai/ImageGenPrompt";
 import {PHYSICS_LIBRARY} from "@/api/types/open-ai/PhysicsPromptLibrary";
 
 enum OpenAIModel {
@@ -191,7 +190,7 @@ Instruction: Process the input data and return the JSON output according to the 
         masterStylePositivePromptInfo?: MasterStyleInfo;
         masterStyleNegativePrompt?: string;
         // [수정 2] 리턴 타입에 entityManifest 추가
-        entityManifestList?: EntityManifestItem[];
+        entityManifestList?: InitialEntityManifestItem[];
         error?: {
             message: string;
             code: string
@@ -261,7 +260,7 @@ Instruction: Analyze the input style AND the full script context to generate the
                         positivePromptInfo: MasterStyleInfo;
                         negativePrompt: string;
                     };
-                    entityManifest: EntityManifestItem[];
+                    entityManifest: InitialEntityManifestItem[];
                 } = JSON.parse(generatedResult);
 
                 return {
@@ -299,10 +298,11 @@ Instruction: Analyze the input style AND the full script context to generate the
         sceneNarration: string,
         videoTitle: string,
         videoDescription: string,
-        entityManifestList: EntityManifestItem[],
+        entityManifestList: InitialEntityManifestItem[],
     ): Promise<{
         success: boolean;
         imageGenPrompt?: string;
+        entityManifestList?: Entity[],
         error?: {
             message: string;
             code: string
@@ -362,7 +362,7 @@ Instruction: Generate the scene instruction JSON.
                 ],
                 response_format: { type: 'json_object' },
                 reasoning_effort: 'high',
-                max_completion_tokens: 8192,
+                max_completion_tokens: 10240,
             });
 
             const generatedContent = completion.choices[0]?.message?.content;
@@ -381,22 +381,7 @@ Instruction: Generate the scene instruction JSON.
             try {
                 const instructionJSON: {
                     image_gen_prompt: string;
-                    updated_entity_manifest: {
-                        id: string;
-                        physics_profile: {
-                            morphology: "articulated" | "wheeled" | "tracked" | "aerial_wing" | "aquatic" | "amorphous";
-                            material: "rigid" | "viscoelastic" | "brittle" | "cloth" | "fluid" | "elastoplastic" | "granular";
-                            action_context: "locomotion" | "combat" | "interaction" | "aerodynamics" | "passive";
-                        },
-                        appearance: {
-                            clothing_or_material: string;
-                            body_features: string;
-                        },
-                        state: {
-                            pose: string;
-                            expression: string;
-                        }
-                    }[]
+                    updated_entity_manifest: Omit<Entity, 'role' | 'type' | 'demographics'>[]
                 } = JSON.parse(generatedContent);
 
                 // [수정] 병합 로직 (Physics-Aware Merge)
@@ -411,30 +396,33 @@ Instruction: Generate the scene instruction JSON.
                     };
                 }
 
-                const finalPromptString = JSON.stringify({
+                return {
+                    success: true,
                     imageGenPrompt: instructionJSON.image_gen_prompt,
                     entityManifestList: instructionJSON.updated_entity_manifest.map(instruction => {
-                        const originalEntity = entityManifestList.find(e => e.id === instruction.id);
+                        const originalEntity = entityManifestList.find((entityManifest) => {
+                            return entityManifest.id === instruction.id;
+                        });
 
                         if (!originalEntity) {
-                            console.warn(`Warning: LLM generated unknown ID '${instruction.id}'. Keeping as is.`);
-                            return instruction;
+                            console.warn(`Warning: LLM generated unknown ID '${instruction.id}'`);
+                            throw Error("LLM generated unknown ID '${instruction.id}'.")
                         }
 
                         return {
-                            ...originalEntity, // 1. 원본의 기본 속성(role, demographics 등) 가져오기
-
-                            // 2. LLM이 생성한 핵심 물리/시각 데이터로 덮어쓰기
-                            physics_profile: instruction.physics_profile || originalEntity.physics_profile,
-                            appearance: instruction.appearance || originalEntity.appearance,
+                            // LLM이 생성한 핵심 물리/시각 데이터로 덮어쓰기
+                            id: instruction.id,
+                            physics_profile: instruction.physics_profile,
+                            type: originalEntity.type,
+                            demographics: originalEntity.demographics,
+                            appearance: {
+                                ...originalEntity.appearance,
+                                ...instruction.appearance,
+                            },
                             state: instruction.state,
+                            role: originalEntity.role,
                         };
-                    })
-                });
-
-                return {
-                    success: true,
-                    imageGenPrompt: finalPromptString
+                    }),
                 };
             } catch (jsonError) {
                 console.error('Failed to parse generated JSON:', jsonError);
@@ -466,7 +454,7 @@ Instruction: Generate the scene instruction JSON.
         targetDuration: number,
         videoTitle: string,
         videoDescription: string,
-        entityManifest: EntityManifestItem[],
+        entityManifestList: Entity[],
     ): Promise<{
         success: boolean;
         videoGenPrompt?: string;
@@ -487,31 +475,10 @@ Instruction: Generate the scene instruction JSON.
 
             const developerMessage = POST_VIDEO_GEN_PROMPT_PROMPT;
 
-            // 1. 이미지 프롬프트 파싱
-            const parsedImageGenPromptJSON: {
-                imageGenPrompt: string;
-                entityManifestList: {
-                    id: string;
-                    physics_profile: {
-                        morphology: "articulated" | "wheeled" | "tracked" | "aerial_wing" | "aquatic" | "amorphous";
-                        material: "rigid" | "viscoelastic" | "brittle" | "cloth" | "fluid" | "elastoplastic" | "granular";
-                        action_context: "locomotion" | "combat" | "interaction" | "aerodynamics" | "passive";
-                    },
-                    appearance: {
-                        clothing_or_material: string;
-                        body_features: string;
-                    },
-                    state: {
-                        pose: string;
-                        expression: string;
-                    }
-                }[]
-            } = JSON.parse(imageGenPrompt);
-
-            // 2. [핵심] Physics Profile을 기반으로 물리 법칙 텍스트 생성 (Code Level Injection)
+            // [핵심] Physics Profile을 기반으로 물리 법칙 텍스트 생성 (Code Level Injection)
             // 메인 히어로 또는 씬에 등장하는 주요 엔티티들의 물리 속성을 추출하여 문자열로 변환
-            const activeEntitiesPhysics = parsedImageGenPromptJSON.entityManifestList.map(entity => {
-                const { morphology, material, action_context } = entity.physics_profile;
+            const activeEntitiesPhysics = entityManifestList.filter((entity) => !!(entity.physics_profile)).map((entity) => {
+                const { morphology, material, action_context } = entity.physics_profile as PhysicsProfile;
 
                 // 라이브러리에서 텍스트 조회 (Safety check 포함)
                 const morphologyData = PHYSICS_LIBRARY.morphology[morphology];
@@ -519,10 +486,6 @@ Instruction: Generate the scene instruction JSON.
                 const actionContextData = PHYSICS_LIBRARY.action_context[action_context];
 
                 if (!morphologyData || !materialData || !actionContextData) return null;
-
-                console.log(`Scene [${sceneNumber}] Entity '${entity.id}' morphologyData: `, JSON.stringify(morphologyData));
-                console.log(`Scene [${sceneNumber}] Entity '${entity.id}' materialData: `, JSON.stringify(materialData));
-                console.log(`Scene [${sceneNumber}] Entity '${entity.id}' actionContextData: `, JSON.stringify(actionContextData));
 
                 return `
             [Entity: ${entity.id}]
@@ -547,13 +510,22 @@ Instruction: Generate the scene instruction JSON.
     </physics_instruction_set>
     
     <original_intent>
-        ${parsedImageGenPromptJSON.imageGenPrompt}
-    </original_intent> // 여기
+        ${imageGenPrompt}
+    </original_intent>
     
     <scene_narration>${sceneNarration}</scene_narration>
     
     <entity_reference_manifest>
-        ${JSON.stringify(entityManifest, null, 2)}
+        ${JSON.stringify(entityManifestList.map((entity) => {
+            return {
+                id: entity.id,
+                role: entity.role,
+                type: entity.type,
+                demographics: entity.demographics,
+                appearance: entity.appearance,
+                state: entity.state,
+            }
+        }), null, 2)}
     </entity_reference_manifest>
     
     <target_duration>${targetDuration} seconds</target_duration>
@@ -597,7 +569,7 @@ Instruction: Generate the scene instruction JSON.
                 ],
                 reasoning_effort: 'high',
                 response_format: { type: 'json_object' },
-                max_completion_tokens: 6144,
+                max_completion_tokens: 8192,
             });
 
             console.log(`[${sceneNumber}] usage: `, JSON.stringify(completion.usage))

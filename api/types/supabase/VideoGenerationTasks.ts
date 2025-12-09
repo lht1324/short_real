@@ -1,7 +1,7 @@
 // video_generation_tasks 테이블 타입 정의
 import {MasterStyleInfo} from "@/api/types/supabase/MasterStyleInfo";
 import {CaptionConfigState, CaptionData} from "@/components/page/workspace/editor/WorkspaceEditorPageClient";
-import {EntityManifestItem} from "@/api/types/open-ai/ImageGenPrompt";
+import {Entity, InitialEntityManifestItem} from "@/api/types/open-ai/ImageGenPrompt";
 
 export interface VideoGenerationTask {
     id?: string; // uuid
@@ -13,7 +13,7 @@ export interface VideoGenerationTask {
     subtitle_segment_list: SubtitleSegment[]; // jsonb, not null
     master_style_positive_prompt?: MasterStyleInfo;
     master_style_negative_prompt?: string;
-    entity_manifest_list?: EntityManifestItem[];
+    entity_manifest_list?: InitialEntityManifestItem[];
     video_title?: string;
     video_description?: string;
     processed_scene_count?: number;
@@ -70,6 +70,7 @@ export interface SceneData {
     imageGenPromptDirective: string;
     imageGenPrompt?: string; // 각 Scene 이미지 생성에 넣을 프롬프트
     videoGenPrompt?: string; // 각 Scene 영상 생성에 넣을 프롬프트
+    sceneEntityManifestList?: Entity[];
     requestId?: string;
     sceneSubtitleSegments?: SubtitleSegment[];
     status: SceneGenerationStatus;

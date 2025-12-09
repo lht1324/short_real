@@ -72,6 +72,7 @@ export async function POST(request: NextRequest) {
             return {
                 ...sceneData,
                 imageGenPrompt: postImageGenPromptResult.imageGenPrompt,
+                sceneEntityManifestList: postImageGenPromptResult.entityManifestList,
             };
         });
         const sceneDataWithImageGenPromptList = await Promise.all(sceneDataWithImageGenPromptPromiseList);

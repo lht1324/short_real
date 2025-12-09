@@ -82,37 +82,10 @@ enum ConfigPanelType {
     Music = 'music'
 }
 
-// const INITIAL_CAPTION_CONFIG_STATE: CaptionConfigState = {
-//     // Font settings state
-//     fontFamilyName: "Montserrat",
-//     fontSize: 60,
-//     fontWeight: 900,
-//
-//     // Caption settings state
-//     captionPosition: 80,
-//     captionHeight: 0,
-//     showCaptionLine: true,
-//
-//     // Shadow settings state
-//     // isShadowEnabled: true,
-//     // shadowIntensity: 80,
-//     // shadowThickness: 50,
-//
-//     // Color settings state
-//     activeColor:'#FF0000',
-//     inactiveColor:'#BB0000',
-//     isActiveOutlineEnabled: true,
-//     activeOutlineColor:'#FFFFFF',
-//     activeOutlineThickness: 100,
-//     isInactiveOutlineEnabled: true,
-//     inactiveOutlineColor:'#BBBBBB',
-//     inactiveOutlineThickness: 70,
-// }
-
 const INITIAL_CAPTION_CONFIG_STATE: CaptionConfigState = {
     // Font settings state
-    fontFamilyName: "Roboto",
-    fontSize: 60,
+    fontFamilyName: "Poppins",
+    fontSize: 48,
     fontWeight: 900,
 
     // Caption settings state
@@ -127,12 +100,12 @@ const INITIAL_CAPTION_CONFIG_STATE: CaptionConfigState = {
 
     // Color settings state
     activeColor:'#FFFFFF',
-    inactiveColor:'#A0A0A0',
-    isActiveOutlineEnabled: false,
+    inactiveColor:'#AAAAAA',
+    isActiveOutlineEnabled: true,
     activeOutlineColor:'#000000',
     activeOutlineThickness: 50,
-    isInactiveOutlineEnabled: false,
-    inactiveOutlineColor:'#404040',
+    isInactiveOutlineEnabled: true,
+    inactiveOutlineColor:'#000000',
     inactiveOutlineThickness: 50,
 }
 
