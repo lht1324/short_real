@@ -32,8 +32,8 @@ const features: Feature[] = [
         description:
             "The AI chooses how close to shoot.\nFrom close-ups to wide shots automatically.",
         prompt:
-            "Extreme close-up of a human eye, detailed iris, reflection of city lights at night, ultra sharp macro photography",
-        videoSrc: "/demo/demo_3.mp4",
+            "A continuous visceral sequence of a professional boxer: tracking a sweat drop on bruised skin, tensing neck muscles under a mouthpiece, rebounding off the flexible ropes, connecting a crushing Right Cross with glove compression, and exploding into a fine mist of atomized sweat.",
+        videoSrc: "/demo/demo_framing.mp4",
         icon: Scan,
         color: "border-pink-500/50 shadow-pink-500/20",
     },

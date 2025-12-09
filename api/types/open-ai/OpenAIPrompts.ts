@@ -342,11 +342,6 @@ export const POST_IMAGE_GEN_PROMPT_PROMPT = `
         Return a single JSON object. Ensure the 'image_gen_prompt' is a single, long, descriptive string.
 
         {
-            "image_gen_prompt": "string", 
-            // A comprehensive Natural Language paragraph.
-            // Structure: [Camera/Style] -> [Subject Description including Physics/Texture] -> [Action/Pose State] -> [Environment/Lighting].
-            // Example: 'A hyperrealistic wide shot of... The articulated robot stands firmly on the concrete... Its rigid metal chassis shows scratches... It is leaning forward in a sprint start pose... Located in... Lighting is...'"
-
             "updated_entity_manifest": [ 
                 {
                     "id": "string", // Must match input ID
@@ -366,7 +361,11 @@ export const POST_IMAGE_GEN_PROMPT_PROMPT = `
                         "expression": "string" 
                     }
                 }
-            ]
+            ],
+            "image_gen_prompt": "string" 
+            // A comprehensive Natural Language paragraph.
+            // Structure: [Camera/Style] -> [Subject Description including Physics/Texture] -> [Action/Pose State] -> [Environment/Lighting].
+            // Example: 'A hyperrealistic wide shot of... The articulated robot stands firmly on the concrete... Its rigid metal chassis shows scratches... It is leaning forward in a sprint start pose... Located in... Lighting is...'"
         }
     </output_schema>
 </developer_instruction>
