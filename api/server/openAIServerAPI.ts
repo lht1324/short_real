@@ -452,6 +452,7 @@ Instruction: Generate the scene instruction JSON.
         sceneNumber: number,
         imageBase64: string,
         targetDuration: number,
+        masterStyleInfo: MasterStyleInfo,
         videoTitle: string,
         videoDescription: string,
         entityManifestList: Entity[],
@@ -477,23 +478,44 @@ Instruction: Generate the scene instruction JSON.
 
             // [핵심] Physics Profile을 기반으로 물리 법칙 텍스트 생성 (Code Level Injection)
             // 메인 히어로 또는 씬에 등장하는 주요 엔티티들의 물리 속성을 추출하여 문자열로 변환
-            const activeEntitiesPhysics = entityManifestList.filter((entity) => !!(entity.physics_profile)).map((entity) => {
+            const activeEntityPhysicsList = entityManifestList.filter((entity) => !!(entity.physics_profile)).map((entity) => {
+                // 1. PhysicsProfile 타입 단언
                 const { morphology, material, action_context } = entity.physics_profile as PhysicsProfile;
 
-                // 라이브러리에서 텍스트 조회 (Safety check 포함)
-                const morphologyData = PHYSICS_LIBRARY.morphology[morphology];
-                const materialData = PHYSICS_LIBRARY.material[material];
-                const actionContextData = PHYSICS_LIBRARY.action_context[action_context];
+                // 2. 신규 PHYSICS_LIBRARY 구조에 맞춰 데이터 조회
+                const morphData = PHYSICS_LIBRARY.morphology[morphology];
+                const matData = PHYSICS_LIBRARY.material[material];
+                const ctxData = PHYSICS_LIBRARY.action_context[action_context];
 
-                if (!morphologyData || !materialData || !actionContextData) return null;
+                // Safety Check: 데이터가 없으면 건너뜀
+                if (!morphData || !matData || !ctxData) return null;
 
+                // 3. Dry S-A-C-S용 키워드 포맷팅
+                // 설명(Description)은 배제하고, LLM이 선택할 수 있는 '옵션'만 제공합니다.
                 return `
-            [Entity: ${entity.id}]
-            - **Morphology (${morphology})**: ${morphologyData.motion_rules} (Constraint: ${morphologyData.negative_prompt})
-            - **Material (${material})**: Impact High -> "${materialData.impact_high}", Texture -> "${materialData.texture_desc}"
-            - **Context (${action_context})**: ${actionContextData.physics_law} (Cam: ${actionContextData.camera_behavior})
-            `;
+[Entity Role: ${entity.role}]
+- **Action Verbs (Tier 1)**: ${morphData.verbs.join(', ')}
+- **Visual Tag (Select One)**: "${matData.effect_tag}" (or "${matData.alt_tag}")
+- **Camera & Speed**: ${ctxData.camera_tech}, ${ctxData.speed_term}
+`;
             }).filter(Boolean).join('\n');
+
+            const mappedEntityList = entityManifestList.map((entity) => {
+                // 1. 식별에 도움 안 되는 미세 텍스처 정보(body_features 등)는 제외
+                const { body_features, accessories, ...safeAppearance } = entity.appearance;
+
+                // 2. 옷/재질 정보에서 너무 긴 묘사는 잘라내거나 핵심만 남기는 전처리도 좋음 (여기서는 그대로 전달하되 프롬프트로 제어)
+                return {
+                    id: entity.id,
+                    role: entity.role,
+                    type: entity.type,
+                    demographics: entity.demographics, // 예: "Latino, late 20s" (식별용)
+                    distinguishing_features: {
+                        hair: safeAppearance.hair, // 예: "Short buzz cut" -> "The buzz-cut boxer"
+                        clothing: safeAppearance.clothing_or_material // 예: "Red satin shorts" -> "The boxer in red"
+                    }
+                };
+            });
 
             // 4. User Message 구성 (physics_instruction_set 주입)
             const userMessage = `
@@ -503,43 +525,27 @@ Instruction: Generate the scene instruction JSON.
         <description>${videoDescription}</description>
     </video_metadata>
     
-    <physics_instruction_set>
-        **MANDATORY PHYSICS RULES FOR THIS SCENE**:
-        The following rules are derived from the entity's physical structure. You MUST enforce these constraints in the prompt.
-        ${activeEntitiesPhysics}
-    </physics_instruction_set>
-    
-    <original_intent>
-        ${imageGenPrompt}
-    </original_intent>
+    <vocabulary_depot>
+        **RESOURCE POOL**: Select keywords from here to construct the Dry S-A-C-S prompt.
+        DO NOT use these as descriptions. Use them as tags.
+        ${activeEntityPhysicsList}
+    </vocabulary_depot>
     
     <scene_narration>${sceneNarration}</scene_narration>
     
-    <entity_reference_manifest>
-        ${JSON.stringify(entityManifestList.map((entity) => {
-            return {
-                id: entity.id,
-                role: entity.role,
-                type: entity.type,
-                demographics: entity.demographics,
-                appearance: entity.appearance,
-                state: entity.state,
-            }
-        }), null, 2)}
-    </entity_reference_manifest>
+    <master_style_guide>
+        ${JSON.stringify(masterStyleInfo, null, 2)}
+    </master_style_guide>
     
-    <target_duration>${targetDuration} seconds</target_duration>
-
+    <entity_list>
+        ${JSON.stringify(mappedEntityList, null, 2)}
+    </entity_list>
+    
     <image_context>
-        The attached image represents the STARTING FRAME (t=0) of the video.
-        **CRITICAL INSTRUCTION**:
-        1. **Vision is Truth (Start Only)**: Use the image to determine the *starting* pose.
-           - If Image is **Static**: Describe the transition from stillness to action using the 'Physics Context' rules.
-           - If Image is **Dynamic**: Describe the continuation/reaction.
-        2. **Context-Driven Tone**: 
-           - Analyze <video_metadata> for genre.
-           - Combine Genre (e.g., Action) with Physics Context (e.g., Rigid Impact) to select the final verbs.
-        3. **Flow & Continuity**: The video MUST NOT STOP or BREAK PHYSICS.
+        **START FRAME TRUTH**:
+        The input image is the visual ground truth.
+        - Do NOT describe the character's appearance (It is already there).
+        - ONLY describe the **Movement** (Action) and **Camera** (Composition).
     </image_context>
 </input_context>
 `;

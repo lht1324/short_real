@@ -44,6 +44,29 @@ export async function POST(request: NextRequest) {
 
 
         const sceneDataList = videoGenerationTask.scene_breakdown_list;
+        const masterStyleInfo = videoGenerationTask.master_style_positive_prompt;
+        const videoTitle = videoGenerationTask.video_title;
+        const videoDescription = videoGenerationTask.video_description;
+
+        if (!masterStyleInfo) {
+            await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
+
+            return getNextBaseResponse({
+                success: false,
+                status: 404,
+                error: 'Video visual data not found.'
+            });
+        }
+
+        if (!videoTitle || !videoDescription) {
+            await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
+
+            return getNextBaseResponse({
+                success: false,
+                status: 404,
+                error: 'Video metadata not found.'
+            });
+        }
 
         const sceneDataWithVideoGenPromptPromiseList: Promise<SceneData>[] = sceneDataList.map(async (sceneData) => {
             const { data: imageData, error: imageError } = await supabase.storage
@@ -70,8 +93,9 @@ export async function POST(request: NextRequest) {
                 sceneData.sceneNumber,
                 imageBase64,
                 sceneData.sceneDuration,
-                videoGenerationTask.video_title ?? '',
-                videoGenerationTask.video_description ?? '',
+                masterStyleInfo,
+                videoTitle,
+                videoDescription,
                 sceneData.sceneEntityManifestList ?? [],
             );
 
