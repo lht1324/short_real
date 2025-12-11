@@ -88,7 +88,6 @@ export async function POST(request: NextRequest) {
             const imageBase64 = Buffer.from(imageArrayBuffer).toString('base64');
 
             const postVideoGenPromptResult = await openAIServerAPI.postVideoGenPrompt(
-                sceneData.imageGenPrompt as string,
                 sceneData.narration,
                 sceneData.sceneNumber,
                 imageBase64,

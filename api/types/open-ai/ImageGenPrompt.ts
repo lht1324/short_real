@@ -85,18 +85,7 @@ export interface ImageGenPrompt {
 
 export interface PhysicsProfile {
     /**
-     * Layer A: 형태학적 골격 (Morphology) - "어떤 구조로 움직이는가?"
-     * - 'articulated': 관절 기반 (인간, 로봇, 곤충) -> 관절 가동 범위 제한, 뼈대 유지.
-     * - 'wheeled': 바퀴 기반 (자동차, 자전거) -> 미끄러짐 방지(No Crabbing), 회전축 이동.
-     * - 'tracked': 무한궤도 (탱크, 불도저) -> 제자리 회전, 마찰력 극대화.
-     * - 'aerial_wing': 날개 기반 (새, 비행기) -> 양력, 뱅킹 턴.
-     * - 'aquatic': 수중 유선형 (물고기, 잠수함) -> 유체 저항, 꼬리 파동.
-     * - 'amorphous': 비정형 (슬라임, 연기, 물) -> 부피 보존, 자유 변형.
-     */
-    morphology: 'articulated' | 'wheeled' | 'tracked' | 'aerial_wing' | 'aquatic' | 'amorphous';
-
-    /**
-     * Layer B: 재료 역학 (Material Dynamics) - "충격에 어떻게 반응하는가?"
+     * Layer A: 재료 역학 (Material Dynamics) - "충격에 어떻게 반응하는가?"
      * - 'rigid': 강체 (금속, 바위, 뼈) -> 찌그러짐(Dent), 튕김(Bounce), 파편화(Shatter).
      * - 'viscoelastic': 점탄성체 (피부, 고무, 근육) -> 출렁임(Ripple), 멍(Bruise), 충격 흡수.
      * - 'brittle': 취성체 (유리, 얼음, 도자기) -> 산산조각(Crack/Shatter).
@@ -106,14 +95,15 @@ export interface PhysicsProfile {
     material: 'rigid' | 'viscoelastic' | 'brittle' | 'cloth' | 'fluid' | 'elastoplastic' | 'granular';
 
     /**
-     * Layer C: 행동 맥락 (Action Context) - "어떤 힘이 지배하는가?"
+     * Layer B: 행동 맥락 (Action Context) - "어떤 힘이 지배하는가?"
      * - 'locomotion': 이동 (달리기, 주행) -> 마찰력, 관성, 무게 중심 이동.
      * - 'combat': 전투 (타격, 피격) -> 비탄성 충돌(Snap), 충격파, 넉백.
      * - 'interaction': 상호작용 (잡기, 조작) -> 미세 컨트롤, 파지력.
      * - 'aerodynamics': 공기역학 (비행, 낙하) -> 양력, 항력, 중력 가속도.
      * - 'passive': 수동적 상태 (정지, 밀려남) -> 외부 힘에 의한 반응.
+     * - 'velocity_max': 초고속 이동
      */
-    action_context: 'locomotion' | 'combat' | 'interaction' | 'aerodynamics' | 'passive';
+    action_context: 'locomotion' | 'combat' | 'interaction' | 'aerodynamics' | 'passive' | 'velocity_max';
 }
 
 // Entity 인터페이스는 기존과 동일하게 유지
@@ -136,6 +126,7 @@ export interface Entity {
         body_features?: string;
     };
 
+    // LLM 생각 정리용 내부 변수, 실사용 없음
     state?: {
         /** * 정지 이미지(t=0)에서의 초기 자세
          * 예: "Right fist fully extended", "Suspension compressed"

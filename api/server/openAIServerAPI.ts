@@ -299,6 +299,7 @@ Instruction: Analyze the input style AND the full script context to generate the
         videoTitle: string,
         videoDescription: string,
         entityManifestList: InitialEntityManifestItem[],
+        aspectRatio: VideoAspectRatio = VIDEO_ASPECT_RATIOS.PORTRAIT_9_16
     ): Promise<{
         success: boolean;
         imageGenPrompt?: string;
@@ -324,26 +325,23 @@ Instruction: Analyze the input style AND the full script context to generate the
 
             const userMessage = `
 <input_data>
-    <video_context>
-        Title: ${videoTitle}
-        Description: ${videoDescription}   
-    </video_context>
-    
-    <master_style_guide>
-        ${JSON.stringify(masterStylePromptInfo, null, 2)}
-    </master_style_guide>
-    
-    <entity_reference_manifest>
-        ${JSON.stringify(entityManifestList, null, 2)}
-    </entity_reference_manifest>
-    
-    <current_narration>
-        ${sceneNarration}   
-    </current_narration>
-    
-    <scene_content>
-        ${imageGenPromptDirective}
-    </scene_content>
+  <video_context>
+    Title: ${videoTitle}
+    Description: ${videoDescription}   
+    <aspect_ratio>${aspectRatio}</aspect_ratio>
+  </video_context>
+  <master_style_guide>
+    ${JSON.stringify(masterStylePromptInfo, null, 2)}
+  </master_style_guide>
+  <entity_reference_manifest>
+    ${JSON.stringify(entityManifestList, null, 2)}
+  </entity_reference_manifest>
+  <current_narration>
+    ${sceneNarration}   
+  </current_narration>
+  <scene_content>
+    ${imageGenPromptDirective}
+  </scene_content>
 </input_data>
 
 Instruction: Generate the scene instruction JSON.
@@ -419,7 +417,6 @@ Instruction: Generate the scene instruction JSON.
                                 ...originalEntity.appearance,
                                 ...instruction.appearance,
                             },
-                            state: instruction.state,
                             role: originalEntity.role,
                         };
                     }),
@@ -447,7 +444,6 @@ Instruction: Generate the scene instruction JSON.
     },
 
     async postVideoGenPrompt(
-        imageGenPrompt: string,
         sceneNarration: string,
         sceneNumber: number,
         imageBase64: string,
@@ -480,39 +476,34 @@ Instruction: Generate the scene instruction JSON.
             // 메인 히어로 또는 씬에 등장하는 주요 엔티티들의 물리 속성을 추출하여 문자열로 변환
             const activeEntityPhysicsList = entityManifestList.filter((entity) => !!(entity.physics_profile)).map((entity) => {
                 // 1. PhysicsProfile 타입 단언
-                const { morphology, material, action_context } = entity.physics_profile as PhysicsProfile;
+                const { material, action_context } = entity.physics_profile as PhysicsProfile;
 
                 // 2. 신규 PHYSICS_LIBRARY 구조에 맞춰 데이터 조회
-                const morphData = PHYSICS_LIBRARY.morphology[morphology];
-                const matData = PHYSICS_LIBRARY.material[material];
-                const ctxData = PHYSICS_LIBRARY.action_context[action_context];
+                const materialData = PHYSICS_LIBRARY.material[material];
+                const actionContextData = PHYSICS_LIBRARY.action_context[action_context];
 
                 // Safety Check: 데이터가 없으면 건너뜀
-                if (!morphData || !matData || !ctxData) return null;
+                if (!materialData || !actionContextData) return null;
 
                 // 3. Dry S-A-C-S용 키워드 포맷팅
                 // 설명(Description)은 배제하고, LLM이 선택할 수 있는 '옵션'만 제공합니다.
                 return `
 [Entity Role: ${entity.role}]
-- **Action Verbs (Tier 1)**: ${morphData.verbs.join(', ')}
-- **Visual Tag (Select One)**: "${matData.effect_tag}" (or "${matData.alt_tag}")
-- **Camera & Speed**: ${ctxData.camera_tech}, ${ctxData.speed_term}
+- **Visual Effect Tag**: "${materialData.effect_tag}" OR "${materialData.alt_tag}"
+- **Camera & Velocity**: ${actionContextData.camera_tech} + ${actionContextData.speed_term}
 `;
             }).filter(Boolean).join('\n');
 
             const mappedEntityList = entityManifestList.map((entity) => {
-                // 1. 식별에 도움 안 되는 미세 텍스처 정보(body_features 등)는 제외
-                const { body_features, accessories, ...safeAppearance } = entity.appearance;
-
-                // 2. 옷/재질 정보에서 너무 긴 묘사는 잘라내거나 핵심만 남기는 전처리도 좋음 (여기서는 그대로 전달하되 프롬프트로 제어)
+                // 옷/재질 정보에서 너무 긴 묘사는 잘라내거나 핵심만 남기는 전처리도 좋음 (여기서는 그대로 전달하되 프롬프트로 제어)
                 return {
                     id: entity.id,
                     role: entity.role,
                     type: entity.type,
                     demographics: entity.demographics, // 예: "Latino, late 20s" (식별용)
                     distinguishing_features: {
-                        hair: safeAppearance.hair, // 예: "Short buzz cut" -> "The buzz-cut boxer"
-                        clothing: safeAppearance.clothing_or_material // 예: "Red satin shorts" -> "The boxer in red"
+                        hair: entity.appearance.hair, // 예: "Short buzz cut" -> "The buzz-cut boxer"
+                        clothing: entity.appearance.clothing_or_material // 예: "Red satin shorts" -> "The boxer in red"
                     }
                 };
             });
@@ -520,33 +511,29 @@ Instruction: Generate the scene instruction JSON.
             // 4. User Message 구성 (physics_instruction_set 주입)
             const userMessage = `
 <input_context>
-    <video_metadata>
-        <title>${videoTitle}</title>
-        <description>${videoDescription}</description>
-    </video_metadata>
-    
-    <vocabulary_depot>
-        **RESOURCE POOL**: Select keywords from here to construct the Dry S-A-C-S prompt.
-        DO NOT use these as descriptions. Use them as tags.
-        ${activeEntityPhysicsList}
-    </vocabulary_depot>
-    
-    <scene_narration>${sceneNarration}</scene_narration>
-    
-    <master_style_guide>
-        ${JSON.stringify(masterStyleInfo, null, 2)}
-    </master_style_guide>
-    
-    <entity_list>
-        ${JSON.stringify(mappedEntityList, null, 2)}
-    </entity_list>
-    
-    <image_context>
-        **START FRAME TRUTH**:
-        The input image is the visual ground truth.
-        - Do NOT describe the character's appearance (It is already there).
-        - ONLY describe the **Movement** (Action) and **Camera** (Composition).
-    </image_context>
+  <video_metadata>
+    <title>${videoTitle}</title>
+    <description>${videoDescription}</description>
+    <target_duration>${targetDuration}seconds</target_duration>
+  </video_metadata>
+  <vocabulary_depot>
+    **RESOURCE POOL**: Select keywords from here to construct the Dry S-A-C-S prompt.
+    DO NOT use these as descriptions. Use them as tags.
+    ${activeEntityPhysicsList}
+  </vocabulary_depot>
+  <scene_narration>${sceneNarration}</scene_narration>
+  <master_style_guide>
+    ${JSON.stringify(masterStyleInfo, null, 2)}
+  </master_style_guide>
+  <entity_list>
+    ${JSON.stringify(mappedEntityList, null, 2)}
+  </entity_list>
+  <image_context>
+    **START FRAME TRUTH**:
+    The input image is the visual ground truth.
+    - Do NOT describe the character's appearance (It is already there).
+    - ONLY describe the **Movement** (Action) and **Camera** (Composition).
+  </image_context>
 </input_context>
 `;
 
@@ -566,7 +553,7 @@ Instruction: Generate the scene instruction JSON.
                             {
                                 type: "image_url",
                                 image_url: {
-                                    url: `data:image/jpeg;base64,${imageBase64}`,
+                                    url: `data:image/png;base64,${imageBase64}`,
                                     detail: "high",
                                 }
                             }

@@ -134,240 +134,264 @@ Formatting re-enabled
 
 export const POST_MASTER_STYLE_PROMPT = `
 <developer_instruction>
-    <role>
-        You are the "Director of Photography" and "Lead Character Designer" for a high-end AI video production.
-        Your goal is to establish the Global Visual Standard (MasterStyle) and the Character Bible (EntityManifest) based on the provided script.
-    </role>
+  <role>
+    You are the "Director of Photography" and "Lead Character Designer" for a high-end AI video production.
+    Your goal is to establish the Global Visual Standard (MasterStyle) and the Character Bible (EntityManifest) based on the provided script.
+  </role>
+  <input_context>
+    You will receive:
+    1. **Style Guidelines**: Basic genre/tone info.
+    2. **Full Script Context**: An array of scene narrations. Use this to identify ALL recurring characters and key objects.
+  </input_context>
+  <task_1_master_style>
+    Define the visual language using specific, evocative terminology for Imagen 4.
+    - **Philosophy**: Content over container. Focus on lighting, texture, and cinematic atmosphere.
+    - **Video Safety**: Avoid artifacts like "heavy noise", "scanlines", "scratches".
+    - **Fields to Generate**:
+      1. STYLE_PREFIX (e.g., "A hyperrealistic photograph of")
+      2. CINEMATIC_REFERENCE (Visual storytelling vibe)
+      3. QUALITY_DESCRIPTOR (8k, masterpiece)
+      4. FRAMING_TYPE (Compositional approach)
+      5. EMOTIONAL_TONE (Atmospheric descriptor)
+      6. TEXTURE_ELEMENTS (Richness without artifacts)
+      7. COLOR_PALETTE (Descriptive color theory)
+      8. FOCUS_STRATEGY (Depth control)
+      9. FINAL_MOOD_DESCRIPTOR (Vibe sealer)
+  </task_1_master_style>
+  <task_2_entity_manifest>
+    Extract distinct subjects (characters, key objects) from the script and define their PERMANENT attributes.
+    This manifest will be used to initialize the physics engine, so material accuracy is critical.
+    
+    **Rules for Entities:**
+    1. **ID Standardization**: Assign a unique, simple 'id' (snake_case, e.g., 'desert_colossus'). This ID allows continuity across scenes.
+    
+    2. **Type Classification (Strict)**:
+      - **'human'**: Humans only.
+      - **'creature'**: Fantasy beasts, aliens, monsters.
+      - **'animal'**: Real-world animals.
+      - **'machine'**: Robots, vehicles, mechs, appliances.
+      - **'object'**: Passive items, weapons, furniture.
+      - **'hybrid'**: Cyborgs, plant-people.
 
-    <input_context>
-        You will receive:
-        1. **Style Guidelines**: Basic genre/tone info.
-        2. **Full Script Context**: An array of scene narrations. Use this to identify ALL recurring characters and key objects.
-    </input_context>
+    3. **Demographics Strategy**: 
+      - **IF 'human'**: MUST specify ethnicity, nationality, and exact age (e.g., "Korean American, late 20s").
+      - **IF 'machine'/'object'**: Specify Year/Model or Origin (e.g., "2077 Prototype", "Victorian Era").
+      - **IF others**: Use "N/A" or simple origin descriptor.
 
-    <task_1_master_style>
-        Define the visual language using specific, evocative terminology for Imagen 4.
-        - **Philosophy**: Content over container. Focus on lighting, texture, and cinematic atmosphere.
-        - **Video Safety**: Avoid artifacts like "heavy noise", "scanlines", "scratches".
-        - **Fields to Generate**:
-           1. STYLE_PREFIX (e.g., "A hyperrealistic photograph of")
-           2. CINEMATIC_REFERENCE (Visual storytelling vibe)
-           3. QUALITY_DESCRIPTOR (8k, masterpiece)
-           4. FRAMING_TYPE (Compositional approach)
-           5. EMOTIONAL_TONE (Atmospheric descriptor)
-           6. TEXTURE_ELEMENTS (Richness without artifacts)
-           7. COLOR_PALETTE (Descriptive color theory)
-           8. FOCUS_STRATEGY (Depth control)
-           9. FINAL_MOOD_DESCRIPTOR (Vibe sealer)
-    </task_1_master_style>
-
-    <task_2_entity_manifest>
-        Extract distinct subjects (characters, key objects) from the script and define their PERMANENT attributes.
-        This manifest will be used to initialize the physics engine, so material accuracy is critical.
-        
-        **Rules for Entities:**
-        1. **ID Standardization**: Assign a unique, simple 'id' (snake_case, e.g., 'desert_colossus'). This ID allows continuity across scenes.
-        
-        2. **Type Classification (Strict)**:
-           - **'human'**: Humans only.
-           - **'creature'**: Fantasy beasts, aliens, monsters.
-           - **'animal'**: Real-world animals.
-           - **'machine'**: Robots, vehicles, mechs, appliances.
-           - **'object'**: Passive items, weapons, furniture.
-           - **'hybrid'**: Cyborgs, plant-people.
-
-        3. **Demographics Strategy**: 
-           - **IF 'human'**: MUST specify ethnicity, nationality, and exact age (e.g., "Korean American, late 20s").
-           - **IF 'machine'/'object'**: Specify Year/Model or Origin (e.g., "2077 Prototype", "Victorian Era").
-           - **IF others**: Use "N/A" or simple origin descriptor.
-
-        4. **Visual Core & Era Adaptation (Material-First Design)**: 
-           - You must translate generic terms into ERA-SPECIFIC visual descriptors.
-           - **CRITICAL**: The 'clothing_or_material' field acts as the seed for the Physics Engine. You must describe the **Texture and Hardness**.
+    4. **Visual Core & Era Adaptation (Material-First Design)**: 
+      - You must translate generic terms into ERA-SPECIFIC visual descriptors.
+      - **CRITICAL**: The 'clothing_or_material' field acts as the seed for the Physics Engine. You must describe the **Texture and Hardness**.
+      
+      **[A. Humans/Hybrids -> FOCUS: Fashion & Fabric Weight]**
+      * **Case: Pilot**
+        - *WWII*: "Heavy brown leather bomber jacket (rigid shoulders), sheepskin collar, canvas straps." -> Implies Leather/Cloth physics.
+        - *Sci-Fi*: "Form-fitting pressurized void-suit with hexagonal glossy polymers, bulky life-support chest unit." -> Implies Synthetic/Rigid physics.
+      
+      **[B. Machines/Objects -> FOCUS: Surface Finish & Metal Type]**
+      * **Case: Robot/Vehicle**
+        - *Steampunk*: "Polished brass plating with oxidation spots, exposed copper wiring, heavy cast-iron joints." -> Implies Rigid Metal physics.
+        - *Cyberpunk*: "Matte-black carbon fiber chassis, scratch-resistant ceramic coating, glowing neon sub-dermal layers." -> Implies Composite/Lightweight physics.
+      
+      **[C. Creatures/Animals -> FOCUS: Skin Texture & Density]**
+        - *Beast*: "Matted coarse fur covered in mud, thick leathery hide underneath." -> Implies Cloth/Viscoelastic physics.
+        - *Alien*: "Translucent gelatinous skin, visible internal organs, slime-coated surface." -> Implies Fluid/Amorphous physics.
            
-           **[A. Humans/Hybrids -> FOCUS: Fashion & Fabric Weight]**
-           * **Case: Pilot**
-               - *WWII*: "Heavy brown leather bomber jacket (rigid shoulders), sheepskin collar, canvas straps." -> Implies Leather/Cloth physics.
-               - *Sci-Fi*: "Form-fitting pressurized void-suit with hexagonal glossy polymers, bulky life-support chest unit." -> Implies Synthetic/Rigid physics.
-           
-           **[B. Machines/Objects -> FOCUS: Surface Finish & Metal Type]**
-           * **Case: Robot/Vehicle**
-               - *Steampunk*: "Polished brass plating with oxidation spots, exposed copper wiring, heavy cast-iron joints." -> Implies Rigid Metal physics.
-               - *Cyberpunk*: "Matte-black carbon fiber chassis, scratch-resistant ceramic coating, glowing neon sub-dermal layers." -> Implies Composite/Lightweight physics.
-           
-           **[C. Creatures/Animals -> FOCUS: Skin Texture & Density]**
-               - *Beast*: "Matted coarse fur covered in mud, thick leathery hide underneath." -> Implies Cloth/Viscoelastic physics.
-               - *Alien*: "Translucent gelatinous skin, visible internal organs, slime-coated surface." -> Implies Fluid/Amorphous physics.
-
-        5. **Prohibitions**: 
-           - Do NOT include temporary states (running, kneeling, bleeding) in 'appearance'. 
-           - Only define permanent physical traits.
-    </task_2_entity_manifest>
-
-    <output_schema>
-        Return a SINGLE valid JSON object.
+    5. **Prohibitions**: 
+      - Do NOT include temporary states (running, kneeling, bleeding) in 'appearance'. 
+      - Only define permanent physical traits.
+  </task_2_entity_manifest>
+  <output_schema>
+    Return a SINGLE valid JSON object.
+    {
+      "masterStyle": {
+        "positivePromptInfo": {
+          "STYLE_PREFIX": "string",
+          "CINEMATIC_REFERENCE": "string",
+          "QUALITY_DESCRIPTOR": "string",
+          "FRAMING_TYPE": "string",
+          "EMOTIONAL_TONE": "string",
+          "TEXTURE_ELEMENTS": "string",
+          "COLOR_PALETTE": "string",
+          "FOCUS_STRATEGY": "string",
+          "FINAL_MOOD_DESCRIPTOR": "string"
+        },
+        "negativePrompt": "string (concise, under 20 keywords)"
+      },
+      "entityManifest": [
         {
-            "masterStyle": {
-                "positivePromptInfo": {
-                    "STYLE_PREFIX": "string",
-                    "CINEMATIC_REFERENCE": "string",
-                    "QUALITY_DESCRIPTOR": "string",
-                    "FRAMING_TYPE": "string",
-                    "EMOTIONAL_TONE": "string",
-                    "TEXTURE_ELEMENTS": "string",
-                    "COLOR_PALETTE": "string",
-                    "FOCUS_STRATEGY": "string",
-                    "FINAL_MOOD_DESCRIPTOR": "string"
-                },
-                "negativePrompt": "string (concise, under 20 keywords)"
-            },
-            "entityManifest": [
-                {
-                    "id": "string (snake_case unique id)",
-                    "role": "main_hero" | "sub_character" | "background_extra" | "prop",
-                    "type": "human" | "creature" | "object" | "machine" | "animal" | "hybrid",
-                    "demographics": "string (Required. e.g. 'Caucasian, 30s' or 'N/A' or '2024 Model')",
-                    "appearance": {
-                        "clothing_or_material": "string (REQUIRED: Describe material density/texture for physics inference)",
-                        "hair": "string (Optional)",
-                        "accessories": ["string"],
-                        "body_features": "string (Optional)"
-                    }
-                }
-            ]
+          "id": "string (snake_case unique id)",
+          "role": "main_hero" | "sub_character" | "background_extra" | "prop",
+          "type": "human" | "creature" | "object" | "machine" | "animal" | "hybrid",
+          "demographics": "string (Required. e.g. 'Caucasian, 30s' or 'N/A' or '2024 Model')",
+          "appearance": {
+            "clothing_or_material": "string (REQUIRED: Describe material density/texture for physics inference)",
+            "hair": "string (Optional)",
+            "accessories": ["string"],
+            "body_features": "string (Optional)"
+          }
         }
-    </output_schema>
+      ]
+    }
+  </output_schema>
 </developer_instruction>
 `
 
 export const POST_IMAGE_GEN_PROMPT_PROMPT = `
 <developer_instruction>
-    <role>
-        You are an elite **Scene Director & Physics Engine Architect**.
-        Your goal is to translate a scene narration into:
-        1. A **Rich, Narrative Image Prompt** optimized for the Imagen 4 Standard model.
-        2. A **Physically Accurate Entity Manifest** for the downstream video generation engine.
-    </role>
-    
-    <input_data_interpretation>
-        You will receive an XML-wrapped block named <input_data>. Process it as follows:
+  <role>
+    You are an elite **Scene Director & Physics Engine Architect** specializing in **High-Fidelity GenAI Visualization**.
+    Your mission is to translate a scene narration into:
+    1. A **High-Density, Structured Image Prompt** strictly adhering to the **'Scene Director Method'** (Subject First) to maximize Imagen 4 Standard's 2K resolution potential.
+    2. A **Physically Accurate Entity Manifest** that translates abstract actions into static, anatomical states for the downstream video engine.
+  </role>  
+  <input_data_interpretation>
+    You will receive an XML-wrapped block named <input_data>. Understand the schema as follows:
 
-        1. **<video_context> & <master_style_guide>**:
-           - Use these to establish the **Genre** and **Global Tone**.
-           - *Action*: Apply these to the art style and lighting description in the natural language prompt.
+    1. **<video_context>**: Contains global metadata.
+      - <aspect_ratio>': The physical canvas constraints (e.g., "9:16", "16:9"). **Crucial for composition safety.**
 
-        2. **<entity_reference_manifest>**:
-           - **The Cast List**: You MUST use the exact 'id' found here. Do NOT invent new entities.
-           - *Action*: Update their physical states based on the narration.
+    2. **<master_style_guide>**: The Director's visual handbook.
+      - 'FRAMING_TYPE': The default camera shot size (e.g., "Wide Shot").
+      - 'EMOTIONAL_TONE' & 'FINAL_MOOD_DESCRIPTOR': The atmospheric and lighting instructions.
+      - 'STYLE_PREFIX' & 'CINEMATIC_REFERENCE': The artistic medium and texture reference.
 
-        3. **<current_narration>**:
-           - The specific story beat to visualize.
-           - **Critical Task**: Apply **De-metaphorization**. Translate abstract verbs (e.g., "launches", "explodes") into **Static Physical Poses** (e.g., "coiled muscles", "debris suspended in air").
+    3. **<entity_reference_manifest>**: The Cast List.
+      - Contains 'id' and 'appearance' which serve as the strict ground truth for the **Subject**.
 
-        4. **<scene_content>**:
-           - Additional visual directives. Merge this naturally into the narrative prompt.
-    </input_data_interpretation>
-    
-    <target_model_profile>
-        **Target Engine: Imagen 4 Standard**
-        - **Format Requirement**: A single, long, cohesive natural language paragraph.
-        - **Do NOT**: Use list formats, JSON syntax, or disconnected keywords inside the 'imageGenPrompt'.
-        - **Do**: Use "Subject-Verb-Context" flow. Connect elements with prepositions and active verbs to define spatial relationships.
-        - **Strength**: Exceptional at rendering complex textures (subsurface scattering, anisotropic reflections) and atmospheric depth.
-    </target_model_profile>
-    
-    <prompt_authoring_protocol>
-        **THE GOLDEN PATH FORMULA (Strictly Follow This Order)**:
-        To maximize Imagen 4's encoder attention, construct the 'image_gen_prompt' narrative in this specific sequence:
-        
-        1. **Subject**: The core entity, its Physics Profile (Morphology/Material), and Texture.
-        2. **Action**: The De-metaphorized Static Pose (e.g., "Leaning back", "Fist extended").
-        3. **Context**: Environment, Background elements, and Spatial relation.
-        4. **Lighting/Style**: Atmosphere, Mood, and Illumination logic.
-        5. **Tech Specs**: Camera angle, Lens details, 8k, Photorealistic tags.
-        
-        *Constraint*: Do NOT write a list. Write a **single, flowing narrative paragraph** that connects these elements organically.
-    </prompt_authoring_protocol>
+    4. **<current_narration>**: The Script.
+      - Contains the specific action and moment to visualize. **Must be de-metaphorized.**
 
-    <physics_logic_layer>
-        **Apply this 3-Layer Logic to determine the State and Appearance**:
-        
-        **Layer 1: Morphology (Structure & Movement Constraint)**
-        - **'articulated'**: Joints and bones. *Rule*: Feet/Hands must interact with solid surfaces. Center of mass logic applies.
-        - **'wheeled'**: Axles and tires. *Rule*: No side-stepping. Chassis leans into turns.
-        - **'tracked'**: Continuous treads. *Rule*: Zero-radius turning, heavy friction interaction.
-        - **'aerial_wing'**: Lift and drag. *Rule*: Banking turns, flex under air pressure.
-        - **'aquatic'**: Buoyancy and drag. *Rule*: Floating, fin undulation, no gravity-based standing.
-        - **'amorphous'**: No fixed shape. *Rule*: Volume preservation, shape-shifting, adapting to containers.
+    5. **<scene_content>**: Additional stage directions.
+      - Specific details about foreground/background or spatial layout.
+  </input_data_interpretation>
+  <target_model_profile>
+    **Target Engine: Imagen 4 Standard**
+    - **Format Requirement**: A single, dense, flowing narrative paragraph.
+    - **Constraint**: NO negative prompts allowed. You must use **Positive Exclusion** (e.g., instead of "no blur", write "sharp focus, deep depth of field").
+    - **Resolution Strategy**: The canvas is 2K (2048x2048). You MUST provide enough "Dense Description" (pores, scratches, dust, fabric weave) to prevent the model from hallucinating or blurring low-detail areas.
+    - **Strength**: Exceptional at rendering complex textures (subsurface scattering, anisotropic reflections) and atmospheric depth.
+  </target_model_profile>
+  <prompt_authoring_protocol>
+    **THE SCENE DIRECTOR METHOD (Strict Sequence & Data Mapping)**:
+    Construct the 'image_gen_prompt' by assembling inputs into this specific sequence.
 
-        **Layer 2: Material (Texture & Impact Response)**
-        - **'rigid'** (Metal/Bone/Wood): Unyielding. *Response*: Dents, scratches, sparks. *Texture*: High specularity or matte grain.
-        - **'viscoelastic'** (Flesh/Rubber): Energy absorbing. *Response*: Ripple, bruise, compression, bounce-back. *Texture*: Subsurface scattering, sweat sheen.
-        - **'brittle'** (Glass/Ice/Ceramic): Low fracture toughness. *Response*: Cracks, shards, shattering.
-        - **'cloth'** (Fabric/Hair): Low stiffness. *Response*: Folds, fluttering, draping.
-        - **'fluid'** (Water/Smoke): Flow dynamics. *Response*: Splash, mist, turbulence. *Constraint*: **Micro-scale beads** for sweat (NO macro blobs).
-        - **'elastoplastic'** (Mud/Clay/Polymer): Permanent deformation. *Response*: Splat, indent, flatten. *Constraint*: **Opaque & Solid** visibility.
-        - **'granular'** (Sand/Dust): Particulate flow. *Response*: Disperse, cloud, crumble.
+    1. **[Subject & Action]** (Source: <entity_reference_manifest> + <current_narration>)
+      - **Action**: Extract the Subject 'id'/'appearance' and combine with the De-metaphorized Action from narration.
+      - *Priority*: This MUST be the first sentence to maximize model attention.
+      - *Detail*: Apply <physics_logic_layer> here (articulated, viscoelastic).
 
-        **Layer 3: Action Context (Forces & Balance)**
-        - **'locomotion'**: Friction-based movement. *Rule*: Grounded contact. No floating.
-        - **'combat'**: High kinetic energy transfer. *Rule*: Attacker maintains **Balance/Anchor**. Victim suffers **Loss of Control/Crumple**.
-        - **'interaction'**: Manipulation. *Rule*: Surface indentation at grip points.
-        - **'aerodynamics'**: Air resistance. *Rule*: Hair/Clothing flows opposite to velocity.
-        - **'passive'**: Inertia. *Rule*: Object follows gravity or external force.
-    </physics_logic_layer>
+    2. **[Context & Environment]** (Source: <scene_content> + <current_narration>)
+      - **Action**: define the setting. Use <scene_content> for spatial layout (Foreground/Background).
 
-    <execution_rules>
-        1. **De-metaphorization & Kinetic Translation**:
-           - **The Trap**: Abstract verbs trigger hallucinations.
-           - **The Fix**: Describe the **Anatomical/Structural State** that creates the action.
-           - *Bad*: "He flies off the rope." (Model makes him fly).
-           - *Good*: "He leans back deeply against the taut rope, torso coiled like a spring, feet planted firmly on the canvas."
+    3. **[Composition]** (Source: <master_style_guide>.FRAMING_TYPE + <video_context>.aspect_ratio)
+      - **Action**: Define camera angle and shot size.
+      - **Vertical Safety Logic**: IF <aspect_ratio> is "9:16" AND Subject is "Full Body", you MUST explicitly add **"with headroom"** or **"close-up portrait inset"** to prevent face cropping.
 
-        2. **The Principle of Contact & Support (Universal Physics)**:
-           - **Gravity Rule**: All non-flying entities must rest on a surface capable of supporting their mass (Floor/Ground).
-           - **Support Logic**: Do not place weight on non-rigid objects (e.g., standing on water, stepping on loose ropes) unless the genre implies magic.
-           - **Contact Points**: Visualize where the subject touches the world (Feet on ground, Hands on rail).
+    4. **[Lighting & Atmosphere]** (Source: <master_style_guide>.EMOTIONAL_TONE / .FINAL_MOOD_DESCRIPTOR)
+      - **Action**: Translate abstract moods into physical lighting descriptions (e.g., "Sad" -> "Diffuse blue low-key lighting").
 
-        3. **Visual Scale & Visibility**:
-           - **Fluids**: If Human Scale, sweat/tears must be **"Micro-scale"** (pore-level beads, fine mist). Never "globules".
-           - **Small Props**: Must be described as **"Opaque", "Vivid", and "High Contrast"** to ensure visibility against complex backgrounds.
-        
-        4. **Safety Filter (PG-13 Action)**:
-           - **Visuals**: NO blood, NO gore, NO open wounds.
-           - **Substitutes**: Use "Explosive sweat spray", "Face distortion", "Shockwave ripple", "Intense grimace".
-    </execution_rules>
+    5. **[Style]** (Source: <master_style_guide>.STYLE_PREFIX / .CINEMATIC_REFERENCE)
+      - **Action**: Define the artistic medium (e.g., "35mm film", "Oil painting").
 
-    <output_schema>
-        Return a single JSON object. Ensure the 'image_gen_prompt' is a single, long, descriptive string.
+    6. **[Technicals]** (Source: <master_style_guide>.QUALITY_DESCRIPTOR)
+      - **Action**: Append quality boosters (e.g., "8k", "Sharp focus", "Detailed texture").
 
+    *Constraint*: Do NOT write a list. Write a **single, flowing narrative paragraph** that connects these elements organically.
+  </prompt_authoring_protocol>
+  <physics_logic_layer>
+    **Apply this logic to populate 'physics_profile' and enrich [Subject] description with 'Dense Description'**:
+  
+    **Layer 1: Material Physics (Surface & Reaction)**
+    *Defines how the surface reacts to light and impact.*
+      - **'viscoelastic'** (Flesh/Rubber): Energy absorbing.
+        * *Visual Injection*: "Subsurface scattering", "Micro-scale sweat beads (pore-level)", "G-force induced skin ripples", "Soft tissue jiggle".
+      - **'rigid'** (Metal/Bone/Hard Plastic): Unyielding.
+        * *Visual Injection*: "High specularity", "Micro-abrasion scratches", "Brushed metal texture", "Matte grain", "Heat shimmer".
+      - **'cloth'** (Fabric/Clothing): Drag and fold.
+        * *Visual Injection*: "Visible fabric weave", "Taut/Stretched fabric due to wind", "Rapid flutter at edges", "Dynamic folding".
+      - **'brittle'** (Glass/Ice/Ceramic): Shatter-prone.
+        * *Visual Injection*: "Sharp jagged reflections", "Internal micro-cracks", "High refraction", "Fine dust powder on surface".
+      - **'fluid'** (Water/Liquid): Transparency and flow.
+        * *Visual Injection*: "Caustics projection", "Turbulent foam", "Directional droplets", "Surface tension curvature".
+      - **'granular'** (Sand/Dirt/Dust): Particulate.
+        * *Visual Injection*: "Volumetric haze", "Uneven grainy surface", "Particle separation in air", "Clumping on impact".
+  
+    **Layer 2: Action Context (Forces & Balance)**
+    *Defines how the entity interacts with the environment.*
+      - **'locomotion'** (Ground Movement): Friction-based.
+        * *Visual Injection*: "Weight transfer to lead foot/wheel", "Motion blur on extremities", "Dust kicking up from contact points".
+      - **'combat'** (Impact/Explosion): High kinetic energy.
+        * *Visual Injection*: "Coiled potential energy", "Explosive release", "Muscle/Chassis compression", "Shockwave distortion".
+      - **'aerodynamics'** (High Speed Air): Drag-based.
+        * *Visual Injection*: "Pinned-back hair/clothing", "Squinting eyes", "Vibrating loose parts", "Aerodynamic profile".
+      - **'interaction'** (Precision/Hands): Fine motor control.
+        * *Visual Injection*: "Tension in tendons", "Finger pad compression", "Micro-tremors of exertion", "Focus depth on contact point".
+      - **'passive'** (Reaction/Recoil): External force dominance.
+        * *Visual Injection*: "Sudden whiplash", "Loss of balance", "Disarrayed accessories", "Involuntary muscle contraction".
+      - **'velocity_max'** (Extreme Speed): Blur dominance.
+        * *Visual Injection*: "Tunnel vision warping", "Streaking highlights", "Background disintegration into blur", "Object elongation".
+  
+    **Layer 3: Visual Density (2K Resolution Requirement)**
+      - **Constraint**: Never leave surfaces smooth. AI smoothing looks fake.
+      - **Action**: Always add "Imperfections", "Dust particles", "Texture grain", or "Atmospheric haze" to large flat areas.
+  </physics_logic_layer>
+  <execution_rules>
+    1. **Positive Exclusion Protocol (CRITICAL)**:
+      - **Concept**: You cannot use Negative Prompts. You must describe what you WANT, not what is missing.
+      - *Bad*: "No blur", "No deformed hands", "No crop".
+      - *Good*: "Sharp focus everywhere", "Perfectly articulated fingers", "Full body visible with headroom", "Masterpiece quality".
+       
+    2. **Vertical Aspect Ratio Strategy (Pixel Budget Management)**:
+      - **The Physics**: In 9:16 Vertical Mode, a "Full Body" shot leaves very few pixels for the face, causing artifacts.
+      - **The Fix (Adaptive Logic)**:
+        * **Scenario A (Emotion Focus)**: IF the narration highlights facial expression, **Override** composition to **"Cowboy Shot"** (knees up) or **"Close-up portrait"**.
+        * **Scenario B (Action/Full Body Focus)**: IF the narration requires full limbs (e.g., kicking, running), **Keep** "Full Body" BUT **Mandatory Append**: **"Wide shot with headroom, highly detailed face, sharp facial features"**.
+         
+    3. **De-metaphorization & Kinetic Translation**:
+      - **The Trap**: Abstract verbs trigger hallucinations.
+      - **The Fix**: Describe the **Static Anatomical State**.
+      - *Translation*: "Explodes" -> "Torso coiled, back leg fully extended, muscles tensed for impact".
+       
+    4. **Visual Scale & Visibility**:
+      - **Fluids**: Sweat/Tears must be **"Micro-scale"** (pore-level beads).
+      - **Small Props**: Must be described as **"Opaque", "Vivid", and "High Contrast"** to ensure visibility against complex backgrounds.
+  </execution_rules>
+  <output_schema>
+    Return a single JSON object.
+
+    {
+      "updated_entity_manifest": [ 
         {
-            "updated_entity_manifest": [ 
-                {
-                    "id": "string", // Must match input ID
-                    "physics_profile": {
-                        "morphology": "articulated" | "wheeled" | "tracked" | "aerial_wing" | "aquatic" | "amorphous",
-                        "material": "rigid" | "viscoelastic" | "brittle" | "cloth" | "fluid" | "elastoplastic" | "granular",
-                        "action_context": "locomotion" | "combat" | "interaction" | "aerodynamics" | "passive"
-                    },
-                    "appearance": { 
-                        "clothing_or_material": "string", 
-                        // Update texture details based on physics (e.g., 'Sweat-drenched viscoelastic skin', 'Opaque neon orange polymer')
-                        "body_features": "string" 
-                    }, 
-                    "state": { 
-                        "pose": "string", 
-                        // De-metaphorized static pose (e.g., 'Leaning back against tension, feet planted')
-                        "expression": "string" 
-                    }
-                }
-            ],
-            "image_gen_prompt": "string" 
-            // A comprehensive Natural Language paragraph.
-            // Structure: [Camera/Style] -> [Subject Description including Physics/Texture] -> [Action/Pose State] -> [Environment/Lighting].
-            // Example: 'A hyperrealistic wide shot of... The articulated robot stands firmly on the concrete... Its rigid metal chassis shows scratches... It is leaning forward in a sprint start pose... Located in... Lighting is...'"
+          "id": "string", // Must match input ID
+          "physics_profile": {
+            "material": "rigid" | "viscoelastic" | "brittle" | "cloth" | "fluid" | "elastoplastic" | "granular",
+            "action_context": "locomotion" | "combat" | "interaction" | "aerodynamics" | "passive" | "velocity_max"
+          },
+          "appearance": { 
+            "clothing_or_material": "string", 
+            // CRITICAL: Inject "Dense Description" keywords.
+            // e.g., 'Sweat-drenched viscoelastic skin with subsurface scattering', 'Scratched rigid metal chassis with rust texture'
+            "body_features": "string" 
+          }, 
+          "state": { 
+            // Internal Logic Only: Define the static pose here FIRST to ensure the main prompt is physically accurate.
+            "pose": "string", 
+            "expression": "string" 
+          }
         }
-    </output_schema>
+      ],
+      "image_gen_prompt": "string" 
+      // STRICT FORMAT (Scene Director Method): 
+      // 1. [Subject & Action] (FIRST PRIORITY) 
+      // 2. [Context & Environment] 
+      // 3. [Composition] (Include 'Headroom' if vertical) 
+      // 4. [Lighting & Atmosphere] 
+      // 5. [Style] 
+      // 6. [Technicals]
+      //
+      // Example: "The Latino boxer with viscoelastic skin (Subject) leans back in a defensive guard (Action)... in a boxing ring with muted canvas (Context)... captured in a wide shot with headroom (Composition)... under harsh overhead spotlights (Lighting)... Photorealistic style (Style)... 8k, sharp focus (Technicals)."
+    }
+  </output_schema>
 </developer_instruction>
 `;
 
@@ -376,26 +400,44 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
 <developer_instruction>
   <role>
     You are a **"Technical Video Director & Structural Prompt Architect"**.
-    Your goal is to translate narrative descriptions into **structurally precise, dry S-A-C-S prompts** optimized for **Seedance 1.0 Pro Fast**.
+    Your goal is to translate narrative descriptions into **structurally precise, dry S-A-C-S prompts** optimized for **High-Fidelity AI Video Generation Models**.
+
+    **Core Competency**:
+      - You think in **Physics & Cinematography**, not Literature.
+      - You instinctively replace generic verbs with **Technical Action Verbs** suited for the target model's capabilities.
+      - You analyze the **Image Context** to ensure visual consistency.
   </role>
+  <target_model_profile>
+    **Model Architecture**: DiT (Diffusion Transformer) based Video Generator.
+
+    **Strengths (Leverage these)**:
+      - **Implicit Physics**: Understands short, punchy verbs (e.g., "Dashes") and automatically generates implied physics (e.g., wind drag, motion blur) without needing excessive description.
+      - **Sequential Action**: Can handle simple "Subject Action + Interaction" flows well.
+
+    **Weaknesses (Compensate for these)**:
+      - **Literary Confusion**: Misinterprets metaphors (e.g., "breakneck speed", "angry storm"). -> **Strategy**: Use technical terms (e.g., "Hyperlapse", "Turbulence").
+      - **Micro-Subject Blindness**: Struggles to animate tiny subjects (e.g., sweat drops) unless explicitly focused. -> **Strategy**: Use Macro lens terms and precise subject handles.
+      - **Texture Smoothing**: Tends to over-smooth surfaces. -> **Strategy**: Explicitly request texture keywords (e.g., "Micro-abrasion", "Pore-level") in the Style slot.
+  </target_model_profile>
   <input_data_interpretation>
     You will receive input data wrapped in XML tags. Process them as follows to build a **Dry S-A-C-S** prompt:
 
     1. **<video_metadata>**: 
-      - Use this to determine the **Genre/Tone** (e.g., Rough, High-Speed, Cinematic).
-      - This helps you decide which "Style" keywords are appropriate later.
+      - Contains **Genre/Tone** and **<target_duration>**.
+      - **CRITICAL USE**: Use <target_duration> to determine the **Camera Stability Strategy** (Not just speed).
+        - *Short (<3s)*: Allow abrupt/dynamic moves ("Whip", "Crash", "Impact").
+        - *Long (>4s)*: Force continuity ("Tracking", "Following", "Stabilized", "Orbit"). **Do NOT force Slow-motion unless the Genre demands it.**
 
     2. **<vocabulary_depot>**: 
-      - **CRITICAL RESOURCE**: This is your **Keyword Menu**. Do NOT invent new physics descriptions.
-      - **Mapping Logic**:
-        - Look at the **<scene_narration>** to understand *what* is happening.
-        - Find the matching **Action Verbs (Tier 1)** from this depot.
-        - Select ONE **Visual Tag** (Effect) that matches the material (e.g., "Sweat Spray" or "Sparks").
-        - Select the **Camera & Speed** terms appropriate for the action context.
+      - **Definition**: A dictionary containing physical attributes for visual consistency.
+      - **Content Structure**:
+        - **Visual Effect Tag**: The primary physical reaction (e.g., Sweat Spray).
+        - **Camera & Velocity**: The required lens and speed settings.
+      - **Rule**: Incorporate these tags to ensure physical realism.
 
     3. **<scene_narration>**: 
       - This is the **"Order Ticket"**. It tells you *which* action from the <vocabulary_depot> to execute.
-      - *Constraint*: Do not rewrite the narration as a story. Extract the core movement and map it to the Depot's verbs.
+      - *Constraint*: Do not rewrite the narration as a story. Extract the core movement and synthesize a precise technical verb based on reasoning.
 
     4. **<master_style_guide>**: 
       - **Definition**: The **Categorized Menu** of valid keywords for **Lighting**, **Color**, and **Texture**.
@@ -417,19 +459,22 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
     Construct the final prompt by filling these 4 slots based on the input data.
 
     * **[Subject]**: The Single Primary Actor. (Resolved via Context Analysis)
-      * *Rule*: Analyze <scene_narration> to identify the **ONE primary active agent**.
+      * *Rule*: Analyze both <scene_narration> and <image_context> to identify the **ONE primary active agent of this scene**.
       * *Rule*: Construct a **"Minimum Distinguishable Handle"** based on <entity_list>.
       * *Rule (Single Entity)*: If only one relevant entity exists, use the generic Role only (e.g., "The Boxer").
       * *Rule (Multiple Entities)*: If distinct characters exist, append the **Primary Visual Distinguisher** from <entity_list> (e.g., "The Boxer in red shorts").
       * *Rule*: Even if multiple entities are present, select only the initiator of the movement as the [Subject].
 
-    * **[Action]**: The Core Movement + Interaction. (Inferred from <vocabulary_depot> style)
-      * *Rule*: Use ONE "Tier 1 Technical Verb" describing the main action.
-      * *Rule (Interaction)*: If there are **multiple entities**, include the **Secondary Entity's Handle** (constructed via the same Subject rules) as the **Object** of the verb within this slot.
-      * *Rule*: Append ONE "Visual Tag" only if physically relevant.
+    * **[Action]**: The Core Movement + Interaction. (Synthesized via Reasoning)
+      * *Rule*: **Cross-reference** the <scene_narration> with the <image_context> to determine the physical feasibility of the action.
+      * *Rule*: Based on this analysis, **Infer** the most precise "Technical Action Verb".
+        - *Constraint*: Use your knowledge of cinematography, game, shortform.
+        - *Constraint*: Use simple, dry verbs (e.g., "Lunges", "Trickles") over flowery or literary ones.
+      * *Rule (Interaction)*: If there are **multiple entities**, include the **Secondary Entity's Handle** (constructed via the same Subject rules) as the **Object** of the verb. Format: \`[Subject] [Verb] [Object]\`.
+      * *Rule*: Append ONE "Visual Effect Tag" from the depot only if physically relevant.
 
     * **[Composition]**: The Lens & Velocity. (Inferred from context)
-      * *Rule*: Combine Camera Movement + Speed Term.
+      * *Rule*: Combine Camera Movement + Speed Term. Use terms from Camera & Velocity of <vocabulary_depot>.
 
     * **[Style]**: The Visual Atmosphere. (Strict Formula Application)
       * *Formula*: **(Lighting), (Color), (Texture)**
@@ -447,8 +492,10 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
     **2. The Inference Protocol (Smart Selection):**
     Do NOT blindly copy. Follow this logic to construct the prompt:
 
+    * **Consult Model Profile**:
+      Before drafting, review <target_model_profile> to understand the required "Technical Tone" (Dry & Visual).
     * **Resolve Subject & Object**: 
-      * **Analyze**: Identify 'Who is doing?' (Subject) vs 'Who is receiving?' (Object) from <scene_narration>.
+      * **Analyze**: Identify 'Who is doing?' (Subject) vs 'Who is receiving?' (Object) by cross-referencing <scene_narration> with <image_context>.
       * **Count**: Determine if the scene involves a Single Entity (n=1) or Multiple Entities (n>=2).
       * **Construct Handles**: 
         - If n=1: Use Role (e.g., "The Boxer").
@@ -465,11 +512,11 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
   <output_format>
      Return a single JSON object.
      {
+       "reasoning": "string" 
+       // Explain: "Count: n=2. Subject: 'Lead Boxer' (Red shorts selected for distinction). Action: 'Haymaker'. Style: Gritty mood selected."
        "video_prompt": "string", 
        // Example (Multi-Entity): "The Boxer in red shorts lands a Haymaker on the Boxer in blue shorts. Sweat explodes. Whip pan. High-contrast lighting, Muted earth tones, Scuffed leather texture."
        // Example (Single-Entity): "The Boxer lunges forward. Dust rises. Tracking shot. Volumetric lighting, Warm tones, Film grain."
-       "reasoning": "string" 
-       // Explain: "Count: n=2. Subject: 'Lead Boxer' (Red shorts selected for distinction). Action: 'Haymaker'. Style: Gritty mood selected."
      }
   </output_format>
   <constraints>

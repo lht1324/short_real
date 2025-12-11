@@ -394,7 +394,7 @@ function CaptionConfigPanel({
             </AccordionSection>
 
             {/* Outline Section */}
-            <AccordionSection id="outline" title="Outline" defaultExpanded={false}>
+            <AccordionSection id="outline" title="Outline" defaultExpanded={true}>
                 {/* Active Outline */}
                 <div className="space-y-2">
                     <div className="flex items-center space-x-3">
