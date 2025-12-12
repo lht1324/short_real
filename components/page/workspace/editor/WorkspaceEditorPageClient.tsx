@@ -15,11 +15,12 @@ import {
     VideoGenerationTaskStatus
 } from "@/api/types/supabase/VideoGenerationTasks";
 import SceneSequencePanel from "@/components/page/workspace/editor/SceneSequencePanel";
-import CaptionConfigPanel from "@/components/page/workspace/editor/CaptionConfigPanel";
+import CaptionConfigPanel, {ColorPickerType} from "@/components/page/workspace/editor/CaptionConfigPanel";
 import VideoPlayerPanel, {VideoPlayerHandle} from "@/components/page/workspace/editor/VideoPlayerPanel";
 import MusicPanel from "@/components/page/workspace/editor/MusicPanel";
 import MusicEditPanel from "@/components/page/workspace/editor/MusicEditPanel";
 import {musicClientAPI} from "@/api/client/musicClientAPI";
+import ColorPickerPopover from "@/components/page/workspace/editor/ColorPickerPopover";
 
 interface VideoData {
     title: string;
@@ -75,6 +76,13 @@ export interface MusicPlayConfig {
     startSec: number;
     duration :number;
     volume: number
+}
+
+interface ColorPickerState {
+    isOpen: boolean;
+    type: ColorPickerType | null;
+    position: { top: number; left: number };
+    color: string;
 }
 
 enum ConfigPanelType {
@@ -297,6 +305,85 @@ function WorkspaceEditorPageClient() {
         setEditingMusicIndex(musicIndex);
     }, []);
 
+    // Color Picker Logic
+    const [colorPickerState, setColorPickerState] = useState<ColorPickerState>({
+        isOpen: false,
+        type: null,
+        position: { top: 0, left: 0 },
+        color: '#FFFFFF'
+    });
+
+    const onOpenColorPicker = useCallback((type: ColorPickerType, anchor: HTMLElement) => {
+        const rect = anchor.getBoundingClientRect();
+
+        // 현재 선택된 색상 가져오기
+        let currentColor = '#FFFFFF';
+
+        switch (type) {
+            case 'activeColor': {
+                currentColor = captionConfigState.activeColor;
+                break;
+            }
+            case 'inactiveColor': {
+                currentColor = captionConfigState.inactiveColor;
+                break;
+            }
+            case 'activeOutlineColor': {
+                currentColor = captionConfigState.activeOutlineColor;
+                break;
+            }
+            case 'inactiveOutlineColor': {
+                currentColor = captionConfigState.inactiveOutlineColor;
+                break;
+            }
+        }
+
+        setColorPickerState({
+            isOpen: true,
+            type: type,
+            position: {
+                top: rect.bottom + 8,
+                left: rect.left
+            },
+            color: currentColor
+        });
+    }, [captionConfigState]);
+
+    const onCloseColorPicker = useCallback(() => {
+        setColorPickerState(prev => ({ ...prev, isOpen: false }));
+    }, []);
+
+    const onChangeColorPickerColor = useCallback((newColor: string) => {
+        setColorPickerState(prev => ({ ...prev, color: newColor }));
+
+        if (!colorPickerState.type) return;
+
+        setCaptionConfigState(prev => {
+            const newState = { ...prev };
+
+            switch (colorPickerState.type) {
+                case 'activeColor': {
+                    newState.activeColor = newColor.toUpperCase();
+                    break;
+                }
+                case 'inactiveColor': {
+                    newState.inactiveColor = newColor.toUpperCase();
+                    break;
+                }
+                case 'activeOutlineColor': {
+                    newState.activeOutlineColor = newColor.toUpperCase();
+                    break;
+                }
+                case 'inactiveOutlineColor': {
+                    newState.inactiveOutlineColor = newColor.toUpperCase();
+                    break;
+                }
+            }
+
+            return newState;
+        });
+    }, [colorPickerState.type]);
+
     useEffect(() => {
         if (taskId) {
             const loadData = async () => {
@@ -486,6 +573,7 @@ function WorkspaceEditorPageClient() {
                                         selectedFontFamilyWeightList={selectedFontFamilyWeightList}
                                         selectedFontFamilyFullShape={selectedFontFamilyFullShape}
                                         onChangeCaptionConfigState={onChangeCaptionConfigState}
+                                        onOpenColorPicker={onOpenColorPicker}
                                     />
                                 )}
                                 {activeConfigPanel === ConfigPanelType.Music && (
@@ -547,6 +635,16 @@ function WorkspaceEditorPageClient() {
                     <p className="text-gray-400">Sending your video to the producer...</p>
                 </div>
             </div>)}
+
+            {/* Color Picker Popover */}
+            {colorPickerState.isOpen && (
+                <ColorPickerPopover
+                    color={colorPickerState.color}
+                    onChange={onChangeColorPickerColor}
+                    position={colorPickerState.position}
+                    onClose={onCloseColorPicker}
+                />
+            )}
         </div>
     )
 }

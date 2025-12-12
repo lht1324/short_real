@@ -6,12 +6,15 @@ import {FontVariant} from "@/api/types/google-fonts/GoogleFont";
 import {AccordionSection} from "@/components/public/Accordion";
 import {FontFamily} from "@/lib/FontFamilyList";
 
+export type ColorPickerType = 'activeColor' | 'inactiveColor' | 'activeOutlineColor' | 'inactiveOutlineColor';
+
 interface CaptionConfigPanelProps {
     captionConfigState: CaptionConfigState;
     fontFamilyList: FontFamily[];
     selectedFontFamilyWeightList: FontVariant[];
     selectedFontFamilyFullShape: string;
     onChangeCaptionConfigState: (captionConfigState: CaptionConfigState) => void;
+    onOpenColorPicker: (type: ColorPickerType, anchor: HTMLElement) => void;
 }
 
 function CaptionConfigPanel({
@@ -20,6 +23,7 @@ function CaptionConfigPanel({
     selectedFontFamilyWeightList,
     selectedFontFamilyFullShape,
     onChangeCaptionConfigState,
+    onOpenColorPicker,
 }: CaptionConfigPanelProps) {
     const fontSizeInputRef = useRef<HTMLInputElement>(null);
 
@@ -344,7 +348,11 @@ function CaptionConfigPanel({
                 <div className="space-y-2">
                     <label className="text-gray-300 text-base">Active Color</label>
                     <div className="flex items-center space-x-3">
-                        <div className="w-6 h-6 rounded-full border border-purple-500/30" style={{backgroundColor: activeColor}}></div>
+                        <div
+                            className="w-6 h-6 rounded-full border border-purple-500/30 cursor-pointer hover:scale-110 transition-transform"
+                            style={{backgroundColor: activeColor}}
+                            onClick={(e) => onOpenColorPicker('activeColor', e.currentTarget)}
+                        ></div>
                         <div className="flex items-center flex-1">
                             <span className="bg-gray-800/50 border border-purple-500/30 border-r-0 rounded-l-lg px-3 py-2 text-white text-base">#</span>
                             <input
@@ -370,7 +378,11 @@ function CaptionConfigPanel({
                 <div className="space-y-2">
                     <label className="text-gray-300 text-base">Inactive Color</label>
                     <div className="flex items-center space-x-3">
-                        <div className="w-6 h-6 rounded-full border border-purple-500/30" style={{backgroundColor: inactiveColor}}></div>
+                        <div
+                            className="w-6 h-6 rounded-full border border-purple-500/30 cursor-pointer hover:scale-110 transition-transform"
+                            style={{backgroundColor: inactiveColor}}
+                            onClick={(e) => onOpenColorPicker('inactiveColor', e.currentTarget)}
+                        ></div>
                         <div className="flex items-center flex-1">
                             <span className="bg-gray-800/50 border border-purple-500/30 border-r-0 rounded-l-lg px-3 py-2 text-white text-base">#</span>
                             <input
@@ -416,7 +428,11 @@ function CaptionConfigPanel({
                             <div className="space-y-2">
                                 <label className="text-gray-300 text-sm">Color</label>
                                 <div className="flex items-center space-x-3">
-                                    <div className="w-6 h-6 rounded-full border border-purple-500/30" style={{backgroundColor: activeOutlineColor}}></div>
+                                    <div
+                                        className="w-6 h-6 rounded-full border border-purple-500/30 cursor-pointer hover:scale-110 transition-transform"
+                                        style={{backgroundColor: activeOutlineColor}}
+                                        onClick={(e) => onOpenColorPicker('activeOutlineColor', e.currentTarget)}
+                                    ></div>
                                     <div className="flex items-center flex-1">
                                         <span className="bg-gray-800/50 border border-purple-500/30 border-r-0 rounded-l-lg px-3 py-2 text-white text-base">#</span>
                                         <input
@@ -504,7 +520,11 @@ function CaptionConfigPanel({
                             <div className="space-y-2">
                                 <label className="text-gray-300 text-sm">Color</label>
                                 <div className="flex items-center space-x-3">
-                                    <div className="w-6 h-6 rounded-full border border-purple-500/30" style={{backgroundColor: inactiveOutlineColor}}></div>
+                                    <div
+                                        className="w-6 h-6 rounded-full border border-purple-500/30 cursor-pointer hover:scale-110 transition-transform"
+                                        style={{backgroundColor: inactiveOutlineColor}}
+                                        onClick={(e) => onOpenColorPicker('inactiveOutlineColor', e.currentTarget)}
+                                    ></div>
                                     <div className="flex items-center flex-1">
                                         <span className="bg-gray-800/50 border border-purple-500/30 border-r-0 rounded-l-lg px-3 py-2 text-white text-base">#</span>
                                         <input

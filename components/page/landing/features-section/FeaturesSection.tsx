@@ -43,7 +43,7 @@ const features: Feature[] = [
         description:
             "The engine adds cinematic camera moves.\nIt matches each scene's energy for you.",
         prompt:
-            "FPV drone shot flying fast through a futuristic neon city at night, motion blur, smooth camera path",
+            "A continuous adrenaline-fueled sequence of a wingsuit jumper: diving with visible fabric flutter, snapping the suit open against wind resistance, weaving through narrow stone arches with aerodynamic precision, rushing past blurred canyon walls inches from the lens, and skimming the river surface spray before soaring into the open horizon.",
         videoSrc: "/demo/demo_camera.mp4",
         icon: Aperture,
         color: "border-purple-500/50 shadow-purple-500/20",
