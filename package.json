@@ -4,7 +4,7 @@
     "private": true,
     "scripts": {
         "dev": "next dev",
-        "dev:worker": "next dev -p 3001",
+        "dev:worker": "next dev --webpack",
         "build": "next build",
         "start": "next start",
         "lint": "next lint"
@@ -24,7 +24,7 @@
         "inngest": "^3.40.3",
         "lucide-react": "^0.539.0",
         "mediabunny": "^1.15.1",
-        "next": "15.4.7",
+        "next": "^16.0.7",
         "ngrok": "^5.0.0-beta.2",
         "openai": "^5.19.1",
         "react": "19.1.0",
@@ -38,6 +38,7 @@
         "@types/react": "^19",
         "@types/react-dom": "^19",
         "autoprefixer": "^10.4.21",
+        "baseline-browser-mapping": "^2.9.4",
         "eslint": "^9",
         "eslint-config-next": "15.4.6",
         "postcss": "^8.5.6",

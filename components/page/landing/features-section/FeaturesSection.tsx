@@ -21,8 +21,8 @@ const features: Feature[] = [
         description:
             "Objects move with real weight.\nNot just pictures sliding around.",
         prompt:
-            "A horse galloping through a dusty desert, realistic muscle movement, dust clouds rising, cinematic 4k",
-        videoSrc: "/demo/demo_1.mp4",
+            "A continuous high-octane sequence of a monster truck: launching into a torque-heavy wheelie, drifting with visible tire deformation, crushing scrap cars with metal destruction physics, landing a massive jump with full suspension compression, and sliding to a smoky halt.",
+        videoSrc: "/demo/demo_physics.mp4",
         icon: Atom,
         color: "border-cyan-500/50 shadow-cyan-500/20",
     },
@@ -32,8 +32,8 @@ const features: Feature[] = [
         description:
             "The AI chooses how close to shoot.\nFrom close-ups to wide shots automatically.",
         prompt:
-            "Extreme close-up of a human eye, detailed iris, reflection of city lights at night, ultra sharp macro photography",
-        videoSrc: "/demo/demo_3.mp4",
+            "A continuous visceral sequence of a professional boxer: tracking a sweat drop on bruised skin, tensing neck muscles under a mouthpiece, rebounding off the flexible ropes, connecting a crushing Right Cross with glove compression, and exploding into a fine mist of atomized sweat.",
+        videoSrc: "/demo/demo_framing.mp4",
         icon: Scan,
         color: "border-pink-500/50 shadow-pink-500/20",
     },
@@ -44,7 +44,7 @@ const features: Feature[] = [
             "The engine adds cinematic camera moves.\nIt matches each scene's energy for you.",
         prompt:
             "FPV drone shot flying fast through a futuristic neon city at night, motion blur, smooth camera path",
-        videoSrc: "/demo/demo_main.mp4",
+        videoSrc: "/demo/demo_camera.mp4",
         icon: Aperture,
         color: "border-purple-500/50 shadow-purple-500/20",
     },
