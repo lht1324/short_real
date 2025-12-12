@@ -67,6 +67,7 @@ const VideoPlayerPanel = forwardRef<VideoPlayerHandle, VideoPlayerPanelProps>(({
     const [isVideoEnded, setIsVideoEnded] = useState(false);
     const [videoDuration, setVideoDuration] = useState(0);
     const [isDraggingTimeline, setIsDraggingTimeline] = useState(false);
+    const [isHoveringVideo, setIsHoveringVideo] = useState(false);
     const [videoContainerWidth, setVideoContainerWidth] = useState<number>(324); // 16/9
     const [videoContainerHeight, setVideoContainerHeight] = useState<number>(576); // 16/9
 
@@ -389,7 +390,6 @@ const VideoPlayerPanel = forwardRef<VideoPlayerHandle, VideoPlayerPanelProps>(({
             const maxSliderPercentage = (sliderHeight / videoContainerHeight) * 100;
 
             if (captionPosition > maxSliderPercentage) {
-                console.log(`captionPosition = ${captionPosition}, maxSliderPercentage = ${maxSliderPercentage}`)
                 onChangeCaptionPosition(100);
             }
 
@@ -608,6 +608,8 @@ const VideoPlayerPanel = forwardRef<VideoPlayerHandle, VideoPlayerPanelProps>(({
                             width: `${videoContainerWidth}px`,
                             height: `${videoContainerHeight}px`
                         }}
+                        onMouseEnter={() => setIsHoveringVideo(true)}
+                        onMouseLeave={() => setIsHoveringVideo(false)}
                     >
                         {videoUrl ? (
                             <div className="relative w-full h-full flex items-center justify-center">
@@ -629,7 +631,9 @@ const VideoPlayerPanel = forwardRef<VideoPlayerHandle, VideoPlayerPanelProps>(({
                                 )}
 
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent pointer-events-none"></div>
-                                <div className="absolute inset-0 flex items-center justify-center z-30 pointer-events-none">
+                                <div className={`absolute inset-0 flex items-center justify-center z-30 pointer-events-none transition-opacity duration-200 ${
+                                    (videoRef.current?.currentTime === 0 || isHoveringVideo || isVideoEnded) ? 'opacity-100' : 'opacity-0'
+                                }`}>
                                     <button
                                         onClick={isVideoEnded ? onClickReplay : onClickPlayAndPause}
                                         className="w-16 h-16 bg-black/40 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-black/60 transition-all border border-purple-400/50 pointer-events-auto"
