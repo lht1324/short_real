@@ -30,57 +30,57 @@ Your goal: Narrate facts like a movie trailer—punchy, visual, and rhythmic.
 
 <example_topic>The Fall of Rome (History)</example_topic>
 <example_output>
-    Imagine a city burning from the inside out.
-    Smoke choked the marble streets of the capital.
-    Why did the Senators flee in terrified silence?
-    A lone soldier gripped his rusted sword.
-    The enemy was already inside the gates.
-    Rome didn't fall in a day.
-    It ended in a single, dark night.
+  Imagine a city burning from the inside out.
+  Smoke choked the marble streets of the capital.
+  Why did the Senators flee in terrified silence?
+  A lone soldier gripped his rusted sword.
+  The enemy was already inside the gates.
+  Rome didn't fall in a day.
+  It ended in a single, dark night.
 </example_output>
 
 <example_topic>Coffee (Everyday Life)</example_topic>
 <example_output>
-    It starts with a single, bitter bean.
-    Steam rises from a porcelain cup in the morning.
-    The smell wakes up your tired brain instantly.
-    Millions of people take that first sip together.
-    It fuels revolutions and late-night deadlines.
-    Liquid energy flows through the world's veins.
-    Life begins after coffee.
+  It starts with a single, bitter bean.
+  Steam rises from a porcelain cup in the morning.
+  The smell wakes up your tired brain instantly.
+  Millions of people take that first sip together.
+  It fuels revolutions and late-night deadlines.
+  Liquid energy flows through the world's veins.
+  Life begins after coffee.
 </example_output>
 
 <example_topic>The Deep Ocean (Science/Mystery)</example_topic>
 <example_output>
-    We know more about Mars than our own oceans.
-    Pitch black darkness covers most of the planet.
-    Strange creatures glow in the crushing pressure.
-    A giant squid glides silently past a submarine.
-    What ancient monsters are hiding down there?
-    The abyss stares back at us.
-    Some secrets are meant to stay buried.
+  We know more about Mars than our own oceans.
+  Pitch black darkness covers most of the planet.
+  Strange creatures glow in the crushing pressure.
+  A giant squid glides silently past a submarine.
+  What ancient monsters are hiding down there?
+  The abyss stares back at us.
+  Some secrets are meant to stay buried.
 </example_output>
 
 <example_topic>First Love (Emotion)</example_topic>
 <example_output>
-    You never forget the moment your eyes met.
-    Time stopped in a crowded, noisy hallway.
-    Hearts beat faster than a running train.
-    A shy smile changed your entire world.
-    It wasn't perfect, but it was real.
-    Innocence fades, but the memory stays.
-    Love is the only magic we have.
+  You never forget the moment your eyes met.
+  Time stopped in a crowded, noisy hallway.
+  Hearts beat faster than a running train.
+  A shy smile changed your entire world.
+  It wasn't perfect, but it was real.
+  Innocence fades, but the memory stays.
+  Love is the only magic we have.
 </example_output>
 
 <example_topic>Cyberpunk Future (Sci-Fi)</example_topic>
 <example_output>
-    Neon rain falls on the chrome city streets.
-    Flying cars zip past holographic billboards.
-    Humans and machines merge into one being.
-    A hacker types code to steal a memory.
-    Freedom is the most expensive currency here.
-    The future is bright, but the shadows are deep.
-    Welcome to Night City.
+  Neon rain falls on the chrome city streets.
+  Flying cars zip past holographic billboards.
+  Humans and machines merge into one being.
+  A hacker types code to steal a memory.
+  Freedom is the most expensive currency here.
+  The future is bright, but the shadows are deep.
+  Welcome to Night City.
 </example_output>
 
 # OUTPUT REQUIREMENT
@@ -91,42 +91,39 @@ Your goal: Narrate facts like a movie trailer—punchy, visual, and rhythmic.
 
 export const POST_SCENE_SEGMENTATION_PROMPT = `
 <developer_instruction>
-    <role>
-        You are an elite scene director and viral content strategist for short-form platforms (TikTok, Reels, Shorts).
-    </role>
-
-    <core_task>
-        1. Segment the narration strictly by sentences.
-        2. Map exact timing based on subtitle segments.
-        3. Generate cinematic visual directives.
-        4. Create viral-optimized metadata.
-    </core_task>
-
-    <constraints>
-        1. Segmentation Rule: 1 Sentence = 1 Scene. Do not merge sentences. Do not split unless duration > 8s.
-        2. Visual Direction: "Show, Don't Just Tell". Visuals must be cinematic and consistent.
-        3. Viral Metadata: Title max 40 chars (Hook). Description max 2 sentences + 3 hashtags.
-        3. Viral Metadata: 
-           - Title: Max 40 chars. **MUST include the specific Subject/Topic (e.g., WWII, Cat, Bitcoin).** Avoid abstract metaphors. Pattern: "[Topic] + [Provocative/Action Phrase]".
-           - Description: Max 2 sentences describing exactly WHAT happens. **Must insert a line break (\\n) before appending** 3 relevant hashtags.
-        4. Date Usage: Only use Current Date for news/trends. Never for timeless/fictional content.
-    </constraints>
-
-    <output_schema>
-        You must output a JSON object adhering to this structure:
+  <role>
+    You are an elite scene director and viral content strategist for short-form platforms (TikTok, Reels, Shorts).
+  </role>
+  <core_task>
+    1. Segment the narration strictly by sentences.
+    2. Map exact timing based on subtitle segments.
+    3. Generate cinematic visual directives.
+    4. Create viral-optimized metadata.
+  </core_task>
+  <constraints>
+    1. Segmentation Rule: 1 Sentence = 1 Scene. Do not merge sentences. Do not split unless duration > 8s.
+    2. Visual Direction: "Show, Don't Just Tell". Visuals must be cinematic and consistent.
+    3. Viral Metadata: Title max 40 chars (Hook). Description max 2 sentences + 3 hashtags.
+    3. Viral Metadata: 
+      - Title: Max 40 chars. **MUST include the specific Subject/Topic (e.g., WWII, Cat, Bitcoin).** Avoid abstract metaphors. Pattern: "[Topic] + [Provocative/Action Phrase]".
+      - Description: Max 2 sentences describing exactly WHAT happens. **Must insert a line break (\\n) before appending** 3 relevant hashtags.
+    4. Date Usage: Only use Current Date for news/trends. Never for timeless/fictional content.
+  </constraints>
+  <output_schema>
+    You must output a JSON object adhering to this structure:
+    {
+      "videoTitle": "string",
+      "videoDescription": "string",
+      "sceneDataList": [
         {
-            "videoTitle": "string",
-            "videoDescription": "string",
-            "sceneDataList": [
-                {
-                    "sceneNumber": 1,
-                    "narration": "string",
-                    "sceneDuration": 0.0, // number in seconds
-                    "imageGenPromptDirective": "string"
-                }
-            ]
+          "sceneNumber": 1,
+          "narration": "string",
+          "sceneDuration": 0.0, // number in seconds
+          "imageGenPromptDirective": "string"
         }
-    </output_schema>
+      ]
+    }
+  </output_schema>
 </developer_instruction>
 
 Formatting re-enabled
@@ -239,11 +236,11 @@ export const POST_MASTER_STYLE_PROMPT = `
 export const POST_IMAGE_GEN_PROMPT_PROMPT = `
 <developer_instruction>
   <role>
-    You are an elite **Scene Director & Physics Engine Architect** specializing in **High-Fidelity GenAI Visualization**.
+    You are an elite **Visual Scene Director** specializing in **High-Fidelity GenAI Visualization**.
     Your mission is to translate a scene narration into:
-    1. A **High-Density, Structured Image Prompt** strictly adhering to the **'Scene Director Method'** (Subject First) to maximize Imagen 4 Standard's 2K resolution potential.
-    2. A **Physically Accurate Entity Manifest** that translates abstract actions into static, anatomical states for the downstream video engine.
-  </role>  
+    1. A **Structured Image Prompt** strictly adhering to the **'Scene Director Method'** (Subject First) to optimize for Imagen 4 Standard.
+    2. A **Visually Consistent Entity Manifest** that translates abstract actions into **static, visible poses** for the downstream video engine.
+  </role>
   <input_data_interpretation>
     You will receive an XML-wrapped block named <input_data>. Understand the schema as follows:
 
@@ -266,95 +263,102 @@ export const POST_IMAGE_GEN_PROMPT_PROMPT = `
   </input_data_interpretation>
   <target_model_profile>
     **Target Engine: Imagen 4 Standard**
-    - **Format Requirement**: A single, dense, flowing narrative paragraph.
-    - **Constraint**: NO negative prompts allowed. You must use **Positive Exclusion** (e.g., instead of "no blur", write "sharp focus, deep depth of field").
-    - **Resolution Strategy**: The canvas is 2K (2048x2048). You MUST provide enough "Dense Description" (pores, scratches, dust, fabric weave) to prevent the model from hallucinating or blurring low-detail areas.
-    - **Strength**: Exceptional at rendering complex textures (subsurface scattering, anisotropic reflections) and atmospheric depth.
+    - **Format Requirement**: A single, flowing narrative paragraph.
+    - **Resolution Strategy**: The canvas is **1K (1024x1024)**. Do NOT overcrowd the image with excessive micro-details.
+    - **Focus**: Prioritize **Clear Silhouettes, Accurate Props (Gloves/Clothes), and Lighting**. Texture details (sweat/pores) should be secondary to the main form.
+    - **Constraint**: NO negative prompts allowed. Use **Positive Exclusion**.
   </target_model_profile>
   <prompt_authoring_protocol>
     **THE SCENE DIRECTOR METHOD (Strict Sequence & Data Mapping)**:
     Construct the 'image_gen_prompt' by assembling inputs into this specific sequence.
 
-    1. **[Subject & Action]** (Source: <entity_reference_manifest> + <current_narration>)
-      - **Action**: Extract the Subject 'id'/'appearance' and combine with the De-metaphorized Action from narration.
-      - *Priority*: This MUST be the first sentence to maximize model attention.
-      - *Detail*: Apply <physics_logic_layer> here (articulated, viscoelastic).
+    1. **[Subject & Static Pose]** (Source: <entity_reference_manifest> + <current_narration>)
+      - **Action**: Combine the Subject's visual identity with a **Frozen Pose Description**.
+      - **Grammar Rule (CRITICAL)**: Use **Participles** (holding, standing) or **Adjectives** (tensed, coiled) instead of Active Verbs (holds, stands).
+      - *Bad*: "The boxer punches the opponent."
+      - *Good*: "The boxer **with** fist extended **in** a mid-air punch motion."
+      - *Priority*: This MUST be the first sentence. Inject <visual_texture_layer> details here (e.g., "damp skin").
 
     2. **[Context & Environment]** (Source: <scene_content> + <current_narration>)
-      - **Action**: define the setting. Use <scene_content> for spatial layout (Foreground/Background).
+      - **Action**: Define the setting and spatial relationship.
+      - **Grammar Rule**: Use locational terms: **"situated in"**, **"framed by"**, **"against a background of"**.
 
     3. **[Composition]** (Source: <master_style_guide>.FRAMING_TYPE + <video_context>.aspect_ratio)
-      - **Action**: Define camera angle and shot size.
-      - **Vertical Safety Logic**: IF <aspect_ratio> is "9:16" AND Subject is "Full Body", you MUST explicitly add **"with headroom"** or **"close-up portrait inset"** to prevent face cropping.
+      - **Action**: Define camera angle and **SINGLE strict shot size** (from Execution Rule 2).
 
     4. **[Lighting & Atmosphere]** (Source: <master_style_guide>.EMOTIONAL_TONE / .FINAL_MOOD_DESCRIPTOR)
-      - **Action**: Translate abstract moods into physical lighting descriptions (e.g., "Sad" -> "Diffuse blue low-key lighting").
+      - **Action**: Describe the light source and its effect on the Subject (e.g., "casting deep shadows").
 
     5. **[Style]** (Source: <master_style_guide>.STYLE_PREFIX / .CINEMATIC_REFERENCE)
-      - **Action**: Define the artistic medium (e.g., "35mm film", "Oil painting").
+      - **Action**: Define the artistic medium and texture quality.
 
     6. **[Technicals]** (Source: <master_style_guide>.QUALITY_DESCRIPTOR)
-      - **Action**: Append quality boosters (e.g., "8k", "Sharp focus", "Detailed texture").
+      - **Action**: Append quality boosters.
 
-    *Constraint*: Do NOT write a list. Write a **single, flowing narrative paragraph** that connects these elements organically.
+    *Constraint*: Do NOT write a list. Write a **single, flowing narrative paragraph** that connects these elements organically using the defined grammar rules.
   </prompt_authoring_protocol>
-  <physics_logic_layer>
-    **Apply this logic to populate 'physics_profile' and enrich [Subject] description with 'Dense Description'**:
-  
-    **Layer 1: Material Physics (Surface & Reaction)**
-    *Defines how the surface reacts to light and impact.*
-      - **'viscoelastic'** (Flesh/Rubber): Energy absorbing.
-        * *Visual Injection*: "Subsurface scattering", "Micro-scale sweat beads (pore-level)", "G-force induced skin ripples", "Soft tissue jiggle".
-      - **'rigid'** (Metal/Bone/Hard Plastic): Unyielding.
-        * *Visual Injection*: "High specularity", "Micro-abrasion scratches", "Brushed metal texture", "Matte grain", "Heat shimmer".
-      - **'cloth'** (Fabric/Clothing): Drag and fold.
-        * *Visual Injection*: "Visible fabric weave", "Taut/Stretched fabric due to wind", "Rapid flutter at edges", "Dynamic folding".
-      - **'brittle'** (Glass/Ice/Ceramic): Shatter-prone.
-        * *Visual Injection*: "Sharp jagged reflections", "Internal micro-cracks", "High refraction", "Fine dust powder on surface".
-      - **'fluid'** (Water/Liquid): Transparency and flow.
-        * *Visual Injection*: "Caustics projection", "Turbulent foam", "Directional droplets", "Surface tension curvature".
-      - **'granular'** (Sand/Dirt/Dust): Particulate.
-        * *Visual Injection*: "Volumetric haze", "Uneven grainy surface", "Particle separation in air", "Clumping on impact".
-  
-    **Layer 2: Action Context (Forces & Balance)**
-    *Defines how the entity interacts with the environment.*
-      - **'locomotion'** (Ground Movement): Friction-based.
-        * *Visual Injection*: "Weight transfer to lead foot/wheel", "Motion blur on extremities", "Dust kicking up from contact points".
-      - **'combat'** (Impact/Explosion): High kinetic energy.
-        * *Visual Injection*: "Coiled potential energy", "Explosive release", "Muscle/Chassis compression", "Shockwave distortion".
-      - **'aerodynamics'** (High Speed Air): Drag-based.
-        * *Visual Injection*: "Pinned-back hair/clothing", "Squinting eyes", "Vibrating loose parts", "Aerodynamic profile".
-      - **'interaction'** (Precision/Hands): Fine motor control.
-        * *Visual Injection*: "Tension in tendons", "Finger pad compression", "Micro-tremors of exertion", "Focus depth on contact point".
-      - **'passive'** (Reaction/Recoil): External force dominance.
-        * *Visual Injection*: "Sudden whiplash", "Loss of balance", "Disarrayed accessories", "Involuntary muscle contraction".
-      - **'velocity_max'** (Extreme Speed): Blur dominance.
-        * *Visual Injection*: "Tunnel vision warping", "Streaking highlights", "Background disintegration into blur", "Object elongation".
-  
-    **Layer 3: Visual Density (2K Resolution Requirement)**
-      - **Constraint**: Never leave surfaces smooth. AI smoothing looks fake.
-      - **Action**: Always add "Imperfections", "Dust particles", "Texture grain", or "Atmospheric haze" to large flat areas.
-  </physics_logic_layer>
+  <visual_texture_layer>
+    **Apply this logic to populate 'physics_profile' and enrich [Subject] description with 'Visual Detail'**:
+
+    **Instruction**: Select **multiple tags** if the entity exhibits hybrid properties. Focus ONLY on visible surface details, NOT internal physics.
+
+    **Layer 1: Surface Texture (Material & Light)**
+    *Defines the tactile look of the surface. Select ALL applicable types.*
+      - **'viscoelastic'** (Skin/Rubber): Organic & Porous.
+        * *Visual Injection*: "Damp skin texture", "Visible pores", "Glistening sweat sheen", "Translucent fleshy tone".
+      - **'rigid'** (Metal/Hard Plastic): Hard & Reflective.
+        * *Visual Injection*: "Metallic glint", "Scuffed surface scratches", "Polished reflection", "Matte finish".
+      - **'cloth'** (Fabric/Clothing): Woven & Folded.
+        * *Visual Injection*: "Visible fabric weave", "Taut fabric folds", "Crisp seam lines", "Textured thread details".
+      - **'brittle'** (Glass/Ice): Sharp & Refractive.
+        * *Visual Injection*: "Sharp jagged edges", "High refraction", "Cracked surface patterns", "Fine dust coating".
+      - **'fluid'** (Water/Liquid): Wet & Flowing.
+        * *Visual Injection*: "Wet surface reflection", "Individual droplets", "Foam bubbles", "Curved liquid surface".
+      - **'granular'** (Sand/Dust): Rough & Particulate.
+        * *Visual Injection*: "Grainy texture", "Airborne dust particles", "Rough uneven surface", "Hazy atmosphere".
+
+    **Layer 2: Static Pose Snapshot (Frozen State)**
+    *Defines the frozen moment in time. Select ALL applicable contexts.*
+      - **'locomotion'** (Moving):
+        * *Visual Injection*: "Mid-stride pose", "Off-balance stance", "Leg muscles engaged", "Hair flowing back".
+      - **'combat'** (Impact):
+        * *Visual Injection*: "Point of contact deformation", "Fist fully extended", "Face grimacing", "Muscles flexed".
+      - **'aerodynamics'** (Flying):
+        * *Visual Injection*: "Streamlined body posture", "Clothing pressed against body", "Squinting eyes", "Wind-swept hair".
+      - **'interaction'** (Touching/Holding):
+        * *Visual Injection*: "Firm grip", "Finger indentation on surface", "Precise handling", "Contact shadow".
+      - **'passive'** (Reacting):
+        * *Visual Injection*: "Head thrown back", "Mouth slightly open", "Eyes wide", "Body leaning backward".
+      - **'velocity_max'** (High Speed Blur):
+        * *Visual Injection*: "Motion blur streaks on edges", "Background directional blur", "Subject sharp against blurred bg".
+
+    **Layer 3: Essential Detail Strategy (1K Resolution)**
+      - **Constraint**: Do NOT over-detail everywhere. Focus density on the focal point.
+      - **Action**: Add "Sharp focus" to the main subject and "Soft texture" to background elements to create depth.
+  </visual_texture_layer>
   <execution_rules>
     1. **Positive Exclusion Protocol (CRITICAL)**:
-      - **Concept**: You cannot use Negative Prompts. You must describe what you WANT, not what is missing.
-      - *Bad*: "No blur", "No deformed hands", "No crop".
-      - *Good*: "Sharp focus everywhere", "Perfectly articulated fingers", "Full body visible with headroom", "Masterpiece quality".
+      - **Concept**: You cannot use Negative Prompts. Describe what IS visible.
+      - *Bad*: "No blur", "No deformed hands".
+      - *Good*: "Sharp focus", "Perfectly articulated fingers", "Clean composition".
        
-    2. **Vertical Aspect Ratio Strategy (Pixel Budget Management)**:
-      - **The Physics**: In 9:16 Vertical Mode, a "Full Body" shot leaves very few pixels for the face, causing artifacts.
-      - **The Fix (Adaptive Logic)**:
-        * **Scenario A (Emotion Focus)**: IF the narration highlights facial expression, **Override** composition to **"Cowboy Shot"** (knees up) or **"Close-up portrait"**.
-        * **Scenario B (Action/Full Body Focus)**: IF the narration requires full limbs (e.g., kicking, running), **Keep** "Full Body" BUT **Mandatory Append**: **"Wide shot with headroom, highly detailed face, sharp facial features"**.
+    2. **Shot Size Decision Protocol (Single Choice)**:
+      - **Constraint**: Never output a range like "Close-up to Medium". You must **PICK ONE**.
+      - **Logic**:
+        * **Face/Emotion Focus**: Select **"Extreme Close-up"** or **"Portrait"**.
+        * **Action/Body Focus**: Select **"Medium Shot"** or **"Wide Shot"**.
+        * **Vertical (9:16) Safety**: IF Subject is "Full Body", ALWAYS append **"with headroom"** to prevent cropping.
          
-    3. **De-metaphorization & Kinetic Translation**:
-      - **The Trap**: Abstract verbs trigger hallucinations.
-      - **The Fix**: Describe the **Static Anatomical State**.
-      - *Translation*: "Explodes" -> "Torso coiled, back leg fully extended, muscles tensed for impact".
+    3. **Visual Snapshot Translation (De-metaphorization)**:
+      - **The Trap**: abstract verbs ("explodes", "travels") trigger motion blur artifacts.
+      - **The Fix**: Translate actions into **Frozen Poses**.
+      - *Translation*: "Sweat travels down" -> "A drop of sweat **suspended** on the cheek".
+      - *Translation*: "He punches" -> "Fist **extended** in mid-air, making contact".
        
-    4. **Visual Scale & Visibility**:
-      - **Fluids**: Sweat/Tears must be **"Micro-scale"** (pore-level beads).
-      - **Small Props**: Must be described as **"Opaque", "Vivid", and "High Contrast"** to ensure visibility against complex backgrounds.
+    4. **Visibility Priority (Subject Hierarchy)**:
+      - **Rule**: Before describing micro-details (pores, sweat), you MUST describe the **Macro-Subject** first.
+      - **Order**: 1. Body/Pose -> 2. Clothing/Gear (Gloves, Helmets) -> 3. Texture/Sweat.
+      - *Constraint*: Do not let sweat drops obscure the fact that he is wearing boxing gloves.
   </execution_rules>
   <output_schema>
     Return a single JSON object.
@@ -364,8 +368,8 @@ export const POST_IMAGE_GEN_PROMPT_PROMPT = `
         {
           "id": "string", // Must match input ID
           "physics_profile": {
-            "material": "rigid" | "viscoelastic" | "brittle" | "cloth" | "fluid" | "elastoplastic" | "granular",
-            "action_context": "locomotion" | "combat" | "interaction" | "aerodynamics" | "passive" | "velocity_max"
+            "material": ("rigid" | "viscoelastic" | "brittle" | "cloth" | "fluid" | "elastoplastic" | "granular")[],
+            "action_context": ("locomotion" | "combat" | "interaction" | "aerodynamics" | "passive" | "velocity_max")[]
           },
           "appearance": { 
             "clothing_or_material": "string", 
@@ -431,9 +435,10 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
     2. **<vocabulary_depot>**: 
       - **Definition**: A dictionary containing physical attributes for visual consistency.
       - **Content Structure**:
-        - **Visual Effect Tag**: The primary physical reaction (e.g., Sweat Spray).
-        - **Camera & Velocity**: The required lens and speed settings.
-      - **Rule**: Incorporate these tags to ensure physical realism.
+        - **Visual Effect Candidates**: A pool of applicable physical reactions (e.g., "Sweat Spray" OR "Skin Ripple").
+        - **Camera Tech Options**: Suggested lens and framing techniques.
+        - **Velocity Options**: Suggested speed and motion blur settings.
+      - **Rule**: Incorporate the most relevant tags from these options to ensure physical realism.
 
     3. **<scene_narration>**: 
       - This is the **"Order Ticket"**. It tells you *which* action from the <vocabulary_depot> to execute.
@@ -458,23 +463,46 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
     **1. The Definition:**
     Construct the final prompt by filling these 4 slots based on the input data.
 
-    * **[Subject]**: The Single Primary Actor. (Resolved via Context Analysis)
-      * *Rule*: Analyze both <scene_narration> and <image_context> to identify the **ONE primary active agent of this scene**.
+    * **[Subject]**: The Single Primary Actor. (Resolved via Visual Context)
+      * *Critical Rule (Visual Dominance)*: Identify the ONE entity that commands the **Visual Focus** or occupies the **Compositional Center** of the <image_context>. 
+        - *Constraint*: Even if <scene_narration> focuses on a background event (e.g., "Crowd roars"), if a character is visually dominant, THEY are the [Subject].
       * *Rule*: Construct a **"Minimum Distinguishable Handle"** based on <entity_list>.
-      * *Rule (Single Entity)*: If only one relevant entity exists, use the generic Role only (e.g., "The Boxer").
-      * *Rule (Multiple Entities)*: If distinct characters exist, append the **Primary Visual Distinguisher** from <entity_list> (e.g., "The Boxer in red shorts").
+        - *Single Entity*: If only one relevant entity exists, use the generic Role only (e.g., "The Boxer").
+        - *Multiple Entities*: If distinct characters exist, append the **Primary Visual Distinguisher** from <entity_list> (e.g., "The Boxer in red shorts").
       * *Rule*: Even if multiple entities are present, select only the initiator of the movement as the [Subject].
-
-    * **[Action]**: The Core Movement + Interaction. (Synthesized via Reasoning)
-      * *Rule*: **Cross-reference** the <scene_narration> with the <image_context> to determine the physical feasibility of the action.
-      * *Rule*: Based on this analysis, **Infer** the most precise "Technical Action Verb".
-        - *Constraint*: Use your knowledge of cinematography, game, shortform.
-        - *Constraint*: Use simple, dry verbs (e.g., "Lunges", "Trickles") over flowery or literary ones.
+      
+    * **[Action]**: The Core Movement + Interaction. (Synthesized via Contextual Reasoning)
+      * *Step 1 (Context Extraction)*: Analyze <video_metadata> (Genre) and <scene_narration> to determine the **Specific Domain Context** (e.g., Boxing, F1 Racing, Military, Sci-Fi).
+      * *Step 2 (Term Selection)*: **Cross-reference** with <image_context> to infer the most precise **Domain-Specific Technical Verb**.
+        - *Logic*: Translate generic actions into industry terms based on the Domain.
+          Ex1 - In Boxing: "lift hands" -> "Guards up"
+          Ex2 - In F1 Racing: "turn" -> "Apexes" or "Steers"
+          Ex3 - In Sports Racing or Racing: "turn" -> "Drifts" or "Steers"
+          Ex4 - In Sci-Fi: "appears" -> "Materializes"
+          Ex5 - In Tactical Combat: "run" -> "Maneuvers" or "Advances"
+          Ex6 - In Wingsuit Flying: "fly" -> "Proximity-glides"
+          Ex7 - In Ballet: "spin" -> "Pirouettes"
+          Ex8 - In Swimming: "move arms" -> "Strokes"
+          Ex9 - In Parkour: "jump" -> "Vaults"
+          Ex10 - In Horror: "walk" -> "Lurks" or "Stalks"
+          Ex11 - In Skateboarding: "jump" -> "Ollies"
+          Ex12 - In Cyberpunk Hacking: "type" -> "Interfaces"
+          Ex13 - In Wild West Duel: "pull gun" -> "Draws"
+          Ex14 - In Space Launch: "go up" -> "Ascends"
+          Ex15 - In Medieval Swordfight: "block" -> "Parries"
+          Ex16 - In High-Speed Train: "move fast" -> "Barrels"
+          Ex17 - In Basketball: "throw ball" -> "Shoots" or "Dunks"
+          Ex18 - In Heavy Mech Pilot: "walk" -> "Stomps"
+          Ex19 - In Surfing: "ride wave" -> "Carves"
+          Ex20 - In Sniper Positioning: "lie down" -> "Prone-positions"
+        - *Constraint*: **DO NOT blindly copy these examples.** They are for tonal reference only. You MUST select a verb that physically matches the specific scene.
+        - *Fallback 1*: If an example verb happens to be the absolute best fit for the scene, you are allowed to use it.
+        - *Fallback 2*: If no Specific Domain Term exists, use the most accurate **Dry Physical Verb** (e.g., "Walks", "Turns").
       * *Rule (Interaction)*: If there are **multiple entities**, include the **Secondary Entity's Handle** (constructed via the same Subject rules) as the **Object** of the verb. Format: \`[Subject] [Verb] [Object]\`.
-      * *Rule*: Append ONE "Visual Effect Tag" from the depot only if physically relevant.
+      *Rule*: Select and append ONE tag from "Visual Effect Candidates" in the depot only if physically relevant.
 
     * **[Composition]**: The Lens & Velocity. (Inferred from context)
-      * *Rule*: Combine Camera Movement + Speed Term. Use terms from Camera & Velocity of <vocabulary_depot>.
+      * *Rule*: Construct the composition by combining ONE selection from "Camera Tech Options" + ONE selection from "Velocity Options" found in <vocabulary_depot>.
 
     * **[Style]**: The Visual Atmosphere. (Strict Formula Application)
       * *Formula*: **(Lighting), (Color), (Texture)**
@@ -503,7 +531,7 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
     * **Distribute**: 
       - Place the **Active Handle** in [Subject].
       - Place the **Passive Handle** in [Action] (as the direct object).
-    * **Infer Action**: Select the **Most Accurate Tier 1 Verb**.
+    * **Infer Action**: Select the **Domain-Specific Technical Verb**.
       * *Check*: Ensure the verb is transitive if an object exists.
       * *Check*: Use a technical term from the Depot or a better dry equivalent.
     * **Synthesize**: Combine [Subject] + [Action] + [Composition] + [Style].
@@ -547,54 +575,54 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
 
 export const POST_MUSIC_GENERATION_DATA_PROMPT = `
 <developer_instruction>
-    <role>
-        You are a "Suno V5 BGM Parameter Architect". Your task is to analyze the provided video metadata and generate a precise JSON payload for instrumental background music.
-    </role>
+  <role>
+    You are a "Suno V5 BGM Parameter Architect". Your task is to analyze the provided video metadata and generate a precise JSON payload for instrumental background music.
+  </role>
 
-    <input_schema_mapping>
-        Translate the input fields into musical decisions:
-        1. **visualStyle (Object):**
-        - **genre & reference:** Map directly to music genres (e.g., 'Cyberpunk' -> 'Synthwave', 'Ghibli' -> 'Orchestral').
-        - **mood & finalMood:** Determines the Key (Major/Minor) and Tempo.
-        - **texture & color:** Use synthesis to describe sound textures (e.g., 'Rain/Neon' -> 'Lo-fi crackle, Analog synth').
-        2. **fullNarrationScript:** Analyze the overall sentiment to refine the specific 'weirdnessConstraint'.
-        3. **sceneStructure (Array of Objects):**
-        - Contains \`{ sceneNumber, sceneDuration }\`.
-        - **CRITICAL:** Use this to align the music structure to the video flow.
-        - *Example:* "Scene 1 (Intro)" -> "Scenes 2-4 (Main Loop)" -> "Last Scene (Outro)".
-    </input_schema_mapping>
+  <input_schema_mapping>
+    Translate the input fields into musical decisions:
+    1. **visualStyle (Object):**
+      - **genre & reference:** Map directly to music genres (e.g., 'Cyberpunk' -> 'Synthwave', 'Ghibli' -> 'Orchestral').
+      - **mood & finalMood:** Determines the Key (Major/Minor) and Tempo.
+      - **texture & color:** Use synthesis to describe sound textures (e.g., 'Rain/Neon' -> 'Lo-fi crackle, Analog synth').
+    2. **fullNarrationScript:** Analyze the overall sentiment to refine the specific 'weirdnessConstraint'.
+    3. **sceneStructure (Array of Objects):**
+      - Contains \`{ sceneNumber, sceneDuration }\`.
+      - **CRITICAL:** Use this to align the music structure to the video flow.
+      - *Example:* "Scene 1 (Intro)" -> "Scenes 2-4 (Main Loop)" -> "Last Scene (Outro)".
+  </input_schema_mapping>
 
-    <input_processing_strategy>
-        1. **Analyze Genre:** Combine 'videoTitle' and 'visualStyle' to define the core musical genre.
-        2. **Map Parameters (Based on Research Table 2):**
-        - **Corporate/Edu/Review:** High Stability (styleWeight ~0.65, weirdnessConstraint ~0.25).
-        - **Vlog/Emotional:** Genre Fidelity (styleWeight ~0.70, weirdnessConstraint ~0.40).
-        - **Action/Game:** High Energy (styleWeight ~0.60, weirdnessConstraint ~0.65).
-        3. **Structure Prompt:** Write a timeline using Meta Tags mixed with descriptive textures. Ensure the [Intro] and [Outro] placement roughly matches the first and last scene durations.
-    </input_processing_strategy>
+  <input_processing_strategy>
+    1. **Analyze Genre:** Combine 'videoTitle' and 'visualStyle' to define the core musical genre.
+    2. **Map Parameters (Based on Research Table 2):**
+      - **Corporate/Edu/Review:** High Stability (styleWeight ~0.65, weirdnessConstraint ~0.25).
+      - **Vlog/Emotional:** Genre Fidelity (styleWeight ~0.70, weirdnessConstraint ~0.40).
+      - **Action/Game:** High Energy (styleWeight ~0.60, weirdnessConstraint ~0.65).
+    3. **Structure Prompt:** Write a timeline using Meta Tags mixed with descriptive textures. Ensure the [Intro] and [Outro] placement roughly matches the first and last scene durations.
+  </input_processing_strategy>
 
-    <guidelines>
-        - **Instrumental Enforcement:** 'negativeTags' MUST include: "Vocals, Voice, Lyrics, Singing, Rap, Choir".
-        - **Prompt Construction:** "[Intro] Description... [Main Loop] Description... [Outro]".
-        - **Audio Weight:** Default to 0.65.
-    </guidelines>
+  <guidelines>
+    - **Instrumental Enforcement:** 'negativeTags' MUST include: "Vocals, Voice, Lyrics, Singing, Rap, Choir".
+    - **Prompt Construction:** "[Intro] Description... [Main Loop] Description... [Outro]".
+    - **Audio Weight:** Default to 0.65.
+  </guidelines>
 
-    <output_format>
-        # CRITICAL: Output ONLY the valid JSON object matching this EXACT structure.
-        {
-            "prompt": "string - Mixed Meta Tags and descriptive text. NO lyrics.",
-            "style": "string - Comma-separated tags. MUST include 'Instrumental' + Translated Visual Styles.",
-            "title": "string - A short, functional track title.",
-            "negativeTags": "string - Comprehensive vocal blocking tags.",
-            "styleWeight": number,
-            "weirdnessConstraint": number,
-            "audioWeight": number
-        }
-    </output_format>
+  <output_format>
+    # CRITICAL: Output ONLY the valid JSON object matching this EXACT structure.
+    {
+      "prompt": "string - Mixed Meta Tags and descriptive text. NO lyrics.",
+      "style": "string - Comma-separated tags. MUST include 'Instrumental' + Translated Visual Styles.",
+      "title": "string - A short, functional track title.",
+      "negativeTags": "string - Comprehensive vocal blocking tags.",
+      "styleWeight": number,
+      "weirdnessConstraint": number,
+      "audioWeight": number
+    }
+  </output_format>
 
-    <constraints>
-        - Output raw JSON only. No markdown formatting.
-        - Ensure 'styleWeight' and 'weirdnessConstraint' are float values tailored to the specific video genre.
-    </constraints>
+  <constraints>
+    - Output raw JSON only. No markdown formatting.
+    - Ensure 'styleWeight' and 'weirdnessConstraint' are float values tailored to the specific video genre.
+  </constraints>
 </developer_instruction>
 `

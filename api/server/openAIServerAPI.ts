@@ -15,7 +15,7 @@ import {
     POST_VIDEO_GEN_PROMPT_PROMPT, POST_MUSIC_GENERATION_DATA_PROMPT
 } from "@/api/types/open-ai/OpenAIPrompts";
 import {MusicGenerationData} from "@/api/types/suno-api/MusicGenerationData";
-import {Entity, InitialEntityManifestItem, PhysicsProfile} from "@/api/types/open-ai/ImageGenPrompt";
+import {Entity, InitialEntityManifestItem, PhysicsProfile} from "@/api/types/open-ai/Entity";
 import {PHYSICS_LIBRARY} from "@/api/types/open-ai/PhysicsPromptLibrary";
 
 enum OpenAIModel {
@@ -117,11 +117,11 @@ export const openAIServerAPI = {
 
             const userMessage = `
 <input_data>
-    <current_date>${currentDate}</current_date>
-    <narration_script>${narrationScript}</narration_script>
-    <subtitle_segments>
-        ${JSON.stringify(subtitleSegments)}
-    </subtitle_segments>
+  <current_date>${currentDate}</current_date>
+  <narration_script>${narrationScript}</narration_script>
+  <subtitle_segments>
+    ${JSON.stringify(subtitleSegments, null, 2)}
+  </subtitle_segments>
 </input_data>
 
 Instruction: Process the input data and return the JSON output according to the schema.
@@ -214,14 +214,14 @@ Instruction: Process the input data and return the JSON output according to the 
             // [수정 3] scriptDataList를 JSON 문자열로 변환하여 컨텍스트 제공
             const userMessage = `
 <input_data>
-    <style_name>${style.name}</style_name>
-    <style_description>${style.description}</style_description>
-    <style_prompt_guideline>${style.stylePrompt}</style_prompt_guideline>
-    <target_aspect_ratio>${aspectRatio}</target_aspect_ratio>
+  <style_name>${style.name}</style_name>
+  <style_description>${style.description}</style_description>
+  <style_prompt_guideline>${style.stylePrompt}</style_prompt_guideline>
+  <target_aspect_ratio>${aspectRatio}</target_aspect_ratio>
 
-    <full_script_context>
-        ${JSON.stringify(scriptDataList, null, 2)}
-    </full_script_context>
+  <full_script_context>
+    ${JSON.stringify(scriptDataList, null, 2)}
+  </full_script_context>
 </input_data>
 
 Instruction: Analyze the input style AND the full script context to generate the MasterStyle and EntityManifest JSON output.
@@ -474,25 +474,48 @@ Instruction: Generate the scene instruction JSON.
 
             // [핵심] Physics Profile을 기반으로 물리 법칙 텍스트 생성 (Code Level Injection)
             // 메인 히어로 또는 씬에 등장하는 주요 엔티티들의 물리 속성을 추출하여 문자열로 변환
-            const activeEntityPhysicsList = entityManifestList.filter((entity) => !!(entity.physics_profile)).map((entity) => {
-                // 1. PhysicsProfile 타입 단언
-                const { material, action_context } = entity.physics_profile as PhysicsProfile;
+            const activeEntityPhysicsList = entityManifestList
+                .filter((entity) => !!(entity.physics_profile))
+                .map((entity) => {
+                    // 1. 타입 단언 (배열로 변경됨)
+                    const { material: materialList, action_context: actionContextList } = entity.physics_profile as PhysicsProfile;
 
-                // 2. 신규 PHYSICS_LIBRARY 구조에 맞춰 데이터 조회
-                const materialData = PHYSICS_LIBRARY.material[material];
-                const actionContextData = PHYSICS_LIBRARY.action_context[action_context];
+                    // 2. Material 데이터 수집 (배열 순회)
+                    const effectTags = new Set<string>();
+                    materialList.forEach((materialKey) => {
+                        const data = PHYSICS_LIBRARY.material[materialKey];
+                        if (data) {
+                            effectTags.add(`"${data.effect_tag}"`);
+                            effectTags.add(`"${data.alt_tag}"`);
+                        }
+                    });
 
-                // Safety Check: 데이터가 없으면 건너뜀
-                if (!materialData || !actionContextData) return null;
+                    // 3. Action Context 데이터 수집 (배열 순회)
+                    const cameraTechs = new Set<string>();
+                    const speedTerms = new Set<string>();
+                    actionContextList.forEach((contextKey) => {
+                        const data = PHYSICS_LIBRARY.action_context[contextKey];
+                        if (data) {
+                            // 콤마로 구분된 문자열일 수 있으므로 분리해서 저장하거나, 통째로 저장
+                            cameraTechs.add(data.camera_tech);
+                            speedTerms.add(data.speed_term);
+                        }
+                    });
 
-                // 3. Dry S-A-C-S용 키워드 포맷팅
-                // 설명(Description)은 배제하고, LLM이 선택할 수 있는 '옵션'만 제공합니다.
-                return `
+                    // 데이터가 하나도 없으면 null 반환
+                    if (effectTags.size === 0 && cameraTechs.size === 0) return null;
+
+                    // 4. 포맷팅: 옵션들을 'OR'나 콤마로 연결하여 제공
+                    // LLM이 상황에 맞춰 고를 수 있게 나열해줍니다.
+                    return `
 [Entity Role: ${entity.role}]
-- **Visual Effect Tag**: "${materialData.effect_tag}" OR "${materialData.alt_tag}"
-- **Camera & Velocity**: ${actionContextData.camera_tech} + ${actionContextData.speed_term}
+- **Visual Effect Candidates**: ${Array.from(effectTags).join(' OR ')}
+- **Camera Tech Options**: ${Array.from(cameraTechs).join(', ')}
+- **Velocity Options**: ${Array.from(speedTerms).join(', ')}
 `;
-            }).filter(Boolean).join('\n');
+                })
+                .filter(Boolean)
+                .join('\n');
 
             const mappedEntityList = entityManifestList.map((entity) => {
                 // 옷/재질 정보에서 너무 긴 묘사는 잘라내거나 핵심만 남기는 전처리도 좋음 (여기서는 그대로 전달하되 프롬프트로 제어)
@@ -507,7 +530,6 @@ Instruction: Generate the scene instruction JSON.
                     }
                 };
             });
-
             // 4. User Message 구성 (physics_instruction_set 주입)
             const userMessage = `
 <input_context>
@@ -669,7 +691,7 @@ Instruction: Generate the scene instruction JSON.
 
             const userMessage = `
 <task_data>
-    ${JSON.stringify(musicPromptRequestData, null, 2)}
+  ${JSON.stringify(musicPromptRequestData, null, 2)}
 </task_data>
 `;
 
