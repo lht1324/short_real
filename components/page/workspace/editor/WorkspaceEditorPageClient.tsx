@@ -147,6 +147,8 @@ function WorkspaceEditorPageClient() {
 
     const [videoData, setVideoData] = useState<VideoData | null>(null);
 
+    const [isCaptionEnabled, setIsCaptionEnabled] = useState(true);
+
     const captionDataList = useMemo(() => {
         return videoData?.captionDataList ?? []
     }, [videoData]);
@@ -207,6 +209,7 @@ function WorkspaceEditorPageClient() {
     const finalVideoMergeData: FinalVideoMergeData | null = useMemo(() => {
         if (captionDataList.length !== 0 && taskId && videoPlayerUIData && videoDuration > 0) {
             return {
+                isCaptionEnabled: isCaptionEnabled,
                 captionDataList: captionDataList,
                 captionConfigState: captionConfigState,
                 videoWidth: videoPlayerUIData.videoWidth,
@@ -214,7 +217,7 @@ function WorkspaceEditorPageClient() {
                 captionAreaTop: videoPlayerUIData.captionAreaTop,
                 captionAreaVerticalPadding: videoPlayerUIData.captionAreaVerticalPadding,
                 captionOneLineHeight: videoPlayerUIData.captionOneLineHeight,
-                
+
                 musicIndex: editingMusicIndex,
                 cuttingAreaStartSec: musicStartSec,
                 cuttingAreaEndSec: musicStartSec + videoDuration,
@@ -223,7 +226,7 @@ function WorkspaceEditorPageClient() {
         } else {
             return null;
         }
-    }, [captionDataList, taskId, videoPlayerUIData, videoDuration, captionConfigState, editingMusicIndex, musicStartSec, musicVolume]);
+    }, [isCaptionEnabled, captionDataList, taskId, videoPlayerUIData, videoDuration, captionConfigState, editingMusicIndex, musicStartSec, musicVolume]);
 
     const onClickFinish = useCallback(async () => {
         setIsFinishLoading(true);
@@ -259,6 +262,10 @@ function WorkspaceEditorPageClient() {
             setIsFinishLoading(false);
         }
     }, [taskId, finalVideoMergeData]);
+
+    const onToggleIsCaptionEnabled = useCallback(() => {
+        setIsCaptionEnabled(prev => !prev)
+    }, []);
 
     const onClickSceneSequence = useCallback((sceneStartSec: number) => {
         videoPlayerRef.current?.seekTo(sceneStartSec);
@@ -568,10 +575,12 @@ function WorkspaceEditorPageClient() {
                             <div className="flex-1 px-3 overflow-y-auto">
                                 {activeConfigPanel === ConfigPanelType.Caption && (
                                     <CaptionConfigPanel
+                                        isCaptionEnabled={isCaptionEnabled}
                                         captionConfigState={captionConfigState}
                                         fontFamilyList={fontFamilyList}
                                         selectedFontFamilyWeightList={selectedFontFamilyWeightList}
                                         selectedFontFamilyFullShape={selectedFontFamilyFullShape}
+                                        onToggleIsCaptionEnabled={onToggleIsCaptionEnabled}
                                         onChangeCaptionConfigState={onChangeCaptionConfigState}
                                         onOpenColorPicker={onOpenColorPicker}
                                     />
@@ -593,6 +602,7 @@ function WorkspaceEditorPageClient() {
                                 ref={videoPlayerRef}
                                 videoUrl={videoData.videoUrl}
                                 currentTime={videoCurrentTime}
+                                isCaptionEnabled={isCaptionEnabled}
                                 captionDataList={captionDataList}
                                 captionConfigState={captionConfigState}
                                 musicPlayConfig={musicPlayConfig}

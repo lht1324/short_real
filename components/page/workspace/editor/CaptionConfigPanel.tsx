@@ -9,19 +9,23 @@ import {FontFamily} from "@/lib/FontFamilyList";
 export type ColorPickerType = 'activeColor' | 'inactiveColor' | 'activeOutlineColor' | 'inactiveOutlineColor';
 
 interface CaptionConfigPanelProps {
+    isCaptionEnabled: boolean;
     captionConfigState: CaptionConfigState;
     fontFamilyList: FontFamily[];
     selectedFontFamilyWeightList: FontVariant[];
     selectedFontFamilyFullShape: string;
+    onToggleIsCaptionEnabled: () => void;
     onChangeCaptionConfigState: (captionConfigState: CaptionConfigState) => void;
     onOpenColorPicker: (type: ColorPickerType, anchor: HTMLElement) => void;
 }
 
 function CaptionConfigPanel({
+    isCaptionEnabled,
     captionConfigState,
     fontFamilyList,
     selectedFontFamilyWeightList,
     selectedFontFamilyFullShape,
+    onToggleIsCaptionEnabled,
     onChangeCaptionConfigState,
     onOpenColorPicker,
 }: CaptionConfigPanelProps) {
@@ -228,8 +232,22 @@ function CaptionConfigPanel({
         <div id="shadow-section" className="flex-1 min-h-0 p-4 space-y-6 overflow-y-auto">
             {/*<div className="text-purple-300 text-2xl font-medium mb-4">Caption</div>*/}
 
+            {/* Enable Caption */}
+            <div className="flex items-center space-x-3">
+                <label className="text-white text-lg font-medium">Enable Caption</label>
+                <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                        type="checkbox"
+                        checked={isCaptionEnabled}
+                        onChange={onToggleIsCaptionEnabled}
+                        className="sr-only peer"
+                    />
+                    <div className="w-11 h-6 bg-gray-800 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-purple-400 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all border border-purple-500/30 peer-checked:bg-gradient-to-r peer-checked:from-pink-500 peer-checked:to-purple-600"></div>
+                </label>
+            </div>
+
             {/* Font Section */}
-            <AccordionSection id="font" title="Font" defaultExpanded={true}>
+            {isCaptionEnabled && <AccordionSection id="font" title="Font" defaultExpanded={true}>
                 {/* Font Family */}
                 <div className="space-y-2">
                     <label className="text-white text-base font-medium">Font Family</label>
@@ -340,10 +358,10 @@ function CaptionConfigPanel({
                         />
                     </div>
                 </div>
-            </AccordionSection>
+            </AccordionSection>}
 
             {/* Text Section (renamed from Colors) */}
-            <AccordionSection id="text" title="Text" defaultExpanded={true}>
+            {isCaptionEnabled && <AccordionSection id="text" title="Text" defaultExpanded={true}>
                 {/* Active Color */}
                 <div className="space-y-2">
                     <label className="text-gray-300 text-base">Active Color</label>
@@ -354,7 +372,8 @@ function CaptionConfigPanel({
                             onClick={(e) => onOpenColorPicker('activeColor', e.currentTarget)}
                         ></div>
                         <div className="flex items-center flex-1">
-                            <span className="bg-gray-800/50 border border-purple-500/30 border-r-0 rounded-l-lg px-3 py-2 text-white text-base">#</span>
+                            <span
+                                className="bg-gray-800/50 border border-purple-500/30 border-r-0 rounded-l-lg px-3 py-2 text-white text-base">#</span>
                             <input
                                 type="text"
                                 value={activeColor.replace('#', '')}
@@ -384,7 +403,8 @@ function CaptionConfigPanel({
                             onClick={(e) => onOpenColorPicker('inactiveColor', e.currentTarget)}
                         ></div>
                         <div className="flex items-center flex-1">
-                            <span className="bg-gray-800/50 border border-purple-500/30 border-r-0 rounded-l-lg px-3 py-2 text-white text-base">#</span>
+                            <span
+                                className="bg-gray-800/50 border border-purple-500/30 border-r-0 rounded-l-lg px-3 py-2 text-white text-base">#</span>
                             <input
                                 type="text"
                                 value={inactiveColor.replace('#', '')}
@@ -403,10 +423,10 @@ function CaptionConfigPanel({
                         </div>
                     </div>
                 </div>
-            </AccordionSection>
+            </AccordionSection>}
 
             {/* Outline Section */}
-            <AccordionSection id="outline" title="Outline" defaultExpanded={true}>
+            {isCaptionEnabled && <AccordionSection id="outline" title="Outline" defaultExpanded={true}>
                 {/* Active Outline */}
                 <div className="space-y-2">
                     <div className="flex items-center space-x-3">
@@ -590,7 +610,7 @@ function CaptionConfigPanel({
                         </div>
                     )}
                 </div>
-            </AccordionSection>
+            </AccordionSection>}
 
             {/* 현재 기술로는 <svg/>, Canvas API 사용 안 하면 Outline + Shadow 양립 불가 */}
             {/* Shadow Section */}

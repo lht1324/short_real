@@ -45,6 +45,7 @@ export async function POST(request: NextRequest) {
         // video, audio url 저장이 아닌 새로 받아오는 걸로 수정 (잘못하면 만료됨)
         const {
             // Caption 관련
+            isCaptionEnabled,
             captionDataList,
             captionConfigState,
             videoWidth,
@@ -90,6 +91,7 @@ export async function POST(request: NextRequest) {
 
         // ASS 콘텐츠 생성
         const assContent = generateASSContent(
+            isCaptionEnabled,
             captionDataList,
             captionConfigState,
             videoWidth,

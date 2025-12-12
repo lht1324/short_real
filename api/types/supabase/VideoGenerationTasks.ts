@@ -99,6 +99,7 @@ export interface MusicData {
 
 export interface FinalVideoMergeData {
     // Caption 병합용
+    isCaptionEnabled: boolean;
     captionDataList: CaptionData[];
     captionConfigState: CaptionConfigState;
     videoWidth: number;

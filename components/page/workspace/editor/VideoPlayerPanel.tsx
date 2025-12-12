@@ -30,6 +30,7 @@ export interface VideoPlayerHandle {
 interface VideoPlayerPanelProps {
     videoUrl: string;
     currentTime: number;
+    isCaptionEnabled: boolean;
     captionDataList: CaptionData[];
     captionConfigState: CaptionConfigState;
     selectedFontFamilyFullShape: string;
@@ -44,6 +45,7 @@ interface VideoPlayerPanelProps {
 const VideoPlayerPanel = forwardRef<VideoPlayerHandle, VideoPlayerPanelProps>(({
     videoUrl,
     currentTime,
+    isCaptionEnabled,
     captionDataList,
     captionConfigState,
     selectedFontFamilyFullShape,
@@ -547,9 +549,9 @@ const VideoPlayerPanel = forwardRef<VideoPlayerHandle, VideoPlayerPanelProps>(({
             <div className="flex flex-row p-8 justify-center z-10">
                 {/* Caption Position Slider */}
                 {/* w-6 + w-2 + w-6 */}
-                <div
+                {isCaptionEnabled && <div
                     className="w-14 relative z-30"
-                    style={{ height: `${sliderHeight}px` }}
+                    style={{height: `${sliderHeight}px`}}
                 >
                     {/* Caption Position Toggle Button */}
                     <button
@@ -562,9 +564,9 @@ const VideoPlayerPanel = forwardRef<VideoPlayerHandle, VideoPlayerPanelProps>(({
                         }}
                     >
                         {showCaptionLine ? (
-                            <Eye size={14} className="text-gray-300" />
+                            <Eye size={14} className="text-gray-300"/>
                         ) : (
-                            <EyeOff size={14} className="text-gray-500" />
+                            <EyeOff size={14} className="text-gray-500"/>
                         )}
                     </button>
                     <input
@@ -591,7 +593,7 @@ const VideoPlayerPanel = forwardRef<VideoPlayerHandle, VideoPlayerPanelProps>(({
                             accentColor: "#A855F7",
                         }}
                     />
-                </div>
+                </div>}
                 <div className="w-8"/>
                 <div
                     className="flex justify-center relative"
@@ -680,7 +682,7 @@ const VideoPlayerPanel = forwardRef<VideoPlayerHandle, VideoPlayerPanelProps>(({
                     </div>
 
                     {/* Caption Area */}
-                    {fontSize > 0 && <div
+                    {isCaptionEnabled && fontSize > 0 && <div
                         className="absolute flex flex-col z-20"
                         style={{
                             top: `${captionAreaTop}px`,
