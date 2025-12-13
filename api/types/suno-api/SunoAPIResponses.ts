@@ -13,7 +13,7 @@ export interface SunoAPIBaseData {
 export interface PostGenerateWebhookPayload {
     callbackType: PostGenerateWebhookType;
     task_id: string;
-    data: GeneratedMusicMetadata[];
+    data?: GeneratedMusicMetadata[];
 }
 
 export enum PostGenerateWebhookType {

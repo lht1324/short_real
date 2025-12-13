@@ -18,6 +18,7 @@ services:
       # -> Docker는 리눅스용 라이브러리를 따로 관리함
       - /workdir/node_modules
       - /workdir/.next
+      - /workdir/.git
 
     environment:
       # 윈도우 파일 시스템 위에서 돌릴 경우를 대비한 핫 리로딩 설정

@@ -18,6 +18,17 @@ const nextConfig: NextConfig = {
             },
         ]
     },
+    webpack: (config, { dev }) => {
+        if (dev) {
+            config.watchOptions = {
+                poll: 800,             // 0.8초마다 변경 사항 강제 확인 (감시자 부활)
+                aggregateTimeout: 300,  // 변경 후 0.3초 대기
+                ignored: /node_modules|\.git/ // .git 폴더는 무시 (부하 방지)
+            };
+        }
+        return config;
+    },
+    turbopack: {},
     async headers() {
         return [
             {
