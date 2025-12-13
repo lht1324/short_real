@@ -86,6 +86,7 @@ function WorkspaceCreatePageClient() {
     const [isSaving, setIsSaving] = useState(false);
     const [showSaveSuccessModal, setShowSaveSuccessModal] = useState(false);
     const [showVoiceChangeWarningModal, setShowVoiceChangeWarningModal] = useState(false);
+    const [showInsufficientCreditModal, setShowInsufficientCreditModal] = useState(false);
     const [pendingVoiceId, setPendingVoiceId] = useState<string | null>(null);
     
     // Collapse states for sections
@@ -124,6 +125,10 @@ function WorkspaceCreatePageClient() {
     const expectedCreditUsage = useMemo(() => {
         return 100 + (expectedDurationUsage + expectedSceneCountUsage);
     }, [expectedDurationUsage, expectedSceneCountUsage]);
+
+    const isCreditInsufficient = useMemo(() => {
+        return userCreditCount < expectedCreditUsage;
+    }, [userCreditCount, expectedCreditUsage]);
 
     // Style examples for preview
     const styleList = useMemo((): Style[] => STYLE_DATA_LIST, []);
@@ -303,7 +308,7 @@ function WorkspaceCreatePageClient() {
             }
 
             // Video API 호출
-            const postVideoResult = await videoClientAPI.postVideo(taskId, selectedStyleId);
+            const postVideoResult = await videoClientAPI.postVideo(taskId, user.id as string, selectedStyleId);
 
             if (postVideoResult) {
                 console.log('Video data generation succeed.');
@@ -573,7 +578,7 @@ function WorkspaceCreatePageClient() {
                             {/* Storyboard Section */}
                             <div>
                                 <div className="flex items-center justify-between mb-4">
-                                    <div className="flex items-center space-x-2">
+                                    <div className="flex items-center space-x-3">
                                         <label className="block text-xl font-semibold text-purple-300">
                                             Storyboard
                                         </label>
@@ -590,6 +595,9 @@ function WorkspaceCreatePageClient() {
                                                 <span className="text-xs text-purple-300 font-medium">Preview</span>
                                             </button>
                                         )}
+                                        <label className="text-xs text-purple-300 font-medium">
+                                            {expectedVideoTotalDuration.toFixed(1)} secs
+                                        </label>
                                     </div>
                                     <div className="relative group">
                                         <div className="flex flex-row space-x-2 items-center">
@@ -901,14 +909,29 @@ function WorkspaceCreatePageClient() {
                             {/* Generate Video 버튼 */}
                             <div className="relative group">
                                 <button
-                                    onClick={onClickGenerateVideo}
+                                    onClick={() => {
+                                        if (isCreditInsufficient) {
+                                            setShowInsufficientCreditModal(true);
+                                        } else {
+                                            onClickGenerateVideo();
+                                        }
+                                    }}
                                     disabled={!isVideoGenerationEnabled || isSubmitting}
-                                    className="flex-1 min-w-[280px] group bg-gradient-to-r from-pink-500 to-purple-600 text-white px-6 py-3 rounded-xl text-lg font-semibold hover:from-pink-600 hover:to-purple-700 transition-all duration-300 transform hover:scale-105 flex items-center justify-center space-x-2 shadow-lg shadow-purple-500/25 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                                    className={`flex-1 min-w-[280px] group px-6 py-3 rounded-xl text-lg font-semibold transition-all duration-300 transform hover:scale-105 flex items-center justify-center space-x-2 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none ${
+                                        isCreditInsufficient
+                                            ? 'bg-red-500/10 border-2 border-red-500 text-red-500 hover:bg-red-500/20 shadow-red-500/25'
+                                            : 'bg-gradient-to-r from-pink-500 to-purple-600 text-white hover:from-pink-600 hover:to-purple-700 shadow-purple-500/25'
+                                    }`}
                                 >
                                     {isSubmitting ? (
                                         <>
                                             <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
                                             <span>Requesting...</span>
+                                        </>
+                                    ) : isCreditInsufficient ? (
+                                        <>
+                                            <AlertTriangle className="w-5 h-5" />
+                                            <span>Not Enough Credits</span>
                                         </>
                                     ) : (
                                         <>
@@ -960,6 +983,16 @@ function WorkspaceCreatePageClient() {
                         </div>
                     </div>
                 </div>
+
+                {/* Insufficient Credit Modal */}
+                {showInsufficientCreditModal && (
+                    <DefaultModal
+                        title="Insufficient Credits"
+                        message={`You need ${expectedCreditUsage} credits to generate this video,\nbut you only have ${userCreditCount} credits.\n\nPlease top up your credits to continue.`}
+                        cancelText="Close"
+                        onClickCancel={() => setShowInsufficientCreditModal(false)}
+                    />
+                )}
 
                 {/* Save Success Modal */}
                 {showSaveSuccessModal && (
