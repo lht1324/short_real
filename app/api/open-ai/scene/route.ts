@@ -75,6 +75,24 @@ export async function POST(request: NextRequest): Promise<NextResponse<PostOpenA
         }
 
         if (videoGenerationTask.scene_breakdown_list) {
+            const user = await usersServerAPI.getUserByUserId(userId);
+
+            if (!user) {
+                return getNextBaseResponse({
+                    success: false,
+                    status: 404,
+                    error: 'User not found.'
+                });
+            }
+
+            if (!user.credit_count || user.credit_count < 2) {
+                return getNextBaseResponse({
+                    success: false,
+                    status: 402,
+                    error: "Insufficient credits."
+                });
+            }
+
             const patchUserCreditCountResult = await usersServerAPI.patchUserCreditCountByUserId(userId, -2);
 
             if (!patchUserCreditCountResult) {

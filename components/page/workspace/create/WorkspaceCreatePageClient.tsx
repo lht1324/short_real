@@ -483,6 +483,7 @@ function WorkspaceCreatePageClient() {
                     voiceUrl={voiceUrl}
                     selectedVoiceId={selectedVoiceId}
                     expectedVideoTotalDuration={expectedVideoTotalDuration}
+                    userCredit={userCreditCount}
                     isGeneratingStoryboardData={isGeneratingStoryboardData}
                     onChangeScript={onChangeScript}
                     onClickGenerateWithAI={onClickGenerateWithAI}

@@ -1,5 +1,5 @@
 import {memo, useCallback, useEffect, useRef, useState} from "react";
-import {Coins, Film, Play, Square} from "lucide-react";
+import {AlertTriangle, Coins, Film, Play, Square} from "lucide-react";
 import StoryboardItem from "@/components/page/workspace/create/create-form-panel/StoryboardItem";
 import {SceneData} from "@/api/types/supabase/VideoGenerationTasks";
 
@@ -11,6 +11,7 @@ interface StoryboardSectionProps {
     voiceUrl: string | null;
     expectedVideoTotalDuration: number;
     selectedVoiceId: string;
+    userCredit: number;
     isGeneratingStoryboardData: boolean;
     onClickGenerateStoryboard: () => void;
 }
@@ -23,6 +24,7 @@ function StoryboardSection({
     voiceUrl,
     expectedVideoTotalDuration,
     selectedVoiceId,
+    userCredit,
     isGeneratingStoryboardData,
     onClickGenerateStoryboard,
 }: StoryboardSectionProps) {
@@ -110,13 +112,22 @@ function StoryboardSection({
                         <button
                             type="button"
                             onClick={onClickGenerateStoryboard}
-                            disabled={isGeneratingStoryboardData || !script.trim() || !selectedVoiceId}
-                            className="px-3 py-1.5 bg-gradient-to-r from-green-500 to-blue-500 text-white rounded-lg text-sm font-medium hover:from-green-600 hover:to-blue-600 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-1"
+                            disabled={isGeneratingStoryboardData || !script.trim() || !selectedVoiceId || (userCredit < 2 && (sceneDataList.length > 0 || !!videoTitle))}
+                            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-1 ${
+                                (userCredit < 2 && (sceneDataList.length > 0 || !!videoTitle))
+                                    ? 'bg-red-500/10 border border-red-500 text-red-500 hover:bg-red-500/20'
+                                    : 'bg-gradient-to-r from-green-500 to-blue-500 text-white hover:from-green-600 hover:to-blue-600'
+                            }`}
                         >
                             {isGeneratingStoryboardData ? (
                                 <>
                                     <div className="w-3 h-3 border border-white/30 border-t-white rounded-full animate-spin"></div>
                                     <span>Generating...</span>
+                                </>
+                            ) : (userCredit < 2 && (sceneDataList.length > 0 || !!videoTitle)) ? (
+                                <>
+                                    <AlertTriangle className="w-3.5 h-3.5" />
+                                    <span>Not Enough Credits</span>
                                 </>
                             ) : sceneDataList.length === 0 && !videoTitle ? (
                                 <span>Generate Storyboard</span>

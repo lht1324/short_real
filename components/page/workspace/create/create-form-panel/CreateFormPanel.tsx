@@ -1,10 +1,7 @@
-import {ChangeEvent, memo, useCallback, useMemo, useState} from "react";
-import {Coins, Film, Play, Sparkles, Square} from "lucide-react";
+import {ChangeEvent, memo, useMemo} from "react";
+import {Sparkles} from "lucide-react";
 import {SceneData} from "@/api/types/supabase/VideoGenerationTasks";
 import StoryboardSection from "@/components/page/workspace/create/create-form-panel/StoryboardSection";
-import {PostOpenAISceneRequest} from "@/api/types/api/open-ai/scene/PostOpenAISceneRequest";
-import {openAIClientAPI} from "@/api/client/openAIClientAPI";
-import {StoryboardData} from "@/api/types/api/open-ai/scene/PostOpenAISceneResponse";
 
 interface CreateFormPanelProps {
     script: string;
@@ -14,6 +11,7 @@ interface CreateFormPanelProps {
     voiceUrl: string | null;
     selectedVoiceId: string;
     expectedVideoTotalDuration: number;
+    userCredit: number;
     isGeneratingStoryboardData: boolean;
     onChangeScript: (e: ChangeEvent<HTMLTextAreaElement>) => void;
     onClickGenerateWithAI: () => void;
@@ -28,6 +26,7 @@ function CreateFormPanel({
     voiceUrl,
     selectedVoiceId,
     expectedVideoTotalDuration,
+    userCredit,
     isGeneratingStoryboardData,
     onChangeScript,
     onClickGenerateWithAI,
@@ -86,6 +85,7 @@ function CreateFormPanel({
                         videoDescription={videoDescription}
                         voiceUrl={voiceUrl}
                         expectedVideoTotalDuration={expectedVideoTotalDuration}
+                        userCredit={userCredit}
                         selectedVoiceId={selectedVoiceId}
                         isGeneratingStoryboardData={isGeneratingStoryboardData}
                         onClickGenerateStoryboard={onClickGenerateStoryboard}
