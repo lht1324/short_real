@@ -14,8 +14,6 @@ import {getNextBaseResponse} from "@/utils/getNextBaseResponse";
  * 항상 유념할 것.
  */
 export async function POST(request: NextRequest) {
-    const supabase = createSupabaseServiceRoleClient();
-
     const { searchParams } = new URL(request.url);
     const taskId = searchParams.get('taskId');
 
@@ -64,69 +62,56 @@ export async function POST(request: NextRequest) {
 
         // 4. 실패한 요청인지 확인
         if (prediction.status === 'failed') {
-            console.error(`Replicate prediction ${prediction.id} failed:`, prediction.error);
-
-            // ▼▼▼ 여기가 이렇게 바뀝니다 ▼▼▼
-
-            // 1. 에러 내용 확인 및 CUDA 에러 여부 판단
-            let isCudaError = false;
-            let isHttpxReadError = false;
-
             const errorMessage = getErrorMessage(prediction.error);
+            console.error(`Replicate prediction ${prediction.id} failed:`, errorMessage);
 
-            if (errorMessage) {
-                // 에러 메시지에 'CUDA'가 포함되어 있는지 대소문자 구분 없이 확인
-                isCudaError = errorMessage.toUpperCase().includes('CUDA');
-                isHttpxReadError = errorMessage.toUpperCase().includes('READERROR');
-            }
+            const isRetryable = errorMessage && (
+                errorMessage.toUpperCase().includes('CUDA') ||
+                errorMessage.toUpperCase().includes('READERROR')
+            );
 
-            // 2. CUDA 에러인 경우에만 재시도
-            if (isCudaError || isHttpxReadError) {
-                console.log(`[Retry] CUDA error detected for prediction ${prediction.id}. Retrying immediately...`);
-                // 즉시 재시도 요청
-                // 테스트 금지, 이미지 생성 시 Supabase Storage에 저장하는 로직 추가 후 다시 해야 함. 현재 sceneToProcess에는 imageBase64가 없음.
-                const { data, error } = await supabase.storage
-                    .from('scene_image_temp_storage')
-                    .createSignedUrl(`${taskId}/${sceneToProcess.sceneNumber}.jpeg`, 3600);
+            if (isRetryable) {
+                console.log(`[Retry] Retryable error (CUDA/ReadError) detected for prediction ${prediction.id}. Retrying...`);
 
-                if (!data || !data?.signedUrl || error) {
-                    throw new Error(error?.message || `Scene ${sceneToProcess.sceneNumber}: 이미지 데이터가 없습니다.`);
+                try {
+                    // Retry: videoServerAPI.postVideo handles storage checking and request submission
+                    const newRequestId = await videoServerAPI.postVideo(
+                        sceneToProcess,
+                        taskId,
+                    );
+
+                    // Update task with new requestId
+                    await videoGenerationTasksServerAPI.patchVideoGenerationTask(
+                        taskId,
+                        {
+                            scene_breakdown_list: originalSceneDataList.map((sceneData) => {
+                                return sceneData.requestId === sceneToProcess.requestId
+                                    ? {
+                                        ...sceneData,
+                                        requestId: newRequestId,
+                                        status: SceneGenerationStatus.IN_PROGRESS // Ensure status is consistent
+                                    }
+                                    : sceneData;
+                            })
+                        }
+                    );
+
+                    return getNextBaseResponse({
+                        success: true,
+                        status: 200,
+                        message: "Retryable error detected. Retrying job."
+                    });
+                } catch (retryError) {
+                    console.error("Failed to retry video generation:", retryError);
+                    // If retry fails, we rethrow to trigger the global error handler which marks the task as failed.
+                    throw retryError;
                 }
-
-                const newRequestId = await videoServerAPI.postVideo(
-                    sceneToProcess,
-                    taskId,
-                );
-
-                const patchVideoGenerationTaskResult = await videoGenerationTasksServerAPI.patchVideoGenerationTask(
-                    taskId,
-                    {
-                        scene_breakdown_list: originalSceneDataList.map((sceneData) => {
-                            return sceneData.requestId === sceneToProcess.requestId
-                                ? {
-                                    ...sceneData,
-                                    requestId: newRequestId,
-                                }
-                                : sceneData;
-                        })
-                    }
-                )
-
-                if (!patchVideoGenerationTaskResult) {
-                    throw new Error(`Patching video generation task is failed.`);
-                }
-
-                return getNextBaseResponse({
-                    success: true,
-                    status: 200,
-                    message: "CUDA error detected. Retrying job."
-                });
 
             } else {
-                // 3. CUDA가 아닌 다른 에러인 경우 (영구 실패 처리)
-                console.log(`[Permanent Failure] Non-CUDA error for prediction ${prediction.id}. Not retrying.`);
+                // Permanent Failure
+                console.log(`[Permanent Failure] Non-retryable error for prediction ${prediction.id}. Not retrying.`);
 
-                await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
+                // Mark specific scene as FAILED and Task as FAILED
                 await videoGenerationTasksServerAPI.patchVideoGenerationTask(
                     taskId,
                     {
@@ -137,15 +122,16 @@ export async function POST(request: NextRequest) {
                                     status: SceneGenerationStatus.FAILED,
                                 }
                                 : sceneData;
-                        })
+                        }),
+                        is_generation_failed: true
                     }
-                )
+                );
 
-                // Replicate에는 성공으로 응답하여 더 이상 웹훅을 받지 않도록 합니다.
+                // Acknowledge webhook to stop retries from Replicate
                 return getNextBaseResponse({
                     success: true,
                     status: 200,
-                    message: "Non-CUDA failure acknowledged. No retry."
+                    message: "Permanent failure acknowledged. No retry."
                 });
             }
         }
