@@ -1,10 +1,9 @@
 'use client'
 
 import {memo, MouseEvent, useCallback, useEffect, useMemo, useState} from "react";
-import {Play, Square} from "lucide-react";
 import {Voice} from "@/api/types/eleven-labs/Voice";
 import {voiceClientAPI} from "@/api/client/voiceClientAPI";
-import VoiceSelectionPanelItem from "@/components/page/workspace/create/VoiceSelectionPanelItem";
+import VoiceSelectionPanelItem from "@/components/page/workspace/create/voice-selection-panel/VoiceSelectionPanelItem";
 
 interface VoiceSelectionPanelProps {
     selectedVoiceId?: string,
@@ -260,45 +259,45 @@ function VoiceSelectionPanel({
                         <div className="text-sm font-medium text-purple-300 mb-2">Gender</div>
                         <div className="flex flex-wrap gap-2">
                             {Object.keys(voiceGenderTagRecord).map((tagName) => {
-                            const isActive = voiceGenderTagRecord[tagName];
+                                const isActive = voiceGenderTagRecord[tagName];
 
 
-                            // Tailwind 동적 클래스 문제 해결: 조건문으로 전체 클래스 반환
-                            const getTagClasses = () => {
-                                if (!isActive) {
-                                    return "bg-gray-500/20 text-gray-400 border-gray-500/30 hover:bg-gray-500/30";
-                                }
+                                // Tailwind 동적 클래스 문제 해결: 조건문으로 전체 클래스 반환
+                                const getTagClasses = () => {
+                                    if (!isActive) {
+                                        return "bg-gray-500/20 text-gray-400 border-gray-500/30 hover:bg-gray-500/30";
+                                    }
 
-                                switch (tagName) {
-                                    case 'male': return "bg-blue-500/20 text-blue-300 border-blue-400/30";
-                                    case 'female': return "bg-red-500/20 text-red-300 border-red-400/30";
-                                    case 'neutral': return "bg-gray-500/20 text-gray-300 border-gray-400/30";
-                                    default: return "bg-gray-500/20 text-gray-400 border-gray-500/30";
+                                    switch (tagName) {
+                                        case 'male': return "bg-blue-500/20 text-blue-300 border-blue-400/30";
+                                        case 'female': return "bg-red-500/20 text-red-300 border-red-400/30";
+                                        case 'neutral': return "bg-gray-500/20 text-gray-300 border-gray-400/30";
+                                        default: return "bg-gray-500/20 text-gray-400 border-gray-500/30";
                                     }
                                 };
 
-                            // 표시할 라벨 결정
-                            const getDisplayLabel = () => {
-                                switch (tagName) {
-                                    case 'male': return 'Male';
-                                    case 'female': return 'Female';
-                                    case 'neutral': return 'Neutral';
-                                    default: return tagName;
-                                }
-                            };
+                                // 표시할 라벨 결정
+                                const getDisplayLabel = () => {
+                                    switch (tagName) {
+                                        case 'male': return 'Male';
+                                        case 'female': return 'Female';
+                                        case 'neutral': return 'Neutral';
+                                        default: return tagName;
+                                    }
+                                };
 
-                            return (
-                                <button
-                                    key={tagName}
-                                    onClick={() => {
-                                        onToggleVoiceGenderTag(tagName);
-                                    }}
-                                    className={`text-xs px-2 py-1 rounded-full border font-medium transition-all ${getTagClasses()}`}
-                                >
-                                    {getDisplayLabel()}
-                                </button>
-                            );
-                        })}
+                                return (
+                                    <button
+                                        key={tagName}
+                                        onClick={() => {
+                                            onToggleVoiceGenderTag(tagName);
+                                        }}
+                                        className={`text-xs px-2 py-1 rounded-full border font-medium transition-all ${getTagClasses()}`}
+                                    >
+                                        {getDisplayLabel()}
+                                    </button>
+                                );
+                            })}
                         </div>
                     </div>
 
