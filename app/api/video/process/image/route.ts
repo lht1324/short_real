@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
         const sceneDataList = videoGenerationTask.scene_breakdown_list;
         const videoTitle = videoGenerationTask.video_title;
         const videoDescription = videoGenerationTask.video_description;
-        const masterStylePositivePromptInfo = videoGenerationTask.master_style_positive_prompt;
+        const masterStylePositivePromptInfo = videoGenerationTask.master_style_info;
         const masterStyleNegativePrompt = videoGenerationTask.master_style_negative_prompt;
         const entityManifestList = videoGenerationTask.entity_manifest_list;
 

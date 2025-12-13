@@ -47,12 +47,12 @@ export async function POST(request: NextRequest) {
             });
         }
 
-        if (!videoGenerationTask.master_style_positive_prompt) {
+        if (!videoGenerationTask.master_style_info) {
             await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
             return getNextBaseResponse({
                 success: false,
                 status: 404,
-                error: 'master_style_positive_prompt is missing from task'
+                error: 'master_style_info is missing from task'
             });
         }
 
@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
             videoGenerationTask.video_title,
             videoGenerationTask.video_description,
             videoGenerationTask.narration_script,
-            videoGenerationTask.master_style_positive_prompt,
+            videoGenerationTask.master_style_info,
             videoGenerationTask.scene_breakdown_list,
         );
 

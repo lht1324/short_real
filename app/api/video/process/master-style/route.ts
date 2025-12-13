@@ -92,7 +92,7 @@ export async function POST(request: NextRequest) {
 
         const patchVideoGenerationTaskStatusFinalResult = await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, {
             status: VideoGenerationTaskStatus.GENERATING_IMAGE_PROMPT,
-            master_style_positive_prompt: masterStylePositivePromptInfo,
+            master_style_info: masterStylePositivePromptInfo,
             master_style_negative_prompt: masterStyleNegativePrompt,
             entity_manifest_list: entityManifestList,
         });
