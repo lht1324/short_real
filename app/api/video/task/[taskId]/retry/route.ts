@@ -1,7 +1,9 @@
-import {NextRequest, NextResponse} from "next/server";
+import {NextRequest} from "next/server";
 import {videoGenerationTasksServerAPI} from "@/api/server/videoGenerationTasksServerAPI";
 import {VideoGenerationTaskStatus} from "@/api/types/supabase/VideoGenerationTasks";
 import {getNextBaseResponse} from "@/utils/getNextBaseResponse";
+import {getIsValidRequestC2S} from "@/utils/getIsValidRequest";
+import {internalFireAndForgetFetch} from "@/utils/internalFetch";
 
 interface RetryPathData {
     path: string;
@@ -13,6 +15,18 @@ export async function POST(
     request: NextRequest,
     { params }: { params: Promise<{ taskId: string }> }
 ) {
+    const {
+        isValidRequest,
+    } = await getIsValidRequestC2S();
+
+    if (!isValidRequest) {
+        return getNextBaseResponse({
+            success: false,
+            status: 401,
+            error: "Unauthorized request."
+        });
+    }
+
     try {
         const { taskId } = await params;
 
@@ -53,6 +67,7 @@ export async function POST(
                         body: undefined,
                     }
                 }
+                // 보통 프롬프트가 잘못 돼서 모델이 이상해지니 프롬프트 생성부터 다시 시작
                 case VideoGenerationTaskStatus.GENERATING_VIDEO_PROMPT:
                 case VideoGenerationTaskStatus.GENERATING_VIDEO: {
                     return {
@@ -123,16 +138,13 @@ export async function POST(
         });
 
         // Fire and Forget으로 재시작 엔드포인트 호출
-        const baseUrl = process.env.BASE_URL || 'http://localhost:3000';
-        fetch(`${baseUrl}${retryPathData.path}?taskId=${taskId}`, {
-            method: retryPathData.restType,
-            headers: {
-                'Content-Type': 'application/json',
+        internalFireAndForgetFetch(
+            `${process.env.BASE_URL}${retryPathData.path}?taskId=${taskId}`,
+            {
+                method: 'POST',
             },
-            body: retryPathData.body ? JSON.stringify(retryPathData.body) : undefined
-        }).catch(error => {
-            console.error('Fire and forget fetch error:', error);
-        });
+            retryPathData.body ?? undefined,
+        )
 
         // 즉시 응답
         return getNextBaseResponse({

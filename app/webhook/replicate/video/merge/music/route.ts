@@ -4,8 +4,17 @@ import { videoGenerationTasksServerAPI } from '@/api/server/videoGenerationTasks
 import { VideoGenerationTaskStatus } from '@/api/types/supabase/VideoGenerationTasks';
 import {taskCheckAndCleanupIfCancelled} from "@/utils/taskCheckAndCleanupIfCancelled";
 import {getNextBaseResponse} from "@/utils/getNextBaseResponse";
+import {getIsValidRequestS2S} from "@/utils/getIsValidRequest";
 
 export async function POST(request: NextRequest) {
+    if (!getIsValidRequestS2S(request)) {
+        return getNextBaseResponse({
+            success: false,
+            status: 401,
+            error: 'Unauthorized internal request',
+        });
+    }
+
     const supabase = createSupabaseServiceRoleClient();
 
     const { searchParams } = new URL(request.url);

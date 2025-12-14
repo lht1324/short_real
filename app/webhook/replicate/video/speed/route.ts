@@ -1,9 +1,10 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { createSupabaseServiceRoleClient } from "@/lib/supabaseServiceRole";
 import { videoGenerationTasksServerAPI } from "@/api/server/videoGenerationTasksServerAPI";
 import { SceneGenerationStatus, VideoGenerationTaskStatus } from "@/api/types/supabase/VideoGenerationTasks";
 import { taskCheckAndCleanupIfCancelled } from "@/utils/taskCheckAndCleanupIfCancelled";
 import { getNextBaseResponse } from "@/utils/getNextBaseResponse";
+import {internalFireAndForgetFetch} from "@/utils/internalFetch";
 
 export async function POST(request: NextRequest) {
     const supabase = createSupabaseServiceRoleClient();
@@ -147,12 +148,10 @@ export async function POST(request: NextRequest) {
 
             // 병합 엔드포인트 호출 (Fire and Forget)
             // 주의: 서버 사이드 fetch이므로 process.env.BASE_URL(절대 경로) 필수
-            const mergeEndpointUrl = `${process.env.BASE_URL}/api/video/merge?taskId=${taskId}`;
 
-            fetch(mergeEndpointUrl, {
+            internalFireAndForgetFetch(`${process.env.BASE_URL}/api/video/merge?taskId=${taskId}`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-            }).catch(err => console.error("Merge trigger failed:", err));
+            });
         }
 
         return getNextBaseResponse({

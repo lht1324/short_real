@@ -2,8 +2,7 @@ import {NextRequest} from "next/server";
 import {Prediction} from "replicate";
 import {videoGenerationTasksServerAPI} from "@/api/server/videoGenerationTasksServerAPI";
 import {videoServerAPI} from "@/api/server/videoServerAPI";
-import {SceneGenerationStatus, VideoGenerationTaskStatus} from "@/api/types/supabase/VideoGenerationTasks";
-import {createSupabaseServiceRoleClient} from "@/lib/supabaseServiceRole";
+import {SceneGenerationStatus} from "@/api/types/supabase/VideoGenerationTasks";
 import {getErrorMessage} from "@/utils/ErrorUtils";
 import {taskCheckAndCleanupIfCancelled} from "@/utils/taskCheckAndCleanupIfCancelled";
 import {getNextBaseResponse} from "@/utils/getNextBaseResponse";
@@ -182,7 +181,6 @@ export async function POST(request: NextRequest) {
             status: 200,
             message: "Webhook received and scene processing initiated."
         });
-
     } catch (error) {
         console.error("Webhook processing error:", error);
 

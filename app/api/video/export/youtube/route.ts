@@ -7,9 +7,22 @@
 // app/api/youtube/auth/initiate/route.ts
 import { NextRequest } from 'next/server';
 import {getNextBaseResponse} from "@/utils/getNextBaseResponse";
-import {PostVideoExportYoutubeRequest} from "@/api/types/api/video/export/youtube/PostVideoExportYoutubeRequest";
+import {getIsValidRequestC2S} from "@/utils/getIsValidRequest";
 
 export async function POST(request: NextRequest) {
+    const {
+        user,
+        isValidRequest,
+    } = await getIsValidRequestC2S();
+
+    if (!isValidRequest) {
+        return getNextBaseResponse({
+            success: false,
+            status: 401,
+            error: "Unauthorized request."
+        });
+    }
+
     // URL에서 파라미터 추출
     const { searchParams } = new URL(request.url);
     const taskId = searchParams.get('taskId');
@@ -23,7 +36,7 @@ export async function POST(request: NextRequest) {
     }
 
     try {
-        const { userId }: PostVideoExportYoutubeRequest = await request.json();
+        const userId = user?.id;
 
         if (!userId) {
             return getNextBaseResponse({

@@ -83,7 +83,7 @@ function WorkspaceDashboardPageClient() {
 
             const getPostExportByPlatformPromise = (exportPlatform: ExportPlatform) => {
                 switch (exportPlatform) {
-                    case ExportPlatform.YOUTUBE: return videoClientAPI.postVideoExportYoutube(user?.id, taskId);
+                    case ExportPlatform.YOUTUBE: return videoClientAPI.postVideoExportYoutube(taskId);
                     case ExportPlatform.INSTAGRAM: return videoClientAPI.postVideoExportInstagram(user?.id, taskId);
                     case ExportPlatform.TIKTOK: return videoClientAPI.postVideoExportTikTok(user?.id, taskId);
                 }

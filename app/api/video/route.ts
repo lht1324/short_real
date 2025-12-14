@@ -3,17 +3,16 @@ import {videoGenerationTasksServerAPI} from "@/api/server/videoGenerationTasksSe
 import {getNextBaseResponse} from "@/utils/getNextBaseResponse";
 import {BaseResponse} from "@/api/types/api/BaseResponse";
 import {usersServerAPI} from "@/api/server/usersServerAPI";
-import {createSupabaseServer} from "@/lib/supabaseServer";
+import {internalFireAndForgetFetch} from "@/utils/internalFetch";
+import {getIsValidRequestC2S} from "@/utils/getIsValidRequest";
 
 export async function POST(request: NextRequest): Promise<NextResponse<BaseResponse>> {
-    // URL에서 파라미터 추출
-    const { searchParams } = new URL(request.url);
-    const taskId = searchParams.get('taskId');
+    const {
+        user,
+        isValidRequest,
+    } = await getIsValidRequestC2S();
 
-    const supabase = await createSupabaseServer();
-    const {data: {user: authUser}, error: authError} = await supabase.auth.getUser();
-
-    if (authError || !authUser) {
+    if (!isValidRequest) {
         return getNextBaseResponse({
             success: false,
             status: 401,
@@ -21,7 +20,11 @@ export async function POST(request: NextRequest): Promise<NextResponse<BaseRespo
         });
     }
 
-    const userId = authUser.id;
+    // URL에서 파라미터 추출
+    const { searchParams } = new URL(request.url);
+    const taskId = searchParams.get('taskId');
+
+    const userId = user!.id;
 
     const {
         selectedStyleId,
@@ -83,13 +86,8 @@ export async function POST(request: NextRequest): Promise<NextResponse<BaseRespo
         });
 
         // fire and forget
-        fetch(`${process.env.BASE_URL}/api/video/process/master-style?taskId=${taskId}`, {
+        internalFireAndForgetFetch(`${process.env.BASE_URL}/api/video/process/master-style?taskId=${taskId}`, {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-        }).catch((error) => {
-            console.error("Failed to trigger video process:", error);
         });
 
         return getNextBaseResponse({

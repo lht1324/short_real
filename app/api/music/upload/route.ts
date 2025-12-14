@@ -5,8 +5,17 @@ import {videoGenerationTasksServerAPI} from "@/api/server/videoGenerationTasksSe
 import {taskCheckAndCleanupIfCancelled} from "@/utils/taskCheckAndCleanupIfCancelled";
 import {VideoGenerationTaskStatus} from "@/api/types/supabase/VideoGenerationTasks";
 import {getNextBaseResponse} from "@/utils/getNextBaseResponse";
+import {getIsValidRequestS2S} from "@/utils/getIsValidRequest";
 
 export async function POST(request: NextRequest) {
+    if (!getIsValidRequestS2S(request)) {
+        return getNextBaseResponse({
+            success: false,
+            status: 401,
+            error: 'Unauthorized internal request',
+        });
+    }
+
     // URL에서 파라미터 추출
     const { searchParams } = new URL(request.url);
     const taskId = searchParams.get('taskId');

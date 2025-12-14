@@ -238,11 +238,9 @@ export const videoClientAPI = {
         }
     },
 
-    async postVideoExportYoutube(userId: string, taskId: string): Promise<string | null> {
+    async postVideoExportYoutube(taskId: string): Promise<string | null> {
         try {
-            const response = await postFetch(`/api/video/export/youtube?taskId=${taskId}`, {
-                userId: userId,
-            });
+            const response = await postFetch(`/api/video/export/youtube?taskId=${taskId}`);
 
             if (!response.ok) {
                 throw Error(`HTTP error! status: ${response.status}`);

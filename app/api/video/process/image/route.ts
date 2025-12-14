@@ -5,8 +5,18 @@ import {SceneData, VideoGenerationTaskStatus} from "@/api/types/supabase/VideoGe
 import {openAIServerAPI} from "@/api/server/openAIServerAPI";
 import {imageServerAPI} from "@/api/server/imageServerAPI";
 import {getNextBaseResponse} from "@/utils/getNextBaseResponse";
+import {internalFireAndForgetFetch} from "@/utils/internalFetch";
+import {getIsValidRequestS2S} from "@/utils/getIsValidRequest";
 
 export async function POST(request: NextRequest) {
+    if (!getIsValidRequestS2S(request)) {
+        return getNextBaseResponse({
+            success: false,
+            status: 401,
+            error: 'Unauthorized internal request',
+        });
+    }
+
     // URL에서 파라미터 추출
     const { searchParams } = new URL(request.url);
     const taskId = searchParams.get('taskId');
@@ -113,13 +123,8 @@ export async function POST(request: NextRequest) {
         }
 
         // fire and forget
-        fetch(`${process.env.BASE_URL}/api/video/process/video?taskId=${taskId}`, {
+        internalFireAndForgetFetch(`${process.env.BASE_URL}/api/video/process/video?taskId=${taskId}`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-        }).catch(error => {
-            console.error('[/api/video/process/image] Fire and forget fetch error:', error);
         });
 
         return getNextBaseResponse({

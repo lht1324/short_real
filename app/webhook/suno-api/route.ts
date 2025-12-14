@@ -6,7 +6,7 @@ import {
 } from "@/api/types/suno-api/SunoAPIResponses";
 import {videoGenerationTasksServerAPI} from "@/api/server/videoGenerationTasksServerAPI";
 import {getNextBaseResponse} from "@/utils/getNextBaseResponse";
-import {waitUntil} from "@vercel/functions";
+import {internalFireAndForgetFetch} from "@/utils/internalFetch";
 
 export async function POST(request: NextRequest) {
     // URL에서 파라미터 추출
@@ -56,6 +56,8 @@ export async function POST(request: NextRequest) {
                 });
             }
             case PostGenerateWebhookType.ERROR: {
+                await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
+
                 return getNextBaseResponse({
                     success: true,
                     status: 200,
@@ -63,18 +65,14 @@ export async function POST(request: NextRequest) {
                 });
             }
             case PostGenerateWebhookType.COMPLETE: {
-                waitUntil(
-                    fetch(`${process.env.BASE_URL!}/api/music/upload?taskId=${taskId}`, {
+                internalFireAndForgetFetch(
+                    `${process.env.BASE_URL!}/api/music/upload?taskId=${taskId}`,
+                    {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            musicMetadataList: webhookData.data,
-                        }, null, 2),
-                    }).then(res => {
-                        console.log('[Suno API Webhook] Music upload initiated, status:', res.status);
-                    }).catch(err => {
-                        console.error('[Suno API Webhook] Music upload initiation error:', err);
-                    })
+                    },
+                    {
+                        musicMetadataList: webhookData.data,
+                    }
                 );
 
                 return getNextBaseResponse({

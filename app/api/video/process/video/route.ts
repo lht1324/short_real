@@ -7,8 +7,17 @@ import {openAIServerAPI} from "@/api/server/openAIServerAPI";
 import {videoServerAPI} from "@/api/server/videoServerAPI";
 import {getNextBaseResponse} from "@/utils/getNextBaseResponse";
 import {delay} from "@/utils/asyncUtils";
+import {getIsValidRequestS2S} from "@/utils/getIsValidRequest";
 
 export async function POST(request: NextRequest) {
+    if (!getIsValidRequestS2S(request)) {
+        return getNextBaseResponse({
+            success: false,
+            status: 401,
+            error: 'Unauthorized internal request',
+        });
+    }
+
     const supabase = createSupabaseServiceRoleClient();
 
     // URL에서 파라미터 추출

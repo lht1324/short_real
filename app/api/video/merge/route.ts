@@ -1,11 +1,21 @@
-import {NextRequest, NextResponse} from "next/server";
+import {NextRequest} from "next/server";
 import {videoServerAPI} from "@/api/server/videoServerAPI";
 import {videoGenerationTasksServerAPI} from "@/api/server/videoGenerationTasksServerAPI";
 import {VideoGenerationTaskStatus} from "@/api/types/supabase/VideoGenerationTasks";
 import {taskCheckAndCleanupIfCancelled} from "@/utils/taskCheckAndCleanupIfCancelled";
 import {getNextBaseResponse} from "@/utils/getNextBaseResponse";
+import {internalFireAndForgetFetch} from "@/utils/internalFetch";
+import {getIsValidRequestS2S} from "@/utils/getIsValidRequest";
 
 export async function POST(request: NextRequest) {
+    if (!getIsValidRequestS2S(request)) {
+        return getNextBaseResponse({
+            success: false,
+            status: 401,
+            error: 'Unauthorized internal request',
+        });
+    }
+
     const { searchParams } = new URL(request.url);
     const taskId = searchParams.get('taskId');
 
@@ -57,13 +67,8 @@ export async function POST(request: NextRequest) {
         }
 
         // /api/music 엔드포인트 호출 (Fire and Forget)
-        fetch(new URL(`${process.env.BASE_URL}/api/music?taskId=${taskId}`, request.url).toString(), {
+        internalFireAndForgetFetch(`${process.env.BASE_URL}/api/music?taskId=${taskId}`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-        }).catch(error => {
-            console.error('Fire and forget /api//music call failed:', error);
         });
 
         // 3. 성공 응답 반환

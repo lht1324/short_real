@@ -1,4 +1,4 @@
-import {NextRequest, NextResponse} from "next/server";
+import {NextRequest} from "next/server";
 import {sunoAPIServerAPI} from "@/api/server/sunoAPIServerAPI";
 import {PostGenerateRequest, SunoModelType} from "@/api/types/suno-api/SunoAPIRequests";
 import {videoGenerationTasksServerAPI} from "@/api/server/videoGenerationTasksServerAPI";
@@ -6,8 +6,17 @@ import {taskCheckAndCleanupIfCancelled} from "@/utils/taskCheckAndCleanupIfCance
 import {openAIServerAPI} from "@/api/server/openAIServerAPI";
 import {getNextBaseResponse} from "@/utils/getNextBaseResponse";
 import {MusicGenerationData} from "@/api/types/suno-api/MusicGenerationData";
+import {getIsValidRequestS2S} from "@/utils/getIsValidRequest";
 
 export async function POST(request: NextRequest) {
+    if (!getIsValidRequestS2S(request)) {
+        return getNextBaseResponse({
+            success: false,
+            status: 401,
+            error: 'Unauthorized internal request',
+        });
+    }
+
     // URL에서 파라미터 추출
     const { searchParams } = new URL(request.url);
     const taskId = searchParams.get('taskId');

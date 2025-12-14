@@ -1,8 +1,9 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { createSupabaseServiceRoleClient } from '@/lib/supabaseServiceRole';
 import {videoGenerationTasksServerAPI} from "@/api/server/videoGenerationTasksServerAPI";
 import {taskCheckAndCleanupIfCancelled} from "@/utils/taskCheckAndCleanupIfCancelled";
 import {getNextBaseResponse} from "@/utils/getNextBaseResponse";
+import {internalFireAndForgetFetch} from "@/utils/internalFetch";
 
 export async function POST(request: NextRequest) {
     const supabase = createSupabaseServiceRoleClient();
@@ -105,32 +106,9 @@ export async function POST(request: NextRequest) {
                 console.log(`[Webhook Subtitle] 최종 병합 시작 조건 충족: ${taskId}`);
 
                 // 최종 병합 API 호출 (fire-and-forget)
-                const baseUrl = process.env.BASE_URL;
-                console.log(`[Webhook Subtitle] BASE_URL: ${baseUrl}`);
-
-                if (baseUrl) {
-                    const apiUrl = `${baseUrl}/api/video/merge/music?taskId=${taskId}`;
-                    console.log(`[Webhook Subtitle] 최종 병합 API 호출: ${apiUrl}`);
-
-                    fetch(apiUrl, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                    })
-                    .then(res => {
-                        console.log(`[Webhook Subtitle] API 응답 상태: ${res.status}`);
-                        return res.json();
-                    })
-                    .then(data => {
-                        console.log(`[Webhook Subtitle] API 응답 데이터:`, data);
-                    })
-                    .catch(err => {
-                        console.error(`[Webhook Subtitle] 최종 병합 API 호출 실패:`, err);
-                    });
-                } else {
-                    console.error(`[Webhook Subtitle] BASE_URL이 설정되지 않았습니다.`);
-                }
+                internalFireAndForgetFetch(`${process.env.BASE_URL}/api/video/merge/music?taskId=${taskId}`, {
+                    method: 'POST',
+                })
             } else {
                 console.log(`[Webhook Subtitle] 음악 처리 대기 중 (canStartMerge = false): ${taskId}`);
             }
