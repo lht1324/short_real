@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
         const cached = productCache.get(cacheKey);
 
         if (cached) {
-            console.log('✅ Cache HIT - Products served from cache');
+            console.log('✅ Cache HIT - Products in /polar/products served from cache');
             return getNextBaseResponse({
                 success: true,
                 status: 200,

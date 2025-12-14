@@ -12,11 +12,25 @@ import {
 } from "@/api/types/supabase/VideoGenerationTasks";
 import {getNextBaseResponse} from "@/utils/getNextBaseResponse";
 import {usersServerAPI} from "@/api/server/usersServerAPI";
+import {createSupabaseServer} from "@/lib/supabaseServer";
 
 export async function POST(request: NextRequest): Promise<NextResponse<PostOpenAISceneResponse>> {
     try {
+        const supabase = await createSupabaseServer();
+        const {data: {user: authUser}, error: authError} = await supabase.auth.getUser();
+
+        if (authError || !authUser) {
+            console.error("/api/open-ai/scene authError: ", authError);
+            return getNextBaseResponse({
+                success: false,
+                status: 401,
+                error: 'Unauthorized request.',
+            });
+        }
+
+        const userId = authUser.id;
+
         const {
-            userId,
             taskId,
             narrationScript,
             voiceId,

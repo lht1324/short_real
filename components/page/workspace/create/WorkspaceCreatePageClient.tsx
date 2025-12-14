@@ -84,10 +84,14 @@ function WorkspaceCreatePageClient() {
     }, [user?.credit_count]);
 
     const expectedVideoTotalDuration = useMemo(() => {
-        // 시간
-        return sceneDataList.reduce((acc, sceneData) => {
-            return acc + sceneData.sceneDuration;
-        }, 0);
+        if (sceneDataList.length === 0) return 0;
+
+        // 장면 사이 간격 포함
+        const lastSceneSegmentList = sceneDataList[sceneDataList.length - 1].sceneSubtitleSegments;
+
+        if (!lastSceneSegmentList || lastSceneSegmentList.length === 0) return 0;
+
+        return lastSceneSegmentList[lastSceneSegmentList.length - 1].endSec;
     }, [sceneDataList]);
 
     const expectedVideoSceneCount = useMemo(() => {
@@ -149,7 +153,6 @@ function WorkspaceCreatePageClient() {
 
             console.log(`selectedVoice = ${voiceId}`)
             const request: PostOpenAISceneRequest = {
-                userId: user?.id,
                 taskId: taskId,
                 narrationScript: script,
                 styleId: selectedStyleId,

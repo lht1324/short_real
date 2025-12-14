@@ -3,17 +3,29 @@ import {videoGenerationTasksServerAPI} from "@/api/server/videoGenerationTasksSe
 import {getNextBaseResponse} from "@/utils/getNextBaseResponse";
 import {BaseResponse} from "@/api/types/api/BaseResponse";
 import {usersServerAPI} from "@/api/server/usersServerAPI";
+import {createSupabaseServer} from "@/lib/supabaseServer";
 
 export async function POST(request: NextRequest): Promise<NextResponse<BaseResponse>> {
     // URL에서 파라미터 추출
     const { searchParams } = new URL(request.url);
     const taskId = searchParams.get('taskId');
 
+    const supabase = await createSupabaseServer();
+    const {data: {user: authUser}, error: authError} = await supabase.auth.getUser();
+
+    if (authError || !authUser) {
+        return getNextBaseResponse({
+            success: false,
+            status: 401,
+            error: "Unauthorized request."
+        });
+    }
+
+    const userId = authUser.id;
+
     const {
-        userId,
         selectedStyleId,
     }: {
-        userId: string;
         selectedStyleId: string;
     } = await request.json();
 
