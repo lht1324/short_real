@@ -145,10 +145,7 @@ function WorkspaceDashboardPageClient() {
             setShowRetryLoadingModal(false);
         } catch (error) {
             console.error(error);
-
-            await videoClientAPI.patchVideoTaskByTaskId(taskId, {
-                is_user_cancelled_task: true,
-            })
+            alert(error instanceof Error ? error.message : 'Unknown error occurred. Try again.');
             setShowRetryLoadingModal(false);
         }
         console.log('Retry generation:', taskId);
