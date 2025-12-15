@@ -4,37 +4,58 @@ export const PHYSICS_LIBRARY = {
         rigid: { // 금속, 차체
             effect_tag: "Sparks",
             alt_tag: "Debris",
-            visual_injection: "High specularity, Micro-abrasion scratches, Heat shimmer from friction"
+            visual_injection: {
+                detailed: "Brushed metal grain, Micro-scratches, Welding seams, Rust patina",
+                dynamic: "Streamlined reflection lines, Heat haze distortion, Motion-blurred specularity"
+            }
         },
         viscoelastic: { // 피부, 근육
             effect_tag: "Sweat Spray",
             alt_tag: "Skin Ripple",
-            visual_injection: "Subsurface scattering, Micro-scale sweat beads, G-force induced skin ripples"
+            visual_injection: {
+                detailed: "Damp skin texture, Visible pores, Subsurface scattering, Fine wrinkles",
+                dynamic: "Glistening sweat sheen, Tensed muscle definition, Face contorted in exertion"
+            }
         },
         brittle: { // 유리
             effect_tag: "Shards",
             alt_tag: "Glass Explosion",
-            visual_injection: "Sharp jagged edges, High refraction, Fine dust powder"
+            visual_injection: {
+                detailed: "Sharp faceted edges, Internal light refraction, Dust on surface",
+                dynamic: "Fragmenting geometry, Directional shattering, Motion-warped reflection"
+            }
         },
         cloth: { // 옷, 망토
             effect_tag: "Fabric Flutter",
             alt_tag: "Wind Drag",
-            visual_injection: "Visible fabric weave, Taut/Stretched fabric due to high wind, Rapid flutter"
+            visual_injection: {
+                detailed: "Visible thread weave, Crisp stitching, Heavy drape folds, Fabric nap",
+                dynamic: "Wind-sheared silhouette, Taut fabric ripples, Clothing pressed against body"
+            }
         },
         fluid: { // 물
             effect_tag: "Mist",
             alt_tag: "Splash Burst",
-            visual_injection: "Light refraction, Turbulence, Directional droplets"
+            visual_injection: {
+                detailed: "Surface tension curvature, Clear optical refraction, Stationary droplets",
+                dynamic: "Directional spray, Turbulent foam trails, Elongated liquid streaks"
+            }
         },
         elastoplastic: { // 진흙, 껌
             effect_tag: "Surface Deformation",
             alt_tag: "Heavy Splat",
-            visual_injection: "Deep indentation, Sticky texture, Slow recoil"
+            visual_injection: {
+                detailed: "Deep surface indentation, Sticky glossy texture, Fingerprint marks",
+                dynamic: "Impact splash pattern, Stretching material shapes, Dynamic surface deformation"
+            }
         },
         granular: { // 모래, 먼지
             effect_tag: "Dust Cloud",
             alt_tag: "Gravel Spray",
-            visual_injection: "Particulate haze, Volumetric density, uneven grainy surface"
+            visual_injection: {
+                detailed: "Individual coarse grains, Piled texture, Rough surface shadow",
+                dynamic: "Volumetric dust cloud, Streaming particle trails, Airborne density"
+            }
         }
     },
 

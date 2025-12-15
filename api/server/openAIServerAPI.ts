@@ -326,8 +326,8 @@ Instruction: Analyze the input style AND the full script context to generate the
             const userMessage = `
 <input_data>
   <video_context>
-    Title: ${videoTitle}
-    Description: ${videoDescription}   
+    <title>${videoTitle}</title>
+    <description>${videoDescription}</description>   
     <aspect_ratio>${aspectRatio}</aspect_ratio>
   </video_context>
   <master_style_guide>
@@ -474,19 +474,35 @@ Instruction: Generate the scene instruction JSON.
 
             // [핵심] Physics Profile을 기반으로 물리 법칙 텍스트 생성 (Code Level Injection)
             // 메인 히어로 또는 씬에 등장하는 주요 엔티티들의 물리 속성을 추출하여 문자열로 변환
+
             const activeEntityPhysicsList = entityManifestList
                 .filter((entity) => !!(entity.physics_profile))
                 .map((entity) => {
-                    // 1. 타입 단언 (배열로 변경됨)
-                    const { material: materialList, action_context: actionContextList } = entity.physics_profile as PhysicsProfile;
+                    // 1. 타입 단언 및 render_mode 추출
+                    const {
+                        render_mode: renderMode,
+                        material: materialList,
+                        action_context: actionContextList,
+                    } = entity.physics_profile as PhysicsProfile;
 
                     // 2. Material 데이터 수집 (배열 순회)
                     const effectTags = new Set<string>();
+                    const visualInjections = new Set<string>(); // visual_injection 수집용
+
                     materialList.forEach((materialKey) => {
                         const data = PHYSICS_LIBRARY.material[materialKey];
                         if (data) {
                             effectTags.add(`"${data.effect_tag}"`);
                             effectTags.add(`"${data.alt_tag}"`);
+
+                            // [NEW] render_mode에 따른 시각적 힌트 주입
+                            if (data.visual_injection && renderMode) {
+                                // renderMode가 'detailed' 또는 'dynamic' 중 하나일 것이므로 해당 키값 사용
+                                const injectionText = data.visual_injection[renderMode as keyof typeof data.visual_injection];
+                                if (injectionText) {
+                                    visualInjections.add(injectionText);
+                                }
+                            }
                         }
                     });
 
@@ -496,7 +512,6 @@ Instruction: Generate the scene instruction JSON.
                     actionContextList.forEach((contextKey) => {
                         const data = PHYSICS_LIBRARY.action_context[contextKey];
                         if (data) {
-                            // 콤마로 구분된 문자열일 수 있으므로 분리해서 저장하거나, 통째로 저장
                             cameraTechs.add(data.camera_tech);
                             speedTerms.add(data.speed_term);
                         }
@@ -506,10 +521,11 @@ Instruction: Generate the scene instruction JSON.
                     if (effectTags.size === 0 && cameraTechs.size === 0) return null;
 
                     // 4. 포맷팅: 옵션들을 'OR'나 콤마로 연결하여 제공
-                    // LLM이 상황에 맞춰 고를 수 있게 나열해줍니다.
+                    // Visual Hints 항목 추가
                     return `
 [Entity Role: ${entity.role}]
 - **Visual Effect Candidates**: ${Array.from(effectTags).join(' OR ')}
+- **Visual Hints (${renderMode})**: ${Array.from(visualInjections).join(', ')}
 - **Camera Tech Options**: ${Array.from(cameraTechs).join(', ')}
 - **Velocity Options**: ${Array.from(speedTerms).join(', ')}
 `;

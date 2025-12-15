@@ -204,7 +204,7 @@ function WorkspaceEditorPageClient() {
     }, [musicDataList, editingMusicIndex]);
 
     const [musicStartSec, setMusicStartSec] = useState<number>(0);
-    const [musicVolume, setMusicVolume] = useState<number>(0);
+    const [musicVolume, setMusicVolume] = useState<number>(1.0);
     const [isMusicMuted, setIsMusicMuted] = useState(false);
 
     const musicPlayConfig: MusicPlayConfig | null = useMemo(() => {
