@@ -4,7 +4,7 @@ import {memo, useCallback, useEffect, useMemo, useRef, useState} from "react";
 import Link from "next/link";
 import Image from "next/image";
 import {useRouter, useSearchParams} from 'next/navigation';
-import { RotateCcw, ChevronLeft } from 'lucide-react';
+import { ChevronLeft } from 'lucide-react';
 import { fontMap, type FontName } from "@/lib/fonts";
 import FONT_FAMILY_LIST, {FontFamily} from "@/lib/FontFamilyList";
 import {videoClientAPI} from "@/api/client/videoClientAPI";
@@ -18,9 +18,17 @@ import SceneSequencePanel from "@/components/page/workspace/editor/SceneSequence
 import CaptionConfigPanel, {ColorPickerType} from "@/components/page/workspace/editor/CaptionConfigPanel";
 import VideoPlayerPanel, {VideoPlayerHandle} from "@/components/page/workspace/editor/VideoPlayerPanel";
 import MusicPanel from "@/components/page/workspace/editor/MusicPanel";
-import MusicEditPanel from "@/components/page/workspace/editor/MusicEditPanel";
+// import MusicEditPanel from "@/components/page/workspace/editor/MusicEditPanel";
 import {musicClientAPI} from "@/api/client/musicClientAPI";
 import ColorPickerPopover from "@/components/page/workspace/editor/ColorPickerPopover";
+import dynamic from "next/dynamic";
+const MusicEditPanel = dynamic(
+    () => import('@/components/page/workspace/editor/MusicEditPanel'), // 컴포넌트 경로
+    {
+        ssr: false, // [핵심] 서버 사이드 렌더링을 끕니다.
+        loading: () => <div className="w-full h-40 bg-gray-900 animate-pulse" /> // (선택) 로딩 중 보여줄 UI
+    }
+)
 
 interface VideoData {
     title: string;
@@ -197,14 +205,16 @@ function WorkspaceEditorPageClient() {
 
     const [musicStartSec, setMusicStartSec] = useState<number>(0);
     const [musicVolume, setMusicVolume] = useState<number>(0);
+    const [isMusicMuted, setIsMusicMuted] = useState(false);
+
     const musicPlayConfig: MusicPlayConfig | null = useMemo(() => {
         return editingMusicData ? {
             audioUrl: editingMusicData.audioUrl,
             startSec: musicStartSec,
             duration: videoDuration,
-            volume: musicVolume,
+            volume: isMusicMuted ? 0 : musicVolume,
         } : null;
-    }, [editingMusicData, musicStartSec, videoDuration, musicVolume]);
+    }, [editingMusicData, musicStartSec, videoDuration, musicVolume, isMusicMuted]);
 
     const finalVideoMergeData: FinalVideoMergeData | null = useMemo(() => {
         if (captionDataList.length !== 0 && taskId && videoPlayerUIData && videoDuration > 0) {
@@ -306,6 +316,10 @@ function WorkspaceEditorPageClient() {
 
     const onChangeMusicVolume = useCallback((newVolume: number) => {
         setMusicVolume(newVolume);
+    }, []);
+
+    const onChangeIsMusicMuted = useCallback((newIsMuted: boolean) => {
+        setIsMusicMuted(newIsMuted);
     }, []);
 
     const onSelectMusic = useCallback((musicIndex: number) => {
@@ -627,6 +641,7 @@ function WorkspaceEditorPageClient() {
                             panelHeight={musicEditPanelHeight}
                             onChangeMusicStartSec={onChangeMusicStartSec}
                             onChangeMusicVolume={onChangeMusicVolume}
+                            onChangeIsMuted={onChangeIsMusicMuted}
                         />
                     </div>}
                 </div>
