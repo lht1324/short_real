@@ -1,4 +1,4 @@
-import Replicate from "replicate";
+import Replicate, {FileOutput} from "replicate";
 import {GenerateImagesResponse, GoogleGenAI, PersonGeneration} from "@google/genai";
 import {createSupabaseServiceRoleClient} from "@/lib/supabaseServiceRole";
 
@@ -14,21 +14,33 @@ export const imageServerAPI = {
         try {
             const replicate = new Replicate();
 
-            const output = await replicate.run("bytedance/seedream-4.5", {
+            // const output = await replicate.run("bytedance/seedream-4.5", {
+            //     input: {
+            //         prompt: imageGenPrompt,
+            //         size: '2K',
+            //         aspect_ratio: '9:16'
+            //     },
+            // });
+
+            const output = await replicate.run("google/imagen-4", {
                 input: {
                     prompt: imageGenPrompt,
-                    size: '2K',
-                    aspect_ratio: '9:16'
+                    aspect_ratio: '9:16',
+                    safety_filter_level: 'block_medium_and_above',
+                    output_format: 'jpg',
                 },
-            });
+            }) as FileOutput;
 
             // Replicate 결과(URL)에서 이미지 다운로드 및 Buffer 변환
 
-            if (!Array.isArray(output) || (Array.isArray(output) && output.length === 0)) {
-                throw new Error("Replicate output is invalid.");
-            }
-
-            const imageUrl = output[0].url();
+            // if (!Array.isArray(output) || (Array.isArray(output) && output.length === 0)) {
+            //     console.log(`Scene[${sceneNumber}] ImageGenPrompt: ${imageGenPrompt}`)
+            //     console.log(`Scene[${sceneNumber}] Output: `, JSON.stringify(output));
+            //     throw new Error("Replicate output is invalid.");
+            // }
+            //
+            // const imageUrl = output[0].url();
+            const imageUrl = output.url();
             
             if (!imageUrl) {
                 throw new Error("No image generated from Replicate");

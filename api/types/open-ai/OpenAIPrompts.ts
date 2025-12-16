@@ -136,24 +136,51 @@ export const POST_MASTER_STYLE_PROMPT = `
     Your goal is to establish the Global Visual Standard (MasterStyle) and the Character Bible (EntityManifest) based on the provided script.
   </role>
   <input_context>
-    You will receive:
-    1. **Style Guidelines**: Basic genre/tone info.
-    2. **Full Script Context**: An array of scene narrations. Use this to identify ALL recurring characters and key objects.
+    You will receive an XML-wrapped block named <input_data>. It contains:
+
+    1. **<target_aspect_ratio>**: The canvas dimensions (e.g., "16:9", "9:16", "1:1"). 
+       - *Usage*: Use this to calibrate 'FRAMING_TYPE' inside MasterStyle.
+         *Examples by dimension type*
+         * Vertical(width < height): "Vertical cinematic composition with headroom"
+         * Horizontal(width > height): "Cinematic wide composition"
+         * Square(width ≈ height): "Balanced central composition with symmetry"
+
+    2. **<style_guidelines>**: The strict visual constraints provided by the user.
+       - **<core_concept>**: The fundamental identity of the style.
+       - **<visual_keywords>**: Specific descriptors to infuse into 'STYLE_PREFIX' and 'TEXTURE_ELEMENTS'.
+       - **<negative_guidance>**: What to explicitly AVOID. Use this to populate the 'negativePrompt'.
+       - **<preferred_framing_logic>**: The framing strategy that best suits this style.
+
+    3. **<full_script_context>**: An array of the object including scene narration and scene number. 
+       - *Usage*: Identify ALL recurring characters and key objects for the Entity Manifest.
   </input_context>
   <task_1_master_style>
-    Define the visual language using specific, evocative terminology for Imagen 4.
-    - **Philosophy**: Content over container. Focus on lighting, texture, and cinematic atmosphere.
-    - **Video Safety**: Avoid artifacts like "heavy noise", "scanlines", "scratches".
+    Define the visual language strictly adhering to the <style_guidelines>.
+
+    **Mapping Rules (CRITICAL)**:
+    1. **Identity**: Build the core aesthetic around **<core_concept>**.
+    2. **Vocabulary Distribution**: Smartly distribute **<visual_keywords>** based on their category:
+       - Use *Medium/Lens* terms for 'STYLE_PREFIX'.
+       - Use *Vibe/Atmosphere* terms for 'CINEMATIC_REFERENCE'.
+       - Use *Material/Surface* terms for 'TEXTURE_ELEMENTS'.
+       - *Constraint*: Do NOT repeat the same keyword across multiple fields.
+    3. **Framing Logic**: Calibrate 'FRAMING_TYPE' by combining **<target_aspect_ratio>** AND **<preferred_framing_logic>**.
+       - *Example*: If Vertical + "Prioritize Wide", output "Vertical Wide Shot with significant headroom".
+    4. **Negation Strategy**: Construct 'negativePrompt' by combining:
+       - The user's **<negative_guidance>**.
+       - Standard video artifacts (e.g., text, watermarks, heavy noise, scanlines, distorted anatomy).
+    5. **Philosophy**: Content over container. Focus on lighting, cinematic atmosphere, and **framing breathability**.
+
     - **Fields to Generate**:
-      1. STYLE_PREFIX (e.g., "A hyperrealistic photograph of")
-      2. CINEMATIC_REFERENCE (Visual storytelling vibe)
-      3. QUALITY_DESCRIPTOR (8k, masterpiece)
-      4. FRAMING_TYPE (Compositional approach)
-      5. EMOTIONAL_TONE (Atmospheric descriptor)
-      6. TEXTURE_ELEMENTS (Richness without artifacts)
-      7. COLOR_PALETTE (Descriptive color theory)
-      8. FOCUS_STRATEGY (Depth control)
-      9. FINAL_MOOD_DESCRIPTOR (Vibe sealer)
+    1. **STYLE_PREFIX**: The opening medium format definition derived from <core_concept>.
+    2. **CINEMATIC_REFERENCE**: The visual storytelling vibe infused with <visual_keywords>.
+    3. **QUALITY_DESCRIPTOR**: Technical fidelity keywords suitable for the chosen style.
+    4. **FRAMING_TYPE**: The compositional approach calibrated by Aspect Ratio.
+    5. **EMOTIONAL_TONE**: The atmospheric descriptor setting the scene's mood.
+    6. **TEXTURE_ELEMENTS**: Surface details derived from <visual_keywords> (Avoid defaulting to "Richness without artifacts").
+    7. **COLOR_PALETTE**: Descriptive color theory matching the style's identity.
+    8. **FOCUS_STRATEGY**: Depth of field control based on the intended look.
+    9. **FINAL_MOOD_DESCRIPTOR**: The concluding vibe sealer.
   </task_1_master_style>
   <task_2_entity_manifest>
     Extract distinct subjects (characters, key objects) from the script and define their PERMANENT attributes.
@@ -212,7 +239,7 @@ export const POST_MASTER_STYLE_PROMPT = `
           "FOCUS_STRATEGY": "string",
           "FINAL_MOOD_DESCRIPTOR": "string"
         },
-        "negativePrompt": "string (concise, under 20 keywords)"
+        "negativePrompt": "string (Derived strictly from <negative_guidance>)"
       },
       "entityManifest": [
         {
@@ -245,7 +272,7 @@ export const POST_IMAGE_GEN_PROMPT_PROMPT = `
     You will receive an XML-wrapped block named <input_data>. Understand the schema as follows:
 
     1. **<video_context>**: Contains global metadata.
-      - <aspect_ratio>': The physical canvas constraints (e.g., "9:16", "16:9"). **Crucial for composition safety.**
+      - <aspect_ratio>': The physical canvas constraints (e.g., "9:16", "16:9", "1:1"). **Crucial for composition safety.**
 
     2. **<master_style_guide>**: The Director's visual handbook.
       - 'FRAMING_TYPE': The default camera shot size (e.g., "Wide Shot").
@@ -262,98 +289,146 @@ export const POST_IMAGE_GEN_PROMPT_PROMPT = `
       - Specific details about foreground/background or spatial layout.
   </input_data_interpretation>
   <target_model_profile>
-    **Target Engine: Next-Gen High-Fidelity Diffusion (Seedream Optimized)**
+    **Target Engine: Imagen 4 Standard**
     - **Format Requirement**: A single, flowing narrative paragraph.
-    - **Resolution Strategy**: Native **2K to 4K** support. Employ **"Dense Description"** but avoid "medical/grotesque" micro-details. Focus on surface realism.
-    - **Constraint 1 (Positive Only)**: NO negative prompts allowed. Use **Positive Exclusion** (e.g., "Sharp focus").
-    - **Constraint 2 (Text Rendering)**: If text appears (signs, shirts), wrap it in **Double Quotes** (e.g., "OPEN").
-    - **Focus Priority**: 
-      1. **Visual Fidelity**: Lighting, Material Texture.
-      2. **Structural Integrity**: Solid forms and natural posture (Avoid internal anatomy rendering like veins without skin).
+    - **Resolution Strategy**: The canvas is **1K (1024x1024)**. Do NOT overcrowd the image with excessive micro-details.
+    - **Focus**: Prioritize **Clear Silhouettes, Accurate Props (Gloves/Clothes), and Lighting**. Texture details (sweat/pores) should be secondary to the main form.
+    - **Constraint**: NO negative prompts allowed. Use **Positive Exclusion**.
   </target_model_profile>
+  <visual_texture_layer>
+    **Apply this logic to populate 'physics_profile' and enrich [Subject] description with 'Visual Detail'**:
+
+    **Instruction (Data Routing Protocol)**: 
+    This layer acts as the **Single Source of Truth** for both the JSON manifest and the Image Prompt. You must perform these steps in order:
+
+    1. **Select Physics Parameters**:
+       - Analyze the input context to determine \`render_mode\` (detailed/dynamic).
+       - Select all applicable \`material\` tags by \`render_mode\`.
+       - Select all applicable \`action_context\` tags.
+
+    2. **Route to Image Prompt (\`image_gen_prompt\`)**:
+     - Extract the corresponding **Visual Injection** strings for the selected tags.
+     - **Synthesize** these strings into the \`[Subject & Static Pose]\` of <prompt_authoring_protocol> section.
+     - *Constraint*: Do NOT use the raw tag names (e.g., 'viscoelastic') in the text prompt; use the visual descriptions only.
+
+    3. **Route to JSON Manifest (\`updated_entity_manifest\`)**:
+       - Populate \`physics_profile\` strictly using the raw tags selected in Step 1.
+
+    **Layer 1: Render-Mode Decision (CRITICAL)**
+      - **'detailed'**: Focus on surface micro-textures (pores, scratches).
+      - **'dynamic'**: Focus on motion form and silhouettes (blur, stream).
+
+    **Layer 2: Surface Texture (Material & Light)**
+    *Defines the tactile look based on Render-Mode.*
+
+      - **'viscoelastic'** (Skin/Rubber): Organic & Porous.
+        * *Visual Injection*:
+          * *detailed*: "Opaque skin texture", "Natural skin tone", "Soft matte sheen", "High dermal opacity".
+          * *dynamic*: "Glistening sweat sheen", "Sculpted muscle form", "Face contorted in exertion".
+
+      - **'rigid'** (Metal/Hard Plastic): Hard & Reflective.
+        * *Visual Injection*:
+          * *detailed*: "Brushed metal grain", "Micro-scratches", "Welding seams", "Rust patina".
+          * *dynamic*: "Streamlined reflection lines", "Shimmering air turbulence", "Motion-blurred specularity".
+
+      - **'cloth'** (Fabric/Clothing): Woven & Folded.
+        * *Visual Injection*:
+          * *detailed*: "Visible thread weave", "Crisp stitching", "Heavy drape folds", "Fabric nap".
+          * *dynamic*: "Wind-sheared silhouette", "Taut fabric ripples", "Clothing pressed against body".
+
+      - **'brittle'** (Glass/Ice): Sharp & Refractive.
+        * *Visual Injection*:
+          * *detailed*: "Sharp faceted edges", "Internal light refraction", "Dust on surface".
+          * *dynamic*: "Flying sharp shards", "Directional shattering", "Motion-warped reflection".
+
+      - **'fluid'** (Water/Liquid): Wet & Flowing.
+        * *Visual Injection*:
+          * *detailed*: "Surface tension curvature", "Clear optical refraction", "Stationary droplets".
+          * *dynamic*: "Directional spray", "Turbulent foam trails", "Elongated liquid streaks".
+
+      - **'granular'** (Sand/Dust): Rough & Particulate.
+        * *Visual Injection*:
+          * *detailed*: "Individual coarse grains", "Piled texture", "Rough surface shadow".
+          * *dynamic*: "Volumetric dust cloud", "Streaming particle trails", "Airborne density".
+
+    **Layer 3: Static Pose Snapshot (Frozen State)**
+    *Defines the frozen moment in time. Select ALL applicable contexts.*
+      - **'locomotion'** (Moving):
+        * *Visual Injection*: "Mid-stride pose", "Off-balance stance", "Leg muscles engaged", "Hair flowing back".
+      - **'combat'** (Impact):
+        * *Visual Injection*: "Glove compressing against skin", "Sweat spraying from impact point", "Facial tissue displacing", "Heavy weight transfer".
+      - **'aerodynamics'** (Flying):
+        * *Visual Injection*: "Streamlined body posture", "Clothing pressed against body", "Squinting eyes", "Wind-swept hair".
+      - **'interaction'** (Touching/Holding):
+        * *Visual Injection*: "Firm grip", "Finger indentation on surface", "Precise handling", "Contact shadow".
+      - **'passive'** (Reacting):
+        * *Visual Injection*: "Head thrown back", "Mouth slightly open", "Eyes wide", "Body leaning backward".
+      - **'velocity_max'** (High Speed Blur):
+        * *Visual Injection*: "Motion blur streaks on edges", "Background directional blur", "Subject sharp against blurred bg".
+  </visual_texture_layer>
   <prompt_authoring_protocol>
-    **THE SCENE DIRECTOR METHOD (Golden Sequence & Hybrid Logic)**:
+    **THE SCENE DIRECTOR METHOD (Strict Sequence & Data Mapping)**:
     Construct the 'image_gen_prompt' by assembling inputs into this specific sequence.
+      
+    1. **[Subject & Static Pose]** (Source: <entity_reference_manifest> + <visual_texture_layer> + <current_narration>)
+      - **Action**: Combine the Subject's visual identity with a **Frozen Pose Description**.
+      - **Data Integration**: Seamlessly **integrate** the chosen \`Visual Injection\`s from <visual_texture_layer>.
+      - *Constraint*: Do NOT list the raw tags or simply append keywords. **Weave** the visual details (e.g., "sweat-slicked skin") directly into the pose description.
+      - **Grammar Rule (CRITICAL)**: Use **Participles** (holding, standing) or **Adjectives** (tensed, coiled) to describe the *current state*.
+        - **Constraint**: Avoid Active Verbs (runs, punches) which imply temporal duration.
+        - **Focus**: Describe the **point of maximum tension** or **impact**.
+        - *Bad Pattern*: Listing disconnected attributes ("The subject is angry. Blue shirt. Running fast.")
+        - *Good Pattern*: Integrating attributes into the action ("The angry subject in a blue shirt **sprinting** with explosive momentum...")
 
-    1. **[Subject & Style]** (CRITICAL UPDATE)
-      - **Action**: Define the Subject immediately followed by the [Style].
-      - **Format**: "[Subject Description] **in a** [Style/Medium]..."
-      - *Reasoning*: Early style definition ensures correct artistic rendering for Seedream 4.5.
+    2. **[Context & Environment]** (Source: <scene_content> + <current_narration>)
+      - **Action**: Define the setting and spatial relationship.
+      - **Grammar Rule**: Use locational terms: **"situated in"**, **"framed by"**, **"against a background of"**.
 
-    2. **[Action & Static Pose]** (Source: <visual_state_logic>)
-      - **Action**: Describe the frozen moment using keywords from Logic Part 2.
-      - **Grammar Rule**: Use **Participles** (holding) or **Adjectives** (tensed) instead of Active Verbs.
-      - *Good*: "The boxer **with** fist extended **in** a mid-air punch motion."
+    3. **[Composition]** (Source: <master_style_guide>.FRAMING_TYPE + <video_context>.aspect_ratio)
+      - **Action**: Define camera angle and **SINGLE strict shot size** (from Execution Rule 2).
 
-    3. **[Context & Environment]**
-      - **Action**: Define setting and spatial layout (e.g., "situated in", "framed by").
+    4. **[Lighting & Atmosphere]** (Source: <master_style_guide>.EMOTIONAL_TONE / .FINAL_MOOD_DESCRIPTOR)
+      - **Action**: Describe the light source and its effect on the Subject (e.g., "casting deep shadows").
 
-    4. **[Lighting & Atmosphere]**
-      - **Action**: Describe light source and mood.
+    5. **[Style]** (Source: <master_style_guide>.STYLE_PREFIX / .CINEMATIC_REFERENCE)
+      - **Action**: Define the artistic medium and texture quality.
 
-    5. **[Composition]**
-      - **Action**: Define camera angle and **SINGLE strict shot size**.
-      - **Constraint**: IF Vertical (9:16) AND Full Body, ALWAYS append **"with headroom"**.
+    6. **[Technicals]** (Source: <master_style_guide>.QUALITY_DESCRIPTOR)
+      - **Action**: Append quality boosters.
 
-    6. **[Technicals]**
-      - **Action**: Append quality boosters. Use keywords from <visual_state_logic> based on 'render_mode'.
+    *Constraint*: Do NOT write a list. Write a **single, flowing narrative paragraph** that connects these elements organically using the defined grammar rules.
   </prompt_authoring_protocol>
-  <visual_state_logic>
-    **Render-Mode Decision Protocol (CRITICAL)**:
-    You must assign a 'render_mode' to each entity based on the scene context.
-    - **'detailed'**: Static/Slow scenes. Focus on micro-textures.
-    - **'dynamic'**: High-velocity/Combat scenes. Focus on motion form and silhouettes.
-
-    **Logic Part 1: Material Library**:
-    **Instruction**: Select **one or more** types for 'physics_profile.material'. Inject the corresponding *visual keywords* into the prompt based on the assigned 'render_mode'.
-
-    1. **'viscoelastic'** (Skin/Flesh):
-       - *detailed*: "Damp skin texture", "Visible pores", "Subsurface scattering"
-       - *dynamic*: "Glistening sweat sheen", "Tensed muscle definition", "Face contorted"
-    2. **'rigid'** (Metal/Vehicle):
-       - *detailed*: "Brushed metal grain", "Micro-scratches", "Welding seams", "Rust patina"
-       - *dynamic*: "Streamlined reflection lines", "Heat haze distortion", "Motion-blurred specularity"
-    3. **'cloth'** (Fabric/Attire):
-       - *detailed*: "Visible thread weave", "Crisp stitching", "Heavy drape folds", "Fabric nap"
-       - *dynamic*: "Wind-sheared silhouette", "Taut fabric ripples", "Clothing pressed against body"
-    4. **'brittle'** (Glass/Ice):
-       - *detailed*: "Sharp faceted edges", "Internal light refraction", "Dust on surface"
-       - *dynamic*: "Fragmenting geometry", "Directional shattering", "Motion-warped reflection"
-    5. **'fluid'** (Water/Liquid):
-       - *detailed*: "Surface tension curvature", "Clear optical refraction", "Stationary droplets"
-       - *dynamic*: "Directional spray", "Turbulent foam trails", "Elongated liquid streaks"
-    6. **'granular'** (Sand/Dust):
-       - *detailed*: "Individual coarse grains", "Piled texture", "Rough surface shadow"
-       - *dynamic*: "Volumetric dust cloud", "Streaming particle trails", "Airborne density"
-
-    **Logic Part 2: Action Context Library**:
-    **Instruction**: Select **one or more** types for 'physics_profile.action_context' that best fit the narration. Inject the corresponding *pose keywords* into the prompt.
-
-    - **'locomotion'**: "Mid-stride pose", "Off-balance stance", "Hair flowing back"
-    - **'combat'**: "Point of contact deformation", "Fist fully extended", "Muscles flexed"
-    - **'aerodynamics'**: "Streamlined body posture", "Clothing pressed against body", "Squinting eyes"
-    - **'interaction'**: "Firm grip", "Finger indentation on surface", "Precise handling"
-    - **'passive'**: "Head thrown back", "Mouth slightly open", "Body leaning backward"
-    - **'velocity_max'**: "Motion blur streaks on edges", "Background directional blur", "Subject sharp against blurred bg"
-  </visual_state_logic>
   <execution_rules>
     1. **Positive Exclusion Protocol (CRITICAL)**:
-      - **Concept**: You cannot use Negative Prompts. Describe what IS visible.
-      - *Bad*: "No blur", "No deformed hands".
-      - *Good*: "Sharp focus", "Perfectly articulated fingers", "Clean composition".
+      - **Concept**: Do not describe what is *absent*. Describe the *ideal quality* of what is *present*.
+      - **Instruction**: Instead of saying "no [defect]", describe the "[perfect state]" of that feature.
        
-    2. **Shot Size Decision Protocol (Single Choice)**:
-      - **Constraint**: Never output a range like "Close-up to Medium". You must **PICK ONE**.
-      - **Logic**:
-        * **Face/Emotion Focus**: Select **"Extreme Close-up"** or **"Portrait"**.
-        * **Action/Body Focus**: Select **"Medium Shot"** or **"Wide Shot"**.
-        * **Vertical (9:16) Safety**: IF Subject is "Full Body", ALWAYS append **"with headroom"** to prevent cropping.
+    2. **Shot Size Decision Protocol (Contextual Inference)**:
+      - **Constraint**: Never output a range. Pick exactly ONE specific shot size.
+      - **Reasoning Core**: Analyze <current_narration>, <aspect_ratio>, and <scene_content> to decide the optimal framing.
+      - **Guideline 1 (Aspect Ratio Adaptation)**:
+        * **Vertical Canvas (Height > Width)**: The frame is narrow. Be cautious with "Extreme Close-ups" as they choke the subject. Prioritize **Vertical Breathing Room** (Headroom/Torso visibility).
+        * **Horizontal Canvas (Width > Height)**: Ideal for environment and lateral movement.
+        * **Square Canvas (Height ≈ Width)**: The frame is perfectly balanced. Focus on **Symmetry** and **Central Composition**. Avoid placing the subject too far off-center; "Portraits" work best when centered with equal margins.
+      - **Guideline 2 (Narrative Focus)**:
+        * Ask: "Is the key information facial emotion or physical action?"
+        * *If Emotion*: Focus on the face, but consider the canvas width. (e.g., In Vertical, use "Medium Close-up" instead of "Extreme" to keep context).
+        * *If Action*: Ensure limbs are visible. Use "Medium Shot" or "Wide Shot".
+        * *If Atmosphere*: Pull back to "Long Shot".
+      - **Safety Override**: IF formatting a Full Body shot in Vertical, ALWAYS append **"with headroom"**.
          
     3. **Visual Snapshot Translation (De-metaphorization)**:
       - **The Trap**: abstract verbs ("explodes", "travels") trigger motion blur artifacts.
       - **The Fix**: Translate actions into **Frozen Poses**.
       - *Translation*: "Sweat travels down" -> "A drop of sweat **suspended** on the cheek".
-      - *Translation*: "He punches" -> "Fist **extended** in mid-air, making contact".
+      - *Translation*: "He punches" -> "Fist **driving** through the target, glove compressing on impact".
+      
+    3. **Visual Snapshot Translation (De-metaphorization)**:
+      - **The Logic**: Generative models cannot render "time passing". You must freeze time.
+      - **Conversion Formula**:
+        * Input: [Subject] + [Abstract Verb] (e.g., "attacks", "ascends")
+        * Output: [Subject] + [Visible Physical State] (e.g., "limb extended in impact", "body angled upward")
+      - **Constraint**: Never use words that imply "process" (e.g., "starting to", "in the middle of", "traveling"). Use words that imply "frozen state" (e.g., "suspended", "contacting", "positioned").
        
     4. **Visibility Priority (Subject Hierarchy)**:
       - **Rule**: Before describing micro-details (pores, sweat), you MUST describe the **Macro-Subject** first.
@@ -368,33 +443,22 @@ export const POST_IMAGE_GEN_PROMPT_PROMPT = `
         {
           "id": "string", // Must match input ID
           "physics_profile": {
-            "render_mode": "detailed" | "dynamic", // DECISION from <visual_state_logic>
+            // DATA MAPPING RULE: 
+            // Selected tag from [Layer 1: Render-Mode Decision] of <visual_texture_layer>.
+            "render_mode": "detailed" | "dynamic",
+            // Selected tags from [Layer 2: Surface Texture] of <visual_texture_layer>.
             "material": ("rigid" | "viscoelastic" | "brittle" | "cloth" | "fluid" | "elastoplastic" | "granular")[],
+            // Selected tags from [Layer 3: Static Pose Snapshot] of <visual_texture_layer>.
             "action_context": ("locomotion" | "combat" | "interaction" | "aerodynamics" | "passive" | "velocity_max")[]
           },
           "appearance": { 
             "clothing_or_material": "string", 
-            // CRITICAL: Inject "Dense Description" keywords.
-            // e.g., 'Sweat-drenched viscoelastic skin with subsurface scattering', 'Scratched rigid metal chassis with rust texture'
             "body_features": "string" 
-          }, 
-          "state": { 
-            // Internal Logic Only: Define the static pose here FIRST to ensure the main prompt is physically accurate.
-            "pose": "string", 
-            "expression": "string" 
           }
         }
       ],
       "image_gen_prompt": "string" 
-      // STRICT FORMAT (Scene Director Method): 
-      // 1. [Subject & Action] (FIRST PRIORITY) 
-      // 2. [Context & Environment] 
-      // 3. [Composition] (Include 'Headroom' if vertical) 
-      // 4. [Lighting & Atmosphere] 
-      // 5. [Style] 
-      // 6. [Technicals]
-      //
-      // Example: "The Latino boxer with viscoelastic skin (Subject) leans back in a defensive guard (Action)... in a boxing ring with muted canvas (Context)... captured in a wide shot with headroom (Composition)... under harsh overhead spotlights (Lighting)... Photorealistic style (Style)... 8k, sharp focus (Technicals)."
+      // STRICT FORMAT: Follow <prompt_authoring_protocol> to synthesize the final text.
     }
   </output_schema>
 </developer_instruction>

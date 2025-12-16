@@ -26,7 +26,8 @@ export async function POST(request: NextRequest) {
 
     try {
         // 1. Replicate Prediction 객체와 URL Param(taskId) 받기
-        const prediction: Prediction = await request.json();
+        // Prediction 정의와 안 맞을 수 있으니 object로 사용
+        const prediction = await request.json();
 
         // 2. Supabase에서 해당 row(Task) 데이터 갖고 오기
         const videoGenerationTask = await videoGenerationTasksServerAPI.getVideoGenerationTaskById(taskId);
@@ -183,6 +184,7 @@ export async function POST(request: NextRequest) {
         });
     } catch (error) {
         console.error("Webhook processing error:", error);
+        console.log("Replicate Error Request: ", request.toString());
 
         await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
         return getNextBaseResponse({

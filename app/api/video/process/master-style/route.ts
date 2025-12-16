@@ -62,7 +62,7 @@ export async function POST(request: NextRequest) {
         // Scene 생성 단계에서 이미 저장됨
         const selectedStyleId = videoGenerationTask.selected_style_id;
         const selectedStyle = STYLE_DATA_LIST.find((styleData) => {
-            return styleData.id == selectedStyleId;
+            return styleData.uiMetadata.id == selectedStyleId;
         });
 
         if (!selectedStyle) {
@@ -77,7 +77,7 @@ export async function POST(request: NextRequest) {
 
         // 2. openAIServerAPI로 비디오 Scene 분리 데이터, 마스터 스타일 프롬프트 생성 요청
         const postMasterStylePromptResult = await openAIServerAPI.postMasterStylePrompt(
-            selectedStyle,
+            selectedStyle.generationParams,
             patchVideoGenerationTaskStatusResult.scene_breakdown_list.map((sceneData) => {
                 return {
                     sceneNumber: sceneData.sceneNumber,

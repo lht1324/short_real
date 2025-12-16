@@ -2,7 +2,7 @@ import OpenAI from 'openai';
 import {
     ScriptGenerationResponse
 } from "@/api/types/open-ai/ScriptGeneration";
-import {Style} from "@/api/types/supabase/Styles";
+import {StyleGenerationParams} from "@/api/types/supabase/Styles";
 import {SceneData, SubtitleSegment} from "@/api/types/supabase/VideoGenerationTasks";
 import {MasterStyleInfo} from "@/api/types/supabase/MasterStyleInfo";
 import {VIDEO_ASPECT_RATIOS, VideoAspectRatio} from "@/lib/ReplicateData";
@@ -179,7 +179,7 @@ Instruction: Process the input data and return the JSON output according to the 
     },
 
     async postMasterStylePrompt(
-        style: Style,
+        style: StyleGenerationParams,
         scriptDataList: {
             sceneNumber: number;
             sceneNarration: string;
@@ -214,17 +214,19 @@ Instruction: Process the input data and return the JSON output according to the 
             // [수정 3] scriptDataList를 JSON 문자열로 변환하여 컨텍스트 제공
             const userMessage = `
 <input_data>
-  <style_name>${style.name}</style_name>
-  <style_description>${style.description}</style_description>
-  <style_prompt_guideline>${style.stylePrompt}</style_prompt_guideline>
   <target_aspect_ratio>${aspectRatio}</target_aspect_ratio>
-
+  <style_guidelines>
+    <core_concept>${style.coreConcept}</core_concept>
+    <visual_keywords>${style.visualKeywords.join(',')}</visual_keywords>
+    <negative_guidance>${style.negativeGuidance}</negative_guidance>
+    <preferred_framing_logic>${style.preferredFramingLogic}</preferred_framing_logic>
+  </style_guidelines>
   <full_script_context>
     ${JSON.stringify(scriptDataList, null, 2)}
   </full_script_context>
 </input_data>
 
-Instruction: Analyze the input style AND the full script context to generate the MasterStyle and EntityManifest JSON output.
+Instruction: Analyze the input <target_aspect_ratio>, <style_guidelines>, <full_script_context> to generate the \`masterStyle\` and \`entityManifest\` JSON output.
 `;
 
             const client = new OpenAI({ apiKey });
