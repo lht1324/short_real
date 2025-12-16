@@ -298,94 +298,129 @@ export const POST_IMAGE_GEN_PROMPT_PROMPT = `
   <visual_texture_layer>
     **Apply this logic to populate 'physics_profile' and enrich [Subject] description with 'Visual Detail'**:
 
-    **Instruction (Data Routing Protocol)**: 
-    This layer acts as the **Single Source of Truth** for both the JSON manifest and the Image Prompt. You must perform these steps in order:
+    **Core Principle: Context-Aware Dynamic Injection**
+    Instead of static mapping, you must dynamically synthesize visual descriptions by combining **Material Rules** and **Pose Rules** with **Scene Context**.
+    
+    **Step 1: Context Analysis & Render Mode Classification**
+    *Analyze the scene intensity to determine 'render_mode' for the physics_profile. This tag does not restrict vocabulary but signals the scene's energy level.*
+    
+    **[RENDER MODE DECISION] -> Field: 'render_mode'**
+    - **'dynamic'**: Triggered by High Velocity, Combat, Heavy Weather (Storm), Flying, Running.
+      * *Criteria*: Motion blur or shape distortion is expected.
+    - **'detailed'**: Triggered by Portraits, Slow Interactions, Stillness, Close-ups, Dialogue.
+      * *Criteria*: Surface texture and pore-level details are visible.
 
-    1. **Select Physics Parameters**:
-       - Analyze the input context to determine \`render_mode\` (detailed/dynamic).
-       - Select all applicable \`material\` tags by \`render_mode\`.
-       - Select all applicable \`action_context\` tags.
+    **Step 2: Material Behavior Logic & Tag Selection**
+    *Apply these rules to select vocabulary AND determine the 'material' tags for physics_profile.*
+    
+    **[MATERIAL: CLOTH / FABRIC] -> Tag: 'cloth'**
+    - **Rule (Wind/Motion)**: High velocity/wind -> *Billowing, Taut, Sheared, Fluttering*.
+    - **Rule (Wet/Liquid)**: Rain/Sweat -> *Clinging, Translucent, Weighted, Heavy-drape*.
+    - **Rule (Impact)**: Hit/Compressed -> *Ripple, Shock-wrinkled, Compressing*.
+    - **Vocabulary**: "Coarse weave", "Finely-stitched", "Plush", "Matte finish", "Satin sheen", "Billowing", "Clinging", "Taut against skin", "Rippling", "Heavy-set".
 
-    2. **Route to Image Prompt (\`image_gen_prompt\`)**:
-     - Extract the corresponding **Visual Injection** strings for the selected tags.
-     - **Synthesize** these strings into the \`[Subject & Static Pose]\` of <prompt_authoring_protocol> section.
-     - *Constraint*: Do NOT use the raw tag names (e.g., 'viscoelastic') in the text prompt; use the visual descriptions only.
+    **[MATERIAL: VISCOELASTIC / SKIN] -> Tag: 'viscoelastic'**
+    - **Rule (Exertion/Heat)**: Active -> *Sweat-beaded, Glistening, Flushed*.
+    - **Rule (Impact/Pressure)**: Contact -> *Compressed, Indented, Bulging*.
+    - **Vocabulary**: "Porous", "Calloused", "Subsurface scattering", "Oily sheen", "Sweat-beaded", "Flushed", "Stretched", "Sagging", "Bulging veins", "Muscle definition".
 
-    3. **Route to JSON Manifest (\`updated_entity_manifest\`)**:
-       - Populate \`physics_profile\` strictly using the raw tags selected in Step 1.
+    **[MATERIAL: RIGID / METAL] -> Tag: 'rigid'**
+    - **Rule (Damage/Wear)**: Combat/Old -> *Scratched, Dented, Patina*.
+    - **Rule (Light)**: Reflection -> *Specular highlight, Glint*.
+    - **Vocabulary**: "Brushed grain", "Pitted", "Rusted", "Polished", "Specular highlight", "Chrome glint", "Dented", "Scratched", "Warped".
 
-    **Layer 1: Render-Mode Decision (CRITICAL)**
-      - **'detailed'**: Focus on surface micro-textures (pores, scratches).
-      - **'dynamic'**: Focus on motion form and silhouettes (blur, stream).
+    **[MATERIAL: FLUID / LIQUID] -> Tag: 'fluid'**
+    - **Rule (Motion)**: Chaotic -> *Spray, Droplets, Foam*.
+    - **Rule (Light)**: Refractive -> *Caustics, Crystal clear*.
+    - **Vocabulary**: "Droplets", "Spray", "Mist", "Foam", "Ripples", "Caustics", "Refractive", "High-contrast reflection".
+      
+    **[MATERIAL: BRITTLE / GLASS] -> Tag: 'brittle'**
+    - **Rule (Impact)**: Shatter -> *Shards, Faceted*.
+    - **Vocabulary**: "Sharp faceted edges", "Cracks", "Shards", "Internal refraction", "Prismatic glint".
 
-    **Layer 2: Surface Texture (Material & Light)**
-    *Defines the tactile look based on Render-Mode.*
+    **Step 3: Action/Pose Logic & Tag Selection**
+    *Apply these rules to select vocabulary for the 'Frozen Pose' AND determine the 'action_context' tags for physics_profile.*
 
-      - **'viscoelastic'** (Skin/Rubber): Organic & Porous.
-        * *Visual Injection*:
-          * *detailed*: "Opaque skin texture", "Natural skin tone", "Soft matte sheen", "High dermal opacity".
-          * *dynamic*: "Glistening sweat sheen", "Sculpted muscle form", "Face contorted in exertion".
+    **[ACTION: LOCOMOTION] -> Tag: 'locomotion'**
+    - **Context**: Running, Walking, Jumping.
+    - **Vocabulary**: "Mid-stride", "Off-balance stance", "Airborne phase", "Leaning into turn", "Legs blurred in motion", "Weight shifted forward".
 
-      - **'rigid'** (Metal/Hard Plastic): Hard & Reflective.
-        * *Visual Injection*:
-          * *detailed*: "Brushed metal grain", "Micro-scratches", "Welding seams", "Rust patina".
-          * *dynamic*: "Streamlined reflection lines", "Shimmering air turbulence", "Motion-blurred specularity".
+    **[ACTION: COMBAT] -> Tag: 'combat'**
+    - **Context**: Punching, Kicking, Getting hit.
+    - **Vocabulary**: "Fist extended", "Impact tremor", "Muscle coiled", "Recoiling from blow", "Guard raised", "Face contorted", "Torque in torso".
 
-      - **'cloth'** (Fabric/Clothing): Woven & Folded.
-        * *Visual Injection*:
-          * *detailed*: "Visible thread weave", "Crisp stitching", "Heavy drape folds", "Fabric nap".
-          * *dynamic*: "Wind-sheared silhouette", "Taut fabric ripples", "Clothing pressed against body".
+    **[ACTION: AERODYNAMICS] -> Tag: 'aerodynamics'**
+    - **Context**: Flying, Falling, Gliding.
+    - **Vocabulary**: "Streamlined posture", "Arms swept back", "Body arched", "Free-falling orientation", "Wind-resistance tuck".
 
-      - **'brittle'** (Glass/Ice): Sharp & Refractive.
-        * *Visual Injection*:
-          * *detailed*: "Sharp faceted edges", "Internal light refraction", "Dust on surface".
-          * *dynamic*: "Flying sharp shards", "Directional shattering", "Motion-warped reflection".
+    **[ACTION: INTERACTION] -> Tag: 'interaction'**
+    - **Context**: Holding, Touching, Pushing.
+    - **Vocabulary**: "Firm grip", "Knuckles white", "Fingertips grazing", "Interlocked fingers", "Palm pressed flat", "Precise handling".
 
-      - **'fluid'** (Water/Liquid): Wet & Flowing.
-        * *Visual Injection*:
-          * *detailed*: "Surface tension curvature", "Clear optical refraction", "Stationary droplets".
-          * *dynamic*: "Directional spray", "Turbulent foam trails", "Elongated liquid streaks".
+    **[ACTION: PASSIVE] -> Tag: 'passive'**
+    - **Context**: Standing, Sitting, Lying down.
+    - **Vocabulary**: "Slouched posture", "Resting weight", "Stationary stance", "Relaxed limbs", "Grounded footing".
+    
+    **[ACTION: VELOCITY_MAX] -> Tag: 'velocity_max'**
+    - **Context**: Extremely high speed (Over 160km/h, Vehicles, Superheroes).
+    - **Vocabulary**: "Motion-blurred edges", "Speed lines", "Background streaking", "Silhouette distorted by speed".
 
-      - **'granular'** (Sand/Dust): Rough & Particulate.
-        * *Visual Injection*:
-          * *detailed*: "Individual coarse grains", "Piled texture", "Rough surface shadow".
-          * *dynamic*: "Volumetric dust cloud", "Streaming particle trails", "Airborne density".
+    **Step 4: Synthesis Instruction**
+    - **Route to JSON (\`physics_profile\`)**: 
+      1. Set \`render_mode\` based on Step 1 Analysis.
+      2. Collect ALL selected \`material\` and \`action_context\` Tags triggered by the scene.
 
-    **Layer 3: Static Pose Snapshot (Frozen State)**
-    *Defines the frozen moment in time. Select ALL applicable contexts.*
-      - **'locomotion'** (Moving):
-        * *Visual Injection*: "Mid-stride pose", "Off-balance stance", "Leg muscles engaged", "Hair flowing back".
-      - **'combat'** (Impact):
-        * *Visual Injection*: "Glove compressing against skin", "Sweat spraying from impact point", "Facial tissue displacing", "Heavy weight transfer".
-      - **'aerodynamics'** (Flying):
-        * *Visual Injection*: "Streamlined body posture", "Clothing pressed against body", "Squinting eyes", "Wind-swept hair".
-      - **'interaction'** (Touching/Holding):
-        * *Visual Injection*: "Firm grip", "Finger indentation on surface", "Precise handling", "Contact shadow".
-      - **'passive'** (Reacting):
-        * *Visual Injection*: "Head thrown back", "Mouth slightly open", "Eyes wide", "Body leaning backward".
-      - **'velocity_max'** (High Speed Blur):
-        * *Visual Injection*: "Motion blur streaks on edges", "Background directional blur", "Subject sharp against blurred bg".
+    - **Route to Prompt (Creative Synthesis)**: 
+      - **Action**: Weave the selected **Action Vocabulary** (Pose) with the **Material Vocabulary** (Texture) into a coherent sentence.
+      - **Constraint (CRITICAL)**: Do NOT simply list the keywords. You must conjugate verbs and blend adjectives to fit the grammar. 
+      - **Anti-Pattern**: "Cloth is billowing. Skin is sweat-beaded." (Robotic/Bad)
+      - **Correct Pattern**: "The billowing cloth whips around the sweat-beaded skin." (Organic/Good)
+
+    - **Reference Examples (DO NOT COPY, ADAPT LOGIC)**: 
+      **Ex 1: High-Speed Action (Rain)**
+      - *Input*: "Samurai slashing in a storm."
+      - *Tags*: render_mode="dynamic", material=["cloth", "rigid", "fluid"], action_context=["combat", "locomotion"]
+      - *Synthesized Output*: "...mid-stride with a **rain-slicked** kimono **billowing** violently, the **polished** katana blade cutting through **micro-droplets** of water..."
+
+      **Ex 2: Static Portrait (Intense)**
+      - *Input*: "Tired mechanic resting after work."
+      - *Tags*: render_mode="detailed", material=["viscoelastic", "cloth"], action_context=["passive"]
+      - *Synthesized Output*: "...sitting in a **slouched posture**, his **calloused** hands resting heavily on **grease-stained** denim that holds a **matte** finish under the workshop light..."
+
+      **Ex 3: Aerodynamic Flight (Sci-Fi)**
+      - *Input*: "Cyborg falling from the sky."
+      - *Tags*: render_mode="dynamic", material=["rigid", "viscoelastic"], action_context=["aerodynamics", "velocity_max"]
+      - *Synthesized Output*: "...plummeting in a **streamlined posture**, the **chrome glint** of the cybernetic arm streaking with **motion-blurred edges** against the wind..."
+
+      **Ex 4: Close-Up Interaction (Delicate)**
+      - *Input*: "Jeweler inspecting a diamond."
+      - *Tags*: render_mode="detailed", material=["viscoelastic", "brittle"], action_context=["interaction"]
+      - *Synthesized Output*: "...fingers positioned with a **precise handling** grip, the **sharp faceted edges** of the gem catching an **internal refraction** of light..."
+
+      **Ex 5: Impact Moment (Sport)**
+      - *Input*: "Soccer player kicking the ball."
+      - *Tags*: render_mode="dynamic", material=["viscoelastic", "cloth", "elastoplastic"], action_context=["locomotion", "combat"]
+      - *Synthesized Output*: "...leg extended with **muscle definition** clearly visible, the **taut** jersey **rippling** from the sudden force, boot making contact..."
   </visual_texture_layer>
   <prompt_authoring_protocol>
     **THE SCENE DIRECTOR METHOD (Strict Sequence & Data Mapping)**:
     Construct the 'image_gen_prompt' by assembling inputs into this specific sequence.
       
-    1. **[Subject & Static Pose]** (Source: <entity_reference_manifest> + <visual_texture_layer> + <current_narration>)
-      - **Action**: Combine the Subject's visual identity with a **Frozen Pose Description**.
-      - **Data Integration**: Seamlessly **integrate** the chosen \`Visual Injection\`s from <visual_texture_layer>.
-      - *Constraint*: Do NOT list the raw tags or simply append keywords. **Weave** the visual details (e.g., "sweat-slicked skin") directly into the pose description.
+    1. **[Subject & Static Pose]** (Source: <entity_reference_manifest> + <visual_texture_layer> Step 4)
+      - **Action**: Combine the Subject's visual identity with the **Synthesized Visual Description** generated in <visual_texture_layer>.
+      - **Method**: Seamlessly **weave** the selected Vocabulary (from Step 4) into the Subject's pose description.
+      - *Constraint*: Do NOT list the raw tags (e.g., "physics: cloth"). Use the natural language vocabulary (e.g., "heavy drape").
       - **Grammar Rule (CRITICAL)**: Use **Participles** (holding, standing) or **Adjectives** (tensed, coiled) to describe the *current state*.
-        - **Constraint**: Avoid Active Verbs (runs, punches) which imply temporal duration.
         - **Focus**: Describe the **point of maximum tension** or **impact**.
-        - *Bad Pattern*: Listing disconnected attributes ("The subject is angry. Blue shirt. Running fast.")
-        - *Good Pattern*: Integrating attributes into the action ("The angry subject in a blue shirt **sprinting** with explosive momentum...")
+        - *Bad Pattern*: "The subject is angry. Blue shirt. Running fast." (Disconnected)
+        - *Good Pattern*: "The angry subject in a blue shirt **sprinting** with explosive momentum..."
 
     2. **[Context & Environment]** (Source: <scene_content> + <current_narration>)
       - **Action**: Define the setting and spatial relationship.
       - **Grammar Rule**: Use locational terms: **"situated in"**, **"framed by"**, **"against a background of"**.
 
     3. **[Composition]** (Source: <master_style_guide>.FRAMING_TYPE + <video_context>.aspect_ratio)
-      - **Action**: Define camera angle and **SINGLE strict shot size** (from Execution Rule 2).
+      - **Action**: Define camera angle and **SINGLE strict shot size**.
 
     4. **[Lighting & Atmosphere]** (Source: <master_style_guide>.EMOTIONAL_TONE / .FINAL_MOOD_DESCRIPTOR)
       - **Action**: Describe the light source and its effect on the Subject (e.g., "casting deep shadows").
@@ -416,20 +451,16 @@ export const POST_IMAGE_GEN_PROMPT_PROMPT = `
         * *If Action*: Ensure limbs are visible. Use "Medium Shot" or "Wide Shot".
         * *If Atmosphere*: Pull back to "Long Shot".
       - **Safety Override**: IF formatting a Full Body shot in Vertical, ALWAYS append **"with headroom"**.
-         
+
     3. **Visual Snapshot Translation (De-metaphorization)**:
-      - **The Trap**: abstract verbs ("explodes", "travels") trigger motion blur artifacts.
-      - **The Fix**: Translate actions into **Frozen Poses**.
-      - *Translation*: "Sweat travels down" -> "A drop of sweat **suspended** on the cheek".
-      - *Translation*: "He punches" -> "Fist **driving** through the target, glove compressing on impact".
-      
-    3. **Visual Snapshot Translation (De-metaphorization)**:
-      - **The Logic**: Generative models cannot render "time passing". You must freeze time.
+      - **The Logic**: Generative models cannot render "time passing". You must freeze time into a single frame.
+      - **The Instruction**: Replace abstract verbs ("attacks", "travels", "explodes") with **Visible Physical States**.
+      - **Integration Strategy**: Use the **Action Vocabulary** selected in <visual_texture_layer> as the core description.
       - **Conversion Formula**:
-        * Input: [Subject] + [Abstract Verb] (e.g., "attacks", "ascends")
-        * Output: [Subject] + [Visible Physical State] (e.g., "limb extended in impact", "body angled upward")
-      - **Constraint**: Never use words that imply "process" (e.g., "starting to", "in the middle of", "traveling"). Use words that imply "frozen state" (e.g., "suspended", "contacting", "positioned").
-       
+        * *Input (Abstract)*: "Subject punches the enemy."
+        * *Output (Frozen)*: "Fist **extended** in impact (Action), glove **compressing** against the target (Physics)."
+      - **Constraint**: Strictly PROHIBIT words implying duration ("starting to", "trying to", "in the middle of"). Use words implying a **static snapshot** ("suspended", "contacting", "positioned").
+
     4. **Visibility Priority (Subject Hierarchy)**:
       - **Rule**: Before describing micro-details (pores, sweat), you MUST describe the **Macro-Subject** first.
       - **Order**: 1. Body/Pose -> 2. Clothing/Gear (Gloves, Helmets) -> 3. Texture/Sweat.
@@ -443,13 +474,14 @@ export const POST_IMAGE_GEN_PROMPT_PROMPT = `
         {
           "id": "string", // Must match input ID
           "physics_profile": {
-            // DATA MAPPING RULE: 
-            // Selected tag from [Layer 1: Render-Mode Decision] of <visual_texture_layer>.
+            // Derived from <visual_texture_layer> Step 1
             "render_mode": "detailed" | "dynamic",
-            // Selected tags from [Layer 2: Surface Texture] of <visual_texture_layer>.
-            "material": ("rigid" | "viscoelastic" | "brittle" | "cloth" | "fluid" | "elastoplastic" | "granular")[],
-            // Selected tags from [Layer 3: Static Pose Snapshot] of <visual_texture_layer>.
-            "action_context": ("locomotion" | "combat" | "interaction" | "aerodynamics" | "passive" | "velocity_max")[]
+
+            // Derived from <visual_texture_layer> Step 2 (Collect ALL applicable)
+            "material": ("cloth" | "viscoelastic" | "rigid" | "fluid" | "brittle" | "granular" | "elastoplastic")[],
+
+            // Derived from <visual_texture_layer> Step 3 (Collect ALL applicable)
+            "action_context": ("locomotion" | "combat" | "aerodynamics" | "interaction" | "passive" | "velocity_max")[]
           },
           "appearance": { 
             "clothing_or_material": "string", 
