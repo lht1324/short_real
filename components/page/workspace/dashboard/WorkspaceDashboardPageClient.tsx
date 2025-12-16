@@ -414,6 +414,20 @@ function WorkspaceDashboardPageClient() {
         }
     }, [customerSessionToken]);
 
+    useEffect(() => {
+        let timeout: NodeJS.Timeout;
+
+        if (!user) {
+            timeout = setTimeout(() => {
+                router.push('/');
+            }, 10000);
+        }
+
+        return () => {
+            clearTimeout(timeout);
+        };
+    }, [user, router]);
+
     return (
         <div className="min-h-screen bg-black text-white">
             {/* Top Header - Same as Create */}

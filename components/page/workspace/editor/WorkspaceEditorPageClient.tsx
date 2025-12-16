@@ -22,6 +22,7 @@ import MusicPanel from "@/components/page/workspace/editor/MusicPanel";
 import {musicClientAPI} from "@/api/client/musicClientAPI";
 import ColorPickerPopover from "@/components/page/workspace/editor/ColorPickerPopover";
 import dynamic from "next/dynamic";
+import {useAuth} from "@/context/AuthContext";
 const MusicEditPanel = dynamic(
     () => import('@/components/page/workspace/editor/MusicEditPanel'), // 컴포넌트 경로
     {
@@ -129,6 +130,8 @@ function WorkspaceEditorPageClient() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const taskId = searchParams.get('taskId');
+
+    const { user } = useAuth();
 
     const headerRef = useRef<HTMLDivElement>(null);
     const videoPlayerRef = useRef<VideoPlayerHandle>(null);
@@ -492,6 +495,20 @@ function WorkspaceEditorPageClient() {
             setHeaderHeight(headerRef.current.offsetHeight);
         }
     }, []);
+
+    useEffect(() => {
+        let timeout: NodeJS.Timeout;
+
+        if (!user) {
+            timeout = setTimeout(() => {
+                router.push('/');
+            }, 10000);
+        }
+
+        return () => {
+            clearTimeout(timeout);
+        };
+    }, [user, router]);
 
     return (
         <div className="min-h-screen bg-black text-white">
