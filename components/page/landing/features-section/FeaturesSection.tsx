@@ -54,8 +54,8 @@ const features: Feature[] = [
         description:
             "Rain, fog, and neon when your story needs it.\nWeather and light follow your script's tone.",
         prompt:
-            "Dark moody alleyway at night, rain on pavement, red neon sign reflections, volumetric fog, noir style, high contrast",
-        videoSrc: "/demo/demo_2.mp4",
+            "A continuous atmospheric sequence of a storm-drenched city: heavy rain lashing against high-rise glass with chaotic droplet trails, headlights cutting sharply through thick rolling ground fog, wet asphalt distorting vibrant neon signs into colorful ripples, steam from vents mixing visibly with the cold downpour, and the entire skyline glowing in high-contrast cinematic blue as the storm settles.",
+        videoSrc: "/demo/demo_atmosphere.mp4",
         icon: CloudFog,
         color: "border-yellow-500/50 shadow-yellow-500/20",
     },

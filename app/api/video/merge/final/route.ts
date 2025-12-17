@@ -6,24 +6,35 @@ import {videoGenerationTasksServerAPI} from "@/api/server/videoGenerationTasksSe
 import {FinalVideoMergeData, VideoGenerationTaskStatus} from "@/api/types/supabase/VideoGenerationTasks";
 import {taskCheckAndCleanupIfCancelled} from "@/utils/taskCheckAndCleanupIfCancelled";
 import {getNextBaseResponse} from "@/utils/getNextBaseResponse";
-import {getIsValidRequestC2S} from "@/utils/getIsValidRequest";
+import {getIsValidRequestC2S, getIsValidRequestS2S} from "@/utils/getIsValidRequest";
 
 export async function POST(request: NextRequest) {
-    const {
-        isValidRequest,
-    } = await getIsValidRequestC2S();
-
-    if (!isValidRequest) {
-        return getNextBaseResponse({
-            success: false,
-            status: 401,
-            error: "Unauthorized request."
-        });
-    }
-
     // URL에서 파라미터 추출
     const { searchParams } = new URL(request.url);
     const taskId = searchParams.get('taskId');
+    const isRetry = searchParams.get('isRetry');
+
+    if (isRetry) {
+        if (!getIsValidRequestS2S(request)) {
+            return getNextBaseResponse({
+                success: false,
+                status: 401,
+                error: 'Unauthorized internal request',
+            });
+        }
+    } else {
+        const {
+            isValidRequest,
+        } = await getIsValidRequestC2S();
+
+        if (!isValidRequest) {
+            return getNextBaseResponse({
+                success: false,
+                status: 401,
+                error: "Unauthorized request."
+            });
+        }
+    }
 
     if (!taskId) {
         return getNextBaseResponse({

@@ -114,7 +114,7 @@ export async function POST(
             return getNextBaseResponse({
                 status: 500,
                 success: false,
-                message: `Cannot retry from status: ${taskStatus}`
+                error: `Cannot retry from status: ${taskStatus}`
             });
         }
 
@@ -139,7 +139,7 @@ export async function POST(
 
         // Fire and Forget으로 재시작 엔드포인트 호출
         internalFireAndForgetFetch(
-            `${process.env.BASE_URL}${retryPathData.path}?taskId=${taskId}`,
+            `${process.env.BASE_URL}${retryPathData.path}?taskId=${taskId}&isRetry=true`,
             {
                 method: 'POST',
             },

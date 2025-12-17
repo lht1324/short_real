@@ -102,6 +102,17 @@ function MusicEditPanel({
     useEffect(() => {
         if (!musicData.audioUrl) return;
 
+        // [초기화] 오디오 소스가 변경되면 상태를 리셋하고 기존 인스턴스 파괴
+        setStartTime(0);
+        setIsPlaying(false);
+        setDecodedAudioBuffer(null);
+        setPeaksInstance((prev) => {
+            if (prev) {
+                prev.destroy();
+            }
+            return null;
+        });
+
         let isMounted = true;
         setIsDownloading(true);
 
