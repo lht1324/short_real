@@ -300,17 +300,8 @@ export const POST_IMAGE_GEN_PROMPT_PROMPT = `
 
     **Core Principle: Context-Aware Dynamic Injection**
     Instead of static mapping, you must dynamically synthesize visual descriptions by combining **Material Rules** and **Pose Rules** with **Scene Context**.
-    
-    **Step 1: Context Analysis & Render Mode Classification**
-    *Analyze the scene intensity to determine 'render_mode' for the physics_profile. This tag does not restrict vocabulary but signals the scene's energy level.*
-    
-    **[RENDER MODE DECISION] -> Field: 'render_mode'**
-    - **'dynamic'**: Triggered by High Velocity, Combat, Heavy Weather (Storm), Flying, Running.
-      * *Criteria*: Motion blur or shape distortion is expected.
-    - **'detailed'**: Triggered by Portraits, Slow Interactions, Stillness, Close-ups, Dialogue.
-      * *Criteria*: Surface texture and pore-level details are visible.
 
-    **Step 2: Material Behavior Logic & Tag Selection**
+    **Step 1: Material Behavior Logic & Tag Selection**
     *Apply these rules to select vocabulary AND determine the 'material' tags for physics_profile.*
     
     **[MATERIAL: CLOTH / FABRIC] -> Tag: 'cloth'**
@@ -337,8 +328,17 @@ export const POST_IMAGE_GEN_PROMPT_PROMPT = `
     **[MATERIAL: BRITTLE / GLASS] -> Tag: 'brittle'**
     - **Rule (Impact)**: Shatter -> *Shards, Faceted*.
     - **Vocabulary**: "Sharp faceted edges", "Cracks", "Shards", "Internal refraction", "Prismatic glint".
+    
+    **[MATERIAL: ELASTOPLASTIC / MUD & RUBBER] -> Tag: 'elastoplastic'**
+    - **Rule (Impact)**: Deforms without breaking -> *Indent, Splat, Stretch*.
+    - **Vocabulary**: "Deep surface indentation", "Sticky glossy texture", "Impact splash pattern", "Stretching material", "Viscous splat".
 
-    **Step 3: Action/Pose Logic & Tag Selection**
+    **[MATERIAL: GRANULAR / SAND & DUST] -> Tag: 'granular'**
+    - **Rule (Motion)**: Disperses -> *Cloud, Haze, Trail*.
+    - **Rule (Surface)**: Roughness -> *Coarse, Piled, Gritty*.
+    - **Vocabulary**: "Volumetric dust cloud", "Streaming particle trails", "Coarse grains", "Airborne density", "Rough surface shadow".
+
+    **Step 2: Action/Pose Logic & Tag Selection**
     *Apply these rules to select vocabulary for the 'Frozen Pose' AND determine the 'action_context' tags for physics_profile.*
 
     **[ACTION: LOCOMOTION] -> Tag: 'locomotion'**
@@ -365,10 +365,9 @@ export const POST_IMAGE_GEN_PROMPT_PROMPT = `
     - **Context**: Extremely high speed (Over 160km/h, Vehicles, Superheroes).
     - **Vocabulary**: "Motion-blurred edges", "Speed lines", "Background streaking", "Silhouette distorted by speed".
 
-    **Step 4: Synthesis Instruction**
-    - **Route to JSON (\`physics_profile\`)**: 
-      1. Set \`render_mode\` based on Step 1 Analysis.
-      2. Collect ALL selected \`material\` and \`action_context\` Tags triggered by the scene.
+    **Step 3: Synthesis Instruction**
+    - **Route to JSON (\`physics_profile\`)**:
+      Collect ALL selected \`material\` and \`action_context\` Tags triggered by the scene.
 
     - **Route to Prompt (Creative Synthesis)**: 
       - **Action**: Weave the selected **Action Vocabulary** (Pose) with the **Material Vocabulary** (Texture) into a coherent sentence.
@@ -379,27 +378,27 @@ export const POST_IMAGE_GEN_PROMPT_PROMPT = `
     - **Reference Examples (DO NOT COPY, ADAPT LOGIC)**: 
       **Ex 1: High-Speed Action (Rain)**
       - *Input*: "Samurai slashing in a storm."
-      - *Tags*: render_mode="dynamic", material=["cloth", "rigid", "fluid"], action_context=["combat", "locomotion"]
+      - *Tags*: material=["cloth", "rigid", "fluid"], action_context=["combat", "locomotion"]
       - *Synthesized Output*: "...mid-stride with a **rain-slicked** kimono **billowing** violently, the **polished** katana blade cutting through **micro-droplets** of water..."
 
       **Ex 2: Static Portrait (Intense)**
       - *Input*: "Tired mechanic resting after work."
-      - *Tags*: render_mode="detailed", material=["viscoelastic", "cloth"], action_context=["passive"]
+      - *Tags*: material=["viscoelastic", "cloth"], action_context=["passive"]
       - *Synthesized Output*: "...sitting in a **slouched posture**, his **calloused** hands resting heavily on **grease-stained** denim that holds a **matte** finish under the workshop light..."
 
       **Ex 3: Aerodynamic Flight (Sci-Fi)**
       - *Input*: "Cyborg falling from the sky."
-      - *Tags*: render_mode="dynamic", material=["rigid", "viscoelastic"], action_context=["aerodynamics", "velocity_max"]
+      - *Tags*: material=["rigid", "viscoelastic"], action_context=["aerodynamics", "velocity_max"]
       - *Synthesized Output*: "...plummeting in a **streamlined posture**, the **chrome glint** of the cybernetic arm streaking with **motion-blurred edges** against the wind..."
 
       **Ex 4: Close-Up Interaction (Delicate)**
       - *Input*: "Jeweler inspecting a diamond."
-      - *Tags*: render_mode="detailed", material=["viscoelastic", "brittle"], action_context=["interaction"]
+      - *Tags*: material=["viscoelastic", "brittle"], action_context=["interaction"]
       - *Synthesized Output*: "...fingers positioned with a **precise handling** grip, the **sharp faceted edges** of the gem catching an **internal refraction** of light..."
 
       **Ex 5: Impact Moment (Sport)**
       - *Input*: "Soccer player kicking the ball."
-      - *Tags*: render_mode="dynamic", material=["viscoelastic", "cloth", "elastoplastic"], action_context=["locomotion", "combat"]
+      - *Tags*: material=["viscoelastic", "cloth", "elastoplastic"], action_context=["locomotion", "combat"]
       - *Synthesized Output*: "...leg extended with **muscle definition** clearly visible, the **taut** jersey **rippling** from the sudden force, boot making contact..."
   </visual_texture_layer>
   <prompt_authoring_protocol>
@@ -466,6 +465,24 @@ export const POST_IMAGE_GEN_PROMPT_PROMPT = `
       - **Order**: 1. Body/Pose -> 2. Clothing/Gear (Gloves, Helmets) -> 3. Texture/Sweat.
       - *Constraint*: Do not let sweat drops obscure the fact that he is wearing boxing gloves.
   </execution_rules>
+  <entity_positioning_rules>
+    **Apply this logic to populate 'updated_entity_manifest' in <output_scheme>**:
+
+    **1. Priority Roles ('main_hero' | 'sub_character')**:
+    - **Mandate**: You MUST populate the \`appearance.position_descriptor\` with specific spatial data.
+    - **Reason**: Critical for downstream Subject Identification.
+    - *Example*: "Foreground, back to camera"
+
+    **2. Secondary Roles ('background_extra' | 'prop')**:
+    - **Mandate**: Optional. Populate ONLY if the object is compositionally significant (e.g., The Ring Ropes in the foreground).
+    - **Fallback**: If the position is generic or irrelevant, return an **empty string** ("").
+    - *Example*: "" (for generic crowd) OR "Framing the shot from below" (for significant prop).
+
+    **Selection Protocol (Vocabulary)**:
+    - **Lateral**: "Positioned on the left", "Positioned on the right", "Center frame"
+    - **Depth**: "Foreground (back to camera)", "Mid-ground (facing camera)", "Background blur"
+    - **Action-Relative**: "Pinned against ropes", "Mid-air above target", "Knocked down on canvas"
+  </entity_positioning_rules>
   <output_schema>
     Return a single JSON object.
 
@@ -474,18 +491,16 @@ export const POST_IMAGE_GEN_PROMPT_PROMPT = `
         {
           "id": "string", // Must match input ID
           "physics_profile": {
-            // Derived from <visual_texture_layer> Step 1
-            "render_mode": "detailed" | "dynamic",
-
-            // Derived from <visual_texture_layer> Step 2 (Collect ALL applicable)
+            // Derived from <visual_texture_layer> Step 1 (Collect ALL applicable)
             "material": ("cloth" | "viscoelastic" | "rigid" | "fluid" | "brittle" | "granular" | "elastoplastic")[],
 
-            // Derived from <visual_texture_layer> Step 3 (Collect ALL applicable)
+            // Derived from <visual_texture_layer> Step 2 (Collect ALL applicable)
             "action_context": ("locomotion" | "combat" | "aerodynamics" | "interaction" | "passive" | "velocity_max")[]
           },
           "appearance": { 
             "clothing_or_material": "string", 
-            "body_features": "string" 
+            "body_features": "string",
+            "position_descriptor": "string",
           }
         }
       ],
@@ -530,10 +545,10 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
         - *Long (>4s)*: Force continuity ("Tracking", "Following", "Stabilized", "Orbit"). **Do NOT force Slow-motion unless the Genre demands it.**
 
     2. **<vocabulary_depot>**: 
-      - **Definition**: A dictionary containing physical attributes for visual consistency.
+      - **Definition**: A dictionary containing physical attributes and action descriptors for visual consistency.
       - **Content Structure**:
-        - **Visual Effect Candidates**: A pool of applicable physical reactions (e.g., "Sweat Spray" OR "Skin Ripple").
-        - **Visual Hints**: Dynamic texture descriptions. (e.g., "Wind-sheared silhouette").
+        - **Visual Effect Candidates**: A pool of applicable physical reactions.
+        - **Visual Vocabulary Pool**: A raw list of descriptive keywords covering Textures, Poses, and Details. 
         - **Camera Tech Options**: Suggested lens and framing techniques.
         - **Velocity Options**: Suggested speed and motion blur settings.
       - **Rule**: Incorporate the most relevant tags from these options to ensure physical realism.
@@ -547,8 +562,18 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
       - **Purpose**: Serves as the **exclusive source** from which you will select specific tags to populate the **[Style]** slot.
 
     5. **<entity_list>**: 
-    - **Definition**: Contains the \`role\` and specific \`visual_traits\` for all characters.
-    - **Purpose**: Use this data to create a **"Minimum Distinguishable Handle"** (e.g., "The Boxer in red", "The black car") that uniquely identifies the subject without unnecessary description.
+      - **Definition**: A structured list of characters/objects present in the scene.
+      - **Content Strategy**:
+        - **role**: The base noun for the handle (e.g., "Boxer", "Car").
+        - **position**: The **PRIMARY KEY** for identifying the [Subject]. 
+          * *Rule*: If "position" contains "Foreground", "Focus", or "Facing Camera", this entity is likely the [Subject].
+          * *Note*: If "position" is empty (""), ignore this field.
+        - **distinguishing_features**: Visual cues (Color/Hair) used ONLY to differentiate distinct entities.
+      - **Critical Logic (Handle Creation)**:
+        - *Step 1*: Identify the [Subject] based on \`position\` and <scene_narration>.
+        - *Step 2*: Create a **"Minimum Distinguishable Handle"**.
+          * *Single Entity*: Use Role only (e.g., "The Boxer").
+          * *Multi-Entity*: Combine Role + ONE Feature (e.g., "The Boxer in red").
 
     6. **<image_context>**: 
       - **The Visual Ground Truth**. 
@@ -597,9 +622,14 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
         - *Fallback 1*: If an example verb happens to be the absolute best fit for the scene, you are allowed to use it.
         - *Fallback 2*: If no Specific Domain Term exists, use the most accurate **Dry Physical Verb** (e.g., "Walks", "Turns").
       * *Rule (Interaction)*: If there are **multiple entities**, include the **Secondary Entity's Handle** (constructed via the same Subject rules) as the **Object** of the verb. Format: \`[Subject] [Verb] [Object]\`.
-      * *Rule (Texture/Motion)*: Select and append tags from "Visual Effect Candidates" OR "Visual Hints" to describe the physical reaction.
-        - *Logic*: Use 'Visual Hints' if the action involves speed/wind/deformation (e.g., "Wind-sheared silhouette").
-        - *Logic*: Use 'Effect Candidates' for impact/collision (e.g., "Sweat explodes").
+      * *Rule (Texture/Motion Selection)*:
+        - **Source**: Review the **Visual Vocabulary Pool** and **Visual Effect Candidates** in <vocabulary_depot>.
+        - **Selection Limit**: Select **up to 2** most contextually relevant keywords.
+          * *Logic*: Do not blindly copy all words. Pick only what matches the specific action moment.
+          * *Priority*:
+            1. If Impact/Collision -> Prioritize **'Effect Candidate'**.
+            2. If Speed/Motion/Detail -> Prioritize **'Visual Vocabulary Pool'**.
+        - **Format**: Append strictly at the end of the action sentence.
 
     * **[Composition]**: The Lens & Velocity. (Inferred from context)
       * *Rule*: Construct the composition by combining ONE selection from "Camera Tech Options" + ONE selection from "Velocity Options" found in <vocabulary_depot>.
@@ -669,6 +699,10 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
     5. **Contextual Loyalty (Anti-Hallucination)**:
       - The examples in this prompt are for **FORMAT ONLY**.
       - Do not output "Right Cross" just because the example used it. You MUST derive the action strictly from the <scene_narration>.
+
+    6. **Vocabulary Usage**:
+       - Do NOT conjugate or alter the keywords from the Vocabulary Pool excessively.
+       - Use them as "Tags" or short descriptive phrases to maintain the physics simulation triggers.
   </constraints>
 </developer_instruction>
 `;

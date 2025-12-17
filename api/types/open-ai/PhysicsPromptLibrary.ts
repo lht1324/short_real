@@ -1,89 +1,112 @@
 export const PHYSICS_LIBRARY = {
-    // [Layer 1] 재질 (Material) -> Effect Tag (단일 명사형 이펙트 + 물리적 반응)
+    // [Layer 1] 재질 (Material) -> Vocabulary List
     material: {
-        rigid: { // 금속, 차체
+        rigid: {
             effect_tag: "Sparks",
             alt_tag: "Debris",
-            visual_injection: {
-                detailed: "Brushed metal grain, Micro-scratches, Welding seams, Rust patina",
-                dynamic: "Streamlined reflection lines, Heat haze distortion, Motion-blurred specularity"
-            }
+            vocabulary: [
+                "Brushed grain", "Pitted", "Rusted", "Polished", "Specular highlight",
+                "Chrome glint", "Dented", "Scratched", "Warped"
+            ]
         },
-        viscoelastic: { // 피부, 근육
+        viscoelastic: {
             effect_tag: "Sweat Spray",
             alt_tag: "Skin Ripple",
-            visual_injection: {
-                detailed: "Damp skin texture, Visible pores, Subsurface scattering, Fine wrinkles",
-                dynamic: "Glistening sweat sheen, Tensed muscle definition, Face contorted in exertion"
-            }
+            vocabulary: [
+                "Porous", "Calloused", "Subsurface scattering", "Oily sheen", "Sweat-beaded",
+                "Flushed", "Stretched", "Sagging", "Bulging veins", "Muscle definition"
+            ]
         },
-        brittle: { // 유리
+        brittle: {
             effect_tag: "Shards",
             alt_tag: "Glass Explosion",
-            visual_injection: {
-                detailed: "Sharp faceted edges, Internal light refraction, Dust on surface",
-                dynamic: "Fragmenting geometry, Directional shattering, Motion-warped reflection"
-            }
+            vocabulary: [
+                "Sharp faceted edges", "Cracks", "Shards", "Internal refraction", "Prismatic glint"
+            ]
         },
-        cloth: { // 옷, 망토
+        cloth: {
             effect_tag: "Fabric Flutter",
             alt_tag: "Wind Drag",
-            visual_injection: {
-                detailed: "Visible thread weave, Crisp stitching, Heavy drape folds, Fabric nap",
-                dynamic: "Wind-sheared silhouette, Taut fabric ripples, Clothing pressed against body"
-            }
+            vocabulary: [
+                "Coarse weave", "Finely-stitched", "Plush", "Matte finish", "Satin sheen",
+                "Billowing", "Clinging", "Taut against skin", "Rippling", "Heavy-set"
+            ]
         },
-        fluid: { // 물
+        fluid: {
             effect_tag: "Mist",
             alt_tag: "Splash Burst",
-            visual_injection: {
-                detailed: "Surface tension curvature, Clear optical refraction, Stationary droplets",
-                dynamic: "Directional spray, Turbulent foam trails, Elongated liquid streaks"
-            }
+            vocabulary: [
+                "Droplets", "Spray", "Mist", "Foam", "Ripples",
+                "Caustics", "Refractive", "High-contrast reflection"
+            ]
         },
-        elastoplastic: { // 진흙, 껌
+        elastoplastic: {
             effect_tag: "Surface Deformation",
             alt_tag: "Heavy Splat",
-            visual_injection: {
-                detailed: "Deep surface indentation, Sticky glossy texture, Fingerprint marks",
-                dynamic: "Impact splash pattern, Stretching material shapes, Dynamic surface deformation"
-            }
+            vocabulary: [
+                "Deep surface indentation", "Sticky glossy texture", "Impact splash pattern",
+                "Stretching material", "Viscous splat"
+            ]
         },
-        granular: { // 모래, 먼지
+        granular: {
             effect_tag: "Dust Cloud",
             alt_tag: "Gravel Spray",
-            visual_injection: {
-                detailed: "Individual coarse grains, Piled texture, Rough surface shadow",
-                dynamic: "Volumetric dust cloud, Streaming particle trails, Airborne density"
-            }
+            vocabulary: [
+                "Volumetric dust cloud", "Streaming particle trails", "Coarse grains",
+                "Airborne density", "Rough surface shadow"
+            ]
         }
     },
 
-    // [Layer 2] 행동 맥락 (Action Context) -> Composition & Speed (구도 및 속도)
+    // [Layer 2] 행동 맥락 (Action Context) -> Vocabulary List (Visual Hints로 사용)
     action_context: {
-        locomotion: { // 이동
+        locomotion: {
             camera_tech: "Low Angle Tracking Shot",
-            speed_term: "Fast Motion, Directional Motion Blur"
+            speed_term: "Fast Motion, Directional Motion Blur",
+            vocabulary: [
+                "Mid-stride", "Off-balance stance", "Airborne phase",
+                "Leaning into turn", "Legs blurred in motion", "Weight shifted forward"
+            ]
         },
-        combat: { // 전투
+        combat: {
             camera_tech: "Handheld Shaky Cam, Whip Pan",
-            speed_term: "High Shutter Speed, Sudden Motion Blur"
+            speed_term: "High Shutter Speed, Sudden Motion Blur",
+            vocabulary: [
+                "Fist extended", "Impact tremor", "Muscle coiled", "Recoiling from blow",
+                "Guard raised", "Face contorted", "Torque in torso"
+            ]
         },
-        interaction: { // 조작 (손)
+        interaction: {
             camera_tech: "Macro Shot, Tight Focus",
-            speed_term: "Real-time, Shallow Depth of Field"
+            speed_term: "Real-time, Shallow Depth of Field",
+            vocabulary: [
+                "Firm grip", "Knuckles white", "Fingertips grazing",
+                "Interlocked fingers", "Palm pressed flat", "Precise handling"
+            ]
         },
-        aerodynamics: { // 비행 (윙슈트)
+        aerodynamics: {
             camera_tech: "FPV Drone Shot, Wide Angle",
-            speed_term: "Hyperlapse, Extreme Motion Blur, Speed Lines"
+            speed_term: "Hyperlapse, Extreme Motion Blur, Speed Lines",
+            vocabulary: [
+                "Streamlined posture", "Arms swept back", "Body arched",
+                "Free-falling orientation", "Wind-resistance tuck"
+            ]
         },
-        passive: { // 피격/반동
+        passive: {
             camera_tech: "Crash Zoom, Reactionary Pan",
-            speed_term: "Sudden Recoil, Camera Shake"
+            speed_term: "Sudden Recoil, Camera Shake",
+            vocabulary: [
+                "Slouched posture", "Resting weight", "Stationary stance",
+                "Relaxed limbs", "Grounded footing"
+            ]
         },
-        velocity_max: { // [NEW] 극초고속 (레이싱, 추격)
+        velocity_max: {
             camera_tech: "Bumper Cam, Ground Level",
-            speed_term: "Hyperlapse, Warp Speed Effect, Background Streaming Blur"
+            speed_term: "Hyperlapse, Warp Speed Effect, Background Streaming Blur",
+            vocabulary: [
+                "Motion-blurred edges", "Speed lines", "Background streaking",
+                "Silhouette distorted by speed"
+            ]
         }
     }
 };

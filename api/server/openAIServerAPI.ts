@@ -480,54 +480,53 @@ Instruction: Generate the scene instruction JSON.
             const activeEntityPhysicsList = entityManifestList
                 .filter((entity) => !!(entity.physics_profile))
                 .map((entity) => {
-                    // 1. 타입 단언 및 render_mode 추출
+                    // 1. 타입 단언 (render_mode 제거됨)
                     const {
-                        render_mode: renderMode,
                         material: materialList,
                         action_context: actionContextList,
                     } = entity.physics_profile as PhysicsProfile;
 
-                    // 2. Material 데이터 수집 (배열 순회)
+                    // 2. 데이터 수집용 Set 초기화
                     const effectTags = new Set<string>();
-                    const visualInjections = new Set<string>(); // visual_injection 수집용
+                    const visualVocabularyPool = new Set<string>(); // 여기에 모든 단어를 합칩니다
+                    const cameraTechs = new Set<string>();
+                    const speedTerms = new Set<string>();
 
+                    // 3. Material 데이터 수집
                     materialList.forEach((materialKey) => {
                         const data = PHYSICS_LIBRARY.material[materialKey];
                         if (data) {
+                            // 이펙트 태그 수집
                             effectTags.add(`"${data.effect_tag}"`);
                             effectTags.add(`"${data.alt_tag}"`);
 
-                            // [NEW] render_mode에 따른 시각적 힌트 주입
-                            if (data.visual_injection && renderMode) {
-                                // renderMode가 'detailed' 또는 'dynamic' 중 하나일 것이므로 해당 키값 사용
-                                const injectionText = data.visual_injection[renderMode as keyof typeof data.visual_injection];
-                                if (injectionText) {
-                                    visualInjections.add(injectionText);
-                                }
-                            }
+                            // [Action] Material 단어장 수집 (배열의 모든 단어를 Set에 추가)
+                            data.vocabulary.forEach(word => visualVocabularyPool.add(word));
                         }
                     });
 
-                    // 3. Action Context 데이터 수집 (배열 순회)
-                    const cameraTechs = new Set<string>();
-                    const speedTerms = new Set<string>();
+                    // 4. Action Context 데이터 수집 (여기에 Vocabulary 추가 로직 포함)
                     actionContextList.forEach((contextKey) => {
                         const data = PHYSICS_LIBRARY.action_context[contextKey];
                         if (data) {
+                            // 카메라 & 속도 수집
                             cameraTechs.add(data.camera_tech);
                             speedTerms.add(data.speed_term);
+
+                            // [Action] Action Context 단어장 수집 (Material과 같은 Pool에 합침)
+                            data.vocabulary.forEach(word => visualVocabularyPool.add(word));
                         }
                     });
 
                     // 데이터가 하나도 없으면 null 반환
                     if (effectTags.size === 0 && cameraTechs.size === 0) return null;
 
-                    // 4. 포맷팅: 옵션들을 'OR'나 콤마로 연결하여 제공
-                    // Visual Hints 항목 추가
+                    // 5. 포맷팅
+                    // Visual Hints -> Visual Vocabulary Pool로 명칭 변경 (프롬프트 의도에 맞춤)
                     return `
 [Entity Role: ${entity.role}]
 - **Visual Effect Candidates**: ${Array.from(effectTags).join(' OR ')}
-- **Visual Hints (${renderMode})**: ${Array.from(visualInjections).join(', ')}
+- **Visual Vocabulary Pool**: ${Array.from(visualVocabularyPool).join(', ')}
 - **Camera Tech Options**: ${Array.from(cameraTechs).join(', ')}
 - **Velocity Options**: ${Array.from(speedTerms).join(', ')}
 `;
@@ -538,13 +537,15 @@ Instruction: Generate the scene instruction JSON.
             const mappedEntityList = entityManifestList.map((entity) => {
                 // 옷/재질 정보에서 너무 긴 묘사는 잘라내거나 핵심만 남기는 전처리도 좋음 (여기서는 그대로 전달하되 프롬프트로 제어)
                 return {
-                    id: entity.id,
                     role: entity.role,
                     type: entity.type,
                     demographics: entity.demographics, // 예: "Latino, late 20s" (식별용)
+
+                    position: entity.appearance.position_descriptor ?? "",
+
                     distinguishing_features: {
                         hair: entity.appearance.hair, // 예: "Short buzz cut" -> "The buzz-cut boxer"
-                        clothing: entity.appearance.clothing_or_material // 예: "Red satin shorts" -> "The boxer in red"
+                        clothing: entity.appearance.clothing_or_material, // 예: "Red satin shorts" -> "The boxer in red"
                     }
                 };
             });
