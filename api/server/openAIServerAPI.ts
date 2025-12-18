@@ -12,7 +12,8 @@ import {
     POST_SCENE_SEGMENTATION_PROMPT,
     POST_MASTER_STYLE_PROMPT,
     POST_IMAGE_GEN_PROMPT_PROMPT,
-    POST_VIDEO_GEN_PROMPT_PROMPT, POST_MUSIC_GENERATION_DATA_PROMPT
+    POST_VIDEO_GEN_PROMPT_PROMPT, POST_MUSIC_GENERATION_DATA_PROMPT, POST_IMAGE_GEN_PROMPT_NO_ENTITIES_PROMPT,
+    POST_VIDEO_GEN_PROMPT_NO_ENTITIES_PROMPT
 } from "@/api/types/open-ai/OpenAIPrompts";
 import {MusicGenerationData} from "@/api/types/suno-api/MusicGenerationData";
 import {Entity, InitialEntityManifestItem, PhysicsProfile} from "@/api/types/open-ai/Entity";
@@ -242,6 +243,8 @@ Instruction: Analyze the input <target_aspect_ratio>, <style_guidelines>, <full_
                 max_completion_tokens: 8192, // [팁] Entity Manifest가 길어질 수 있으므로 토큰 한도를 넉넉히 늘렸습니다.
             });
 
+            console.log(`postMasterStylePrompt() usage: `, JSON.stringify(completion.usage))
+
             const generatedResult = completion.choices[0]?.message?.content;
 
             if (!generatedResult) {
@@ -263,7 +266,33 @@ Instruction: Analyze the input <target_aspect_ratio>, <style_guidelines>, <full_
                         negativePrompt: string;
                     };
                     entityManifest: InitialEntityManifestItem[];
+                    entityReasoningList: {
+                        scene_number: number,
+                        entity_reasoning_list: {
+                            id: string;
+                            reasoning: string;
+                        }[],
+                        scene_empty_reasoning: string
+                    }[];
                 } = JSON.parse(generatedResult);
+
+                for (const entityReasoningData of parsedData.entityReasoningList) {
+                    const {
+                        scene_number: sceneNumber,
+                        entity_reasoning_list: sceneEntityReasoningList,
+                        scene_empty_reasoning: sceneEmptyReasoning,
+                    } = entityReasoningData;
+
+                    console.log(`Scene #${sceneNumber} Reasoning`);
+
+                    if (sceneEntityReasoningList.length !== 0) {
+                        for (const sceneEntityReasoningData of sceneEntityReasoningList) {
+                            console.log(`Entity[${sceneEntityReasoningData.id}] Reason: ${sceneEntityReasoningData.reasoning}`)
+                        }
+                    } else {
+                        console.log(`Empty: ${sceneEmptyReasoning}`);
+                    }
+                }
 
                 return {
                     success: true,
@@ -298,9 +327,10 @@ Instruction: Analyze the input <target_aspect_ratio>, <style_guidelines>, <full_
         imageGenPromptDirective: string,
         masterStylePromptInfo: MasterStyleInfo,
         sceneNarration: string,
+        sceneNumber: number,
         videoTitle: string,
         videoDescription: string,
-        entityManifestList: InitialEntityManifestItem[],
+        sceneEntityManifestList: InitialEntityManifestItem[],
         aspectRatio: VideoAspectRatio = VIDEO_ASPECT_RATIOS.PORTRAIT_9_16
     ): Promise<{
         success: boolean;
@@ -323,34 +353,43 @@ Instruction: Analyze the input <target_aspect_ratio>, <style_guidelines>, <full_
                 };
             }
 
-            const developerMessage = POST_IMAGE_GEN_PROMPT_PROMPT;
+            const doesSceneHaveEntities = sceneEntityManifestList.length !== 0;
+            const developerMessage = doesSceneHaveEntities
+                ? POST_IMAGE_GEN_PROMPT_PROMPT
+                : POST_IMAGE_GEN_PROMPT_NO_ENTITIES_PROMPT;
 
             const userMessage = `
 <input_data>
   <video_context>
     <title>${videoTitle}</title>
-    <description>${videoDescription}</description>   
+    <description>${videoDescription}</description>
     <aspect_ratio>${aspectRatio}</aspect_ratio>
   </video_context>
   <master_style_guide>
     ${JSON.stringify(masterStylePromptInfo, null, 2)}
   </master_style_guide>
-  <entity_reference_manifest>
-    ${JSON.stringify(entityManifestList, null, 2)}
-  </entity_reference_manifest>
+  ${doesSceneHaveEntities ? `<entity_reference_manifest>${JSON.stringify(sceneEntityManifestList, null, 2)}</entity_reference_manifest>` : ""}
   <current_narration>
-    ${sceneNarration}   
+    ${sceneNarration}
   </current_narration>
   <scene_content>
     ${imageGenPromptDirective}
   </scene_content>
 </input_data>
 
+${doesSceneHaveEntities ? `
 Instruction: Generate the scene instruction JSON.
 **CRITICAL**: You are the Physics Architect.
 1. Populate 'physics_profile' based on the 3-Layer Logic.
 2. Enrich 'appearance' with visual cues that imply that physics (e.g., textures, damage).
-3. Define 'state' with a physically accurate pose.
+3. Define 'state' with a physically accurate pose.\`
+` : `
+Instruction: Generate the scene instruction JSON.
+**CRITICAL**: You are the Atmospheric Architect.
+1. Analyze the <scene_content> to identify the Dominant Anchor.
+2. Focus strictly on Environmental Textures, Lighting, and Scale.
+3. Output the single 'image_gen_prompt' string. Do NOT invent characters.
+`}
 `;
 
             const client = new OpenAI({ apiKey });
@@ -362,8 +401,10 @@ Instruction: Generate the scene instruction JSON.
                 ],
                 response_format: { type: 'json_object' },
                 reasoning_effort: 'high',
-                max_completion_tokens: 10240,
+                max_completion_tokens: 12288,
             });
+
+            console.log(`Scene #${sceneNumber} postImageGenPrompt() usage: `, JSON.stringify(completion.usage))
 
             const generatedContent = completion.choices[0]?.message?.content;
             if (!generatedContent) {
@@ -381,26 +422,17 @@ Instruction: Generate the scene instruction JSON.
             try {
                 const instructionJSON: {
                     image_gen_prompt: string;
-                    updated_entity_manifest: Omit<Entity, 'role' | 'type' | 'demographics'>[]
+                    updated_entity_manifest?: Omit<Entity, 'role' | 'type' | 'appearance_scenes' | 'demographics'>[]
                 } = JSON.parse(generatedContent);
 
-                // [수정] 병합 로직 (Physics-Aware Merge)
-
-                if (!instructionJSON.updated_entity_manifest || !Array.isArray(instructionJSON.updated_entity_manifest)) {
-                    return {
-                        success: false,
-                        error: {
-                            message: 'Generated entities are invalid.',
-                            code: 'INVALID_CONTENT'
-                        }
-                    };
-                }
+                const imageGenPrompt = instructionJSON.image_gen_prompt;
+                const updatedEntityManifestList = instructionJSON.updated_entity_manifest;
 
                 return {
                     success: true,
-                    imageGenPrompt: instructionJSON.image_gen_prompt,
-                    entityManifestList: instructionJSON.updated_entity_manifest.map(instruction => {
-                        const originalEntity = entityManifestList.find((entityManifest) => {
+                    imageGenPrompt: imageGenPrompt,
+                    entityManifestList: updatedEntityManifestList ? updatedEntityManifestList.map(instruction => {
+                        const originalEntity = sceneEntityManifestList.find((entityManifest) => {
                             return entityManifest.id === instruction.id;
                         });
 
@@ -414,6 +446,7 @@ Instruction: Generate the scene instruction JSON.
                             id: instruction.id,
                             physics_profile: instruction.physics_profile,
                             type: originalEntity.type,
+                            appearance_scenes: originalEntity.appearance_scenes,
                             demographics: originalEntity.demographics,
                             appearance: {
                                 ...originalEntity.appearance,
@@ -421,7 +454,7 @@ Instruction: Generate the scene instruction JSON.
                             },
                             role: originalEntity.role,
                         };
-                    }),
+                    }) : [],
                 };
             } catch (jsonError) {
                 console.error('Failed to parse generated JSON:', jsonError);
@@ -472,83 +505,90 @@ Instruction: Generate the scene instruction JSON.
                 };
             }
 
-            const developerMessage = POST_VIDEO_GEN_PROMPT_PROMPT;
+            const isEntityListNotEmpty = entityManifestList.length !== 0;
+            const developerMessage = isEntityListNotEmpty
+                ? POST_VIDEO_GEN_PROMPT_PROMPT
+                : POST_VIDEO_GEN_PROMPT_NO_ENTITIES_PROMPT;
 
             // [핵심] Physics Profile을 기반으로 물리 법칙 텍스트 생성 (Code Level Injection)
             // 메인 히어로 또는 씬에 등장하는 주요 엔티티들의 물리 속성을 추출하여 문자열로 변환
 
-            const activeEntityPhysicsList = entityManifestList
-                .filter((entity) => !!(entity.physics_profile))
-                .map((entity) => {
-                    // 1. 타입 단언 (render_mode 제거됨)
-                    const {
-                        material: materialList,
-                        action_context: actionContextList,
-                    } = entity.physics_profile as PhysicsProfile;
+            const activeEntityPhysicsList = isEntityListNotEmpty
+                ? entityManifestList
+                    .filter((entity) => !!(entity.physics_profile))
+                    .map((entity) => {
+                        // 1. 타입 단언 (render_mode 제거됨)
+                        const {
+                            material: materialList,
+                            action_context: actionContextList,
+                        } = entity.physics_profile as PhysicsProfile;
 
-                    // 2. 데이터 수집용 Set 초기화
-                    const effectTags = new Set<string>();
-                    const visualVocabularyPool = new Set<string>(); // 여기에 모든 단어를 합칩니다
-                    const cameraTechs = new Set<string>();
-                    const speedTerms = new Set<string>();
+                        // 2. 데이터 수집용 Set 초기화
+                        const effectTags = new Set<string>();
+                        const visualVocabularyPool = new Set<string>(); // 여기에 모든 단어를 합칩니다
+                        const cameraTechs = new Set<string>();
+                        const speedTerms = new Set<string>();
 
-                    // 3. Material 데이터 수집
-                    materialList.forEach((materialKey) => {
-                        const data = PHYSICS_LIBRARY.material[materialKey];
-                        if (data) {
-                            // 이펙트 태그 수집
-                            effectTags.add(`"${data.effect_tag}"`);
-                            effectTags.add(`"${data.alt_tag}"`);
+                        // 3. Material 데이터 수집
+                        materialList.forEach((materialKey) => {
+                            const data = PHYSICS_LIBRARY.material[materialKey];
+                            if (data) {
+                                // 이펙트 태그 수집
+                                effectTags.add(`"${data.effect_tag}"`);
+                                effectTags.add(`"${data.alt_tag}"`);
 
-                            // [Action] Material 단어장 수집 (배열의 모든 단어를 Set에 추가)
-                            data.vocabulary.forEach(word => visualVocabularyPool.add(word));
-                        }
-                    });
+                                // [Action] Material 단어장 수집 (배열의 모든 단어를 Set에 추가)
+                                data.vocabulary.forEach(word => visualVocabularyPool.add(word));
+                            }
+                        });
 
-                    // 4. Action Context 데이터 수집 (여기에 Vocabulary 추가 로직 포함)
-                    actionContextList.forEach((contextKey) => {
-                        const data = PHYSICS_LIBRARY.action_context[contextKey];
-                        if (data) {
-                            // 카메라 & 속도 수집
-                            cameraTechs.add(data.camera_tech);
-                            speedTerms.add(data.speed_term);
+                        // 4. Action Context 데이터 수집 (여기에 Vocabulary 추가 로직 포함)
+                        actionContextList.forEach((contextKey) => {
+                            const data = PHYSICS_LIBRARY.action_context[contextKey];
+                            if (data) {
+                                // 카메라 & 속도 수집
+                                cameraTechs.add(data.camera_tech);
+                                speedTerms.add(data.speed_term);
 
-                            // [Action] Action Context 단어장 수집 (Material과 같은 Pool에 합침)
-                            data.vocabulary.forEach(word => visualVocabularyPool.add(word));
-                        }
-                    });
+                                // [Action] Action Context 단어장 수집 (Material과 같은 Pool에 합침)
+                                data.vocabulary.forEach(word => visualVocabularyPool.add(word));
+                            }
+                        });
 
-                    // 데이터가 하나도 없으면 null 반환
-                    if (effectTags.size === 0 && cameraTechs.size === 0) return null;
+                        // 데이터가 하나도 없으면 null 반환
+                        if (effectTags.size === 0 && cameraTechs.size === 0) return null;
 
-                    // 5. 포맷팅
-                    // Visual Hints -> Visual Vocabulary Pool로 명칭 변경 (프롬프트 의도에 맞춤)
-                    return `
+                        // 5. 포맷팅
+                        // Visual Hints -> Visual Vocabulary Pool로 명칭 변경 (프롬프트 의도에 맞춤)
+                        return `
 [Entity Role: ${entity.role}]
 - **Visual Effect Candidates**: ${Array.from(effectTags).join(' OR ')}
 - **Visual Vocabulary Pool**: ${Array.from(visualVocabularyPool).join(', ')}
 - **Camera Tech Options**: ${Array.from(cameraTechs).join(', ')}
 - **Velocity Options**: ${Array.from(speedTerms).join(', ')}
 `;
+                    })
+                    .filter(Boolean)
+                    .join('\n')
+                : '';
+
+            const mappedEntityList = isEntityListNotEmpty
+                ? entityManifestList.map((entity) => {
+                    // 옷/재질 정보에서 너무 긴 묘사는 잘라내거나 핵심만 남기는 전처리도 좋음 (여기서는 그대로 전달하되 프롬프트로 제어)
+                    return {
+                        role: entity.role,
+                        type: entity.type,
+                        demographics: entity.demographics, // 예: "Latino, late 20s" (식별용)
+
+                        position: entity.appearance.position_descriptor ?? "",
+
+                        distinguishing_features: {
+                            hair: entity.appearance.hair, // 예: "Short buzz cut" -> "The buzz-cut boxer"
+                            clothing: entity.appearance.clothing_or_material, // 예: "Red satin shorts" -> "The boxer in red"
+                        }
+                    };
                 })
-                .filter(Boolean)
-                .join('\n');
-
-            const mappedEntityList = entityManifestList.map((entity) => {
-                // 옷/재질 정보에서 너무 긴 묘사는 잘라내거나 핵심만 남기는 전처리도 좋음 (여기서는 그대로 전달하되 프롬프트로 제어)
-                return {
-                    role: entity.role,
-                    type: entity.type,
-                    demographics: entity.demographics, // 예: "Latino, late 20s" (식별용)
-
-                    position: entity.appearance.position_descriptor ?? "",
-
-                    distinguishing_features: {
-                        hair: entity.appearance.hair, // 예: "Short buzz cut" -> "The buzz-cut boxer"
-                        clothing: entity.appearance.clothing_or_material, // 예: "Red satin shorts" -> "The boxer in red"
-                    }
-                };
-            });
+                : []
             // 4. User Message 구성 (physics_instruction_set 주입)
             const userMessage = `
 <input_context>
@@ -557,23 +597,35 @@ Instruction: Generate the scene instruction JSON.
     <description>${videoDescription}</description>
     <target_duration>${targetDuration}seconds</target_duration>
   </video_metadata>
-  <vocabulary_depot>
+  ${isEntityListNotEmpty ? `<vocabulary_depot>
     **RESOURCE POOL**: Select keywords from here to construct the Dry S-A-C-S prompt.
     DO NOT use these as descriptions. Use them as tags.
     ${activeEntityPhysicsList}
-  </vocabulary_depot>
+  </vocabulary_depot>` : ""}
   <scene_narration>${sceneNarration}</scene_narration>
   <master_style_guide>
     ${JSON.stringify(masterStyleInfo, null, 2)}
   </master_style_guide>
-  <entity_list>
+  ${isEntityListNotEmpty ? `<entity_list>
     ${JSON.stringify(mappedEntityList, null, 2)}
-  </entity_list>
+  </entity_list>` : ""}
   <image_context>
     **START FRAME TRUTH**:
     The input image is the visual ground truth.
+  ${isEntityListNotEmpty ? `
     - Do NOT describe the character's appearance (It is already there).
     - ONLY describe the **Movement** (Action) and **Camera** (Composition).
+  ` : `
+    - Treat the **location/environment** as the subject (no characters).
+    - Do NOT introduce **people/characters/silhouettes** or any new **objects/structures** not present in the image.
+    - Do NOT restate static visual details already visible in the image (buildings, terrain, props).
+    - ONLY describe **what changes over time**:
+      1) **Environmental physics**: fog rolls/billows, rain falls/slashes, wind sways foliage, dust motes drift, water ripples, light flickers/gleams.
+      2) **Camera movement**: dolly in/out, orbit, pan, tilt, crane, tracking — with speed matched to target duration.
+    - If narration mentions human actions, convert them to **actorless effects** (e.g., “footsteps splash in puddles”) or ignore.
+    - Use **positive exclusion** phrasing when needed (e.g., “empty”, “unpopulated”, “abandoned”).
+    - Adding **atmospheric VFX** (rain, fog, wind, lighting changes) implied by the narration is allowed and encouraged.
+  `}
   </image_context>
 </input_context>
 `;
@@ -606,7 +658,7 @@ Instruction: Generate the scene instruction JSON.
                 max_completion_tokens: 8192,
             });
 
-            console.log(`[${sceneNumber}] usage: `, JSON.stringify(completion.usage))
+            console.log(`Scene #${sceneNumber} postVideoGenPrompt() usage: `, JSON.stringify(completion.usage))
             const generatedContent = completion.choices[0]?.message?.content;
 
             if (!generatedContent) {

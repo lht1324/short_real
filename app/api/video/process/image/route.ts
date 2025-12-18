@@ -71,9 +71,12 @@ export async function POST(request: NextRequest) {
                 sceneData.imageGenPromptDirective,
                 masterStylePositivePromptInfo,
                 sceneData.narration,
+                sceneData.sceneNumber,
                 videoTitle,
                 videoDescription,
-                entityManifestList,
+                entityManifestList.filter((entity) => {
+                    return entity.appearance_scenes.includes(sceneData.sceneNumber);
+                }),
             );
 
             if (!postImageGenPromptResult.success || !postImageGenPromptResult.imageGenPrompt) {

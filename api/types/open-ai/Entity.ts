@@ -29,6 +29,8 @@ export interface Entity {
     /** 시각적/의미적 분류 (VLM 이해용 보조 태그) */
     type: 'human' | 'creature' | 'object' | 'machine' | 'animal' | 'hybrid';
 
+    appearance_scenes: number[];
+
     demographics: string; // 예: "African American, 30s"
 
     appearance: {

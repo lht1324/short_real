@@ -96,6 +96,8 @@ export async function POST(request: NextRequest) {
             // ArrayBuffer를 Base64로 인코딩
             const imageBase64 = Buffer.from(imageArrayBuffer).toString('base64');
 
+            const sceneEntityManifestList = sceneData.sceneEntityManifestList ?? [];
+
             const postVideoGenPromptResult = await openAIServerAPI.postVideoGenPrompt(
                 sceneData.narration,
                 sceneData.sceneNumber,
@@ -104,7 +106,9 @@ export async function POST(request: NextRequest) {
                 masterStyleInfo,
                 videoTitle,
                 videoDescription,
-                sceneData.sceneEntityManifestList ?? [],
+                sceneEntityManifestList.filter((entity) => {
+                    return entity.appearance_scenes.includes(sceneData.sceneNumber);
+                }),
             );
 
             if (!postVideoGenPromptResult.success || !postVideoGenPromptResult.videoGenPrompt) {

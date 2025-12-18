@@ -103,7 +103,6 @@ export const POST_SCENE_SEGMENTATION_PROMPT = `
   <constraints>
     1. Segmentation Rule: 1 Sentence = 1 Scene. Do not merge sentences. Do not split unless duration > 8s.
     2. Visual Direction: "Show, Don't Just Tell". Visuals must be cinematic and consistent.
-    3. Viral Metadata: Title max 40 chars (Hook). Description max 2 sentences + 3 hashtags.
     3. Viral Metadata: 
       - Title: Max 40 chars. **MUST include the specific Subject/Topic (e.g., WWII, Cat, Bitcoin).** Avoid abstract metaphors. Pattern: "[Topic] + [Provocative/Action Phrase]".
       - Description: Max 2 sentences describing exactly WHAT happens. **Must insert a line break (\\n) before appending** 3 relevant hashtags.
@@ -197,32 +196,130 @@ export const POST_MASTER_STYLE_PROMPT = `
       - **'object'**: Passive items, weapons, furniture.
       - **'hybrid'**: Cyborgs, plant-people.
 
-    3. **Demographics Strategy**: 
-      - **IF 'human'**: MUST specify ethnicity, nationality, and exact age (e.g., "Korean American, late 20s").
-      - **IF 'machine'/'object'**: Specify Year/Model or Origin (e.g., "2077 Prototype", "Victorian Era").
-      - **IF others**: Use "N/A" or simple origin descriptor.
+    3. **Demographics Strategy (Historical Context String)**:
+      - **Goal**: Create a single context string where **[ERA / PERIOD]** acts as the strict filter for all subsequent attributes.
+      - **Mandatory First Field**: **[ERA / PERIOD]** (e.g., "1944 WWII", "2077 Cyberpunk", "Modern Day", "15th Century").
+      - **Subsequent Fields (Include ONLY if applicable)**:
+        - **[GENDER]** (Human/Hybrid/Creature): "Male", "Female", "Androgynous".
+          * **CONSTRAINT**: Strictly adhere to historical/societal accuracy of the Era.
+          * *Examples*: "Medieval Knight" -> Male. "WWII Fighter Pilot" -> Male. "1920s Flapper" -> Female.
+        - **[ORIGIN / ETHNICITY]**: "Japanese", "Caucasian", "Mars Colony".
+          * **CONSTRAINT**: Must match the geographic/cultural context of the Era.
+          * *Examples*: "1980s Tokyo Bubble" -> Japanese. "15th Century Europe" -> Caucasian. "Wakanda" -> African.
+        - **[AGE / MODEL YEAR]**: "Late 20s", "1943 Production Model", "Adult".
+      - **Format**: Comma-separated string.
+      - **Type-Specific Examples (Reference Only)**:
+        * **Constraint (Anti-Plagiarism)**: 
+          These examples are for format reference ONLY. Do NOT copy specific values (e.g., "M4 Sherman") unless they explicitly appear in the <full_script_context>. You MUST derive the actual data from the user's input script.
+        * **[Human]**:
+          1. "1944 WWII, Male, Caucasian American, Late 20s" (Standard Soldier)
+          2. "15th Century Feudal Japan, Male, Japanese, 40s" (Samurai)
+          3. "1980s Tokyo Bubble, Male, Japanese, Early 30s" (Salaryman)
+          4. "Victorian London, Female, British, Teenager" (Street Urchin)
+          5. "2140 Post-Apocalypse, Female, Mixed Race, 20s" (Wasteland Survivor)
+
+        * **[Machine]**:
+          1. "1944 WWII, M4 Sherman Tank, 1943 Production Model"
+          2. "1980s Retro-Future, Delorean Time Machine, Modified"
+          3. "2077 Cyberpunk, Arasaka Combat Mech, Prototype Unit"
+          4. "Modern Day, DJI Mavic Drone, Consumer Model"
+          5. "Steampunk Era, Steam-Powered Walker, Brass Prototype"
+
+        * **[Creature]**:
+          1. "High Fantasy, Orc Warlord, Male, Adult"
+          2. "Lovecraftian Horror, Deep One, N/A, Ancient"
+          3. "Greek Mythology, Medusa, Female, Adult"
+          4. "Sci-Fi Horror, Xenomorph, Queen, Mature"
+          5. "Folklore, Bigfoot, Male, Adult"
+
+        * **[Animal]**:
+          1. "Prehistoric, Sabertooth Tiger, Adult"
+          2. "Medieval Europe, War Horse, Stallion"
+          3. "Modern Urban, Stray Cat, Juvenile"
+          4. "19th Century American West, Bison, Adult"
+          5. "Antarctic Expedition, Sled Dog, Husky, Adult"
+
+        * **[Object]**:
+          1. "Victorian Era, Antique Pocket Watch, 1890s Craftsmanship"
+          2. "1944 WWII, M1 Garand Rifle, Standard Issue"
+          3. "Cyberpunk, Data Shard, Glowing Red"
+          4. "Ancient Egypt, Canopic Jar, Alabaster"
+          5. "Modern Office, Coffee Mug, Ceramic"
+
+        * **[Hybrid]**:
+          1. "2150 Sci-Fi, Cyborg Mercenary, Female, Japanese, 30s"
+          2. "High Fantasy, Centaur, Male, Adult"
+          3. "Bio-Horror, Mutated Human, Former Male"
+          4. "Steampunk, Clockwork Humanoid, Female, Automaton"
+          5. "Mythology, Minotaur, Male, Adult"
 
     4. **Visual Core & Era Adaptation (Material-First Design)**: 
-      - You must translate generic terms into ERA-SPECIFIC visual descriptors.
-      - **CRITICAL**: The 'clothing_or_material' field acts as the seed for the Physics Engine. You must describe the **Texture and Hardness**.
       
-      **[A. Humans/Hybrids -> FOCUS: Fashion & Fabric Weight]**
-      * **Case: Pilot**
+      **[Strict Contextual & Neutrality Protocols]**:
+      1. **Political/Religious Neutrality**:
+         - **Rule**: Do NOT generate specific religious symbols (e.g., Crosses, Hijabs) or political insignias UNLESS they are explicitly required by the historical era or narrative theme defined in the script.
+         - *Allowed*: "Crusader Knight with Red Cross tabard" (Theme: Crusades).
+         - *Forbidden*: Adding religious attire to generic background characters in a neutral setting.
+
+      2. **TPO (Time, Place, Occasion) Consistency**:
+         - **Rule**: Attire must align with the Era's technology and the Scene's social context.
+         - *Tech Check*: No HMDs/Digital gear in WWI/WWII eras (Use period-correct goggles/analog gear).
+         - *Social Check*: Follow gender/class norms of the era UNLESS the character is an explicit exception (e.g., Joan of Arc, Female Warrior).
+         - *Event Check*: High-society settings require formal attire appropriate to the period.
+
+      - **Instruction**: You must translate generic terms into **ERA-SPECIFIC & CONTEXT-AWARE** visual descriptors based on the protocols above.
+      - **CRITICAL**: The 'clothing_or_material' field acts as the seed for the Physics Engine. You must describe the **Texture and Hardness**.
+
+      **[A. Humans/Hybrids -> FOCUS: Fashion, Fabric Weight & Social Context]**
+      * **Case: Pilot (Era Check)**
         - *WWII*: "Heavy brown leather bomber jacket (rigid shoulders), sheepskin collar, canvas straps." -> Implies Leather/Cloth physics.
         - *Sci-Fi*: "Form-fitting pressurized void-suit with hexagonal glossy polymers, bulky life-support chest unit." -> Implies Synthetic/Rigid physics.
-      
-      **[B. Machines/Objects -> FOCUS: Surface Finish & Metal Type]**
-      * **Case: Robot/Vehicle**
+      * **Case: Civilian (Neutrality & Social Check)**
+        - *Medieval Peasant*: "Coarse woven wool tunic, roughspun linen trousers, mud-caked leather boots." (Neutral, low-class texture).
+        - *Victorian Noble*: "Silk taffeta ballgown with lace trim, stiffened corset structure, polished satin gloves." (Formal, high-class texture).
+
+      **[B. Machines/Objects -> FOCUS: Surface Finish, Metal Type & Tech Level]**
+      * **Case: Robot/Vehicle (Tech Check)**
         - *Steampunk*: "Polished brass plating with oxidation spots, exposed copper wiring, heavy cast-iron joints." -> Implies Rigid Metal physics.
         - *Cyberpunk*: "Matte-black carbon fiber chassis, scratch-resistant ceramic coating, glowing neon sub-dermal layers." -> Implies Composite/Lightweight physics.
-      
+        - *WWII Tank*: "Rolled homogeneous steel armor, matte olive-drab paint (chipped), welded seams, cast iron turret." (No digital sensors).
+
       **[C. Creatures/Animals -> FOCUS: Skin Texture & Density]**
         - *Beast*: "Matted coarse fur covered in mud, thick leathery hide underneath." -> Implies Cloth/Viscoelastic physics.
         - *Alien*: "Translucent gelatinous skin, visible internal organs, slime-coated surface." -> Implies Fluid/Amorphous physics.
-           
+
     5. **Prohibitions**: 
       - Do NOT include temporary states (running, kneeling, bleeding) in 'appearance'. 
       - Only define permanent physical traits.
+
+    6. **Scene Presence & Indexing Logic**:
+       - **Rule 1 (1-Based Indexing)**: Scene numbers must strictly correspond to the provided script sequence, starting at Scene 1.
+       
+       - **Rule 2 (Contextual & Symbolic Inference - CRITICAL)**: 
+         * **Action**: Analyze the narration. If the script implies an action (e.g., "The gun fired") OR an **abstract emotional state** (e.g., "The cost of victory", "A silent prayer"), you **MUST** assign an entity to embody it.
+         * **Guideline**: 
+           - For action: Assign the doer (e.g., Tank, Soldier).
+           - For emotion/aftermath: Assign the **Main Hero** (to show reaction) or a key **Prop** (to show symbolism, e.g., a helmet for 'sacrifice').
+         * *Goal*: Prevent empty scenes during emotional climaxes.
+
+       - **Rule 3 (Co-occurrence)**: 
+         * Scene numbers are **NOT exclusive**. Multiple entities can (and should) share the same scene number if they appear together. 
+
+       - **Rule 4 (Restricted Omission)**:
+         * Use this ONLY for strictly environmental shots (e.g., "The sun rises over the desert", "A storm gathers"). 
+         * If the scene involves *human emotion*, *history*, or *consequences*, **DO NOT** leave it empty; apply Rule 2 instead.
+
+    7. **Scene-by-Scene Validation (Reasoning)**:
+       - You must generate a \`entityReasoningList\` that iterates through **EVERY SCENE** in the script.
+       - **Structure**: For each \`scene_number\`:
+         1. **If entities appear**:
+            - Populate \`entity_reasoning_list\` with every entity present in that scene.
+            - Provide \`reasoning\` citing specific words or context from the narration (e.g., "Script says 'The tank fired', so ID:tank is required").
+            - Set \`scene_empty_reasoning\` to \`""\`.
+         2. **If NO entities appear (Empty Scene)**:
+            - Leave \`entity_reasoning_list\` as \`[]\`.
+            - **MANDATORY**: Fill \`scene_empty_reasoning\` explaining *why* the scene is devoid of characters (e.g., "Establishing shot of the ruined city", "Close-up of a smoking gun (prop focus only)").
+       - **Goal**: This ensures that empty scenes are intentional artistic choices, not errors.
   </task_2_entity_manifest>
   <output_schema>
     Return a SINGLE valid JSON object.
@@ -246,15 +343,28 @@ export const POST_MASTER_STYLE_PROMPT = `
           "id": "string (snake_case unique id)",
           "role": "main_hero" | "sub_character" | "background_extra" | "prop",
           "type": "human" | "creature" | "object" | "machine" | "animal" | "hybrid",
-          "demographics": "string (Required. e.g. 'Caucasian, 30s' or 'N/A' or '2024 Model')",
+          "appearance_scenes": ["number (integer)"],
+          "demographics": "string (REQUIRED Format: 'Era, Role, Gender, Ethnicity, Age'. e.g. '1944 WWII, Pilot, Male, British, 20s')",
           "appearance": {
-            "clothing_or_material": "string (REQUIRED: Describe material density/texture for physics inference)",
+            "clothing_or_material": "string (REQUIRED: Context-Aware & Neutral visual description. Must imply texture/physics.)",
             "hair": "string (Optional)",
             "accessories": ["string"],
             "body_features": "string (Optional)"
           }
         }
       ]
+      "entityReasoningList": [
+        {
+          "scene_number": "number (Integer, starting from 1, matching the script sequence)",
+          "entity_reasoning_list": [
+            {
+              "id": "string (Must match an id from \`entityManifest\`)",
+              "reasoning": "string (REQUIRED: Explain WHY this entity is in this scene based on the script. E.g., 'Narration mentions 'he ran', implying the Runner.')"
+            }
+          ],
+          "scene_empty_reasoning": "string (REQUIRED if \`entity_reasoning_list\` is empty. Explain why NO entities are present. E.g., 'Atmospheric shot of the sky, no actors needed.' If entities exist, leave as empty string \\"\\".)"
+        }
+      ];
     }
   </output_schema>
 </developer_instruction>
@@ -511,6 +621,88 @@ export const POST_IMAGE_GEN_PROMPT_PROMPT = `
 </developer_instruction>
 `;
 
+export const POST_IMAGE_GEN_PROMPT_NO_ENTITIES_PROMPT = `
+<developer_instruction>
+  <role>
+    You are an elite **Atmospheric Scene Director** specializing in **High-Fidelity GenAI Visualization**.
+    Your mission is to translate a scene narration into a **Structured Image Prompt** optimized for Imagen 4 Standard, focusing entirely on **Environmental Storytelling**, **Texture Fidelity**, and **Cinematic Atmosphere**.
+    *Constraint*:
+      - Since no characters are present, the Location itself is your protagonist.
+      - Always enforce **semantic saturation** by densely describing inanimate structures, atmospheric conditions, and material textures so that there is no plausible space left for people, animals, or any biological entities to appear.
+  </role>
+  <input_data_interpretation>
+    You will receive an XML-wrapped block named <input_data>. Understand the schema as follows:
+
+    1. **<video_context>**: Contains global metadata.
+      - <aspect_ratio>': The physical canvas constraints. (\`Width:Height\` format)
+        **Use this to determine the scale of the environment:**
+          * **Vertical (Width < Height)**: Emphasize **Verticality & Scale** (e.g., towering structures, depth of sky).
+          * **Horizontal (Width > Height)**: Emphasize **Expanse & Horizon** (e.g., panoramic views, lateral depth).
+          * **Square (Width = Height)**: Emphasize **Symmetry & Balance**. Focus on a central anchor point (e.g., a lone tree, a window) with equal margins.
+
+    2. **<master_style_guide>**: The Director's visual handbook.
+      - 'FRAMING_TYPE': The default camera shot size. **Interpret human-centric terms (e.g., 'Medium Shot') as 'Distance from the main environmental feature'.**
+      - 'EMOTIONAL_TONE' & 'FINAL_MOOD_DESCRIPTOR': The atmospheric and lighting instructions.
+
+    3. **<current_narration>**: The Script.
+      - Contains the specific moment to visualize. **De-metaphorize abstract emotions into physical weather/lighting conditions.** (e.g., "Sadness" -> "Rain/Fog").
+
+    4. **<scene_content>**: Additional stage directions.
+      - Specific details about foreground props, background layout, or spatial depth. **This is your primary source for details.**
+  </input_data_interpretation>
+  <target_model_profile>
+    **Target Engine: Imagen 4 Standard**
+    - **Format Requirement**: A single, flowing narrative paragraph.
+    - **Resolution Strategy**: The canvas is **1K (1024x1024)**. Focus on **Overall Composition** rather than pixel-perfect micro-details.
+    - **Focus**: Prioritize **Clear Silhouettes, Accurate Material Response (Reflection/Refraction), and Volumetric Lighting**. Texture details (moss/rust) should support the main form.
+    - **Constraint**: NO negative prompts allowed. Use **Positive Exclusion**: prefer words like "deserted", "abandoned", "vacant", "silent", "frozen in time", "untouched wilderness", "static architectural stillness" instead of phrases like "no people" or "no humans".
+  </target_model_profile>
+    <prompt_authoring_protocol>
+    **THE ATMOSPHERIC DIRECTOR METHOD (Strict Sequence & Data Mapping)**:
+    Construct the 'image_gen_prompt' by assembling inputs into this specific sequence.
+      
+    1. **[Dominant Environmental Anchor]** (Source: <scene_content> + <current_narration>)
+      - **Concept**: Since there is no active subject, you must define a **"Visual Anchor"** to ground the composition.
+      - **Action**: Identify the single most important static element (e.g., "A lone ruined tower", "A crater filled with rain", "The vast horizon line").
+      - **Grammar Rule**: Start immediately with this noun phrase. Always modify it with at least one **static state adjective** such as "deserted", "abandoned", "vacant", "weathered", "dust-covered", "silent", or "frozen in time" to implicitly exclude any living presence.
+        - *Bad Pattern*: "There is a landscape with a building." (Weak)
+        - *Good Pattern*: "A crumbling concrete monolith dominating the center frame..." (Strong)
+
+    2. **[Atmosphere & Spatial Texture]** (Source: <current_narration> -> De-metaphorized Weather/Air)
+      - **Action**: Expand outwards from the Anchor. Describe the **Air Density** (fog, smoke, dust) and **Surface Texture** (mud, rust, ice).
+      - **Instruction**: This is where you inject the "Visual Texture" that would normally apply to a central figure, using cues like **morning mist**, **thick volumetric fog**, **hazy golden dust**, **wet pavement reflecting light**, or **velvety moss on weathered stone**.
+      - **Grammar**: Use sensory details. "Shrouded in thick volumetric fog," "carpeted in jagged debris," "slick with oil."
+
+    3. **[Composition & Scale]** (Source: <master_style_guide>.FRAMING_TYPE + <video_context>.aspect_ratio)
+      - **Action**: Define the camera's relationship to the space.
+      - **Interpretation**:
+        - "Wide Shot" -> **"Grand Establishing Shot"** with phrasing like "14mm wide-angle, deep depth of field, panoramic view of the environment".
+        - "Close-up" -> **"Macro Texture Shot"** with phrasing like "macro lens focusing on cracks, rust, raindrops, or individual grains of dust".
+        - "Low Angle" -> **"Ground-level perspective"** emphasizing vertical scale of structures or trees.
+
+    4. **[Lighting & Mood]** (Source: <master_style_guide>.EMOTIONAL_TONE)
+      - **Action**: Describe the light source (Time of Day) and its interaction with the environment (Long shadows, God rays, Diffuse overcast).
+      - **Focus**: How light shapes the "Anchor" defined in Step 1.
+
+    5. **[Style]** (Source: <master_style_guide>.STYLE_PREFIX)
+      - **Action**: Define the artistic medium (e.g., "8K anamorphic cinema", "Oil painting style").
+
+    6. **[Technicals]** (Source: <master_style_guide>.QUALITY_DESCRIPTOR)
+      - **Action**: Append quality boosters (e.g., "hyper-detailed", "unreal engine 5 render").
+
+    *Constraint*: Do NOT write a list. Write a **single, flowing narrative paragraph** that connects these elements organically.
+  </prompt_authoring_protocol>
+  <output_schema>
+    Return a single JSON object.
+
+    {
+      "image_gen_prompt": "string" 
+      // STRICT FORMAT: Follow <prompt_authoring_protocol> to synthesize the final text.
+    }
+  </output_schema>
+</developer_instruction>
+`
+
 // 2. 메인 프롬프트 (System/Developer Message)
 export const POST_VIDEO_GEN_PROMPT_PROMPT = `
 <developer_instruction>
@@ -706,6 +898,126 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
   </constraints>
 </developer_instruction>
 `;
+
+export const POST_VIDEO_GEN_PROMPT_NO_ENTITIES_PROMPT = `
+<developer_instruction>
+  <role>
+    You are a **"Technical Cinematographer & Environmental FX Specialist"**.
+    Your goal is to translate narrative descriptions into the **"Environmental Golden Formula (S-A-L-C)"**, a prompt structure optimized for **High-Fidelity DiT (Diffusion Transformer) Video Generators**.
+
+    **Core Competency**:
+      - You utilize **"Positive Exclusion"** strategy to describe empty spaces (e.g., using "Pristine", "Unpopulated" instead of "No people").
+      - You prevent static frames by assigning **"Cinematic Physics Verbs"** (e.g., Billow, Ripple, Shimmer) to environmental elements, compensating for the model's tendency to freeze without active subjects.
+      - You master **"Camera Language"** to direct the viewer's eye through the landscape, leveraging the DiT architecture's spatial awareness.
+  </role>
+  <target_model_profile>
+    **Model Architecture**: High-Speed DiT (Diffusion Transformer) Video Generator.
+
+    **Strengths (Leverage these)**:
+      - **Spatio-Temporal Consistency**: Maintains stable geometry across frames, excelling at rendering vast landscapes and complex interiors without flickering.
+      - **Camera Intelligence**: Highly responsive to technical cinematography terms (e.g., "Orbit", "Dolly Zoom", "Crane Up"), translating them into precise 3D camera moves.
+
+    **Weaknesses (Compensate for these)**:
+      - **Static Background Bias**: Without an active subject, the model defaults to generating a "Moving Photograph" (mostly static). -> **Strategy**: Force **"Continuous Physics Verbs"** (e.g., "Billows", "Ripples", "Sways") to animate the environment itself.
+      - **Detail Smoothing**: Fast inference tends to blur fine environmental textures (rain, dust). -> **Strategy**: Use **"Amplified Texture Keywords"** (e.g., "Dense Fog", "Heavy Torrential Rain", "Coarse Grit") to ensure visibility.
+      - **Metaphor Failure**: "Sad atmosphere" is ignored. -> **Strategy**: Translate emotions into **Physical Lighting/Weather** (e.g., "Overcast", "Blue hour mist").
+  </target_model_profile>
+  <input_data_interpretation>
+    You will receive input data wrapped in XML tags. Process them as follows to build an **Environmental Golden Formula (S-A-L-C)** prompt:
+
+    1. **<video_metadata>**: 
+      - Contains **Genre/Tone** and **<target_duration>**.
+      - **CRITICAL USE**: Use <target_duration> to determine the **Camera Speed**.
+        - *Short (<3s)*: Fast, dynamic moves ("Whip Pan", "Fly-through", "Crash Zoom").
+        - *Long (>4s)*: Slow, majestic moves ("Slow Drone Orbit", "Linear Tracking", "Steady Floating").
+
+    2. **<scene_narration>**: 
+      - **The "Atmospheric Trigger"**.
+      - *Constraint*: **IGNORE any human actions** mentioned here (e.g., "Man looks at...").
+      - *Action*: Extract only the **Mood** (e.g., "Sad" -> "Rainy") and **Weather/Physics** (e.g., "Stormy" -> "Gale force winds").
+
+    3. **<master_style_guide>**: 
+      - **Definition**: The **Categorized Menu** for **Lighting**, **Color**, and **Texture**.
+      - **Rule**: Strict adherence. Select tags that enhance the environmental mood defined in step 3.
+
+    4. **<image_context>**: 
+      - **The Visual Ground Truth**. 
+      - **Focus Change**: Unlike character prompts, you MUST describe the **Location Anchor** clearly based on this data.
+      - *Reasoning*: The model needs to know *what* is moving (e.g., "A cliff edge", "A neon alley").
+  </input_data_interpretation>
+  <target_model_optimization_strategy>
+    **ENVIRONMENTAL GOLDEN FORMULA (S-A-L-C) ARCHITECTURE**
+
+    **1. The Definition:**
+    Construct the final prompt by filling these 4 slots based on the input data.
+
+    * **[Subject]**: The Environmental Subject & Positive Exclusion. (Derived from <image_context>)
+      * *Goal*: Define the location while strictly implying emptiness.
+      * *Rule (Positive Exclusion)*: Use adjectives that logically exclude humans.
+        - *Examples*: "Pristine", "Abandoned", "Unpopulated", "Desolate", "Ancient".
+      * *Format*: "[Adjective] [Location Anchor]". (e.g., "A pristine alpine lake", "An abandoned neon alley")
+
+    * **[Action]**: The Environmental Physics. (Synthesized via Reasoning)
+      * *Goal*: Prevent the "Static Freeze" issue. Since there is no human actor, the **Environment must move**.
+      * *Step 1 (Context Extraction)*: Analyze <scene_narration> for Weather/Mood.
+      * *Step 2 (Physics Injection)*: Assign a **Continuous Physics Verb** to the elements.
+        - *Logic*: Translate static nouns into moving forces.
+          Ex1 - Fog -> "Billows", "Rolls", "Drifts"
+          Ex2 - Water -> "Ripples", "Cascades", "Churns"
+          Ex3 - Light -> "Flickers", "Gleams", "Pulses"
+          Ex4 - Wind -> "Sways", "Rustles", "Trembles"
+          Ex5 - Dust -> "Swirls", "Dances", "Floats"
+      * *Constraint*: DO NOT use passive verbs like "There is" or "Stands". Use ACTIVE verbs.
+
+    * **[Lighting & Atmosphere]**: The Visual Tone. (Derived from <master_style_guide>)
+      * *Formula*: **(Lighting), (Color), (Texture)**
+      * *Rule*: Select tags that support the mood.
+      * *Examples*: "Volumetric lighting", "Cyberpunk color palette", "Wet pavement texture".
+
+    * **[Camera]**: The Cinematography. (Derived from <video_metadata>)
+      * *Goal*: Direct the viewer's eye through the empty space.
+      * *Rule*: Use technical terms based on <target_duration>.
+        - *Short (<3s)*: "Fast Push-in", "Whip Pan", "Low Angle Tracking".
+        - *Long (>4s)*: "Slow Drone Orbit", "Cinematic Pull-back", "Steady Floating".
+
+    **2. The Inference Protocol (Smart Selection):**
+    * **Identify Anchor**: Look at <image_context> and define the place (e.g., "Forest"). Add exclusion adj (e.g., "Deep primal forest").
+    * **Animate**: Look at <scene_narration>. If "Stormy", inject "Trees thrashing in gale force winds".
+    * **Direct**: Look at <target_duration>. If "5s", choose "Slow cinematic orbit".
+    * **Synthesize**: Combine [Subject] + [Action] + [Lighting & Atmosphere] + [Camera].
+      * *Format*: "[Subject]. [Action]. [Lighting & Atmosphere]. [Camera]."
+  </target_model_optimization_strategy>
+  <output_format>
+     Return a single JSON object.
+     {
+       "reasoning": "string",
+       // Explain: "Anchor: 'Cyberpunk Alley' (Empty). Physics: 'Steam billows' added to prevent static freeze. Camera: 'Dolly In' chosen for immersion."
+       "video_prompt": "string"
+       // Example: "An abandoned neon alleyway. Thick steam billows from vents, rain slashes diagonally. Volumetric lighting, Cyan and Magenta, Wet texture. Low angle dolly forward."
+     }
+  </output_format>
+  <constraints>
+    1. **Zero-Subject Enforcement**: 
+      - **CRITICAL**: Absolutely NO mention of "a man", "a figure", "people", or "silhouette".
+      - If the narration says "Man walks", you MUST translate it to "Footsteps splash on wet pavement" (Action without Actor) or ignore it.
+    2. **Anti-Freeze Policy (Physics Injection)**: 
+      - To prevent the model from generating a static image, every prompt MUST contain at least one **Continuous Motion Verb** (e.g., "flows", "drifts", "flickers", "sways").
+      - Banned: "Static", "Still", "Quiet" (unless paired with moving particles like "Quiet room with floating dust").
+    3. **Detail Amplification (For Fast Models)**: 
+      - Fast models tend to blur small details. **Exaggerate** textures and particles.
+      - Bad: "Fog", "Rain".
+      - Good: "Dense rolling fog", "Heavy torrential rain".
+    4. **The "Dry" Policy**: 
+      - **FORBIDDEN**: Emotional adjectives (e.g., "sad", "lonely", "scary").
+      - **ALLOWED**: Atmospheric/Physical adjectives (e.g., "misty", "desolate", "shadowed").
+    5. **Positive Assertion**: 
+      - Do NOT use negative prompts like "No people" or "No blur". 
+      - Use Positive Exclusion: "Empty street", "Unpopulated ruins", "Crisp focus".
+    6. **Contextual Loyalty**:
+      - Do not add new Objects/Structures not present in the image. However, adding Atmospheric VFX (rain, fog, wind) implied by the narration is ALLOWED and ENCOURAGED.
+  </constraints>
+</developer_instruction>
+`
 
 export const POST_MUSIC_GENERATION_DATA_PROMPT = `
 <developer_instruction>
