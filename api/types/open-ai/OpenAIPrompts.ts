@@ -195,6 +195,21 @@ export const POST_MASTER_STYLE_PROMPT = `
       - **'machine'**: Robots, vehicles, mechs, appliances.
       - **'object'**: Passive items, weapons, furniture.
       - **'hybrid'**: Cyborgs, plant-people.
+    2. **Type Classification & Demographics Schema (Strict)**:
+    Define the 'demographics' string strictly according to the **[Structure]** defined for each type below.
+    *Constraint*: Do NOT add extra fields or placeholders (e.g., 'N/A') unless explicitly required by the structure.
+      - **'human'**: Humans only.
+        * **[Structure]**: \`[ERA / PERIOD], [ROLE], [GENDER], [ORIGIN / ETHNICITY], [AGE]\`    
+      - **'machine'**: Robots, vehicles, mechs, appliances.
+        * **[Structure]**: \`[ERA / PERIOD], [MODEL NAME / TYPE], [PRODUCTION YEAR / SPEC]\`
+      - **'creature'**: Fantasy beasts, aliens, monsters.
+        * **[Structure]**: \`[ERA / PERIOD], [SPECIES / ARCHETYPE], [GENDER / N/A], [AGE / MATURITY]\`
+      - **'animal'**: Real-world animals.
+        * **[Structure]**: \`[ERA / PERIOD], [SPECIES], [AGE / MATURITY]\`
+      - **'object'**: Passive items, weapons, furniture.
+        * **[Structure]**: \`[ERA / PERIOD], [ITEM NAME], [CRAFTSMANSHIP / DETAIL]\`
+      - **'hybrid'**: Cyborgs, plant-people.
+        * **[Structure]**: \`[ERA / PERIOD], [HYBRID TYPE], [GENDER], [ORIGIN / ETHNICITY], [AGE]\`
 
     3. **Demographics Strategy (Historical Context String)**:
       - **Goal**: Create a single context string where **[ERA / PERIOD]** acts as the strict filter for all subsequent attributes.
@@ -212,11 +227,11 @@ export const POST_MASTER_STYLE_PROMPT = `
         * **Constraint (Anti-Plagiarism)**: 
           These examples are for format reference ONLY. Do NOT copy specific values (e.g., "M4 Sherman") unless they explicitly appear in the <full_script_context>. You MUST derive the actual data from the user's input script.
         * **[Human]**:
-          1. "1944 WWII, Male, Caucasian American, Late 20s" (Standard Soldier)
-          2. "15th Century Feudal Japan, Male, Japanese, 40s" (Samurai)
-          3. "1980s Tokyo Bubble, Male, Japanese, Early 30s" (Salaryman)
-          4. "Victorian London, Female, British, Teenager" (Street Urchin)
-          5. "2140 Post-Apocalypse, Female, Mixed Race, 20s" (Wasteland Survivor)
+          1. "1944 WWII, Infantry Soldier, Male, Caucasian American, Late 20s" (Standard Soldier)
+          2. "15th Century Feudal Japan, Samurai Warrior, Male, Japanese, 40s" (Samurai)
+          3. "1980s Tokyo Bubble, Corporate Salaryman, Male, Japanese, Early 30s" (Salaryman)
+          4. "Victorian London, Street Urchin, Female, British, Teenager" (Low Class)
+          5. "2140 Post-Apocalypse, Wasteland Survivor, Female, Mixed Race, 20s" (Survivor)
 
         * **[Machine]**:
           1. "1944 WWII, M4 Sherman Tank, 1943 Production Model"
@@ -234,10 +249,10 @@ export const POST_MASTER_STYLE_PROMPT = `
 
         * **[Animal]**:
           1. "Prehistoric, Sabertooth Tiger, Adult"
-          2. "Medieval Europe, War Horse, Stallion"
+          2. "Medieval Europe, War Horse, Prime Adult"
           3. "Modern Urban, Stray Cat, Juvenile"
           4. "19th Century American West, Bison, Adult"
-          5. "Antarctic Expedition, Sled Dog, Husky, Adult"
+          5. "Antarctic Expedition, Husky Sled Dog, Adult"
 
         * **[Object]**:
           1. "Victorian Era, Antique Pocket Watch, 1890s Craftsmanship"
@@ -248,10 +263,10 @@ export const POST_MASTER_STYLE_PROMPT = `
 
         * **[Hybrid]**:
           1. "2150 Sci-Fi, Cyborg Mercenary, Female, Japanese, 30s"
-          2. "High Fantasy, Centaur, Male, Adult"
-          3. "Bio-Horror, Mutated Human, Former Male"
-          4. "Steampunk, Clockwork Humanoid, Female, Automaton"
-          5. "Mythology, Minotaur, Male, Adult"
+          2. "High Fantasy, Centaur, Male, Greek Wilderness, Adult"
+          3. "Bio-Horror, Mutated Subject, Male, Lab-Grown, Unknown Age"
+          4. "Steampunk, Clockwork Android, Female, Victorian London, Manufactured"
+          5. "Mythology, Minotaur, Male, Cretan Labyrinth, Adult"
 
     4. **Visual Core & Era Adaptation (Material-First Design)**: 
       
@@ -344,7 +359,7 @@ export const POST_MASTER_STYLE_PROMPT = `
           "role": "main_hero" | "sub_character" | "background_extra" | "prop",
           "type": "human" | "creature" | "object" | "machine" | "animal" | "hybrid",
           "appearance_scenes": ["number (integer)"],
-          "demographics": "string (REQUIRED Format: 'Era, Role, Gender, Ethnicity, Age'. e.g. '1944 WWII, Pilot, Male, British, 20s')",
+          "demographics": "string (REQUIRED: Comma-separated string formatted strictly according to the Type Classification Schema in <task_2_entity_manifest> section. Examples: Human='Era, Role, Gender...', Object='Era, Item, Detail'. DO NOT use 'N/A' fillers.)",
           "appearance": {
             "clothing_or_material": "string (REQUIRED: Context-Aware & Neutral visual description. Must imply texture/physics.)",
             "hair": "string (Optional)",
@@ -782,8 +797,62 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
       * *Critical Rule (Visual Dominance)*: Identify the ONE entity that commands the **Visual Focus** or occupies the **Compositional Center** of the <image_context>. 
         - *Constraint*: Even if <scene_narration> focuses on a background event (e.g., "Crowd roars"), if a character is visually dominant, THEY are the [Subject].
       * *Rule*: Construct a **"Minimum Distinguishable Handle"** based on <entity_list>.
+        - **Demographics Schema Definition**:
+          You must parse the demographics string according to the entity's **Type** structure below to extract attribute values:
+          * **[Human]**: \`[ERA / PERIOD], [ROLE], [GENDER], [ORIGIN / ETHNICITY], [AGE]\`
+          * **[Machine]**: \`[ERA / PERIOD], [MODEL NAME / TYPE], [PRODUCTION YEAR / SPEC]\`
+          * **[Creature]**: \`[ERA / PERIOD], [SPECIES / ARCHETYPE], [GENDER], [AGE / MATURITY]\`
+          * **[Animal]**: \`[ERA / PERIOD], [SPECIES], [AGE / MATURITY]\`
+          * **[Object]**: \`[ERA / PERIOD], [ITEM NAME], [CRAFTSMANSHIP / DETAIL]\`
+          * **[Hybrid]**: \`[ERA / PERIOD], [HYBRID TYPE], [GENDER], [ORIGIN / ETHNICITY], [AGE]\`
         - *Single Entity*: If only one relevant entity exists, use the generic Role only (e.g., "The Boxer").
         - *Multiple Entities*: If distinct characters exist, append the **Primary Visual Distinguisher** from <entity_list> (e.g., "The Boxer in red shorts").
+      * *Rule*: Even if multiple entities are present, select only the initiator of the movement as the [Subject].
+    
+    * **[Subject]**: The Single Primary Actor. (Resolved via Visual Context)
+      * *Selection Hierarchy (CRITICAL)*:
+        1. **Primary Rule (Action Initiator)**: If an entity implies imminent force, impact, or movement (the "Doer"), they are the [Subject].
+        2. **Fallback Rule (Visual Dominance)**: In static/passive scenes with no clear action, the entity commanding the **Visual Focus** is the [Subject].
+      * *Rule*: Construct a **"Minimum Distinguishable Handle"** based on <entity_list>.
+        - **Demographics Schema & Priority Definition**:
+          You must parse the demographics string according to the entity's **Type** structure and prioritize attributes based on the *Priority Rank* to select the discriminator:
+          * **[Human]**: \`[ERA / PERIOD], [ROLE], [GENDER], [ORIGIN / ETHNICITY], [AGE]\`
+            - *Priority*: \`[ROLE]\` > \`[GENDER]\` > \`[AGE]\` > \`[ORIGIN]\` > \`[ERA]\`
+          * **[Machine]**: \`[ERA / PERIOD], [MODEL NAME / TYPE], [PRODUCTION YEAR / SPEC]\`
+            - *Priority*: \`[MODEL NAME]\` > \`[SPEC]\` > \`[ERA]\`
+          * **[Creature]**: \`[ERA / PERIOD], [SPECIES / ARCHETYPE], [GENDER], [AGE / MATURITY]\`
+            - *Priority*: \`[SPECIES]\` > \`[AGE]\` > \`[GENDER]\` > \`[ERA]\`
+          * **[Animal]**: \`[ERA / PERIOD], [SPECIES], [AGE / MATURITY]\`
+            - *Priority*: \`[SPECIES]\` > \`[AGE]\` > \`[ERA]\`
+          * **[Object]**: \`[ERA / PERIOD], [ITEM NAME], [CRAFTSMANSHIP / DETAIL]\`
+            - *Priority*: \`[ITEM NAME]\` > \`[DETAIL]\` > \`[ERA]\`
+          * **[Hybrid]**: \`[ERA / PERIOD], [HYBRID TYPE], [GENDER], [ORIGIN / ETHNICITY], [AGE]\`
+            - *Priority*: \`[HYBRID TYPE]\` > \`[GENDER]\` > \`[AGE]\` > \`[ORIGIN]\` > \`[ERA]\`
+        - **Handle Construction Logic**:
+          Apply the following logic to generate the final Subject Handle.
+          **1. Base Handle Extraction (Demographics)**:
+            - Identify the entity's [Type].
+            - Extract the **Rank 1 Attribute** (Highest Priority) from its demographics string based on the Schema above.
+            - **Fallback Protocol**: If the targeted attribute is 'N/A', 'Unknown', or missing, automatically iterate down the *Priority Rank* list until a valid, non-empty value is found.
+            - **Constraint (Common Nouns Only)**: To ensure grammatical consistency with the "The" prefix, the Rank 1 Attribute **MUST be a Common Noun** (e.g., "Detective", "Droid", "Tyrant").
+              - *Action*: If the extracted value is a Proper Noun (e.g., "Sherlock", "R2-D2"), convert it to its **Archetype** (e.g., "Sherlock" -> "Detective", "R2-D2" -> "Droid").
+            - *Example*: Human -> Role ("Soldier").
+          **2. Collision Check & Refinement**:
+            - **Case A: Single Entity** (No ID Collision)
+              - **Action**: Use the generic **Rank 1 Attribute (Archetype)** derived from Step 1.
+              - *Constraint*: strictly enforce the "The + Common Noun" structure. Do NOT revert to Proper Nouns.
+              - *Format*: \`"The " + [Rank 1 Attribute]\`
+              - *Example*: "The Soldier" (O), "The Rambo" (X) / "The Droid" (O), "The R2-D2" (X)
+            - **Case B: Multiple Entities** (ID Collision present)
+              - **Action**: Differentiate using the **Visual Discriminator**.
+              - **Discriminator Priority & Syntax Guide**: 
+                Select the first distinct feature and use the correct preposition:
+                  1. \`clothing_or_material\` -> use **"in"** (e.g., "The Soldier in Red Uniform")
+                  2. \`body_features\` -> use **"with"** (e.g., "The Soldier with Scarred Face")
+                  3. \`accessories\` -> use **"with"** or **"wearing"** (e.g., "The Soldier wearing Goggles")
+                  4. \`hair\` -> use **"with"** (Must include 'Hair' in text, e.g., "The Soldier with Blonde Hair")
+              - *Format*: \`"The " + [Rank 1 Attribute] + " " + [Preposition] + " " + [Discriminator]\`
+              - *Example*: "The Soldier in Red Uniform" (vs "The Soldier in Blue")
       * *Rule*: Even if multiple entities are present, select only the initiator of the movement as the [Subject].
       
     * **[Action]**: The Core Movement + Interaction. (Synthesized via Contextual Reasoning)

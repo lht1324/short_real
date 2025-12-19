@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
             return checkResultInitialResult;
         }
 
-        // 3. Prediction ID와 일치하는 Scene 찾기
+        // 3. Prediction ID와 일치하는 Scene 찾기 // 발생 중
         const originalSceneDataList = videoGenerationTask.scene_breakdown_list
         const sceneToProcess = originalSceneDataList.find(
             (scene) => scene.requestId === prediction.id
@@ -73,39 +73,47 @@ export async function POST(request: NextRequest) {
             if (isRetryable) {
                 console.log(`[Retry] Retryable error (CUDA/ReadError) detected for prediction ${prediction.id}. Retrying...`);
 
-                try {
-                    // Retry: videoServerAPI.postVideo handles storage checking and request submission
-                    const newRequestId = await videoServerAPI.postVideo(
-                        sceneToProcess,
-                        taskId,
-                    );
 
-                    // Update task with new requestId
-                    await videoGenerationTasksServerAPI.patchVideoGenerationTask(
-                        taskId,
-                        {
-                            scene_breakdown_list: originalSceneDataList.map((sceneData) => {
-                                return sceneData.requestId === sceneToProcess.requestId
-                                    ? {
-                                        ...sceneData,
-                                        requestId: newRequestId,
-                                        status: SceneGenerationStatus.IN_PROGRESS // Ensure status is consistent
-                                    }
-                                    : sceneData;
-                            })
-                        }
-                    );
-
-                    return getNextBaseResponse({
-                        success: true,
-                        status: 200,
-                        message: "Retryable error detected. Retrying job."
-                    });
-                } catch (retryError) {
-                    console.error("Failed to retry video generation:", retryError);
-                    // If retry fails, we rethrow to trigger the global error handler which marks the task as failed.
-                    throw retryError;
-                }
+                await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
+                return getNextBaseResponse({
+                    success: true,
+                    status: 200,
+                    message: "Retryable error detected. Retrying job."
+                });
+                // 전체 취소 요청 보내고 재실행으로 가버리자
+                // try {
+                //     // Retry: videoServerAPI.postVideo handles storage checking and request submission
+                //     const newRequestId = await videoServerAPI.postVideo(
+                //         sceneToProcess,
+                //         taskId,
+                //     );
+                //
+                //     // Update task with new requestId
+                //     await videoGenerationTasksServerAPI.patchVideoGenerationTask(
+                //         taskId,
+                //         {
+                //             scene_breakdown_list: originalSceneDataList.map((sceneData) => {
+                //                 return sceneData.requestId === sceneToProcess.requestId
+                //                     ? {
+                //                         ...sceneData,
+                //                         requestId: newRequestId,
+                //                         status: SceneGenerationStatus.IN_PROGRESS // Ensure status is consistent
+                //                     }
+                //                     : sceneData;
+                //             })
+                //         }
+                //     );
+                //
+                //     return getNextBaseResponse({
+                //         success: true,
+                //         status: 200,
+                //         message: "Retryable error detected. Retrying job."
+                //     });
+                // } catch (retryError) {
+                //     console.error("Failed to retry video generation:", retryError);
+                //     // If retry fails, we rethrow to trigger the global error handler which marks the task as failed.
+                //     throw retryError;
+                // }
 
             } else {
                 // Permanent Failure
