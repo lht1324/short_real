@@ -385,6 +385,53 @@ export const POST_MASTER_STYLE_PROMPT = `
 </developer_instruction>
 `
 
+const SUBJECT_EXTRACTION_GUIDE = `
+      * *Selection Hierarchy (CRITICAL)*:
+        1. **Primary Rule (Action Initiator)**: If an entity implies imminent force, impact, or movement (the "Doer"), they are the [Subject].
+        2. **Fallback Rule (Visual Dominance)**: In static/passive scenes with no clear action, the entity commanding the **Visual Focus** is the [Subject].
+      * *Rule*: Construct a **"Minimum Distinguishable Handle"** based on <entity_list>.
+        - **Demographics Schema & Priority Definition**:
+          You must parse the demographics string according to the entity's **Type** structure and prioritize attributes based on the *Priority Rank* to select the discriminator:
+          * **[Human]**: \`[ERA / PERIOD], [ROLE], [GENDER], [ORIGIN / ETHNICITY], [AGE]\`
+            - *Priority*: \`[ROLE]\` > \`[GENDER]\` > \`[AGE]\` > \`[ORIGIN]\` > \`[ERA]\`
+          * **[Machine]**: \`[ERA / PERIOD], [MODEL NAME / TYPE], [PRODUCTION YEAR / SPEC]\`
+            - *Priority*: \`[MODEL NAME]\` > \`[SPEC]\` > \`[ERA]\`
+          * **[Creature]**: \`[ERA / PERIOD], [SPECIES / ARCHETYPE], [GENDER], [AGE / MATURITY]\`
+            - *Priority*: \`[SPECIES]\` > \`[AGE]\` > \`[GENDER]\` > \`[ERA]\`
+          * **[Animal]**: \`[ERA / PERIOD], [SPECIES], [AGE / MATURITY]\`
+            - *Priority*: \`[SPECIES]\` > \`[AGE]\` > \`[ERA]\`
+          * **[Object]**: \`[ERA / PERIOD], [ITEM NAME], [CRAFTSMANSHIP / DETAIL]\`
+            - *Priority*: \`[ITEM NAME]\` > \`[DETAIL]\` > \`[ERA]\`
+          * **[Hybrid]**: \`[ERA / PERIOD], [HYBRID TYPE], [GENDER], [ORIGIN / ETHNICITY], [AGE]\`
+            - *Priority*: \`[HYBRID TYPE]\` > \`[GENDER]\` > \`[AGE]\` > \`[ORIGIN]\` > \`[ERA]\`
+        - **Handle Construction Logic**:
+          Apply the following logic to generate the final Subject Handle.
+          **1. Base Handle Extraction (Demographics)**:
+            - Identify the entity's [Type].
+            - Extract the **Rank 1 Attribute** (Highest Priority) from its demographics string based on the Schema above.
+            - **Fallback Protocol**: If the targeted attribute is 'N/A', 'Unknown', or missing, automatically iterate down the *Priority Rank* list until a valid, non-empty value is found.
+            - **Constraint (Common Nouns Only)**: To ensure grammatical consistency with the "The" prefix, the Rank 1 Attribute **MUST be a Common Noun** (e.g., "Detective", "Droid", "Tyrant").
+              - *Action*: If the extracted value is a Proper Noun (e.g., "Sherlock", "R2-D2"), convert it to its **Archetype** (e.g., "Sherlock" -> "Detective", "R2-D2" -> "Droid").
+            - *Example*: Human -> Role ("Soldier").
+          **2. Collision Check & Refinement**:
+            - **Case A: Single Entity** (No ID Collision)
+              - **Action**: Use the generic **Rank 1 Attribute (Archetype)** derived from Step 1.
+              - *Constraint*: strictly enforce the "The + Common Noun" structure. Do NOT revert to Proper Nouns.
+              - *Format*: \`"The " + [Rank 1 Attribute]\`
+              - *Example*: "The Soldier" (O), "The Rambo" (X) / "The Droid" (O), "The R2-D2" (X)
+            - **Case B: Multiple Entities** (ID Collision present)
+              - **Action**: Differentiate using the **Visual Discriminator**.
+              - **Discriminator Priority & Syntax Guide**: 
+                Select the first distinct feature and use the correct preposition:
+                  1. \`clothing_or_material\` -> use **"in"** (e.g., "The Soldier in Red Uniform")
+                  2. \`body_features\` -> use **"with"** (e.g., "The Soldier with Scarred Face")
+                  3. \`accessories\` -> use **"with"** or **"wearing"** (e.g., "The Soldier wearing Goggles")
+                  4. \`hair\` -> use **"with"** (Must include 'Hair' in text, e.g., "The Soldier with Blonde Hair")
+              - *Format*: \`"The " + [Rank 1 Attribute] + " " + [Preposition] + " " + [Discriminator]\`
+              - *Example*: "The Soldier in Red Uniform" (vs "The Soldier in Blue")
+      * *Rule*: Even if multiple entities are present, select only the initiator of the movement as the [Subject].
+`
+
 export const POST_IMAGE_GEN_PROMPT_PROMPT = `
 <developer_instruction>
   <role>
@@ -529,19 +576,49 @@ export const POST_IMAGE_GEN_PROMPT_PROMPT = `
   <prompt_authoring_protocol>
     **THE SCENE DIRECTOR METHOD (Strict Sequence & Data Mapping)**:
     Construct the 'image_gen_prompt' by assembling inputs into this specific sequence.
-      
-    1. **[Subject & Static Pose]** (Source: <entity_reference_manifest> + <visual_texture_layer> Step 4)
-      - **Action**: Combine the Subject's visual identity with the **Synthesized Visual Description** generated in <visual_texture_layer>.
-      - **Method**: Seamlessly **weave** the selected Vocabulary (from Step 4) into the Subject's pose description.
-      - *Constraint*: Do NOT list the raw tags (e.g., "physics: cloth"). Use the natural language vocabulary (e.g., "heavy drape").
-      - **Grammar Rule (CRITICAL)**: Use **Participles** (holding, standing) or **Adjectives** (tensed, coiled) to describe the *current state*.
-        - **Focus**: Describe the **point of maximum tension** or **impact**.
-        - *Bad Pattern*: "The subject is angry. Blue shirt. Running fast." (Disconnected)
-        - *Good Pattern*: "The angry subject in a blue shirt **sprinting** with explosive momentum..."
 
-    2. **[Context & Environment]** (Source: <scene_content> + <current_narration>)
-      - **Action**: Define the setting and spatial relationship.
-      - **Grammar Rule**: Use locational terms: **"situated in"**, **"framed by"**, **"against a background of"**.
+    1. **[Subject & Static Pose]** (Source: <entity_reference_manifest> + <visual_texture_layer> Step 4)
+      - **[Handle: The Single Primary Actor]**
+        ${SUBJECT_EXTRACTION_GUIDE}
+        * **Constraint**: The Handle generated in this step serves as the **Absolute Anchor** of the entire sentence and must not be substituted by secondary objects (e.g., helmets, weapons) mentioned in <scene_content>.
+
+      - **[Modifier: Physical & Identity Synthesis]**
+        * **Action**: Combine the **established Handle's** visual identity with the **Synthesized Visual Description** generated in <visual_texture_layer>.
+        * **Method**: Seamlessly **weave** the selected Vocabulary (from Step 4) into the Subject's pose description.
+        * **Grammar Rule (CRITICAL)**: Use **Participles** (holding, standing) or **Adjectives** (tensed, coiled) to describe the *current state*.
+        * **Focus**: Describe the **point of maximum tension** or **impact** for the established Handle.
+        
+      - **[Modifier: Physical & Identity Synthesis]**
+        * **Action**: 
+          1. Integrate the **established Handle's** visual identity with the **[ERA / PERIOD]** identified from \`<entity_reference_manifest>.demographics\` in [Handle: The Single Primary Actor].
+          2. Synchronize these with the **Synthesized Visual Description** from <visual_texture_layer>.
+        * **Method**: 
+          - **[ERA / PERIOD] Filter (Mandatory)**: Prioritize era-specific synonyms and textures. Discard any terms suggesting technology or materials post-dating the [ERA / PERIOD].
+          - **Historical Weaving**: Seamlessly weave the selected Vocabulary into the pose description, ensuring props remain historically accurate.
+        * **Grammar Rule (CRITICAL)**: Use **Participles** or **Adjectives** to describe the *current state*.
+
+      - **[Assembly Method: Assembly & Final Polish]**
+        * **Assembly Rule**: Position the **Handle** confirmed in [Handle: The Single Primary Actor] at the beginning of the sentence and grammatically integrate the **Modifier** extracted from [Modifier: Physical & Identity Synthesis].
+        * **Logic**: Focus on depicting a **Frozen Snapshot** of a single instant rather than a temporal progression.
+        * **Good Pattern**: **\`[Handle] + [Modifier: Identity Synthesis] + [Modifier: Static Pose/Action]...\`**
+          - *Example*: "The Soldier (Handle) with a raised battle scar (Modifier: Identity), **kneeling** in a slouched posture while **holding** a battered helmet (Modifier: Pose/Action)..."
+
+    2. **[Context & Environment]** (Source: <scene_content> + <current_narration> + <entity_reference_manifest>.demographics.[ERA / PERIOD])
+      - **Action**: Define the setting, spatial relationship, and all environmental assets (e.g., vehicles, architecture, props).
+      - **ERA Synchronization**: Ensure every element in the background is historically synchronized with the Subject's [ERA / PERIOD] established in [Handle: The Single Primary Actor].
+      - **Method**:
+        * **Logic Mapping Manual (CRITICAL)**:
+          The following examples are a procedural manual for translating generic nouns into era-specific assets. You MUST NOT copy these examples verbatim unless they perfectly match the established [ERA / PERIOD]. Instead, use the demonstrated logic—replacing general terms with historically accurate textures and technologies—to interpret <scene_content>.
+        * **Contextual Alignment (Era-Specific Mapping)**:
+          Apply the mapping logic demonstrated below ONLY to the current [ERA / PERIOD]. If the era is not listed, extrapolate based on the same pattern:
+          **Examples**
+          * [Ancient/Medieval]: Road → "cracked cobblestone"; Light → "flickering oil torches"; Wall → "rough-hewn limestone blocks"; Door → "heavy iron-studded oak".
+          * [1944 WWII]: Cockpit → "analog cockpit with brass-rimmed dials and toggle switches"; Wing → "riveted aluminum wing with straight-edged airfoils"; Canopy → "framed greenhouse-style glass canopy"; Ground → "mud-caked cratered terrain with sandbags"; Building → "shattered brick masonry with exposed rebar".
+          * [19th Century Industrial]: Factory → "soot-stained brick chimneys with steam vents"; Street → "gas-lit foggy pavement"; Vehicle → "iron-bolted steam carriage".
+          * [Cyberpunk/Future]: Screen → "flickering holographic projection"; Street → "neon-drenched wet asphalt"; Vehicle → "sleek hover-unit with carbon-fiber plating"; Sign → "glowing Kanji LED billboards".
+          * [Western/Frontier]: Bar → "dusty wooden saloon with swinging doors"; Floor → "creaking timber planks"; Weapon → "engraved steel revolver with a bone grip".
+        * Anachronism Exclusion: Explicitly exclude any environmental features that post-date the [ERA / PERIOD] (e.g., no digital screens in 1944).
+      - **Grammar Rule**: Use locational terms: "situated in", "framed by", "against a background of".
 
     3. **[Composition]** (Source: <master_style_guide>.FRAMING_TYPE + <video_context>.aspect_ratio)
       - **Action**: Define camera angle and **SINGLE strict shot size**.
@@ -789,128 +866,84 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
   </input_data_interpretation>
   <target_model_optimization_strategy>
     **DRY S-A-C-S ARCHITECTURE (Image-to-Video Mode)**
-
     **1. The Definition:**
     Construct the final prompt by filling these 4 slots based on the input data.
-
     * **[Subject]**: The Single Primary Actor. (Resolved via Visual Context)
-      * *Critical Rule (Visual Dominance)*: Identify the ONE entity that commands the **Visual Focus** or occupies the **Compositional Center** of the <image_context>. 
-        - *Constraint*: Even if <scene_narration> focuses on a background event (e.g., "Crowd roars"), if a character is visually dominant, THEY are the [Subject].
-      * *Rule*: Construct a **"Minimum Distinguishable Handle"** based on <entity_list>.
-        - **Demographics Schema Definition**:
-          You must parse the demographics string according to the entity's **Type** structure below to extract attribute values:
-          * **[Human]**: \`[ERA / PERIOD], [ROLE], [GENDER], [ORIGIN / ETHNICITY], [AGE]\`
-          * **[Machine]**: \`[ERA / PERIOD], [MODEL NAME / TYPE], [PRODUCTION YEAR / SPEC]\`
-          * **[Creature]**: \`[ERA / PERIOD], [SPECIES / ARCHETYPE], [GENDER], [AGE / MATURITY]\`
-          * **[Animal]**: \`[ERA / PERIOD], [SPECIES], [AGE / MATURITY]\`
-          * **[Object]**: \`[ERA / PERIOD], [ITEM NAME], [CRAFTSMANSHIP / DETAIL]\`
-          * **[Hybrid]**: \`[ERA / PERIOD], [HYBRID TYPE], [GENDER], [ORIGIN / ETHNICITY], [AGE]\`
-        - *Single Entity*: If only one relevant entity exists, use the generic Role only (e.g., "The Boxer").
-        - *Multiple Entities*: If distinct characters exist, append the **Primary Visual Distinguisher** from <entity_list> (e.g., "The Boxer in red shorts").
-      * *Rule*: Even if multiple entities are present, select only the initiator of the movement as the [Subject].
-    
-    * **[Subject]**: The Single Primary Actor. (Resolved via Visual Context)
-      * *Selection Hierarchy (CRITICAL)*:
-        1. **Primary Rule (Action Initiator)**: If an entity implies imminent force, impact, or movement (the "Doer"), they are the [Subject].
-        2. **Fallback Rule (Visual Dominance)**: In static/passive scenes with no clear action, the entity commanding the **Visual Focus** is the [Subject].
-      * *Rule*: Construct a **"Minimum Distinguishable Handle"** based on <entity_list>.
-        - **Demographics Schema & Priority Definition**:
-          You must parse the demographics string according to the entity's **Type** structure and prioritize attributes based on the *Priority Rank* to select the discriminator:
-          * **[Human]**: \`[ERA / PERIOD], [ROLE], [GENDER], [ORIGIN / ETHNICITY], [AGE]\`
-            - *Priority*: \`[ROLE]\` > \`[GENDER]\` > \`[AGE]\` > \`[ORIGIN]\` > \`[ERA]\`
-          * **[Machine]**: \`[ERA / PERIOD], [MODEL NAME / TYPE], [PRODUCTION YEAR / SPEC]\`
-            - *Priority*: \`[MODEL NAME]\` > \`[SPEC]\` > \`[ERA]\`
-          * **[Creature]**: \`[ERA / PERIOD], [SPECIES / ARCHETYPE], [GENDER], [AGE / MATURITY]\`
-            - *Priority*: \`[SPECIES]\` > \`[AGE]\` > \`[GENDER]\` > \`[ERA]\`
-          * **[Animal]**: \`[ERA / PERIOD], [SPECIES], [AGE / MATURITY]\`
-            - *Priority*: \`[SPECIES]\` > \`[AGE]\` > \`[ERA]\`
-          * **[Object]**: \`[ERA / PERIOD], [ITEM NAME], [CRAFTSMANSHIP / DETAIL]\`
-            - *Priority*: \`[ITEM NAME]\` > \`[DETAIL]\` > \`[ERA]\`
-          * **[Hybrid]**: \`[ERA / PERIOD], [HYBRID TYPE], [GENDER], [ORIGIN / ETHNICITY], [AGE]\`
-            - *Priority*: \`[HYBRID TYPE]\` > \`[GENDER]\` > \`[AGE]\` > \`[ORIGIN]\` > \`[ERA]\`
-        - **Handle Construction Logic**:
-          Apply the following logic to generate the final Subject Handle.
-          **1. Base Handle Extraction (Demographics)**:
-            - Identify the entity's [Type].
-            - Extract the **Rank 1 Attribute** (Highest Priority) from its demographics string based on the Schema above.
-            - **Fallback Protocol**: If the targeted attribute is 'N/A', 'Unknown', or missing, automatically iterate down the *Priority Rank* list until a valid, non-empty value is found.
-            - **Constraint (Common Nouns Only)**: To ensure grammatical consistency with the "The" prefix, the Rank 1 Attribute **MUST be a Common Noun** (e.g., "Detective", "Droid", "Tyrant").
-              - *Action*: If the extracted value is a Proper Noun (e.g., "Sherlock", "R2-D2"), convert it to its **Archetype** (e.g., "Sherlock" -> "Detective", "R2-D2" -> "Droid").
-            - *Example*: Human -> Role ("Soldier").
-          **2. Collision Check & Refinement**:
-            - **Case A: Single Entity** (No ID Collision)
-              - **Action**: Use the generic **Rank 1 Attribute (Archetype)** derived from Step 1.
-              - *Constraint*: strictly enforce the "The + Common Noun" structure. Do NOT revert to Proper Nouns.
-              - *Format*: \`"The " + [Rank 1 Attribute]\`
-              - *Example*: "The Soldier" (O), "The Rambo" (X) / "The Droid" (O), "The R2-D2" (X)
-            - **Case B: Multiple Entities** (ID Collision present)
-              - **Action**: Differentiate using the **Visual Discriminator**.
-              - **Discriminator Priority & Syntax Guide**: 
-                Select the first distinct feature and use the correct preposition:
-                  1. \`clothing_or_material\` -> use **"in"** (e.g., "The Soldier in Red Uniform")
-                  2. \`body_features\` -> use **"with"** (e.g., "The Soldier with Scarred Face")
-                  3. \`accessories\` -> use **"with"** or **"wearing"** (e.g., "The Soldier wearing Goggles")
-                  4. \`hair\` -> use **"with"** (Must include 'Hair' in text, e.g., "The Soldier with Blonde Hair")
-              - *Format*: \`"The " + [Rank 1 Attribute] + " " + [Preposition] + " " + [Discriminator]\`
-              - *Example*: "The Soldier in Red Uniform" (vs "The Soldier in Blue")
-      * *Rule*: Even if multiple entities are present, select only the initiator of the movement as the [Subject].
-      
+      ${SUBJECT_EXTRACTION_GUIDE}
     * **[Action]**: The Core Movement + Interaction. (Synthesized via Contextual Reasoning)
-      * *Step 1 (Context Extraction)*: Analyze <video_metadata> (Genre) and <scene_narration> to determine the **Specific Domain Context** (e.g., Boxing, F1 Racing, Military, Sci-Fi).
-      * *Step 2 (Term Selection)*: **Cross-reference** with <image_context> to infer the most precise **Domain-Specific Technical Verb**.
-        - *Logic*: Translate generic actions into industry terms based on the Domain.
-          Ex1 - In Boxing: "lift hands" -> "Guards up"
-          Ex2 - In F1 Racing: "turn" -> "Apexes" or "Steers"
-          Ex3 - In Sports Racing or Racing: "turn" -> "Drifts" or "Steers"
-          Ex4 - In Sci-Fi: "appears" -> "Materializes"
-          Ex5 - In Tactical Combat: "run" -> "Maneuvers" or "Advances"
-          Ex6 - In Wingsuit Flying: "fly" -> "Proximity-glides"
-          Ex7 - In Ballet: "spin" -> "Pirouettes"
-          Ex8 - In Swimming: "move arms" -> "Strokes"
-          Ex9 - In Parkour: "jump" -> "Vaults"
-          Ex10 - In Horror: "walk" -> "Lurks" or "Stalks"
-          Ex11 - In Skateboarding: "jump" -> "Ollies"
-          Ex12 - In Cyberpunk Hacking: "type" -> "Interfaces"
-          Ex13 - In Wild West Duel: "pull gun" -> "Draws"
-          Ex14 - In Space Launch: "go up" -> "Ascends"
-          Ex15 - In Medieval Swordfight: "block" -> "Parries"
-          Ex16 - In High-Speed Train: "move fast" -> "Barrels"
-          Ex17 - In Basketball: "throw ball" -> "Shoots" or "Dunks"
-          Ex18 - In Heavy Mech Pilot: "walk" -> "Stomps"
-          Ex19 - In Surfing: "ride wave" -> "Carves"
-          Ex20 - In Sniper Positioning: "lie down" -> "Prone-positions"
-        - *Constraint*: **DO NOT blindly copy these examples.** They are for tonal reference only. You MUST select a verb that physically matches the specific scene.
-        - *Fallback 1*: If an example verb happens to be the absolute best fit for the scene, you are allowed to use it.
-        - *Fallback 2*: If no Specific Domain Term exists, use the most accurate **Dry Physical Verb** (e.g., "Walks", "Turns").
-      * *Rule (Interaction)*: If there are **multiple entities**, include the **Secondary Entity's Handle** (constructed via the same Subject rules) as the **Object** of the verb. Format: \`[Subject] [Verb] [Object]\`.
-      * *Rule (Texture/Motion Selection)*:
-        - **Source**: Review the **Visual Vocabulary Pool** and **Visual Effect Candidates** in <vocabulary_depot>.
-        - **Selection Limit**: Select **up to 2** most contextually relevant keywords.
-          * *Logic*: Do not blindly copy all words. Pick only what matches the specific action moment.
-          * *Priority*:
-            1. If Impact/Collision -> Prioritize **'Effect Candidate'**.
-            2. If Speed/Motion/Detail -> Prioritize **'Visual Vocabulary Pool'**.
-        - **Format**: Append strictly at the end of the action sentence.
-
+      * **Phase 1**: Contextual Synthesis & Logical Bridge Construction
+        **Objective**: Analyze multi-modal input data to establish the physical, social, and temporal boundaries for the subject's movement.
+        - **1. Identity & Era Synthesis**
+          Analyze the Handle and [ERA / PERIOD] to define the subject's "Behavioral Essence."
+          * **Logic**: Determine movement physics and social protocols (e.g., WWII bomb’s mechanical fall vs. a Victorian boxer’s formal stance).
+          * **Goal**: Establish the "Demeanor" of the action for historical and physical authenticity.
+        - **2. Temporal Density & Template Selection**
+          Analyze \`<target_duration>\` and \`<image_context>\` to assign the strict "Action Density Template" (1, 2, or 3 slots).
+          * **Logic**: Map the duration to the physical limits of video generation (The 2-Second Rule).
+          * **Proximity Override**: If \`<image_context>\` indicates "Immediate Proximity" or "Zero Buffer" to a target (e.g., fist inches from face, foot near puddle), **FORCE Template A** regardless of duration to prevent clipping.
+          * **Template Definitions**: 
+            * **Template A (Impulse)**: Duration < 3.0s OR High Proximity.
+              - *Capacity*: 1 Core Action (Finisher only).
+            * **Template B (Standard)**: Duration 3.0s - 6.0s.
+              - *Capacity*: 2 Actions (Transition -> Finisher).
+            * **Template C (Cinematic)**: Duration > 6.0s.
+              - *Capacity*: 3 Actions (Initiation -> Transition -> Finisher).
+        - **3. Functional Goal & Terminal Logic**
+          Identify the most "Socially and Narratively Appropriate" conclusion for the sequence.
+          * **Constraint**: Prioritize "Functional Culmination" (e.g., detonating) over "Physical Contact" (e.g., hitting ground).
+          * **Goal**: Prevent visual errors like ground clipping or unnatural deformation.
+        - **4. Reasoning Output: logical_bridge Synthesis**
+          Synthesize all findings into the \`logical_bridge\` object, adhering strictly to the schema in \`<output_format>\`.
+          * **Field: identity_logic**: Definition of the subject's era-based physics and social protocols.
+          * **Field: situational_context**: Analysis of spatial buffer and the selected **Action Mode**.
+          * **Field: functional_goal**: The logically appropriate final state or objective.
+      * **Phase 2**: Technical Action Synthesis & Recursive Budgeting
+        **Objective**: Translate the \`logical_bridge\` into a timed sequence of industry-standard technical verbs, ensuring the \`functional_goal\` is achieved within the \`<target_duration>\`.
+        - **1. Action Slot Assembly (Template Execution)**
+          Define the Structural Framework based on the **Template** selected in Phase 1's \`situational_context\`.
+          * **Case A: Template A (Impulse)**
+            * *Structure*: \`[Finisher Verb + Object]\`
+            * *Logic*: Skip setup. Use the most explosive/conclusive technical verb immediately.
+            * *Example*: "Detonates into shrapnel." / "Shatters the glass."
+          * **Case B: Template B (Standard)**
+            * *Structure*: \`[Transition Verb] -> [Finisher Verb]\`
+            * *Logic*: Show the movement leading to the impact.
+            * *Slot 1 (Transition)*: A setup action (e.g., "Chambers a round", "Accelerates").
+            * *Slot 2 (Finisher)*: The final result (e.g., "Fires", "Apexes the corner").
+          * **Case C: Template C (Cinematic)**
+            * *Structure*: \`[Initiation Verb] -> [Transition Verb] -> [Finisher Verb]\`
+            * *Logic*: A complete narrative arc.
+            * *Slot 1 (Initiation)*: Establishing the state (e.g., "Idles with engine rumbling").
+            * *Slot 2 (Transition)*: Building momentum (e.g., "Shifts gear and accelerates").
+            * *Slot 3 (Finisher)*: The climax (e.g., "Drifts through the finish line").
+        - **2. Technical & Visual Vocabulary Alignment**
+          For EACH Slot defined in the Structural Framework, synthesize the content:
+          * **Step A: Action Verb Selection (Role Matching)**
+            Select a **Domain-Specific Technical Verb** that matches the Slot's Role (Initiation/Transition/Finisher) (e.g., Use "Chambers" for Transition, "Fires" for Finisher).
+            * *Constraint*: Use professional terminology over generic verbs (e.g., use "Apexes" not "turns", "Parries" not "blocks").
+          * **Step B: Visual Modifier Application (The "How")**
+            **Selectively** enhance the verb using tags from \`<vocabulary_depot>\` **ONLY IF** physically logical.
+            * **Physics Reality Check**: Before attaching a tag (e.g., "Sparks"), ask: "Does a [Subject Material] interacting with [Environment] actually produce this effect?"
+              - **Bad Logic**: Parkour Runner (Rubber/Cloth) + Concrete Roof -> "Sparks" (Hallucination).
+              - **Good Logic**: Parkour Runner + Concrete Roof -> "Dust Cloud" or "Gravel Spray".
+              - **Good Logic**: Sword (Metal) + Armor (Metal) -> "Sparks".
+            * **Constraint**: If the interaction is organic (Human/Cloth/Skin), prioritize subtler tags (e.g., "Sweat-beaded", "Fabric Flutter", "Muscle definition") over high-intensity impact tags.
+          * **Consistency Rule**: Ensure all verbs in the sequence share the same **Subject Handle** and maintain the **Identity Logic** defined in Phase 1.
     * **[Composition]**: The Lens & Velocity. (Inferred from context)
       * *Rule*: Construct the composition by combining ONE selection from "Camera Tech Options" + ONE selection from "Velocity Options" found in <vocabulary_depot>.
-
     * **[Style]**: The Visual Atmosphere. (Strict Formula Application)
       * *Formula*: **(Lighting), (Color), (Texture)**
       * *Rule*: Construct the style string by selecting ONE tag for each category from <master_style_guide>.
       * *Constraint*: Do NOT use camera terms (Zoom, Pan) or quality boosters (8k, Masterpiece) here.
       * *Constraint*: Do NOT blindly copy the examples below. Select tags that match the specific scene mood from the guide.
-
       **[Style Combination Examples]**
       * *Ex 1 (Documentary)*: Volumetric lighting, Muted earth tones, 35mm film grain
       * *Ex 2 (Cinematic)*: Rim lighting, Teal and Orange, Atmospheric dust
       * *Ex 3 (Cyberpunk)*: Neon glow, Cool blue tint, Wet surface reflection
       * *Ex 4 (Retro)*: Soft diffused light, Sepia tone, VHS distortion
       * *Ex 5 (Gritty)*: High-contrast lighting, Desaturated, Scuffed and dirty texture
-
     **2. The Inference Protocol (Smart Selection):**
     Do NOT blindly copy. Follow this logic to construct the prompt:
-
     * **Consult Model Profile**:
       Before drafting, review <target_model_profile> to understand the required "Technical Tone" (Dry & Visual).
     * **Resolve Subject & Object**: 
@@ -922,21 +955,51 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
     * **Distribute**: 
       - Place the **Active Handle** in [Subject].
       - Place the **Passive Handle** in [Action] (as the direct object).
-    * **Infer Action**: Select the **Domain-Specific Technical Verb**.
-      * *Check*: Ensure the verb is transitive if an object exists.
-      * *Check*: Use a technical term from the Depot or a better dry equivalent.
+    * **Infer Action**: execute the **Phase 2 (Technical Action Synthesis)** defined above.
+      * *Check*: Follow the Template Structure (A/B/C) strictly.
+      * *Check*: Use strict Vocabulary rules (No hallucinated tags).
     * **Synthesize**: Combine [Subject] + [Action] + [Composition] + [Style].
       * *Format*: "[Subject] [Action (+ Object)]. [Composition]. [Style]."
+    **3. Final Assembly (The Compiler Stage):**
+    This stage strictly compiles the pre-generated slots into the final string. Do NOT re-calculate physics or logic here.
+    - **1. Action Sequence Compilation**
+      Convert the "Action Slots" defined in Phase 2 into a fluid sentence using temporal conjunctions.
+      * **Rule**: Apply syntax based on the Template Count.
+        * **1 Slot (Template A)**: \`[Subject] [Slot 1 Phrase].\`
+        * **2 Slots (Template B)**: \`[Subject] [Slot 1 Phrase] then [Slot 2 Phrase].\`
+        * **3 Slots (Template C)**: \`[Subject] [Slot 1 Phrase], [Slot 2 Phrase], finally [Slot 3 Phrase].\`
+      * **Object Placement**: Ensure any interaction objects (e.g., "the sword", "the lever") follow their respective verbs immediately.
+    - **2. Global Syntax Merging**
+      Assemble the four main components into the final structure optimized for the **Target Video Generation Model**.
+      * **Formula**: \`[Action Sequence Compilation Result] [Composition]. [Style].\`
+      * **Consistency Check**: Ensure the [Subject] is mentioned only once at the beginning, unless re-stating it is necessary for clarity in a complex sequence.
+    - **3. The Dry Filter (Negative Constraints)**
+      Before printing, perform a silent check to strip 'Noise'.
+      * **Remove**: Subjective adjectives (e.g., "beautiful", "epic", "scary").
+      * **Remove**: Quality boosters (e.g., "8k", "best quality", "hyper-realistic").
+      * **Ensure**: Every word describes a visible physical, optical, or atmospheric property.
+    - **4. Output Generation (JSON Packaging)**
+      * **Objective**: Package the reasoning process and the final string into the required JSON format.
+      * **Strict Constraint**: Do NOT output raw text. You MUST return the JSON object defined in \`<output_format>\`.
+      * **Mapping**:
+        - \`logical_bridge\`: Fill with data from Phase 1 (Identity, Context, Goal).
+        - \`reasoning\`: Briefly explain the Template Selection (A/B/C) and Verb choices.
+        - \`video_gen_prompt\`: Insert the result from Step 2 (Global Syntax Merging) here.
   </target_model_optimization_strategy>
   <output_format>
-     Return a single JSON object.
-     {
-       "reasoning": "string" 
-       // Explain: "Count: n=2. Subject: 'Lead Boxer' (Red shorts selected for distinction). Action: 'Haymaker'. Style: Gritty mood selected."
-       "video_prompt": "string", 
-       // Example (Multi-Entity): "The Boxer in red shorts lands a Haymaker on the Boxer in blue shorts. Sweat explodes. Whip pan. High-contrast lighting, Muted earth tones, Scuffed leather texture."
-       // Example (Single-Entity): "The Boxer lunges forward. Dust rises. Tracking shot. Volumetric lighting, Warm tones, Film grain."
-     }
+    Return a single JSON object.
+    {
+      "logical_bridge": {
+        "identity_logic": "string (Subject's era-based physics and social protocols)",
+        "situational_context": {
+          "assessment": "string (Analysis of Duration and Proximity)",
+          "selected_template": 'Impulse' | 'Standard' | 'Cinematic' 
+        },
+        "functional_goal": "string (The logically appropriate terminal state/objective)"
+      },
+      "reasoning": "string (Detailed explanation of count, handle selection, and strategy)",
+      "video_gen_prompt": "string (Final technical prompt for target generative model)"
+    }
   </output_format>
   <constraints>
     1. **Safety Filter**: 

@@ -16,6 +16,7 @@ import {createSupabaseServiceRoleClient} from "@/lib/supabaseServiceRole";
 import {ALL_FORMATS, Input, UrlSource} from "mediabunny";
 import {FalAIClient} from "@/lib/fal-ai/FalAIClient";
 import {FalAIService} from "@/lib/fal-ai/FalAIService";
+import {fal} from "@fal-ai/client";
 
 export const videoServerAPI = {
     // POST /videos - Scene별 image-to-video 생성 요청 제출
@@ -27,6 +28,11 @@ export const videoServerAPI = {
     ) {
         const supabase = createSupabaseServiceRoleClient();
         const replicate = new Replicate();
+        // const falAIClient = new FalAIClient();
+        const falAIClient = fal;
+        falAIClient.config({
+            credentials: process.env.FAL_AI_API_KEY!
+        })
 
         // ---- [추가] 웹훅 URL 환경 변수 확인 ----
         const baseUrl = process.env.BASE_URL;
@@ -35,7 +41,8 @@ export const videoServerAPI = {
         }
 
         // ---- [추가] generationTaskId를 포함한 동적 웹훅 URL 생성 ----
-        const webhookUrl = `${baseUrl}/webhook/replicate/video?taskId=${taskId}`;
+        // const webhookUrl = `${baseUrl}/webhook/replicate/video?taskId=${taskId}`;
+        const webhookUrl = `${baseUrl}/webhook/fal-ai/video?taskId=${taskId}`;
 
         // Signed URL 생성 (1시간 유효)
         const { data, error } = await supabase.storage
@@ -55,27 +62,40 @@ export const videoServerAPI = {
                 : roundedDuration;
 
         const inputData = {
-            image: imageUrl,
+            // image: imageUrl,
+            image_url: imageUrl,
             fps: 24,
             prompt: sceneData.videoGenPrompt ?? "A cinematic video",
             duration: safeRoundedDuration, // 2-12
             resolution: videoResolution as "480p" | "720p" | "1080p",
             aspect_ratio: aspectRatio,
             camera_fixed: false,
+            // FalAI
+            enable_safety_checker: false,
         }
 
-        const prediction = await replicate.predictions.create({
-            version: "bytedance/seedance-1-pro-fast",
+        const startDate = new Date();
+        console.log("")
+        const { request_id: requestId } = await falAIClient.queue.submit('fal-ai/bytedance/seedance/v1/pro/fast/image-to-video', {
             input: inputData,
-            webhook: webhookUrl,
-            webhook_events_filter: ["completed"],
-        })
+            webhookUrl: webhookUrl,
+        });
+        const finishDate = new Date();
+        console.log(`Scene #${sceneData.sceneNumber} Execution time: ${(finishDate.getTime() - startDate.getTime()) / 1000}s`);
 
-        if (prediction.error || prediction.status === (VIDEO_GENERATION_STATUS.FAILED || VIDEO_GENERATION_STATUS.CANCELED)) {
-            throw Error(`Scene ${sceneData.sceneNumber}: ${prediction.error || prediction.status}`);
-        }
+        return requestId;
+        // const prediction = await replicate.predictions.create({
+        //     version: "bytedance/seedance-1-pro-fast",
+        //     input: inputData,
+        //     webhook: webhookUrl,
+        //     webhook_events_filter: ["completed"],
+        // })
+        //
+        // if (prediction.error || prediction.status === (VIDEO_GENERATION_STATUS.FAILED || VIDEO_GENERATION_STATUS.CANCELED)) {
+        //     throw Error(`Scene ${sceneData.sceneNumber}: ${prediction.error || prediction.status}`);
+        // }
 
-        return prediction.id;
+        // return prediction.id;
     },
 
     /**

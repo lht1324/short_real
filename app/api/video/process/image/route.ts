@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
         }
 
         const sceneDataWithImageGenPromptPromiseList: Promise<SceneData>[] = sceneDataList.map(async (sceneData) => {
-            console.log(`Scene[${sceneData.sceneNumber}] postImageGenPrompt() is executed.`);
+            console.log(`Scene #${sceneData.sceneNumber} postImageGenPrompt() is executed.`);
             const postImageGenPromptResult = await openAIServerAPI.postImageGenPrompt(
                 sceneData.imageGenPromptDirective,
                 masterStylePositivePromptInfo,
@@ -80,7 +80,7 @@ export async function POST(request: NextRequest) {
             );
 
             if (!postImageGenPromptResult.success || !postImageGenPromptResult.imageGenPrompt) {
-                throw new Error(`Scene[${sceneData.sceneNumber}]: ${postImageGenPromptResult.error?.message ?? "Failed to generate image gen prompt"}`);
+                throw new Error(`Scene #${sceneData.sceneNumber} error: ${postImageGenPromptResult.error?.message ?? "Failed to generate image gen prompt"}`);
             }
 
             return {
@@ -97,7 +97,7 @@ export async function POST(request: NextRequest) {
             const uniqueMasterNegativeKeywordSet = new Set(combinedMasterNegativeKeywords);
             const uniqueMasterNegativePrompt = Array.from(uniqueMasterNegativeKeywordSet).join(", ");
 
-            console.log(`Scene[${sceneData.sceneNumber}] postImage() is executed.`);
+            console.log(`Scene #${sceneData.sceneNumber} postImage() is executed.`);
             const postImageResult = await imageServerAPI.postImage(
                 sceneData.imageGenPrompt as string,
                 taskId,

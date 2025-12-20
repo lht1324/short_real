@@ -52,7 +52,7 @@ export interface Video {
 }
 
 export interface Metadata {
-    [key: string]: any; // 메타데이터는 각 서비스마다 다를 수 있음
+    [key: string]: unknown; // 메타데이터는 각 서비스마다 다를 수 있음
 }
 
 // 서비스 타입 정의

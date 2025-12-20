@@ -353,8 +353,8 @@ Instruction: Analyze the input <target_aspect_ratio>, <style_guidelines>, <full_
                 };
             }
 
-            const doesSceneHaveEntities = sceneEntityManifestList.length !== 0;
-            const developerMessage = doesSceneHaveEntities
+            const isEntityListNotEmpty = sceneEntityManifestList.length !== 0;
+            const developerMessage = isEntityListNotEmpty
                 ? POST_IMAGE_GEN_PROMPT_PROMPT
                 : POST_IMAGE_GEN_PROMPT_NO_ENTITIES_PROMPT;
 
@@ -368,7 +368,7 @@ Instruction: Analyze the input <target_aspect_ratio>, <style_guidelines>, <full_
   <master_style_guide>
     ${JSON.stringify(masterStylePromptInfo, null, 2)}
   </master_style_guide>
-  ${doesSceneHaveEntities ? `<entity_reference_manifest>${JSON.stringify(sceneEntityManifestList, null, 2)}</entity_reference_manifest>` : ""}
+  ${isEntityListNotEmpty ? `<entity_reference_manifest>${JSON.stringify(sceneEntityManifestList, null, 2)}</entity_reference_manifest>` : ""}
   <current_narration>
     ${sceneNarration}
   </current_narration>
@@ -377,7 +377,7 @@ Instruction: Analyze the input <target_aspect_ratio>, <style_guidelines>, <full_
   </scene_content>
 </input_data>
 
-${doesSceneHaveEntities ? `
+${isEntityListNotEmpty ? `
 Instruction: Generate the scene instruction JSON.
 **CRITICAL**: You are the Physics Architect.
 1. Populate 'physics_profile' based on the 3-Layer Logic.
@@ -674,15 +674,36 @@ Instruction: Generate the scene instruction JSON.
             // [선택 사항] 유효성 검사: JSON 파싱이 가능한지 미리 확인
             try {
                 const parsedJson: {
-                    video_prompt: string;
+                    video_gen_prompt: string;
                     reasoning: string;
+                    logical_bridge: {
+                        identity_logic: string;
+                        situational_context: {
+                            assessment: string;
+                            selected_template: 'Impulse' | 'Standard' | 'Cinematic';
+                        },
+                        functional_goal: string;
+                    }
                 } = JSON.parse(generatedContent);
 
-                console.log(`Scene[${sceneNumber}] reasoning: ${parsedJson.reasoning}`)
+                const {
+                    identity_logic: identityLogic,
+                    situational_context: {
+                        assessment,
+                        selected_template: selectedTemplate,
+                    },
+                    functional_goal: functionalGoal,
+                } = parsedJson.logical_bridge;
+
+                console.log(`Scene #${sceneNumber} postVideoGenPrompt() Result`);
+                console.log(`[${selectedTemplate}]: ${assessment}`);
+                console.log(`Identity Logic: ${identityLogic}`);
+                console.log(`Functional Goal: ${functionalGoal}`)
+                console.log(`Reasoning: ${parsedJson.reasoning}`);
 
                 return {
                     success: true,
-                    videoGenPrompt: parsedJson.video_prompt,
+                    videoGenPrompt: parsedJson.video_gen_prompt,
                 }
             } catch (parseError) {
                 console.error('JSON Parse Failed:', parseError);
