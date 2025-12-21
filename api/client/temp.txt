@@ -1,55 +1,55 @@
 Scene #1 postVideoGenPrompt() Result
-[Impulse]: Duration 2.72s (<3s) qualifies for Impulse template; no proximity override
-Identity Logic: 1944 infantry soldier with rigid stance and grounded footing, conditioned to brace against blast shockwaves
-Functional Goal: Subject regains grounded footing post-recoil
-Reasoning: Single entity (n=1) at center frame identified as Soldier; duration under 3s triggered Impulse template for a single finisher; chosen finisher verb ‘recoils’ to depict reactive movement; applied ‘dust cloud’ effect tag to convey blast debris; composition set to Crash Zoom + Camera Shake for abrupt emphasis; style tags sourced from master style guide
-videoGenPrompt: The Soldier charges forward, Debris, Volumetric dust cloud. Crash Zoom, Camera Shake. Soft natural lighting, Muted earth tones with deep shadows and subtle highlight accents, Rich, believable textures.
+[Impact/Result]: Duration 2.72s (<3.0s) triggers Impact focus
+Identity Logic: WWII infantry soldier in heavy combat gear experiences shockwave from falling debris
+Action Focus: Reactive recoil from falling debris
+Reasoning: Single entity → demographics give role “Infantry Soldier” → common noun → “The Soldier.” Target duration 2.72s <3s → Mode A (Impact). Scene narration implies battlefield chaos → select Visual Effect Candidate “dust cloud” from pool. Chose technical verb “recoils” to convey sudden reaction under debris. Impact reaction → Camera Shake.
+videoGenPrompt: The Soldier recoils through dust cloud. Camera Shake
 
 Scene #2 postVideoGenPrompt() Result
-[Standard]: Duration of 4.09s falls within Standard template (3–6s); no high-proximity override
-Identity Logic: WWII medium tank physics: tracked propulsion generating momentum across uneven terrain
-Functional Goal: Complete traversal of the terrain
-Reasoning: Single entity detected (one medium tank) → handle “The Medium Tank” (machine schema, model type). Target duration 4.09 s maps to Standard template (2 actions). Transition verb “Accelerates” chosen to reflect tracked propulsion buildup. Finisher verb “traverses” paired with visual effect tag “volumetric dust cloud” for logical ground interaction. Composition uses Low Angle Tracking Shot for dynamic framing and Directional Motion Blur for motion emphasis. Style tags pulled from master style guide: lighting (soft natural lighting with moody chiaroscuro), color (muted earth tones with deep shadows and subtle highlight accents), texture (rich, believable textures).
-videoGenPrompt: The Medium Tank rolls forward. Volumetric dust cloud, Coarse grains. Low Angle Tracking Shot, Directional Motion Blur. Soft natural lighting with moody chiaroscuro, Muted earth tones with deep shadows and subtle highlight accents, Rich, believable textures.
+[Sustain/Process]: Duration (4.09s) exceeds 3.0s threshold, prioritizing sustained motion over impact
+Identity Logic: 1944 WWII-era medium tank momentum with steel treads crushing earth
+Action Focus: Continuous rolling motion
+Reasoning: Single-entity scene selects 'The Medium Tank' using the model name from demographics. With a 4.09s duration, Mode B (sustain) is chosen to focus on continuous movement. The verb 'rolls' captures the durative advance, enhanced by 'volumetric dust cloud' for track–ground interaction and 'directional motion blur' for velocity. High-velocity sustain triggers the 'Low Angle Tracking Shot' camera move.
+videoGenPrompt: The Medium Tank rolls through volumetric dust cloud with directional motion blur. Low Angle Tracking Shot.
 
 Scene #3 postVideoGenPrompt() Result
-[Standard]: Duration 3.69s yields Standard template with two action slots
-Identity Logic: WWII infantry charge physics with loaded gear momentum and military sprint protocol
-Functional Goal: Landing foot into muddy ground creating splash burst
-Reasoning: Single entity (main hero) yields handle “The Soldier”. Target duration 3.69s maps to Standard template (Transition→Finisher). Transition verb “Propels forward” applies wind drag from the visual effect candidates to convey acceleration. Finisher verb “Impacts the ground” uses splash burst to represent muddy debris. Composition selects Low Angle Tracking Shot for stable follow and Directional Motion Blur to emphasize running motion. Style tags drawn from master guide: soft natural lighting with moody chiaroscuro; muted earth tones with deep shadows and subtle highlight accents; rich, believable textures.
-videoGenPrompt: The Soldier advances forward. Surface Deformation, mid-stride. Low Angle Tracking Shot, Directional Motion Blur. Soft natural lighting with moody chiaroscuro, Muted earth tones with deep shadows and subtle highlight accents, Rich, believable textures.
+[Sustain/Process]: Duration 3.69s above 3.0s selects Mode B for sustained movement
+Identity Logic: WWII infantry charge with forward momentum under gear inertia and mud drag
+Action Focus: Sustained forward sprint
+Reasoning: Single entity resolved to 'The Infantry Soldier' using the role attribute. Duration 3.69s > 3.0s triggers Mode B (sustain). Selected durative verb 'sprints' for continuous forward charge. Applied 'debris' from Visual Effect Candidates to represent mud spray and 'directional motion blur' from Velocity Options. Chose 'Low Angle Tracking Shot' for high-velocity tracking.
+videoGenPrompt: The Infantry Soldier sprints through debris with directional motion blur. Low Angle Tracking Shot.
 
 Scene #4 postVideoGenPrompt() Result
-[Impulse]: Target duration below 3s and immediate proximity to surf => Impulse template.
-Identity Logic: Uniform load and water drag require sustained forward momentum to breach surf during WWII beach assault.
-Functional Goal: Breach surf line with water displacement.
-Reasoning: Single entity detected; Role "Infantry Soldier" yields handle "The Soldier". Duration 2.97s (<3s) plus high proximity to churning surf forces Impulse template (1 finisher). Chose finisher verb "dashes through surf" to convey immediate assault, with Visual Effect tag "Splash Burst". Composition uses Low Angle Tracking Shot for dynamic perspective and Directional Motion Blur to emphasize speed. Style tags selected from master guide: Soft natural lighting, Muted earth tones, Rich believable textures.
-videoGenPrompt: The Soldier wades ashore. Splash Burst, Mid-stride. Low Angle Tracking Shot, Directional Motion Blur. Soft natural lighting with moody chiaroscuro, Muted earth tones with deep shadows and subtle highlight accents, Rich, believable textures.
+[Impact/Result]: Duration < 3.0s triggers impact focus
+Identity Logic: WWII infantry soldier heavy-booted footfall displaces surf with force
+Action Focus: Immediate surf impact
+Reasoning: Single human entity resolves to "The Soldier" via role priority. Target duration 2.97s (<3.0s) selects Mode A (impact). The scene shows heavy boots striking water—terminal action conveys splash impact. No camera tag chosen as splash is not explosive-level impact.
+videoGenPrompt: The Soldier splashes through surf with splash burst.
 
 Scene #5 postVideoGenPrompt() Result
-[Standard]: Duration 3.25s falls within 3.0–6.0s range; no proximity override; selecting Standard template with two actions
-Identity Logic: WWII-era fighter pilot maneuvering under propeller-driven torque and manual control forces, executing bank and roll under high-G conditions
-Functional Goal: Stabilize aircraft into level flight after evasive roll
-Reasoning: Single entity detected (n=1); handle derived from role 'Fighter Pilot' as 'The Pilot'. Target duration 3.25s triggers Standard Template (Transition→Finisher). Transition verb 'Banks sharply' matched to aerial roll initiation; attached 'motion-blurred edges' from visual pool for high-speed realism. Finisher verb 'rolls into level flight' fulfills functional goal of aircraft stabilization. Composition chosen as FPV Drone Shot with Background Streaming Blur for dynamic perspective. Style tags selected directly from master guide: lighting, color, texture.
-videoGenPrompt: The Fighter Pilot banks into a high-G roll. Wind Drag, Motion-blurred edges. Tight Focus, Background Streaming Blur. Soft natural lighting, Muted earth tones with deep shadows and subtle highlight accents, Rich believable textures.
+[Sustain/Process]: Duration 3.25s > 3.0s selects Mode B (Sustain); no immediate proximity trigger
+Identity Logic: 1944 WWII fighter pilot exhibits sustained aerodynamic banking physics balancing g-forces and wind resistance
+Action Focus: Continuous evasive banking
+Reasoning: Single entity yields handle 'The Fighter Pilot' from Role. Target duration >3s triggers Mode B for sustained motion. Chose 'Banks' as the durative technical verb. Applied 'wind drag' and 'background streaming blur' tags from vocabulary_depot for physical realism. High-velocity sustain invokes 'Tracking Shot' camera.
+videoGenPrompt: The Fighter Pilot Banks with wind drag and background streaming blur. Tracking Shot.
 
 Scene #6 postVideoGenPrompt() Result
-[Standard]: Duration 3.61s within Standard range, no proximity override
-Identity Logic: 1944 WWII aerial bomb accelerates under gravity in free-fall orientation with wind-resistance posture
-Functional Goal: Detonation scattering debris
-Reasoning: Single object entity identified as bomb, yielding the handle “The Bomb.” A 3.61 s duration falls into the 3–6 s bracket, triggering the Standard template (Transition → Finisher). Transition uses “Free-falls” plus the “motion-blurred edges” tag to convey high-speed descent. Finisher “Detonates into debris” fulfills the goal of scattering debris. Composition pairs Ground Level with Speed Lines to emphasize velocity. Style draws lighting, color, and texture from the master style guide.
-videoGenPrompt: The Bomb free-falls. Background streaking. Ground Level, Hyperlapse. Soft natural lighting, Muted earth tones with deep shadows, Rich believable textures.
+[Sustain/Process]: Duration (3.61s) ≥ 3.0s with no immediate proximity override
+Identity Logic: Ballistic descent with wind resistance for a high-explosive WWII bomb
+Action Focus: Sustained ballistic descent
+Reasoning: Single entity detected → extracted 'Aerial Bomb' as item name → handle 'The Aerial Bomb'. With a 3.61s duration (>3.0s) and no high-proximity impact, Mode B (Sustain) was chosen. Identity logic reflects a WWII high-explosive bomb in gravity-driven free-fall with drag. Selected the durative verb 'descends'. Applied 'hyperlapse' (velocity option), 'motion-blurred edges' and 'background streaking' (visual tags) for high-speed fall realism. Added 'Tracking Shot' to follow the continuous descent.
+videoGenPrompt: The Aerial Bomb descends in hyperlapse with motion-blurred edges and background streaking. Tracking Shot.
 
 Scene #7 postVideoGenPrompt() Result
-[Standard]: Duration 4.28s selects Standard template (Transition→Finisher), no close-proximity override
-Identity Logic: WWII infantry soldier maintaining disciplined posture despite post-battle fatigue, shoulders releasing built-up tension under era-specific military bearing
-Functional Goal: Settle into stationary stance with rifle lowered
-Reasoning: Single entity; extracted rank-1 ‘Infantry Soldier’ → handle. Duration 4.28s maps to Standard template for a two-step sequence. Chose Transition verb “Slumps” with tag “sagging posture” to convey post-combat exhaustion, then Finisher verb “Lowers rifle” with tag “stationary stance” for a stabilized posture. Composition uses Reactionary Pan for continuity plus Camera Shake for battlefield realism. Style tags sourced from master guide.
-videoGenPrompt: The Infantry Soldier bows head. Dust Cloud. Reactionary Pan, Sudden Recoil. Soft natural lighting with moody chiaroscuro, Muted earth tones with deep shadows and subtle highlight accents, Rich believable textures.
+[Sustain/Process]: Duration 4.28s > 3.0s, no high-proximity trigger, choosing Mode B (Sustain/Process)
+Identity Logic: 1944 infantry soldier in moisture-laden gear sustaining exhaustion stance
+Action Focus: Enduring static posture
+Reasoning: Single entity from <entity_list>: main_hero → role ‘Infantry Soldier’ → handle ‘The Infantry Soldier’. Duration exceeds 3 s, no proximity override → Mode B (durative). Narration implies combat fatigue → focus on sustained exhaustion. Chose the verb ‘stands’ and applied ‘sweat-beaded’ from the Visual Vocabulary Pool. Standard action → no camera tag.
+videoGenPrompt: The Infantry Soldier stands sweat-beaded.
 
 Scene #8 postVideoGenPrompt() Result
-[Impulse]: Target duration 2.69s < 3s triggers Impulse template; no proximity override.
-Identity Logic: Movement reflects a WWII infantryman’s weighted uniform and boots, requiring disciplined, forceful motion under combat conditions.
-Functional Goal: Achieve a firm helmet grasp.
-Reasoning: Single entity at mid-ground facing camera identified as The Soldier by role and action initiator. Duration under 3s selects Template A (Impulse) for a single finisher. Chose 'seizes' to convey a forceful gear engagement; added 'Debris' tag to simulate ground dust. Composition uses Crash Zoom and Camera Shake for abrupt dynamic emphasis. Style draws from master guide: Soft natural lighting; Muted earth tones with deep shadows; Rich, believable textures.
-videoGenPrompt: The Infantry Soldier advances. Volumetric dust cloud, Grounded footing. Crash Zoom, Camera Shake. Soft natural lighting, Muted earth tones with deep shadows and subtle highlight accents, Rich believable textures.
+[Impact/Result]: target_duration 2.69s < 3.0s triggers Impact/Result Mode A
+Identity Logic: WWII infantry soldier reacting to nearby explosion with instant physical recoil
+Action Focus: Immediate debris impact reaction
+Reasoning: Single entity -> handle “The Infantry Soldier” (Role). Duration 2.69s <3s => Mode A Impact/Result. Select terminal verb “recoils.” Apply visual effect tag “debris” for physical realism. Impact scene => select camera tag “Camera Shake.”
+videoGenPrompt: The Infantry Soldier recoils amid debris. Camera Shake.

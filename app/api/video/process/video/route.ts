@@ -130,7 +130,7 @@ export async function POST(request: NextRequest) {
         if (checkResultFirst) {
             return checkResultFirst;
         }
-        
+
         const finalSceneDataList: SceneData[] = [];
 
         for (const sceneData of sceneDataWithVideoGenPromptList) {

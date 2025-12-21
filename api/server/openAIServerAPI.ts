@@ -598,14 +598,14 @@ Instruction: Generate the scene instruction JSON.
     <target_duration>${targetDuration}seconds</target_duration>
   </video_metadata>
   ${isEntityListNotEmpty ? `<vocabulary_depot>
-    **RESOURCE POOL**: Select keywords from here to construct the Dry S-A-C-S prompt.
+    **RESOURCE POOL**: Select keywords from here to construct the Dry S-A-C prompt.
     DO NOT use these as descriptions. Use them as tags.
     ${activeEntityPhysicsList}
   </vocabulary_depot>` : ""}
   <scene_narration>${sceneNarration}</scene_narration>
-  <master_style_guide>
+  ${!isEntityListNotEmpty && `<master_style_guide>
     ${JSON.stringify(masterStyleInfo, null, 2)}
-  </master_style_guide>
+  </master_style_guide>`}
   ${isEntityListNotEmpty ? `<entity_list>
     ${JSON.stringify(mappedEntityList, null, 2)}
   </entity_list>` : ""}
@@ -677,29 +677,30 @@ Instruction: Generate the scene instruction JSON.
                     video_gen_prompt: string;
                     reasoning: string;
                     logical_bridge: {
-                        identity_logic: string;
-                        situational_context: {
-                            assessment: string;
-                            selected_template: 'Impulse' | 'Standard' | 'Cinematic';
+                        identity_logic: string,
+                        action_mode: {
+                            "assessment": string,
+                            "selected_mode": "A" | "B"
                         },
-                        functional_goal: string;
+                        action_focus: string;
                     }
                 } = JSON.parse(generatedContent);
 
                 const {
                     identity_logic: identityLogic,
-                    situational_context: {
+                    action_mode: {
                         assessment,
-                        selected_template: selectedTemplate,
+                        selected_mode: selectedMode,
                     },
-                    functional_goal: functionalGoal,
+                    action_focus: actionFocus,
                 } = parsedJson.logical_bridge;
 
                 console.log(`Scene #${sceneNumber} postVideoGenPrompt() Result`);
-                console.log(`[${selectedTemplate}]: ${assessment}`);
+                console.log(`[${selectedMode === 'A' ? "Impact/Result" : "Sustain/Process"}]: ${assessment}`);
                 console.log(`Identity Logic: ${identityLogic}`);
-                console.log(`Functional Goal: ${functionalGoal}`)
+                console.log(`Action Focus: ${actionFocus}`)
                 console.log(`Reasoning: ${parsedJson.reasoning}`);
+                console.log(`videoGenPrompt: ${parsedJson.video_gen_prompt}`);
 
                 return {
                     success: true,
