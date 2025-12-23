@@ -122,10 +122,12 @@ export async function POST(request: NextRequest) {
         });
         const sceneDataWithVideoGenPromptList = await Promise.all(sceneDataWithVideoGenPromptPromiseList);
 
+        const patchVideoGenerationTaskResult = await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, {
+            status: VideoGenerationTaskStatus.GENERATING_VIDEO,
+            scene_breakdown_list: sceneDataWithVideoGenPromptList,
+        })
 
-        const patchVideoGenerationTaskStatusResult = await videoGenerationTasksServerAPI.patchVideoGenerationTaskStatus(taskId, VideoGenerationTaskStatus.GENERATING_VIDEO);
-
-        const checkResultFirst = await taskCheckAndCleanupIfCancelled(patchVideoGenerationTaskStatusResult);
+        const checkResultFirst = await taskCheckAndCleanupIfCancelled(patchVideoGenerationTaskResult);
 
         if (checkResultFirst) {
             return checkResultFirst;

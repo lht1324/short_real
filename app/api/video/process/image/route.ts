@@ -1,4 +1,4 @@
-import {NextRequest, NextResponse} from "next/server";
+import {NextRequest} from "next/server";
 import {videoGenerationTasksServerAPI} from "@/api/server/videoGenerationTasksServerAPI";
 import {taskCheckAndCleanupIfCancelled} from "@/utils/taskCheckAndCleanupIfCancelled";
 import {SceneData, VideoGenerationTaskStatus} from "@/api/types/supabase/VideoGenerationTasks";
@@ -91,8 +91,7 @@ export async function POST(request: NextRequest) {
         });
         const sceneDataWithImageGenPromptList = await Promise.all(sceneDataWithImageGenPromptPromiseList);
 
-        for (let index = 0; index < sceneDataWithImageGenPromptList.length; index++) {
-            const sceneData = sceneDataWithImageGenPromptList[index];
+        for (const sceneData of sceneDataWithImageGenPromptList) {
             const combinedMasterNegativeKeywords = `${masterStyleNegativePrompt}`.split(/\s*,\s*/);
             const uniqueMasterNegativeKeywordSet = new Set(combinedMasterNegativeKeywords);
             const uniqueMasterNegativePrompt = Array.from(uniqueMasterNegativeKeywordSet).join(", ");

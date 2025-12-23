@@ -361,14 +361,14 @@ Instruction: Analyze the input <target_aspect_ratio>, <style_guidelines>, <full_
             const userMessage = `
 <input_data>
   <video_context>
-    <title>${videoTitle}</title>
-    <description>${videoDescription}</description>
+    <video_title>${videoTitle}</video_title>
+    <video_description>${videoDescription}</video_description>
     <aspect_ratio>${aspectRatio}</aspect_ratio>
   </video_context>
   <master_style_guide>
     ${JSON.stringify(masterStylePromptInfo, null, 2)}
   </master_style_guide>
-  ${isEntityListNotEmpty ? `<entity_reference_manifest>${JSON.stringify(sceneEntityManifestList, null, 2)}</entity_reference_manifest>` : ""}
+  ${isEntityListNotEmpty ? `<entity_list>${JSON.stringify(sceneEntityManifestList, null, 2)}</entity_list>` : ""}
   <current_narration>
     ${sceneNarration}
   </current_narration>
@@ -683,22 +683,52 @@ Instruction: Generate the scene instruction JSON.
                             "selected_mode": "A" | "B"
                         },
                         action_focus: string;
+                    } | {
+                        anchor_logic: string;
+                        physics_logic: string;
+                        camera_logic: string;
                     }
                 } = JSON.parse(generatedContent);
 
-                const {
-                    identity_logic: identityLogic,
-                    action_mode: {
-                        assessment,
-                        selected_mode: selectedMode,
-                    },
-                    action_focus: actionFocus,
-                } = parsedJson.logical_bridge;
-
                 console.log(`Scene #${sceneNumber} postVideoGenPrompt() Result`);
-                console.log(`[${selectedMode === 'A' ? "Impact/Result" : "Sustain/Process"}]: ${assessment}`);
-                console.log(`Identity Logic: ${identityLogic}`);
-                console.log(`Action Focus: ${actionFocus}`)
+                if (isEntityListNotEmpty) {
+                    const {
+                        identity_logic: identityLogic,
+                        action_mode: {
+                            assessment,
+                            selected_mode: selectedMode,
+                        },
+                        action_focus: actionFocus,
+                    } = parsedJson.logical_bridge as {
+                        identity_logic: string,
+                        action_mode: {
+                            "assessment": string,
+                            "selected_mode": "A" | "B"
+                        },
+                        action_focus: string;
+                    };
+
+                    console.log("EntityList is not empty.")
+                    console.log(`[${selectedMode === 'A' ? "Impact/Result" : "Sustain/Process"}]: ${assessment}`);
+                    console.log(`Identity Logic: ${identityLogic}`);
+                    console.log(`Action Focus: ${actionFocus}`)
+                } else {
+                    const {
+                        anchor_logic: anchorLogic,
+                        physics_logic: physicsLogic,
+                        camera_logic: cameraLogic,
+                    } = parsedJson.logical_bridge as {
+                        anchor_logic: string;
+                        physics_logic: string;
+                        camera_logic: string;
+                    };
+
+                    console.log("EntityList is empty.")
+                    console.log(`Anchor Logic: ${anchorLogic}`);
+                    console.log(`Physics Logic: ${physicsLogic}`);
+                    console.log(`Camera Logic: ${cameraLogic}`);
+                }
+
                 console.log(`Reasoning: ${parsedJson.reasoning}`);
                 console.log(`videoGenPrompt: ${parsedJson.video_gen_prompt}`);
 

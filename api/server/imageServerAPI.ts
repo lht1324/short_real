@@ -1,47 +1,46 @@
 import Replicate, {FileOutput} from "replicate";
 import {GenerateImagesResponse, GoogleGenAI, PersonGeneration} from "@google/genai";
 import {createSupabaseServiceRoleClient} from "@/lib/supabaseServiceRole";
+import {fal} from "@fal-ai/client";
 
 export const imageServerAPI = {
     async postImage(
         imageGenPrompt: string,
-        generationTaskId: string,
+        taskId: string,
         sceneNumber: number,
         negativePrompt?: string
     ): Promise<{ success: boolean; error?: { message: string; code: string } }> {
         const supabase = createSupabaseServiceRoleClient();
 
         try {
-            const replicate = new Replicate();
+            const falAIClient = fal;
+            falAIClient.config({
+                credentials: process.env.FAL_AI_API_KEY!
+            });
 
-            // const output = await replicate.run("bytedance/seedream-4.5", {
-            //     input: {
-            //         prompt: imageGenPrompt,
-            //         size: '2K',
-            //         aspect_ratio: '9:16'
-            //     },
-            // });
-
-            const output = await replicate.run("google/imagen-4", {
+            const output = await falAIClient.subscribe('fal-ai/flux-2', {
                 input: {
                     prompt: imageGenPrompt,
-                    aspect_ratio: '9:16',
-                    safety_filter_level: 'block_medium_and_above',
-                    output_format: 'jpg',
-                },
-            }) as FileOutput;
+                    guidance_scale: 20,
+                    num_inference_steps: 50,
+                    image_size: "portrait_16_9",
+                    num_images: 1,
+                    acceleration: "none",
+                    enable_prompt_expansion: true,
+                    enable_safety_checker: false,
+                    output_format: "jpeg"
+                }
+            });
 
-            // Replicate 결과(URL)에서 이미지 다운로드 및 Buffer 변환
+            const resultImageUrlList = output.data.images;
+            let imageUrl: string;
 
-            // if (!Array.isArray(output) || (Array.isArray(output) && output.length === 0)) {
-            //     console.log(`Scene[${sceneNumber}] ImageGenPrompt: ${imageGenPrompt}`)
-            //     console.log(`Scene[${sceneNumber}] Output: `, JSON.stringify(output));
-            //     throw new Error("Replicate output is invalid.");
-            // }
-            //
-            // const imageUrl = output[0].url();
-            const imageUrl = output.url();
-            
+            if (resultImageUrlList.length !== 0) {
+                imageUrl = output.data.images[0].url;
+            } else {
+                throw Error("Flux 2 generation failed.")
+            }
+
             if (!imageUrl) {
                 throw new Error("No image generated from Replicate");
             }
@@ -120,7 +119,7 @@ export const imageServerAPI = {
             // Supabase Storage에 이미지 업로드
             const { error: uploadError } = await supabase.storage
                 .from('scene_image_temp_storage') // 버킷 이름
-                .upload(`${generationTaskId}/${sceneNumber}.jpeg`, imageBuffer, {
+                .upload(`${taskId}/${sceneNumber}.jpeg`, imageBuffer, {
                     contentType: 'image/jpeg', // 파일 포맷 지정
                     upsert: true // 덮어쓰기 허용
                 });

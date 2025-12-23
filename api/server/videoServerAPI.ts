@@ -23,12 +23,10 @@ export const videoServerAPI = {
     async postVideo(
         sceneData: SceneData,
         taskId: string,
-        aspectRatio: VideoAspectRatio = VIDEO_ASPECT_RATIOS.PORTRAIT_9_16,
+        aspectRatio: "16:9" | "9:16" | "1:1" | "21:9" | "4:3" | "3:4" | "auto" = "9:16",
         videoResolution: VideoResolution = VIDEO_RESOLUTIONS.RES_720P, // nP란 가로세로 중 짧은 쪽의 비율을 따라감
     ) {
         const supabase = createSupabaseServiceRoleClient();
-        const replicate = new Replicate();
-        // const falAIClient = new FalAIClient();
         const falAIClient = fal;
         falAIClient.config({
             credentials: process.env.FAL_AI_API_KEY!
@@ -41,7 +39,6 @@ export const videoServerAPI = {
         }
 
         // ---- [추가] generationTaskId를 포함한 동적 웹훅 URL 생성 ----
-        // const webhookUrl = `${baseUrl}/webhook/replicate/video?taskId=${taskId}`;
         const webhookUrl = `${baseUrl}/webhook/fal-ai/video?taskId=${taskId}`;
 
         // Signed URL 생성 (1시간 유효)
@@ -66,7 +63,7 @@ export const videoServerAPI = {
             image_url: imageUrl,
             fps: 24,
             prompt: sceneData.videoGenPrompt ?? "A cinematic video",
-            duration: safeRoundedDuration, // 2-12
+            duration: safeRoundedDuration.toString() as "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" | "10" | "11" | "12", // 2-12
             resolution: videoResolution as "480p" | "720p" | "1080p",
             aspect_ratio: aspectRatio,
             camera_fixed: false,
@@ -75,7 +72,6 @@ export const videoServerAPI = {
         }
 
         const startDate = new Date();
-        console.log("")
         const { request_id: requestId } = await falAIClient.queue.submit('fal-ai/bytedance/seedance/v1/pro/fast/image-to-video', {
             input: inputData,
             webhookUrl: webhookUrl,
@@ -84,18 +80,6 @@ export const videoServerAPI = {
         console.log(`Scene #${sceneData.sceneNumber} Execution time: ${(finishDate.getTime() - startDate.getTime()) / 1000}s`);
 
         return requestId;
-        // const prediction = await replicate.predictions.create({
-        //     version: "bytedance/seedance-1-pro-fast",
-        //     input: inputData,
-        //     webhook: webhookUrl,
-        //     webhook_events_filter: ["completed"],
-        // })
-        //
-        // if (prediction.error || prediction.status === (VIDEO_GENERATION_STATUS.FAILED || VIDEO_GENERATION_STATUS.CANCELED)) {
-        //     throw Error(`Scene ${sceneData.sceneNumber}: ${prediction.error || prediction.status}`);
-        // }
-
-        // return prediction.id;
     },
 
     /**
@@ -322,7 +306,7 @@ export const videoServerAPI = {
                     .createSignedUrl(filePath, 3600);
 
                 if (error || !data?.signedUrl) {
-                    throw new Error(`Scene #${sceneData.sceneNumber} signed URL 생성 실패: ${error?.message}`)
+                    throw new Error(`Scene #${sceneData.sceneNumber} signed URL 생성 실패: ${JSON.stringify(error)}`)
                 }
                 return data.signedUrl;
             });
