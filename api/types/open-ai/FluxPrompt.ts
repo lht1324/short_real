@@ -6,7 +6,7 @@ export interface FluxPrompt {
     lighting: string;
     mood: string;
     background: string;
-    composition: string;
+    composition: "rule of thirds" | "circular arrangement" | "framed by foreground" | "minimalist negative space" | "S-curve" | "vanishing point center" | "dynamic off-center" | "leading leads" | "golden spiral" | "diagonal energy" | "strong verticals" | "triangular arrangement";
     camera: FluxPromptCameraInfo;
     effects: string[];
 }
@@ -19,10 +19,10 @@ export interface FluxPromptSubject {
 }
 
 export interface FluxPromptCameraInfo {
-    angle: string;
-    distance: string;
-    focus: string;
-    lens: string;
+    angle: "eye level" | "low angle" | "slightly low" | "bird's-eye" | "worm's-eye" | "over-the-shoulder" | "isometric";
+    distance: "close-up" | "medium close-up" | "medium shot" | "medium wide" | "wide shot" | "extreme wide";
+    focus: "deep focus" | "macro focus" | "soft background" | "selective focus" | "sharp on subject";
+    lens: "14mm" | "24mm" | "35mm" | "50mm" | "70mm" | "85mm";
     fNumber: string; // 사용 시 f-number로 매핑
     ISO: number;
 }

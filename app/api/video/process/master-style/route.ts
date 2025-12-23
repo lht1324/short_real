@@ -64,14 +64,16 @@ export async function POST(request: NextRequest) {
         const selectedStyle = STYLE_DATA_LIST.find((styleData) => {
             return styleData.uiMetadata.id == selectedStyleId;
         });
+        const videoTitle = videoGenerationTask.video_title;
+        const videoDescription = videoGenerationTask.video_description;
 
-        if (!selectedStyle) {
+        if (!selectedStyle || !videoTitle || !videoDescription) {
             await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
 
             return getNextBaseResponse({
                 success: false,
                 status: 404,
-                error: 'Style data not found.'
+                error: 'Task is invalid.'
             });
         }
 
@@ -83,10 +85,12 @@ export async function POST(request: NextRequest) {
                     sceneNumber: sceneData.sceneNumber,
                     sceneNarration: sceneData.narration,
                 }
-            })
+            }),
+            videoTitle,
+            videoDescription,
         );
 
-        if (!postMasterStylePromptResult.success || !postMasterStylePromptResult.masterStylePositivePromptInfo || !postMasterStylePromptResult.masterStyleNegativePrompt) {
+        if (!postMasterStylePromptResult.success || !postMasterStylePromptResult.masterStyleInfo) {
             await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
 
             return getNextBaseResponse({
@@ -96,14 +100,12 @@ export async function POST(request: NextRequest) {
             });
         }
 
-        const masterStylePositivePromptInfo = postMasterStylePromptResult.masterStylePositivePromptInfo;
-        const masterStyleNegativePrompt = postMasterStylePromptResult.masterStyleNegativePrompt;
+        const masterStylePositivePromptInfo = postMasterStylePromptResult.masterStyleInfo;
         const entityManifestList = postMasterStylePromptResult.entityManifestList;
 
         const patchVideoGenerationTaskStatusFinalResult = await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, {
             status: VideoGenerationTaskStatus.GENERATING_IMAGE_PROMPT,
             master_style_info: masterStylePositivePromptInfo,
-            master_style_negative_prompt: masterStyleNegativePrompt,
             entity_manifest_list: entityManifestList,
         });
 

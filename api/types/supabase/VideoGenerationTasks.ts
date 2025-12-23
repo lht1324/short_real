@@ -12,7 +12,6 @@ export interface VideoGenerationTask {
     scene_breakdown_list: SceneData[]; // jsonb, not null
     subtitle_segment_list: SubtitleSegment[]; // jsonb, not null
     master_style_info?: MasterStyleInfo;
-    master_style_negative_prompt?: string;
     entity_manifest_list?: InitialEntityManifestItem[];
     video_title?: string;
     video_description?: string;

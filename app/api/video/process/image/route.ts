@@ -51,11 +51,10 @@ export async function POST(request: NextRequest) {
         const sceneDataList = videoGenerationTask.scene_breakdown_list;
         const videoTitle = videoGenerationTask.video_title;
         const videoDescription = videoGenerationTask.video_description;
-        const masterStylePositivePromptInfo = videoGenerationTask.master_style_info;
-        const masterStyleNegativePrompt = videoGenerationTask.master_style_negative_prompt;
+        const masterStyleInfo = videoGenerationTask.master_style_info;
         const entityManifestList = videoGenerationTask.entity_manifest_list;
 
-        if (!sceneDataList || !videoTitle || !videoDescription || !masterStylePositivePromptInfo || !masterStyleNegativePrompt || !entityManifestList) {
+        if (!sceneDataList || !videoTitle || !videoDescription || !masterStyleInfo || !entityManifestList) {
             await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
 
             return getNextBaseResponse({
@@ -69,7 +68,7 @@ export async function POST(request: NextRequest) {
             console.log(`Scene #${sceneData.sceneNumber} postImageGenPrompt() is executed.`);
             const postImageGenPromptResult = await openAIServerAPI.postImageGenPrompt(
                 sceneData.imageGenPromptDirective,
-                masterStylePositivePromptInfo,
+                masterStyleInfo,
                 sceneData.narration,
                 sceneData.sceneNumber,
                 videoTitle,
@@ -85,23 +84,29 @@ export async function POST(request: NextRequest) {
 
             return {
                 ...sceneData,
-                imageGenPrompt: postImageGenPromptResult.imageGenPrompt,
+                imageGenPrompt: JSON.stringify(postImageGenPromptResult.imageGenPrompt, null, 2),
                 sceneEntityManifestList: postImageGenPromptResult.entityManifestList,
             };
         });
         const sceneDataWithImageGenPromptList = await Promise.all(sceneDataWithImageGenPromptPromiseList);
 
         for (const sceneData of sceneDataWithImageGenPromptList) {
-            const combinedMasterNegativeKeywords = `${masterStyleNegativePrompt}`.split(/\s*,\s*/);
-            const uniqueMasterNegativeKeywordSet = new Set(combinedMasterNegativeKeywords);
-            const uniqueMasterNegativePrompt = Array.from(uniqueMasterNegativeKeywordSet).join(", ");
-
             console.log(`Scene #${sceneData.sceneNumber} postImage() is executed.`);
+
+            if (!sceneData.imageGenPrompt) {
+                await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
+
+                return getNextBaseResponse({
+                    success: false,
+                    status: 404,
+                    error: `Scene #${sceneData.sceneNumber} imageGenPrompt is not exist.`
+                });
+            }
+
             const postImageResult = await imageServerAPI.postImage(
                 sceneData.imageGenPrompt as string,
                 taskId,
                 sceneData.sceneNumber,
-                uniqueMasterNegativePrompt,
             );
 
             if (!postImageResult.success) {

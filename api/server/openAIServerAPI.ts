@@ -18,6 +18,7 @@ import {
 import {MusicGenerationData} from "@/api/types/suno-api/MusicGenerationData";
 import {Entity, InitialEntityManifestItem, PhysicsProfile} from "@/api/types/open-ai/Entity";
 import {PHYSICS_LIBRARY} from "@/api/types/open-ai/PhysicsPromptLibrary";
+import {FluxPrompt} from "@/api/types/open-ai/FluxPrompt";
 
 enum OpenAIModel {
     GPT_4O_MINI = "gpt-4o-mini-2024-07-18",
@@ -185,12 +186,12 @@ Instruction: Process the input data and return the JSON output according to the 
             sceneNumber: number;
             sceneNarration: string;
         }[],
+        videoTitle: string,
+        videoDescription: string,
         aspectRatio: VideoAspectRatio = VIDEO_ASPECT_RATIOS.PORTRAIT_9_16
     ): Promise<{
         success: boolean;
-        masterStylePositivePromptInfo?: MasterStyleInfo;
-        masterStyleNegativePrompt?: string;
-        // [수정 2] 리턴 타입에 entityManifest 추가
+        masterStyleInfo?: MasterStyleInfo;
         entityManifestList?: InitialEntityManifestItem[];
         error?: {
             message: string;
@@ -215,6 +216,10 @@ Instruction: Process the input data and return the JSON output according to the 
             // [수정 3] scriptDataList를 JSON 문자열로 변환하여 컨텍스트 제공
             const userMessage = `
 <input_data>
+  <video_metadata>
+    <video_title>${videoTitle}</video_title>
+    <video_description>${videoDescription}</video_description>
+  </video_metadata>
   <target_aspect_ratio>${aspectRatio}</target_aspect_ratio>
   <style_guidelines>
     <core_concept>${style.coreConcept}</core_concept>
@@ -261,10 +266,7 @@ Instruction: Analyze the input <target_aspect_ratio>, <style_guidelines>, <full_
                 // [수정 4] 변경된 JSON 구조에 맞춰 파싱 (masterStyle + entityManifest)
                 // 프롬프트의 output_schema와 일치해야 함
                 const parsedData: {
-                    masterStyle: {
-                        positivePromptInfo: MasterStyleInfo;
-                        negativePrompt: string;
-                    };
+                    masterStyleInfo: MasterStyleInfo;
                     entityManifest: InitialEntityManifestItem[];
                     entityReasoningList: {
                         scene_number: number,
@@ -297,8 +299,7 @@ Instruction: Analyze the input <target_aspect_ratio>, <style_guidelines>, <full_
                 return {
                     success: true,
                     // 구조 분해 할당
-                    masterStylePositivePromptInfo: parsedData.masterStyle.positivePromptInfo,
-                    masterStyleNegativePrompt: parsedData.masterStyle.negativePrompt,
+                    masterStyleInfo: parsedData.masterStyleInfo,
                     entityManifestList: parsedData.entityManifest, // 추출된 캐릭터 시트 반환
                 };
 
@@ -334,7 +335,7 @@ Instruction: Analyze the input <target_aspect_ratio>, <style_guidelines>, <full_
         aspectRatio: VideoAspectRatio = VIDEO_ASPECT_RATIOS.PORTRAIT_9_16
     ): Promise<{
         success: boolean;
-        imageGenPrompt?: string;
+        imageGenPrompt?: FluxPrompt;
         entityManifestList?: Entity[],
         error?: {
             message: string;
@@ -366,7 +367,11 @@ Instruction: Analyze the input <target_aspect_ratio>, <style_guidelines>, <full_
     <aspect_ratio>${aspectRatio}</aspect_ratio>
   </video_context>
   <master_style_guide>
-    ${JSON.stringify(masterStylePromptInfo, null, 2)}
+    <optics>${JSON.stringify(masterStylePromptInfo.optics, null, 2)}</optics>
+    <color_and_light>${JSON.stringify(masterStylePromptInfo.colorAndLight, null, 2)}</color_and_light>
+    <fidelity>${JSON.stringify(masterStylePromptInfo.fidelity, null, 2)}</fidelity>
+    <global_environment>${JSON.stringify(masterStylePromptInfo.globalEnvironment, null, 2)}</global_environment>
+    <composition>${JSON.stringify(masterStylePromptInfo.composition, null, 2)}</composition>
   </master_style_guide>
   ${isEntityListNotEmpty ? `<entity_list>${JSON.stringify(sceneEntityManifestList, null, 2)}</entity_list>` : ""}
   <current_narration>
@@ -421,7 +426,7 @@ Instruction: Generate the scene instruction JSON.
             // JSON 유효성 검증
             try {
                 const instructionJSON: {
-                    image_gen_prompt: string;
+                    image_gen_prompt: FluxPrompt;
                     updated_entity_manifest?: Omit<Entity, 'role' | 'type' | 'appearance_scenes' | 'demographics'>[]
                 } = JSON.parse(generatedContent);
 
@@ -593,8 +598,8 @@ Instruction: Generate the scene instruction JSON.
             const userMessage = `
 <input_context>
   <video_metadata>
-    <title>${videoTitle}</title>
-    <description>${videoDescription}</description>
+    <video_title>${videoTitle}</video_title>
+    <video_description>${videoDescription}</video_description>
     <target_duration>${targetDuration}seconds</target_duration>
   </video_metadata>
   ${isEntityListNotEmpty ? `<vocabulary_depot>
@@ -785,37 +790,50 @@ Instruction: Generate the scene instruction JSON.
 
 
             // AI에 전달할 데이터를 명확한 구조로 재구성
-            const musicPromptRequestData = {
-                videoTotalDuration: sceneDataList.map((sceneData) => {
-                    return sceneData.sceneDuration;
-                }).reduce((acc, duration) => {
-                    return acc + duration;
-                }, 0.0), // 계산된 총 시간
-                videoTitle: videoTitle,
-                videoDescription: videoDescription,
-                fullNarrationScript: fullNarrationScript, // 감정 분석용
-                // 시각 정보 중 음악과 연관된 것만 선별
-                visualStyle: {
-                    genre: masterStyleInfo.STYLE_PREFIX,
-                    reference: masterStyleInfo.CINEMATIC_REFERENCE,
-                    mood: masterStyleInfo.EMOTIONAL_TONE,
-                    texture: masterStyleInfo.TEXTURE_ELEMENTS,
-                    color: masterStyleInfo.COLOR_PALETTE,
-                    finalMood: masterStyleInfo.FINAL_MOOD_DESCRIPTOR
+            const videoTotalDuration = sceneDataList.map((sceneData) => {
+                return sceneData.sceneDuration;
+            }).reduce((acc, duration) => {
+                return acc + duration;
+            }, 0.0);
+            const videoSceneContextList = sceneDataList.map((sceneData) => {
+                const sceneSubtitleSegmentList = sceneData.sceneSubtitleSegments;
+
+                return {
+                    sceneNumber: sceneData.sceneNumber,
+                    sceneDuration: sceneSubtitleSegmentList && sceneSubtitleSegmentList.length !== 0
+                        ? sceneSubtitleSegmentList[sceneSubtitleSegmentList.length - 1].endSec - sceneSubtitleSegmentList[0].startSec
+                        : sceneData.sceneDuration,
+                }
+            });
+            const masterStyleGuideData = {
+                // 1. 시대 및 공간 (장르와 악기 구성의 결정적 근거)
+                environment: {
+                    era: masterStyleInfo.globalEnvironment.era,
+                    location: masterStyleInfo.globalEnvironment.locationArchetype
                 },
-                // 구조 계산용 시간 리스트만 전달
-                sceneStructure: sceneDataList.map((sceneData) => {
-                    return {
-                        sceneNumber: sceneData.sceneNumber,
-                        sceneDuration: sceneData.sceneDuration,
-                    }
-                })
+                // 2. 분위기 및 조명 (조성(Key)과 화성적 색채의 근거)
+                atmosphere: {
+                    tonality: masterStyleInfo.colorAndLight.tonality,
+                    lighting: masterStyleInfo.colorAndLight.lightingSetup,
+                    exposure: masterStyleInfo.optics.exposureVibe
+                },
+                // 3. 노이즈 및 질감 (오디오 FX 및 음질 스타일의 근거)
+                fidelity: {
+                    grainLevel: masterStyleInfo.fidelity.grainLevel // "Gritty" -> Vinyl Crackle/Lo-fi 등
+                },
             }
 
             const userMessage = `
-<task_data>
-  ${JSON.stringify(musicPromptRequestData, null, 2)}
-</task_data>
+<input_data>
+  <video_metadata>
+    <video_duration>${videoTotalDuration} secs</video_duration>
+    <video_title>${videoTitle}</video_title>
+    <video_description>${videoDescription}</video_description>
+  </video_metadata>
+  <full_narration>${fullNarrationScript}</full_narration>
+  <scene_context_list>${JSON.stringify(videoSceneContextList, null, 2)}</scene_context_list>
+  <master_style_guide>${JSON.stringify(masterStyleGuideData, null, 2)}</master_style_guide>
+</input_data>
 `;
 
             const client = new OpenAI({ apiKey });
@@ -842,7 +860,7 @@ Instruction: Generate the scene instruction JSON.
             }
 
             try {
-                const parsedData: MusicGenerationData = JSON.parse(generatedContent);
+                const parsedData: Omit<MusicGenerationData, 'audioWeight'> = JSON.parse(generatedContent);
 
                 if (!parsedData.prompt || !parsedData.style || !parsedData.title) {
                     throw new Error("Missing one or more required fields: prompt, style, title");
@@ -851,7 +869,10 @@ Instruction: Generate the scene instruction JSON.
                 return {
                     success: true,
                     status: 200,
-                    data: parsedData
+                    data: {
+                        ...parsedData,
+                        audioWeight: 0.65,
+                    }
                 };
             } catch (parseError) {
                 console.error('Failed to parse music generation JSON response:', parseError);

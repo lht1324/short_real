@@ -1,5 +1,3 @@
-import Replicate, {FileOutput} from "replicate";
-import {GenerateImagesResponse, GoogleGenAI, PersonGeneration} from "@google/genai";
 import {createSupabaseServiceRoleClient} from "@/lib/supabaseServiceRole";
 import {fal} from "@fal-ai/client";
 
@@ -8,7 +6,6 @@ export const imageServerAPI = {
         imageGenPrompt: string,
         taskId: string,
         sceneNumber: number,
-        negativePrompt?: string
     ): Promise<{ success: boolean; error?: { message: string; code: string } }> {
         const supabase = createSupabaseServiceRoleClient();
 
@@ -26,7 +23,7 @@ export const imageServerAPI = {
                     image_size: "portrait_16_9",
                     num_images: 1,
                     acceleration: "none",
-                    enable_prompt_expansion: true,
+                    enable_prompt_expansion: false,
                     enable_safety_checker: false,
                     output_format: "jpeg"
                 }
