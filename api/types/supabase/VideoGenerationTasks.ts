@@ -2,6 +2,7 @@
 import {MasterStyleInfo} from "@/api/types/supabase/MasterStyleInfo";
 import {CaptionConfigState, CaptionData} from "@/components/page/workspace/editor/WorkspaceEditorPageClient";
 import {Entity, InitialEntityManifestItem} from "@/api/types/open-ai/Entity";
+import {FluxPrompt} from "@/api/types/open-ai/FluxPrompt";
 
 export interface VideoGenerationTask {
     id?: string; // uuid
@@ -67,8 +68,9 @@ export interface SceneData {
     narration: string; // 각 Scene에 보여질 자막
     sceneDuration: number;
     imageGenPromptDirective: string;
-    imageGenPrompt?: string; // 각 Scene 이미지 생성에 넣을 프롬프트
+    imageGenPrompt?: FluxPrompt; // 각 Scene 이미지 생성에 넣을 프롬프트
     videoGenPrompt?: string; // 각 Scene 영상 생성에 넣을 프롬프트
+    videoGenPromptShort?: string;
     sceneEntityManifestList?: Entity[];
     requestId?: string;
     sceneSubtitleSegments?: SubtitleSegment[];

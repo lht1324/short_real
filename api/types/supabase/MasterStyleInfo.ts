@@ -11,7 +11,16 @@ export interface MasterStyleInfo {
     colorAndLight: {
         tonality: string; // 예: "Warm earth tones"
         lightingSetup: string; // 예: "Chiaroscuro"
-        globalHexPalette: string[]; // 전체 영상의 톤을 지배하는 3가지 Hex 코드
+        globalHexPalette: {
+            materialAnchor: string;      // Fixed: Primary subject base color
+            keyLightSpectrumMin: string; // Range Start: Primary light
+            keyLightSpectrumMax: string; // Range End: Primary light
+            fillLightSpectrumMin: string;// Range Start: Secondary light
+            fillLightSpectrumMax: string;// Range End: Secondary light
+            shadowAnchor: string;        // Fixed: Environment black level
+            ambientSpectrumMin: string;  // Range Start: Atmospheric/Haze
+            ambientSpectrumMax: string;  // Range End: Atmospheric/Haze
+        };
     };
 
     // 3. 재질 및 품질 표준 (Image Prompt의 description/effects 생성 근거)

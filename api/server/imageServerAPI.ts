@@ -1,9 +1,10 @@
 import {createSupabaseServiceRoleClient} from "@/lib/supabaseServiceRole";
 import {fal} from "@fal-ai/client";
+import {FluxPrompt} from "@/api/types/open-ai/FluxPrompt";
 
 export const imageServerAPI = {
     async postImage(
-        imageGenPrompt: string,
+        imageGenPrompt: FluxPrompt,
         taskId: string,
         sceneNumber: number,
     ): Promise<{ success: boolean; error?: { message: string; code: string } }> {
@@ -17,7 +18,9 @@ export const imageServerAPI = {
 
             const output = await falAIClient.subscribe('fal-ai/flux-2', {
                 input: {
-                    prompt: imageGenPrompt,
+                    prompt: JSON.stringify(imageGenPrompt, null, 1)
+                        .replace(/\n\s*/g, ' ')
+                        .replace("fNumber", "f-number"),
                     guidance_scale: 20,
                     num_inference_steps: 50,
                     image_size: "portrait_16_9",
@@ -49,69 +52,6 @@ export const imageServerAPI = {
             
             const arrayBuffer = await imageResponse.arrayBuffer();
             const imageBuffer = Buffer.from(arrayBuffer);
-            // // 환경 변수 GOOGLE_APPLICATION_CREDENTIALS를 설정했기 때문에 API 키는 필요 없습니다.
-            // const project = process.env.GCP_PROJECT_ID; // 환경 변수
-            // const location = 'us-central1'; // 사용하려는 리전
-            //
-            // if (!project) {
-            //     return {
-            //         success: false,
-            //         error: {
-            //             message: 'Google Cloud Project ID is not configured.',
-            //             code: 'MISSING_PROJECT_ID'
-            //         }
-            //     };
-            // }
-            //
-            // // Dev ONLY!!!!!!
-            //
-            // const isDev = process.env.NODE_ENV === 'development';
-            // const credentials = isDev ? JSON.parse(process.env.GCP_CREDENTIALS_JSON!) : undefined;
-            //
-            // // 1. GoogleGenAI 클라이언트 초기화
-            // const ai = new GoogleGenAI(({
-            //     vertexai: true,
-            //     project: project,
-            //     location: location,
-            //     // DEV ONLY!!!!!
-            //     ...(isDev && credentials && {
-            //         googleAuthOptions: {
-            //             credentials: {
-            //                 ...credentials,
-            //                 private_key: credentials.private_key.replace(/\\n/g, '\n'),
-            //             },
-            //         }
-            //     })
-            // }))
-            //
-            // // 3. 이미지 생성 요청
-            // const response: GenerateImagesResponse = await ai.models.generateImages({
-            //     model: "imagen-4.0-generate-001",
-            //     prompt: imageGenPrompt,
-            //     config: {
-            //         numberOfImages: 1,
-            //         aspectRatio: "9:16",
-            //         negativePrompt: negativePrompt,
-            //         personGeneration: PersonGeneration.ALLOW_ALL,
-            //         enhancePrompt: false,
-            //     }
-            // });
-            //
-            // if (!response || !response?.generatedImages || response?.generatedImages?.length === 0) {
-            //     throw Error("No image generated from Imagen 4");
-            // }
-            //
-            // // 4. 응답에서 이미지 데이터 추출
-            // const generatedImageList = response.generatedImages;
-            //
-            // const imageBase64 = generatedImageList[0]?.image?.imageBytes;
-            //
-            // if (!imageBase64) {
-            //     throw Error("Generated image is invalid.");
-            // }
-
-            // Base64 문자열을 Node.js의 Buffer 객체로 디코딩합니다.
-            // const imageBuffer = Buffer.from(imageBase64, 'base64');
 
             // Supabase Storage에 이미지 업로드
             const { error: uploadError } = await supabase.storage

@@ -84,7 +84,7 @@ export async function POST(request: NextRequest) {
 
             return {
                 ...sceneData,
-                imageGenPrompt: JSON.stringify(postImageGenPromptResult.imageGenPrompt, null, 2),
+                imageGenPrompt: postImageGenPromptResult.imageGenPrompt,
                 sceneEntityManifestList: postImageGenPromptResult.entityManifestList,
             };
         });
@@ -104,7 +104,7 @@ export async function POST(request: NextRequest) {
             }
 
             const postImageResult = await imageServerAPI.postImage(
-                sceneData.imageGenPrompt as string,
+                sceneData.imageGenPrompt,
                 taskId,
                 sceneData.sceneNumber,
             );

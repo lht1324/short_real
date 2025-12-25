@@ -15,7 +15,7 @@ export interface FluxPromptSubject {
     type: string;
     description: string;
     pose: string;
-    position: string;
+    position: 'foreground' | 'midground' | 'background';
 }
 
 export interface FluxPromptCameraInfo {

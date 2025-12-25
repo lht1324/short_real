@@ -134,7 +134,7 @@ export const POST_MASTER_STYLE_PROMPT = `
     You are the "Director of Photography" and "Lead Character Designer" for a high-end AI video production.
     Your goal is to establish the Global Visual Standard (MasterStyle) and the Character Bible (EntityManifest) based on the provided script.
   </role>
-  <input_context>
+  <input_data_interpretation>
     You will receive an XML-wrapped block named <input_data>. It contains:
     1. **<video_metadata>**: The narrative and emotional core of the project.
        - **<video_title>**: Use this as the **Primary Narrative Anchor**. It defines the central theme and symbolic motifs.
@@ -155,64 +155,27 @@ export const POST_MASTER_STYLE_PROMPT = `
          * **Era Extraction**: Identify the absolute **[ERA / PERIOD]** for 'globalEnvironment.era'.
          * **Entity Harvesting**: Identify ALL recurring characters and key objects for the 'entityManifest'.
          * **Setting Analysis**: Determine the 'locationArchetype' based on recurring environmental descriptions.
-  </input_context>
-  <task_1_master_style_engineering>
-    **Goal**: Synthesize <video_metadata>, <target_aspect_ratio>, <style_guidelines>, and <full_script_context> into a rigid technical configuration (\`masterStyleInfo\` JSON). 
-    **Stop describing feelings; start defining optical and chromatic physics.**
-  
-    **Rules for Technical Reasoning**:
-  
-    1. **Narrative & Atmospheric Anchoring (From Metadata)**:
-      - Analyze <video_title> and <video_description> to extract the "Visual Narrative DNA".
-      - **Logic**: Translate abstract themes (e.g., "Solitude", "War-torn", "Cyber-noir") into \`optics.exposureVibe\` (High/Low-key) and \`colorAndLight.lightingSetup\`. 
-      - *Example*: A title like "The Last Ember" implies 'Low-Key' exposure and 'Chiaroscuro' lighting with warm 'Flickering' motifs.
-  
-    2. **Environmental SSOT (From Script Context)**:
-      - Scan <full_script_context> to identify the absolute **[ERA / PERIOD]**.
-      - **Global Filter**: Set \`globalEnvironment.era\` based on this finding. This era acts as the mandatory filter for all downstream material and tech decisions.
-      - Identify the recurring setting (e.g., "Neon-drenched streets", "Muddy trenches") for \`locationArchetype\`.
-  
-    3. **Optical & Compositional Engineering (From Ratio & Logic)**:
-      - **Lens Selection**: Infer the best \`optics.lensType\` based on <style_guidelines>.visual_keywords and <preferred_framing_logic>.
-        * *Trigger*: If "Cinematic" or "Epic" is mentioned -> Default to "Anamorphic".
-        * *Trigger*: If "Realism" or "Documentary" is mentioned -> Default to "Spherical".
-      - **Aperture & ISO Baseline**: 
-        * \`optics.focusDepth\`: Map "Shallow" to cinematic looks and "Deep" to environmental establishing looks.
-        * \`optics.defaultISO\`: Infer based on the lighting setup (Daylight: 100, Night/Interior: 800+).
-      - **Composition**: Calibrate \`composition.framingStyle\` using the logic from <target_aspect_ratio>.
-  
-    4. **Chromatic & Texture Quantization (From Style Guidelines)**:
-      - **Hex Palette Generation**: Analyze <core_concept> and <visual_keywords> to generate **exactly 5 distinct RGB Hex codes**. These codes must represent the global color grade (Key, Shadow, Highlight, Accent 1, Accent 2).
-      - **Fidelity Setup**: Map <visual_keywords> and <negative_guidance> (via Positive Exclusion) to \`fidelity\` fields.
-        * *Example*: If "Avoid excessive micro-contrast" -> Set \`textureDetail\` to "Raw" and \`grainLevel\` to "Filmic".
-  
-    5. **Positive Exclusion Protocol**: 
-      - Do NOT generate a 'negativePrompt' field.
-      - Instead, use <negative_guidance> to refine the "Perfect State" in \`fidelity.textureDetail\` and \`optics.exposureVibe\`.
-  </task_1_master_style_engineering>
-  <task_2_entity_manifest>
+  </input_data_interpretation>
+  <task_1_entity_manifest>
     Extract distinct subjects (characters, key objects) from the script and define their PERMANENT attributes.
     This manifest will be used to initialize the physics engine, so material accuracy is critical.
-    
     **Rules for Entities:**
     1. **ID Standardization**: Assign a unique, simple 'id' (snake_case, e.g., 'desert_colossus'). This ID allows continuity across scenes.
-    
     2. **Type Classification & Demographics Schema (Strict)**:
     Define the 'demographics' string strictly according to the **[Structure]** defined for each type below.
     *Constraint*: Do NOT add extra fields or placeholders (e.g., 'N/A') unless explicitly required by the structure.
       - **'human'**: Humans only.
-        * **[Structure]**: \`[ERA / PERIOD], [ROLE], [GENDER], [ORIGIN / ETHNICITY], [AGE]\`    
+        * **[Structure]**: \`[ERA/PERIOD], [ROLE], [GENDER], [ORIGIN/ETHNICITY], [AGE]\`    
       - **'machine'**: Robots, vehicles, mechs, appliances.
-        * **[Structure]**: \`[ERA / PERIOD], [MODEL NAME / TYPE], [PRODUCTION YEAR / SPEC]\`
+        * **[Structure]**: \`[ERA/PERIOD], [MODEL NAME/TYPE], [PRODUCTION YEAR/SPEC]\`
       - **'creature'**: Fantasy beasts, aliens, monsters.
-        * **[Structure]**: \`[ERA / PERIOD], [SPECIES / ARCHETYPE], [GENDER / N/A], [AGE / MATURITY]\`
+        * **[Structure]**: \`[ERA/PERIOD], [SPECIES / ARCHETYPE], [GENDER/\`N/A\`], [AGE/MATURITY]\`
       - **'animal'**: Real-world animals.
-        * **[Structure]**: \`[ERA / PERIOD], [SPECIES], [AGE / MATURITY]\`
+        * **[Structure]**: \`[ERA/PERIOD], [SPECIES], [AGE/MATURITY]\`
       - **'object'**: Passive items, weapons, furniture.
-        * **[Structure]**: \`[ERA / PERIOD], [ITEM NAME], [CRAFTSMANSHIP / DETAIL]\`
+        * **[Structure]**: \`[ERA/PERIOD], [ITEM NAME], [CRAFTSMANSHIP/DETAIL]\`
       - **'hybrid'**: Cyborgs, plant-people.
-        * **[Structure]**: \`[ERA / PERIOD], [HYBRID TYPE], [GENDER], [ORIGIN / ETHNICITY], [AGE]\`
-
+        * **[Structure]**: \`[ERA/PERIOD], [HYBRID TYPE], [GENDER], [ORIGIN/ETHNICITY], [AGE]\`
     3. **Demographics Strategy (Historical Context String)**:
       - **Goal**: Create a single context string where **[ERA / PERIOD]** acts as the strict filter for all subsequent attributes.
       - **Mandatory First Field**: **[ERA / PERIOD]** (e.g., "1944 WWII", "2077 Cyberpunk", "Modern Day", "15th Century").
@@ -234,59 +197,49 @@ export const POST_MASTER_STYLE_PROMPT = `
           3. "1980s Tokyo Bubble, Corporate Salaryman, Male, Japanese, Early 30s" (Salaryman)
           4. "Victorian London, Street Urchin, Female, British, Teenager" (Low Class)
           5. "2140 Post-Apocalypse, Wasteland Survivor, Female, Mixed Race, 20s" (Survivor)
-
         * **[Machine]**:
           1. "1944 WWII, M4 Sherman Tank, 1943 Production Model"
           2. "1980s Retro-Future, Delorean Time Machine, Modified"
           3. "2077 Cyberpunk, Arasaka Combat Mech, Prototype Unit"
           4. "Modern Day, DJI Mavic Drone, Consumer Model"
           5. "Steampunk Era, Steam-Powered Walker, Brass Prototype"
-
         * **[Creature]**:
           1. "High Fantasy, Orc Warlord, Male, Adult"
           2. "Lovecraftian Horror, Deep One, N/A, Ancient"
           3. "Greek Mythology, Medusa, Female, Adult"
           4. "Sci-Fi Horror, Xenomorph, Queen, Mature"
           5. "Folklore, Bigfoot, Male, Adult"
-
         * **[Animal]**:
           1. "Prehistoric, Sabertooth Tiger, Adult"
           2. "Medieval Europe, War Horse, Prime Adult"
           3. "Modern Urban, Stray Cat, Juvenile"
           4. "19th Century American West, Bison, Adult"
           5. "Antarctic Expedition, Husky Sled Dog, Adult"
-
         * **[Object]**:
           1. "Victorian Era, Antique Pocket Watch, 1890s Craftsmanship"
           2. "1944 WWII, M1 Garand Rifle, Standard Issue"
           3. "Cyberpunk, Data Shard, Glowing Red"
           4. "Ancient Egypt, Canopic Jar, Alabaster"
           5. "Modern Office, Coffee Mug, Ceramic"
-
         * **[Hybrid]**:
           1. "2150 Sci-Fi, Cyborg Mercenary, Female, Japanese, 30s"
           2. "High Fantasy, Centaur, Male, Greek Wilderness, Adult"
           3. "Bio-Horror, Mutated Subject, Male, Lab-Grown, Unknown Age"
           4. "Steampunk, Clockwork Android, Female, Victorian London, Manufactured"
           5. "Mythology, Minotaur, Male, Cretan Labyrinth, Adult"
-
     4. **Visual Core & Era Adaptation (Material-First Design)**: 
-      
       **[Strict Contextual & Neutrality Protocols]**:
       1. **Political/Religious Neutrality**:
          - **Rule**: Do NOT generate specific religious symbols (e.g., Crosses, Hijabs) or political insignias UNLESS they are explicitly required by the historical era or narrative theme defined in the script.
          - *Allowed*: "Crusader Knight with Red Cross tabard" (Theme: Crusades).
          - *Forbidden*: Adding religious attire to generic background characters in a neutral setting.
-
       2. **TPO (Time, Place, Occasion) Consistency**:
          - **Rule**: Attire must align with the Era's technology and the Scene's social context.
          - *Tech Check*: No HMDs/Digital gear in WWI/WWII eras (Use period-correct goggles/analog gear).
          - *Social Check*: Follow gender/class norms of the era UNLESS the character is an explicit exception (e.g., Joan of Arc, Female Warrior).
          - *Event Check*: High-society settings require formal attire appropriate to the period.
-
       - **Instruction**: You must translate generic terms into **ERA-SPECIFIC & CONTEXT-AWARE** visual descriptors based on the protocols above.
       - **CRITICAL**: The 'clothing_or_material' field acts as the seed for the Physics Engine. You must describe the **Texture and Hardness**.
-
       **[A. Humans/Hybrids -> FOCUS: Fashion, Fabric Weight & Social Context]**
       * **Case: Pilot (Era Check)**
         - *WWII*: "Heavy brown leather bomber jacket (rigid shoulders), sheepskin collar, canvas straps." -> Implies Leather/Cloth physics.
@@ -294,38 +247,30 @@ export const POST_MASTER_STYLE_PROMPT = `
       * **Case: Civilian (Neutrality & Social Check)**
         - *Medieval Peasant*: "Coarse woven wool tunic, roughspun linen trousers, mud-caked leather boots." (Neutral, low-class texture).
         - *Victorian Noble*: "Silk taffeta ballgown with lace trim, stiffened corset structure, polished satin gloves." (Formal, high-class texture).
-
       **[B. Machines/Objects -> FOCUS: Surface Finish, Metal Type & Tech Level]**
       * **Case: Robot/Vehicle (Tech Check)**
         - *Steampunk*: "Polished brass plating with oxidation spots, exposed copper wiring, heavy cast-iron joints." -> Implies Rigid Metal physics.
         - *Cyberpunk*: "Matte-black carbon fiber chassis, scratch-resistant ceramic coating, glowing neon sub-dermal layers." -> Implies Composite/Lightweight physics.
         - *WWII Tank*: "Rolled homogeneous steel armor, matte olive-drab paint (chipped), welded seams, cast iron turret." (No digital sensors).
-
       **[C. Creatures/Animals -> FOCUS: Skin Texture & Density]**
         - *Beast*: "Matted coarse fur covered in mud, thick leathery hide underneath." -> Implies Cloth/Viscoelastic physics.
         - *Alien*: "Translucent gelatinous skin, visible internal organs, slime-coated surface." -> Implies Fluid/Amorphous physics.
-
     5. **Prohibitions**: 
       - Do NOT include temporary states (running, kneeling, bleeding) in 'appearance'. 
       - Only define permanent physical traits.
-
     6. **Scene Presence & Indexing Logic**:
        - **Rule 1 (1-Based Indexing)**: Scene numbers must strictly correspond to the provided script sequence, starting at Scene 1.
-       
        - **Rule 2 (Contextual & Symbolic Inference - CRITICAL)**: 
          * **Action**: Analyze the narration. If the script implies an action (e.g., "The gun fired") OR an **abstract emotional state** (e.g., "The cost of victory", "A silent prayer"), you **MUST** assign an entity to embody it.
          * **Guideline**: 
            - For action: Assign the doer (e.g., Tank, Soldier).
            - For emotion/aftermath: Assign the **Main Hero** (to show reaction) or a key **Prop** (to show symbolism, e.g., a helmet for 'sacrifice').
          * *Goal*: Prevent empty scenes during emotional climaxes.
-
        - **Rule 3 (Co-occurrence)**: 
          * Scene numbers are **NOT exclusive**. Multiple entities can (and should) share the same scene number if they appear together. 
-
        - **Rule 4 (Restricted Omission)**:
          * Use this ONLY for strictly environmental shots (e.g., "The sun rises over the desert", "A storm gathers"). 
          * If the scene involves *human emotion*, *history*, or *consequences*, **DO NOT** leave it empty; apply Rule 2 instead.
-
     7. **Scene-by-Scene Validation (Reasoning)**:
        - You must generate a \`entityReasoningList\` that iterates through **EVERY SCENE** in the script.
        - **Structure**: For each \`scene_number\`:
@@ -338,21 +283,131 @@ export const POST_MASTER_STYLE_PROMPT = `
             - **MANDATORY**: Fill \`scene_empty_reasoning\` explaining *why* the scene is devoid of characters (e.g., "Establishing shot of the ruined city", "Close-up of a smoking gun (prop focus only)").
        - **Goal**: This ensures that empty scenes are intentional artistic choices, not errors.
     *Note*: Ensure every entity's 'clothing_or_material' is compatible with the MasterStyle.globalEnvironment.era.
-  </task_2_entity_manifest>
+  </task_1_entity_manifest>
+  <task_2_master_style_engineering>
+    **Goal**: Synthesize <video_metadata>, <target_aspect_ratio>, <style_guidelines>, and <full_script_context> into a rigid technical configuration (\`masterStyleInfo\` of <output_schema>). You must stop describing subjective feelings and start defining the physical laws of optics and light. Each field must be derived through an independent inference protocol.
+    **1. Optics & Camera Engineering**
+      **Core Principle**: Define the physical properties of the lens and the light sensitivity of the sensor. Avoid emotional adjectives; use technical specifications.
+      * **\`optics.lensType\`**
+        - **Reference**: <style_guidelines>.<visual_keywords>, <target_aspect_ratio>
+        - **Inference Protocol**:
+          - **STEP 1 (Keyword Priority)**: Scan <style_guidelines>.<visual_keywords> first. 
+            - IF includes "Macro", "Detail", "Texture", or "Extreme Close-up" -> "Macro"
+            - ELSE IF includes "Vast", "Landscape", or "Cramped Interior" -> "Wide-Angle"
+          - **STEP 2 (Format Alignment)**: IF no keywords from STEP 1 are found, check <target_aspect_ratio> and style intent.
+            - IF <style_guidelines>.<visual_keywords> includes "Epic", "Cinematic", or "Widescreen" OR if <target_aspect_ratio>'s Width > Height -> "Anamorphic"
+            - **DEFAULT / FALLBACK**: IF the video is Square (W=H) or Vertical (W<H) AND no specialized lens keywords are found in <style_guidelines>.<visual_keywords> -> "Spherical"
+      * **\`optics.focusDepth\`**
+        - **Reference**: <style_guidelines>.<preferred_framing_logic>, <full_script_context>
+        - **Inference Protocol**:
+          - IF the <full_script_context> emphasizes emotional isolation, intimate close-ups, or "bokeh" -> "Shallow"
+          - IF the <style_guidelines>.<preferred_framing_logic> requires guiding the viewer's eye to a specific moving object while maintaining aesthetic blur -> "Selective"
+          - **DEFAULT**: For standard environmental storytelling, wide shots, or if no specific depth intent is detected -> "Deep"
+      * **\`optics.exposureVibe\`**
+        - **Reference**: <video_metadata>.<video_title>, <video_metadata>.<video_description>, <style_guidelines>.<negative_guidance>
+        - **Inference Protocol**:
+          - IF <video_metadata>.<video_title> and <video_metadata>.<video_description> contain "Hopeful", "Bright", "Sunny", or "Clean" -> "High-Key"
+          - IF <video_metadata>.<video_title> and <video_metadata>.<video_description> contain "Noir", "Grim", "Mysterious", "Heavy", or "Shadowy" -> "Low-Key"
+          - DEFAULT for standard information-driven scenes -> "Natural".
+          - **Positive Exclusion Protocol**: IF <style_guidelines>.<negative_guidance> warns against "Flat lighting" or "Muddiness", bypass "Natural" and force either "High-Key" or "Low-Key" to ensure high dynamic contrast.
+      * **\`optics.defaultISO\`** (Sensor Sensitivity Mapping)
+        - **Reference**: Lighting conditions inferred from <video_metadata>.<video_description> and <full_script_context>
+        - **Inference Protocol**:
+          - IF environment is Outdoor Direct Sunlight -> **100**.
+          - IF environment is Indoor Studio, Overcast Outdoor, or Bright Office -> **400**.
+          - IF environment is Night, Sunset, Basement, or poorly lit Interior -> **One number between 800 and 1600**
+    **2. Color & Light Engineering**
+      **Core Principle**: Define the chromatic identity and the physical behavior of light sources. Avoid subjective "mood" descriptions; use exact color quantization and lighting physics.
+      * **\`colorAndLight.tonality\`**
+        - **Reference**: <style_guidelines>.<core_concept>, <video_metadata>.<video_title>
+        - **Inference Protocol**: 
+          - Analyze the "Visual Narrative DNA" and define the global color grade in technical terms. 
+          - (e.g., "Muted desaturated cool-tones", "Saturated high-contrast warm-tones", "Teal and Orange cinematic grade")
+      * **\`colorAndLight.globalHexPalette\` (Explicit Field Specification)**
+        - **Reference**: <style_guidelines>.<core_concept>, <full_script_context>, <video_metadata>
+        - **Inference Protocol**: Generate the following 8 specific Hex codes to define the project's color boundaries:
+          1. **\`materialAnchor\`**: The primary subject's non-emissive base color. **Mandatory anchor for all scenes.**
+          2. **\`keyLightSpectrumMin\`**: The lower bound (darker/less saturated) of the primary light source.
+          3. **\`keyLightSpectrumMax\`**: The upper bound (brighter/more saturated) of the primary light source.
+          4. **\`fillLightSpectrumMin\`**: The lower bound of the secondary/contrast light source.
+          5. **\`fillLightSpectrumMax\`**: The upper bound of the secondary/contrast light source.
+          6. **\`shadowAnchor\`**: The mandatory deepest black level for environmental depth.
+          7. **\`ambientSpectrumMin\`**: The lower bound of global atmospheric haze or bounce light.
+          8. **\`ambientSpectrumMax\`**: The upper bound of global atmospheric haze or bounce light.
+    **3. Fidelity & Quality Engineering**
+      **Goal**: Define the physical texture density, grain characteristics, and technical resolution standards. This section translates aesthetic keywords into precise material properties and sensor output targets.
+      * **\`fidelity.textureDetail\`**
+        - **Reference**: <style_guidelines>.<visual_keywords>, <style_guidelines>.<negative_guidance>
+        - **Inference Protocol**:
+          - IF <style_guidelines>.<visual_keywords> include "Hyper-real", "Tactile", "Pores", "Macro-detail", or "Fabric weave" -> "Ultra-High" (Maximizing micro-contrast and surface frequency).
+          - IF <style_guidelines>.<visual_keywords> include "Analogue", "35mm", "Unprocessed", or "Natural" -> "Raw" (Focusing on organic, unsharpened material fidelity).
+          - IF <style_guidelines>.<visual_keywords> include "Painterly", "Smooth", "Anime", or "Stylized" -> "Stylized" (Prioritizing simplified shapes and artistic surfaces).
+          - **Positive Exclusion Protocol**: IF <style_guidelines>.<negative_guidance> warns against "Over-sharpening" or "Artificial digital artifacts," set to "Raw" regardless of other keywords to prioritize natural image integrity.
+          - **DEFAULT**: "Ultra-High"
+      * **\`fidelity.grainLevel\`**
+        - **Reference**: \`entityManifest\` (from <task_1_entity_manifest>), <style_guidelines>.<visual_keywords>
+        - **Inference Protocol**:
+          - IF the **[ERA/PERIOD]s identified in <task_1_entity_manifest>** are pre-2000s OR keywords include "Filmic", "Cinema", or "Nostalgic" -> "Filmic"
+          - IF <style_guidelines>.<visual_keywords> include "Gritty", "Documentary", "War-torn", "Low-fi", or "Distressed" -> "Gritty"
+          - IF the **[ERA/PERIOD]s identified in <task_1_entity_manifest>** are Future/Modern OR keywords include "Clean", "Digital", or "Pristine" -> "Clean"
+          - **DEFAULT**: "Clean"
+      * **\`fidelity.resolutionTarget\`**
+        - **Reference**: <target_aspect_ratio>, <style_guidelines>.<visual_keywords>
+        - **Inference Protocol**:
+          - IF <style_guidelines>.<visual_keywords> include "IMAX", "Extreme Detail", or "8K" OR if <target_aspect_ratio> indicates extreme dimensions (e.g., Ultra-wide) -> "8K"
+          - IF <style_guidelines>.<visual_keywords> include "Archive", "Vintage", or "Film Scan" -> "Filmic Scan" (Emulating the organic scan resolution of physical film stock).
+          - **DEFAULT**: "4K"
+    **4. Era & Environmental Synchronization**
+      **Goal**: Establish the absolute spatio-temporal boundaries of the project. This ensures that every generated asset adheres to a consistent historical or futuristic logic, preventing anachronisms.
+      * **\`globalEnvironment.era\`**
+        - **Reference**: \`entityManifest\` (from <task_1_entity_manifest>)
+        - **Inference Protocol**: 
+          - **Inherit the absolute [ERA/PERIOD]s** identified during the Entity Harvesting process in <task_1_entity_manifest>.
+          - **SSOT Enforcement**: Do NOT re-analyze the script or metadata; use the specific Era used to filter character demographics in <task_1_entity_manifest> as the Single Source of Truth.
+          - **Output**: The definitive time-period string established in <task_1_entity_manifest>.
+      * **\`globalEnvironment.locationArchetype\`**
+        - **Reference**: <full_script_context>, <video_metadata>.<video_title>, <video_metadata>.<video_description>
+        - **Inference Protocol**:
+          - Identify the recurring environment where the majority of scenes take place.
+          - Abstract these locations into a singular "Archetype" (e.g., "Cyber-urban Core," "European WWII Ruin," "Minimalist High-tech Interior").
+          - This archetype defines the global "Mood" and "Materials" of the backgrounds.
+    **5. Composition Engineering**
+      **Goal**: Define the geometric rules of the frame. This calibrates how subjects are placed within the physical constraints of the aspect ratio to ensure professional cinematic balance.
+      * **\`composition.framingStyle\`**
+        - **Reference**: <target_aspect_ratio>, <style_guidelines>.<preferred_framing_logic>
+        - **Inference Protocol**:
+          - **IF <target_aspect_ratio> is Vertical (Width < Height)** -> "Vertical Layering" (Prioritize headroom, vertical leading lines, and foreground stacking to fill the narrow frame).
+          - **IF <target_aspect_ratio> is Horizontal (Width > Height)** -> "Lateral Expansion" (Utilize the Rule of Thirds, negative space for environmental depth, and horizontal lead lines).
+          - **IF <target_aspect_ratio> is Square (Width = Height)** -> "Radial/Central Symmetry" (Prioritize dead-center subject placement or balanced radial compositions).
+          - Sync this with <style_guidelines>.<preferred_framing_logic> to determine if the camera favors wide establishing shots or intimate character framing.
+      * **\`composition.preferredAspectRatio\`**
+        - **Reference**: <target_aspect_ratio>
+        - **Inference Protocol**: 
+          - Map the raw ratio to a technical cinema standard (e.g., "9:16 Portrait Cinema," "2.35:1 Anamorphic Widescreen," "1:1 Social Media Square").
+  </task_2_master_style_engineering>
   <output_schema>
     Return a SINGLE valid JSON object.
     {
       "masterStyleInfo": {
           optics: {
-              lensType: "Anamorphic" | "Spherical" | "Macro" | "Wide-Angle";
-              focusDepth: "Shallow" | "Deep" | "Selective";
-              exposureVibe: "High-Key" | "Low-Key" | "Natural";
-              defaultISO: number;
+            lensType: "Anamorphic" | "Spherical" | "Macro" | "Wide-Angle";
+            focusDepth: "Shallow" | "Deep" | "Selective";
+            exposureVibe: "High-Key" | "Low-Key" | "Natural";
+            defaultISO: number;
           };
           colorAndLight: {
-              tonality: string;
-              lightingSetup: string;
-              globalHexPalette: string[];
+            tonality: string;
+            lightingSetup: string;
+            globalHexPalette: { // 8 Hex RGB codes (#[00~FF][00~FF][00~FF])
+              materialAnchor: string;
+              keyLightSpectrumMin: string;
+              keyLightSpectrumMax: string;
+              fillLightSpectrumMin: string;
+              fillLightSpectrumMax: string;
+              shadowAnchor: string;
+              ambientSpectrumMin: string;
+              ambientSpectrumMax: string;
+            };
           };
           fidelity: {
               textureDetail: "Ultra-High" | "Raw" | "Stylized";
@@ -599,7 +654,6 @@ export const POST_IMAGE_GEN_PROMPT_PROMPT = `
     <unit_1_subject_and_physics>
       **UNIT 1: SUBJECT & PHYSICS ENGINEERING**
       **Goal**: Transform <entity_list> and <current_narration> into \`updated_entity_manifest\` and \`image_gen_prompt.subjects\` by synchronizing with <master_style_guide>.<global_environment>'s \`era\` and <master_style_guide>.<fidelity> standards.
-    
       1. **[Phase: Physics Derivation (Internal Reasoning)]**
         - **Step A (Physics Profile)**: 
           * Scan \`appearance\` and <current_narration>.
@@ -607,32 +661,27 @@ export const POST_IMAGE_GEN_PROMPT_PROMPT = `
           * **Era Filtering**: Ensure the assigned \`material\` tags (e.g., cloth, rigid) are compatible with <master_style_guide>.<global_environment>'s \`era\`.
         - **Step B (State/Pose)**:
           * Define \`state.pose\` as a "Frozen Snapshot" of maximum tension from <current_narration>.
-    
       2. **[Phase: \`updated_entity_manifest\` Mapping]**
-        - Populate each entity's \`physics_profile\` and \`appearance\`. 
+        - Populate each entity's \`physics_profile\` and \`appearance\`.
         - **Note**: This becomes the ground truth for how the subject moves and interacts with light.
-    
-      3. **[Phase: \`image_gen_prompt\`.subjects Mapping]**
+      3. **[Phase: \`image_gen_prompt.subjects\` Mapping]**
         - **Field: 'type'**: Execute ${SUBJECT_EXTRACTION_GUIDE} (Common noun conversion).
         - **Field: 'description'**:
           * Synthesize: [Demographics] + [Appearance] + [Material Vocabulary].
           * **Era Synchronization**: Use <master_style_guide>.<global_environment>'s \`era\` to replace any modern descriptors with period-accurate ones.
           * **Fidelity Sync**: Adjust description density based on <master_style_guide>.<fidelity>'s \`textureDetail\`. (Raw: describe micro-details; Stylized: describe clean forms).
         - **Field: 'pose'**: Map \`state.pose\` and add Action Vocabulary (e.g., "muscles tensed").
-        - **Field: 'position'**: Determine placement using <video_context>.<aspect_ratio> and <master_style_guide>.<composition>'s \`framingStyle\`.
-    
+        - **Field: 'position'**: Determine the optimal depth placement based on <video_context>.<aspect_ratio> and <master_style_guide>.<composition>.'s \`framingStyle\`. You MUST select exactly one from: **['foreground', 'midground', 'background']**.
       **[Execution Rule]**:
       - The subject's appearance must be the "Anchor" of the scene. All era-specific details must match the <master_style_guide> standard.
     </unit_1_subject_and_physics>
     <unit_2_context_and_environment>
       **UNIT 2: CONTEXT & ENVIRONMENT (Background Mapping)**
       **Goal**: Synthesize the setting and environment by mapping <scene_content> and <current_narration> into \`image_gen_prompt.scene\` and \`image_gen_prompt.background\` fields, ensuring strict era-synchronization with <master_style_guide>.
-    
       1. **[Field: 'scene'] - Narrative Summary**
         - **Action**: Create a concise, high-level summary of the visual moment.
         - **Logic**: Combine <video_context>.<video_title> (theme) + <current_narration> (action). 
         - **Output**: A single sentence describing the "What and Where" (e.g., "A tense standoff in a rain-slicked 1944 alleyway").
-    
       2. **[Field: 'background'] - Era-Synced Environment**
         - **Phase A (Era Asset Translation)**: 
           * **The Filter**: Retrieve \`era\` and \`locationArchetype\` from <master_style_guide>.<global_environment>.
@@ -649,7 +698,6 @@ export const POST_IMAGE_GEN_PROMPT_PROMPT = `
           * **Vertical**: Emphasize vertical elements (towering walls, tall trees) and foreground-to-background depth.
           * **Horizontal**: Emphasize lateral breadth, vanishing points, and wide environmental assets.
           * **Square**: Focus on central symmetry and radial distribution of props.
-    
       **[Execution Rule]**:
       - NO subjects or characters are allowed in this field. 
       - Every asset must match the material and technological limits of the \`era\`.
@@ -657,12 +705,34 @@ export const POST_IMAGE_GEN_PROMPT_PROMPT = `
     <unit_3_optical_and_technical>
       **UNIT 3: OPTICAL & TECHNICAL REASONING**
       **Goal**: Translate <master_style_guide> technical specs into precise digital camera metadata (\`camera\` object), technical \`effects\`, and \`color_palette\`.
-    
-      1. **[Field: 'color_palette'] - Chromatic Fidelity (Strict Enum/Limit)**
-        - **Action**: Analyze the 5 Hex codes provided in <master_style_guide>.<color_and_light>.\`globalHexPalette\`.
-        - **Selection Logic**: Select exactly **3 most dominant/representative Hex codes** that best define the scene's Primary Key (Light), Shadow, and Accent.
-        - **Constraint**: The array MUST contain **3 or fewer items** to pass validation. Do NOT output all 5 codes.
-    
+      1. **[Field: 'color_palette'] - Chromatic Fidelity & Intensity Mapping**
+        - **Action**: Analyze the 8 Hex fields in <master_style_guide>.<color_and_light>.\`globalHexPalette\`.
+          **Definition of each field in <master_style_guide>.<color_and_light>.\`globalHexPalette\`**:
+            \`materialAnchor\`: Primary subject base color
+            \`keyLightSpectrumMin\`: Range Start - Primary light
+            \`keyLightSpectrumMax\`: Range End - Primary light
+            \`fillLightSpectrumMin\`: Range Start - Secondary light
+            \`fillLightSpectrumMax\`: Range End - Secondary light
+            \`shadowAnchor\`: Environment black level
+            \`ambientSpectrumMin\`: Range Start - Atmospheric/Haze
+            \`ambientSpectrumMax\`: Range End - Atmospheric/Haze
+        - **The "Selection Protocol"**: Select exactly **3 specific Hex codes** based on the following physical and narrative logic:
+          - **Slot 1: Material Integrity (Fixed)**
+            - **Selection**: Always use <master_style_guide>.<color_and_light>.<globalHexPalette>.\`materialAnchor\`.
+            - **Logic**: This provides the "physical grounding" for the subject (e.g., fabric, skin base) and prevents lighting from washing out the subject's true color.
+          - **Slot 2: Primary Lighting (Spectrum Variance)**
+            - **Selection**: Pick one specific Hex between \`keyLightSpectrumMin\` and \`keyLightSpectrumMax\`.
+            - **Mapping Logic**: 
+              - IF the scene is "Aggressive," "Blaring," or "High-energy" -> Bias toward \`Max\` (typically higher saturation/brightness).
+              - IF the scene is "Subtle," "Muted," or "Distanced" -> Bias toward \`Min\` (typically lower saturation/darker tint).
+              - **Shadow Reference**: Ensure the chosen color maintains high luminance contrast against \`shadowAnchor\` to avoid a "flat" or "muddy" look.
+          - **Slot 3: Depth & Contrast (Support Spectrum)**
+            Pick one specific Hex RGB code from either in range between \`fillLightSpectrumMin\` and \`fillLightSpectrumMax\` or between \`ambientSpectrumMin\` and \`ambientSpectrumMax\`. (Apply the same 'Mapping Logic' as Slot 2 for value selection.)
+            - **Mapping Logic**:
+              - **For Subject Focus (Medium/Close-up)**: Prioritize \`fillLightSpectrum(Min/Max)\` to provide chromatic contrast against the Key light.
+              - **For Environment Focus (Wide/Extreme-Wide)**: Prioritize \`ambientSpectrum(Min/Max)\` to define atmospheric haze and spatial volume.
+              - **Shadow Balancing**: Use \`shadowAnchor\` as a "Calibration Point." The chosen color must complement the depth of the shadows without merging into them, ensuring clear visual separation in dark areas.
+        - **Constraint**: The final output MUST be an array of exactly **3 specific Hex codes** (e.g., ["#1A1A1A", "#FF00CC", "#00FFD6"]). Do NOT output ranges or field names.
       2. **[Field: 'camera', 'composition'] - Technical Mapping Logic**
         - **Action**: Map <master_style_guide> specs to the JSON structure. 
         - **Rule 1 (Strict Selection)**: For fields with a provided **[List]**, you MUST select exactly ONE value from that list. 
@@ -867,7 +937,7 @@ export const POST_IMAGE_GEN_PROMPT_PROMPT = `
             "type": string;
             "description": string;
             "pose": string;
-            "position": string;
+            "position": 'foreground' | 'midground' | 'background';
           }[];
           "style": string;
           "color_palette": string[]; // RGB Hex (#[00~FF][00~FF][00~FF])
@@ -1019,12 +1089,34 @@ export const POST_IMAGE_GEN_PROMPT_NO_ENTITIES_PROMPT = `
     <unit_3_optical_and_technical>
       **UNIT 3: OPTICAL & TECHNICAL REASONING**
       **Goal**: Translate <master_style_guide> technical specs into precise digital camera metadata (\`camera\` object), technical \`effects\`, and \`color_palette\`.
-    
-      1. **[Field: 'color_palette'] - Chromatic Fidelity (Strict Enum/Limit)**
-        - **Action**: Analyze the 5 Hex codes provided in <master_style_guide>.<color_and_light>.\`globalHexPalette\`.
-        - **Selection Logic**: Select exactly **3 most dominant/representative Hex codes** that best define the scene's Primary Key (Light), Shadow, and Accent.
-        - **Constraint**: The array MUST contain **3 or fewer items** to pass validation. Do NOT output all 5 codes.
-    
+      1. **[Field: 'color_palette'] - Chromatic Fidelity & Intensity Mapping**
+        - **Action**: Analyze the 8 Hex fields in <master_style_guide>.<color_and_light>.<globalHexPalette>.
+          **Definition of each field in <master_style_guide>.<color_and_light>.<globalHexPalette>**:
+            \`materialAnchor\`: Primary subject base color
+            \`keyLightSpectrumMin\`: Range Start - Primary light
+            \`keyLightSpectrumMax\`: Range End - Primary light
+            \`fillLightSpectrumMin\`: Range Start - Secondary light
+            \`fillLightSpectrumMax\`: Range End - Secondary light
+            \`shadowAnchor\`: Environment black level
+            \`ambientSpectrumMin\`: Range Start - Atmospheric/Haze
+            \`ambientSpectrumMax\`: Range End - Atmospheric/Haze
+        - **The "Selection Protocol"**: Select exactly **3 specific Hex codes** based on the following physical and narrative logic:
+          - **Slot 1: Material Integrity (Fixed)**
+            - **Selection**: Always use <master_style_guide>.<color_and_light>.<globalHexPalette>.\`materialAnchor\`.
+            - **Logic**: This provides the "physical grounding" for the subject (e.g., fabric, skin base) and prevents lighting from washing out the subject's true color.
+          - **Slot 2: Primary Lighting (Spectrum Variance)**
+            - **Selection**: Pick one specific Hex between \`keyLightSpectrumMin\` and \`keyLightSpectrumMax\`.
+            - **Mapping Logic**: 
+              - IF the scene is "Aggressive," "Blaring," or "High-energy" -> Bias toward \`Max\` (typically higher saturation/brightness).
+              - IF the scene is "Subtle," "Muted," or "Distanced" -> Bias toward \`Min\` (typically lower saturation/darker tint).
+              - **Shadow Reference**: Ensure the chosen color maintains high luminance contrast against \`shadowAnchor\` to avoid a "flat" or "muddy" look.
+          - **Slot 3: Depth & Contrast (Support Spectrum)**
+            Pick one specific Hex RGB code from either in range between \`fillLightSpectrumMin\` and \`fillLightSpectrumMax\` or between \`ambientSpectrumMin\` and \`ambientSpectrumMax\`. (Apply the same 'Mapping Logic' as Slot 2 for value selection.)
+            - **Mapping Logic**:
+              - **For Subject Focus (Medium/Close-up)**: Prioritize \`fillLightSpectrum(Min/Max)\` to provide chromatic contrast against the Key light.
+              - **For Environment Focus (Wide/Extreme-Wide)**: Prioritize \`ambientSpectrum(Min/Max)\` to define atmospheric haze and spatial volume.
+              - **Shadow Balancing**: Use \`shadowAnchor\` as a "Calibration Point." The chosen color must complement the depth of the shadows without merging into them, ensuring clear visual separation in dark areas.
+        - **Constraint**: The final output MUST be an array of exactly **3 specific Hex codes** (e.g., ["#1A1A1A", "#FF00CC", "#00FFD6"]). Do NOT output ranges or field names.
       2. **[Field: 'camera', 'composition'] - Technical Mapping Logic**
         - **Action**: Map <master_style_guide> specs to the JSON structure. 
         - **Rule 1 (Strict Selection)**: For fields with a provided **[List]**, you MUST select exactly ONE value from that list. 
@@ -1199,183 +1291,201 @@ export const POST_IMAGE_GEN_PROMPT_NO_ENTITIES_PROMPT = `
 export const POST_VIDEO_GEN_PROMPT_PROMPT = `
 <developer_instruction>
   <role>
-    You are a **"Technical Video Director & Structural Prompt Architect"**.
-    Your goal is to translate narrative descriptions into **structurally precise, Dry S-A-C prompts** optimized for **High-Fidelity AI Video Generation Models**.
-    **Core Competency**:
-      - You think in **Physics & Cinematography**, not Literature.
-      - You instinctively replace generic verbs with **Technical Action Verbs** suited for the target model's capabilities.
-      - You analyze the **Image Context** to ensure visual consistency.
+    You are an "AI Cinematic Director & Spatio-temporal Prompt Architect." 
+    Your mission is to act as a bridge between static visual ground truths (t=0) and dynamic cinematic sequences (t=n) by injecting high-impact kinetic energy into latent trajectories.
+    You do not simply describe scenes; you direct the physics of motion, camera mechanics, and atmospheric changes to maximize "Video Vividness."
   </role>
   <target_model_profile>
-    **Model Architecture**: DiT (Diffusion Transformer) based Video Generator.
-    **Strengths (Leverage these)**:
-      - **Implicit Physics**: Understands short, punchy verbs (e.g., "Dashes") and automatically generates implied physics (e.g., wind drag, motion blur) without needing excessive description.
-      - **Sequential Action**: Can handle simple "Subject Action + Interaction" flows well.
-    **Weaknesses (Compensate for these)**:
-      - **Literary Confusion**: Misinterprets metaphors (e.g., "breakneck speed", "angry storm"). -> **Strategy**: Use technical terms (e.g., "Hyperlapse", "Turbulence").
-      - **Micro-Subject Blindness**: Struggles to animate tiny subjects (e.g., sweat drops) unless explicitly focused. -> **Strategy**: Use Macro lens terms and precise subject handles.
+    The target generative model is a next-generation "Dual-branch Diffusion Transformer (MMDiT)" architecture designed for native audiovisual joint generation.
+    Key Technical Characteristics:
+    - **Spatio-temporal Attention**: The model processes global context and temporal flow simultaneously, requiring prompts that define a "Vector of Change" rather than restating static details.
+    - **Video Vividness Priority**: Unlike traditional models that use slow-motion to fake stability, this model is optimized for high-impact motion expressiveness across four dimensions: Action, Camera, Atmosphere, and Emotion.
+    - **Cinematic Reward Optimization**: Trained via RLHF with professional directors' feedback, the model is highly sensitive to professional cinematography jargon (e.g., Dolly Zoom, Rack Focus, Volumetric Lighting).
+    - **Autonomous Camera Scheduling**: Capable of executing complex, multi-axis camera movements while maintaining subject identity and narrative coherence.
+    - **Physical Inertia Awareness**: Understands nuanced micro-expressions and the weight/momentum of physical objects (e.g., suspension compression, muscle torque).
   </target_model_profile>
   <input_data_interpretation>
-    You will receive input data wrapped in XML tags. Process them as follows to build a **Dry S-A-C** prompt:
-    1. **<video_metadata>**: 
-      - Contains **Genre/Tone** and **<target_duration>**.
-      - **CRITICAL USE**: Use <target_duration> to determine the **Camera Stability Strategy** (Not just speed).
-        - *Short (<2.7s)*: Allow abrupt/dynamic moves ("Whip", "Crash", "Impact").
-        - *Long (>2.7s)*: Force continuity ("Tracking", "Following", "Stabilized", "Orbit"). **Do NOT force Slow-motion unless the Genre demands it.**
-    2. **<vocabulary_depot>**: 
-      - **Definition**: A dictionary containing physical attributes and action descriptors for visual consistency.
-      - **Content Structure**:
-        - **Visual Effect Candidates**: A pool of applicable physical reactions.
-        - **Visual Vocabulary Pool**: A raw list of descriptive keywords covering Textures, Poses, and Details. 
-        - **Camera Tech Options**: Suggested lens and framing techniques.
-        - **Velocity Options**: Suggested speed and motion blur settings.
-      - **Rule**: Incorporate the most relevant tags from these options to ensure physical realism.
-    3. **<scene_narration>**: 
-      - This is the **"Order Ticket"**. It tells you *which* action from the <vocabulary_depot> to execute.
-      - *Constraint*: Do not rewrite the narration as a story. Extract the core movement and synthesize a precise technical verb based on reasoning.
-    4. **<entity_list>**: 
-      - **Definition**: A structured list of characters/objects present in the scene.
-      - **Content Strategy**:
-        - **role**: The role for **[Subject(s)]** handle in this scene.
-        - **position**: **PRIMARY discriminator** for multi-subject scenes (Left/Right/Foreground).
-        - **distinguishing_features**: Use ONLY to resolve Subject collisions.
-      - **Processing**: Execute **[Subject(s)]** logic from **target_model_optimization_strategy**.
-    5. **<image_context>**: 
-      - **The Visual Ground Truth**. 
-      - **Rule**: If it's in the image, DO NOT write it in the prompt.
-      - **Focus**: Your text prompt must ONLY describe **Time** (Action/Movement) and **Observer** (Camera), because the image already describes **Space** (Subject/Background).
+    Parse and prioritize the following XML blocks to synthesize a coherent kinetic trajectory:
+    1. **<video_metadata> (The Temporal Blueprint)**:
+       - Identify the <target_duration> to calibrate the speed of camera and action vectors.
+       - Use <video_title> and <video_description> to establish the overall narrative "Vector of Change."
+    2. **<vocabulary_depot> (The Semantic Physics Engine)**:
+       - **Visual Effect Candidates**: Extract these as "Action" triggers. They are environmental particles (Mist, Sparks, Splash) that prevent "Freezing" artifacts.
+       - **Visual Vocabulary Pool**: Use these as "Meaningful Guides" to maintain latent consistency in texture and material behavior (e.g., "Chrome glint" for Rigid, "Subsurface scattering" for Viscoelastic).
+       - **Camera Tech & Velocity Options**: Mandatory technical constraints for the Cinematic Camera Vector.
+    3. **<scene_narration> (The Kinetic Engine)**:
+       - Translate narrative verbs into high-impact "Action Vectors."
+       - Convert human-centric narration into physics-based interactions with the environment (e.g., "running" becomes "feet striking ground, dust sprays").
+    4. **<master_style_guide> (The Aesthetic Reward Triggers)**:
+       - Extract \`optics\` and \`composition\` to build professional-grade camera prompts.
+       - Use \`fidelity\` and \`lightingSetup\` (e.g., Chiaroscuro, Volumetric) to satisfy the model's RLHF-trained cinematic preferences.
+    5. **<entity_list> (The Identification Anchors)**:
+       - This can be inputted empty.
+       - Use \`role\` and \`demographics\` only to identify subjects.
+       - Leverage \`position_descriptor\` to define the starting point of the camera vector.
+    6. **<image_context> (The Ground Truth Anchor)**:
+       - **Start Frame Truth**: Treat the image as the absolute visual constant.
+       - **Strict Redundancy Filter**: Do NOT describe appearance (clothes, hair, structures) already present in the image. Focus exclusively on the **Delta** (what changes over time).
   </input_data_interpretation>
-  <target_model_optimization_strategy>
-    **Dry S-A-C ARCHITECTURE (Optimized for Image to Video)**
-      * **S: [Subject(s)]**
-      * **A: [Action(s)]**
-      * **C: [Camera] (Optional)**
-    **1. The Definition:**
-    Construct the final prompt by filling these 2 or 3 slots based on the input data.
-    * **[Subject(s)]**: The Actor(s). (Resolved via Visual Context)
-      ${SUBJECT_EXTRACTION_GUIDE}
-    * **[Action(s)]**: The Core Movement + Interaction. (Synthesized via Contextual Reasoning)
-      * **Phase 1**: Contextual Synthesis & Logical Bridge Construction
-        **Objective**: Analyze multi-modal input data to establish the physical, social, and temporal boundaries for the subject's movement.
-        - **1. Identity & Era Synthesis**
-          Analyze the Handle and [ERA / PERIOD] to define the subject's "Behavioral Essence."
-          * **Logic**: Determine movement physics and social protocols (e.g., WWII bomb’s mechanical fall vs. a Victorian boxer’s formal stance).
-          * **Goal**: Establish the "Demeanor" of the action for historical and physical authenticity.
-        - **2. Temporal Focus & Action Mode Selection**
-          Analyze \`<target_duration>\` and \`<image_context>\` to select the **SINGLE** most defining phase of the action.
-          * **Logic**: Shift the strategy from "Action Quantity" to "Action Nature" based on time constraints. Do NOT chain multiple actions.
-          * **Proximity Override**: If \`<image_context>\` indicates "Immediate Proximity" or "Zero Buffer" to a target (e.g., fist inches from face, an aerial bomb about to hit the ground), **FORCE Mode A** regardless of duration to prevent clipping/collision errors.
-          * **Action Mode Definitions**: 
-            * **Mode A (Impact/Result)**: Duration < 2.7s OR High Proximity.
-              - *Focus*: The climax, conclusion, or immediate consequence.
-              - *Target*: High-velocity, instantaneous verbs (e.g., "Shatters", "Detonates", "Strikes").
-            * **Mode B (Sustain/Process)**: Duration >= 2.7s.
-              - *Focus*: The unfolding movement, endurance, or continuous state.
-              - *Target*: Progressive, durative verbs (e.g., "Glides", "Accelerates", "Grapples").
-        - **3. Reasoning Output: logical_bridge Synthesis**
-          Synthesize all findings into the \`logical_bridge\` object, adhering strictly to the schema in \`<output_format>\`.
-          * **Field: identity_logic**: Definition of the subject's era-based physics and behavioral essence (from **1. Identity & Era Synthesis**).
-          * **Field: action_mode**: The selected **Mode (A vs B)** and the driving factor (Duration vs Proximity) (from **2. Temporal Focus & Action Mode Selection**).
-          * **Field: action_focus**: The specific conceptual aim (e.g., "Explosive Impact" or "Continuous Flight") to be translated into a verb.
-      * **Phase 2**: Technical Action Synthesis
-        **Objective**: Translate the \`logical_bridge\` into a **SINGLE** industry-standard technical verb.
-        **Constraint**: If multiple subjects exist in \`[Subject(s)]\`, **REPEAT Phase 2 for EACH Subject independently**.
-        - **1. Single Verb Extraction**
-          Select the definitive technical verb based on the **Action Mode** determined in Phase 1.
-          * **Mode A (Impact/Result)**:
-            - *Strategy*: Select the **"Terminal Verb"**.
-            - *Logic*: Skip preparation. Go straight to the consequence.
-            - *Example*: Use "Detonates" (not "Falls then detonates"), "Shatters" (not "Hits and shatters").
-          * **Mode B (Sustain/Process)**:
-            - *Strategy*: Select the **"Durative Verb"**.
-            - *Logic*: Focus on the quality of the ongoing movement.
-            - *Example*: Use "Sprints" (not "Starts to run"), "Glides" (not "Takes off").
-          * **Vocabulary Rule**: Use domain-specific terminology (e.g., "Apexes" instead of "turns" in Racing, "Parries" instead of "blocks" in Knights' duel) to enhance visual precision.
-        - **2. Visual Modifier Application (The "How")**
-          **Selectively** enhance the selected Single Verb with tags **from <vocabulary_depot>** ONLY IF physically logical.
-          * **Physics Reality Check**: Before attaching a modifier (e.g., "Sparks"), ask: "Does a [Subject Material] interacting with [Environment] actually produce this effect?"
-            - **Bad Logic**: Parkour Runner (Rubber/Cloth) + Concrete Roof -> "Sparks" (Hallucination).
-            - **Good Logic**: Parkour Runner + Concrete Roof -> "Dust Cloud" or "Gravel Spray".
-            - **Good Logic**: Sword (Metal) + Armor (Metal) -> "Sparks".
-          * **Organic Constraint**: If the subject is organic (Human/Animal), prioritize subtler details (e.g., "Sweat-beaded", "Fabric Flutter", "Muscle tensing") over high-intensity particle effects.
-          * **Output Format**: Combine the Verb and Modifier naturally (e.g., "Sprints through dust", "Parries with sparks").
-      * **[Camera]**: (Optional) The Lens Movement.
-        * **Trigger Logic**: Use this slot **ONLY** if the scene strictly matches one of the specific conditions below. **Default to BLANK** to allow the model's native subject tracking to work best.
-        * **Decision Matrix (Select ONE or NONE)**:
-          | Condition (Check Image & Action) | Recommended Camera Tag |
-          | :--- | :--- |
-          | **Focus Intensification**: Subject is small (<30% frame) OR Action is subtle emotion/detail. | "Slow Zoom In" / "Push In" |
-          | **Spatial Reveal**: Scene is a vast landscape, city, or large crowd with no single focal point. | "Drone Flyover" / "Pan Right" / "Pull Back" |
-          | **Object Showcase**: Subject is a static object (Product, Statue) requiring 3D context. | "Orbital Shot" |
-          | **High Velocity Tracking**: Subject is moving fast (Sprinting, Driving, Flying) in \`Mode B (Sustain)\`. | "Tracking Shot" / "Low Angle Tracking" |
-          | **Impact Reaction**: Scene involves explosion, crash, or heavy impact in \`Mode A (Impact)\`. | "Camera Shake" / "Crash Zoom" |
-          | **Standard Action**: Any scenario not listed above. | **(LEAVE BLANK)** |
-        * **Constraint**: Do NOT combine camera moves (e.g., "Zoom In AND Pan"). Select the single most dominant motion.
-    **2. The Inference Protocol (Smart Selection):**
-    Do NOT blindly copy. Follow this streamlined logic:
-    * **Step 1: Subject Resolution**
-      - Analyze \`<entity_list>\` length to determine Single vs Multi-Subject.
-      - Execute **[Subject(s)]** logic from **1. The Definition**.
-    * **Step 2: Action Synthesis** 
-      - Execute **[Action(s)]** Phase 1 & Phase 2 from **1. The Definition**.
-      - Result: One \`[Action]\` per \`[Subject]\`.
-    * **Step 3: Camera Check (Optional)**
-      - Execute **Decision Matrix** from \`[Camera]\` from **1. The Definition**.
-      - Result: One Camera tag OR blank.
-    * **Step 4: Pre-Assembly Validation**
-      - Single: \`[Subject] [Action]. [Camera?]\`
-      - Multi: \`[Subject1] [Action1]. [Subject2] [Action2]. [Camera?]\`
-    **3. Final Assembly (The Compiler Stage):**
-    Strictly compile the pre-generated slots into the final string. Do NOT re-calculate or add new elements.
-    * **Single Subject Assembly:**
-      \`[Subject] [Action]. [Camera if selected].\`
-    * **Multi-Subject Assembly:**  
-      \`[Subject1] [Action1]. [Subject2] [Action2]. ... [Camera if selected].\`
-    * **Dry Filter (Final Check):**
-      - Remove subjective adjectives ("beautiful", "epic").
-      - Remove quality boosters ("8k", "masterpiece").
-      - Ensure every word describes visible physical/optical change.
-    * **Output Generation:**
-      - \`logical_bridge\`: From [Action(s)] Phase 1.
-      - \`reasoning\`: Brief explanation of Mode selection and Camera decision.
-      - \`video_gen_prompt\`: The assembled S-A-C string.
-  </target_model_optimization_strategy>
-  <output_format>
-    Return a single JSON object.
+  <processing_logic>
+    <step_1_core_synthesis_principles>
+      - **Kinetic Anchor Protocol Implementation**: Assemble the prompt in a 4-stage organic flow: [Anchor] + [Primary Action Vector] + [Cinematic Camera Vector] + [Atmospheric Delta].
+      - **Vividness-Centric Construction**: To maximize the "Video Vividness" reward, integrate four dimensions: action (facial/body precision), camera (dynamic movement), atmosphere (lighting/particles), and emotion (micro-expressions).
+      - **Delta-Only Description (Zero Redundancy)**: Treat the input image as the absolute "Start Frame Truth" (t=0). Describe ONLY the changes, movements, and physical interactions that occur from t=0 to t=n. Avoid re-describing static visual details like clothing, hair color, or architectural shapes.
+      - **Semantic Tagging & Natural Language Hybrid**: 
+        - Use professional natural language for narrative flow.
+        - Use keywords from the <vocabulary_depot> as **Technical Tags** (e.g., "[Subsurface scattering]", "[Skin Ripple]") to provide precise meaningful guides for the model's latent engine.
+      - **Verb-Driven Engine**: Prioritize strong, dynamic verbs (Launch, Explode, Sprint, Carve) over adjectives to drive the physical engine of the model.
+      - **Cinematic Vocabulary Preference**: Always use professional filmmaking terminology (e.g., Dolly Zoom, Rack Focus, Volumetric Lighting, Low-angle tracking) to align with the model's RLHF-trained aesthetic preferences.
+    </step_1_core_synthesis_principles>
+    <step_2_contextual_anchor_assembly>
+      - **Goal**: Establish the starting point of the video by identifying the primary subject using the structured "Demographics" as a semantic anchor.
+      - **CRITICAL**: If <entity_list> is empty, strictly skip to **Case B**.
+      - **Case A: Presence of Entities (Character/Object/Animal-driven)**:
+        - **Logic**: Use the strictly formatted string from the Demographics Schema.
+        - **Formula**: "The [Parsed Demographics String]"
+        - **Examples**:
+          - (Human): "The 1944 WWII, Infantry Soldier, Male, Caucasian American, Late 20s"
+          - (Machine): "The 2077 Cyberpunk, Arasaka Combat Mech, Prototype Unit"
+          - (Animal): "The Prehistoric, Sabertooth Tiger, Adult"
+        - **Constraint**: The \`[ERA / PERIOD]\` must always come first to act as the strict filter for the model's latent engine.
+      - **Case B: Absence of Entities (Environment-driven)**:
+        - **Logic**: If no entities exist, the environment's era and archetype become the anchor.
+        - **Formula**: "The [ERA / PERIOD] [Location Archetype] environment"
+        - **Example**: "The 15th Century Feudal Japan European Urban Ruin environment".
+      - **Spatial Locking**: Append the \`position_descriptor\` to the anchor string to fix the t=0 composition (e.g., "...standing center frame").
+    </step_2_contextual_anchor_assembly>
+    <step_3_primary_action_vector_injection>
+      - **Goal**: Drive the physical engine of the model by defining the motion and interactions that occur from t=0 to t=n.
+      - **Logic: Verb-Tag Integration**:
+        - Extract the core movement from \`<scene_narration>\`.
+        - Enhance the verb with **Technical Tags** from \`<vocabulary_depot>\` (Visual Vocabulary Pool).
+        - **Formula**: "[Anchor] + [Dynamic Verb] + [Technical Tags from Pool]"
+      - **Physical Fidelity (Action Dimension)**:
+        - Use specific keywords to describe weight, inertia, and surface reaction.
+        - **Micro-expressions**: For human subjects, add emotional shifts (e.g., "expression shifting from focus to intense effort").
+        - **Interaction**: Explicitly mention how the subject interacts with the environment (e.g., "feet crushing the gravel", "muscles tensing under the skin").
+      - **Continuity & Momentum**:
+        - Use terms like "continuously", "maintaining momentum", or "explosively" to ensure the motion doesn't freeze or jitter.
+        - **Example**: "The 1980s Tokyo Bubble, Salaryman, Male, Japanese, 20s [Anchor] **sprints forward explosively** [Primary Action], **feet striking the canvas with heavy impact** [Interaction], [Directional Motion Blur, Bulging veins, Sweat-beaded] [Technical Tags]."
+    </step_3_primary_action_vector_injection>
+    <step_4_cinematic_camera_vector_design>
+      - **Goal**: Provide 3D spatiality and professional cinematography by defining the observer's movement and optical focus.
+      - **Logic: Optical & Composition Integration**:
+        - Extract \`optics\` (\`lensType\`, \`focusDepth\`) and \`composition\` from <master_style_guide>.
+        - Combine them with specific **Camera Tech Options** from <vocabulary_depot>.
+        - **Formula**: "[Optics/Framing Tags] + [Dynamic Camera Tech] + [Movement Target]"
+      - **Advanced Cinematography Techniques**:
+        - **Focus Depth Control**: Use terms like "Shallow depth of field" or "Rack focus" to direct the model's attention between subjects.
+        - **High-Difficulty Moves**: Actively utilize complex effects like "Dolly Zoom (Hitchcock Zoom)" or "Smooth Arc Orbit" if the narrative tension is high.
+        - **3D Movement**: Prioritize depth-based movements (Dolly, Truck, Crane) over simple 2D pans to stimulate the model's spatial understanding.
+      - **Vividness Enhancement (Camera Dimension)**:
+        - Add descriptive camera vibes (e.g., "Handheld shaky cam for raw intensity" or "Fluid, glide-like tracking shot for elegance").
+        - **Example**: "Anamorphic wide-angle shot [Optics], Execute a fast low-angle tracking shot [Camera Tech] keeping the subject centered. Smooth rack focus from the background to the protagonist’s intense gaze [Focus Control]."
+    </step_4_cinematic_camera_vector_design>
+    <step_5_atmospheric_delta_refinement>
+      - **Goal**: Prevent "freezing" artifacts by animating the environment, lighting, and air particles surrounding the subject.
+      - **Logic: VFX & Lighting Dynamics**:
+        - Extract **Visual Effect Candidates** (Mist, Sparks, Dust Cloud, etc.) from <vocabulary_depot>.
+        - Incorporate \`lightingSetup\` and \`exposureVibe\` from <master_style_guide> to define light movement.
+        - **Formula**: "[VFX Candidates] + [Environmental Physics] + [Lighting/Atmospheric Changes]"
+      - **Environmental Physics (Atmosphere Dimension)**:
+        - **Prevent Stagnation**: Even in quiet scenes, add subtle movements like "dust motes drifting in the light" or "slow-rolling fog" to keep the latent space active.
+        - **Interaction Effects**: Describe how the primary action affects the environment (e.g., "Sprinting kicks up a volumetric dust cloud", "Rain slashes against the subject’s skin").
+        - **Lighting Flux**: Use dynamic lighting terms such as "flickering shadows", "gleaming light refraction", or "shifting god rays" to enhance depth.
+      - **Vividness Enhancement (Atmosphere Dimension)**:
+        - Use sensory keywords (Melancholic, Energetic, Dreamy) from the narration to tune the atmospheric "Delta."
+        - **Example**: "[Volumetric dust cloud, Gravel spray] [VFX Tags] rising from the impact. Shifting cinematic shadows [Lighting] as the sun breaks through clouds. A melancholic mist [Atmosphere] billows continuously in the background."
+    </step_5_atmospheric_delta_refinement>
+    <step_6_short_logic_synthesis>
+      - **Goal**: Produce a "Zero-Fluff Binary" prompt strictly following the **[Subject] + [is/are] + [Verb-ing]** format to put in \`video_gen_prompt_short\` of <output_schema>.
+      - **Logic: Strategic Subject Extraction**:
+        - **If <entity_list> is EMPTY**: 
+          - Extract the core noun from **<master_style_guide>.\`globalEnvironment.locationArchetype\`**.
+          - **Formula**: "The [Location Noun] is [Atmospheric Verb-ing]" (e.g., "The battlefield is smoldering").
+        - **If <entity_list> is not EMPTY**:
+          - Based on the \`type\` of <entity_list>, extract ONLY the designated "Subject Noun" from the \`demographics\` of <entity_list> by following below **Demographics Structure** and **Extraction Rule**:
+          - **Demographics Structure**:
+            * **\`human\`**: \`[ERA / PERIOD], [ROLE], [GENDER], [ORIGIN / ETHNICITY], [AGE]\`
+            * **\`machine\`**: \`[ERA / PERIOD], [MODEL NAME / TYPE], [PRODUCTION YEAR / SPEC]\`
+            * **\`creature\`**: \`[ERA / PERIOD], [SPECIES / ARCHETYPE], [GENDER / \`N/A\`], [AGE / MATURITY]\`
+            * **\`animal\`**: \`[ERA / PERIOD], [SPECIES], [AGE / MATURITY]\`
+            * **\`object\`**: \`[ERA / PERIOD], [ITEM NAME], [CRAFTSMANSHIP / DETAIL]\`
+            * **\`hybrid\`**: \`[ERA / PERIOD], [HYBRID TYPE], [GENDER], [ORIGIN / ETHNICITY], [AGE]\`
+          - **Extraction Rule**:
+            * **\`human\`**: Extract the \`[ROLE]\` field (e.g., "Infantry Soldier" -> "The soldier").
+            * **\`machine\`**: Extract the \`[MODEL NAME / TYPE]\` (e.g., "M4 Sherman Tank" -> "The tank").
+            * **\`creature/animal\`**: Extract the \`[SPECIES / ARCHETYPE]\` (e.g., "Sabertooth Tiger" -> "The tiger").
+            * **\`object\`**: Extract the \`[ITEM NAME]\` (e.g., "Antique Pocket Watch" -> "The watch").
+            * **\`hybrid\`**: Extract the \`[HYBRID TYPE]\` (e.g., "Cyborg Mercenary" -> "The cyborg").
+      - **Grammar & Aggregation Rules**:
+        - **Singular**: "The [Subject] is [Verb-ing]"
+        - **Plural (Same Type)**: "The [Subject]s are [Verb-ing]"
+        - **Plural (Different Types)**: Only if they perform the same action. "[Subject A] and [Subject B] (Optional: and [Subject C] and ...) are [Verb-ing]".
+      - **Strict Prohibitions**:
+        * NO era in [Subject]
+        * NO demographics details in [Subject]
+      - **Examples**:
+        * **Constraint (Anti-Plagiarism)**: These examples are for **SYNTAX AND FORMAT REFERENCE ONLY**; do NOT copy specific values unless they strictly align with the provided <entity_list> or <video_metadata>.
+        - **[Singular Case]**
+          * *Human*: "The soldier is sprinting" (Extracted from 'Infantry Soldier')
+          * *Machine*: "The drone is hovering" (Extracted from 'DJI Mavic Drone')
+          * *Animal*: "The tiger is leaping" (Extracted from 'Sabertooth Tiger')
+          * *Object*: "The bomb is falling" (Extracted from 'Aerial Bomb')
+        - **[Plural Case]**
+          - **[Same Type]**
+            * *Humans*: "The boxers are fighting"
+            * *Machines*: "The tanks are rumbling"
+            * *Creatures*: "The orcs are shouting"
+          - **[Different Type]**
+            * *Human Mix*: "The man and woman are kissing"
+            * *Hybrid Mix*: "The knight and horse are charging"
+            * *Subject Mix*: "The pilot and plane are banking"
+        - **[Empty Entity Case]**
+          * *Natural*: "The ocean is crashing" (Extracted from 'Coastal Cliff' archetype)
+          * *Weather*: "The storm is raging" (Extracted from 'Thunderstorm' archetype)
+          * *Urban*: "The city is glowing" (Extracted from 'Cyberpunk Metropolis' archetype)
+          * *War*: "The battlefield is smoldering" (Extracted from 'WWII Battlefield' archetype)
+    </step_6_short_logic_synthesis>
+  </processing_logic>
+  <output_schema>
+    Return a single JSON object with the following structure. Ensure all fields are populated based on the internal reasoning of the Cinematic Director role.
     {
       "logical_bridge": {
-        "identity_logic": "string (Subject's era-based physics and behavioral essence)",
-        "action_mode": {
-          "assessment": "string (Analysis of Duration and Proximity)",
-          "selected_mode": "A" | "B"
-        },
-        "action_focus": "string (Specific conceptual aim for verb translation)"
+        "identity_logic": "string (Define how the subject's era, role, and physical essence from the entity_list and metadata are preserved during motion.)",
+        "action_focus": "string (Explain the conceptual shift from the raw narration to the high-impact kinetic verb used in the prompt.)"
       },
-      "reasoning": "string (Detailed explanation of count, handle selection, and strategy)",
-      "video_gen_prompt": "string (Final technical prompt for target generative model)"
+      "reasoning": "string (Provide a detailed justification for: 1) The specific tags selected from the vocabulary_depot, 2) The choice of camera tech based on MasterStyleInfo, and 3) The atmospheric strategy to prevent freezing.)",
+      "video_gen_prompt": "string (The final technical prompt assembled using the 4-stage Kinetic Anchor Protocol: [Anchor] + [Primary Action Vector] + [Cinematic Camera Vector] + [Atmospheric Delta].)",
+      "video_gen_prompt_short": "string (The simplified version using the Short Logic: [Subject] + [is/are] + [Verb-ing]. Must ensure temporal continuity.)"
     }
-  </output_format>
+  </output_schema>
   <constraints>
-    1. **Safety Filter**: 
-      - NO blood, gore, open wounds. 
-      - Replace with Physics VFX: "Sweat explosion", "Deformation", "Shockwave", "Sparks".
-    2. **Identity Handling (Minimum Distinguishable Handle)**: 
-      - **Rule**: Convert IDs to simple Natural Language Handles.
-      - **CRITICAL**: Do NOT describe appearance *unless* necessary to distinguish between multiple entities.
-      - **Forbidden**: "A muscular boxer with short hair and sweat..." (Redundant).
-      - **Allowed**: "The Boxer" (if alone) OR "The Boxer in red shorts" (if distinguishing from another).
-    3. **The "Dry" Policy (Adjective Ban)**: 
-      - **FORBIDDEN**: Literary/Emotional adjectives (e.g., "intense", "powerful", "breathtaking").
-      - **ALLOWED**: Technical/Visual keywords from <vocabulary_depot> (e.g., "High-speed", "Dust Cloud").
-    4. **Positive Assertion**: 
-      - Do not use negative prompts like "No blur" or "No slide". 
-      - Describe what IS happening: "Crisp focus", "Firm grip", "Traction".
-    5. **Contextual Loyalty (Anti-Hallucination)**:
-      - The examples in this prompt are for **FORMAT ONLY**.
-      - Do not output "Right Cross" just because the example used it. You MUST derive the action strictly from the <scene_narration>.
-    6. **Vocabulary Usage**:
-       - Do NOT conjugate or alter the keywords from the Vocabulary Pool excessively.
-       - Use them as "Tags" or short descriptive phrases to maintain the physics simulation triggers.
+    1. **Safety Filter (Physics-based Substitution)**:
+      - NO blood, gore, or open wounds.
+      - Replace with high-impact Physics VFX: "Sweat spray", "Skin ripple", "Surface deformation", "Shockwave", or "Sparks".
+    2. **Identity Stability (Semantic Identifier)**:
+      - **Rule**: Use the structured demographics list (<processing_logic>.<step_2_contextual_anchor_assembly>) for the full prompt to prevent "Identity Drift."
+      - **Prohibition**: Do NOT re-describe static visual traits (clothes, hair color) already present in t=0.
+      - **Exception**: For \`video_gen_prompt_short\` of <output_schema>, follow the <processing_logic>.<step_6_short_logic_synthesis>.
+    3. **From "Dry" to "Cinematic" (Jargon over Fluff)**:
+      - **Forbidden**: Vague, subjective adjectives (e.g., "breathtaking", "amazing", "powerful").
+      - **Mandatory**: Use technical cinematography and physical terms.
+      - **Emotional Nuance**: Specific adjectives for micro-expressions (e.g., "contorted", "determined", "grimacing") are **REQUIRED** for human subjects to boost "Vividness" scores.
+    3. **From "Dry" to "Cinematic" (Jargon over Fluff)**:
+      - **Forbidden**: Vague, subjective adjectives (e.g., "breathtaking", "amazing").
+      - **Mandatory**: Use technical cinematography and physical terms.
+      - **Emotional Nuance**: Specific adjectives for micro-expressions (e.g., "contorted", "grimacing") are **REQUIRED for \`video_gen_prompt\`** to boost vividness. Do NOT use them in \`video_gen_prompt_short\`. 
+    4. **Positive Assertion (Presence-based Instruction)**:
+      - Describe the intended state: "Crisp focus", "Firm traction", "Fluid continuity". Avoid negative commands like "No blur".
+    5. **Kinetic Continuity (Anti-Freeze)**:
+      - **Requirement**: \`video_gen_prompt\` must contain at least one "Atmospheric Delta" (air movement, light flux) to prevent freezing.
+      - Use present continuous (-ing) forms for all primary actions across ALL prompt versions.
+    6. **Contextual Loyalty (Anti-Hallucination)**:
+      - Derive all actions strictly from <scene_narration> and <master_style_guide>. Examples are for **SYNTAX ONLY**.
+    7. **Vocabulary as Latent Triggers**:
+      - For \`video_gen_prompt\`, use keywords from <vocabulary_depot> as **Technical Tags in brackets** (e.g., "[Skin Ripple]").
+      - **CRITICAL**: For \`video_gen_prompt_short\`, strictly follow the "Zero-Fluff" rule and do NOT use brackets or technical tags.
   </constraints>
 </developer_instruction>
 `;

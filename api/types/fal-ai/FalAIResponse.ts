@@ -18,3 +18,11 @@ export interface FalApiResult<T> {
 export interface QueueSubmitResult {
     request_id: string;
 }
+
+export interface FalAiErrorDetail {
+    loc: string[];
+    msg: string;
+    type: string;
+    url: string;
+    input: unknown;
+}

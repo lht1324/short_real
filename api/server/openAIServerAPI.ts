@@ -495,6 +495,7 @@ Instruction: Generate the scene instruction JSON.
     ): Promise<{
         success: boolean;
         videoGenPrompt?: string;
+        videoGenPromptShort?: string;
         error?: { message: string; code: string }
     }> {
         try {
@@ -511,9 +512,10 @@ Instruction: Generate the scene instruction JSON.
             }
 
             const isEntityListNotEmpty = entityManifestList.length !== 0;
-            const developerMessage = isEntityListNotEmpty
-                ? POST_VIDEO_GEN_PROMPT_PROMPT
-                : POST_VIDEO_GEN_PROMPT_NO_ENTITIES_PROMPT;
+            // const developerMessage = isEntityListNotEmpty
+            //     ? POST_VIDEO_GEN_PROMPT_PROMPT
+            //     : POST_VIDEO_GEN_PROMPT_NO_ENTITIES_PROMPT;
+            const developerMessage = POST_VIDEO_GEN_PROMPT_PROMPT;
 
             // [핵심] Physics Profile을 기반으로 물리 법칙 텍스트 생성 (Code Level Injection)
             // 메인 히어로 또는 씬에 등장하는 주요 엔티티들의 물리 속성을 추출하여 문자열로 변환
@@ -595,6 +597,45 @@ Instruction: Generate the scene instruction JSON.
                 })
                 : []
             // 4. User Message 구성 (physics_instruction_set 주입)
+//             const userMessage = `
+// <input_context>
+//   <video_metadata>
+//     <video_title>${videoTitle}</video_title>
+//     <video_description>${videoDescription}</video_description>
+//     <target_duration>${targetDuration}seconds</target_duration>
+//   </video_metadata>
+//   ${isEntityListNotEmpty ? `<vocabulary_depot>
+//     **RESOURCE POOL**: Select keywords from here to construct the Dry S-A-C prompt.
+//     DO NOT use these as descriptions. Use them as tags.
+//     ${activeEntityPhysicsList}
+//   </vocabulary_depot>` : ""}
+//   <scene_narration>${sceneNarration}</scene_narration>
+//   ${!isEntityListNotEmpty && `<master_style_guide>
+//     ${JSON.stringify(masterStyleInfo, null, 2)}
+//   </master_style_guide>`}
+//   ${isEntityListNotEmpty ? `<entity_list>
+//     ${JSON.stringify(mappedEntityList, null, 2)}
+//   </entity_list>` : ""}
+//   <image_context>
+//     **START FRAME TRUTH**:
+//     The input image is the visual ground truth.
+//   ${isEntityListNotEmpty ? `
+//     - Do NOT describe the character's appearance (It is already there).
+//     - ONLY describe the **Movement** (Action) and **Camera** (Composition).
+//   ` : `
+//     - Treat the **location/environment** as the subject (no characters).
+//     - Do NOT introduce **people/characters/silhouettes** or any new **objects/structures** not present in the image.
+//     - Do NOT restate static visual details already visible in the image (buildings, terrain, props).
+//     - ONLY describe **what changes over time**:
+//       1) **Environmental physics**: fog rolls/billows, rain falls/slashes, wind sways foliage, dust motes drift, water ripples, light flickers/gleams.
+//       2) **Camera movement**: dolly in/out, orbit, pan, tilt, crane, tracking — with speed matched to target duration.
+//     - If narration mentions human actions, convert them to **actorless effects** (e.g., “footsteps splash in puddles”) or ignore.
+//     - Use **positive exclusion** phrasing when needed (e.g., “empty”, “unpopulated”, “abandoned”).
+//     - Adding **atmospheric VFX** (rain, fog, wind, lighting changes) implied by the narration is allowed and encouraged.
+//   `}
+//   </image_context>
+// </input_context>
+// `;
             const userMessage = `
 <input_context>
   <video_metadata>
@@ -602,35 +643,28 @@ Instruction: Generate the scene instruction JSON.
     <video_description>${videoDescription}</video_description>
     <target_duration>${targetDuration}seconds</target_duration>
   </video_metadata>
-  ${isEntityListNotEmpty ? `<vocabulary_depot>
+  <vocabulary_depot>
     **RESOURCE POOL**: Select keywords from here to construct the Dry S-A-C prompt.
     DO NOT use these as descriptions. Use them as tags.
     ${activeEntityPhysicsList}
-  </vocabulary_depot>` : ""}
+  </vocabulary_depot>
   <scene_narration>${sceneNarration}</scene_narration>
-  ${!isEntityListNotEmpty && `<master_style_guide>
+  <master_style_guide>
     ${JSON.stringify(masterStyleInfo, null, 2)}
-  </master_style_guide>`}
-  ${isEntityListNotEmpty ? `<entity_list>
+  </master_style_guide>
+  <entity_list>
     ${JSON.stringify(mappedEntityList, null, 2)}
-  </entity_list>` : ""}
+  </entity_list>
   <image_context>
     **START FRAME TRUTH**:
-    The input image is the visual ground truth.
-  ${isEntityListNotEmpty ? `
-    - Do NOT describe the character's appearance (It is already there).
-    - ONLY describe the **Movement** (Action) and **Camera** (Composition).
-  ` : `
-    - Treat the **location/environment** as the subject (no characters).
-    - Do NOT introduce **people/characters/silhouettes** or any new **objects/structures** not present in the image.
-    - Do NOT restate static visual details already visible in the image (buildings, terrain, props).
-    - ONLY describe **what changes over time**:
-      1) **Environmental physics**: fog rolls/billows, rain falls/slashes, wind sways foliage, dust motes drift, water ripples, light flickers/gleams.
-      2) **Camera movement**: dolly in/out, orbit, pan, tilt, crane, tracking — with speed matched to target duration.
-    - If narration mentions human actions, convert them to **actorless effects** (e.g., “footsteps splash in puddles”) or ignore.
-    - Use **positive exclusion** phrasing when needed (e.g., “empty”, “unpopulated”, “abandoned”).
-    - Adding **atmospheric VFX** (rain, fog, wind, lighting changes) implied by the narration is allowed and encouraged.
-  `}
+    The input image is the absolute visual ground truth (t=0).
+    **INSTRUCTIONS**:
+    - **Zero Redundancy**: Do NOT restate static visual details already visible (clothing, hair, structures, props).
+    - **Delta-Only Focus**: ONLY describe the **Delta (change)** across four dimensions:
+      1) **Primary Action**: Physical movement, inertia, and micro-expressions of subjects.
+      2) **Cinematic Camera**: Dynamic 3D movement and optical shifts (focus, zoom).
+      3) **Atmospheric Delta**: Fluid changes in lighting, weather, and air particles.
+    - **Entity Interaction**: Describe how subjects interact with their environment based on the RESOURCE POOL.
   </image_context>
 </input_context>
 `;
@@ -678,68 +712,87 @@ Instruction: Generate the scene instruction JSON.
 
             // [선택 사항] 유효성 검사: JSON 파싱이 가능한지 미리 확인
             try {
+                // const parsedJson: {
+                //     video_gen_prompt: string;
+                //     reasoning: string;
+                //     logical_bridge: {
+                //         identity_logic: string,
+                //         action_mode: {
+                //             "assessment": string,
+                //             "selected_mode": "A" | "B"
+                //         },
+                //         action_focus: string;
+                //     } | {
+                //         anchor_logic: string;
+                //         physics_logic: string;
+                //         camera_logic: string;
+                //     }
+                // } = JSON.parse(generatedContent);
+                //
+                // console.log(`Scene #${sceneNumber} postVideoGenPrompt() Result`);
+                // if (isEntityListNotEmpty) {
+                //     const {
+                //         identity_logic: identityLogic,
+                //         action_mode: {
+                //             assessment,
+                //             selected_mode: selectedMode,
+                //         },
+                //         action_focus: actionFocus,
+                //     } = parsedJson.logical_bridge as {
+                //         identity_logic: string,
+                //         action_mode: {
+                //             "assessment": string,
+                //             "selected_mode": "A" | "B"
+                //         },
+                //         action_focus: string;
+                //     };
+                //
+                //     console.log("EntityList is not empty.")
+                //     console.log(`[${selectedMode === 'A' ? "Impact/Result" : "Sustain/Process"}]: ${assessment}`);
+                //     console.log(`Identity Logic: ${identityLogic}`);
+                //     console.log(`Action Focus: ${actionFocus}`)
+                // } else {
+                //     const {
+                //         anchor_logic: anchorLogic,
+                //         physics_logic: physicsLogic,
+                //         camera_logic: cameraLogic,
+                //     } = parsedJson.logical_bridge as {
+                //         anchor_logic: string;
+                //         physics_logic: string;
+                //         camera_logic: string;
+                //     };
+                //
+                //     console.log("EntityList is empty.")
+                //     console.log(`Anchor Logic: ${anchorLogic}`);
+                //     console.log(`Physics Logic: ${physicsLogic}`);
+                //     console.log(`Camera Logic: ${cameraLogic}`);
+                // }
                 const parsedJson: {
-                    video_gen_prompt: string;
-                    reasoning: string;
                     logical_bridge: {
-                        identity_logic: string,
-                        action_mode: {
-                            "assessment": string,
-                            "selected_mode": "A" | "B"
-                        },
+                        identity_logic: string;
                         action_focus: string;
-                    } | {
-                        anchor_logic: string;
-                        physics_logic: string;
-                        camera_logic: string;
-                    }
+                    },
+                    reasoning: string;
+                    video_gen_prompt: string;
+                    video_gen_prompt_short: string;
                 } = JSON.parse(generatedContent);
+                const {
+                    identity_logic: identityLogic,
+                    action_focus: actionFocus
+                } = parsedJson.logical_bridge;
+
 
                 console.log(`Scene #${sceneNumber} postVideoGenPrompt() Result`);
-                if (isEntityListNotEmpty) {
-                    const {
-                        identity_logic: identityLogic,
-                        action_mode: {
-                            assessment,
-                            selected_mode: selectedMode,
-                        },
-                        action_focus: actionFocus,
-                    } = parsedJson.logical_bridge as {
-                        identity_logic: string,
-                        action_mode: {
-                            "assessment": string,
-                            "selected_mode": "A" | "B"
-                        },
-                        action_focus: string;
-                    };
-
-                    console.log("EntityList is not empty.")
-                    console.log(`[${selectedMode === 'A' ? "Impact/Result" : "Sustain/Process"}]: ${assessment}`);
-                    console.log(`Identity Logic: ${identityLogic}`);
-                    console.log(`Action Focus: ${actionFocus}`)
-                } else {
-                    const {
-                        anchor_logic: anchorLogic,
-                        physics_logic: physicsLogic,
-                        camera_logic: cameraLogic,
-                    } = parsedJson.logical_bridge as {
-                        anchor_logic: string;
-                        physics_logic: string;
-                        camera_logic: string;
-                    };
-
-                    console.log("EntityList is empty.")
-                    console.log(`Anchor Logic: ${anchorLogic}`);
-                    console.log(`Physics Logic: ${physicsLogic}`);
-                    console.log(`Camera Logic: ${cameraLogic}`);
-                }
-
+                console.log(`Identity Logic: ${identityLogic}`);
+                console.log(`Action Focus: ${actionFocus}`)
                 console.log(`Reasoning: ${parsedJson.reasoning}`);
                 console.log(`videoGenPrompt: ${parsedJson.video_gen_prompt}`);
+                console.log(`videoGenPromptShort: ${parsedJson.video_gen_prompt_short}`);
 
                 return {
                     success: true,
                     videoGenPrompt: parsedJson.video_gen_prompt,
+                    videoGenPromptShort: parsedJson.video_gen_prompt_short,
                 }
             } catch (parseError) {
                 console.error('JSON Parse Failed:', parseError);

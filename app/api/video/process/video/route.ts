@@ -111,13 +111,14 @@ export async function POST(request: NextRequest) {
                 }),
             );
 
-            if (!postVideoGenPromptResult.success || !postVideoGenPromptResult.videoGenPrompt) {
+            if (!postVideoGenPromptResult.success || !postVideoGenPromptResult.videoGenPrompt || !postVideoGenPromptResult.videoGenPromptShort) {
                 throw new Error("Failed to generate video gen prompt");
             }
 
             return {
                 ...sceneData,
                 videoGenPrompt: postVideoGenPromptResult.videoGenPrompt,
+                videoGenPromptShort: postVideoGenPromptResult.videoGenPromptShort,
             }
         });
         const sceneDataWithVideoGenPromptList = await Promise.all(sceneDataWithVideoGenPromptPromiseList);

@@ -11,6 +11,7 @@ import {internalFireAndForgetFetch} from "@/utils/internalFetch";
 export async function POST(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const taskId = searchParams.get('taskId');
+    const isRetriedByViolence = searchParams.get('isRetriedByViolence');
 
     if (!taskId) {
         return getNextBaseResponse({
@@ -24,7 +25,7 @@ export async function POST(request: NextRequest) {
         // 1. fal-ai Payload 받기
         // fal-ai의 구조: { request_id: string, status: "COMPLETED" | "ERROR", payload: any, error: any }
         const falPayload = await request.json();
-        const { request_id: requestId, status, error: falError } = falPayload;
+        const { request_id: requestId } = falPayload;
 
         if (!falPayload) {
             return getNextBaseResponse({
@@ -42,33 +43,21 @@ export async function POST(request: NextRequest) {
             });
         }
 
-        if (status === 'OK' || status === 'COMPLETED' || status === 'completed' || status === 'Completed') {
-            internalFireAndForgetFetch(
-                `${process.env.BASE_URL}/api/video/process/speed/before?taskId=${taskId}`,
-                {
-                    method: 'POST',
-                },
-                {
-                    falPayload: falPayload,
-                },
-            )
+        internalFireAndForgetFetch(
+            `${process.env.BASE_URL}/api/video/process/speed/before?taskId=${taskId}&isRetriedByViolence=${isRetriedByViolence}`,
+            {
+                method: 'POST',
+            },
+            {
+                falPayload: falPayload,
+            },
+        )
 
-            return getNextBaseResponse({
-                success: true,
-                status: 200,
-                message: "Received fal-ai Webhook successfully."
-            });
-        } else {
-            const errorMessage = getErrorMessage(falError);
-            console.error(`fal-ai request ${requestId} failed:`, errorMessage);
-
-            await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
-            return getNextBaseResponse({
-                success: true,
-                status: 200,
-                message: "Retryable error detected."
-            });
-        }
+        return getNextBaseResponse({
+            success: true,
+            status: 200,
+            message: "Received fal-ai Webhook successfully."
+        });
     } catch (error) {
         console.error("fal-ai Webhook processing error:", error);
         await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
