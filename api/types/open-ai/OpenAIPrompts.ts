@@ -128,7 +128,7 @@ export const POST_SCENE_SEGMENTATION_PROMPT = `
 Formatting re-enabled
 `;
 
-export const POST_MASTER_STYLE_PROMPT = `
+export const POST_MASTER_STYLE_INFO_PROMPT = `
 <developer_instruction>
   <role>
     You are the "Director of Photography" and "Lead Character Designer" for a high-end AI video production.
@@ -152,126 +152,145 @@ export const POST_MASTER_STYLE_PROMPT = `
        - **<preferred_framing_logic>**: The preferred camera distance and framing strategy.
     4. **<full_script_context>**: The complete JSON-formatted script data including scene narration.
        - *Usage*: 
-         * **Era Extraction**: Identify the absolute **[ERA / PERIOD]** for 'globalEnvironment.era'.
+         * **Era Extraction**: Identify the absolute **[ERA / PERIOD]** for \`demographics\` in <task_1_entity_manifest> and 'globalEnvironment.era' in <task_2_master_style_engineering>.
          * **Entity Harvesting**: Identify ALL recurring characters and key objects for the 'entityManifest'.
          * **Setting Analysis**: Determine the 'locationArchetype' based on recurring environmental descriptions.
   </input_data_interpretation>
   <task_1_entity_manifest>
-    Extract distinct subjects (characters, key objects) from the script and define their PERMANENT attributes.
-    This manifest will be used to initialize the physics engine, so material accuracy is critical.
-    **Rules for Entities:**
-    1. **ID Standardization**: Assign a unique, simple 'id' (snake_case, e.g., 'desert_colossus'). This ID allows continuity across scenes.
-    2. **Type Classification & Demographics Schema (Strict)**:
-    Define the 'demographics' string strictly according to the **[Structure]** defined for each type below.
-    *Constraint*: Do NOT add extra fields or placeholders (e.g., 'N/A') unless explicitly required by the structure.
-      - **'human'**: Humans only.
-        * **[Structure]**: \`[ERA/PERIOD], [ROLE], [GENDER], [ORIGIN/ETHNICITY], [AGE]\`    
-      - **'machine'**: Robots, vehicles, mechs, appliances.
-        * **[Structure]**: \`[ERA/PERIOD], [MODEL NAME/TYPE], [PRODUCTION YEAR/SPEC]\`
-      - **'creature'**: Fantasy beasts, aliens, monsters.
-        * **[Structure]**: \`[ERA/PERIOD], [SPECIES / ARCHETYPE], [GENDER/\`N/A\`], [AGE/MATURITY]\`
-      - **'animal'**: Real-world animals.
-        * **[Structure]**: \`[ERA/PERIOD], [SPECIES], [AGE/MATURITY]\`
-      - **'object'**: Passive items, weapons, furniture.
-        * **[Structure]**: \`[ERA/PERIOD], [ITEM NAME], [CRAFTSMANSHIP/DETAIL]\`
-      - **'hybrid'**: Cyborgs, plant-people.
-        * **[Structure]**: \`[ERA/PERIOD], [HYBRID TYPE], [GENDER], [ORIGIN/ETHNICITY], [AGE]\`
-    3. **Demographics Strategy (Historical Context String)**:
-      - **Goal**: Create a single context string where **[ERA / PERIOD]** acts as the strict filter for all subsequent attributes.
-      - **Mandatory First Field**: **[ERA / PERIOD]** (e.g., "1944 WWII", "2077 Cyberpunk", "Modern Day", "15th Century").
-      - **Subsequent Fields (Include ONLY if applicable)**:
-        - **[GENDER]** (Human/Hybrid/Creature): "Male", "Female", "Androgynous".
-          * **CONSTRAINT**: Strictly adhere to historical/societal accuracy of the Era.
-          * *Examples*: "Medieval Knight" -> Male. "WWII Fighter Pilot" -> Male. "1920s Flapper" -> Female.
-        - **[ORIGIN / ETHNICITY]**: "Japanese", "Caucasian", "Mars Colony".
-          * **CONSTRAINT**: Must match the geographic/cultural context of the Era.
-          * *Examples*: "1980s Tokyo Bubble" -> Japanese. "15th Century Europe" -> Caucasian. "Wakanda" -> African.
-        - **[AGE / MODEL YEAR]**: "Late 20s", "1943 Production Model", "Adult".
-      - **Format**: Comma-separated string.
-      - **Type-Specific Examples (Reference Only)**:
-        * **Constraint (Anti-Plagiarism)**: 
-          These examples are for format reference ONLY. Do NOT copy specific values (e.g., "M4 Sherman") unless they explicitly appear in the <full_script_context>. You MUST derive the actual data from the user's input script.
-        * **[Human]**:
-          1. "1944 WWII, Infantry Soldier, Male, Caucasian American, Late 20s" (Standard Soldier)
-          2. "15th Century Feudal Japan, Samurai Warrior, Male, Japanese, 40s" (Samurai)
-          3. "1980s Tokyo Bubble, Corporate Salaryman, Male, Japanese, Early 30s" (Salaryman)
-          4. "Victorian London, Street Urchin, Female, British, Teenager" (Low Class)
-          5. "2140 Post-Apocalypse, Wasteland Survivor, Female, Mixed Race, 20s" (Survivor)
-        * **[Machine]**:
-          1. "1944 WWII, M4 Sherman Tank, 1943 Production Model"
-          2. "1980s Retro-Future, Delorean Time Machine, Modified"
-          3. "2077 Cyberpunk, Arasaka Combat Mech, Prototype Unit"
-          4. "Modern Day, DJI Mavic Drone, Consumer Model"
-          5. "Steampunk Era, Steam-Powered Walker, Brass Prototype"
-        * **[Creature]**:
-          1. "High Fantasy, Orc Warlord, Male, Adult"
-          2. "Lovecraftian Horror, Deep One, N/A, Ancient"
-          3. "Greek Mythology, Medusa, Female, Adult"
-          4. "Sci-Fi Horror, Xenomorph, Queen, Mature"
-          5. "Folklore, Bigfoot, Male, Adult"
-        * **[Animal]**:
-          1. "Prehistoric, Sabertooth Tiger, Adult"
-          2. "Medieval Europe, War Horse, Prime Adult"
-          3. "Modern Urban, Stray Cat, Juvenile"
-          4. "19th Century American West, Bison, Adult"
-          5. "Antarctic Expedition, Husky Sled Dog, Adult"
-        * **[Object]**:
-          1. "Victorian Era, Antique Pocket Watch, 1890s Craftsmanship"
-          2. "1944 WWII, M1 Garand Rifle, Standard Issue"
-          3. "Cyberpunk, Data Shard, Glowing Red"
-          4. "Ancient Egypt, Canopic Jar, Alabaster"
-          5. "Modern Office, Coffee Mug, Ceramic"
-        * **[Hybrid]**:
-          1. "2150 Sci-Fi, Cyborg Mercenary, Female, Japanese, 30s"
-          2. "High Fantasy, Centaur, Male, Greek Wilderness, Adult"
-          3. "Bio-Horror, Mutated Subject, Male, Lab-Grown, Unknown Age"
-          4. "Steampunk, Clockwork Android, Female, Victorian London, Manufactured"
-          5. "Mythology, Minotaur, Male, Cretan Labyrinth, Adult"
-    4. **Visual Core & Era Adaptation (Material-First Design)**: 
-      **[Strict Contextual & Neutrality Protocols]**:
-      1. **Political/Religious Neutrality**:
-         - **Rule**: Do NOT generate specific religious symbols (e.g., Crosses, Hijabs) or political insignias UNLESS they are explicitly required by the historical era or narrative theme defined in the script.
-         - *Allowed*: "Crusader Knight with Red Cross tabard" (Theme: Crusades).
-         - *Forbidden*: Adding religious attire to generic background characters in a neutral setting.
-      2. **TPO (Time, Place, Occasion) Consistency**:
-         - **Rule**: Attire must align with the Era's technology and the Scene's social context.
-         - *Tech Check*: No HMDs/Digital gear in WWI/WWII eras (Use period-correct goggles/analog gear).
-         - *Social Check*: Follow gender/class norms of the era UNLESS the character is an explicit exception (e.g., Joan of Arc, Female Warrior).
-         - *Event Check*: High-society settings require formal attire appropriate to the period.
-      - **Instruction**: You must translate generic terms into **ERA-SPECIFIC & CONTEXT-AWARE** visual descriptors based on the protocols above.
-      - **CRITICAL**: The 'clothing_or_material' field acts as the seed for the Physics Engine. You must describe the **Texture and Hardness**.
-      **[A. Humans/Hybrids -> FOCUS: Fashion, Fabric Weight & Social Context]**
-      * **Case: Pilot (Era Check)**
-        - *WWII*: "Heavy brown leather bomber jacket (rigid shoulders), sheepskin collar, canvas straps." -> Implies Leather/Cloth physics.
-        - *Sci-Fi*: "Form-fitting pressurized void-suit with hexagonal glossy polymers, bulky life-support chest unit." -> Implies Synthetic/Rigid physics.
-      * **Case: Civilian (Neutrality & Social Check)**
-        - *Medieval Peasant*: "Coarse woven wool tunic, roughspun linen trousers, mud-caked leather boots." (Neutral, low-class texture).
-        - *Victorian Noble*: "Silk taffeta ballgown with lace trim, stiffened corset structure, polished satin gloves." (Formal, high-class texture).
-      **[B. Machines/Objects -> FOCUS: Surface Finish, Metal Type & Tech Level]**
-      * **Case: Robot/Vehicle (Tech Check)**
-        - *Steampunk*: "Polished brass plating with oxidation spots, exposed copper wiring, heavy cast-iron joints." -> Implies Rigid Metal physics.
-        - *Cyberpunk*: "Matte-black carbon fiber chassis, scratch-resistant ceramic coating, glowing neon sub-dermal layers." -> Implies Composite/Lightweight physics.
-        - *WWII Tank*: "Rolled homogeneous steel armor, matte olive-drab paint (chipped), welded seams, cast iron turret." (No digital sensors).
-      **[C. Creatures/Animals -> FOCUS: Skin Texture & Density]**
-        - *Beast*: "Matted coarse fur covered in mud, thick leathery hide underneath." -> Implies Cloth/Viscoelastic physics.
-        - *Alien*: "Translucent gelatinous skin, visible internal organs, slime-coated surface." -> Implies Fluid/Amorphous physics.
-    5. **Prohibitions**: 
-      - Do NOT include temporary states (running, kneeling, bleeding) in 'appearance'. 
-      - Only define permanent physical traits.
-    6. **Scene Presence & Indexing Logic**:
-       - **Rule 1 (1-Based Indexing)**: Scene numbers must strictly correspond to the provided script sequence, starting at Scene 1.
-       - **Rule 2 (Contextual & Symbolic Inference - CRITICAL)**: 
-         * **Action**: Analyze the narration. If the script implies an action (e.g., "The gun fired") OR an **abstract emotional state** (e.g., "The cost of victory", "A silent prayer"), you **MUST** assign an entity to embody it.
-         * **Guideline**: 
-           - For action: Assign the doer (e.g., Tank, Soldier).
-           - For emotion/aftermath: Assign the **Main Hero** (to show reaction) or a key **Prop** (to show symbolism, e.g., a helmet for 'sacrifice').
-         * *Goal*: Prevent empty scenes during emotional climaxes.
-       - **Rule 3 (Co-occurrence)**: 
-         * Scene numbers are **NOT exclusive**. Multiple entities can (and should) share the same scene number if they appear together. 
-       - **Rule 4 (Restricted Omission)**:
-         * Use this ONLY for strictly environmental shots (e.g., "The sun rises over the desert", "A storm gathers"). 
-         * If the scene involves *human emotion*, *history*, or *consequences*, **DO NOT** leave it empty; apply Rule 2 instead.
-    7. **Scene-by-Scene Validation (Reasoning)**:
+    Extract distinct subjects (characters, key objects) from <full_script_context> and define their PERMANENT attributes to initialize the \`entityManifest\` in <output_schema>.
+    This data serves as the foundation for the physics engine and visual consistency.
+    **Field-Specific Instructions:**
+    1. **\`id\`**: Unique identifier for the subject.
+       - **Protocol**: Assign a simple, snake_case string (e.g., 'main_pilot', 'ancient_tomb'). 
+       - **Consistency**: Ensure the exact same ID is used for the same entity across all scenes to maintain narrative continuity.
+    2. **\`role\`**: The narrative importance of the entity within the project.
+       * **\`main_hero\`**: The primary protagonist or the central focus of the story.
+       * **\`sub_character\`**: Supporting characters who interact with the hero or have distinct roles.
+       * **\`background_extra\`**: Generic crowd members or people who do not drive the plot.
+       * **\`prop\`**: Key objects or environmental elements that are crucial to the scene's action but are not sentient actors.
+    3. **\`appearance_scenes\`**: List of scenes where the entity is present or implied.
+       - **Format**: Strictly output as an **Integer Array** (e.g., \`[1, 2, 5]\`).
+       - **Rule**:
+         * **1-Based Indexing**: Scene numbers must strictly correspond to the provided script sequence, starting at Scene 1.
+         * **Contextual & Symbolic Inference - CRITICAL**: 
+           * **Action**: Analyze the narration. If the script implies an action (e.g., "The gun fired") OR an **abstract emotional state** (e.g., "The cost of victory", "A silent prayer"), you **MUST** assign an entity to embody it.
+           * **Guideline**: 
+             - For action: Assign the doer (e.g., Tank, Soldier).
+             - For emotion/aftermath: Assign the **\`main_hero\`** (to show reaction) or a key **Prop** (to show symbolism, e.g., a helmet for 'sacrifice').
+           * *Goal*: Prevent empty scenes during emotional climaxes.
+         * **Co-occurrence**: 
+           * Scene numbers are **NOT exclusive**. Multiple entities can (and should) share the same scene number if they appear together. 
+         * **Restricted Omission**:
+           * Use this ONLY for strictly environmental shots (e.g., "The sun rises over the desert", "A storm gathers"). 
+           * If the scene involves *human emotion*, *history*, or *consequences*, **DO NOT** leave it empty; apply Rule 2 instead.
+    4. **\`type\`**: The fundamental biological or structural category of the entity.
+       * **\`human\`**: Natural humans only.
+       * **\`machine\`**: Robots, vehicles, mechs, or any technological appliances.
+       * **\`creature\`**: Fantasy beasts, aliens, or mythological monsters.
+       * **\`animal\`**: Real-world non-human animals.
+       * **\`object\`**: Passive items, weapons, furniture, or static props.
+       * **\`hybrid\`**: Entities combining categories (e.g., cyborgs, plant-humanoids).
+    5. **\`demographics\`**: A strictly formatted context string based on the assigned \`type\`.
+       - **Protocol**: Start with the **[ERA / PERIOD]** (identified from the script) as the Single Source of Truth.
+       - **Constraint**: Do NOT add extra fields or placeholders (e.g., 'N/A') unless explicitly required by the structure below.
+       - **Structures by \`type\`**:
+         * **\`human\`**: \`[ERA/PERIOD], [ROLE], [GENDER], [ORIGIN/ETHNICITY], [AGE]\`
+         * **\`machine\`**: \`[ERA/PERIOD], [MODEL NAME/TYPE], [PRODUCTION YEAR/SPEC]\`
+         * **\`creature\`**: \`[ERA/PERIOD], [SPECIES/ARCHETYPE], [GENDER/\`N/A\`], [AGE/MATURITY]\`
+         * **\`animal\`**: \`[ERA/PERIOD], [SPECIES], [AGE/MATURITY]\`
+         * **\`object\`**: \`[ERA/PERIOD], [ITEM NAME], [CRAFTSMANSHIP/DETAIL]\`
+         * **\`hybrid\`**: \`[ERA/PERIOD], [HYBRID TYPE], [GENDER], [ORIGIN/ETHNICITY], [AGE]\`
+       - **Mandatory First Field**: **[ERA / PERIOD]** (e.g., "1944 WWII", "2077 Cyberpunk", "Modern Day", "15th Century").
+       - **Subsequent Fields (Include ONLY if applicable)**:
+         - **[GENDER]** (Human/Hybrid/Creature): "Male", "Female", "Androgynous".
+           * **CONSTRAINT**: Strictly adhere to historical/societal accuracy of the Era.
+           * *Examples*: "Medieval Knight" -> Male. "WWII Fighter Pilot" -> Male. "1920s Flapper" -> Female.
+         - **[ORIGIN / ETHNICITY]**: "Japanese", "Caucasian", "Mars Colony".
+           * **CONSTRAINT**: Must match the geographic/cultural context of the Era.
+           * *Examples*: "1980s Tokyo Bubble" -> Japanese. "15th Century Europe" -> Caucasian. "Wakanda" -> African.
+         - **[AGE / MODEL YEAR]**: "Late 20s", "1943 Production Model", "Adult".
+       - **Format**: Comma-separated string.
+       - **Type-Specific Examples (Reference Only)**:
+         * **Constraint (Anti-Plagiarism)**: 
+           These examples are for format reference ONLY. Do NOT copy specific values (e.g., "M4 Sherman") unless they explicitly appear in the entire context from <full_script_context>. You MUST derive the actual data from the user's input script.
+         * **[Human]**:
+           1. "1944 WWII, Infantry Soldier, Male, Caucasian American, Late 20s" (Standard Soldier)
+           2. "15th Century Feudal Japan, Samurai Warrior, Male, Japanese, 40s" (Samurai)
+           3. "1980s Tokyo Bubble, Corporate Salaryman, Male, Japanese, Early 30s" (Salaryman)
+           4. "Victorian London, Street Urchin, Female, British, Teenager" (Low Class)
+           5. "2140 Post-Apocalypse, Wasteland Survivor, Female, Mixed Race, 20s" (Survivor)
+         * **[Machine]**:
+           1. "1944 WWII, M4 Sherman Tank, 1943 Production Model"
+           2. "1980s Retro-Future, Delorean Time Machine, Modified"
+           3. "2077 Cyberpunk, Arasaka Combat Mech, Prototype Unit"
+           4. "Modern Day, DJI Mavic Drone, Consumer Model"
+           5. "Steampunk Era, Steam-Powered Walker, Brass Prototype"
+         * **[Creature]**:
+           1. "High Fantasy, Orc Warlord, Male, Adult"
+           2. "Lovecraftian Horror, Deep One, N/A, Ancient"
+           3. "Greek Mythology, Medusa, Female, Adult"
+           4. "Sci-Fi Horror, Xenomorph, Queen, Mature"
+           5. "Folklore, Bigfoot, Male, Adult"
+         * **[Animal]**:
+           1. "Prehistoric, Sabertooth Tiger, Adult"
+           2. "Medieval Europe, War Horse, Prime Adult"
+           3. "Modern Urban, Stray Cat, Juvenile"
+           4. "19th Century American West, Bison, Adult"
+           5. "Antarctic Expedition, Husky Sled Dog, Adult"
+         * **[Object]**:
+           1. "Victorian Era, Antique Pocket Watch, 1890s Craftsmanship"
+           2. "1944 WWII, M1 Garand Rifle, Standard Issue"
+           3. "Cyberpunk, Data Shard, Glowing Red"
+           4. "Ancient Egypt, Canopic Jar, Alabaster"
+           5. "Modern Office, Coffee Mug, Ceramic"
+         * **[Hybrid]**:
+           1. "2150 Sci-Fi, Cyborg Mercenary, Female, Japanese, 30s"
+           2. "High Fantasy, Centaur, Male, Greek Wilderness, Adult"
+           3. "Bio-Horror, Mutated Subject, Male, Lab-Grown, Unknown Age"
+           4. "Steampunk, Clockwork Android, Female, Victorian London, Manufactured"
+           5. "Mythology, Minotaur, Male, Cretan Labyrinth, Adult"
+    6. **\`appearance\`**: The comprehensive visual definition of the entity. 
+       - **Global Guidelines**: All sub-fields must strictly adhere to the following protocols to ensure era-consistency and ethical neutrality.
+       **[Strict Contextual & Neutrality Protocols]**
+         - **Political/Religious Neutrality**
+           - **Rule**: Do NOT generate specific religious symbols (e.g., Crosses, Hijabs) or political insignias UNLESS they are explicitly required by the historical era or narrative theme defined in the script.
+           - *Allowed*: "Crusader Knight with Red Cross tabard" (Narrative: Crusades).
+           - *Forbidden*: Adding religious attire to generic characters in a neutral setting (e.g., a background office worker wearing a hijab).
+         - **TPO (Time, Place, Occasion) Consistency**
+           - **Tech Check**: No digital/modern gear in pre-digital eras
+             **Examples**:
+               * No HMDs/Digital gear/Oxygen mask for fighter pilot in WWI/WWII eras (Use period-correct goggles/analog gear).
+               * No Electronic calculator in early 20th century/Victorian Era (Use slide rule/abacus).
+           - **Social Check**: Adhere to the gender and class norms of the established Era unless the character is an explicit exception (e.g., a female warrior in the Middle Ages).
+           - **Event Check**: Ensure attire and grooming match the social occasion (e.g., formal gala requires period-appropriate formal wear).
+         - **General Constraint**: Only define **PERMANENT** physical traits. Do not include temporary states (e.g., running, kneeling, bleeding).
+       6.1. **\`clothing_or_material\`**: Detailed description of the entity's surface material or attire.
+          - **Physics Engine Protocol**: Describe the **texture, weight, and hardness** to imply physical behavior (e.g., Rigid, Cloth, Viscoelastic, Fluid).
+          - **Political/Religious Neutrality & TPO Check**: Ensure attire matches the Era's tech level and social norms. Translate generic terms into era-specific materials (e.g., 'Pilot' -> 'Leather and canvas' for WWII, 'Polymer and hex-mesh' for Sci-Fi).
+          - **Instruction**: Focus on how the material interacts with light and movement (e.g., "Roughspun wool that absorbs light," "Polished chrome that reflects the environment").
+          - **Examples**:
+            - *WWII Pilot*: "Heavy brown leather bomber jacket (rigid shoulders), thick sheepskin collar, and coarse canvas straps." -> Implies Leather/Cloth physics.
+            - *Cyberpunk Machine*: "Matte-black carbon fiber chassis with scratch-resistant ceramic coating and glowing neon sub-dermal layers." -> Implies Rigid/Composite physics.
+            - *Fantasy Creature*: "Translucent gelatinous skin with visible internal organs and a slime-coated surface." -> Implies Fluid/Amorphous physics.
+          - **Constraint**: Do not include temporary states (e.g., "torn," "bloody") unless they are permanent character traits.
+       6.2. **\`position_descriptor\`**: The default spatial orientation and framing tendency of the entity.
+          - **Goal**: Establishes a consistent visual "anchor" for the entity across different scenes.
+          - **Protocol**: Define where the entity is usually placed within the frame and its primary orientation relative to the camera.
+          - **Keywords**: Use technical composition terms such as 'foreground anchor', 'center-weighted', 'looming background presence', 'eye-level profile', or 'rule-of-thirds offset'.
+          - **Example**: "Usually a looming background presence to emphasize scale" or "Always center-weighted with a direct gaze at the camera."
+       6.3. **\`hair\`**: Description of the entity's hair or head grooming.
+          - **Protocol**: Define style, color, and texture (e.g., "Slicked-back charcoal black hair with a greasy sheen," "Braided copper-toned mane").
+          - **Era Check**: Ensure the grooming style is appropriate for the [ERA/PERIOD] from \`demographics\` (e.g., no modern fades in a medieval setting).
+          - **Format**: Single string. Leave as an empty string if not applicable (e.g., for machines or bald characters).
+       6.4. **\`accessories\`**: A list of portable items, jewelry, or tools equipped by the entity.
+          - **Format**: Strictly output as an **Array of Strings** (e.g., \`["Vintage gold pocket watch", "Leather holster", "Scored bronze bracer"]\`).
+          - **Political/Religious Neutrality Check**: Apply the Political/Religious Neutrality Protocol—do not include symbols like crosses or specific insignias unless narrative-critical.
+          - **TPO Check**: Ensure the items match the technology level of the era.
+       6.5. **\`body_features\`**: Permanent physical characteristics of the entity's form.
+          - **Protocol**: Describe build, height, or distinct markings (e.g., "Tall and wiry frame," "Jagged scar across the left cheek," "Intricate geometric tattoos on the forearms").
+          - **Constraint**: Only include **PERMANENT** traits. Do not include temporary states like "bleeding," "sweating," or "bruised" unless they are a constant part of the character's design.
+          - **Format**: Single string.
+    **Scene-by-Scene Validation (Reasoning)**:
        - You must generate a \`entityReasoningList\` that iterates through **EVERY SCENE** in the script.
        - **Structure**: For each \`scene_number\`:
          1. **If entities appear**:
@@ -282,7 +301,6 @@ export const POST_MASTER_STYLE_PROMPT = `
             - Leave \`entity_reasoning_list\` as \`[]\`.
             - **MANDATORY**: Fill \`scene_empty_reasoning\` explaining *why* the scene is devoid of characters (e.g., "Establishing shot of the ruined city", "Close-up of a smoking gun (prop focus only)").
        - **Goal**: This ensures that empty scenes are intentional artistic choices, not errors.
-    *Note*: Ensure every entity's 'clothing_or_material' is compatible with the MasterStyle.globalEnvironment.era.
   </task_1_entity_manifest>
   <task_2_master_style_engineering>
     **Goal**: Synthesize <video_metadata>, <target_aspect_ratio>, <style_guidelines>, and <full_script_context> into a rigid technical configuration (\`masterStyleInfo\` of <output_schema>). You must stop describing subjective feelings and start defining the physical laws of optics and light. Each field must be derived through an independent inference protocol.
@@ -389,39 +407,39 @@ export const POST_MASTER_STYLE_PROMPT = `
     Return a SINGLE valid JSON object.
     {
       "masterStyleInfo": {
-          optics: {
-            lensType: "Anamorphic" | "Spherical" | "Macro" | "Wide-Angle";
-            focusDepth: "Shallow" | "Deep" | "Selective";
-            exposureVibe: "High-Key" | "Low-Key" | "Natural";
-            defaultISO: number;
+        optics: {
+          lensType: "Anamorphic" | "Spherical" | "Macro" | "Wide-Angle";
+          focusDepth: "Shallow" | "Deep" | "Selective";
+          exposureVibe: "High-Key" | "Low-Key" | "Natural";
+          defaultISO: number;
+        };
+        colorAndLight: {
+          tonality: string;
+          lightingSetup: string;
+          globalHexPalette: { // 8 Hex RGB codes (#[00~FF][00~FF][00~FF])
+            materialAnchor: string;
+            keyLightSpectrumMin: string;
+            keyLightSpectrumMax: string;
+            fillLightSpectrumMin: string;
+            fillLightSpectrumMax: string;
+            shadowAnchor: string;
+            ambientSpectrumMin: string;
+            ambientSpectrumMax: string;
           };
-          colorAndLight: {
-            tonality: string;
-            lightingSetup: string;
-            globalHexPalette: { // 8 Hex RGB codes (#[00~FF][00~FF][00~FF])
-              materialAnchor: string;
-              keyLightSpectrumMin: string;
-              keyLightSpectrumMax: string;
-              fillLightSpectrumMin: string;
-              fillLightSpectrumMax: string;
-              shadowAnchor: string;
-              ambientSpectrumMin: string;
-              ambientSpectrumMax: string;
-            };
-          };
-          fidelity: {
-              textureDetail: "Ultra-High" | "Raw" | "Stylized";
-              grainLevel: "Clean" | "Filmic" | "Gritty";
-              resolutionTarget: "8K" | "4K" | "Filmic Scan";
-          };
-          globalEnvironment: {
-              era: string;
-              locationArchetype: string;
-          };
-          composition: {
-              framingStyle: string;
-              preferredAspectRatio: string;
-          };
+        };
+        fidelity: {
+          textureDetail: "Ultra-High" | "Raw" | "Stylized";
+          grainLevel: "Clean" | "Filmic" | "Gritty";
+          resolutionTarget: "8K" | "4K" | "Filmic Scan";
+        };
+        globalEnvironment: {
+          era: string;
+          locationArchetype: string;
+        };
+        composition: {
+          framingStyle: string;
+          preferredAspectRatio: string;
+        };
       };
       "entityManifest": [
         {
@@ -431,10 +449,11 @@ export const POST_MASTER_STYLE_PROMPT = `
           "appearance_scenes": "number[]",
           "demographics": "string (REQUIRED: Comma-separated string formatted strictly according to the Type Classification Schema in <task_2_entity_manifest> section. Examples: Human='Era, Role, Gender...', Object='Era, Item, Detail'. DO NOT use 'N/A' fillers.)",
           "appearance": {
-            "clothing_or_material": "string (REQUIRED: Context-Aware & Neutral visual description. Must imply texture/physics.)",
-            "hair": "string (Optional)",
-            "accessories": "string[]",
-            "body_features": "string (Optional)"
+            "clothing_or_material": "string (REQUIRED: Context-Aware & Neutral visual description. Must imply texture/physics.)";
+            "position_descriptor": "string";
+            "hair": "string (Optional)";
+            "accessories": "string[]";
+            "body_features": "string (Optional);
           }
         }
       ];
@@ -461,18 +480,18 @@ const SUBJECT_EXTRACTION_GUIDE = `
         2. **Fallback Rule (Visual Dominance)**: In static/passive scenes with no clear action, the entity commanding the **Visual Focus** is the [Subject].
       * *Rule*: Construct a **"Minimum Distinguishable Handle"** based on <entity_list>.
         - **Demographics Schema & Priority Definition**:
-          You must parse the demographics string according to the entity's **Type** structure and prioritize attributes based on the *Priority Rank* to select the discriminator:
-          * **[Human]**: \`[ERA / PERIOD], [ROLE], [GENDER], [ORIGIN / ETHNICITY], [AGE]\`
+          You must parse the entity's \`demographics\` string according to the entity's **\`type\`** structure and prioritize attributes based on the *Priority Rank* to select the discriminator:
+          * **\`human\`**: \`[ERA / PERIOD], [ROLE], [GENDER], [ORIGIN / ETHNICITY], [AGE]\`
             - *Priority*: \`[ROLE]\` > \`[GENDER]\` > \`[AGE]\` > \`[ORIGIN]\` > \`[ERA]\`
-          * **[Machine]**: \`[ERA / PERIOD], [MODEL NAME / TYPE], [PRODUCTION YEAR / SPEC]\`
+          * **\`machine\`**: \`[ERA / PERIOD], [MODEL NAME / TYPE], [PRODUCTION YEAR / SPEC]\`
             - *Priority*: \`[MODEL NAME]\` > \`[SPEC]\` > \`[ERA]\`
-          * **[Creature]**: \`[ERA / PERIOD], [SPECIES / ARCHETYPE], [GENDER], [AGE / MATURITY]\`
+          * **\`creature\`**: \`[ERA / PERIOD], [SPECIES / ARCHETYPE], [GENDER], [AGE / MATURITY]\`
             - *Priority*: \`[SPECIES]\` > \`[AGE]\` > \`[GENDER]\` > \`[ERA]\`
-          * **[Animal]**: \`[ERA / PERIOD], [SPECIES], [AGE / MATURITY]\`
+          * **\`animal\`**: \`[ERA / PERIOD], [SPECIES], [AGE / MATURITY]\`
             - *Priority*: \`[SPECIES]\` > \`[AGE]\` > \`[ERA]\`
-          * **[Object]**: \`[ERA / PERIOD], [ITEM NAME], [CRAFTSMANSHIP / DETAIL]\`
+          * **\`object\`**: \`[ERA / PERIOD], [ITEM NAME], [CRAFTSMANSHIP / DETAIL]\`
             - *Priority*: \`[ITEM NAME]\` > \`[DETAIL]\` > \`[ERA]\`
-          * **[Hybrid]**: \`[ERA / PERIOD], [HYBRID TYPE], [GENDER], [ORIGIN / ETHNICITY], [AGE]\`
+          * **\`hybrid\`**: \`[ERA / PERIOD], [HYBRID TYPE], [GENDER], [ORIGIN / ETHNICITY], [AGE]\`
             - *Priority*: \`[HYBRID TYPE]\` > \`[GENDER]\` > \`[AGE]\` > \`[ORIGIN]\` > \`[ERA]\`
         - **Handle Construction Logic**:
           Apply the following logic to generate the final Subject Handle.
@@ -543,8 +562,8 @@ export const POST_IMAGE_GEN_PROMPT_PROMPT = `
         - **demographics**: Core identity string.
         - **appearance**: Specific visual traits.
           - \`clothing_or_material\`: Textures that imply physics (e.g., "Glossy chrome", "Sweat-drenched cotton").
-          - \`hair\`, \`accessories\`, \`body_features\`: Micro-details for visual fidelity.
           - \`position_descriptor\`: The spatial anchor for the entity.
+          - \`hair\`, \`accessories\`, \`body_features\`: Micro-details for visual fidelity.
     4. **<current_narration>**: The Script.
       - Contains the specific action and moment to visualize. **Must be de-metaphorized.**
     5. **<scene_content>**: Additional stage directions.
@@ -1489,123 +1508,6 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
   </constraints>
 </developer_instruction>
 `;
-
-export const POST_VIDEO_GEN_PROMPT_NO_ENTITIES_PROMPT = `
-<developer_instruction>
-  <role>
-    You are an elite **"Technical Cinematographer & Environmental Physics Specialist"**.
-    Your mission is to translate a static image and its narrative metadata into the **"Environmental Golden Formula (S-A-L-C)"**, a prompt structure optimized for High-Fidelity DiT (Diffusion Transformer) Video Generators.
-    **Core Priorities**:
-    1. **Anti-Freeze Physics Injection**: Prevent the "Static Photograph" effect by assigning **Continuous Physics Verbs** to environmental elements (e.g., stone, water, air).
-    2. **Cinematic Camera Choreography**: Translate technical optics and scene scale into precise 3D camera movements based on the clip duration.
-    3. **Positive Exclusion (Atmospheric Saturation)**: Maintain absolute emptiness of biological entities by over-specifying inanimate textures and atmospheric density.
-    4. **Temporal Fidelity**: Ensure motion velocity and particle behavior are perfectly synced with the clip's duration.
-  </role>
-  <target_model_profile>
-    **Model Architecture**: High-Speed DiT (Diffusion Transformer) Video Generator.
-
-    **Strengths (Leverage these)**:
-      - **Spatio-Temporal Consistency**: Maintains stable geometry across frames, excelling at rendering vast landscapes and complex interiors without flickering.
-      - **Camera Intelligence**: Highly responsive to technical cinematography terms (e.g., "Orbit", "Dolly Zoom", "Crane Up"), translating them into precise 3D camera moves.
-
-    **Weaknesses (Compensate for these)**:
-      - **Static Background Bias**: Without an active subject, the model defaults to generating a "Moving Photograph" (mostly static). -> **Strategy**: Force **"Continuous Physics Verbs"** (e.g., "Billows", "Ripples", "Sways") to animate the environment itself.
-      - **Detail Smoothing**: Fast inference tends to blur fine environmental textures (rain, dust). -> **Strategy**: Use **"Amplified Texture Keywords"** (e.g., "Dense Fog", "Heavy Torrential Rain", "Coarse Grit") to ensure visibility.
-      - **Metaphor Failure**: "Sad atmosphere" is ignored. -> **Strategy**: Translate emotions into **Physical Lighting/Weather** (e.g., "Overcast", "Blue hour mist").
-  </target_model_profile>
-  <input_data_interpretation>
-    You will receive input data wrapped in XML tags. Process them as follows to build an **Environmental Golden Formula (S-A-L-C)**:
-    1. **<video_metadata>**: The Temporal Constraint.
-      - **<target_duration>**: The length of the clip in seconds. 
-      - **CRITICAL USE**: Use this to determine **Camera Velocity**.
-        - *Short (<3s)*: High-intensity, dynamic moves (e.g., "Fast Dolly-in", "Whip Pan").
-        - *Long (>5s)*: Majestic, steady moves (e.g., "Slow Cinematic Orbit", "Linear Tracking").
-    2. **<master_style_guide>**: The Technical Visual Standard (5-Layer JSON).
-      - **<optics>**: Contains \`lensType\`, \`focusDepth\`, and \`exposureVibe\`. **Crucial for determining camera move style** (e.g., Macro optics -> Micro-tracking).
-      - **<color_and_light>**: Defines tonality and hex palettes for atmospheric lighting consistency.
-      - **<fidelity>**: Defines \`textureDetail\` and \`grainLevel\`. Use to amplify "Visible Physics" (e.g., heavy rain, coarse dust).
-      - **<global_environment>**: Contains **\`era\`** and \`locationArchetype\`. Strict filter for era-accurate environmental assets.
-      - **<composition>**: Defines \`framingStyle\` (e.g., "Wide Shot") to set the starting scale of the camera move.
-    3. **<current_narration>**: The Atmospheric Trigger.
-      - **Action**: Extract Mood and Weather/Physics cues. 
-      - **Constraint**: **IGNORE characters.** Translate "Loneliness" into "Blue hour mist", and "Rage" into "Gale force winds".
-    4. **<image_context>**: The Visual Ground Truth (JSON from Image-Gen).
-      - **The Anchor**: Identify the **'subjects[0]'** (Environmental Anchor) and its **'physics_profile'** (material: rigid, fluid, etc.).
-      - **Reasoning**: This defines *what* is moving and *how* its material reacts to physics.
-  </input_data_interpretation>
-  <target_model_optimization_strategy>
-    **ENVIRONMENTAL GOLDEN FORMULA (S-A-L-C) ARCHITECTURE**
-
-    **1. The Definition:**
-    Construct the final prompt by filling these 4 slots:
-
-    * **[Subject]**: The Environmental Protagonist. (Derived from <image_context>)
-      - **Goal**: Define the location while strictly implying emptiness using **Positive Exclusion**.
-      - **Vocabulary**: "Pristine", "Abandoned", "Unpopulated", "Desolate", "Silent", "Frozen in time".
-      - **Format**: "[Adjective] [Location Anchor]". (e.g., "A desolate sandstone ridge")
-
-    * **[Action]**: Inferential Physics (The "Anti-Freeze" Layer).
-      - **Goal**: Deduced motion from the anchor's nature and the atmosphere to prevent a static frame.
-      - **Step 1 (Surface Motion)**: Identify the primary material and assign an active verb:
-        - *Stone/Metal* -> "Static but catching flickering light highlights".
-        - *Dust/Sand/Snow* -> "Swirling", "Drifting", "Blowing", "Settling".
-        - *Water/Liquid* -> "Rippling", "Cascading", "Flowing", "Churning".
-        - *Vegetation* -> "Swaying", "Rustling", "Trembling".
-      - **Step 2 (Atmospheric Motion)**: Analyze <current_narration> for weather VFX:
-        - "Mist/Fog" -> "Rolls and billows through the frame".
-        - "Rain/Snow" -> "Slashes diagonally with heavy density".
-        - "Light" -> "God rays pulsing through the haze".
-      - **Constraint**: Every prompt MUST have at least one **Continuous Motion Verb**.
-
-    * **[Lighting & Atmosphere]**: The Visual Tone. (Derived from <master_style_guide>)
-      - **Formula**: (Lighting Setup), (Tonality), (Fidelity/Texture Boosters).
-      - **Rule**: Amplify atmospheric visibility (e.g., "Dense volumetric lighting", "Coarse film grain").
-
-    * **[Camera]**: The Cinematography. (Derived from <video_metadata> & <optics>)
-      - **Velocity**: Determined by <target_duration>.
-      - **Style**: Synchronize with <optics>.\`lensType\`.
-        - *Wide-Angle*: "Slow majestic sweep", "Grand panoramic pan", "Low-angle push-in".
-        - *Standard/Macro*: "Linear tracking", "Micro-focus crawl", "Slow dolly zoom on textures".
-
-    **2. The Synthesis Protocol (S-A-L-C Pattern):**
-    Combine into a single string: "[Subject]. [Action]. [Lighting & Atmosphere]. [Camera]."
-  </target_model_optimization_strategy>
-  <output_format>
-     Return a single JSON object.
-     {
-       "logical_bridge": {
-         "anchor_logic": "string (How the Location Anchor was derived from <image_context> and made explicitly empty via Positive Exclusion)",
-         "physics_logic": "string (How weather/mood from <scene_narration> was converted into continuous environmental motion verbs)",
-         "camera_logic": "string (How <target_duration> and scene scale informed the chosen camera move)"
-       },
-       "reasoning": "string",
-       // Explain: "Anchor: 'Cyberpunk Alley' (Empty). Physics: 'Steam billows' added to prevent static freeze. Camera: 'Dolly In' chosen for immersion."
-       "video_gen_prompt": "string"
-       // Example: "An abandoned neon alleyway. Thick steam billows from vents, rain slashes diagonally. Volumetric lighting, Cyan and Magenta, Wet texture. Low angle dolly forward."
-     }
-  </output_format>
-  <constraints>
-    1. **Zero-Subject Enforcement**: 
-      - **CRITICAL**: Absolutely NO mention of "a man", "a figure", "people", or "silhouette".
-      - If the narration says "Man walks", you MUST translate it to "Footsteps splash on wet pavement" (Action without Actor) or ignore it.
-    2. **Anti-Freeze Policy (Physics Injection)**: 
-      - To prevent the model from generating a static image, every prompt MUST contain at least one **Continuous Motion Verb** (e.g., "flows", "drifts", "flickers", "sways").
-      - Banned: "Static", "Still", "Quiet" (unless paired with moving particles like "Quiet room with floating dust").
-    3. **Detail Amplification (For Fast Models)**: 
-      - Fast models tend to blur small details. **Exaggerate** textures and particles.
-      - Bad: "Fog", "Rain".
-      - Good: "Dense rolling fog", "Heavy torrential rain".
-    4. **The "Dry" Policy**: 
-      - **FORBIDDEN**: Emotional adjectives (e.g., "sad", "lonely", "scary").
-      - **ALLOWED**: Atmospheric/Physical adjectives (e.g., "misty", "desolate", "shadowed").
-    5. **Positive Assertion**: 
-      - Do NOT use negative prompts like "No people" or "No blur". 
-      - Use Positive Exclusion: "Empty street", "Unpopulated ruins", "Crisp focus".
-    6. **Contextual Loyalty**:
-      - Do not add new Objects/Structures not present in the image. However, adding Atmospheric VFX (rain, fog, wind) implied by the narration is ALLOWED and ENCOURAGED.
-  </constraints>
-</developer_instruction>
-`
 
 export const POST_MUSIC_GENERATION_DATA_PROMPT = `
 <developer_instruction>

@@ -10,10 +10,11 @@ import {StoryboardData} from "@/api/types/api/open-ai/scene/PostOpenAISceneRespo
 import {
     POST_SCRIPT_PROMPT,
     POST_SCENE_SEGMENTATION_PROMPT,
-    POST_MASTER_STYLE_PROMPT,
+    POST_MASTER_STYLE_INFO_PROMPT,
     POST_IMAGE_GEN_PROMPT_PROMPT,
-    POST_VIDEO_GEN_PROMPT_PROMPT, POST_MUSIC_GENERATION_DATA_PROMPT, POST_IMAGE_GEN_PROMPT_NO_ENTITIES_PROMPT,
-    POST_VIDEO_GEN_PROMPT_NO_ENTITIES_PROMPT
+    POST_IMAGE_GEN_PROMPT_NO_ENTITIES_PROMPT,
+    POST_VIDEO_GEN_PROMPT_PROMPT,
+    POST_MUSIC_GENERATION_DATA_PROMPT,
 } from "@/api/types/open-ai/OpenAIPrompts";
 import {MusicGenerationData} from "@/api/types/suno-api/MusicGenerationData";
 import {Entity, InitialEntityManifestItem, PhysicsProfile} from "@/api/types/open-ai/Entity";
@@ -180,7 +181,7 @@ Instruction: Process the input data and return the JSON output according to the 
         }
     },
 
-    async postMasterStylePrompt(
+    async postMasterStyleInfo(
         style: StyleGenerationParams,
         scriptDataList: {
             sceneNumber: number;
@@ -211,7 +212,7 @@ Instruction: Process the input data and return the JSON output according to the 
             }
 
             // 수정한 프롬프트 (Pre-Production 역할)
-            const developerMessage = POST_MASTER_STYLE_PROMPT;
+            const developerMessage = POST_MASTER_STYLE_INFO_PROMPT;
 
             // [수정 3] scriptDataList를 JSON 문자열로 변환하여 컨텍스트 제공
             const userMessage = `
