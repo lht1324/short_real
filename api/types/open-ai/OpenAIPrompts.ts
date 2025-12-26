@@ -428,12 +428,12 @@ export const POST_MASTER_STYLE_PROMPT = `
           "id": "string (snake_case unique id)",
           "role": "main_hero" | "sub_character" | "background_extra" | "prop",
           "type": "human" | "creature" | "object" | "machine" | "animal" | "hybrid",
-          "appearance_scenes": ["number (integer)"],
+          "appearance_scenes": "number[]",
           "demographics": "string (REQUIRED: Comma-separated string formatted strictly according to the Type Classification Schema in <task_2_entity_manifest> section. Examples: Human='Era, Role, Gender...', Object='Era, Item, Detail'. DO NOT use 'N/A' fillers.)",
           "appearance": {
             "clothing_or_material": "string (REQUIRED: Context-Aware & Neutral visual description. Must imply texture/physics.)",
             "hair": "string (Optional)",
-            "accessories": ["string"],
+            "accessories": "string[]",
             "body_features": "string (Optional)"
           }
         }

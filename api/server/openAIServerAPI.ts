@@ -300,7 +300,17 @@ Instruction: Analyze the input <target_aspect_ratio>, <style_guidelines>, <full_
                     success: true,
                     // 구조 분해 할당
                     masterStyleInfo: parsedData.masterStyleInfo,
-                    entityManifestList: parsedData.entityManifest, // 추출된 캐릭터 시트 반환
+                    entityManifestList: parsedData.entityManifest.map((entity) => {
+                        return {
+                            ...entity,
+                            appearance_scenes: entity.appearance_scenes.map((appearanceSceneNumber) => {
+                                // 방어 로직 (실제 문자열로 들어가는 케이스 발견)
+                                return typeof appearanceSceneNumber === "string"
+                                    ? parseInt(appearanceSceneNumber)
+                                    : appearanceSceneNumber;
+                            }),
+                        }
+                    }), // 추출된 캐릭터 시트 반환
                 };
 
             } catch (parseError) {
