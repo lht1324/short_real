@@ -1,5 +1,4 @@
 export interface PhysicsProfile {
-    // render_mode: 'detailed' | 'dynamic';
     /**
      * Layer A: 재료 역학 (Material Dynamics) - "충격에 어떻게 반응하는가?"
      * - 'rigid': 강체 (금속, 바위, 뼈) -> 찌그러짐(Dent), 튕김(Bounce), 파편화(Shatter).

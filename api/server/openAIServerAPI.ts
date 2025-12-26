@@ -532,60 +532,102 @@ Instruction: Generate the scene instruction JSON.
             // 메인 히어로 또는 씬에 등장하는 주요 엔티티들의 물리 속성을 추출하여 문자열로 변환
 
             const activeEntityPhysicsList = isEntityListNotEmpty
-                ? entityManifestList
-                    .filter((entity) => !!(entity.physics_profile))
-                    .map((entity) => {
-                        // 1. 타입 단언 (render_mode 제거됨)
-                        const {
-                            material: materialList,
-                            action_context: actionContextList,
-                        } = entity.physics_profile as PhysicsProfile;
+                ? entityManifestList.filter((entity) => {
+                    return !!(entity.physics_profile);
+                }).map((entity) => {
+                    const {
+                        material: materialList,
+                        action_context: actionContextList,
+                    } = entity.physics_profile as PhysicsProfile;
 
-                        // 2. 데이터 수집용 Set 초기화
-                        const effectTags = new Set<string>();
-                        const visualVocabularyPool = new Set<string>(); // 여기에 모든 단어를 합칩니다
-                        const cameraTechs = new Set<string>();
-                        const speedTerms = new Set<string>();
+                    // 강도별 데이터를 담을 임시 객체
+                    const intensityData = {
+                        very_low: { effects: new Set(), vocab: new Set(), camera: new Set(), velocity: new Set() },
+                        low: { effects: new Set(), vocab: new Set(), camera: new Set(), velocity: new Set() },
+                        high: { effects: new Set(), vocab: new Set(), camera: new Set(), velocity: new Set() },
+                        very_high: { effects: new Set(), vocab: new Set(), camera: new Set(), velocity: new Set() },
+                    };
 
-                        // 3. Material 데이터 수집
-                        materialList.forEach((materialKey) => {
-                            const data = PHYSICS_LIBRARY.material[materialKey];
-                            if (data) {
-                                // 이펙트 태그 수집
-                                effectTags.add(`"${data.effect_tag}"`);
-                                effectTags.add(`"${data.alt_tag}"`);
+                    // 1. Material 데이터 분류
+                    materialList.forEach((materialKey) => {
+                        const data = PHYSICS_LIBRARY.material[materialKey];
+                        if (data) {
+                            // Very Low Intensity
+                            intensityData.very_low.effects.add(`"${data.very_low_intensity.effect_tag}"`);
+                            intensityData.very_low.effects.add(`"${data.very_low_intensity.alt_tag}"`);
+                            data.very_low_intensity.vocabulary.forEach(v => intensityData.very_low.vocab.add(v));
 
-                                // [Action] Material 단어장 수집 (배열의 모든 단어를 Set에 추가)
-                                data.vocabulary.forEach(word => visualVocabularyPool.add(word));
-                            }
-                        });
+                            // Low Intensity
+                            intensityData.low.effects.add(`"${data.low_intensity.effect_tag}"`);
+                            intensityData.low.effects.add(`"${data.low_intensity.alt_tag}"`);
+                            data.low_intensity.vocabulary.forEach(v => intensityData.low.vocab.add(v));
 
-                        // 4. Action Context 데이터 수집 (여기에 Vocabulary 추가 로직 포함)
-                        actionContextList.forEach((contextKey) => {
-                            const data = PHYSICS_LIBRARY.action_context[contextKey];
-                            if (data) {
-                                // 카메라 & 속도 수집
-                                cameraTechs.add(data.camera_tech);
-                                speedTerms.add(data.speed_term);
+                            // High Intensity
+                            intensityData.high.effects.add(`"${data.high_intensity.effect_tag}"`);
+                            intensityData.high.effects.add(`"${data.high_intensity.alt_tag}"`);
+                            data.high_intensity.vocabulary.forEach(v => intensityData.high.vocab.add(v));
 
-                                // [Action] Action Context 단어장 수집 (Material과 같은 Pool에 합침)
-                                data.vocabulary.forEach(word => visualVocabularyPool.add(word));
-                            }
-                        });
+                            // Very High Intensity
+                            intensityData.very_high.effects.add(`"${data.very_high_intensity.effect_tag}"`);
+                            intensityData.very_high.effects.add(`"${data.very_high_intensity.alt_tag}"`);
+                            data.very_high_intensity.vocabulary.forEach(v => intensityData.very_high.vocab.add(v));
+                        }
+                    });
 
-                        // 데이터가 하나도 없으면 null 반환
-                        if (effectTags.size === 0 && cameraTechs.size === 0) return null;
+                    // 2. Action Context 데이터 분류
+                    actionContextList.forEach((contextKey) => {
+                        const data = PHYSICS_LIBRARY.action_context[contextKey];
+                        if (data) {
+                            // Very Low Intensity
+                            intensityData.very_low.camera.add(data.very_low_intensity.camera_tech);
+                            intensityData.very_low.velocity.add(data.very_low_intensity.speed_term);
+                            data.very_low_intensity.vocabulary.forEach(v => intensityData.very_low.vocab.add(v));
 
-                        // 5. 포맷팅
-                        // Visual Hints -> Visual Vocabulary Pool로 명칭 변경 (프롬프트 의도에 맞춤)
-                        return `
+                            // Low Intensity
+                            intensityData.low.camera.add(data.low_intensity.camera_tech);
+                            intensityData.low.velocity.add(data.low_intensity.speed_term);
+                            data.low_intensity.vocabulary.forEach(v => intensityData.low.vocab.add(v));
+
+                            // High Intensity
+                            intensityData.high.camera.add(data.high_intensity.camera_tech);
+                            intensityData.high.velocity.add(data.high_intensity.speed_term);
+                            data.high_intensity.vocabulary.forEach(v => intensityData.high.vocab.add(v));
+
+                            // Very High Intensity
+                            intensityData.very_high.camera.add(data.very_high_intensity.camera_tech);
+                            intensityData.very_high.velocity.add(data.very_high_intensity.speed_term);
+                            data.very_high_intensity.vocabulary.forEach(v => intensityData.very_high.vocab.add(v));
+                        }
+                    });
+
+                    // 3. 기존 용어를 유지한 포맷팅 (Low/High 블록으로 구분)
+                    return `
 [Entity Role: ${entity.role}]
-- **Visual Effect Candidates**: ${Array.from(effectTags).join(' OR ')}
-- **Visual Vocabulary Pool**: ${Array.from(visualVocabularyPool).join(', ')}
-- **Camera Tech Options**: ${Array.from(cameraTechs).join(', ')}
-- **Velocity Options**: ${Array.from(speedTerms).join(', ')}
+**INTENSITY_TIER: VERY_LOW (Micro-Stasis / Latent Flux / Absolute Stillness)**
+- **Visual Effect Candidates**: ${Array.from(intensityData.very_low.effects).join(' OR ')}
+- **Visual Vocabulary Pool**: ${Array.from(intensityData.very_low.vocab).join(', ')}
+- **Camera Tech Options**: ${Array.from(intensityData.very_low.camera).join(', ')}
+- **Velocity Options**: ${Array.from(intensityData.very_low.velocity).join(', ')}
+
+**INTENSITY_TIER: LOW (Fluid Motion / Rhythmic Drift / Subtle Flow)**
+- **Visual Effect Candidates**: ${Array.from(intensityData.low.effects).join(' OR ')}
+- **Visual Vocabulary Pool**: ${Array.from(intensityData.low.vocab).join(', ')}
+- **Camera Tech Options**: ${Array.from(intensityData.low.camera).join(', ')}
+- **Velocity Options**: ${Array.from(intensityData.low.velocity).join(', ')}
+
+**INTENSITY_TIER: HIGH (Decisive Kinetic / Structural Strain / High Momentum)**
+- **Visual Effect Candidates**: ${Array.from(intensityData.high.effects).join(' OR ')}
+- **Visual Vocabulary Pool**: ${Array.from(intensityData.high.vocab).join(', ')}
+- **Camera Tech Options**: ${Array.from(intensityData.high.camera).join(', ')}
+- **Velocity Options**: ${Array.from(intensityData.high.velocity).join(', ')}
+
+**INTENSITY_TIER: VERY_HIGH (Explosive Chaos / Hyper-Velocity / Kinetic Failure)**
+- **Visual Effect Candidates**: ${Array.from(intensityData.very_high.effects).join(' OR ')}
+- **Visual Vocabulary Pool**: ${Array.from(intensityData.very_high.vocab).join(', ')}
+- **Camera Tech Options**: ${Array.from(intensityData.very_high.camera).join(', ')}
+- **Velocity Options**: ${Array.from(intensityData.very_high.velocity).join(', ')}
 `;
-                    })
+                })
                     .filter(Boolean)
                     .join('\n')
                 : '';
@@ -598,55 +640,14 @@ Instruction: Generate the scene instruction JSON.
                         type: entity.type,
                         demographics: entity.demographics, // 예: "Latino, late 20s" (식별용)
 
-                        position: entity.appearance.position_descriptor ?? "",
+                        position_descriptor: entity.appearance.position_descriptor ?? "",
 
-                        distinguishing_features: {
-                            hair: entity.appearance.hair, // 예: "Short buzz cut" -> "The buzz-cut boxer"
-                            clothing: entity.appearance.clothing_or_material, // 예: "Red satin shorts" -> "The boxer in red"
-                        }
+                        hair: entity.appearance.hair,
+                        clothing: entity.appearance.clothing_or_material,
                     };
                 })
                 : []
             // 4. User Message 구성 (physics_instruction_set 주입)
-//             const userMessage = `
-// <input_context>
-//   <video_metadata>
-//     <video_title>${videoTitle}</video_title>
-//     <video_description>${videoDescription}</video_description>
-//     <target_duration>${targetDuration}seconds</target_duration>
-//   </video_metadata>
-//   ${isEntityListNotEmpty ? `<vocabulary_depot>
-//     **RESOURCE POOL**: Select keywords from here to construct the Dry S-A-C prompt.
-//     DO NOT use these as descriptions. Use them as tags.
-//     ${activeEntityPhysicsList}
-//   </vocabulary_depot>` : ""}
-//   <scene_narration>${sceneNarration}</scene_narration>
-//   ${!isEntityListNotEmpty && `<master_style_guide>
-//     ${JSON.stringify(masterStyleInfo, null, 2)}
-//   </master_style_guide>`}
-//   ${isEntityListNotEmpty ? `<entity_list>
-//     ${JSON.stringify(mappedEntityList, null, 2)}
-//   </entity_list>` : ""}
-//   <image_context>
-//     **START FRAME TRUTH**:
-//     The input image is the visual ground truth.
-//   ${isEntityListNotEmpty ? `
-//     - Do NOT describe the character's appearance (It is already there).
-//     - ONLY describe the **Movement** (Action) and **Camera** (Composition).
-//   ` : `
-//     - Treat the **location/environment** as the subject (no characters).
-//     - Do NOT introduce **people/characters/silhouettes** or any new **objects/structures** not present in the image.
-//     - Do NOT restate static visual details already visible in the image (buildings, terrain, props).
-//     - ONLY describe **what changes over time**:
-//       1) **Environmental physics**: fog rolls/billows, rain falls/slashes, wind sways foliage, dust motes drift, water ripples, light flickers/gleams.
-//       2) **Camera movement**: dolly in/out, orbit, pan, tilt, crane, tracking — with speed matched to target duration.
-//     - If narration mentions human actions, convert them to **actorless effects** (e.g., “footsteps splash in puddles”) or ignore.
-//     - Use **positive exclusion** phrasing when needed (e.g., “empty”, “unpopulated”, “abandoned”).
-//     - Adding **atmospheric VFX** (rain, fog, wind, lighting changes) implied by the narration is allowed and encouraged.
-//   `}
-//   </image_context>
-// </input_context>
-// `;
             const userMessage = `
 <input_context>
   <video_metadata>
@@ -721,63 +722,7 @@ Instruction: Generate the scene instruction JSON.
                 };
             }
 
-            // [선택 사항] 유효성 검사: JSON 파싱이 가능한지 미리 확인
             try {
-                // const parsedJson: {
-                //     video_gen_prompt: string;
-                //     reasoning: string;
-                //     logical_bridge: {
-                //         identity_logic: string,
-                //         action_mode: {
-                //             "assessment": string,
-                //             "selected_mode": "A" | "B"
-                //         },
-                //         action_focus: string;
-                //     } | {
-                //         anchor_logic: string;
-                //         physics_logic: string;
-                //         camera_logic: string;
-                //     }
-                // } = JSON.parse(generatedContent);
-                //
-                // console.log(`Scene #${sceneNumber} postVideoGenPrompt() Result`);
-                // if (isEntityListNotEmpty) {
-                //     const {
-                //         identity_logic: identityLogic,
-                //         action_mode: {
-                //             assessment,
-                //             selected_mode: selectedMode,
-                //         },
-                //         action_focus: actionFocus,
-                //     } = parsedJson.logical_bridge as {
-                //         identity_logic: string,
-                //         action_mode: {
-                //             "assessment": string,
-                //             "selected_mode": "A" | "B"
-                //         },
-                //         action_focus: string;
-                //     };
-                //
-                //     console.log("EntityList is not empty.")
-                //     console.log(`[${selectedMode === 'A' ? "Impact/Result" : "Sustain/Process"}]: ${assessment}`);
-                //     console.log(`Identity Logic: ${identityLogic}`);
-                //     console.log(`Action Focus: ${actionFocus}`)
-                // } else {
-                //     const {
-                //         anchor_logic: anchorLogic,
-                //         physics_logic: physicsLogic,
-                //         camera_logic: cameraLogic,
-                //     } = parsedJson.logical_bridge as {
-                //         anchor_logic: string;
-                //         physics_logic: string;
-                //         camera_logic: string;
-                //     };
-                //
-                //     console.log("EntityList is empty.")
-                //     console.log(`Anchor Logic: ${anchorLogic}`);
-                //     console.log(`Physics Logic: ${physicsLogic}`);
-                //     console.log(`Camera Logic: ${cameraLogic}`);
-                // }
                 const parsedJson: {
                     logical_bridge: {
                         identity_logic: string;

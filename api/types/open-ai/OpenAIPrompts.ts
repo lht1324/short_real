@@ -1329,9 +1329,15 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
        - Identify the <target_duration> to calibrate the speed of camera and action vectors.
        - Use <video_title> and <video_description> to establish the overall narrative "Vector of Change."
     2. **<vocabulary_depot> (The Semantic Physics Engine)**:
-       - **Visual Effect Candidates**: Extract these as "Action" triggers. They are environmental particles (Mist, Sparks, Splash) that prevent "Freezing" artifacts.
-       - **Visual Vocabulary Pool**: Use these as "Meaningful Guides" to maintain latent consistency in texture and material behavior (e.g., "Chrome glint" for Rigid, "Subsurface scattering" for Viscoelastic).
-       - **Camera Tech & Velocity Options**: Mandatory technical constraints for the Cinematic Camera Vector.
+       - **Quad-Tier Intensity Architecture**: This block contains physics-based technical data categorized into four discrete physical states:
+         * **\`VERY_LOW\`**: (Micro-Stasis / Latent Flux / Absolute Stillness) - Data focused on high-fidelity textures and subtle light behavior in near-static conditions.
+         * **\`LOW\`**: (Fluid Motion / Rhythmic Drift / Subtle Flow) - Data focused on natural, rhythmic, and continuous movement within stable environments.
+         * **\`HIGH\`**: (Decisive Kinetic / Structural Strain / High Momentum) - Data focused on intentional force, material tension, and clear kinetic acceleration.
+         * **\`VERY_HIGH\`**: (Explosive Chaos / Hyper-Velocity / Kinetic Failure) - Data focused on physical breaking points, high-speed debris, and violent, erratic impacts.
+       - **Technical Tag Definitions**:
+         * **Visual Effect Candidates**: Atmospheric "Action" triggers (e.g., Mist, Sparks). These are environmental particles used to maintain a constant "Delta" in the video stream.
+         * **Visual Vocabulary Pool**: Material-specific surface descriptors (e.g., [Chrome glint], [Skin Ripple]).
+         * **Camera Tech & Velocity Options**: Mandatory cinematic constraints. These define the 3D movement of the lens and the shutter speed characteristics.
     3. **<scene_narration> (The Kinetic Engine)**:
        - Translate narrative verbs into high-impact "Action Vectors."
        - Convert human-centric narration into physics-based interactions with the environment (e.g., "running" becomes "feet striking ground, dust sprays").
@@ -1343,84 +1349,173 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
        - Use \`role\` and \`demographics\` only to identify subjects.
        - Leverage \`position_descriptor\` to define the starting point of the camera vector.
     6. **<image_context> (The Ground Truth Anchor)**:
+       - The inputted image file as \`image_url\` type member of \`contents\`.
        - **Start Frame Truth**: Treat the image as the absolute visual constant.
        - **Strict Redundancy Filter**: Do NOT describe appearance (clothes, hair, structures) already present in the image. Focus exclusively on the **Delta** (what changes over time).
   </input_data_interpretation>
   <processing_logic>
+    <step_0_kinetic_energy_profiling>
+      - **Goal**: Identify and lock the single **\`INTENSITY_TIER\`** to establish the physical boundaries and intensity of the entire latent trajectory.
+      - **Inference Logic**: 
+        1. **Narrative Kinetic Analysis**: Analyze <scene_narration> for kinetic verbs and the implied velocity of the action.
+        2. **Actor vs. Environment Pivot**: 
+           - **IF <entity_list> is NOT EMPTY**: Evaluate the subjects' \`type\` and \`physics_profile\` to determine inherent mass and action capacity (e.g., a \`machine\` in \`combat\` state).
+           - **IF <entity_list> is EMPTY**: Pivot the analysis entirely to the **Environmental Dynamics**. Treat the background, weather, and light as the primary "Actors" (e.g., a "Neon City" in "locomotion" context implies camera-driven energy).
+        3. **Environmental Stability Assessment**: Evaluate <image_context> (t=0) for environmental stability (e.g., a quiet boutique vs a chaotic street).
+      - **\`INTENSITY_TIER\` Classification (Select Exactly ONE)**:
+        * **\`VERY_LOW\`**: Choose if the scene is defined by **Micro-Stasis** (e.g., subtle breathing, light flickering, near-perfect stillness).
+        * **\`LOW\`**: Choose if the scene is defined by **Fluid Motion** (e.g., rhythmic walking, gentle swaying, consistent natural flow).
+        * **\`HIGH\`**: Choose if the scene is defined by **Decisive Kinetic** energy (e.g., intentional strikes, running, mechanical shifts, heavy mass movement).
+        * **\`VERY_HIGH\`**: Choose if the scene reaches **Explosive Chaos** (e.g., high-impact collisions, shattering, hyper-velocity, total physical failure).
+      - **Output Requirement**: This profile acts as a **Global Latent Filter**. The selected \`INTENSITY_TIER\` strictly dictates all data extraction from <vocabulary_depot> and word choices in later <step_n>s.
+    </step_0_kinetic_energy_profiling>
     <step_1_core_synthesis_principles>
-      - **Kinetic Anchor Protocol Implementation**: Assemble the prompt in a 4-stage organic flow: [Anchor] + [Primary Action Vector] + [Cinematic Camera Vector] + [Atmospheric Delta].
-      - **Vividness-Centric Construction**: To maximize the "Video Vividness" reward, integrate four dimensions: action (facial/body precision), camera (dynamic movement), atmosphere (lighting/particles), and emotion (micro-expressions).
-      - **Delta-Only Description (Zero Redundancy)**: Treat the input image as the absolute "Start Frame Truth" (t=0). Describe ONLY the changes, movements, and physical interactions that occur from t=0 to t=n. Avoid re-describing static visual details like clothing, hair color, or architectural shapes.
-      - **Semantic Tagging & Natural Language Hybrid**: 
-        - Use professional natural language for narrative flow.
-        - Use keywords from the <vocabulary_depot> as **Technical Tags** (e.g., "[Subsurface scattering]", "[Skin Ripple]") to provide precise meaningful guides for the model's latent engine.
-      - **Verb-Driven Engine**: Prioritize strong, dynamic verbs (Launch, Explode, Sprint, Carve) over adjectives to drive the physical engine of the model.
-      - **Cinematic Vocabulary Preference**: Always use professional filmmaking terminology (e.g., Dolly Zoom, Rack Focus, Volumetric Lighting, Low-angle tracking) to align with the model's RLHF-trained aesthetic preferences.
+      - **Kinetic Anchor Protocol**: Assemble every prompt in a 4-stage organic flow to ensure spatio-temporal coherence: 
+        **[Anchor] + [Primary Action Vector] + [Cinematic Camera Vector] + [Atmospheric Delta]**.
+      - **Tier-Resonant Dynamic Realism**: Achieve "Video Vividness" by matching the density of change (Delta) to the selected \`INTENSITY_TIER\`:
+        * **IF \`VERY_LOW\` OR \`LOW\`**: Focus on **Micro-Deltas**. Priority: Surface-level light flux, micro-expressions, and subtle environmental drift (e.g., [Subsurface scattering], [Dust motes]). The goal is "Fluid Continuity" without freezing.
+        * **IF \`HIGH\` OR \`VERY_HIGH\`**: Focus on **Macro-Deltas**. Priority: Structural deformation, high-velocity particle ejecta, and reactionary physics (e.g., [Skin Ripple], [Sparks], [Shards]). The goal is "High-Impact Kinetic Energy."
+      - **Technical Tagging & Jargon**: 
+        - **Brackets Only**: Insert keywords from the selected tier in <vocabulary_depot> as **Technical Tags** strictly using brackets \`[]\` (e.g., [Chrome glint], [Whip Pan]). 
+        - **No Inference**: Do NOT invent or infer tags outside the provided library for the selected tier.
+        - **Cinematic Alignment**: Prioritize professional filmmaking terminology (e.g., Dolly Zoom, Rack Focus) to trigger the model's RLHF-trained aesthetic weights.
+      - **Zero-Redundancy (Delta-Only)**: 
+        - Treat <image_context> as the absolute "Start Frame Truth" (t=0). 
+        - **Strict Prohibition**: Do NOT re-describe static elements (clothing, hair color, architecture) already visible in the image. 
+        - **Focus**: Describe ONLY the **Delta** (the change over time) and physical interactions.
+      - **Verb Synchronization (Strict Grammar, Contextual Vocabulary)**: 
+        - **Mandatory Form**: You MUST use the present continuous **(-ing)** form for all action verbs to drive temporal progression and prevent freezing.
+        - **\`INTENSITY_TIER\`-Weight Alignment**: Select verbs whose semantic intensity matches the selected \`INTENSITY_TIER\`. 
+        - **Vocabulary Selection**: The words below are **examples of the required energy level**; you should select the most contextually accurate verb from <scene_narration> or the general \`INTENSITY_TIER\` vibe:
+          * **IF \`VERY_LOW\` OR \`LOW\`**: (Examples: drifting, shimmering, gazing, swaying, breathing, gliding).
+          * **IF \`HIGH\` OR \`VERY_HIGH\`**: (Examples: launching, shattering, recoiling, bolting, lunging, erupting).
     </step_1_core_synthesis_principles>
     <step_2_contextual_anchor_assembly>
-      - **Goal**: Establish the starting point of the video by identifying the primary subject using the structured "Demographics" as a semantic anchor.
+      - **Goal**: Establish the starting point (t=0) by combining structured identity with inferred kinetic tension while strictly avoiding redundant descriptions.
       - **CRITICAL**: If <entity_list> is empty, strictly skip to **Case B**.
+      - **State-Aware Injection Logic**: Apply a **"State Adjective"** derived from the \`INTENSITY_TIER\` locked in <step_0> to set the initial physical tone:
+        * **\`VERY_LOW\`**: poised, serene, static, dormant.
+        * **\`LOW\`**: composed, steady, rhythmic, balanced.
+        * **\`HIGH\`**: intent, focused, tensed, straining.
+        * **\`VERY_HIGH\`**: frantic, unstable, convulsing, erupting.
+      - **Identity Preservation (The "Physics Proxy" Rule)**:
+        - **Data Handling**: Use <entity_list>.[n].\`hair\` and <entity_list>.[n].\`clothing\` ONLY as latent reference data. 
+        - **Strict Prohibition**: Do NOT restate specific visual details from these fields (e.g., "red leather jacket", "short blonde hair") in the final prompt, as they are already visual truth (t=0).
+        - **Actionable Intent**: Leverage this data only to select corresponding \`Technical Tag\`s from <vocabulary_depot> in <step_3> and <step_5> (e.g., if [clothing] is 'silk', you are now primed to select [Satin sheen] or [Fabric Flutter]).
       - **Case A: Presence of Entities (Character/Object/Animal-driven)**:
-        - **Logic**: Use the strictly formatted string from the Demographics Schema.
-        - **Formula**: "The [Parsed Demographics String]"
+        - **Logic**: Extract identity components from the strictly formatted <entity_list>.[n].\`demographics\` string.
+        - **Universal Formula**: "The [ERA/PERIOD], [State Adjective] [Primary Identifier], [Remaining Demographics Fields], [Position Descriptor]"
+          - **Note**:
+            * **[Primary Identifier]**: Use ([ROLE] | [MODEL NAME/TYPE] | [SPECIES/ARCHETYPE] | [SPECIES] | [ITEM NAME] | [HYBRID TYPE]) based on <entity_list>.[n].\`type\`.
+            * **[Remaining Demographics Fields]**: All fields after the Primary Identifier in the schema.
+            * **[Position Descriptor]**: Strictly use the value from **<entity_list>.[n].\`position_descriptor\`**.
         - **Examples**:
-          - (Human): "The 1944 WWII, Infantry Soldier, Male, Caucasian American, Late 20s"
-          - (Machine): "The 2077 Cyberpunk, Arasaka Combat Mech, Prototype Unit"
-          - (Animal): "The Prehistoric, Sabertooth Tiger, Adult"
-        - **Constraint**: The \`[ERA / PERIOD]\` must always come first to act as the strict filter for the model's latent engine.
+          * **VERY_LOW (Human)**: "The 1980s Tokyo Bubble Economy, **poised** Bubble Generation Member, Male, Japanese, Late 20s, centered in the frame"
+          * **LOW (Machine)**: "The 2077 Cyberpunk, **composed** Arasaka Combat Mech, Prototype Unit, situated mid-ground"
+          * **HIGH (Animal)**: "The Pleistocene Era, **tensed** Sabertooth Tiger, Adult Male, dominating the foreground"
+          * **VERY_HIGH (Object)**: "The Victorian Era, **unstable** Antique Pocket Watch, Ornate Gold Filigree, falling through the frame"
       - **Case B: Absence of Entities (Environment-driven)**:
-        - **Logic**: If no entities exist, the environment's era and archetype become the anchor.
-        - **Formula**: "The [ERA / PERIOD] [Location Archetype] environment"
-        - **Example**: "The 15th Century Feudal Japan European Urban Ruin environment".
-      - **Spatial Locking**: Append the \`position_descriptor\` to the anchor string to fix the t=0 composition (e.g., "...standing center frame").
+        - **Logic**: Use the <master_style_guide>.\`globalEnvironment.era\` and <master_style_guide>.\`globalEnvironment.locationArchetype\` as the anchor.
+        - **Formula**: "The [ERA/PERIOD], [State Adjective] [Location Archetype] environment, [Position/Composition Descriptor]"
+        - **Positioning Source**: Use the <master_style_guide>.\`composition.framingStyle\` and <master_style_guide>.\`composition.preferredAspectRatio\` to define the t=0 composition.
+        - **Examples**:
+          * **\`VERY_LOW\` (Static/Dormant)**: "The 1980s Tokyo Bubble Economy, **serene** Neon Tokyo Urban Core environment, sprawling across the background"
+          * **\`LOW\` (Fluid/Rhythmic)**: "The Victorian Era, **flowing** Cobblestone Alleyway environment, **presented in a cinematic wide shot**, receding into the background"
+          * **\`HIGH\` (Powerful/Surging)**: "The Jurassic Era, **surging** Tropical Waterfall environment, **framed as a low-angle medium shot**, dominating the center frame"
+          * **\`VERY_HIGH\` (Chaotic/Erupting)**: "The 1980s Tokyo Bubble Economy, **erupting** Neon Tokyo Urban Core environment, towering over the frame with structural fire"
+      - **Spatial Locking (Critical Alignment)**: 
+        - **IF Case A**: Strictly append the \`<entity_list>.[n].position_descriptor\` to fix the t=0 composition.
+        - **IF Case B**: Strictly use the \`<master_style_guide>.composition.framingStyle\` to lock the starting perspective and prevent identity drift of the environment.
     </step_2_contextual_anchor_assembly>
     <step_3_primary_action_vector_injection>
-      - **Goal**: Drive the physical engine of the model by defining the motion and interactions that occur from t=0 to t=n.
-      - **Logic: Verb-Tag Integration**:
-        - Extract the core movement from \`<scene_narration>\`.
-        - Enhance the verb with **Technical Tags** from \`<vocabulary_depot>\` (Visual Vocabulary Pool).
-        - **Formula**: "[Anchor] + [Dynamic Verb] + [Technical Tags from Pool]"
-      - **Physical Fidelity (Action Dimension)**:
-        - Use specific keywords to describe weight, inertia, and surface reaction.
-        - **Micro-expressions**: For human subjects, add emotional shifts (e.g., "expression shifting from focus to intense effort").
-        - **Interaction**: Explicitly mention how the subject interacts with the environment (e.g., "feet crushing the gravel", "muscles tensing under the skin").
-      - **Continuity & Momentum**:
-        - Use terms like "continuously", "maintaining momentum", or "explosively" to ensure the motion doesn't freeze or jitter.
-        - **Example**: "The 1980s Tokyo Bubble, Salaryman, Male, Japanese, 20s [Anchor] **sprints forward explosively** [Primary Action], **feet striking the canvas with heavy impact** [Interaction], [Directional Motion Blur, Bulging veins, Sweat-beaded] [Technical Tags]."
+      - **Goal**: Drive the model's physical engine by injecting specific motion and interaction vectors synchronized with the locked **\`INTENSITY_TIER\`**.
+      - **\`INTENSITY_TIER\`-Specific Selection Logic**: Strictly select verbs and \`Technical Tag\`s from the corresponding \`INTENSITY_TIER\` in <vocabulary_depot>:
+        * **\`VERY_LOW\` (Micro-Stasis)**:
+          - **Verb Style**: Internal or microscopic (e.g., shimmering, breathing, gazing, glinting, pulsating).
+          - **Focus**: Light flux, micro-expressions, and static surface tension.
+        * **\`LOW\` (Fluid Motion)**: 
+          - **Verb Style**: Rhythmic and continuous (e.g., drifting, swaying, flowing, gliding, walking).
+          - **Focus**: Natural environmental flow and stable translation.
+        * **\`HIGH\` (Decisive Kinetic)**: 
+          - **Verb Style**: Intentional and forceful (e.g., lunging, gripping, striking, accelerating, surging).
+          - **Focus**: Material tension, structural strain, and clear momentum.
+        * **\`VERY_HIGH\` (Explosive Chaos)**: 
+          - **Verb Style**: Reactionary and destructive (e.g., shattering, erupting, recoiling, bolting, convulsing).
+          - **Focus**: Kinetic failure, fragmentation, and hyper-velocity particles.
+      - **Physical Fidelity & Interaction (The Proxy Application)**:
+        - **Material Selection**: Apply technical tags from <vocabulary_depot> by referencing the latent [hair] and [clothing] data (e.g., Use [Satin sheen] for silk, [Skin Ripple] for viscoelastic skin).
+        - **Human Subjects**: You MUST include a **Micro-expression Delta** (e.g., "pupils dilating", "lips trembling", "brow furrowing") to maximize "Video Vividness."
+        - **Environmental Impact**: Describe the physical interaction between the subject and its surroundings based on the tier (e.g., "fingertips grazing the glass" for \`LOW\` vs "fist denting the metal" for \`HIGH\`).
+      - **Formula**: "[Anchor] + [Verb-ing] + [Interaction/Physics Detail] + [Technical Tags in Brackets]"
+      - **\`INTENSITY_TIER\`-Matched Examples**:
+        * **VERY_LOW**: "[Anchor] **shimmering** under the volumetric light as pupils dilate slightly, **maintaining a poised stillness** as micro-glints dance across the fabric [Subsurface scattering] [Brushed grain]."
+        * **LOW**: "[Anchor] **drifting** forward with a rhythmic stride, **catching soft specular pings** from the environment as the garment sways gently [Satin sheen] [Balanced stride]."
+        * **HIGH**: "[Anchor] **gripping** the industrial lever with white-knuckled tension, **inducing structural strain** as the arm muscles coil under the skin [Tense muscle definition] [Structural dents]."
+        * **VERY_HIGH**: "[Anchor] **recoiling** violently from the impact point, **triggering a propagating shockwave** that contorts the facial features in a frantic grimace [Skin Ripple] [Sparks] [Impact tremor]."
+      - **Constraint**: Strictly prohibit mixing \`Technical Tag\`s or verb weights from different \`INTENSITY_TIER\`s. The kinetic energy must be a pure representation of the locked \`INTENSITY_TIER\`.
     </step_3_primary_action_vector_injection>
     <step_4_cinematic_camera_vector_design>
-      - **Goal**: Provide 3D spatiality and professional cinematography by defining the observer's movement and optical focus.
-      - **Logic: Optical & Composition Integration**:
-        - Extract \`optics\` (\`lensType\`, \`focusDepth\`) and \`composition\` from <master_style_guide>.
-        - Combine them with specific **Camera Tech Options** from <vocabulary_depot>.
-        - **Formula**: "[Optics/Framing Tags] + [Dynamic Camera Tech] + [Movement Target]"
-      - **Advanced Cinematography Techniques**:
-        - **Focus Depth Control**: Use terms like "Shallow depth of field" or "Rack focus" to direct the model's attention between subjects.
-        - **High-Difficulty Moves**: Actively utilize complex effects like "Dolly Zoom (Hitchcock Zoom)" or "Smooth Arc Orbit" if the narrative tension is high.
-        - **3D Movement**: Prioritize depth-based movements (Dolly, Truck, Crane) over simple 2D pans to stimulate the model's spatial understanding.
-      - **Vividness Enhancement (Camera Dimension)**:
-        - Add descriptive camera vibes (e.g., "Handheld shaky cam for raw intensity" or "Fluid, glide-like tracking shot for elegance").
-        - **Example**: "Anamorphic wide-angle shot [Optics], Execute a fast low-angle tracking shot [Camera Tech] keeping the subject centered. Smooth rack focus from the background to the protagonist’s intense gaze [Focus Control]."
+      - **Goal**: Provide professional 3D cinematography by synchronizing optics, composition, and movement intensity with the locked **\`INTENSITY_TIER\`**.
+      - **Logic: Multi-Source Integration**:
+        - **Aesthetic DNA**: Extract \`optics.lensType\`, \`optics.focusDepth\`, and \`composition.framingStyle\` from <master_style_guide>.
+        - **Kinetic Hardware**: Select \`Camera Tech Options\` and \`Velocity Options\` from the corresponding \`INTENSITY_TIER\` in <vocabulary_depot>.
+      - **\`INTENSITY_TIER\`-Specific Execution (Cinematic Protocol)**:
+        * **\`VERY_LOW\` (Micro-Stasis Focus)**: 
+          - **Technique**: Static Frame or Imperceptible Slow Dolly In/Out. 
+          - **Optical Priority**: Use "Extremely shallow depth of field" and [Subtle Rack Focus] to direct viewer attention to micro-deltas (e.g., eyes, textures).
+          - **Movement**: 3D depth moves ONLY. Movement must be nearly invisible to the naked eye.
+        * **\`LOW\` (Fluid Rhythm Focus)**: 
+          - **Technique**: Steady Tracking Shot, Smooth Arc Orbit, or rhythmic Panning.
+          - **Optical Priority**: Naturalistic focus that follows rhythmic movement (e.g., [Balanced stride]).
+          - **Movement**: Stable and continuous, emulating a gimbal or steadicam system.
+        * **\`HIGH\` (Decisive Momentum Focus)**: 
+          - **Technique**: Parallel Tracking, Crane Shot, or purposeful Dolly Zoom (Hitchcock Zoom).
+          - **Optical Priority**: Balanced depth of field with visible [Directional Motion Blur] on edges.
+          - **Movement**: Purposeful and rhythmic, matching the speed of mechanical or intentional action.
+        * **\`VERY_HIGH\` (Chaos/Impact Focus)**: 
+          - **Technique**: Handheld Shaky Cam, Crash Zoom, Whip Pan, or Reactionary 3D Tracking.
+          - **Optical Priority**: High shutter-speed effect with intense [Directional Motion Blur].
+          - **Movement**: Sudden, erratic, and reactionary moves that respond to macro-physics (impact/recoil).
+      - **Formula**: "[Optics/Framing Tags] + [Dynamic Camera Tech] + [Movement Intensity] + [Focus Control/Movement Target]"
+      - **\`INTENSITY_TIER\`-Matched Examples**:
+        * **\`VERY_LOW\`**: "Anamorphic wide-angle shot [Optics], execute an **imperceptible Slow Dolly In**. Maintain an **extremely shallow depth of field** with a [Subtle Rack Focus] to the subject's gaze."
+        * **\`LOW\`**: "Medium shot with naturalistic lens profile [Optics], execute a **Steady Tracking Shot** at a rhythmic pace. Maintain **fluid focus** on the subject's profile, capturing consistent motion blur."
+        * **\`HIGH\`**: "Low-angle telephoto composition, execute a **Parallel Tracking Shot** with decisive acceleration. Integrate a **subtle Dolly Zoom** to emphasize the structural tension of the movement."
+        * **\`VERY_HIGH\`**: "Tight handheld composition, execute a violent **Handheld Shaky Cam** with a sudden **Crash Zoom** on the impact point, inducing heavy [Directional Motion Blur]."
+      - **Constraint**: The camera's kinetic energy MUST be a **reciprocal mirror** of the \`INTENSITY_TIER\`. Strictly prohibit using "Reactive" techniques (e.g., Crash Zoom, Shaky Cam) for \`VERY_LOW\`/\`LOW\`, and "Static" techniques for HIGH/VERY_HIGH.
     </step_4_cinematic_camera_vector_design>
     <step_5_atmospheric_delta_refinement>
-      - **Goal**: Prevent "freezing" artifacts by animating the environment, lighting, and air particles surrounding the subject.
-      - **Logic: VFX & Lighting Dynamics**:
-        - Extract **Visual Effect Candidates** (Mist, Sparks, Dust Cloud, etc.) from <vocabulary_depot>.
-        - Incorporate \`lightingSetup\` and \`exposureVibe\` from <master_style_guide> to define light movement.
-        - **Formula**: "[VFX Candidates] + [Environmental Physics] + [Lighting/Atmospheric Changes]"
-      - **Environmental Physics (Atmosphere Dimension)**:
-        - **Prevent Stagnation**: Even in quiet scenes, add subtle movements like "dust motes drifting in the light" or "slow-rolling fog" to keep the latent space active.
-        - **Interaction Effects**: Describe how the primary action affects the environment (e.g., "Sprinting kicks up a volumetric dust cloud", "Rain slashes against the subject’s skin").
-        - **Lighting Flux**: Use dynamic lighting terms such as "flickering shadows", "gleaming light refraction", or "shifting god rays" to enhance depth.
-      - **Vividness Enhancement (Atmosphere Dimension)**:
-        - Use sensory keywords (Melancholic, Energetic, Dreamy) from the narration to tune the atmospheric "Delta."
-        - **Example**: "[Volumetric dust cloud, Gravel spray] [VFX Tags] rising from the impact. Shifting cinematic shadows [Lighting] as the sun breaks through clouds. A melancholic mist [Atmosphere] billows continuously in the background."
+      - **Goal**: Prevent "Freezing" artifacts and unify scene physics by animating the environment (air, light, particles) in synchronization with the locked **\`INTENSITY_TIER\`**.
+      - **\`INTENSITY_TIER\`-Specific Atmospheric Logic**: Select \`Effect Tags\` and \`Alt Tags\` strictly from the corresponding \`INTENSITY_TIER\` in <vocabulary_depot>:
+        * **\`VERY_LOW\` (Micro-Flux Focus)**: 
+          - **Focus**: Light flux and micro-particles.
+          - **Dynamics**: Focus on "Subtle Drift" (e.g., [Dust motes] drifting in light beams, [Subtle fog] rolling slowly, or light [Flickering] on polished surfaces).
+          - **Rule**: Movement must be smooth, low-frequency, and nearly hypnotic.
+        * **\`LOW\` (Rhythmic Flow Focus)**: 
+          - **Focus**: Consistent environmental forces.
+          - **Dynamics**: Focus on "Steady Momentum" (e.g., [Fabric Flutter] from a breeze, leaves swaying, or consistent [Surface Ripples] on water).
+          - **Rule**: Movement must be purposeful and synchronized with the subject's rhythmic motion.
+        * **\`HIGH\` (Kinetic Pressure Focus)**: 
+          - **Focus**: High-energy fluids and directional particles.
+          - **Dynamics**: Focus on "Pressure" (e.g., [Mist] surging from impact, [Dust Trail] rising from friction, or [Steam] erupting from mechanical heat).
+          - **Rule**: Movement must have clear directionality and visible mass.
+        * **\`VERY_HIGH\` (Kinetic Chaos Focus)**: 
+          - **Focus**: High-velocity ejecta and structural debris.
+          - **Dynamics**: Focus on "Violent Chaos" (e.g., [Sparks] erupting from impact, [Shards] of glass flying, [Volumetric dust clouds], or [Shockwave] propagation).
+          - **Rule**: Movement must be sharp, high-frequency, and reactionary to the primary action.
+      - **Formula**: "[Atmospheric Element] + [Movement Style (-ing)] + [Light/Color Interaction] + [Technical Tags in Brackets]"
+      - **\`INTENSITY_TIER\`-Matched Examples**:
+        * **\`VERY_LOW\`**: "**Fine dust motes drifting** lazily through the volumetric light beams, creating a **serene shimmer** across the background [Dust particles] [Tyndall effect]."
+        * **\`LOW\`**: "**Consistent wind gust billowing** the character's coat with a rhythmic snap, while **leaves skitter across the pavement** in a steady stream [Fabric Flutter] [Wind Drag]."
+        * **\`HIGH\`**: "**Thick mist surging** outward from the subject's path, illuminated by **harsh cinematic lighting** that cuts through the airborne density [Mist] [Turbulent swirl]."
+        * **\`VERY_HIGH\`**: "**Jagged glass shards erupting** outward from the impact point, illuminated by **chaotic orange sparks** that cut through the volumetric smoke [Shards] [Sparks] [Debris]."
+      - **Constraint**: Atmospheric frequency MUST be a **reciprocal mirror** of the \`INTENSITY_TIER\`. Strictly prohibit high-energy effects (e.g., Sparks, Shards) for \`VERY_LOW\`/\`LOW\`. **Every frame must contain at least one element in present continuous (-ing) motion to ensure temporal continuity.**
     </step_5_atmospheric_delta_refinement>
     <step_6_short_logic_synthesis>
       - **Goal**: Produce a "Zero-Fluff Binary" prompt strictly following the **[Subject] + [is/are] + [Verb-ing]** format to put in \`video_gen_prompt_short\` of <output_schema>.
       - **Logic: Strategic Subject Extraction**:
         - **If <entity_list> is EMPTY**: 
-          - Extract the core noun from **<master_style_guide>.\`globalEnvironment.locationArchetype\`**.
+          - Extract the single most dominant noun from **<master_style_guide>.\`globalEnvironment.locationArchetype\`**. (e.g., "Neon Tokyo Urban Core" -> "The city").
           - **Formula**: "The [Location Noun] is [Atmospheric Verb-ing]" (e.g., "The battlefield is smoldering").
         - **If <entity_list> is not EMPTY**:
           - Based on the \`type\` of <entity_list>, extract ONLY the designated "Subject Noun" from the \`demographics\` of <entity_list> by following below **Demographics Structure** and **Extraction Rule**:
@@ -1437,6 +1532,13 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
             * **\`creature/animal\`**: Extract the \`[SPECIES / ARCHETYPE]\` (e.g., "Sabertooth Tiger" -> "The tiger").
             * **\`object\`**: Extract the \`[ITEM NAME]\` (e.g., "Antique Pocket Watch" -> "The watch").
             * **\`hybrid\`**: Extract the \`[HYBRID TYPE]\` (e.g., "Cyborg Mercenary" -> "The cyborg").
+      - **Verb Selection Rule**:
+        - **\`INTENSITY_TIER\`-Alignment**: The [Verb-ing] MUST be the primary action identified in <step_3_primary_action_vector_injection>, maintaining strict semantic consistency with the locked **\`INTENSITY_TIER\`**.
+          **Examples**:
+            * \`VERY_LOW\`: "The woman is **breathing**" (NOT "panting").
+            * \`VERY_HIGH\`: "The building is **collapsing**" (NOT "shaking").
+      - **Plural Priority Rule**:
+        - **Different Types**: If subjects are performing the same action, prioritize the **main_hero** or the most massive subject to avoid visual clutter.
       - **Grammar & Aggregation Rules**:
         - **Singular**: "The [Subject] is [Verb-ing]"
         - **Plural (Same Type)**: "The [Subject]s are [Verb-ing]"
@@ -1471,7 +1573,7 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
     Return a single JSON object with the following structure. Ensure all fields are populated based on the internal reasoning of the Cinematic Director role.
     {
       "logical_bridge": {
-        "identity_logic": "string (Define how the subject's era, role, and physical essence from the entity_list and metadata are preserved during motion.)",
+        "identity_logic": "string (Define how the subject's era, role, and physical essence from the <entity_list> and metadata are preserved during motion.)",
         "action_focus": "string (Explain the conceptual shift from the raw narration to the high-impact kinetic verb used in the prompt.)"
       },
       "reasoning": "string (Provide a detailed justification for: 1) The specific tags selected from the vocabulary_depot, 2) The choice of camera tech based on MasterStyleInfo, and 3) The atmospheric strategy to prevent freezing.)",
@@ -1487,10 +1589,6 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
       - **Rule**: Use the structured demographics list (<processing_logic>.<step_2_contextual_anchor_assembly>) for the full prompt to prevent "Identity Drift."
       - **Prohibition**: Do NOT re-describe static visual traits (clothes, hair color) already present in t=0.
       - **Exception**: For \`video_gen_prompt_short\` of <output_schema>, follow the <processing_logic>.<step_6_short_logic_synthesis>.
-    3. **From "Dry" to "Cinematic" (Jargon over Fluff)**:
-      - **Forbidden**: Vague, subjective adjectives (e.g., "breathtaking", "amazing", "powerful").
-      - **Mandatory**: Use technical cinematography and physical terms.
-      - **Emotional Nuance**: Specific adjectives for micro-expressions (e.g., "contorted", "determined", "grimacing") are **REQUIRED** for human subjects to boost "Vividness" scores.
     3. **From "Dry" to "Cinematic" (Jargon over Fluff)**:
       - **Forbidden**: Vague, subjective adjectives (e.g., "breathtaking", "amazing").
       - **Mandatory**: Use technical cinematography and physical terms.
