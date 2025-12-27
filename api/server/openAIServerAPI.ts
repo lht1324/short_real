@@ -704,7 +704,7 @@ Instruction: Generate the scene instruction JSON.
                 ],
                 reasoning_effort: 'high',
                 response_format: { type: 'json_object' },
-                max_completion_tokens: 8192,
+                max_completion_tokens: 10240,
             });
 
             console.log(`Scene #${sceneNumber} postVideoGenPrompt() usage: `, JSON.stringify(completion.usage))

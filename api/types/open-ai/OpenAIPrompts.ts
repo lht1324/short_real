@@ -1338,7 +1338,10 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
          * **\`HIGH\`**: (Decisive Kinetic / Structural Strain) - Focus on intentional force, material tension, and turbulent displacement.
          * **\`VERY_HIGH\`**: (Explosive Chaos / Hyper-Velocity) - Focus on physical breaking points, high-speed debris, and kinetic shockwave.
        - **Technical Tag Definitions**:
-         * **Visual Effect Candidates (Atmospheric Triggers)**: Environmental particles and fluid effects (e.g., Mist, Sparks, Embers). Used in <step_5_atmospheric_delta_refinement> to maintain constant "Delta" and validate Camera/Subject vectors.
+         * **Visual Effect Candidates (Physics VFX Triggers)**: 
+             - Material-based reaction effects derived from the entity's \`physics_profile\` (e.g., [Sparks] for rigid metal impact, [Sweat Spray] for high-exertion skin).
+             - **Usage**: Primarily used in **<step_3_primary_action_vector_injection>** to describe collision/stress outcomes. 
+             - **Optional Usage**: Can be referenced in <step_5_atmospheric_delta_refinement> IF the generated effect contributes to the environmental atmosphere (e.g., [Dust Cloud] from a granular surface).
          * **Visual Vocabulary Pool (Surface Physics)**: Material-specific descriptors and biological reactions (e.g., [Chrome glint], [Skin Ripple], [Fabric Flutter]). Used in <step_3_primary_action_vector_injection> to ground subject interactions.
          * **Velocity & Shutter Specs (Kinetic Calibration)**: 
            - Mandatory constraints for motion blur and shutter speed.
@@ -1462,12 +1465,20 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
         - **Material Selection**: Apply technical tags from <vocabulary_depot> by referencing the latent [hair] and [clothing] data (e.g., Use [Satin sheen] for silk, [Skin Ripple] for viscoelastic skin).
         - **Human Subjects**: You MUST include a **Micro-expression Delta** (e.g., "pupils dilating", "lips trembling", "brow furrowing") to maximize "Video Vividness."
         - **Environmental Impact**: Describe the physical interaction between the subject and its surroundings based on the tier (e.g., "fingertips grazing the glass" for \`LOW\` vs "fist denting the metal" for \`HIGH\`).
+      - **Gaze & Orientation Logic (The "Fourth Wall" Decision)**:
+        - **Goal**: Determine the subject's eye contact and facing direction based on <scene_narration>, <master_style_guide>, <video_metadata>.<video_title>, <video_metadata>.<video_description> and <master_style_guide>.\`globalEnvironment\`.
+        - **Type A: Direct Address (Fourth Wall Break)**:
+          * **Context**: Interviews, Vlogs, Magic Shows, Explanations.
+          * **Action**: Append **"facing the camera"** or **"making eye contact"**.
+        - **Type B: Cinematic Immersion (Fourth Wall Intact)**:
+          * **Context**: Combat, Driving, Fleeing, Natural Observation, Stealth.
+          * **Action**: Append **"facing away from camera"**, **"gaze fixed on horizon"**, or **"ignoring the lens"**.
       - **Formula([Primary Action Vector] from **Kinetic Anchor Protocol** in <step_1_core_synthesis_principles>)**:
-        "[Verb-ing] + [Interaction/Physics Detail] + [Technical Tags in Brackets]"
+        "[Verb-ing] + [Orientation/Gaze Detail] + [Interaction/Physics Detail] + [Technical Tags in Brackets]"
       - **\`INTENSITY_TIER\`-Matched Examples**:
-        * **\`VERY_LOW\`**: "[Anchor] **shimmering** under the volumetric light as pupils dilate slightly, **maintaining a poised stillness** as micro-glints dance across the fabric [Subsurface scattering] [Brushed grain]."
+        * **\`VERY_LOW\`**: "[Anchor] **shimmering** under the light, **gaze fixed on the distant nebula** [Orientation], maintaining a poised stillness... [Subsurface scattering]"
         * **\`LOW\`**: "[Anchor] **drifting** forward with a rhythmic stride, **catching soft specular pings** from the environment as the garment sways gently [Satin sheen] [Balanced stride]."
-        * **\`HIGH\`**: "[Anchor] **gripping** the industrial lever with white-knuckled tension, **inducing structural strain** as the arm muscles coil under the skin [Tense muscle definition] [Structural dents]."
+        * **\`HIGH\`**: "[Anchor] **gripping** the lever with white-knuckled tension, **ignoring the lens with focused intensity** [Orientation], inducing structural strain... [Structural dents]"
         * **\`VERY_HIGH\`**: "[Anchor] **recoiling** violently from the impact point, **triggering a propagating shockwave** that contorts the facial features in a frantic grimace [Skin Ripple] [Sparks] [Impact tremor]."
       - **Constraint**: Strictly prohibit mixing \`Technical Tag\`s or verb weights from different \`INTENSITY_TIER\`s. The kinetic energy must be a pure representation of the locked \`INTENSITY_TIER\`.
     </step_3_primary_action_vector_injection>
@@ -1574,12 +1585,19 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
       </step_4_3_purification_and_formula_assembly>
     </step_4_cinematic_camera_vector_design>
     <step_5_atmospheric_delta_refinement>
-      - **Goal**: Eliminate "Background Freezing" by synchronizing the environment (Medium) with Camera Vector ($\\vec{C}$) from <step_4_cinematic_camera_vector_design> and Subject Vector ($\\vec{S}$) from <step_4_cinematic_camera_vector_design>.
+      - **Goal**: Eliminate "Background Freezing" by synchronizing the environment (Medium) with Camera Vector ($\\vec{C}$) and Subject Vector ($\\vec{S}$).
       - **The Environmental Vector ($\\vec{E}$)**:
-        1. **Counter-Flow Rule**: If $\\vec{C}$ is moving, $\\vec{E}$ (particles, fog) must move in the **Opposite Direction** to maximize the sense of speed. (e.g., Dolly-In $+Z → Dust Flow $-Z$).
-        2. **Wake Effect Rule**: $\\vec{E}$ must react to $\\vec{S}$'s kinetic trail (e.g., Fast movement $\\vec{S} → Turbulent wake, Dust rising).
+        1. **Counter-Flow Rule**: If $\\vec{C}$ is moving, $\\vec{E}$ (particles, fog) must move in the **Opposite Direction** to maximize the sense of speed. (e.g., Dolly-In $+Z \\rightarrow$ Dust Flow $-Z$).
+        2. **Wake Effect Rule**: $\\vec{E}$ must react to $\\vec{S}$'s kinetic trail (e.g., Fast movement $\\vec{S} \\rightarrow$ Turbulent wake, Dust rising).
+      - **Inference Logic (Context-Driven Generation)**:
+        - **Instruction**: **INFER** the most physically accurate atmospheric element based on <image_context> (Location/Weather), <master_style_guide>.\`globalEnvironment\` and <scene_narration>.
+        - **Examples**:
+          * If Image is "Desert" -> Infer: [Dust trails], [Heat haze], [Sand grit].
+          * If Image is "Ocean" -> Infer: [Salt spray], [Foam bursts], [Mist].
+          * If Image is "Cyberpunk City" -> Infer: [Neon rain], [Steam vents], [Smog].
+          * If Image is "Space" -> Infer: [Stardust streaks], [Nebula drift], [Light flares].
       - **Tier-Based Physics Dynamics**:
-        | Intensity | Focus Area | Dynamics ($\\vec{E}$) | Physics Logic |
+        | \`INTENSITY_TIER\` | Focus Area | Dynamics ($\\vec{E}$) | Physics Logic |
         | :--- | :--- | :--- | :--- |
         | **\`VERY_LOW\`** | Micro-flux | Brownian Motion | Random, non-directional drift of light/dust. |
         | **\`LOW\`** | Rhythmic | Laminar Flow | Steady, predictable stream (Breeze, ripples). |
@@ -1589,7 +1607,7 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
         * Prohibit high-energy particles in LOW tiers.
         * **Mandatory Action**: Every frame MUST contain at least one atmospheric element in **present continuous (-ing)** motion that reacts to the locked \`INTENSITY_TIER\`.
       - **Atmospheric Assembly Formula([Atmospheric Delta] of **Kinetic Anchor Protocol** in <step_1_core_synthesis_principles>)**:
-        - **Structure**: "[Subject-Atmosphere Interaction] + [Camera-Atmosphere Flow] + [Light-Particle Interaction] + [Technical Tags]"
+        - **Structure**: "[Subject-Atmosphere Interaction] + [Camera-Atmosphere Flow] + [Light-Particle Interaction] + [Inferred Technical Tags]"
         - **Example (HIGH Intensity)**: 
           "Thick dust clouds **rising** behind the character's feet [Subject Interaction], while environmental embers **streak past the lens** in the opposite direction of the dolly [Camera Flow], illuminated by flickering orange light [Light Interaction] [Volumetric Dust] [Kinetic Embers]."
     </step_5_atmospheric_delta_refinement>
