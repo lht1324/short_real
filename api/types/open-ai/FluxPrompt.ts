@@ -12,6 +12,7 @@ export interface FluxPrompt {
 }
 
 export interface FluxPromptSubject {
+    id: string; // Entity 매칭용. 실 사용 시 매핑으로 제거 후 넣어주기
     type: string;
     description: string;
     pose: string;

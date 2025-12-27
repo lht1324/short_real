@@ -681,9 +681,11 @@ export const POST_IMAGE_GEN_PROMPT_PROMPT = `
         - **Step B (State/Pose)**:
           * Define \`state.pose\` as a "Frozen Snapshot" of maximum tension from <current_narration>.
       2. **[Phase: \`updated_entity_manifest\` Mapping]**
+        - **Carry over the exact \`id\` from <entity_list> to maintain tracking integrity.**
         - Populate each entity's \`physics_profile\` and \`appearance\`.
         - **Note**: This becomes the ground truth for how the subject moves and interacts with light.
       3. **[Phase: \`image_gen_prompt.subjects\` Mapping]**
+        - **Field: 'id'**: Carry over the exact \`id\` from <entity_list> (e.g., 'wingsuit_01'). **Strict Requirement for Subject-to-Physics tracking.**
         - **Field: 'type'**: Execute ${SUBJECT_EXTRACTION_GUIDE} (Common noun conversion).
         - **Field: 'description'**:
           * Synthesize: [Demographics] + [Appearance] + [Material Vocabulary].
@@ -931,7 +933,7 @@ export const POST_IMAGE_GEN_PROMPT_PROMPT = `
     {
       "updated_entity_manifest": [ 
         {
-          "id": "string", // Must match input ID
+          "id": "string", // Must match input <entity_list>.[n].\`id\`
           "physics_profile": {
             // Derived from <visual_texture_layer> Step 1 (Collect ALL applicable)
             "material": ("cloth" | "viscoelastic" | "rigid" | "fluid" | "brittle" | "granular" | "elastoplastic")[],
@@ -953,6 +955,7 @@ export const POST_IMAGE_GEN_PROMPT_PROMPT = `
       "image_gen_prompt": {
           "scene": string;
           "subjects": {
+            "id": "string"; // Must match input <entity_list>.[n].\`id\`
             "type": string;
             "description": string;
             "pose": string;
@@ -1329,25 +1332,31 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
        - Identify the <target_duration> to calibrate the speed of camera and action vectors.
        - Use <video_title> and <video_description> to establish the overall narrative "Vector of Change."
     2. **<vocabulary_depot> (The Semantic Physics Engine)**:
-       - **Quad-Tier Intensity Architecture**: This block contains physics-based technical data categorized into four discrete physical states:
-         * **\`VERY_LOW\`**: (Micro-Stasis / Latent Flux / Absolute Stillness) - Data focused on high-fidelity textures and subtle light behavior in near-static conditions.
-         * **\`LOW\`**: (Fluid Motion / Rhythmic Drift / Subtle Flow) - Data focused on natural, rhythmic, and continuous movement within stable environments.
-         * **\`HIGH\`**: (Decisive Kinetic / Structural Strain / High Momentum) - Data focused on intentional force, material tension, and clear kinetic acceleration.
-         * **\`VERY_HIGH\`**: (Explosive Chaos / Hyper-Velocity / Kinetic Failure) - Data focused on physical breaking points, high-speed debris, and violent, erratic impacts.
+       - **Quad-Tier Intensity Architecture**: This block contains physics-based technical data categorized into four discrete physical states. All selections must strictly match the locked **\`INTENSITY_TIER\`**:
+         * **\`VERY_LOW\`**: (Micro-Stasis / Latent Flux) - Focus on high-fidelity textures, subtle light behavior, and Brownian motion.
+         * **\`LOW\`**: (Fluid Motion / Rhythmic Flow) - Focus on natural, predictable movement and laminar environmental flow.
+         * **\`HIGH\`**: (Decisive Kinetic / Structural Strain) - Focus on intentional force, material tension, and turbulent displacement.
+         * **\`VERY_HIGH\`**: (Explosive Chaos / Hyper-Velocity) - Focus on physical breaking points, high-speed debris, and kinetic shockwave.
        - **Technical Tag Definitions**:
-         * **Visual Effect Candidates**: Atmospheric "Action" triggers (e.g., Mist, Sparks). These are environmental particles used to maintain a constant "Delta" in the video stream.
-         * **Visual Vocabulary Pool**: Material-specific surface descriptors (e.g., [Chrome glint], [Skin Ripple]).
-         * **Camera Tech & Velocity Options**: Mandatory cinematic constraints. These define the 3D movement of the lens and the shutter speed characteristics.
+         * **Visual Effect Candidates (Atmospheric Triggers)**: Environmental particles and fluid effects (e.g., Mist, Sparks, Embers). Used in <step_5_atmospheric_delta_refinement> to maintain constant "Delta" and validate Camera/Subject vectors.
+         * **Visual Vocabulary Pool (Surface Physics)**: Material-specific descriptors and biological reactions (e.g., [Chrome glint], [Skin Ripple], [Fabric Flutter]). Used in <step_3_primary_action_vector_injection> to ground subject interactions.
+         * **Velocity & Shutter Specs (Kinetic Calibration)**: 
+           - Mandatory constraints for motion blur and shutter speed.
+           - Must be calibrated to sync with the [Movement Intensity] derived from the locked \`INTENSITY_TIER\`.
     3. **<scene_narration> (The Kinetic Engine)**:
        - Translate narrative verbs into high-impact "Action Vectors."
        - Convert human-centric narration into physics-based interactions with the environment (e.g., "running" becomes "feet striking ground, dust sprays").
     4. **<master_style_guide> (The Aesthetic Reward Triggers)**:
        - Extract \`optics\` and \`composition\` to build professional-grade camera prompts.
        - Use \`fidelity\` and \`lightingSetup\` (e.g., Chiaroscuro, Volumetric) to satisfy the model's RLHF-trained cinematic preferences.
-    5. **<entity_list> (The Identification Anchors)**:
-       - This can be inputted empty.
-       - Use \`role\` and \`demographics\` only to identify subjects.
-       - Leverage \`position_descriptor\` to define the starting point of the camera vector.
+    5. **<entity_list> (The Identification & Physics Anchors)**:
+     - This block contains structured data for each subject to ensure spatio-temporal consistency between the base image (t=0) and the generated video.
+     - **Field Definitions**:
+       * **\`role\` & \`type\`**: Defines narrative importance (e.g., main_hero) and biological/mechanical category (e.g., human) for subject prioritization.
+       * **\`demographics\`**: The core identity latent filter (Era, Gender, Origin, Age). Used for era-synchronized fidelity.
+       * **\`position_descriptor\`**: The absolute spatial and framing anchor at t=0. Defines the viewer-centric coordinate starting point.
+       * **\`visual_anchor_initial_pose\`**: The exact "Frozen Snapshot" pose of <entity_list>.[n] in <image_context>.
+       * **\`hair\` & \`clothing\`**: Provides specific texture and material cues to calibrate surface physics and aerodynamic resistance.
     6. **<image_context> (The Ground Truth Anchor)**:
        - The inputted image file as \`image_url\` type member of \`contents\`.
        - **Start Frame Truth**: Treat the image as the absolute visual constant.
@@ -1371,7 +1380,13 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
     </step_0_kinetic_energy_profiling>
     <step_1_core_synthesis_principles>
       - **Kinetic Anchor Protocol**: Assemble every prompt in a 4-stage organic flow to ensure spatio-temporal coherence: 
-        **[Anchor] + [Primary Action Vector] + [Cinematic Camera Vector] + [Atmospheric Delta]**.
+        **"[Anchor] + [Primary Action Vector] + [Cinematic Camera Vector] + [Atmospheric Delta]"**.
+        **CRITICAL CONSTRAINT**: Final result must be single sentence string. Brackets (\`[]\`) and plus (\`+\`) above structure are used to express the structure of total sentence.
+        - **CRITICAL FORMATTING CONSTRAINT**: 
+          * The structure above uses brackets (\`[]\`) and plus (\`+\`) ONLY to denote logical components.
+          * **Final Output Rule**: The final \`video_gen_prompt\` and \`video_gen_prompt_short\` MUST be a single, natural language sentence (or comma-separated phrases) WITHOUT structure brackets or plus signs.
+          * **Correct**: "The soldier is running, camera pushing in, dust flying."
+          * **Incorrect**: "[The soldier] + [is running] + [camera pushing in]"
       - **Tier-Resonant Dynamic Realism**: Achieve "Video Vividness" by matching the density of change (Delta) to the selected \`INTENSITY_TIER\`:
         * **IF \`VERY_LOW\` OR \`LOW\`**: Focus on **Micro-Deltas**. Priority: Surface-level light flux, micro-expressions, and subtle environmental drift (e.g., [Subsurface scattering], [Dust motes]). The goal is "Fluid Continuity" without freezing.
         * **IF \`HIGH\` OR \`VERY_HIGH\`**: Focus on **Macro-Deltas**. Priority: Structural deformation, high-velocity particle ejecta, and reactionary physics (e.g., [Skin Ripple], [Sparks], [Shards]). The goal is "High-Impact Kinetic Energy."
@@ -1393,7 +1408,7 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
     <step_2_contextual_anchor_assembly>
       - **Goal**: Establish the starting point (t=0) by combining structured identity with inferred kinetic tension while strictly avoiding redundant descriptions.
       - **CRITICAL**: If <entity_list> is empty, strictly skip to **Case B**.
-      - **State-Aware Injection Logic**: Apply a **"State Adjective"** derived from the \`INTENSITY_TIER\` locked in <step_0> to set the initial physical tone:
+      - **State-Aware Injection Logic**: Apply a **"State Adjective"** derived from the \`INTENSITY_TIER\` locked in <step_0_kinetic_energy_profiling> to set the initial physical tone:
         * **\`VERY_LOW\`**: poised, serene, static, dormant.
         * **\`LOW\`**: composed, steady, rhythmic, balanced.
         * **\`HIGH\`**: intent, focused, tensed, straining.
@@ -1401,10 +1416,10 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
       - **Identity Preservation (The "Physics Proxy" Rule)**:
         - **Data Handling**: Use <entity_list>.[n].\`hair\` and <entity_list>.[n].\`clothing\` ONLY as latent reference data. 
         - **Strict Prohibition**: Do NOT restate specific visual details from these fields (e.g., "red leather jacket", "short blonde hair") in the final prompt, as they are already visual truth (t=0).
-        - **Actionable Intent**: Leverage this data only to select corresponding \`Technical Tag\`s from <vocabulary_depot> in <step_3> and <step_5> (e.g., if [clothing] is 'silk', you are now primed to select [Satin sheen] or [Fabric Flutter]).
+        - **Actionable Intent**: Leverage this data only to select corresponding \`Technical Tag\`s from <vocabulary_depot> in <step_3_primary_action_vector_injection> and <step_5_atmospheric_delta_refinement> (e.g., if [clothing] is 'silk', you are now primed to select [Satin sheen] or [Fabric Flutter]).
       - **Case A: Presence of Entities (Character/Object/Animal-driven)**:
         - **Logic**: Extract identity components from the strictly formatted <entity_list>.[n].\`demographics\` string.
-        - **Universal Formula**: "The [ERA/PERIOD], [State Adjective] [Primary Identifier], [Remaining Demographics Fields], [Position Descriptor]"
+        - **Universal Formula([Anchor] from **Kinetic Anchor Protocol** in <step_1_core_synthesis_principles>)**: "The [ERA/PERIOD], [State Adjective] [Primary Identifier], [Remaining Demographics Fields], [Position Descriptor]"
           - **Note**:
             * **[Primary Identifier]**: Use ([ROLE] | [MODEL NAME/TYPE] | [SPECIES/ARCHETYPE] | [SPECIES] | [ITEM NAME] | [HYBRID TYPE]) based on <entity_list>.[n].\`type\`.
             * **[Remaining Demographics Fields]**: All fields after the Primary Identifier in the schema.
@@ -1416,7 +1431,8 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
           * **VERY_HIGH (Object)**: "The Victorian Era, **unstable** Antique Pocket Watch, Ornate Gold Filigree, falling through the frame"
       - **Case B: Absence of Entities (Environment-driven)**:
         - **Logic**: Use the <master_style_guide>.\`globalEnvironment.era\` and <master_style_guide>.\`globalEnvironment.locationArchetype\` as the anchor.
-        - **Formula**: "The [ERA/PERIOD], [State Adjective] [Location Archetype] environment, [Position/Composition Descriptor]"
+        - **Formula([Anchor] from **Kinetic Anchor Protocol** in <step_1_core_synthesis_principles>)**:
+          "The [ERA/PERIOD], [State Adjective] [Location Archetype] environment, [Position/Composition Descriptor]"
         - **Positioning Source**: Use the <master_style_guide>.\`composition.framingStyle\` and <master_style_guide>.\`composition.preferredAspectRatio\` to define the t=0 composition.
         - **Examples**:
           * **\`VERY_LOW\` (Static/Dormant)**: "The 1980s Tokyo Bubble Economy, **serene** Neon Tokyo Urban Core environment, sprawling across the background"
@@ -1446,70 +1462,136 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
         - **Material Selection**: Apply technical tags from <vocabulary_depot> by referencing the latent [hair] and [clothing] data (e.g., Use [Satin sheen] for silk, [Skin Ripple] for viscoelastic skin).
         - **Human Subjects**: You MUST include a **Micro-expression Delta** (e.g., "pupils dilating", "lips trembling", "brow furrowing") to maximize "Video Vividness."
         - **Environmental Impact**: Describe the physical interaction between the subject and its surroundings based on the tier (e.g., "fingertips grazing the glass" for \`LOW\` vs "fist denting the metal" for \`HIGH\`).
-      - **Formula**: "[Anchor] + [Verb-ing] + [Interaction/Physics Detail] + [Technical Tags in Brackets]"
+      - **Formula([Primary Action Vector] from **Kinetic Anchor Protocol** in <step_1_core_synthesis_principles>)**:
+        "[Verb-ing] + [Interaction/Physics Detail] + [Technical Tags in Brackets]"
       - **\`INTENSITY_TIER\`-Matched Examples**:
-        * **VERY_LOW**: "[Anchor] **shimmering** under the volumetric light as pupils dilate slightly, **maintaining a poised stillness** as micro-glints dance across the fabric [Subsurface scattering] [Brushed grain]."
-        * **LOW**: "[Anchor] **drifting** forward with a rhythmic stride, **catching soft specular pings** from the environment as the garment sways gently [Satin sheen] [Balanced stride]."
-        * **HIGH**: "[Anchor] **gripping** the industrial lever with white-knuckled tension, **inducing structural strain** as the arm muscles coil under the skin [Tense muscle definition] [Structural dents]."
-        * **VERY_HIGH**: "[Anchor] **recoiling** violently from the impact point, **triggering a propagating shockwave** that contorts the facial features in a frantic grimace [Skin Ripple] [Sparks] [Impact tremor]."
+        * **\`VERY_LOW\`**: "[Anchor] **shimmering** under the volumetric light as pupils dilate slightly, **maintaining a poised stillness** as micro-glints dance across the fabric [Subsurface scattering] [Brushed grain]."
+        * **\`LOW\`**: "[Anchor] **drifting** forward with a rhythmic stride, **catching soft specular pings** from the environment as the garment sways gently [Satin sheen] [Balanced stride]."
+        * **\`HIGH\`**: "[Anchor] **gripping** the industrial lever with white-knuckled tension, **inducing structural strain** as the arm muscles coil under the skin [Tense muscle definition] [Structural dents]."
+        * **\`VERY_HIGH\`**: "[Anchor] **recoiling** violently from the impact point, **triggering a propagating shockwave** that contorts the facial features in a frantic grimace [Skin Ripple] [Sparks] [Impact tremor]."
       - **Constraint**: Strictly prohibit mixing \`Technical Tag\`s or verb weights from different \`INTENSITY_TIER\`s. The kinetic energy must be a pure representation of the locked \`INTENSITY_TIER\`.
     </step_3_primary_action_vector_injection>
     <step_4_cinematic_camera_vector_design>
-      - **Goal**: Provide professional 3D cinematography by synchronizing optics, composition, and movement intensity with the locked **\`INTENSITY_TIER\`**.
-      - **Logic: Multi-Source Integration**:
-        - **Aesthetic DNA**: Extract \`optics.lensType\`, \`optics.focusDepth\`, and \`composition.framingStyle\` from <master_style_guide>.
-        - **Kinetic Hardware**: Select \`Camera Tech Options\` and \`Velocity Options\` from the corresponding \`INTENSITY_TIER\` in <vocabulary_depot>.
-      - **\`INTENSITY_TIER\`-Specific Execution (Cinematic Protocol)**:
-        * **\`VERY_LOW\` (Micro-Stasis Focus)**: 
-          - **Technique**: Static Frame or Imperceptible Slow Dolly In/Out. 
-          - **Optical Priority**: Use "Extremely shallow depth of field" and [Subtle Rack Focus] to direct viewer attention to micro-deltas (e.g., eyes, textures).
-          - **Movement**: 3D depth moves ONLY. Movement must be nearly invisible to the naked eye.
-        * **\`LOW\` (Fluid Rhythm Focus)**: 
-          - **Technique**: Steady Tracking Shot, Smooth Arc Orbit, or rhythmic Panning.
-          - **Optical Priority**: Naturalistic focus that follows rhythmic movement (e.g., [Balanced stride]).
-          - **Movement**: Stable and continuous, emulating a gimbal or steadicam system.
-        * **\`HIGH\` (Decisive Momentum Focus)**: 
-          - **Technique**: Parallel Tracking, Crane Shot, or purposeful Dolly Zoom (Hitchcock Zoom).
-          - **Optical Priority**: Balanced depth of field with visible [Directional Motion Blur] on edges.
-          - **Movement**: Purposeful and rhythmic, matching the speed of mechanical or intentional action.
-        * **\`VERY_HIGH\` (Chaos/Impact Focus)**: 
-          - **Technique**: Handheld Shaky Cam, Crash Zoom, Whip Pan, or Reactionary 3D Tracking.
-          - **Optical Priority**: High shutter-speed effect with intense [Directional Motion Blur].
-          - **Movement**: Sudden, erratic, and reactionary moves that respond to macro-physics (impact/recoil).
-      - **Formula**: "[Optics/Framing Tags] + [Dynamic Camera Tech] + [Movement Intensity] + [Focus Control/Movement Target]"
-      - **\`INTENSITY_TIER\`-Matched Examples**:
-        * **\`VERY_LOW\`**: "Anamorphic wide-angle shot [Optics], execute an **imperceptible Slow Dolly In**. Maintain an **extremely shallow depth of field** with a [Subtle Rack Focus] to the subject's gaze."
-        * **\`LOW\`**: "Medium shot with naturalistic lens profile [Optics], execute a **Steady Tracking Shot** at a rhythmic pace. Maintain **fluid focus** on the subject's profile, capturing consistent motion blur."
-        * **\`HIGH\`**: "Low-angle telephoto composition, execute a **Parallel Tracking Shot** with decisive acceleration. Integrate a **subtle Dolly Zoom** to emphasize the structural tension of the movement."
-        * **\`VERY_HIGH\`**: "Tight handheld composition, execute a violent **Handheld Shaky Cam** with a sudden **Crash Zoom** on the impact point, inducing heavy [Directional Motion Blur]."
-      - **Constraint**: The camera's kinetic energy MUST be a **reciprocal mirror** of the \`INTENSITY_TIER\`. Strictly prohibit using "Reactive" techniques (e.g., Crash Zoom, Shaky Cam) for \`VERY_LOW\`/\`LOW\`, and "Static" techniques for HIGH/VERY_HIGH.
+      <step_4_0_professional_camera_mechanics_definitions>
+        <spatial_coordinate_grounding>
+          - **Origin (0,0,0)**: The focal point of the camera lens at t=0.
+          - **Camera Position $C(t)$**: The physical location of the lens in 3D space.
+          - **Subject Position $S(t)$**: The subject's location derived from <image_context>, \`<entity_list>.[n].position_descriptor\` and \`<entity_list>.[n].visual_anchor_initial_pose\`.
+          - **Relative Distance $D(t)$**: The spatial gap $|S(t) - C(t)|$. 
+          - **Kinetic Conflict Rule**: 
+            * **Toward (+Z)**: Subject is decreasing $D(t)$ relative to $C(0)$.
+            * **Away from (-Z)**: Subject is increasing $D(t)$ relative to $C(0)$.
+          - **The Director's Goal**: Select a Camera Vector ($\\vec{C}$) that manages $D(t)$ to prevent "Lens Clipping" ($D \\approx 0$) or "Identity Loss" ($D \\approx \\infty$).
+        </spatial_coordinate_grounding>
+        <definition_table>
+          | Cinematic Technique | Category | Axis | Vector ($\\vec{C}$) | Intensity | Selection Rule (Vector Harmony) |
+          | :--- | :--- | :--- | :--- | :--- | :--- |
+          | **Static Frame / POV** | Spatial | None | $C(n) = C(0)$ | \`VERY_LOW\` | Use for absolute stillness or internal tension. |
+          | **Dolly-In (Push)** | Spatial | Z | $+Z$ (Toward $S$) | \`LOW\` / \`HIGH\` | Use to decrease $D(t)$ when $\\vec{S}$ is **Away** or **Static**. |
+          | **Dolly-Out (Pull)** | Spatial | Z | $-Z$ (Away from $S$) | \`LOW\` / \`HIGH\` | Use to increase $D(t)$ when $\\vec{S}$ is **Toward** (MANDATORY). |
+          | **Steady Tracking** | Spatial | All | $C(n) \\approx S(n)$ | \`LOW\` | Camera maintains constant $D(t)$ for **Parallel** move. |
+          | **Bumper Cam** | Spatial | All | Fixed to $S(t)$ | \`HIGH\` / \`VERY_HIGH\` | $C$ is parented to $S$; zero $D(t)$ change. |
+          | **FPV Drone Shot** | Spatial | All | Variable $\\vec{C}$ | \`HIGH\` / \`VERY_HIGH\` | Agile $C(t)$ chasing or overtaking $S(t)$. |
+          | **Truck (Left/Right)** | Spatial | X | $\\pm X$ (Lateral) | \`LOW\` / \`HIGH\` | Horizontal $C$ movement for **Parallel** $\\vec{S}$. |
+          | **Pedestal (Up/Down)** | Spatial | Y | $\\pm Y$ (Vertical) | \`LOW\` / \`HIGH\` | Vertical $C$ movement for **Vertical** $\\vec{S}$. |
+          | **Arc Orbit** | Spatial | X, Z | Orbital Curve | \`LOW\` | $C$ revolves around $S$ to inspect 3D volume. |
+          | **Reactionary Pan** | Angular | X, Y | Angular $\\Delta$ | \`HIGH\` | $C$ rotates to follow sudden $\\pm X$ $\\vec{S}$. |
+          | **Whip Pan** | Angular | X, Y | Rapid $\\Delta$ | \`VERY_HIGH\` | High-speed rotation for explosive $\\pm X$ $\\vec{S}$. |
+          | **Rack Focus** | Optical | Z | Optical $\\Delta Z$ | \`LOW\` / \`HIGH\` | Shifts focal plane between depths; $C(t)$ fixed. |
+          | **Macro / Tight Focus** | Optical | Z | $D(0) \\approx$ Min | \`VERY_LOW\` / \`LOW\` | Extreme close-up with $C$ fixed near $S(t)$. |
+          | **Crash Zoom** | Optical | Z | Focal $\\Delta Z$ | \`VERY_HIGH\` | Rapid zoom-in/out without changing $C(t)$. |
+          | **Handheld Shaky** | Vibration | All | $C(t) + Noise$ | \`HIGH\` / \`VERY_HIGH\` | Kinetic jitter added to any Primary $\\vec{C}$. |
+        </definition_table>
+      </step_4_0_professional_camera_mechanics_definitions>
+      <step_4_1_subject_vector_inference>
+        - **Task**: Determine the Primary **Subject Vector ($\\vec{S}$)** by calculating the spatial delta between $t=0$ and $t=n$ relative to the Camera Origin.
+        - **Inference Variables**:
+          1. **Initial Position $S(0)$**: Identify the subject's anchor using <image_context>, <entity_list>.[n].\`position_descriptor\` and <entity_list>.[n].\`visual_anchor_initial_pose\`.
+          2. **Kinetic Potential**: Analyze <scene_narration> to identify the force and direction applied to $S(0)$.
+        - **Subject Movements Classification (The $\\vec{S}$ Map for $D(t)$ Management)**:
+          1. **Toward ($+Z$)**: Subject is **decreasing distance $D(t)$** relative to the lens (e.g., lunging, approaching).
+          2. **Away from ($-Z$)**: Subject is **increasing distance $D(t)$** deeper into the background (e.g., retreating, fleeing).
+          3. **Parallel / Lateral ($\\pm X$)**: Subject is maintaining relatively constant $D(t)$ while **moving horizontally** across the frame.
+          4. **Vertical ($\\pm Y$)**: Subject is maintaining relatively constant $D(t)$ while **moving vertically** (e.g., leaping, falling).
+          5. **Static / Latent ($\\approx 0$)**: Subject has **zero spatial displacement**; energy is contained within $S(0)$.
+        - **Mandatory Output**: Identify exactly ONE category. This label will be used as the **Key** to look up the "Selection Rule" Column in the <step_4_0_professional_camera_mechanics_definitions>.<definition_table>.
+      </step_4_1_subject_vector_inference>
+      <step_4_2_vector_matching_protocol>
+        - **Goal**: Finalize the **Camera Vector ($\\vec{C}$)** by cross-referencing the **Subject Vector ($\\vec{S}$)** with the <step_4_0_professional_camera_mechanics_definitions>.<definition_table>.
+        - **Logic Flow**:
+          1. **Key Retrieval**: Identify the $\\vec{S}$ label (Toward, Away from, Parallel, Vertical, or Static) determined in <step_4_1_subject_vector_inference>.
+          2. **Primary Vector Constraint ($D(t)$ Strategy)**:
+             - **IF $\\vec{S}$ is "Toward ($+Z$)"**: The selected $\\vec{C}$ MUST be a **$-Z$ (Backward)** or **Focal Expansion** vector.
+             - **IF $\\vec{S}$ is "Away from ($-Z$)"**: The selected $\\vec{C}$ MUST be a **$+Z$ (Forward)** or **Focal Contraction** vector.
+             - **IF $\\vec{S}$ is "Parallel / Lateral" or "Vertical"**: The selected $\\vec{C}$ MUST match the movement axis ($\\pm X, \\pm Y$).
+             - **IF $\\vec{S}$ is "Static / Latent ($\\approx 0$)"**: The selected $\\vec{C}$ MUST introduce an **artificial Delta** (Depth or Angular change).
+          3. **Final Technique Selection (The Table Lookup)**:
+             - Scan the <step_4_0_professional_camera_mechanics_definitions>.<definition_table> for all techniques that satisfy the **Selection Rule** for the identified $\\vec{S}$ and the locked **\`INTENSITY_TIER\`**.
+             - **Example Application**:
+               * **IF $\\vec{S}$ is "Static" AND Tier is \`VERY_LOW\`**: Select [Static Frame / POV] or [Macro / Tight Focus]. (Focus on micro-flux).
+               * **IF $\\vec{S}$ is "Parallel" AND Tier is \`LOW\`**: Select [Steady Tracking].
+               * **IF $\\vec{S}$ is "Parallel" AND Tier is \`HIGH\`**: Select [Truck (Left/Right)] or [Reactionary Pan].
+               * **IF $\\vec{S}$ is "Parallel" AND Tier is \`VERY_HIGH\`**: Select [Whip Pan] or [Bumper Cam].
+        - **Resolution Rule (Dual-Layer Movement Algorithm)**:
+          1. **Primary Selection (The Foundation)**:
+             - Select ONE technique from the **Spatial** Category that satisfies the $D(t)$ management strategy.
+          2. **Secondary Layering (The Enhancement)**:
+             - You MAY append ONE technique from the **Optical**, **Angular**, or **Vibration** Categories.
+          3. **Collision Avoidance (The Axis Conflict Rule)**:
+             - **Rule**: Do NOT combine two techniques that share the same **Axis** if their categories are different, to prevent optical distortion.
+             - **CRITICAL EXCEPTION (Dolly Zoom Protocol)**:
+               * You are PERMITTED to combine **Spatial Z [Dolly-In/Out]** and **Optical Z [Zoom-Out/In]** ONLY IF they are **Counter-Directional** to achieve the "Vertigo Effect"(e.g., Dolly-In + Zoom-Out, Dolly-Out + Zoom-In).
+               * Do NOT combine Dolly with [Rack Focus] or [Macro Focus].
+             - **Forbidden Examples**:
+                 * **Spatial Z [Dolly] + Optical Z [Focus / Aligned Zoom]**: Forbidden. Unless strictly following the Dolly Zoom Protocol, overlapping Z-axis moves cause "Focal Breathing" (focus hunting artifacts) or "Hyper-Acceleration" (e.g., Dolly-In + Zoom-In) that destroys spatial realism.
+                 * **Spatial X [Truck] + Angular X/Y [Whip Pan]**: Forbidden, as it creates a "Motion Vector Conflict" where physical parallax and rotational blur fight for dominance, resulting in a smeared/nauseating background.
+                 * **Spatial Y [Pedestal] + Angular X/Y [Reactionary Pan/Tilt]**: Forbidden, as it creates "Geometric Shearing"—the linear vertical move of the Pedestal conflicts with the rotational perspective shift, causing the horizon or background structures to bend unnaturally.
+                 * **Spatial ALL [FPV Drone / Bumper Cam] + Optical Z [Crash Zoom]**: Forbidden, as the 'ALL' axis already contains a Z-component; combining it with an Optical Z shift causes "Latent Space Collapse," where the model fails to calculate the depth of field against the rapid spatial approach. This principle applies equally to the combination with ALL and X axis or Y axis.
+             - **Rule**: **Vibration** category has no axis conflict; it can be added to any Primary selection.
+          4. **Final Formatting**: 
+             - Construct the final camera string as: "[Primary Technique] + [Secondary Technique]".
+             - Ensure both techniques align with the locked **\`INTENSITY_TIER\`**.
+      </step_4_2_vector_matching_protocol>
+      <step_4_3_purification_and_formula_assembly>
+        - **Goal**: Clean the selected tech string and assemble the final cinematic camera prompt.
+        - **Purification Instructions**:
+          1. **Text Extraction**: Take the selected [Cinematic Technique] name(s) from <step_4_2_vector_matching_protocol>.
+          2. **Bracket Formatting**: Surround each purified term with square brackets \`[]\`.
+          3. **Sanitization**: Remove all internal parentheses, hints, and vector symbols (e.g., "Dolly-In (Push) (+Z)" becomes "[Dolly-In]").
+        - **The Cinematic Camera Section Formula ([Cinematic Camera Vector] of **Kinetic Anchor Protocol** in <step_1_core_synthesis_principles>)**:
+          - **Structure**: "[Optics/Framing Tags] + [Purified Camera Tech] + [Movement Intensity] + [Focus/Movement Target]"
+          - **Component Source**:
+            * **[Optics/Framing Tags]**: Extract \`optics\` and \`composition\` from <master_style_guide>.
+            * **[Purified Camera Tech]**: The result of the Purification Instructions above.
+            * **[Movement Intensity]**: Select a descriptor matching the locked **\`INTENSITY_TIER\`** (e.g., "steady" for \`LOW\`, "aggressive" for \`HIGH\`, "violent" for \`VERY_HIGH\`).
+            * **[Focus/Movement Target]**: Identify the primary subject from <entity_list>.[n] or the environment focus.
+        - **Example Outputs**:
+          - **[Anti-Plagiarism Constraint]**: These examples are for **SYNTAX AND FORMAT REFERENCE ONLY**. Do NOT copy specific values unless they strictly align with the provided <entity_list>, <scene_narration>, and <step_4_2_vector_matching_protocol> logic.
+          * **\`VERY_LOW\`**: "[Macro lens, Soft lighting] + [Macro / Tight Focus] + microscopic drifting across the subject's iris as pupils dilate"
+          * **\`LOW\`**: "[Anamorphic lens, Cinematic Wide] + [Dolly-Out] + steady pulling away from the character's face"
+          * **\`HIGH\`**: "[Telephoto lens, Shallow depth of field] + [Dolly-In] + aggressive pushing toward the character's tensed knuckles"
+          * **\`VERY_HIGH\`**: "[8k, IMAX, Shaky-cam] + [FPV Drone Shot] + [Handheld Shaky] + violent overtaking of the speeding vehicle"
+      </step_4_3_purification_and_formula_assembly>
     </step_4_cinematic_camera_vector_design>
     <step_5_atmospheric_delta_refinement>
-      - **Goal**: Prevent "Freezing" artifacts and unify scene physics by animating the environment (air, light, particles) in synchronization with the locked **\`INTENSITY_TIER\`**.
-      - **\`INTENSITY_TIER\`-Specific Atmospheric Logic**: Select \`Effect Tags\` and \`Alt Tags\` strictly from the corresponding \`INTENSITY_TIER\` in <vocabulary_depot>:
-        * **\`VERY_LOW\` (Micro-Flux Focus)**: 
-          - **Focus**: Light flux and micro-particles.
-          - **Dynamics**: Focus on "Subtle Drift" (e.g., [Dust motes] drifting in light beams, [Subtle fog] rolling slowly, or light [Flickering] on polished surfaces).
-          - **Rule**: Movement must be smooth, low-frequency, and nearly hypnotic.
-        * **\`LOW\` (Rhythmic Flow Focus)**: 
-          - **Focus**: Consistent environmental forces.
-          - **Dynamics**: Focus on "Steady Momentum" (e.g., [Fabric Flutter] from a breeze, leaves swaying, or consistent [Surface Ripples] on water).
-          - **Rule**: Movement must be purposeful and synchronized with the subject's rhythmic motion.
-        * **\`HIGH\` (Kinetic Pressure Focus)**: 
-          - **Focus**: High-energy fluids and directional particles.
-          - **Dynamics**: Focus on "Pressure" (e.g., [Mist] surging from impact, [Dust Trail] rising from friction, or [Steam] erupting from mechanical heat).
-          - **Rule**: Movement must have clear directionality and visible mass.
-        * **\`VERY_HIGH\` (Kinetic Chaos Focus)**: 
-          - **Focus**: High-velocity ejecta and structural debris.
-          - **Dynamics**: Focus on "Violent Chaos" (e.g., [Sparks] erupting from impact, [Shards] of glass flying, [Volumetric dust clouds], or [Shockwave] propagation).
-          - **Rule**: Movement must be sharp, high-frequency, and reactionary to the primary action.
-      - **Formula**: "[Atmospheric Element] + [Movement Style (-ing)] + [Light/Color Interaction] + [Technical Tags in Brackets]"
-      - **\`INTENSITY_TIER\`-Matched Examples**:
-        * **\`VERY_LOW\`**: "**Fine dust motes drifting** lazily through the volumetric light beams, creating a **serene shimmer** across the background [Dust particles] [Tyndall effect]."
-        * **\`LOW\`**: "**Consistent wind gust billowing** the character's coat with a rhythmic snap, while **leaves skitter across the pavement** in a steady stream [Fabric Flutter] [Wind Drag]."
-        * **\`HIGH\`**: "**Thick mist surging** outward from the subject's path, illuminated by **harsh cinematic lighting** that cuts through the airborne density [Mist] [Turbulent swirl]."
-        * **\`VERY_HIGH\`**: "**Jagged glass shards erupting** outward from the impact point, illuminated by **chaotic orange sparks** that cut through the volumetric smoke [Shards] [Sparks] [Debris]."
-      - **Constraint**: Atmospheric frequency MUST be a **reciprocal mirror** of the \`INTENSITY_TIER\`. Strictly prohibit high-energy effects (e.g., Sparks, Shards) for \`VERY_LOW\`/\`LOW\`. **Every frame must contain at least one element in present continuous (-ing) motion to ensure temporal continuity.**
+      - **Goal**: Eliminate "Background Freezing" by synchronizing the environment (Medium) with Camera Vector ($\\vec{C}$) from <step_4_cinematic_camera_vector_design> and Subject Vector ($\\vec{S}$) from <step_4_cinematic_camera_vector_design>.
+      - **The Environmental Vector ($\\vec{E}$)**:
+        1. **Counter-Flow Rule**: If $\\vec{C}$ is moving, $\\vec{E}$ (particles, fog) must move in the **Opposite Direction** to maximize the sense of speed. (e.g., Dolly-In $+Z → Dust Flow $-Z$).
+        2. **Wake Effect Rule**: $\\vec{E}$ must react to $\\vec{S}$'s kinetic trail (e.g., Fast movement $\\vec{S} → Turbulent wake, Dust rising).
+      - **Tier-Based Physics Dynamics**:
+        | Intensity | Focus Area | Dynamics ($\\vec{E}$) | Physics Logic |
+        | :--- | :--- | :--- | :--- |
+        | **\`VERY_LOW\`** | Micro-flux | Brownian Motion | Random, non-directional drift of light/dust. |
+        | **\`LOW\`** | Rhythmic | Laminar Flow | Steady, predictable stream (Breeze, ripples). |
+        | **\`HIGH\`** | Pressure | Turbulent Flow | High-pressure displacement, directional mist. |
+        | **\`VERY_HIGH\`**| Kinetic Chaos | Ejecta / Shockwave | Radial explosion, structural disintegration. |
+      - **Constraint (Temporal Anchor)**: 
+        * Prohibit high-energy particles in LOW tiers.
+        * **Mandatory Action**: Every frame MUST contain at least one atmospheric element in **present continuous (-ing)** motion that reacts to the locked \`INTENSITY_TIER\`.
+      - **Atmospheric Assembly Formula([Atmospheric Delta] of **Kinetic Anchor Protocol** in <step_1_core_synthesis_principles>)**:
+        - **Structure**: "[Subject-Atmosphere Interaction] + [Camera-Atmosphere Flow] + [Light-Particle Interaction] + [Technical Tags]"
+        - **Example (HIGH Intensity)**: 
+          "Thick dust clouds **rising** behind the character's feet [Subject Interaction], while environmental embers **streak past the lens** in the opposite direction of the dolly [Camera Flow], illuminated by flickering orange light [Light Interaction] [Volumetric Dust] [Kinetic Embers]."
     </step_5_atmospheric_delta_refinement>
     <step_6_short_logic_synthesis>
       - **Goal**: Produce a "Zero-Fluff Binary" prompt strictly following the **[Subject] + [is/are] + [Verb-ing]** format to put in \`video_gen_prompt_short\` of <output_schema>.
@@ -1544,7 +1626,7 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
         - **Plural (Same Type)**: "The [Subject]s are [Verb-ing]"
         - **Plural (Different Types)**: Only if they perform the same action. "[Subject A] and [Subject B] (Optional: and [Subject C] and ...) are [Verb-ing]".
       - **Strict Prohibitions**:
-        * NO era in [Subject]
+        * **NO era in [Subject]** (The [ERA / PERIOD] field in the structure is for reference only and must be excluded from the final noun).
         * NO demographics details in [Subject]
       - **Examples**:
         * **Constraint (Anti-Plagiarism)**: These examples are for **SYNTAX AND FORMAT REFERENCE ONLY**; do NOT copy specific values unless they strictly align with the provided <entity_list> or <video_metadata>.
@@ -1574,7 +1656,8 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
     {
       "logical_bridge": {
         "identity_logic": "string (Define how the subject's era, role, and physical essence from the <entity_list> and metadata are preserved during motion.)",
-        "action_focus": "string (Explain the conceptual shift from the raw narration to the high-impact kinetic verb used in the prompt.)"
+        "action_focus": "string (Explain the conceptual shift from the raw narration to the high-impact kinetic verb used in the prompt.)",
+        "ambiguous_points": "string[] (For each point you felt was ambiguous during your reasoning, provide an explanation, reason, and location in <developer_instruction>. If there are no ambiguous points, allocate an empty array.)"
       },
       "reasoning": "string (Provide a detailed justification for: 1) The specific tags selected from the vocabulary_depot, 2) The choice of camera tech based on MasterStyleInfo, and 3) The atmospheric strategy to prevent freezing.)",
       "video_gen_prompt": "string (The final technical prompt assembled using the 4-stage Kinetic Anchor Protocol: [Anchor] + [Primary Action Vector] + [Cinematic Camera Vector] + [Atmospheric Delta].)",
@@ -1582,27 +1665,33 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
     }
   </output_schema>
   <constraints>
-    1. **Safety Filter (Physics-based Substitution)**:
-      - NO blood, gore, or open wounds.
-      - Replace with high-impact Physics VFX: "Sweat spray", "Skin ripple", "Surface deformation", "Shockwave", or "Sparks".
-    2. **Identity Stability (Semantic Identifier)**:
-      - **Rule**: Use the structured demographics list (<processing_logic>.<step_2_contextual_anchor_assembly>) for the full prompt to prevent "Identity Drift."
-      - **Prohibition**: Do NOT re-describe static visual traits (clothes, hair color) already present in t=0.
-      - **Exception**: For \`video_gen_prompt_short\` of <output_schema>, follow the <processing_logic>.<step_6_short_logic_synthesis>.
-    3. **From "Dry" to "Cinematic" (Jargon over Fluff)**:
-      - **Forbidden**: Vague, subjective adjectives (e.g., "breathtaking", "amazing").
-      - **Mandatory**: Use technical cinematography and physical terms.
-      - **Emotional Nuance**: Specific adjectives for micro-expressions (e.g., "contorted", "grimacing") are **REQUIRED for \`video_gen_prompt\`** to boost vividness. Do NOT use them in \`video_gen_prompt_short\`. 
-    4. **Positive Assertion (Presence-based Instruction)**:
-      - Describe the intended state: "Crisp focus", "Firm traction", "Fluid continuity". Avoid negative commands like "No blur".
-    5. **Kinetic Continuity (Anti-Freeze)**:
-      - **Requirement**: \`video_gen_prompt\` must contain at least one "Atmospheric Delta" (air movement, light flux) to prevent freezing.
-      - Use present continuous (-ing) forms for all primary actions across ALL prompt versions.
-    6. **Contextual Loyalty (Anti-Hallucination)**:
-      - Derive all actions strictly from <scene_narration> and <master_style_guide>. Examples are for **SYNTAX ONLY**.
-    7. **Vocabulary as Latent Triggers**:
-      - For \`video_gen_prompt\`, use keywords from <vocabulary_depot> as **Technical Tags in brackets** (e.g., "[Skin Ripple]").
-      - **CRITICAL**: For \`video_gen_prompt_short\`, strictly follow the "Zero-Fluff" rule and do NOT use brackets or technical tags.
+    1. **Physics-based Safety Substitution**:
+      - **Prohibition**: Strictly NO blood, gore, or graphic wounds.
+      - **Substitution**: Convert trauma into high-energy Physics VFX: "Surface deformation", "Kinetic shockwave", "High-velocity sparks", or "Subsurface skin ripples".
+      - **Logic**: Use the locked \`INTENSITY_TIER\` to scale the magnitude of these substitutions.
+    2. **Zero-Redundancy (t=0 Anchor Rule)**:
+      - **Start Frame Truth**: Treat <image_context> as absolute visual truth. 
+      - **Strict Prohibition**: Do NOT re-describe static traits (clothes, hair color, architecture) already visible in t=0. 
+      - **Focus**: Every token must describe a **Delta** (change, movement, or interaction) or a **Technical Tag** from <vocabulary_depot>.
+    3. **Vector Synergy & Directional Consistency**:
+      - **The Vector Triad**: Subject Vector ($\\vec{S}$), Camera Vector ($\\vec{C}$), and Environmental Vector ($\\vec{E}$) must satisfy the laws of physics defined in Steps 4 and 5.
+      - **Counter-Flow Rule**: For spatial movement, ensure $\\vec{E}$ (particles, fog) moves opposite to $\\vec{C}$ to validate the camera's momentum.
+      - **Compensatory Scaling**: All movements must align with the locked \`INTENSITY_TIER\`. Do NOT use "explosive" verbs in \`LOW\` tier or "gentle" verbs in \`HIGH\` tier.
+    4. **Multi-Layer Camera & Axis Integrity (Step 4.2 Core)**:
+      - **Composition Rule**: Combine ONE Spatial movement with optional ONE Optical/Angular/Vibrational layer.
+      - **Axis Conflict Prohibition**: Strictly forbid combining techniques that share the same axis (e.g., Spatial Z [Dolly] + Optical Z [Zoom] = FORBIDDEN).
+      - **Geometry Protection**: Prevent "Geometric Shearing" by ensuring linear moves (Pedestal) do not conflict with rotational shifts (Tilt) on the same axis.
+    5. **Kinetic Continuity & Shutter Logic**:
+      - **Mandatory Form**: Use present continuous **(-ing)** for ALL actions in ALL prompt versions (e.g., "pulling", "erupting") to drive temporal progression.
+      - **Anti-Freeze Requirement**: \`video_gen_prompt\` MUST include at least one "Atmospheric Delta" (air, light, or particle flow) to ensure the latent space remains dynamic.
+      - **Positive Assertion**: Describe intended states ("Crisp focus", "Firm traction") instead of negative commands ("No blur").
+    6. **Semantic Purity & Format Protocol**:
+      - **Jargon over Fluff**: Replace subjective adjectives ("breathtaking", "epic") with technical cinematography and physical terms.
+      - **\`video_gen_prompt\`**: MUST use brackets \`[]\` for all keywords/tags from <vocabulary_depot>.
+      - **\`video_gen_prompt_short\`**: Strictly follow the **[Subject] + [is/are] + [Verb-ing]** binary logic. **DO NOT use brackets or technical tags.** (Zero-Fluff Rule).
+    7. **Contextual Fidelity (The Plagiarism Guard)**:
+      - Derive all cinematic decisions strictly from the provided <image_context>, <scene_narration>, <entity_list>, and <master_style_guide>.
+      - **Instruction**: Logics in <processing_logic> are **Functional Algorithms**, not suggestions. The final output must be the result of this calculated reasoning.
   </constraints>
 </developer_instruction>
 `;

@@ -146,50 +146,146 @@ export const PHYSICS_LIBRARY = {
     action_context: {
         // [Locomotion] 이동: 걷기, 달리기, 주행 등
         locomotion: {
-            very_low_intensity: { camera_tech: "Static Medium Shot", speed_term: "Stationary Tension", vocabulary: ["Weight centered", "Latent kinetic energy", "Static stance", "Poised footing"] },
-            low_intensity: { camera_tech: "Steady Tracking Shot", speed_term: "Rhythmic Pace", vocabulary: ["Balanced stride", "Heel-to-toe roll", "Fluid rhythmic walking", "Natural arm swing"] },
-            high_intensity: { camera_tech: "Dolly-In Tracking", speed_term: "Decisive Acceleration", vocabulary: ["Leaning into turn", "Forward momentum", "Aggressive stride", "Suspension compression"] },
-            very_high_intensity: { camera_tech: "Low-Angle Tracking Shot", speed_term: "High-Velocity Motion Blur", vocabulary: ["Airborne phase", "Mid-stride extension", "Directional motion blur", "Ground-level slipstream"] }
+            // VERY_LOW: 정지 상태에서의 대치 시점 선택
+            very_low_intensity: {
+                speed_term: "Stationary Tension",
+                vocabulary: ["Weight centered", "Latent kinetic energy", "Static stance", "Poised footing"]
+            },
+            // LOW: 리드미컬한 이동 시 추격 혹은 선도 선택
+            low_intensity: {
+                speed_term: "Rhythmic Pace",
+                vocabulary: ["Balanced stride", "Heel-to-toe roll", "Fluid rhythmic walking", "Natural arm swing"]
+            },
+            // HIGH: 결정적 가속 시 피사체와의 상대 속도 방향 결정 (역행 방지 핵심)
+            high_intensity: {
+                speed_term: "Decisive Acceleration",
+                vocabulary: ["Leaning into turn", "Forward momentum", "Aggressive stride", "Suspension compression"]
+            },
+            // VERY_HIGH: 초고속 상황에서 지면 밀착형 시점의 전후방 선택
+            very_high_intensity: {
+                speed_term: "High-Velocity Motion Blur",
+                vocabulary: ["Airborne phase", "Mid-stride extension", "Directional motion blur", "Ground-level slipstream"]
+            }
         },
 
         // [Combat] 전투: 타격, 방어, 투척 등
         combat: {
-            very_low_intensity: { camera_tech: "Static Close-up", speed_term: "Tense Stillness", vocabulary: ["Focused gaze", "Muscle coiled", "Measured breathing", "Pre-strike stasis"] },
-            low_intensity: { camera_tech: "Slow Dolly-In", speed_term: "Controlled Maneuver", vocabulary: ["Technical positioning", "Guard raised", "Center of gravity shift", "Defensive pivoting"] },
-            high_intensity: { camera_tech: "Reactionary Pan", speed_term: "Explosive Kinetic Force", vocabulary: ["Fist extended", "Shoulder torque", "Hip rotation", "Snapping impact motion"] },
-            very_high_intensity: { camera_tech: "Handheld Shaky Cam, Whip Pan", speed_term: "Sudden Recoil & Impact", vocabulary: ["Impact tremor", "Recoiling from blow", "Face contorted", "Propagating shockwave"] }
+            // VERY_LOW: 대치 중인 주체 사이의 심리적 압박감 방향 선택
+            very_low_intensity: {
+                speed_term: "Tense Stillness",
+                vocabulary: ["Focused gaze", "Muscle coiled", "Measured breathing", "Pre-strike stasis"]
+            },
+            // LOW: 전술적 거리를 좁히거나 벌리는 움직임 선택
+            low_intensity: {
+                speed_term: "Controlled Maneuver",
+                vocabulary: ["Technical positioning", "Guard raised", "Center of gravity shift", "Defensive pivoting"]
+            },
+            // HIGH: 타격 방향에 따른 즉각적인 시선 회전 선택
+            high_intensity: {
+                speed_term: "Explosive Kinetic Force",
+                vocabulary: ["Fist extended", "Shoulder torque", "Hip rotation", "Snapping impact motion"]
+            },
+            // VERY_HIGH: 타격의 에너지를 추격할지, 피격의 반동을 묘사할지 선택 (물리적 인과관계 확정)
+            very_high_intensity: {
+                speed_term: "Sudden Recoil & Impact",
+                vocabulary: ["Impact tremor", "Recoiling from blow", "Face contorted", "Propagating shockwave"]
+            }
         },
 
         // [Interaction] 상호작용: 잡기, 조작, 터치 등
         interaction: {
-            very_low_intensity: { camera_tech: "Macro Shot", speed_term: "Delicate Stasis", vocabulary: ["Fingertips hovering", "Light tactile contact", "Palm pressed flat", "Static grip"] },
-            low_intensity: { camera_tech: "Macro Shot, Deep Focus", speed_term: "Real-time Precision", vocabulary: ["Fingertips grazing", "Precise handling", "Articulated finger movement", "Soft manipulation"] },
-            high_intensity: { camera_tech: "Tight Focus, Rack Focus", speed_term: "Decisive Grip", vocabulary: ["Firm traction", "Knuckles white", "Tense hold", "Intentional pull"] },
-            very_high_intensity: { camera_tech: "Crash Zoom", speed_term: "Violent Interaction", vocabulary: ["Sudden snatch", "Crushing force", "White-knuckled tension", "Kinetic wrenching"] }
+            // VERY_LOW: 접촉 직전, 물체와의 위치 관계를 정의하는 시점 선택
+            very_low_intensity: {
+                speed_term: "Delicate Stasis",
+                vocabulary: ["Fingertips hovering", "Light tactile contact", "Palm pressed flat", "Static grip"]
+            },
+            // LOW: 정밀 조작 시 움직임에 동기화할지, 고정해서 관찰할지 선택
+            low_intensity: {
+                speed_term: "Real-time Precision",
+                vocabulary: ["Fingertips grazing", "Precise handling", "Articulated finger movement", "Soft manipulation"]
+            },
+            // HIGH: 잡기/당기기 등의 결정적 동작 시 시선 집중도와 초점 이동 방향 선택
+            high_intensity: {
+                speed_term: "Decisive Grip",
+                vocabulary: ["Firm traction", "Knuckles white", "Tense hold", "Intentional pull"]
+            },
+            // VERY_HIGH: 급격한 탈취나 파괴적 상호작용 시 줌의 방향 선택 (시각적 충격량 제어)
+            very_high_intensity: {
+                speed_term: "Violent Interaction",
+                vocabulary: ["Sudden snatch", "Crushing force", "White-knuckled tension", "Kinetic wrenching"]
+            }
         },
 
         // [Aerodynamics] 공기역학: 비행, 낙하, 항력 등
         aerodynamics: {
-            very_low_intensity: { camera_tech: "Gliding Drone Shot", speed_term: "Static Float", vocabulary: ["Hovering stasis", "Subtle air current flux", "Neutral buoyancy"] },
-            low_intensity: { camera_tech: "Slow Arc Orbit", speed_term: "Smooth Descent/Glide", vocabulary: ["Streamlined posture", "Wind-resistance tuck", "Controlled banking", "Stable pitch"] },
-            high_intensity: { camera_tech: "FPV Drone Shot", speed_term: "Rapid Velocity Change", vocabulary: ["Body arched", "G-force lean", "Arms swept back", "Aero-dynamic drag lines"] },
-            very_high_intensity: { camera_tech: "FPV Drone, High Shutter Speed", speed_term: "Hyperlapse, Speed Lines", vocabulary: ["Free-falling orientation", "Terminal velocity", "Violent turbulence", "Extreme motion blur"] }
+            // VERY_LOW: 공중 부양 시 정적인 고정과 미세한 대기 흐름의 반영 선택
+            very_low_intensity: {
+                speed_term: "Static Float",
+                vocabulary: ["Hovering stasis", "Subtle air current flux", "Neutral buoyancy"]
+            },
+            // LOW: 하강 혹은 활공 시 피사체를 중심으로 한 회전 방향 선택
+            low_intensity: {
+                speed_term: "Smooth Descent/Glide",
+                vocabulary: ["Streamlined posture", "Wind-resistance tuck", "Controlled banking", "Stable pitch"]
+            },
+            // HIGH: 고속 비행 시 전진감을 극대화하기 위한 위치 관계 선택 (역행 방지 핵심)
+            high_intensity: {
+                speed_term: "Rapid Velocity Change",
+                vocabulary: ["Body arched", "G-force lean", "Arms swept back", "Aero-dynamic drag lines"]
+            },
+            // VERY_HIGH: 초고속 낙하/비행 시 피사체를 앞지를 것인지, 바짝 붙을 것인지 선택
+            very_high_intensity: {
+                speed_term: "Hyperlapse, Speed Lines",
+                vocabulary: ["Free-falling orientation", "Terminal velocity", "Violent turbulence", "Extreme motion blur"]
+            }
         },
 
         // [Passive] 수동적 상태: 충격 수용, 대기, 피격 등
         passive: {
-            very_low_intensity: { camera_tech: "Static Frame", speed_term: "Absolute Rest", vocabulary: ["Relaxed limbs", "Grounded footing", "Inertial stasis"] },
-            low_intensity: { camera_tech: "Slow Dolly-In", speed_term: "Idle Flux", vocabulary: ["Slouched posture", "Resting weight", "Subtle weight shift", "Passive swaying"] },
-            high_intensity: { camera_tech: "Reactionary Pan", speed_term: "Kinetic Displacement", vocabulary: ["Sharp flinch", "Staggering back", "Torso jolt", "Center of mass disruption"] },
-            very_high_intensity: { camera_tech: "Crash Zoom, Extreme Shaky Cam", speed_term: "Violent Recoil", vocabulary: ["Unexpected lurch", "Impact-driven flight", "Shockwave propagation", "Whiplash motion"] }
+            // VERY_LOW: 힘이 닥치기 전, 피사체의 인내와 주변 상황의 대조 선택
+            very_low_intensity: {
+                speed_term: "Absolute Rest",
+                vocabulary: ["Relaxed limbs", "Grounded footing", "Inertial stasis"]
+            },
+            // LOW: 미세한 힘의 작용 시 피사체에 집중할지, 충격의 전파를 보여줄지 선택
+            low_intensity: {
+                speed_term: "Idle Flux",
+                vocabulary: ["Slouched posture", "Resting weight", "Subtle weight shift", "Passive swaying"]
+            },
+            // HIGH: 물리적 변위 발생 시 충격 방향에 따른 실시간 대응 선택
+            high_intensity: {
+                speed_term: "Kinetic Displacement",
+                vocabulary: ["Sharp flinch", "Staggering back", "Torso jolt", "Center of mass disruption"]
+            },
+            // VERY_HIGH: 폭발적 충격 시 에너지의 작용축(수직/수평)과 급격한 시야 변화 선택
+            very_high_intensity: {
+                speed_term: "Violent Recoil",
+                vocabulary: ["Unexpected lurch", "Impact-driven flight", "Shockwave propagation", "Whiplash motion"]
+            }
         },
 
         // [Velocity Max] 초고속: 가속의 정점
         velocity_max: {
-            very_low_intensity: { camera_tech: "Parallel Tracking", speed_term: "Latent Velocity", vocabulary: ["Vibration at rest", "Humming power", "Aerodynamic readiness"] },
-            low_intensity: { camera_tech: "Parallel Tracking", speed_term: "Consistent High Speed", vocabulary: ["Motion-blurred edges", "Background streaking", "Smooth translation"] },
-            high_intensity: { camera_tech: "Bumper Cam, Ground Level", speed_term: "Warp Speed Effect", vocabulary: ["Speed lines", "Visual streaking", "Environmental blur", "Rapid optical flow"] },
-            very_high_intensity: { camera_tech: "Bumper Cam, Shaky Cam", speed_term: "Hyperlapse, Extreme G-force", vocabulary: ["Silhouette distorted by speed", "Anamorphic light streaks", "Background liquefaction"] }
+            // VERY_LOW: 가속 직전의 잠재적 에너지와 정면의 압박감 대칭
+            very_low_intensity: {
+                speed_term: "Latent Velocity",
+                vocabulary: ["Vibration at rest", "Humming power", "Aerodynamic readiness"]
+            },
+            // LOW: 일정한 고속 주행 시 배경이 흐르는 파라락스 방향 선택
+            low_intensity: {
+                speed_term: "Consistent High Speed",
+                vocabulary: ["Motion-blurred edges", "Background streaking", "Smooth translation"]
+            },
+            // HIGH: 지면/근접 시점에서 속도의 '입구'와 '출구' 시점 선택
+            high_intensity: {
+                speed_term: "Warp Speed Effect",
+                vocabulary: ["Speed lines", "Visual streaking", "Environmental blur", "Rapid optical flow"]
+            },
+            // VERY_HIGH: 피사체를 프레임에 고정할지, 가속도로 추월할지 선택 (역행 현상 제어의 핵심)
+            very_high_intensity: {
+                speed_term: "Hyperlapse, Extreme G-force",
+                vocabulary: ["Silhouette distorted by speed", "Anamorphic light streaks", "Background liquefaction"]
+            }
         }
     }
 };

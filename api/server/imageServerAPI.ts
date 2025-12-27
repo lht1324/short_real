@@ -18,7 +18,17 @@ export const imageServerAPI = {
 
             const output = await falAIClient.subscribe('fal-ai/flux-2', {
                 input: {
-                    prompt: JSON.stringify(imageGenPrompt, null, 1)
+                    prompt: JSON.stringify({
+                        ...imageGenPrompt,
+                        subjects: imageGenPrompt.subjects.map((subject) => {
+                            return {
+                                type: subject.type,
+                                description: subject.description,
+                                pose: subject.pose,
+                                position: subject.position,
+                            }
+                        })
+                    }, null, 1)
                         .replace(/\n\s*/g, ' ')
                         .replace("fNumber", "f-number"),
                     guidance_scale: 20,

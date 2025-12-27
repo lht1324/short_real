@@ -19,7 +19,7 @@ import {
 import {MusicGenerationData} from "@/api/types/suno-api/MusicGenerationData";
 import {Entity, InitialEntityManifestItem, PhysicsProfile} from "@/api/types/open-ai/Entity";
 import {PHYSICS_LIBRARY} from "@/api/types/open-ai/PhysicsPromptLibrary";
-import {FluxPrompt} from "@/api/types/open-ai/FluxPrompt";
+import {FluxPrompt, FluxPromptSubject} from "@/api/types/open-ai/FluxPrompt";
 
 enum OpenAIModel {
     GPT_4O_MINI = "gpt-4o-mini-2024-07-18",
@@ -502,6 +502,7 @@ Instruction: Generate the scene instruction JSON.
         masterStyleInfo: MasterStyleInfo,
         videoTitle: string,
         videoDescription: string,
+        imageGenPromptSubjectList: FluxPromptSubject[],
         entityManifestList: Entity[],
     ): Promise<{
         success: boolean;
@@ -523,9 +524,6 @@ Instruction: Generate the scene instruction JSON.
             }
 
             const isEntityListNotEmpty = entityManifestList.length !== 0;
-            // const developerMessage = isEntityListNotEmpty
-            //     ? POST_VIDEO_GEN_PROMPT_PROMPT
-            //     : POST_VIDEO_GEN_PROMPT_NO_ENTITIES_PROMPT;
             const developerMessage = POST_VIDEO_GEN_PROMPT_PROMPT;
 
             // [핵심] Physics Profile을 기반으로 물리 법칙 텍스트 생성 (Code Level Injection)
@@ -553,23 +551,23 @@ Instruction: Generate the scene instruction JSON.
                         const data = PHYSICS_LIBRARY.material[materialKey];
                         if (data) {
                             // Very Low Intensity
-                            intensityData.very_low.effects.add(`"${data.very_low_intensity.effect_tag}"`);
-                            intensityData.very_low.effects.add(`"${data.very_low_intensity.alt_tag}"`);
+                            intensityData.very_low.effects.add(`${data.very_low_intensity.effect_tag}`);
+                            intensityData.very_low.effects.add(`${data.very_low_intensity.alt_tag}`);
                             data.very_low_intensity.vocabulary.forEach(v => intensityData.very_low.vocab.add(v));
 
                             // Low Intensity
-                            intensityData.low.effects.add(`"${data.low_intensity.effect_tag}"`);
-                            intensityData.low.effects.add(`"${data.low_intensity.alt_tag}"`);
+                            intensityData.low.effects.add(`${data.low_intensity.effect_tag}`);
+                            intensityData.low.effects.add(`${data.low_intensity.alt_tag}`);
                             data.low_intensity.vocabulary.forEach(v => intensityData.low.vocab.add(v));
 
                             // High Intensity
-                            intensityData.high.effects.add(`"${data.high_intensity.effect_tag}"`);
-                            intensityData.high.effects.add(`"${data.high_intensity.alt_tag}"`);
+                            intensityData.high.effects.add(`${data.high_intensity.effect_tag}`);
+                            intensityData.high.effects.add(`${data.high_intensity.alt_tag}`);
                             data.high_intensity.vocabulary.forEach(v => intensityData.high.vocab.add(v));
 
                             // Very High Intensity
-                            intensityData.very_high.effects.add(`"${data.very_high_intensity.effect_tag}"`);
-                            intensityData.very_high.effects.add(`"${data.very_high_intensity.alt_tag}"`);
+                            intensityData.very_high.effects.add(`${data.very_high_intensity.effect_tag}`);
+                            intensityData.very_high.effects.add(`${data.very_high_intensity.alt_tag}`);
                             data.very_high_intensity.vocabulary.forEach(v => intensityData.very_high.vocab.add(v));
                         }
                     });
@@ -579,22 +577,18 @@ Instruction: Generate the scene instruction JSON.
                         const data = PHYSICS_LIBRARY.action_context[contextKey];
                         if (data) {
                             // Very Low Intensity
-                            intensityData.very_low.camera.add(data.very_low_intensity.camera_tech);
                             intensityData.very_low.velocity.add(data.very_low_intensity.speed_term);
                             data.very_low_intensity.vocabulary.forEach(v => intensityData.very_low.vocab.add(v));
 
                             // Low Intensity
-                            intensityData.low.camera.add(data.low_intensity.camera_tech);
                             intensityData.low.velocity.add(data.low_intensity.speed_term);
                             data.low_intensity.vocabulary.forEach(v => intensityData.low.vocab.add(v));
 
                             // High Intensity
-                            intensityData.high.camera.add(data.high_intensity.camera_tech);
                             intensityData.high.velocity.add(data.high_intensity.speed_term);
                             data.high_intensity.vocabulary.forEach(v => intensityData.high.vocab.add(v));
 
                             // Very High Intensity
-                            intensityData.very_high.camera.add(data.very_high_intensity.camera_tech);
                             intensityData.very_high.velocity.add(data.very_high_intensity.speed_term);
                             data.very_high_intensity.vocabulary.forEach(v => intensityData.very_high.vocab.add(v));
                         }
@@ -606,25 +600,21 @@ Instruction: Generate the scene instruction JSON.
 **INTENSITY_TIER: VERY_LOW (Micro-Stasis / Latent Flux / Absolute Stillness)**
 - **Visual Effect Candidates**: ${Array.from(intensityData.very_low.effects).join(' OR ')}
 - **Visual Vocabulary Pool**: ${Array.from(intensityData.very_low.vocab).join(', ')}
-- **Camera Tech Options**: ${Array.from(intensityData.very_low.camera).join(', ')}
 - **Velocity Options**: ${Array.from(intensityData.very_low.velocity).join(', ')}
 
 **INTENSITY_TIER: LOW (Fluid Motion / Rhythmic Drift / Subtle Flow)**
 - **Visual Effect Candidates**: ${Array.from(intensityData.low.effects).join(' OR ')}
 - **Visual Vocabulary Pool**: ${Array.from(intensityData.low.vocab).join(', ')}
-- **Camera Tech Options**: ${Array.from(intensityData.low.camera).join(', ')}
 - **Velocity Options**: ${Array.from(intensityData.low.velocity).join(', ')}
 
 **INTENSITY_TIER: HIGH (Decisive Kinetic / Structural Strain / High Momentum)**
 - **Visual Effect Candidates**: ${Array.from(intensityData.high.effects).join(' OR ')}
 - **Visual Vocabulary Pool**: ${Array.from(intensityData.high.vocab).join(', ')}
-- **Camera Tech Options**: ${Array.from(intensityData.high.camera).join(', ')}
 - **Velocity Options**: ${Array.from(intensityData.high.velocity).join(', ')}
 
 **INTENSITY_TIER: VERY_HIGH (Explosive Chaos / Hyper-Velocity / Kinetic Failure)**
 - **Visual Effect Candidates**: ${Array.from(intensityData.very_high.effects).join(' OR ')}
 - **Visual Vocabulary Pool**: ${Array.from(intensityData.very_high.vocab).join(', ')}
-- **Camera Tech Options**: ${Array.from(intensityData.very_high.camera).join(', ')}
 - **Velocity Options**: ${Array.from(intensityData.very_high.velocity).join(', ')}
 `;
                 })
@@ -634,19 +624,27 @@ Instruction: Generate the scene instruction JSON.
 
             const mappedEntityList = isEntityListNotEmpty
                 ? entityManifestList.map((entity) => {
-                    // 옷/재질 정보에서 너무 긴 묘사는 잘라내거나 핵심만 남기는 전처리도 좋음 (여기서는 그대로 전달하되 프롬프트로 제어)
+                    // 1. Flux 2 베이스 이미지 생성 시 사용된 상세 시각 데이터 매칭 (id 기준)
+                    const visualAnchor = imageGenPromptSubjectList.find(subject => subject.id === entity.id);
+
                     return {
                         role: entity.role,
                         type: entity.type,
-                        demographics: entity.demographics, // 예: "Latino, late 20s" (식별용)
+                        demographics: entity.demographics,
 
+                        // 2. 공간적 고정점 (Composition Anchor)
                         position_descriptor: entity.appearance.position_descriptor ?? "",
 
+                        // 3. 물리적 고정점 (Visual Ground Truth)
+                        // 베이스 이미지의 포즈를 주입하여 Toward/Away 벡터 오판단 방지
+                        visual_anchor_initial_pose: visualAnchor?.pose ?? "",
+
+                        // 4. 보조 식별 정보
                         hair: entity.appearance.hair,
                         clothing: entity.appearance.clothing_or_material,
                     };
                 })
-                : []
+                : [];
             // 4. User Message 구성 (physics_instruction_set 주입)
             const userMessage = `
 <input_context>
@@ -727,6 +725,7 @@ Instruction: Generate the scene instruction JSON.
                     logical_bridge: {
                         identity_logic: string;
                         action_focus: string;
+                        ambiguous_points: string[];
                     },
                     reasoning: string;
                     video_gen_prompt: string;
@@ -734,7 +733,8 @@ Instruction: Generate the scene instruction JSON.
                 } = JSON.parse(generatedContent);
                 const {
                     identity_logic: identityLogic,
-                    action_focus: actionFocus
+                    action_focus: actionFocus,
+                    ambiguous_points: ambiguousPoints,
                 } = parsedJson.logical_bridge;
 
 
@@ -742,6 +742,12 @@ Instruction: Generate the scene instruction JSON.
                 console.log(`Identity Logic: ${identityLogic}`);
                 console.log(`Action Focus: ${actionFocus}`)
                 console.log(`Reasoning: ${parsedJson.reasoning}`);
+                if (ambiguousPoints.length !== 0) {
+                    console.log("Ambiguous Points");
+                    ambiguousPoints.forEach((ambiguousPoint, index) => console.log(`AmbiguousPoint[${index}]: ${ambiguousPoint}`));
+                } else {
+                    console.log(`Scene #${sceneNumber} doesn't have Ambiguous Points`);
+                }
                 console.log(`videoGenPrompt: ${parsedJson.video_gen_prompt}`);
                 console.log(`videoGenPromptShort: ${parsedJson.video_gen_prompt_short}`);
 
