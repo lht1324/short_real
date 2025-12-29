@@ -403,6 +403,15 @@ export const POST_MASTER_STYLE_INFO_PROMPT = `
         - **Inference Protocol**: 
           - Map the raw ratio to a technical cinema standard (e.g., "9:16 Portrait Cinema," "2.35:1 Anamorphic Widescreen," "1:1 Social Media Square").
   </task_2_master_style_engineering>
+  <formatting_constraint>
+    **CRITICAL OUTPUT FORMATTING RULE: MINIFICATION**
+    - You must output the final JSON object in **Strict Minified Format**.
+    - **NO** whitespace, **NO** newlines, **NO** indentation between keys and values.
+    - Example: {"key":"value","array":[1,2]} (Correct)
+    - NOT: { "key": "value" } (Incorrect)
+    - This applies to the entire JSON structure, including nested objects and arrays.
+    - Exception: Do NOT remove spaces *inside* string values (e.g., NO "High contrast" -> "Highcontrast", NO "I'm a boy. She is a girl" -> "I'maboy.Sheisagirl").
+  </formatting_constraint>
   <output_schema>
     Return a SINGLE valid JSON object.
     {
@@ -803,7 +812,7 @@ export const POST_IMAGE_GEN_PROMPT_PROMPT = `
               - If "Natural", Strictly adhere to <master_style_guide>.<optics>.\`defaultISO\` to maintain a balanced, unmanipulated sensor response that reflects standard lighting conditions.
             * **Constraint**: Output exactly one integer.
         - **Field: 'composition' [Strict Selection]**: 
-          - **[List]**: ["rule of thirds", "circular arrangement", "framed by foreground", "minimalist negative space", "S-curve", "vanishing point center", "dynamic off-center", "leading leads", "golden spiral", "diagonal energy", "strong verticals", "triangular arrangement"].
+          - **[List]**: ["rule of thirds", "circular arrangement", "minimalist negative space", "S-curve", "vanishing point center", "dynamic off-center", "leading leads", "golden spiral", "diagonal energy", "strong verticals", "triangular arrangement"].
           - **Mapping Guide (Based on <master_style_guide>.<composition> and Narrative Tone)**:
             * **Stability & Balance**: 
               - "Symmetry/Perspective" -> "vanishing point center".
@@ -813,13 +822,12 @@ export const POST_IMAGE_GEN_PROMPT_PROMPT = `
               - "Action/High Energy" -> "diagonal energy" or "dynamic off-center".
               - "Complex Motion" -> "triangular arrangement" or "S-curve".
             * **Focus & Flow**:
-              - "Depth/Immersion" -> "framed by foreground" or "leading leads".
+              - "Depth/Immersion" -> "leading leads" or "vanishing point center".
               - "Aesthetic Perfection" -> "golden spiral" or "circular arrangement".
             * **Isolation & Minimalist**:
               - "Solitude/Focus" -> "minimalist negative space".
         **[Execution Rule]**:
         - Accuracy and adherence to the predefined pick-lists are mandatory to pass system validation.
-    
       3. **[Field: 'style', 'lighting', 'mood'] - Atmospheric Anchoring**
         - **Action**: Synthesize raw technical data into descriptive strings while maintaining cross-reference stability with the 'camera' object.
         - **Field: 'style' [Format: string]**:
@@ -861,6 +869,37 @@ export const POST_IMAGE_GEN_PROMPT_PROMPT = `
       **[Execution Rule]**:
       - All camera values must be physically plausible and consistent with the MasterStyle standard.
     </unit_3_optical_and_technical>
+    <unit_4_natural_language_sentence_generation>
+      **UNIT 4: NATURAL LANGUAGE SENTENCE GENERATION**
+      **Goal**: Transform the structured \`image_gen_prompt\` object in <output_schema> into a single, cohesive, natural language paragraph and put into \`image_gen_prompt_sentence\` in <output_schema>.
+      **Critical Constraint**: You MUST use EVERY single variable from the \`image_gen_prompt\` object. Do not skip any field.
+      **Formatting Rule (Single Block)**:
+        - Do NOT use line breaks between each [Sentence] of **Syntax Template**.
+        - Output exactly one continuous paragraph consisting of 3 sentences joined by single spaces.
+      **Adaptation Rule (Contextual Smoothing)**:
+        - Do not blindly copy-paste if the grammar sounds robotic.
+        - **Translate technical terms** into flowery prose where necessary (e.g., if \`style\` is "raw", write "Rendered in a raw...").
+        - **Add Articles/Prepositions**: Ensure "A", "An", "The", "with", "in" are added to make the sentence grammatically complete.
+      **Syntax Template (Strict Adherence)**:
+        **[Sentence 1: The Subject & Framing]**
+          - **Logic (Condition A: If \`subjects\` is NOT EMPTY)**: "[Article] [\`camera.angle\`] [\`camera.distance\`] captures [\`subjects[n].description\`] [who is/which is] [\`subjects[n].pose\`] [\`subjects[n].position\`]."
+          - **Logic (Condition B: If \`subjects\` is EMPTY)**: "[Article] [\`camera.angle\`] [\`camera.distance\`] focuses entirely on the [\`scene\`] elements."
+          - **Variables**: \`camera.angle\`, \`camera.distance\`, \`subjects\` OR \`scene\`.
+          - *Instruction*: Check if \`subjects\` array is empty. If yes, use Condition B to avoid a dangling verb. If multiple subjects exist, connect them using spatial prepositions.
+        **[Sentence 2: The Environment & Atmosphere]**
+          - **Logic (Condition A: If \`subjects\` is NOT EMPTY)**: "The scene is set in [\`background\`], depicting [\`scene\`] with a [\`composition\`] composition, where the atmosphere is [\`mood\`], illuminated by [\`lighting\`] and a color palette of [\`color_palette\`]."
+          - **Logic (Condition B: If \`subjects\` is EMPTY)**: "The setting features [\`background\`] arranged in a [\`composition\`] composition, where the atmosphere is [\`mood\`], illuminated by [\`lighting\`] and a color palette of [\`color_palette\`]."
+          - **Variables**: \`background\`, \`composition\`, \`mood\`, \`lighting\`, \`color_palette\`, (\`scene\` only in Condition A).
+          - *Instruction*: List the Hex codes in brackets exactly as provided (e.g., "(#RRGGBB, #RRGGBB, #RRGGBB)").
+        **[Sentence 3: Technical Specifications]**
+          - **Logic**: "Rendered in a [\`style\`], this image is captured with a [\`camera.lens\`] lens at [\`camera.fNumber\`] for [\`camera.focus\`] and ISO [\`camera.ISO\`], featuring [\`effects\`]."
+          - **Variables**: \`style\`, \`camera.lens\`, \`camera.fNumber\`, \`camera.focus\`, \`camera.ISO\`, \`effects\`.
+          - *Instruction*: Join the \`effects\` array with commas and "and" to form a fluent descriptive clause.
+      **Final Quality Check**:
+        - Verify NO variable is missing.
+        - Verify the output is a **single line** (no \`\\n\`).
+        - Verify standard English punctuation is used throughout.
+    </unit_4_natural_language_sentence_generation>
   </prompt_authoring_protocol>
   <execution_rules>
     1. **Positive Exclusion Protocol (CRITICAL)**:
@@ -928,6 +967,15 @@ export const POST_IMAGE_GEN_PROMPT_PROMPT = `
       - *Context Examples*: Confrontation → "looming behind"; Pinned → "against ropes/wall"
       - *Vocabulary Patterns*: "Pinned against the ropes in the background", "Looming directly behind the subject".
   </entity_positioning_rules>
+  <formatting_constraint>
+    **CRITICAL OUTPUT FORMATTING RULE: MINIFICATION**
+    - You must output the final JSON object in **Strict Minified Format**.
+    - **NO** whitespace, **NO** newlines, **NO** indentation between keys and values.
+    - Example: {"key":"value","array":[1,2]} (Correct)
+    - NOT: { "key": "value" } (Incorrect)
+    - This applies to the entire JSON structure, including nested objects and arrays.
+    - Exception: Do NOT remove spaces *inside* string values (e.g., NO "High contrast" -> "Highcontrast", NO "I'm a boy. She is a girl" -> "I'maboy.Sheisagirl").
+  </formatting_constraint>
   <output_schema>
     Return a single JSON object.
     {
@@ -966,7 +1014,7 @@ export const POST_IMAGE_GEN_PROMPT_PROMPT = `
           "lighting": string;
           "mood": string;
           "background": string;
-          "composition": string;
+          "composition": "rule of thirds" | "circular arrangement" | "minimalist negative space" | "S-curve" | "vanishing point center" | "dynamic off-center" | "leading leads" | "golden spiral" | "diagonal energy" | "strong verticals" | "triangular arrangement";
           "camera": {
             "angle": "eye level" | "low angle" | "slightly low" | "bird's-eye" | "worm's-eye" | "over-the-shoulder" | "isometric";
             "distance": "close-up" | "medium close-up" | "medium shot" | "medium wide" | "wide shot" | "extreme wide";
@@ -976,7 +1024,8 @@ export const POST_IMAGE_GEN_PROMPT_PROMPT = `
             "ISO": number;
           };
           "effects": string[];
-      }
+      },
+      "image_gen_prompt_sentence": string; // A single sentence from <prompt_authoring_protocol>.<unit_4_natural_language_sentence_generation>
     }
   </output_schema>
 </developer_instruction>
@@ -1187,7 +1236,7 @@ export const POST_IMAGE_GEN_PROMPT_NO_ENTITIES_PROMPT = `
               - If "Natural", Strictly adhere to <master_style_guide>.<optics>.\`defaultISO\` to maintain a balanced, unmanipulated sensor response that reflects standard lighting conditions.
             * **Constraint**: Output exactly one integer.
         - **Field: 'composition' [Strict Selection]**: 
-          - **[List]**: ["rule of thirds", "circular arrangement", "framed by foreground", "minimalist negative space", "S-curve", "vanishing point center", "dynamic off-center", "leading leads", "golden spiral", "diagonal energy", "strong verticals", "triangular arrangement"].
+          - **[List]**: ["rule of thirds", "circular arrangement", "minimalist negative space", "S-curve", "vanishing point center", "dynamic off-center", "leading leads", "golden spiral", "diagonal energy", "strong verticals", "triangular arrangement"].
           - **Mapping Guide (Based on <master_style_guide>.<composition> and Narrative Tone)**:
             * **Stability & Balance**: 
               - "Symmetry/Perspective" -> "vanishing point center".
@@ -1197,7 +1246,7 @@ export const POST_IMAGE_GEN_PROMPT_NO_ENTITIES_PROMPT = `
               - "Action/High Energy" -> "diagonal energy" or "dynamic off-center".
               - "Complex Motion" -> "triangular arrangement" or "S-curve".
             * **Focus & Flow**:
-              - "Depth/Immersion" -> "framed by foreground" or "leading leads".
+              - "Depth/Immersion" -> "leading leads" or "vanishing point center".
               - "Aesthetic Perfection" -> "golden spiral" or "circular arrangement".
             * **Isolation & Minimalist**:
               - "Solitude/Focus" -> "minimalist negative space".
@@ -1244,6 +1293,37 @@ export const POST_IMAGE_GEN_PROMPT_NO_ENTITIES_PROMPT = `
       **[Execution Rule]**:
       - All camera values must be physically plausible and consistent with the <master_style_guide> standard.
     </unit_3_optical_and_technical>
+    <unit_4_natural_language_sentence_generation>
+      **UNIT 4: NATURAL LANGUAGE SENTENCE GENERATION**
+      **Goal**: Transform the structured \`image_gen_prompt\` object in <output_schema> into a single, cohesive, natural language paragraph and put into \`image_gen_prompt_sentence\` in <output_schema>.
+      **Critical Constraint**: You MUST use EVERY single variable from the \`image_gen_prompt\` object. Do not skip any field.
+      **Formatting Rule (Single Block)**:
+        - Do NOT use line breaks between each [Sentence] of **Syntax Template**.
+        - Output exactly one continuous paragraph consisting of 3 sentences joined by single spaces.
+      **Adaptation Rule (Contextual Smoothing)**:
+        - Do not blindly copy-paste if the grammar sounds robotic.
+        - **Translate technical terms** into flowery prose where necessary (e.g., if \`style\` is "raw", write "Rendered in a raw...").
+        - **Add Articles/Prepositions**: Ensure "A", "An", "The", "with", "in" are added to make the sentence grammatically complete.
+      **Syntax Template (Strict Adherence)**:
+        **[Sentence 1: The Subject & Framing]**
+          - **Logic (Condition A: If \`subjects\` is NOT EMPTY)**: "[Article] [\`camera.angle\`] [\`camera.distance\`] captures [\`subjects[n].description\`] [who is/which is] [\`subjects[n].pose\`] [\`subjects[n].position\`]."
+          - **Logic (Condition B: If \`subjects\` is EMPTY)**: "[Article] [\`camera.angle\`] [\`camera.distance\`] focuses entirely on the [\`scene\`] elements."
+          - **Variables**: \`camera.angle\`, \`camera.distance\`, \`subjects\` OR \`scene\`.
+          - *Instruction*: Check if \`subjects\` array is empty. If yes, use Condition B to avoid a dangling verb. If multiple subjects exist, connect them using spatial prepositions.
+        **[Sentence 2: The Environment & Atmosphere]**
+          - **Logic (Condition A: If \`subjects\` is NOT EMPTY)**: "The scene is set in [\`background\`], depicting [\`scene\`] with a [\`composition\`] composition, where the atmosphere is [\`mood\`], illuminated by [\`lighting\`] and a color palette of [\`color_palette\`]."
+          - **Logic (Condition B: If \`subjects\` is EMPTY)**: "The setting features [\`background\`] arranged in a [\`composition\`] composition, where the atmosphere is [\`mood\`], illuminated by [\`lighting\`] and a color palette of [\`color_palette\`]."
+          - **Variables**: \`background\`, \`composition\`, \`mood\`, \`lighting\`, \`color_palette\`, (\`scene\` only in Condition A).
+          - *Instruction*: List the Hex codes in brackets exactly as provided (e.g., "(#RRGGBB, #RRGGBB, #RRGGBB)").
+        **[Sentence 3: Technical Specifications]**
+          - **Logic**: "Rendered in a [\`style\`], this image is captured with a [\`camera.lens\`] lens at [\`camera.fNumber\`] for [\`camera.focus\`] and ISO [\`camera.ISO\`], featuring [\`effects\`]."
+          - **Variables**: \`style\`, \`camera.lens\`, \`camera.fNumber\`, \`camera.focus\`, \`camera.ISO\`, \`effects\`.
+          - *Instruction*: Join the \`effects\` array with commas and "and" to form a fluent descriptive clause.
+      **Final Quality Check**:
+        - Verify NO variable is missing.
+        - Verify the output is a **single line** (no \`\\n\`).
+        - Verify standard English punctuation is used throughout.
+    </unit_4_natural_language_sentence_generation>
   </prompt_authoring_protocol>
   <execution_rules>
     1. **Positive Exclusion Protocol (CRITICAL)**:
@@ -1277,6 +1357,15 @@ export const POST_IMAGE_GEN_PROMPT_NO_ENTITIES_PROMPT = `
       - **Forbidden**: Brand names, random words, taxi roof text, storefront signs unless explicitly input.
       - **Integration**: Apply AFTER all other rules. Override generic signage descriptions.
   </execution_rules>
+  <formatting_constraint>
+    **CRITICAL OUTPUT FORMATTING RULE: MINIFICATION**
+    - You must output the final JSON object in **Strict Minified Format**.
+    - **NO** whitespace, **NO** newlines, **NO** indentation between keys and values.
+    - Example: {"key":"value","array":[1,2]} (Correct)
+    - NOT: { "key": "value" } (Incorrect)
+    - This applies to the entire JSON structure, including nested objects and arrays.
+    - Exception: Do NOT remove spaces *inside* string values (e.g., NO "High contrast" -> "Highcontrast", NO "I'm a boy. She is a girl" -> "I'maboy.Sheisagirl").
+  </formatting_constraint>
   <output_schema>
     Return a single JSON object.
     {
@@ -1292,8 +1381,7 @@ export const POST_IMAGE_GEN_PROMPT_NO_ENTITIES_PROMPT = `
           "color_palette": string[]; // RGB Hex (#[00~FF][00~FF][00~FF])
           "lighting": string;
           "mood": string;
-          "background": string;
-          "composition": string;
+          "composition": "rule of thirds" | "circular arrangement" | "minimalist negative space" | "S-curve" | "vanishing point center" | "dynamic off-center" | "leading leads" | "golden spiral" | "diagonal energy" | "strong verticals" | "triangular arrangement";
           "camera": {
             "angle": "eye level" | "low angle" | "slightly low" | "bird's-eye" | "worm's-eye" | "isometric";
             "distance": "close-up" | "medium close-up" | "medium shot" | "medium wide" | "wide shot" | "extreme wide";
@@ -1303,7 +1391,8 @@ export const POST_IMAGE_GEN_PROMPT_NO_ENTITIES_PROMPT = `
             "ISO": number;
           };
           "effects": string[];
-      }
+      },
+      "image_gen_prompt_sentence": string; // A single sentence from <prompt_authoring_protocol>.<unit_4_natural_language_sentence_generation>
     }
   </output_schema>
 </developer_instruction>
@@ -1332,6 +1421,10 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
        - Identify the <target_duration> to calibrate the speed of camera and action vectors.
        - Use <video_title> and <video_description> to establish the overall narrative "Vector of Change."
     2. **<vocabulary_depot> (The Semantic Physics Engine)**:
+       - **Exception Handling (Empty Depot Protocol)**: 
+         - The values in <vocabulary_depot> are derived from <entity_list>. 
+         - **IF <vocabulary_depot> is EMPTY** (due to empty entities), you represent the Physics Engine. You MUST **infer** context-appropriate physics jargon based on the **Environment** and **Narrative** (e.g., use 'Neon Refraction' for Cyberpunk City, 'Dust Motes' for Ruins).
+         - **Constraint**: Do NOT hallucinate new physical objects (e.g., do not add 'steam vents' if no vents are visible). Limit inference to atmospheric particles, lighting physics, and surface reactions.
        - **Quad-Tier Intensity Architecture**: This block contains physics-based technical data categorized into four discrete physical states. All selections must strictly match the locked **\`INTENSITY_TIER\`**:
          * **\`VERY_LOW\`**: (Micro-Stasis / Latent Flux) - Focus on high-fidelity textures, subtle light behavior, and Brownian motion.
          * **\`LOW\`**: (Fluid Motion / Rhythmic Flow) - Focus on natural, predictable movement and laminar environmental flow.
@@ -1369,17 +1462,19 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
     <step_0_kinetic_energy_profiling>
       - **Goal**: Identify and lock the single **\`INTENSITY_TIER\`** to establish the physical boundaries and intensity of the entire latent trajectory.
       - **Inference Logic**: 
-        1. **Narrative Kinetic Analysis**: Analyze <scene_narration> for kinetic verbs and the implied velocity of the action.
+        1. **Narrative Intensity Analysis (Mood Extraction)**: 
+           - Analyze <scene_narration> **ONLY** to gauge the **Energy Level** and **Emotional Urgency**.
+           - **Strict Isolation**: Do **NOT** use metaphors of <scene_narration> to infer physical direction or spatial vectors. Treat metaphors (e.g., "skyrocketing", "crashing") purely as intensity indicators, not physics instructions.
         2. **Actor vs. Environment Pivot**: 
-           - **IF <entity_list> is NOT EMPTY**: Evaluate the subjects' \`type\` and \`physics_profile\` to determine inherent mass and action capacity (e.g., a \`machine\` in \`combat\` state).
+           - **IF <entity_list> is NOT EMPTY**: Evaluate the <entity_list>.[n].\`type\` and <entity_list>.[n].\`physics_profile\` to determine inherent mass and action capacity (e.g., a \`machine\` in \`combat\` state).
            - **IF <entity_list> is EMPTY**: Pivot the analysis entirely to the **Environmental Dynamics**. Treat the background, weather, and light as the primary "Actors" (e.g., a "Neon City" in "locomotion" context implies camera-driven energy).
         3. **Environmental Stability Assessment**: Evaluate <image_context> (t=0) for environmental stability (e.g., a quiet boutique vs a chaotic street).
       - **\`INTENSITY_TIER\` Classification (Select Exactly ONE)**:
-        * **\`VERY_LOW\`**: Choose if the scene is defined by **Micro-Stasis** (e.g., subtle breathing, light flickering, near-perfect stillness).
-        * **\`LOW\`**: Choose if the scene is defined by **Fluid Motion** (e.g., rhythmic walking, gentle swaying, consistent natural flow).
-        * **\`HIGH\`**: Choose if the scene is defined by **Decisive Kinetic** energy (e.g., intentional strikes, running, mechanical shifts, heavy mass movement).
-        * **\`VERY_HIGH\`**: Choose if the scene reaches **Explosive Chaos** (e.g., high-impact collisions, shattering, hyper-velocity, total physical failure).
-      - **Output Requirement**: This profile acts as a **Global Latent Filter**. The selected \`INTENSITY_TIER\` strictly dictates all data extraction from <vocabulary_depot> and word choices in later <step_n>s.
+        * **\`VERY_LOW\`**: Choose if the scene is defined by **Micro-Stasis** (e.g., subtle breathing, light flickering, near-perfect stillness, "frozen" moments).
+        * **\`LOW\`**: Choose if the scene is defined by **Fluid Motion** (e.g., rhythmic walking, gentle swaying, consistent natural flow, smooth transitions).
+        * **\`HIGH\`**: Choose if the scene is defined by **Decisive Kinetic** energy (e.g., intentional strikes, running, mechanical shifts, heavy mass movement, "breakneck" metaphors).
+        * **\`VERY_HIGH\`**: Choose if the scene reaches **Explosive Chaos** (e.g., high-impact collisions, shattering, hyper-velocity, total physical failure, "earth-shattering" metaphors).
+      - **Output Requirement**: This profile acts as a **Global Latent Filter**. The selected \`INTENSITY_TIER\` strictly dictates the energy level of word choices in all later <step_n>, regardless of whether data is drawn from <vocabulary_depot> or inferred.
     </step_0_kinetic_energy_profiling>
     <step_1_core_synthesis_principles>
       - **Kinetic Anchor Protocol (The Golden Formula)**:
@@ -1400,10 +1495,10 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
         * **Intensity Alignment**: Ensure verb weight matches the \`INTENSITY_TIER\` identified in **Inference Logic** in <step_0_kinetic_energy_profiling>.
     </step_1_core_synthesis_principles>
     <step_2_contextual_anchor_assembly>
-      - **Goal**: Synthesize a "Minimum Distinguishable Handle" for the **[Anchor]** segment of the **Kinetic Anchor Protocol** in <step_1_core_synthesis_principles>, ensuring absolute visual consistency without redundant descriptions.
+      - **Goal**: Synthesize a "Minimum Distinguishable Handle" for the **[Anchor]** segment of **Kinetic Anchor Protocol** in <step_1_core_synthesis_principles>, ensuring absolute visual consistency without redundant descriptions.
       - **Logical Branching (Entity Presence Check)**:
+        - **IF <entity_list> is EMPTY**: Skip directly to **Case B (Environment-Driven Anchor)**.
         - **IF <entity_list> is NOT EMPTY**: Proceed to **Case A (Entity-Driven Anchor)**.
-        - **IF <entity_list> is EMPTY**: Skip to **Case B (Environment-Driven Anchor)**.
       - **Case A: Entity-Driven Anchor (Character/Object/Animal)**:
         - **Subject Identification**: Apply the **Selection Hierarchy** from below **Subject Extraction Guide** to identify **[Anchor]** of **Final Structure** in <step_1_core_synthesis_principles>.
         - **Handle Construction**: 
@@ -1425,14 +1520,18 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
         - **Zero-Redundancy Prohibition**: Do NOT restate any visual details (e.g., color, material) already present in <image_context>. Focus only on information required for the **Delta** in later steps.
     </step_2_contextual_anchor_assembly>
     <step_3_primary_action_vector_injection>
-      - **Goal**: Drive the MMDiT engine's physical simulation by injecting a high-impact **[Primary Action Vector]** of **Final Structure** in <step_1_core_synthesis_principles> that connects the anchor to a dynamic kinetic delta (Δ).
+      - **Goal**: Drive the MMDiT engine's physical simulation by injecting a high-impact **[Primary Action Vector]** segment of **Kinetic Anchor Protocol** in <step_1_core_synthesis_principles>, connecting the anchor to a dynamic kinetic delta (Δ).
+      - **Logic: Action-Vector Separation Protocol**:
+        * **Action Source**: Derive the **Action Type** (e.g., Run, Dance, Fight, Breathe) from <scene_narration>.
+        * **Vector Source**: Strictly inherit the **Subject Vector ($\vec{S}$)** deduced in <step_4_1_subject_vector_inference> (Visual Truth).
+        * **Conflict Rule**: IF Narrative implies movement (e.g., "charging forward") BUT Step 4.1 deduced **Static**, you MUST generate a **Static Action** of that type (e.g., "tensing muscles to charge" instead of "sprinting").
       - **[Slot_1: Adverb for Intensity] (Velocity & Tone Control)**:
         - **Role**: Calibrate the model's energy output and movement velocity.
-        - **Rule**: Strictly select a descriptive adverb that matches the energy level of the \`INTENSITY_TIER\` locked in <step_0_kinetic_energy_profiling> (e.g., "Serenely" for \`VERY_LOW\`, "Aggressively" for \`HIGH\`).
+        - **Rule**: Strictly select a descriptive adverb that matches the energy level of the \`INTENSITY_TIER\` locked in <step_0_kinetic_energy_profiling>.
       - **[Slot_2: Verb-ing] (Cinematic Kinetic & Performance)**:
         - **Role**: Establish temporal flow and intent-driven performance.
-        - **Rule**: Use high-impact cinematic verbs in present continuous **(-ing)** form.
-        - **Conditional Micro-expression**: Inject a micro-expression delta (e.g., "pupils dilating", "lips trembling") **ONLY IF** the subject's face is clearly visible in <image_context> AND the \`INTENSITY_TIER\` is \`VERY_LOW\` or \`LOW\`. 
+        - **Rule**: Use high-impact cinematic verbs in present continuous **(-ing)** form that align with the **Vector Source**.
+        - **Conditional Micro-expression**: Inject a micro-expression delta (e.g., "pupils dilating", "lips trembling") **ONLY IF** the subject's face (Frontal/3-Quarter/Profile) is clearly visible in <image_context> AND the \`INTENSITY_TIER\` is \`VERY_LOW\` or \`LOW\`. 
         - **Logic**: If the face is obscured or the intensity is \`HIGH/VERY_HIGH\`, focus entirely on skeletal/body kinetics or structural strain to maintain physical consistency.
       - **[Slot_3: Interaction with Landmarks] (Spatial Constraint & Safety)**:
         - **Role**: Prevent environmental clipping and ensure 3D collision awareness.
@@ -1490,25 +1589,39 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
         </definition_table>
       </step_4_0_professional_camera_mechanics_definitions>
       <step_4_1_subject_vector_inference>
-        - **Task**: Determine the Primary **Subject Vector ($\vec{S}$)** by calculating the spatial trajectory between $t=0$ and $t=n$ relative to the Fixed Camera Coordinate System.
-        - **Inference Variables (The Input Set)**:
-          1. **Anchor Point $S(0)$**: Establish the subject's initial $(x, y)$ coordinate and $D(t)$ depth from <image_context> and <entity_list>.[n].\`visual_anchor_initial_pose\`.
-          2. **Kinetic Force**: **Infer** <image_context>, <entity_list>.[n].\`visual_anchor_initial_pose\` and <scene_narration> to derive the velocity and momentum applied to the subject.
-          3. **Environmental Obstacles**: Identify "Strict Prohibitions" or "Landmarks" from <step_1_core_synthesis_principles> that exist along the potential path (e.g., rock arches, walls, ground).
-        - **Vector Path Analysis (Axis-based Calculation)**:
-          - Compare $S(0)$ with the predicted $S(n)$ to identify the dominant axis of displacement:
-            1. **Toward (+Z)**: Subject moves along the Optical Axis toward the lens ($D(t)$ decreases).
-            2. **Away from (-Z)**: Subject moves along the Optical Axis into the background ($D(t)$ increases).
-            3. **Lateral ($\pm X$)**: Subject moves horizontally, crossing the frame while maintaining relatively constant $D(t)$.
-            4. **Vertical ($\pm Y$)**: Subject moves upward or downward, maintaining relatively constant $D(t)$.
-            5. **Static ($\approx 0$)**: No significant spatial displacement; motion is restricted to internal flux (e.g., breathing, micro-expressions).
-        - **Collision Risk Assessment (Spatial Safety Check)**:
-          - **Rule**: If the predicted path ($\vec{S}$) intersects with any identified "Environmental Obstacle," flag this as a **High-Risk Collision Vector**.
-          - **Logic**: For High-Risk vectors, the subject's movement must be interpreted as "dodging," "weaving," or "passing through" (e.g., "soaring through the gap") rather than a simple linear move to ensure the physical engine respects the landmark's boundaries.
+        - **Task**: Determine the Primary **Subject Vector ($\vec{S}$)** by acting as a **Visual Forensic Investigator**. You must deduce the subject's true trajectory not just from 2D pixels, but by decoding the **Socio-Physical Context** and **Geometric Intent** of the scene.
+        - **The 3-Lens Reasoning Framework (Triangulation Logic)**:
+          Analyze <image_context> ([Optional: IF <entity_list> is NOT EMPTY] - and <entity_list>.[n].\`visual_anchor_initial_pose\`) through these three distinct lenses to triangulate the correct vector.
+          1. **Lens 1: Physical Dynamics (Inertia & Forces)**:
+             - *Look for*: Hair/Clothing blowing back (implies Forward Motion), Suspension compression (implies Braking/Turning), Muscle tension/leaning (implies Intent to Move).
+             - *Reasoning*: If gravity is the only visible force (draping straight down), the subject is likely **Static**.
+          2. **Lens 2: Socio-Physical Context (Intent & Conventions)**:
+             - *Goal*: Infer the subject's **intended facing direction** and **likely motion direction** using scene-level conventions, roles, and interactions — not object-specific heuristics.
+             - *Look for (Domain-Agnostic Cues)*:
+               - **Attention & Intent**: Where is attention directed? (gaze line, head orientation, torso orientation, pointing/aiming, tool usage).
+               - **Interaction Affordances**: Which side is used to interact with the world? (hands toward controls/handles, mouth toward food/mic, sensors/lenses aimed at target, weapon muzzle direction).
+               - **Group Consensus**: In crowds/flocks/formations, infer the dominant heading by majority alignment and shared attention target.
+               - **Rule-governed Flow**: Any structured flow implied by the environment (queues, lanes, stage/audience setup, doorway orientation, signage/markings), and how the subject aligns with it.
+               - **Vehicle Subcase (Optional)**: Use lighting/geometry only as supporting evidence (headlights/tail lights, cockpit orientation), but do not treat color alone as decisive in neon/reflection-heavy scenes.
+             - *Reasoning (Robust)*:
+               - Prefer **multi-cue triangulation** (attention + affordance + group flow) over any single cue.
+               - If cues conflict or are weak, mark the vector as **Static or Low-Confidence** rather than forcing a directional claim.
+          3. **Lens 3: Geometric Perspective (Vanishing Points)**:
+             - *Look for*: The scene's dominant vanishing point.
+             - *Reasoning*:
+               - **Toward (+Z)**: Subject faces *away* from the vanishing point, appearing to exit the frame.
+               - **Away (-Z)**: Subject faces *towards* the vanishing point, appearing to recede into depth.
+               - **Lateral ($\pm X$)**: Subject is oriented perpendicular to the depth axis.
+        - **The Visual Supremacy Rule (Conflict Resolution)**:
+          - **IF** <scene_narration> implies motion (e.g., "racing", "speeding") **BUT** Visual Evidence (Lens 1-3) indicates stillness (e.g., Red light, Idling, Static posture):
+          - **THEN**: You MUST prioritize **Visual Evidence**. Classify as **Static** or **Micro-Movement**.
+          - *Principle*: "Text provides the Mood/Intensity, but Image provides the Physics."
+        - **Environmental Obstacle Check**:
+          - Identify "Strict Prohibitions" or "Landmarks" from <step_1_core_synthesis_principles> that obstruct the deduced path.
         - **Mandatory Output**:
-          - **Primary Key**: Select exactly ONE category from the Vector Path Analysis (**Toward**, **Away**, **Lateral**, **Vertical**, **Static**).
-          - **Risk Status**: Specify if the path is [Safe] or [High-Risk: (Target Landmark)].
-          - **Usage**: These outputs will serve as the lookup key and safety constraint for the <step_4_0_professional_camera_mechanics_definitions>.<definition_table>.
+          - **Primary Key**: Select exactly ONE category (**Toward**, **Away**, **Lateral**, **Vertical**, **Static**).
+          - **Visual Reasoning Log**: Briefly state the decisive clues (e.g., "Tail lights visible + Vanishing point alignment = Away").
+          - **Risk Status**: [Safe] or [High-Risk: (Target Landmark)].
       </step_4_1_subject_vector_inference>
       <step_4_2_vector_matching_protocol>
         - **Goal**: Finalize the **Camera Vector ($\vec{C}$)** by cross-referencing the **Subject Vector ($\vec{S}$)** and **Risk Status** from <step_4_1_subject_vector_inference> with the <step_4_0_professional_camera_mechanics_definitions>.<definition_table>.
@@ -1565,19 +1678,35 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
       </step_4_3_cinematic_camera_vector_assembly>
     </step_4_cinematic_camera_vector_design>
     <step_5_atmospheric_delta_refinement>
-      - **Goal**: Eliminate "Background Freezing" and enhance 3D volume by synchronizing the environment (Medium) with Camera ($\vec{C}$) and Subject ($\vec{S}$) vectors.
-      - **Tier-Based Physics Dynamics (The Kinetic Constraint)**:
-        | \`INTENSITY_TIER\` | Dynamics ($\vec{E}$) | Physics Logic & Result |
-        | :--- | :--- | :--- |
-        | **\`VERY_LOW\`** | Brownian Motion | Non-directional micro-drifts; maintains texture stability. |
-        | **\`LOW\`** | Laminar Flow | Steady, predictable streams (e.g., gentle breeze, drifting mist). |
-        | **\`HIGH\`** | Turbulent Flow | High-pressure directional displacement; creates kinetic friction. |
-        | **\`VERY_HIGH\`**| Ejecta / Shockwave | Radial expansion or structural disintegration; maximum volume shift. |
+      - **Goal**: Eliminate "Background Freezing" and enhance 3D volume, BUT strictly adhere to physical plausibility to prevent "Contextual Hallucinations".
+      - **The 3-Stage Visibility Protocol (Mandatory Filter)**:
+        Before generating any atmospheric delta, run this logic chain:
+        1. **Stage 1: \`INTENSITY_TIER\` Threshold Strictness**:
+           * **\`VERY_LOW\` (Extreme Strictness)**: 
+             - **Rule**: Only allow **Passive Particles** (already floating dust/mist in <image_context>).
+             - **Constraint**: FORBID any kinetic generation (no impact dust, no wake trails).
+           * **\`LOW\` (High Threshold)**: 
+             - **Rule**: Only allow particles if there is **Direct Contact** with loose material (water/sand).
+             - **Constraint**: FORBID air turbulence trails from simple movement (e.g., walking/jogging).
+           * **\`HIGH\` (Conditional Amplification)**: 
+             - **Logic**: Check the **Cohesion** of the interacting surface/medium.
+             - **IF Surface is Loose/Reactive** (e.g., granular, liquid, gaseous fog): **AMPLIFY**. Allow visible displacement (puffs, splashes, trails) even from moderate interaction.
+             - **IF Surface is Solid/Inert** (e.g., paved, metallic, clear air): **STRICT**. FORBID impact particles (no dust/debris). Only allow 'Clean' effects (e.g., Heat Haze, Motion Blur, Reflection Shifts).
+           * **\`VERY_HIGH\` (Physics Unbound)**: 
+             - **Rule**: Remove thresholds. Maximize visibility (Shockwaves, Debris allowed everywhere).
+        2. **Stage 2: Material Feasibility (Source Check)**:
+           - **Rule**: You may ONLY generate particles if the **Source Material** exists in the scene or is inferred from the Environment.
+           - *Example*: Do NOT generate "Sand" in a "Space Station". Do NOT generate "Rain" indoors unless there's a leak.
+        3. **Stage 3: Optical Counter-Flow Rule**:
+           - **Physical Moves ($\vec{C} \neq 0$)**: Particles move in the **Opposite Direction** of the Camera Vector (e.g., Dolly In +Z → Flow -Z).
+           - **Optical Moves (Rack Focus / Zoom)**: Particles must move **Radially** (Expand/Contract) or **Drift Laterally** to emphasize the lens change. Do NOT invent a "Reverse Z" flow for a non-spatial move.
+      - **Omission Protocol**:
+        IF **The 3-Stage Visibility Protocol** failed, leave both **[Slot_1]** and **[Slot_2]** as **"NONE"**, and directly skip to **[Slot_3: Volumetric Lighting Anchor] (The Depth Foundation)**.
       - **[Slot_1: Subject-Atmosphere Interaction]**:
-        - **Wake Effect Rule**: The medium must react to the subject's kinetic trajectory, creating displacement or turbulent trails.
+        - **Wake Effect Rule**: Describe the medium's reaction to the subject **ONLY IF** permitted by **Stage 1: \`INTENSITY_TIER\` Threshold Strictness** and **Stage 2: Material Feasibility**.
         - **Logic**: Describe the medium's reaction using **present continuous (-ing)** verbs.
       - **[Slot_2: Camera-Atmosphere Flow]**:
-        - **Counter-Flow Rule**: Environment particles MUST move in the **Opposite Direction** of the Camera Vector ($\vec{C}$).
+        - **Counter-Flow Rule**: Describe particle flow relative to the lens strictly following the **Stage 3: Optical Counter-Flow Rule** (Radial/Lateral for Optical, Opposite for Physical).
         - **Logic**: Describe particle flow relative to the lens based on the rule (e.g., Dolly-In $+Z → Flow $-Z$).
       - **[Slot_3: Volumetric Lighting Anchor] (The Depth Foundation)**:
         - **Source**: Select ONE: [\`Volumetric lighting\`, \`Cinematic silhouette\`, \`Atmospheric haze\`, \`Dynamic refraction\`].
@@ -1586,7 +1715,11 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
         - **Logic**: Infer physically accurate tags (e.g., Heat Haze, Sand Grit, Neon Rain).
         - **Format**: Purify into natural descriptors for the final assembly.
       - **The Atmospheric Assembly Formula (([Atmospheric Delta] of **Kinetic Anchor Protocol** in <step_1_core_synthesis_principles>))**:
-        - **Assembly**: "[Slot_1], while [Slot_2], all enhanced by [Slot_3] and [Slot_4]."
+        - **Logic**: Check if [Slot_1] or [Slot_2] is "NONE".
+        * **IF [Slot_1] != "NONE" AND [Slot_2] != "NONE"**:
+          **Output**: "[Slot_1], while [Slot_2], all enhanced by [Slot_3] and [Slot_4]."
+        * **IF [Slot_1] == "NONE" OR [Slot_2] == "NONE"**:
+          **Output**: "enhanced by [Slot_3] and [Slot_4]."
         - **Constraint**: Synthesize into a **single, organic phrase**. Remove all brackets(\`[]\`), symbols, and slot labels. Ensure a natural flow that respects the locked \`INTENSITY_TIER\`.
       - **Final Assembly Examples by \`INTENSITY_TIER\`**:
         * **\`VERY_LOW\`**: "Subtle dust motes floating in the air while light particles drift slowly, all enhanced by dynamic refraction and micro-flux brownian motion."
@@ -1697,6 +1830,15 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
           * *War*: "The battlefield is smoldering" (Extracted from 'WWII Battlefield' archetype)
     </step_8_short_logic_synthesis>
   </processing_logic>
+  <formatting_constraint>
+    **CRITICAL OUTPUT FORMATTING RULE: MINIFICATION**
+    - You must output the final JSON object in **Strict Minified Format**.
+    - **NO** whitespace, **NO** newlines, **NO** indentation between keys and values.
+    - Example: {"key":"value","array":[1,2]} (Correct)
+    - NOT: { "key": "value" } (Incorrect)
+    - This applies to the entire JSON structure, including nested objects and arrays.
+    - Exception: Do NOT remove spaces *inside* string values (e.g., NO "High contrast" -> "Highcontrast", NO "I'm a boy. She is a girl" -> "I'maboy.Sheisagirl").
+  </formatting_constraint>
   <output_schema>
     Return a single JSON object with the following structure. Ensure all fields are populated based on the internal reasoning of the Cinematic Director role.
     {

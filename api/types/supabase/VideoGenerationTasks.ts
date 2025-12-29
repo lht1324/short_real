@@ -69,6 +69,7 @@ export interface SceneData {
     sceneDuration: number;
     imageGenPromptDirective: string;
     imageGenPrompt?: FluxPrompt; // 각 Scene 이미지 생성에 넣을 프롬프트
+    imageGenPromptSentence?: string;
     videoGenPrompt?: string; // 각 Scene 영상 생성에 넣을 프롬프트
     videoGenPromptShort?: string;
     sceneEntityManifestList?: Entity[];

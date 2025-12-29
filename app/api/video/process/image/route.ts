@@ -78,13 +78,14 @@ export async function POST(request: NextRequest) {
                 }),
             );
 
-            if (!postImageGenPromptResult.success || !postImageGenPromptResult.imageGenPrompt) {
+            if (!postImageGenPromptResult.success || !postImageGenPromptResult.imageGenPrompt || !postImageGenPromptResult.imageGenPromptSentence) {
                 throw new Error(`Scene #${sceneData.sceneNumber} error: ${postImageGenPromptResult.error?.message ?? "Failed to generate image gen prompt"}`);
             }
 
             return {
                 ...sceneData,
                 imageGenPrompt: postImageGenPromptResult.imageGenPrompt,
+                imageGenPromptSentence: postImageGenPromptResult.imageGenPromptSentence,
                 sceneEntityManifestList: postImageGenPromptResult.entityManifestList,
             };
         });
@@ -93,7 +94,7 @@ export async function POST(request: NextRequest) {
         for (const sceneData of sceneDataWithImageGenPromptList) {
             console.log(`Scene #${sceneData.sceneNumber} postImage() is executed.`);
 
-            if (!sceneData.imageGenPrompt) {
+            if (!sceneData.imageGenPrompt || !sceneData.imageGenPromptSentence) {
                 await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
 
                 return getNextBaseResponse({
@@ -105,6 +106,7 @@ export async function POST(request: NextRequest) {
 
             const postImageResult = await imageServerAPI.postImage(
                 sceneData.imageGenPrompt,
+                sceneData.imageGenPromptSentence,
                 taskId,
                 sceneData.sceneNumber,
             );

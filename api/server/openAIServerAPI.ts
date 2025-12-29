@@ -347,6 +347,7 @@ Instruction: Analyze the input <target_aspect_ratio>, <style_guidelines>, <full_
     ): Promise<{
         success: boolean;
         imageGenPrompt?: FluxPrompt;
+        imageGenPromptSentence?: string;
         entityManifestList?: Entity[],
         error?: {
             message: string;
@@ -417,7 +418,7 @@ Instruction: Generate the scene instruction JSON.
                 ],
                 response_format: { type: 'json_object' },
                 reasoning_effort: 'high',
-                max_completion_tokens: 12288,
+                max_completion_tokens: 20480,
             });
 
             console.log(`Scene #${sceneNumber} postImageGenPrompt() usage: `, JSON.stringify(completion.usage))
@@ -438,15 +439,18 @@ Instruction: Generate the scene instruction JSON.
             try {
                 const instructionJSON: {
                     image_gen_prompt: FluxPrompt;
+                    image_gen_prompt_sentence: string;
                     updated_entity_manifest?: Omit<Entity, 'role' | 'type' | 'appearance_scenes' | 'demographics'>[]
                 } = JSON.parse(generatedContent);
 
                 const imageGenPrompt = instructionJSON.image_gen_prompt;
+                const imageGenPromptSentence = instructionJSON.image_gen_prompt_sentence;
                 const updatedEntityManifestList = instructionJSON.updated_entity_manifest;
 
                 return {
                     success: true,
                     imageGenPrompt: imageGenPrompt,
+                    imageGenPromptSentence: imageGenPromptSentence,
                     entityManifestList: updatedEntityManifestList ? updatedEntityManifestList.map(instruction => {
                         const originalEntity = sceneEntityManifestList.find((entityManifest) => {
                             return entityManifest.id === instruction.id;
@@ -502,7 +506,7 @@ Instruction: Generate the scene instruction JSON.
         masterStyleInfo: MasterStyleInfo,
         videoTitle: string,
         videoDescription: string,
-        imageGenPromptSubjectList: FluxPromptSubject[],
+        imageGenPrompt: FluxPrompt,
         entityManifestList: Entity[],
     ): Promise<{
         success: boolean;
@@ -622,6 +626,7 @@ Instruction: Generate the scene instruction JSON.
                     .join('\n')
                 : '';
 
+            const imageGenPromptSubjectList: FluxPromptSubject[] = imageGenPrompt.subjects ?? [];
             const mappedEntityList = isEntityListNotEmpty
                 ? entityManifestList.map((entity) => {
                     // 1. Flux 2 베이스 이미지 생성 시 사용된 상세 시각 데이터 매칭 (id 기준)
@@ -654,13 +659,19 @@ Instruction: Generate the scene instruction JSON.
     <target_duration>${targetDuration}seconds</target_duration>
   </video_metadata>
   <vocabulary_depot>
-    **RESOURCE POOL**: Select keywords from here to construct the Dry S-A-C prompt.
+    **RESOURCE POOL**: Select keywords from here to construct the prompt.
     DO NOT use these as descriptions. Use them as tags.
-    ${activeEntityPhysicsList}
+    ${JSON.stringify(activeEntityPhysicsList, null, 2)}
   </vocabulary_depot>
   <scene_narration>${sceneNarration}</scene_narration>
   <master_style_guide>
-    ${JSON.stringify(masterStyleInfo, null, 2)}
+    ${JSON.stringify({
+                ...masterStyleInfo,
+                optics: {
+                    ...masterStyleInfo.optics,
+                    defaultISO: imageGenPrompt.camera.ISO,
+                }
+            }, null, 2)}
   </master_style_guide>
   <entity_list>
     ${JSON.stringify(mappedEntityList, null, 2)}
@@ -704,7 +715,7 @@ Instruction: Generate the scene instruction JSON.
                 ],
                 reasoning_effort: 'high',
                 response_format: { type: 'json_object' },
-                max_completion_tokens: 10240,
+                max_completion_tokens: 20480,
             });
 
             console.log(`Scene #${sceneNumber} postVideoGenPrompt() usage: `, JSON.stringify(completion.usage))

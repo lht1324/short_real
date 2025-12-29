@@ -6,7 +6,7 @@ export interface FluxPrompt {
     lighting: string;
     mood: string;
     background: string;
-    composition: "rule of thirds" | "circular arrangement" | "framed by foreground" | "minimalist negative space" | "S-curve" | "vanishing point center" | "dynamic off-center" | "leading leads" | "golden spiral" | "diagonal energy" | "strong verticals" | "triangular arrangement";
+    composition: "rule of thirds" | "circular arrangement" | "minimalist negative space" | "S-curve" | "vanishing point center" | "dynamic off-center" | "leading leads" | "golden spiral" | "diagonal energy" | "strong verticals" | "triangular arrangement"; //  | "framed by foreground" (자꾸 엿보는 시점 만들어서 제외)
     camera: FluxPromptCameraInfo;
     effects: string[];
 }

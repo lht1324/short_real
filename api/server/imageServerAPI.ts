@@ -1,10 +1,13 @@
 import {createSupabaseServiceRoleClient} from "@/lib/supabaseServiceRole";
 import {fal} from "@fal-ai/client";
 import {FluxPrompt} from "@/api/types/open-ai/FluxPrompt";
+import {ImageFile} from "@fal-ai/client/endpoints";
+import {FalAiErrorDetail} from "@/api/types/fal-ai/FalAIResponse";
 
 export const imageServerAPI = {
     async postImage(
         imageGenPrompt: FluxPrompt,
+        imageGenPromptSentence: string,
         taskId: string,
         sceneNumber: number,
     ): Promise<{ success: boolean; error?: { message: string; code: string } }> {
@@ -16,48 +19,76 @@ export const imageServerAPI = {
                 credentials: process.env.FAL_AI_API_KEY!
             });
 
-            const output = await falAIClient.subscribe('fal-ai/flux-2', {
-                input: {
-                    prompt: JSON.stringify({
-                        ...imageGenPrompt,
-                        subjects: imageGenPrompt.subjects.map((subject) => {
-                            return {
-                                type: subject.type,
-                                description: subject.description,
-                                pose: subject.pose,
-                                position: subject.position,
-                            }
-                        })
-                    }, null, 1)
-                        .replace(/\n\s*/g, ' ')
-                        .replace("fNumber", "f-number"),
-                    guidance_scale: 20,
-                    num_inference_steps: 50,
-                    image_size: "portrait_16_9",
-                    num_images: 1,
-                    acceleration: "none",
-                    enable_prompt_expansion: false,
-                    enable_safety_checker: false,
-                    output_format: "jpeg"
-                }
-            });
-
-            const resultImageUrlList = output.data.images;
+            // Fallback 시 flux-2, 기본 바나나 조합 추가
+            // subscribe 시 Response부터 확인
+            let resultImageUrlList: Array<ImageFile>;
             let imageUrl: string;
 
+            try {
+                const output = await falAIClient.subscribe('fal-ai/nano-banana', {
+                    input: {
+                        prompt: imageGenPromptSentence,
+                        num_images: 1,
+                        aspect_ratio: "9:16",
+                        output_format: "jpeg",
+                        sync_mode: false,
+                        limit_generations: false,
+                    }
+                });
+
+                resultImageUrlList = output.data.images;
+            } catch (error) {
+                const isPolicyViolation = error.body?.detail?.some((errorDetail: FalAiErrorDetail) =>
+                    errorDetail.type === 'content_policy_violation' ||
+                    errorDetail.msg?.includes('unsafe content') ||
+                    errorDetail.msg?.includes('content checker')
+                );
+
+                if (isPolicyViolation) {
+                    const output = await falAIClient.subscribe('fal-ai/flux-2', {
+                        input: {
+                            prompt: JSON.stringify({
+                                ...imageGenPrompt,
+                                subjects: imageGenPrompt.subjects.map((subject) => {
+                                    return {
+                                        type: subject.type,
+                                        description: subject.description,
+                                        pose: subject.pose,
+                                        position: subject.position,
+                                    }
+                                })
+                            }, null, 1)
+                                .replace(/\n\s*/g, ' ')
+                                .replace("fNumber", "f-number"),
+                            guidance_scale: 20,
+                            num_inference_steps: 50,
+                            image_size: "portrait_16_9",
+                            num_images: 1,
+                            acceleration: "none",
+                            enable_prompt_expansion: false,
+                            enable_safety_checker: false,
+                            output_format: "jpeg"
+                        }
+                    });
+                    resultImageUrlList = output.data.images;
+                } else {
+                    throw Error("Image generation failed.")
+                }
+            }
+
             if (resultImageUrlList.length !== 0) {
-                imageUrl = output.data.images[0].url;
+                imageUrl = resultImageUrlList[0].url;
             } else {
-                throw Error("Flux 2 generation failed.")
+                throw Error("Image generation failed.")
             }
 
             if (!imageUrl) {
-                throw new Error("No image generated from Replicate");
+                throw new Error("No image generated from Fal-AI");
             }
 
             const imageResponse = await fetch(imageUrl);
             if (!imageResponse.ok) {
-                 throw new Error(`Failed to fetch image from Replicate: ${imageResponse.statusText}`);
+                 throw new Error(`Failed to fetch image from Fal-AI: ${imageResponse.statusText}`);
             }
             
             const arrayBuffer = await imageResponse.arrayBuffer();

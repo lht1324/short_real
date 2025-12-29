@@ -96,8 +96,12 @@ export async function POST(request: NextRequest) {
             // ArrayBuffer를 Base64로 인코딩
             const imageBase64 = Buffer.from(imageArrayBuffer).toString('base64');
 
-            const imageGenPromptSubjectList = sceneData.imageGenPrompt?.subjects ?? [];
+            const imageGenPrompt = sceneData.imageGenPrompt;
             const sceneEntityManifestList = sceneData.sceneEntityManifestList ?? [];
+
+            if (!imageGenPrompt) {
+                throw new Error('Image metadata is invalid.');
+            }
 
             const postVideoGenPromptResult = await openAIServerAPI.postVideoGenPrompt(
                 sceneData.narration,
@@ -107,7 +111,7 @@ export async function POST(request: NextRequest) {
                 masterStyleInfo,
                 videoTitle,
                 videoDescription,
-                imageGenPromptSubjectList,
+                imageGenPrompt,
                 sceneEntityManifestList.filter((entity) => {
                     return entity.appearance_scenes.includes(sceneData.sceneNumber);
                 }),
