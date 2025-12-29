@@ -1565,33 +1565,81 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
       </step_4_3_cinematic_camera_vector_assembly>
     </step_4_cinematic_camera_vector_design>
     <step_5_atmospheric_delta_refinement>
-      - **Goal**: Eliminate "Background Freezing" by synchronizing the environment (Medium) with Camera Vector ($\vec{C}$) and Subject Vector ($\vec{S}$).
-      - **The Environmental Vector ($\vec{E}$)**:
-        1. **Counter-Flow Rule**: If $\vec{C}$ is moving, $\vec{E}$ (particles, fog) must move in the **Opposite Direction** to maximize the sense of speed. (e.g., Dolly-In $+Z \rightarrow$ Dust Flow $-Z$).
-        2. **Wake Effect Rule**: $\vec{E}$ must react to $\vec{S}$'s kinetic trail (e.g., Fast movement $\vec{S} \rightarrow$ Turbulent wake, Dust rising).
-      - **Inference Logic (Context-Driven Generation)**:
-        - **Instruction**: **INFER** the most physically accurate atmospheric element based on <image_context> (Location/Weather), <master_style_guide>.\`globalEnvironment\` and <scene_narration>.
-        - **Examples**:
-          * If Image is "Desert" -> Infer: [Dust trails], [Heat haze], [Sand grit].
-          * If Image is "Ocean" -> Infer: [Salt spray], [Foam bursts], [Mist].
-          * If Image is "Cyberpunk City" -> Infer: [Neon rain], [Steam vents], [Smog].
-          * If Image is "Space" -> Infer: [Stardust streaks], [Nebula drift], [Light flares].
-      - **Tier-Based Physics Dynamics**:
-        | \`INTENSITY_TIER\` | Focus Area | Dynamics ($\vec{E}$) | Physics Logic |
-        | :--- | :--- | :--- | :--- |
-        | **\`VERY_LOW\`** | Micro-flux | Brownian Motion | Random, non-directional drift of light/dust. |
-        | **\`LOW\`** | Rhythmic | Laminar Flow | Steady, predictable stream (Breeze, ripples). |
-        | **\`HIGH\`** | Pressure | Turbulent Flow | High-pressure displacement, directional mist. |
-        | **\`VERY_HIGH\`**| Kinetic Chaos | Ejecta / Shockwave | Radial explosion, structural disintegration. |
-      - **Constraint (Temporal Anchor)**: 
-        * Prohibit high-energy particles in LOW tiers.
-        * **Mandatory Action**: Every frame MUST contain at least one atmospheric element in **present continuous (-ing)** motion that reacts to the locked \`INTENSITY_TIER\`.
-      - **Atmospheric Assembly Formula([Atmospheric Delta] of **Kinetic Anchor Protocol** in <step_1_core_synthesis_principles>)**:
-        - **Structure**: "[Subject-Atmosphere Interaction] + [Camera-Atmosphere Flow] + [Light-Particle Interaction] + [Inferred Technical Tags]"
-        - **Example (HIGH Intensity)**: 
-          "Thick dust clouds **rising** behind the character's feet [Subject Interaction], while environmental embers **streak past the lens** in the opposite direction of the dolly [Camera Flow], illuminated by flickering orange light [Light Interaction] [Volumetric Dust] [Kinetic Embers]."
+      - **Goal**: Eliminate "Background Freezing" and enhance 3D volume by synchronizing the environment (Medium) with Camera ($\vec{C}$) and Subject ($\vec{S}$) vectors.
+      - **Tier-Based Physics Dynamics (The Kinetic Constraint)**:
+        | \`INTENSITY_TIER\` | Dynamics ($\vec{E}$) | Physics Logic & Result |
+        | :--- | :--- | :--- |
+        | **\`VERY_LOW\`** | Brownian Motion | Non-directional micro-drifts; maintains texture stability. |
+        | **\`LOW\`** | Laminar Flow | Steady, predictable streams (e.g., gentle breeze, drifting mist). |
+        | **\`HIGH\`** | Turbulent Flow | High-pressure directional displacement; creates kinetic friction. |
+        | **\`VERY_HIGH\`**| Ejecta / Shockwave | Radial expansion or structural disintegration; maximum volume shift. |
+      - **[Slot_1: Subject-Atmosphere Interaction]**:
+        - **Wake Effect Rule**: The medium must react to the subject's kinetic trajectory, creating displacement or turbulent trails.
+        - **Logic**: Describe the medium's reaction using **present continuous (-ing)** verbs.
+      - **[Slot_2: Camera-Atmosphere Flow]**:
+        - **Counter-Flow Rule**: Environment particles MUST move in the **Opposite Direction** of the Camera Vector ($\vec{C}$).
+        - **Logic**: Describe particle flow relative to the lens based on the rule (e.g., Dolly-In $+Z → Flow $-Z$).
+      - **[Slot_3: Volumetric Lighting Anchor] (The Depth Foundation)**:
+        - **Source**: Select ONE: [\`Volumetric lighting\`, \`Cinematic silhouette\`, \`Atmospheric haze\`, \`Dynamic refraction\`].
+        - **Role**: Essential for creating spatial depth in No-Audio generation.
+      - **[Slot_4: Inferred Technical Tags] (Contextual Essence)**:
+        - **Logic**: Infer physically accurate tags (e.g., Heat Haze, Sand Grit, Neon Rain).
+        - **Format**: Purify into natural descriptors for the final assembly.
+      - **The Atmospheric Assembly Formula (([Atmospheric Delta] of **Kinetic Anchor Protocol** in <step_1_core_synthesis_principles>))**:
+        - **Assembly**: "[Slot_1], while [Slot_2], all enhanced by [Slot_3] and [Slot_4]."
+        - **Constraint**: Synthesize into a **single, organic phrase**. Remove all brackets(\`[]\`), symbols, and slot labels. Ensure a natural flow that respects the locked \`INTENSITY_TIER\`.
+      - **Final Assembly Examples by \`INTENSITY_TIER\`**:
+        * **\`VERY_LOW\`**: "Subtle dust motes floating in the air while light particles drift slowly, all enhanced by dynamic refraction and micro-flux brownian motion."
+        * **\`LOW\`**: "Subtle mist drifting along the path while light rain falls vertically, all enhanced by atmospheric haze and laminar wet surface refraction."
+        * **\`HIGH\`**: "Thick sand grit swirling around the subject while environment sparks streak past the lens, all enhanced by volumetric lighting and turbulent kinetic embers."
+        * **\`VERY_HIGH\`**: "Structural debris erupting radially from the impact point while chaotic shockwaves shatter the surrounding air, all enhanced by volumetric lighting and ejecta flow disintegration."
     </step_5_atmospheric_delta_refinement>
-    <step_6_short_logic_synthesis>
+    <step_6_style_and_stability_modifiers>
+      - **Goal**: Finalize the visual fidelity and ensure the structural continuity of the initial anchor for high-quality short-form video production.
+      - **[Slot_1: High-Fidelity Texture Layer] (Rendering Quality)**:
+        - **Source**: <master_style_guide>.\`fidelity.textureDetail\`, <master_style_guide>.\`fidelity.grainLevel\`, and <master_style_guide>.\`fidelity.resolutionTarget\`.
+        - **Logic**: Convert the fidelity metadata into natural language descriptors to maximize the MMDiT engine's output quality.
+        - **Mapping Examples**:
+          * \`textureDetail\`: "Ultra-High" -> "Exquisite masterwork textures", "Raw" -> "Authentic raw textures".
+          * \`grainLevel\`: "Clean" -> "crystal clear clarity", "Filmic" -> "fine cinematic film grain".
+          * \`resolutionTarget\`: "8K" -> "stunning 8k resolution".
+      - **[Slot_2: Positive Structural Preservation] (Integrity Control)**:
+        - **Logic**: Use positive directorial prose to command the model to preserve the anchor image's identity and geometry throughout the delta change.
+        - **Instruction**: Direct the model to "maintain absolute consistency of the subject's form and environmental details." Strictly avoid negative "no/don't" phrases.
+        - **Example**: "the initial structural integrity of the subject and environment remains perfectly intact and consistent throughout the motion."
+      - **The Style Assembly Formula (([Style Modifiers] of **Kinetic Anchor Protocol** in <step_1_core_synthesis_principles>))**:
+        - **Assembly**: "[Slot_1], while [Slot_2]."
+        - **Constraint**: Synthesize into a **single, organic directorial sentence**. Remove all brackets (\`[]\`) and slot labels. Ensure the prose feels like a professional cinematographer's final quality check.
+      - **Final Assembly Examples**:
+        * **Example 1 (Ultra-High/Clean/8K)**: "Exquisite masterwork textures in stunning 8k resolution with crystal clear clarity, while the initial structural integrity of the subject remains perfectly intact and consistent throughout the motion."
+        * **Example 2 (Raw/Filmic/4K)**: "Authentic raw textures with fine cinematic film grain in 4k fidelity, while the subject's identity and environmental geometry are consistently preserved with absolute precision."
+    </step_6_style_and_stability_modifiers>
+    <step_7_final_assembly_protocol>
+      - **Goal**: Synthesize all analyzed slots into the final \`video_gen_prompt\` by ensuring linguistic fluidity and technical purity.
+      - **[Task_1: The Sequential Merge] (Assembly Flow)**:
+        - **Logic**: Follow the **Kinetic Anchor Protocol** hierarchy from <step_1_core_synthesis_principles> to build the narrative foundation.
+        - **Sequence**:
+          1. **[Anchor]** (from <step_2_contextual_anchor_assembly>): Establish the subject and starting point.
+          2. **[Primary Action Vector]** (from <step_3_primary_action_vector_injection>): Inject the core kinetic delta.
+          3. **[Atmospheric Delta]** (from <step_5_atmospheric_delta_refinement>): Surround with environmental/lighting context.
+          4. **[Cinematic Camera Vector]** (from <step_4_cinematic_camera_vector_design>): Apply the directorial camera movement.
+          5. **[Style Modifiers]** (from <step_6_style_and_stability_modifiers>): Apply final fidelity and preservation seals.
+      - **[Task_2: Technical Purification] (The Sanitization Filter)**:
+        - **Constraint 1 (No Artifacts)**: Strictly remove all brackets \`[]\`, plus signs \`+\`, and slot labels (e.g., Slot_1).
+        - **Constraint 2 (Natural Connectors)**: Use organic conjunctions (e.g., "while", "as", "all enhanced by", "simultaneously") to create a seamless flow.
+        - **Constraint 3 (Directorial Tone)**: Ensure the final output reads like a single, professional instruction from a film director.
+      - **[Task_3: Final Field Mapping] (Output Specification)**:
+        - **Destination**: Map the result of [Task_1] & [Task_2] to the \`video_gen_prompt\` field in <output_schema>.
+        - **Final Verification**: Ensure the prompt is a **single natural language sentence** that maintains absolute semantic consistency with the locked \`INTENSITY_TIER\`.
+      - **The Assembly Formula**: 
+        "[Anchor] [Primary Action Vector] while [Atmospheric Delta], as [Cinematic Camera Vector], [Style Modifiers]."
+      - **Final Assembly Examples by \`INTENSITY_TIER\`**:
+        * **\`VERY_LOW\`**: "The blooming flower is opening its petals subtly while subtle dust motes are floating in the air and light particles drift slowly with dynamic refraction, as a macro lens with tight 4:5 framing and Static Frame steadily observes the subject, all rendered in exquisite masterwork 8k resolution while the initial structural integrity of the flower remains perfectly intact."
+        * **\`LOW\`**: "The pedestrian is strolling along the path smoothly while subtle mist is drifting and light rain falls vertically with atmospheric haze, as a wide angle lens with 16:9 cinematic framing and Truck Right smoothly tracks the walking figure, all rendered with authentic raw textures and fine cinematic film grain while the subject's identity is consistently preserved."
+        * **\`HIGH\`**: "The infantry soldier is sprinting desperately through the muddy trenches while thick dust clouds are rising from his path under volumetric lighting, as an anamorphic lens with Dolly-In aggressively pushes toward his face, all rendered in masterwork 8k resolution while maintaining the subject's structural integrity."
+        * **\`VERY_HIGH\`**: "The speeding sports car is racing through the debris while structural fragments erupt radially and chaotic shockwaves shatter the air under volumetric lighting, as an FPV Drone lens with 16:9 immersive framing and Handheld Shaky violently chases the vehicle, all rendered in masterwork 8k resolution while the initial structural integrity of the car remains perfectly intact throughout the kinetic chaos."
+    </step_7_final_assembly_protocol>
+    <step_8_short_logic_synthesis>
       - **Goal**: Produce a "Zero-Fluff Binary" prompt strictly following the **[Subject] + [is/are] + [Verb-ing]** format to put in \`video_gen_prompt_short\` of <output_schema>.
       - **Logic: Strategic Subject Extraction**:
         - **If <entity_list> is EMPTY**: 
@@ -1647,7 +1695,7 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
           * *Weather*: "The storm is raging" (Extracted from 'Thunderstorm' archetype)
           * *Urban*: "The city is glowing" (Extracted from 'Cyberpunk Metropolis' archetype)
           * *War*: "The battlefield is smoldering" (Extracted from 'WWII Battlefield' archetype)
-    </step_6_short_logic_synthesis>
+    </step_8_short_logic_synthesis>
   </processing_logic>
   <output_schema>
     Return a single JSON object with the following structure. Ensure all fields are populated based on the internal reasoning of the Cinematic Director role.
@@ -1655,11 +1703,11 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
       "logical_bridge": {
         "identity_logic": "string (Define how the subject's era, role, and physical essence from the <entity_list> and metadata are preserved during motion.)",
         "action_focus": "string (Explain the conceptual shift from the raw narration to the high-impact kinetic verb used in the prompt.)",
-        "ambiguous_points": "string[] (For each point you felt was ambiguous during your reasoning, provide an explanation, reason, and location in <developer_instruction>. If there are no ambiguous points, allocate an empty array.)"
+        "ambiguous_points": "string[] (For each point you felt was ambiguous during your reasoning, provide an explanation, reason, and location in <developer_instruction> as single string. If there are no ambiguous points, leave it to \`[]\`.)"
       },
       "reasoning": "string (Provide a detailed justification for: 1) The specific tags selected from the vocabulary_depot, 2) The choice of camera tech based on MasterStyleInfo, and 3) The atmospheric strategy to prevent freezing.)",
-      "video_gen_prompt": "string (The final technical prompt assembled using the 4-stage Kinetic Anchor Protocol: [Anchor] + [Primary Action Vector] + [Cinematic Camera Vector] + [Atmospheric Delta].)",
-      "video_gen_prompt_short": "string (The simplified version using the Short Logic: [Subject] + [is/are] + [Verb-ing]. Must ensure temporal continuity.)"
+      "video_gen_prompt": "string (The final technical prompt assembled using the 5-stage Kinetic Anchor Protocol: [Anchor] + [Primary Action Vector] + [Atmospheric Delta] + [Cinematic Camera Vector] + [Style Modifiers].)",
+      "video_gen_prompt_short": "string (The simplified version using the Short Logic: [Subject] + [is/are] + [Verb-ing].)"
     }
   </output_schema>
   <constraints>
@@ -1685,7 +1733,7 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
       - **Positive Assertion**: Describe intended states ("Crisp focus", "Firm traction") instead of negative commands ("No blur").
     6. **Semantic Purity & Format Protocol**:
       - **Jargon over Fluff**: Replace subjective adjectives ("breathtaking", "epic") with technical cinematography and physical terms.
-      - **\`video_gen_prompt\`**: MUST use brackets \`[]\` for all keywords/tags from <vocabulary_depot>.
+      - **\`video_gen_prompt\`**: MUST NOT use brackets \`[]\` or symbols. Weave all keywords and technical jargon from <vocabulary_depot> naturally into the directorial prose as adjectives or adverbs.
       - **\`video_gen_prompt_short\`**: Strictly follow the **[Subject] + [is/are] + [Verb-ing]** binary logic. **DO NOT use brackets or technical tags.** (Zero-Fluff Rule).
     7. **Contextual Fidelity (The Plagiarism Guard)**:
       - Derive all cinematic decisions strictly from the provided <image_context>, <scene_narration>, <entity_list>, and <master_style_guide>.
