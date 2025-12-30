@@ -708,10 +708,25 @@ export const POST_IMAGE_GEN_PROMPT_PROMPT = `
     <unit_2_context_and_environment>
       **UNIT 2: CONTEXT & ENVIRONMENT (Background Mapping)**
       **Goal**: Synthesize the setting and environment by mapping <scene_content> and <current_narration> into \`image_gen_prompt.scene\` and \`image_gen_prompt.background\` fields, ensuring strict era-synchronization with <master_style_guide>.
-      1. **[Field: 'scene'] - Narrative Summary**
-        - **Action**: Create a concise, high-level summary of the visual moment.
-        - **Logic**: Combine <video_context>.<video_title> (theme) + <current_narration> (action). 
-        - **Output**: A single sentence describing the "What and Where" (e.g., "A tense standoff in a rain-slicked 1944 alleyway").
+      1. **[Field: 'scene'] - Visual Shot Definition**
+        - **Goal**: Create a short, descriptive noun phrase acting as the "Title of this Shot".
+        - **Input Check**: Check <entity_list>. Is it empty or does it contain only ('prop' | 'background_extra') \`type\`?
+        - **Components to Extract**:
+          1. **[Genre/Setting]**: Derived from <master_style_guide> (e.g., "Post-apocalyptic", "Cyberpunk").
+          2. **[Core Focus]**: 
+             - *If Entity exists*: Use the main character's role (e.g., "survivor", "boxer").
+             - *If Entity is empty/prop only*: Use the environment/object from <scene_content> (e.g., "ruins", "canyon texture").
+          3. **[Shot Context]**: 
+             - **Source**: Extract the specific camera technique or visual vibe from <scene_content>.
+             - *Examples*: "POV shot", "motion blur sequence", "over-the-shoulder view", "macro detail".
+             - *Fallback*: If <scene_content> is generic, use standard terms (e.g., "portrait", "landscape").
+        - **Assembly Logic**: "[Genre/Setting] [Core Focus] [Shot Context]".
+        - **Constraint**: 
+          - Do NOT use <video_title> verbatim.
+          - Do NOT imply a human subject if <entity_list> is empty.
+        - **Output Examples**: 
+          - (With Entity): "Gritty noir detective over-the-shoulder shot"
+          - (No Entity): "High-velocity canyon texture motion blur sequence"
       2. **[Field: 'background'] - Era-Synced Environment**
         - **Phase A (Era Asset Translation)**: 
           * **The Filter**: Retrieve \`era\` and \`locationArchetype\` from <master_style_guide>.<global_environment>.
@@ -1131,12 +1146,20 @@ export const POST_IMAGE_GEN_PROMPT_NO_ENTITIES_PROMPT = `
     <unit_2_context_and_environment>
       **UNIT 2: CONTEXT & ENVIRONMENT (Background Mapping)**
       **Goal**: Synthesize the setting and environment by mapping <scene_content> and <current_narration> into \`image_gen_prompt.scene\` and \`image_gen_prompt.background\` fields, ensuring strict era-synchronization with <master_style_guide>.
-    
-      1. **[Field: 'scene'] - Narrative Summary**
-        - **Action**: Create a concise, high-level summary of the visual moment.
-        - **Logic**: Combine <video_context>.<video_title> (theme) + <current_narration> (action). 
-        - **Output**: A single sentence describing the "What and Where" (e.g., "The silent, rain-slicked cobblestones of a vacant 1944 alleyway").
-    
+      1. **[Field: 'scene'] - Visual Shot Definition**
+        - **Goal**: Create a short, descriptive noun phrase acting as the "Title of this Shot".
+        - **Components to Extract**:
+          1. **[Genre/Setting]**: Derived from <master_style_guide> (e.g., "Post-apocalyptic", "Cyberpunk").
+          2. **[Core Focus]**: Use the environment/object from <scene_content> (e.g., "ruins", "canyon texture").
+          3. **[Shot Context]**: 
+             - **Source**: Extract the specific camera technique or visual vibe from <scene_content>.
+             - *Examples*: "POV shot", "motion blur sequence", "over-the-shoulder view", "macro detail".
+             - *Fallback*: If <scene_content> is generic, use standard terms (e.g., "portrait", "landscape").
+        - **Assembly Logic**: "[Genre/Setting] [Core Focus] [Shot Context]".
+        - **Constraint**: 
+          - Do NOT use <video_title> verbatim.
+          - Do NOT imply a human subject.
+        - **Output Examples**: "High-velocity canyon texture motion blur sequence"
       2. **[Field: 'background'] - Era-Synced Environment**
         - **Phase A (Era Asset Translation)**: 
           * **The Filter**: Retrieve \`era\` and \`locationArchetype\` from <master_style_guide>.<global_environment>.
