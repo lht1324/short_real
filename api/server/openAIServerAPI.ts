@@ -189,6 +189,7 @@ Instruction: Process the input data and return the JSON output according to the 
         }[],
         videoTitle: string,
         videoDescription: string,
+        videoDuration: number,
         aspectRatio: VideoAspectRatio = VIDEO_ASPECT_RATIOS.PORTRAIT_9_16
     ): Promise<{
         success: boolean;
@@ -220,6 +221,7 @@ Instruction: Process the input data and return the JSON output according to the 
   <video_metadata>
     <video_title>${videoTitle}</video_title>
     <video_description>${videoDescription}</video_description>
+    <video_duration>${videoDuration} secs</video_duration>
   </video_metadata>
   <target_aspect_ratio>${aspectRatio}</target_aspect_ratio>
   <style_guidelines>
@@ -449,7 +451,20 @@ Instruction: Generate the scene instruction JSON.
 
                 return {
                     success: true,
-                    imageGenPrompt: imageGenPrompt,
+                    // imageGenPrompt: imageGenPrompt,
+                    imageGenPrompt: {
+                        ...imageGenPrompt,
+                        subjects: imageGenPrompt.subjects.map((subject) => {
+                            const matchedEntity = sceneEntityManifestList.find((entity) => entity.id === subject.id);
+
+                            if (!matchedEntity) throw Error("Generated imageGenPrompt data is invalid.")
+
+                            return {
+                                ...subject,
+                                role: matchedEntity.role as 'main_hero' | 'sub_character' | 'prop',
+                            }
+                        })
+                    },
                     imageGenPromptSentence: imageGenPromptSentence,
                     entityManifestList: updatedEntityManifestList ? updatedEntityManifestList.map(instruction => {
                         const originalEntity = sceneEntityManifestList.find((entityManifest) => {

@@ -64,10 +64,17 @@ export async function POST(request: NextRequest) {
         const selectedStyle = STYLE_DATA_LIST.find((styleData) => {
             return styleData.uiMetadata.id == selectedStyleId;
         });
+        const sceneDataList = videoGenerationTask.scene_breakdown_list;
+        const lastSceneSubtitleSegmentList = sceneDataList.length !== 0
+            ? sceneDataList[sceneDataList.length - 1].sceneSubtitleSegments ?? []
+            : [];
         const videoTitle = videoGenerationTask.video_title;
         const videoDescription = videoGenerationTask.video_description;
+        const videoDuration = lastSceneSubtitleSegmentList.length !== 0
+            ? lastSceneSubtitleSegmentList[lastSceneSubtitleSegmentList.length - 1].endSec
+            : undefined;
 
-        if (!selectedStyle || !videoTitle || !videoDescription) {
+        if (!selectedStyle || !videoTitle || !videoDescription || !videoDuration) {
             await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
 
             return getNextBaseResponse({
@@ -80,7 +87,7 @@ export async function POST(request: NextRequest) {
         // 2. openAIServerAPI로 비디오 Scene 분리 데이터, 마스터 스타일 프롬프트 생성 요청
         const postMasterStyleInfoResult = await openAIServerAPI.postMasterStyleInfo(
             selectedStyle.generationParams,
-            patchVideoGenerationTaskStatusResult.scene_breakdown_list.map((sceneData) => {
+            sceneDataList.map((sceneData) => {
                 return {
                     sceneNumber: sceneData.sceneNumber,
                     sceneNarration: sceneData.narration,
@@ -88,6 +95,7 @@ export async function POST(request: NextRequest) {
             }),
             videoTitle,
             videoDescription,
+            videoDuration,
         );
 
         if (!postMasterStyleInfoResult.success || !postMasterStyleInfoResult.masterStyleInfo) {
@@ -118,7 +126,6 @@ export async function POST(request: NextRequest) {
         //     message: "Generating MasterStyle Test finished."
         // })
 
-        const sceneDataList = videoGenerationTask.scene_breakdown_list;
         const sceneCount = sceneDataList.length;
         const totalDuration = sceneDataList.reduce((acc, sceneData) => {
             return acc + sceneData.sceneDuration;

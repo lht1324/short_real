@@ -139,6 +139,7 @@ export const POST_MASTER_STYLE_INFO_PROMPT = `
     1. **<video_metadata>**: The narrative and emotional core of the project.
        - **<video_title>**: Use this as the **Primary Narrative Anchor**. It defines the central theme and symbolic motifs.
        - **<video_description>**: Provides **Atmospheric Context**. Use this to infer lighting vibes, emotional weight, and character depth.
+       - **<video_duration>**: Total duration of video.
     2. **<target_aspect_ratio>**: The physical canvas constraints formatted to [width:height] (e.g., "16:9", "9:16", "1:1"). 
        - *Usage*: Calibrate 'optics' and 'composition' inside MasterStyle.
          *Examples by dimension type*
@@ -170,19 +171,34 @@ export const POST_MASTER_STYLE_INFO_PROMPT = `
        * **\`prop\`**: Key objects or environmental elements that are crucial to the scene's action but are not sentient actors.
     3. **\`appearance_scenes\`**: List of scenes where the entity is present or implied.
        - **Format**: Strictly output as an **Integer Array** (e.g., \`[1, 2, 5]\`).
-       - **Rule**:
-         * **1-Based Indexing**: Scene numbers must strictly correspond to the provided script sequence, starting at Scene 1.
-         * **Contextual & Symbolic Inference - CRITICAL**: 
-           * **Action**: Analyze the narration. If the script implies an action (e.g., "The gun fired") OR an **abstract emotional state** (e.g., "The cost of victory", "A silent prayer"), you **MUST** assign an entity to embody it.
-           * **Guideline**: 
-             - For action: Assign the doer (e.g., Tank, Soldier).
-             - For emotion/aftermath: Assign the **\`main_hero\`** (to show reaction) or a key **Prop** (to show symbolism, e.g., a helmet for 'sacrifice').
-           * *Goal*: Prevent empty scenes during emotional climaxes.
-         * **Co-occurrence**: 
-           * Scene numbers are **NOT exclusive**. Multiple entities can (and should) share the same scene number if they appear together. 
-         * **Restricted Omission**:
-           * Use this ONLY for strictly environmental shots (e.g., "The sun rises over the desert", "A storm gathers"). 
-           * If the scene involves *human emotion*, *history*, or *consequences*, **DO NOT** leave it empty; apply Rule 2 instead.
+       * **1-Based Indexing**: Scene numbers must strictly correspond to the provided script sequence, starting at Scene 1.
+       * **Dynamic Pacing Protocol (DURATION-DEPENDENT Logic)**:
+         Apply the following logic based on the provided <video_duration> and <full_script_context>.\`length\`:
+         **Variables**:
+           * **[Video Duration]**: <video_duration>
+           * **[Scene Count]**: <full_script_context>.\`length\`
+         **Rules**:
+           * **Rounding Rule**: Percent mandates MUST be converted to integer scene counts using ceil([Scene Count] * ratio); e.g., 80% of 5 scenes => ceil(4.0) => 4 scenes.
+         **[CASE A: Short-Form ([Video Duration] < 60 secs)]** -> *High Saturation Mode*
+         - **Objective**: Maximize viewer retention via constant character presence.
+         - **Mandate**: The \`role\`: \`main_hero\` Entity MUST appear in **at least 80%** of all scenes.
+         - **Entity Allocation**:
+           1. **First Scene Anchor**: IF a \`main_hero\` exists, they MUST be assigned to **Scene 1** (Establishing/Intro), even if the script is purely atmospheric (use implied presence/silhouette).
+           2. **No "Dead Air"**: Do NOT allow consecutive empty scenes. Every scene must feature either the \`main_hero\` or a narrative-critical \`prop\`.
+         **[CASE B: Long-Form ([Video Duration] >= 60 secs)]** -> *Rhythmic Breathing Mode*
+         - **Objective**: Balance narrative tension with atmospheric release.
+         - **Mandate**: The \`role\`: \`main_hero\` Entity should appear in roughly **50-60%** of scenes to allow for world-building.
+         - **Entity Allocation**:
+           1. **First Scene Anchor**: IF a \`main_hero\` exists, they MUST be assigned to **Scene 1**.
+           2. **Breathing Room**: You MAY omit entities for purely environmental scenes (max 1 consecutive scene) to create pacing pauses, BUT only if the previous scene had high action intensity.
+       * **Contextual & Symbolic Inference - CRITICAL**: 
+         * **Action**: Analyze the narration. If the script implies an action (e.g., "The gun fired") OR an **abstract emotional state** (e.g., "The cost of victory"), you **MUST** assign an entity to embody it.
+         * **Guideline**: 
+           - For action: Assign the doer (e.g., Tank, Soldier).
+           - For emotion/aftermath: Assign the **\`main_hero\`** (to show reaction) or a key **\`prop\`** (to show symbolism).
+         * *Goal*: Prevent empty scenes during emotional climaxes.
+       * **Co-occurrence**: 
+         * Scene numbers are **NOT exclusive**. Multiple entities can (and should) share the same scene number if they appear together. 
     4. **\`type\`**: The fundamental biological or structural category of the entity.
        * **\`human\`**: Natural humans only.
        * **\`machine\`**: Robots, vehicles, mechs, or any technological appliances.
@@ -291,16 +307,16 @@ export const POST_MASTER_STYLE_INFO_PROMPT = `
           - **Constraint**: Only include **PERMANENT** traits. Do not include temporary states like "bleeding," "sweating," or "bruised" unless they are a constant part of the character's design.
           - **Format**: Single string.
     **Scene-by-Scene Validation (Reasoning)**:
-       - You must generate a \`entityReasoningList\` that iterates through **EVERY SCENE** in the script.
-       - **Structure**: For each \`scene_number\`:
-         1. **If entities appear**:
-            - Populate \`entity_reasoning_list\` with every entity present in that scene.
-            - Provide \`reasoning\` citing specific words or context from the narration (e.g., "Script says 'The tank fired', so ID:tank is required").
-            - Set \`scene_empty_reasoning\` to \`""\`.
-         2. **If NO entities appear (Empty Scene)**:
-            - Leave \`entity_reasoning_list\` as \`[]\`.
-            - **MANDATORY**: Fill \`scene_empty_reasoning\` explaining *why* the scene is devoid of characters (e.g., "Establishing shot of the ruined city", "Close-up of a smoking gun (prop focus only)").
-       - **Goal**: This ensures that empty scenes are intentional artistic choices, not errors.
+      - You must generate a \`entityReasoningList\` that iterates through **EVERY SCENE** in the script.
+      - **Structure**: For each \`scene_number\`:
+        1. **If entities appear**:
+           - Populate \`entity_reasoning_list\` with every entity present in that scene.
+           - Provide \`reasoning\` citing specific words or context from the narration (e.g., "Script says 'The tank fired', so ID:tank is required").
+           - Set \`scene_empty_reasoning\` to \`""\`.
+        2. **If NO entities appear (Empty Scene)**:
+           - Leave \`entity_reasoning_list\` as \`[]\`.
+           - **MANDATORY**: Fill \`scene_empty_reasoning\` explaining *why* the scene is devoid of characters (e.g., "Wide establishing shot of the ruined city skyline", "Atmospheric shot of storm clouds gathering").
+      - **Goal**: This ensures that empty scenes are intentional artistic choices, not errors.
   </task_1_entity_manifest>
   <task_2_master_style_engineering>
     **Goal**: Synthesize <video_metadata>, <target_aspect_ratio>, <style_guidelines>, and <full_script_context> into a rigid technical configuration (\`masterStyleInfo\` of <output_schema>). You must stop describing subjective feelings and start defining the physical laws of optics and light. Each field must be derived through an independent inference protocol.
@@ -588,7 +604,7 @@ export const POST_IMAGE_GEN_PROMPT_PROMPT = `
       - **Color Fidelity**: Define the visual mood through precise RGB Hex codes.
   </target_model_profile>
   <visual_texture_layer>
-    **Apply this logic to populate 'physics_profile' and enrich [Subject] description with 'Visual Detail'**:
+    **Apply this logic to populate 'physics_profile' and enrich [Subject] \`description\` with 'Visual Detail'**:
     **Core Principle: Context-Aware Dynamic Injection**
     Instead of static mapping, you must dynamically synthesize visual descriptions by combining **Material Rules** and **Pose Rules** with **Scene Context**.
     **Step 1: Material Behavior Logic & Tag Selection**
@@ -681,29 +697,56 @@ export const POST_IMAGE_GEN_PROMPT_PROMPT = `
   <prompt_authoring_protocol>
     <unit_1_subject_and_physics>
       **UNIT 1: SUBJECT & PHYSICS ENGINEERING**
-      **Goal**: Transform <entity_list> and <current_narration> into \`updated_entity_manifest\` and \`image_gen_prompt.subjects\` by synchronizing with <master_style_guide>.<global_environment>'s \`era\` and <master_style_guide>.<fidelity> standards.
+      **Goal**: Iterate through **EVERY** valid entry in <entity_list> and transform them into \`image_gen_prompt.subjects\` by synchronizing with <master_style_guide>.<global_environment>'s \`era\` and <master_style_guide>.<fidelity> standards. Do NOT omit any valid entity.
       1. **[Phase: Physics Derivation (Internal Reasoning)]**
         - **Step A (Physics Profile)**: 
           * Scan \`appearance\` and <current_narration>.
-          * Apply \`<visual_texture_layer>\` Step 1 & 2.
+          * Apply **Step 1: Material Behavior Logic & Tag Selection** of <visual_texture_layer> and **Step 2: Action/Pose Logic & Tag Selection** of <visual_texture_layer>.
           * **Era Filtering**: Ensure the assigned \`material\` tags (e.g., cloth, rigid) are compatible with <master_style_guide>.<global_environment>'s \`era\`.
         - **Step B (State/Pose)**:
           * Define \`state.pose\` as a "Frozen Snapshot" of maximum tension from <current_narration>.
       2. **[Phase: \`updated_entity_manifest\` Mapping]**
-        - **Carry over the exact \`id\` from <entity_list> to maintain tracking integrity.**
+        - **Carry over the exact \`id\` from <entity_list>.[n] to maintain tracking integrity.**
         - Populate each entity's \`physics_profile\` and \`appearance\`.
         - **Note**: This becomes the ground truth for how the subject moves and interacts with light.
       3. **[Phase: \`image_gen_prompt.subjects\` Mapping]**
+        - **Selection Protocol**:
+          * **INCLUDE**: Any entity with role \`main_hero\`, \`sub_character\`, or \`prop\`.
+          * **EXCLUDE**: Any entity with role \`background_extra\` (Handle these in <unit_2_context_and_environment>).
+        - **Iteration Rule**: You must generate a subject object for **ALL** included entities.
         - **Field: 'id'**: Carry over the exact \`id\` from <entity_list> (e.g., 'wingsuit_01'). **Strict Requirement for Subject-to-Physics tracking.**
-        - **Field: 'type'**: Execute ${SUBJECT_EXTRACTION_GUIDE} (Common noun conversion).
-        - **Field: 'description'**:
-          * Synthesize: [Demographics] + [Appearance] + [Material Vocabulary].
-          * **Era Synchronization**: Use <master_style_guide>.<global_environment>'s \`era\` to replace any modern descriptors with period-accurate ones.
-          * **Fidelity Sync**: Adjust description density based on <master_style_guide>.<fidelity>'s \`textureDetail\`. (Raw: describe micro-details; Stylized: describe clean forms).
+        - **Field: 'type'**: Execute **Subject Extraction Guide** below.
+          **Subject Extraction Guide (Common noun conversion)**:
+          ${SUBJECT_EXTRACTION_GUIDE}
+        - **Field: 'description'**: The visual anchor sentence summarizing the entity.
+          - **Source**: Synthesize from input <entity_list>.[n].\`demographics\`, <entity_list>.[n].\`appearance.body_features\`, and core items from \`appearance\`.
+          - **Role**: Serve as the structural "handle" for the image. It MUST mention the core clothing type and key accessories to ensure linkage with the detail fields below.
+          - **Constraint**: 
+            * **Simplify & Mention**: Do not exhaustively describe textures and details here. Instead, use broad classifiers.
+              **Slimplfied Examples**:
+                * use "wearing a wristwatch" instead of "wearing a high-end Swiss-made mechanical wristwatch..."
+                * use "wearing a suit" instead of "wearing a luxurious three-piece British cashmere suit..."
+                * use "wearing a wingsuit" instead of "wearing a ripstop nylon wingsuit..."
+            * **Era Synchronization**: Ensure the nouns used (e.g., "tunic" vs "t-shirt") match the \`<master_style_guide>.<global_environment>.era\`.
+          - **Example**: "A lean wingsuit athlete wearing an aerodynamic suit, helmet, and goggles."
+        - **Field: 'clothes'**: The detailed material and textual definition of the attire.
+          - **Source**: Strictly derived from <entity_list>.[n].\`appearance.clothing_or_material\`.
+          - **Transformation Rule**:
+            * **Do NOT Copy-Paste**: You must Refine and Stylize the raw input string to match the \`<master_style_guide>.<fidelity>\` (e.g., Raw = add micro-texture details; Stylized = focus on shape/color).
+            * **Era Check**: Verify that materials and fasteners (e.g., zippers vs laces) are accurate to the Era based on <entity_list>.[n].\`demographics\` and <master_style_guide>.\`globalEnvironment.era\`.
+          - **Content**: Focus on fabric weight, texture, weave, and physical behavior (physics hints).
+          - **Example**: "Streamlined ripstop nylon fabric with high-tensile weave, reinforced carbon-fiber joints, and matte synthetic finish."
+        - **Field: accessories**: A list of specific items equipped by the entity.
+          - **Source**: Strictly derived from <entity_list>.[n].\`appearance.accessories\`.
+          - **Format**: Array of Strings.
+          - **Transformation Rule**: 
+            * **Refine & Stylize**: Enhance the raw item names with material or Era-specific adjectives based on <entity_list>.[n].\`demographics\` and <master_style_guide>.\`globalEnvironment.era\`.
+            * **Consistency**: Ensure every item listed here is implied or mentioned in the above \`description\`'s broad categories.
+          - **Example**: \`["Aerodynamic composite helmet with camera mount", "Tinted anti-glare polycarbonate goggles"]\`
         - **Field: 'pose'**: Map \`state.pose\` and add Action Vocabulary (e.g., "muscles tensed").
         - **Field: 'position'**: Determine the optimal depth placement based on <video_context>.<aspect_ratio> and <master_style_guide>.<composition>.'s \`framingStyle\`. You MUST select exactly one from: **['foreground', 'midground', 'background']**.
       **[Execution Rule]**:
-      - The subject's appearance must be the "Anchor" of the scene. All era-specific details must match the <master_style_guide> standard.
+      - Treat every included subject (\`main_hero\`, \`sub_character\` and \`prop\` \`role\` alike) with equal visual fidelity. Do not prioritize the hero at the expense of missing props.
     </unit_1_subject_and_physics>
     <unit_2_context_and_environment>
       **UNIT 2: CONTEXT & ENVIRONMENT (Background Mapping)**
@@ -897,10 +940,32 @@ export const POST_IMAGE_GEN_PROMPT_PROMPT = `
         - **Add Articles/Prepositions**: Ensure "A", "An", "The", "with", "in" are added to make the sentence grammatically complete.
       **Syntax Template (Strict Adherence)**:
         **[Sentence 1: The Subject & Framing]**
-          - **Logic (Condition A: If \`subjects\` is NOT EMPTY)**: "[Article] [\`camera.angle\`] [\`camera.distance\`] captures [\`subjects[n].description\`] [who is/which is] [\`subjects[n].pose\`] [\`subjects[n].position\`]."
-          - **Logic (Condition B: If \`subjects\` is EMPTY)**: "[Article] [\`camera.angle\`] [\`camera.distance\`] focuses entirely on the [\`scene\`] elements."
-          - **Variables**: \`camera.angle\`, \`camera.distance\`, \`subjects\` OR \`scene\`.
-          - *Instruction*: Check if \`subjects\` array is empty. If yes, use Condition B to avoid a dangling verb. If multiple subjects exist, connect them using spatial prepositions.
+          - **Instruction (Primary Subject Selection)**:
+            * Scan \`subjects\` array. Identify the **Primary Subject** based on \`role\` priority: \`main_hero\` > \`sub_character\` > \`prop\`.
+            * Use this Primary Subject for the main clause of the sentence.
+          - **Logic (Condition A: If \`subjects\` is NOT EMPTY)**:
+            "[Article] [\`camera.angle\`] [\`camera.distance\`] captures [\`subjects[n].description\`][Detail_Clause] [who is/which is] [\`subjects[n].pose\`] [\`subjects[n].position\`]."
+            * **Connector Logic**: 
+              - If \`subjects[n].role\` is \`main_hero\` or \`sub_character\`: use "**who is**".
+              - If \`subjects[n].role\` is \`prop\`: use "**which is**" or skip connector directly.
+          - **Logic (Condition B: If \`subjects\` is EMPTY)**:
+            "[Article] [\`camera.angle\`] [\`camera.distance\`] focuses entirely on the [\`scene\`] elements."
+          - **Variables**: \`camera.angle\`, \`camera.distance\`, \`subjects\` (including \`clothes\`, \`accessories\`, \`role\`), \`scene\`.
+          - **Instruction ([Detail_Clause] Construction)**:
+            * You MUST construct the \`[Detail_Clause]\` by intelligently combining \`subjects[n].clothes\` and \`subjects[n].accessories\`.
+            * **Array Flattening Rule**: For \`accessories\` (string array), join the items with commas or "and" (e.g., ["hat", "watch"] -> "a hat and a watch"). Do NOT output brackets or quotes.
+            * **Smart Assembly Rule**:
+              - **Both Present**: ", dressed in [\`clothes\`] and equipped with [flattened_accessories],"
+              - **Clothes Only**: ", clad in [\`clothes\`],"
+              - **Accessories Only**: ", featuring [flattened_accessories],"
+              - **Neither**: (Leave blank)
+            * **Flow Check**: Ensure NO dangling prepositions (e.g., "dressed in ,") and ensure the clause transitions smoothly into "who is [\`pose\`]".
+          - **Instruction (Multi-Subject Handling)**:
+            * If multiple subjects exist, append remaining subjects to the sentence using **Contextual Bridges**.
+            * **Bridge Logic**:
+              - For \`main_hero\` or \`sub_character\` \`role\`: ", while [position] [\`Subject.description\`][Detail_Clause] **is** [\`Subject.pose\`]"
+              - For \`prop\` \`role\`: ", with [\`Subject.description\`][Detail_Clause] **[participle form of pose]** [position]"
+              * *Example*: "...captures the Boxer..., while in the background the Referee is signaling..."
         **[Sentence 2: The Environment & Atmosphere]**
           - **Logic (Condition A: If \`subjects\` is NOT EMPTY)**: "The scene is set in [\`background\`], depicting [\`scene\`] with a [\`composition\`] composition, where the atmosphere is [\`mood\`], illuminated by [\`lighting\`] and a color palette of [\`color_palette\`]."
           - **Logic (Condition B: If \`subjects\` is EMPTY)**: "The setting features [\`background\`] arranged in a [\`composition\`] composition, where the atmosphere is [\`mood\`], illuminated by [\`lighting\`] and a color palette of [\`color_palette\`]."
@@ -1868,7 +1933,7 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
       "logical_bridge": {
         "identity_logic": "string (Define how the subject's era, role, and physical essence from the <entity_list> and metadata are preserved during motion.)",
         "action_focus": "string (Explain the conceptual shift from the raw narration to the high-impact kinetic verb used in the prompt.)",
-        "ambiguous_points": "string[] (For each point you felt was ambiguous during your reasoning, provide an explanation, reason, and location in <developer_instruction> as single string. If there are no ambiguous points, leave it to \`[]\`.)"
+        "ambiguous_points": "string[] (For each point you felt was ambiguous during your reasoning, provide an explanation, reason, location in <developer_instruction>, and what you did for that ambiguous point as single string. If there are no ambiguous points, leave it to \`[]\`.)"
       },
       "reasoning": "string (Provide a detailed justification for: 1) The specific tags selected from the vocabulary_depot, 2) The choice of camera tech based on MasterStyleInfo, and 3) The atmospheric strategy to prevent freezing.)",
       "video_gen_prompt": "string (The final technical prompt assembled using the 5-stage Kinetic Anchor Protocol: [Anchor] + [Primary Action Vector] + [Atmospheric Delta] + [Cinematic Camera Vector] + [Style Modifiers].)",
