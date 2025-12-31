@@ -658,6 +658,7 @@ Instruction: Generate the scene instruction JSON.
                         // 3. 물리적 고정점 (Visual Ground Truth)
                         // 베이스 이미지의 포즈를 주입하여 Toward/Away 벡터 오판단 방지
                         visual_anchor_initial_pose: visualAnchor?.pose ?? "",
+                        physics_profile: entity.physics_profile,
 
                         // 4. 보조 식별 정보
                         hair: entity.appearance.hair,

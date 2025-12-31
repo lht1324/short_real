@@ -1583,61 +1583,145 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
         * **Intensity Alignment**: Ensure verb weight matches the \`INTENSITY_TIER\` identified in **Inference Logic** in <step_0_kinetic_energy_profiling>.
     </step_1_core_synthesis_principles>
     <step_2_contextual_anchor_assembly>
-      - **Goal**: Synthesize a "Minimum Distinguishable Handle" for the **[Anchor]** segment of **Kinetic Anchor Protocol** in <step_1_core_synthesis_principles>, ensuring absolute visual consistency without redundant descriptions.
-      - **Logical Branching (Entity Presence Check)**:
-        - **IF <entity_list> is EMPTY**: Skip directly to **Case B (Environment-Driven Anchor)**.
-        - **IF <entity_list> is NOT EMPTY**: Proceed to **Case A (Entity-Driven Anchor)**.
-      - **Case A: Entity-Driven Anchor (Character/Object/Animal)**:
-        - **Subject Identification**: Apply the **Selection Hierarchy** from below **Subject Extraction Guide** to identify **[Anchor]** of **Final Structure** in <step_1_core_synthesis_principles>.
-        - **Handle Construction**: 
-          - Parse <entity_list>.[n].\`demographics\` using below **Subject Extraction Guide**.
-          - **Subject Extraction Guide**:
-            ${SUBJECT_EXTRACTION_GUIDE}
-          - Convert any proper nouns into their **Common Noun Archetypes** to prevent latent hallucination (e.g., "The jumper").
-        - **Final Result (**[Anchor]** of **Final Structure** in <step_1_core_synthesis_principles>)**: [Minimum Distinguishable Handle].
-          - *Examples*: "The jumper", "The racer", "A man", "The crowds", "The people", "The pilot", "A girl"
-      - **Case B: Environment-Driven Anchor (Absence of Entities)**:
-        - **Logic**: Use <master_style_guide>.\`globalEnvironment.locationArchetype\` as the primary anchor.
-        - **State Injection**: Apply a tier-matched environment adjective:
-          * \`VERY_LOW\`: serene / \`LOW\`: flowing / \`HIGH\`: surging / \`VERY_HIGH\`: erupting.
-        - **Spatial Locking**: Append <master_style_guide>.\`composition.framingStyle\` to lock the starting perspective.
-        - **Final Assembly (**[Anchor]** of **Final Structure** in <step_1_core_synthesis_principles>)**: "The " + [State Adjective] + " " + <master_style_guide>.\`globalEnvironment.locationArchetype\` + " environment, " + <master_style_guide>.\`composition.framingStyle\`.
-          - *Example*: "The surging canyon environment, framed as an eye-level downward tilt"
-      - **Identity Preservation (The Physics Proxy Rule)**:
-        - **Data Handling**: Treat <entity_list>.[n].\`hair\` and <entity_list>.[n].\`clothing\` strictly as latent reference data.
-        - **Zero-Redundancy Prohibition**: Do NOT restate any visual details (e.g., color, material) already present in <image_context>. Focus only on information required for the **Delta** in later steps.
+      - **Goal**: Synthesize a unique "Spatial-Visual Mapping Handle" for EVERY participant in <entity_list> to ensure absolute visual consistency between the <image_context> and the generated motion.
+      - **Logic: Direct Mapping & Re-identification Protocol**:
+        * **Always-Lock Strategy**: Even for a single entity, you MUST construct a full mapping handle.
+      - **Note(Important)**: IF <entity_list> is EMPTY, immediately ignore <step_2_1_entity_driven_mapping> and directly skip to <step_2_2_environment_driven_anchor>.
+      <step_2_1_entity_driven_mapping>
+        - **Phase 1: Core Identity Extraction (Demographics)**:
+          - **Demographics Schema & Priority Definition**:
+            - **Format**:
+              * **<entity_list>.[n].\`type\`**: <entity_list>.[n].\`demographics\`
+                - *Priority*: The components of <entity_list>.[n].\`demographics\` by <entity_list>.[n].\`type\` sorted by their priority.
+            * **\`human\`**: \`[ERA / PERIOD], [ROLE], [GENDER], [ORIGIN / ETHNICITY], [AGE]\`
+              - *Priority*: \`[ROLE]\` > \`[GENDER]\` > \`[AGE]\` > \`[ORIGIN]\` > \`[ERA]\`
+            * **\`machine\`**: \`[ERA / PERIOD], [MODEL NAME / TYPE], [PRODUCTION YEAR / SPEC]\`
+              - *Priority*: \`[MODEL NAME]\` > \`[SPEC]\` > \`[ERA]\`
+            * **\`creature\`**: \`[ERA / PERIOD], [SPECIES / ARCHETYPE], [GENDER], [AGE / MATURITY]\`
+              - *Priority*: \`[SPECIES]\` > \`[AGE]\` > \`[GENDER]\` > \`[ERA]\`
+            * **\`animal\`**: \`[ERA / PERIOD], [SPECIES], [AGE / MATURITY]\`
+              - *Priority*: \`[SPECIES]\` > \`[AGE]\` > \`[ERA]\`
+            * **\`object\`**: \`[ERA / PERIOD], [ITEM NAME], [CRAFTSMANSHIP / DETAIL]\`
+              - *Priority*: \`[ITEM NAME]\` > \`[DETAIL]\` > \`[ERA]\`
+            * **\`hybrid\`**: \`[ERA / PERIOD], [HYBRID TYPE], [GENDER], [ORIGIN / ETHNICITY], [AGE]\`
+              - *Priority*: \`[HYBRID TYPE]\` > \`[GENDER]\` > \`[AGE]\` > \`[ORIGIN]\` > \`[ERA]\`
+          * Parse <entity_list>.[n].\`demographics\` and extract the highest priority noun based on by above **Demographics Schema & Priority Definition**
+          * **Constraint**: Convert Proper Nouns to Common Noun Archetypes (e.g., "Sherlock" -> "Detective").
+        - **Phase 2: Spatial Anchor Integration (3D Positioning)**:
+          * **Depth Anchor**: Extract the depth plane (e.g., Foreground, Midground, Background) from <entity_list>.[n].\`appearance.position_descriptor\`.
+          * **Horizontal Anchor**: Infer the horizontal position (Select: "Left", "Center", or "Right") by analyzing the <image_context>.
+        - **Phase 3: Visual Anchor Selection (Identity Lock)**:
+          * Select a minimal, high-contrast visual trait from <entity_list>.[n].\`appearance.clothing_or_material\` or <entity_list>.[n].\`accessories\`.
+          * **Rule**: Use color or distinct material to "lock" the identity (e.g., "in red shorts", "with a silver helmet").
+        - **Phase 4: Final Mapping Handle Assembly**:
+          * **Directorial Logic**: Synthesize the anchors into a natural, cohesive noun phrase. Start with "The" or "A" or "An", followed by integrated spatial descriptors (Horizontal and Depth), the core identity, and a terminal visual distinguisher to "lock" the mapping.
+          * **Examples**:
+            * "The left foreground boxer in red shorts".
+            * "The center midground referee wearing a striped cotton shirt".
+            * "The right background crowd in dark winter coats".
+            * "The left midground drone with glowing blue LED strips".
+            * "The right foreground astronaut in a weathered white spacesuit".
+      </step_2_1_entity_driven_mapping>
+      <step_2_2_environment_driven_anchor>
+        - **Logic**: Use this ONLY if <entity_list> is EMPTY.
+        - **Assembly**: Use <master_style_guide>.\`globalEnvironment.locationArchetype\` with a tier-matched adjective (serene, flowing, surging, erupting) and <master_style_guide>.\`composition.framingStyle\`.
+        - **Example**: "The surging canyon environment, framed as a wide-angle shot."
+      </step_2_2_environment_driven_anchor>
+      <constraints>
+        - **Strict Mapping Rule**: 
+          * Generate a unique handle for **EVERY** active entity in the list. These handles will serve as the exclusive [Subject] anchors for the individual action sentences in <step_3_primary_action_vector_injection>.
+          * **Zero-Redundancy**: Use these handles strictly for identification; do not describe static traits beyond the minimal required anchor.
+      </constraints>
     </step_2_contextual_anchor_assembly>
     <step_3_primary_action_vector_injection>
-      - **Goal**: Drive the MMDiT engine's physical simulation by injecting a high-impact **[Primary Action Vector]** segment of **Kinetic Anchor Protocol** in <step_1_core_synthesis_principles>, connecting the anchor to a dynamic kinetic delta (Δ).
-      - **Logic: Action-Vector Separation Protocol**:
-        * **Action Source**: Derive the **Action Type** (e.g., Run, Dance, Fight, Breathe) from <scene_narration>.
-        * **Vector Source**: Strictly inherit the **Subject Vector ($\vec{S}$)** deduced in <step_4_1_subject_vector_inference> (Visual Truth).
-        * **Conflict Rule**: IF Narrative implies movement (e.g., "charging forward") BUT Step 4.1 deduced **Static**, you MUST generate a **Static Action** of that type (e.g., "tensing muscles to charge" instead of "sprinting").
-      - **[Slot_1: Adverb for Intensity] (Velocity & Tone Control)**:
-        - **Role**: Calibrate the model's energy output and movement velocity.
-        - **Rule**: Strictly select a descriptive adverb that matches the energy level of the \`INTENSITY_TIER\` locked in <step_0_kinetic_energy_profiling>.
-      - **[Slot_2: Verb-ing] (Cinematic Kinetic & Performance)**:
-        - **Role**: Establish temporal flow and intent-driven performance.
-        - **Rule**: Use high-impact cinematic verbs in present continuous **(-ing)** form that align with the **Vector Source**.
-        - **Conditional Micro-expression**: Inject a micro-expression delta (e.g., "pupils dilating", "lips trembling") **ONLY IF** the subject's face (Frontal/3-Quarter/Profile) is clearly visible in <image_context> AND the \`INTENSITY_TIER\` is \`VERY_LOW\` or \`LOW\`. 
-        - **Logic**: If the face is obscured or the intensity is \`HIGH/VERY_HIGH\`, focus entirely on skeletal/body kinetics or structural strain to maintain physical consistency.
-      - **[Slot_3: Interaction with Landmarks] (Spatial Constraint & Safety)**:
-        - **Role**: Prevent environmental clipping and ensure 3D collision awareness.
-        - **Rule (Optional)**: If environmental landmarks are defined in **Strict Prohibition** in <step_1_core_synthesis_principles>, describe the subject's physical movement relative to them (e.g., "soaring through the circular cavern opening", "slicing the air past the rock walls").
-      - **[Slot_4: Material Physics Jargon] (Surface Dynamics Proxy)**:
-        - **Role**: Inject high-fidelity texture reactions based on the subject's material.
-        - **Rule (Optional)**: Reference the latent <entity_list>.[n].\`hair\` and <entity_list>.[n].\`clothing\` to select Tier-matched jargon from <vocabulary_depot>.
-        - **Integration**: Convert tags into descriptive phrases (e.g., "causing the wingsuit to compress under structural stress").
-      - **Final Directorial Formula (**[Primary Action Vector]** of **Final Structure** in <step_1_core_synthesis_principles>)**:
-        - **Note**: Select "is" or "are" based on the identified **[Anchor]** from <step_2_contextual_anchor_assembly> and put into [is/are].
-        - **Assembly**: "[is/are] [Slot_1] [Slot_2], [Slot_3] [while/as] [Slot_4]".
-        - **Constraint**: The final output must be a single, seamless natural language sentence without any brackets \`[]\`, plus symbols \`+\`, or other non-narrative markers.
-      - **Tier-Matched Examples (Final Output Reference)**:
-        * **\`VERY_LOW\`**: "is serenely breathing with a steady gaze, displaying subtle pupil dilation as light softly shimmers across the skin texture."
-        * **\`LOW\`**: "is rhythmically striding forward, catching soft specular pings from the environment as the garment gently sways with a subtle satin sheen."
-        * **\`HIGH\`**: "is aggressively surging forward with intense brow furrowing, soaring through the circular cavern opening while the wingsuit heavily compresses under structural stress."
-        * **\`VERY_HIGH\`**: "is violently recoiling from the impact, triggering a physical shockwave that creates high-velocity sparks and causes rapid skin rippling."
+      - **Goal**: Architect a specific kinetic trajectory for each entity by analyzing the starting state ($t=0$) and inferring the most effective temporal structure and kinetic focus.
+      - **Logic: The Director's Decision Pipeline**:
+      <step_3_1_continuity_decision>
+        - **Rule**: Compare \`<entity_list>.[n].description\` with \`<image_context>\` to determine the "Nature of Motion".
+        - **Decision [Continuous]**: Select if the subject is already in a state of sustained momentum or flow (e.g., cruising in a car, gliding in midair).
+        - **Decision [Temporary]**: Select if the subject is initiating a new event or breaking stasis (e.g., a sudden strike, a leap from rest).
+      </step_3_1_continuity_decision>
+      <step_3_2_kinetic_focus_inference>
+        - **Rule**: Identify the "Core Essence" of the scene to select adverbs that align with \`INTENSITY_TIER\` locked in **Inference Logic** of <step_0_kinetic_energy_profiling>.
+        - **Focus Categories**:
+          1. **Velocity**: Focus on speed and rapid translation (e.g., F1 racing, wingsuit diving).
+          2. **Impact**: Focus on force, weight, and pressure (e.g., combat strikes, heavy machinery).
+          3. **Flow**: Focus on rhythm, grace, and fluid movement (e.g., dancing, liquid undulation).
+          4. **Tension**: Focus on precision, strain, and latent energy (e.g., stealth, delicate handling).
+      </step_3_2_kinetic_focus_inference>
+      <step_3_3_complexity_and_temporal_logic>
+        - **Rule**: For [Temporary] actions, define the structural complexity.
+        - **Selection**:
+          * **Single**: A singular, high-impact vector.
+          * **Sequential**: Action A leads to Action B. Use the **"then"** connector.
+          * **Simultaneous**: Action A occurs during Action B. Use **"while"** or **"as"** connectors.
+      </step_3_3_complexity_and_temporal_logic>
+      <step_3_4_syntax_and_tense_mapping>
+        - **Constraint**: Apply the following syntax based on previous decisions.
+        - **Mapping**:
+          * **[Continuous]**: Use **Present Continuous (-ing)**. (e.g., "[Subject] is [Verb-ing] [Adverb]...").
+          * **[Temporary-Single]**: Use **Simple Present + Active Voice**. (e.g., "[Subject] [Verb] [Adverb]...").
+          * **[Temporary-Sequential]**: "[Subject] [Verb A] [Adverb], then [Verb B]...".
+          * **[Temporary-Simultaneous]**: "[Subject] [Verb A] [Adverb] while [Verb-ing B]...".
+      </step_3_4_syntax_and_tense_mapping>
+      <step_3_5_semantic_infusion_and_material_delta>
+        - **Verb/Adverb Selection**: Prioritize \`<vocabulary_depot>\` based on the \`INTENSITY_TIER\` locked in **Inference Logic** of <step_0_kinetic_energy_profiling>. However, you CAN infer more appropriate terms if the specific [Kinetic Focus] or scene context requires it.
+        - **[Kinetic Focus]-\`INTENSITY_TIER\` Adverb Reference** (Archetypes for Inference):
+          **CONSTRAINT**: Treat the Focus-Intensity adverbs strictly as illustrative archetypes; do not copy them verbatim unless the context aligns perfectly, but use them to infer the most contextually accurate kinetic pulse based on the specific scene's focus.
+          1. **Velocity**: Focus on speed and rapid translation (e.g., F1 racing, wingsuit diving).
+             - \`VERY_LOW\`: gradually, subtly.
+             - \`LOW\`: steadily, swiftly.
+             - \`HIGH\`: rapidly, blazingly.
+             - \`VERY_HIGH\`: instantly, blindingly.
+          2. **Impact**: Focus on force, weight, and pressure (e.g., combat strikes, heavy machinery).
+             - \`VERY_LOW\`: barely, latent.
+             - \`LOW\`: firmly, measuredly.
+             - \`HIGH\`: powerfully, aggressively.
+             - \`VERY_HIGH\`: violently, explosively.
+          3. **Flow**: Focus on rhythm, grace, and fluid movement (e.g., dancing, liquid undulation).
+             - \`VERY_LOW\`: serenely, statically.
+             - \`LOW\`: rhythmically, gently.
+             - \`HIGH\`: fluidly, surgingly.
+             - \`VERY_HIGH\`: turbulently, chaotically.
+          4. **Tension**: Focus on precision, strain, and latent energy (e.g., stealth, delicate handling).
+             - \`VERY_LOW\`: barely, motionless.
+             - \`LOW\`: cautiously, tautly.
+             - \`HIGH\`: intensely, strainingly.
+             - \`VERY_HIGH\`: desperately, crushingly.
+        - **Material Delta Injection**: Describe the physical reaction of the subject's material ONLY (e.g., skin ripple, fabric flutter). **Strictly FORBID** describing atmosphere, dust, or light particles here.
+        - **Syntax**: Use causal conjunctions (e.g., "causing...", "triggering...") to ground the action in material reality.
+      </step_3_5_semantic_infusion_and_material_delta>
     </step_3_primary_action_vector_injection>
+    <step_4_multi_agent_kinetic_orchestration>
+      - **Goal**: Orchestrate the independent action units generated in **Step 3** into a singular, cohesive "Kinetic Block" using global temporal logic and narrative hierarchy.
+      - **Logic: The Director's Editing Suite**:
+      <step_4_1_narrative_priority_sequencing>
+        - **Rule**: Arrange the subject-specific sentences based on <entity_list>.[n].\`role\` to optimize Token Attention.
+        - **Hierarchy**: \`main_hero\` > \`sub_character\` > \`background_extra\` > \`prop\`.
+        - **Tie-breaking**: If multiple entities share the same role, prioritize the one with higher kinetic energy or closer proximity to the camera in the <image_context>.
+        - **Constraint**: IF there is \`main_hero\` \`role\` in <entity_list>, \`main_hero\`'s action MUST occupy the sentence head to anchor the model's primary attention.
+      </step_4_1_narrative_priority_sequencing>
+      <step_4_2_global_temporal_logic_decision>
+        - **Rule**: Determine the temporal relationship between the prioritized actions by analyzing <scene_narration> and <action_context>.
+        - **Selection**:
+          * **Simultaneous (while/as)**: Use if entities are performing parallel actions or maintaining a shared atmosphere (e.g., "The hero sprints **while** the crowd cheers").
+          * **Sequential (then/followed by)**: Use if there is a clear narrative beat change or a "trigger-response" sequence (e.g., "The pitcher throws, **then** the batter swings").
+      </step_4_2_global_temporal_logic_decision>
+      <step_4_3_causal_synthesis_and_physics_chaining>
+        - **Rule**: Identify if an action from [Subject A] physically induces a change in [Subject B] or the environment.
+        - **Logic**: If a physical impact or interaction is detected, inject causal connectors.
+        - **Syntax**: Use [Verb-ing] (Present Participles) such as **, causing** or **, triggering** to describe the resulting physical delta.
+        - **Example**: "[Subject A] strikes, **causing** [Subject B] to stumble back".
+      </step_4_3_causal_synthesis_and_physics_chaining>
+      <step_4_4_final_scenario_synthesis>
+        - **Rule**: Merge the orchestrated units into a polished "Directorial Prose".
+        - **Sanitization**:
+          * Ensure **Active Voice** and **Simple Present** are maintained for primary actions.
+          * Remove redundant articles or repetitive subject handles while maintaining absolute mapping.
+          * If a transition feels physically abrupt, use the phrase **"smoothly transitions to"** to prevent morphing artifacts.
+        - **Output Requirement**: A single, fluid paragraph that defines the entire kinetic timeline of the scene.
+      </step_4_4_final_scenario_synthesis>
+    </step_4_multi_agent_kinetic_orchestration>
     <step_4_cinematic_camera_vector_design>
       <step_4_0_professional_camera_mechanics_definitions>
         <spatial_coordinate_grounding>
