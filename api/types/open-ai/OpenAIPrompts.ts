@@ -1518,15 +1518,23 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
          * **\`LOW\`**: (Fluid Motion / Rhythmic Flow) - Focus on natural, predictable movement and laminar environmental flow.
          * **\`HIGH\`**: (Decisive Kinetic / Structural Strain) - Focus on intentional force, material tension, and turbulent displacement.
          * **\`VERY_HIGH\`**: (Explosive Chaos / Hyper-Velocity) - Focus on physical breaking points, high-speed debris, and kinetic shockwave.
-       - **Technical Tag Definitions**:
-         * **Visual Effect Candidates (Physics VFX Triggers)**: 
+       - **Technical Tag Definitions by <entity_list>.\`physics_profile\`**:
+         * **[\`physics_profile\` Field: \`material\`]**:
+           - **Visual Effect Candidates**:
              - Material-based reaction effects derived from the entity's \`physics_profile\` (e.g., [Sparks] for rigid metal impact, [Sweat Spray] for high-exertion skin).
              - **Usage**: Primarily used in **<step_3_primary_action_vector_injection>** to describe collision/stress outcomes. 
              - **Optional Usage**: Can be referenced in <step_5_atmospheric_delta_refinement> IF the generated effect contributes to the environmental atmosphere (e.g., [Dust Cloud] from a granular surface).
-         * **Visual Vocabulary Pool (Surface Physics)**: Material-specific descriptors and biological reactions (e.g., [Chrome glint], [Skin Ripple], [Fabric Flutter]). Used in <step_3_primary_action_vector_injection> to ground subject interactions.
-         * **Velocity & Shutter Specs (Kinetic Calibration)**: 
-           - Mandatory constraints for motion blur and shutter speed.
-           - Must be calibrated to sync with the [Movement Intensity] derived from the locked \`INTENSITY_TIER\`.
+           - **Visual Vocabulary Pool**:
+             - Material-specific descriptors and biological reactions (e.g., [Chrome glint], [Skin Ripple], [Fabric Flutter]).
+             - Used in **<step_3_primary_action_vector_injection>** to ground subject interactions and define surface physics integrity.
+         * **[\`physics_profile\` Field: \`action_context\`]**:
+           - **Velocity Options**:
+              - Subject-centric speed terminology and kinetic tempo (Kinetic Calibration).
+              - Defines the energy magnitude and frequency of the subject's physical movement.
+              - Must be calibrated to sync with the locked \`INTENSITY_TIER\` to define the kinetic pulse and tempo of the motion.
+           - **Visual Vocabulary Pool**:
+             - Action-specific mechanical logic and postural adjustments (e.g., [Weight centered], [G-force lean]).
+             - Used in **<step_3_primary_action_vector_injection>** to define the subject's physical state and mechanical logic relative to its momentum.
     3. **<scene_narration> (The Kinetic Engine)**:
        - Translate narrative verbs into high-impact "Action Vectors."
        - Convert human-centric narration into physics-based interactions with the environment (e.g., "running" becomes "feet striking ground, dust sprays").
@@ -1682,7 +1690,15 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
           * **[Temporary-Simultaneous]**: Use **Active Simple Present** and **Present Continuous (-ing)** using **"while"** or **"as"** connectors. (e.g., [Verb A] [Adverb] [while/as] [Verb-ing B])
       </step_3_3_syntax_and_tense_mapping>
       <step_3_4_semantic_infusion_and_material_delta>
-        - **Verb/Adverb Selection**: Prioritize \`<vocabulary_depot>\` based on the \`INTENSITY_TIER\` locked in **Inference Logic** of <step_0_kinetic_energy_profiling>. However, you CAN infer more appropriate terms if the specific [Kinetic Focus] from <step_3_2_kinetic_focus_inference> or scene context requires it.
+        - **Verb/Adverb Selection (Depot Mapping)**: 
+          - Identify the \`material\` and \`action_context\` from <entity_list>.[n].\`physics_profile\`. 
+          - Match these keys with the corresponding **[physics_profile Field/Value]** blocks of <vocabulary_depot>.
+          - Extract terms ONLY from the section corresponding to the locked **\`INTENSITY_TIER\`**.
+          - Prioritize **Velocity Options** for kinetic pulse and **Visual Vocabulary Pool** for surface/mechanical details.
+          - You CAN infer more appropriate terms if the specific [Kinetic Focus] or scene context requires it.
+        - **Hybrid Tense Implementation (Sync with <step_3_3_syntax_and_tense_mapping>)**:
+          - Apply the selected verbs/adverbs using the specific syntax of **<step_3_3_syntax_and_tense_mapping>**.
+          - Use **Active Simple Present** for decisive/temporary actions and **Present Continuous (-ing)** for sustained flow to create temporal contrast.
         - **[Kinetic Focus]-\`INTENSITY_TIER\` Adverb Reference** (Archetypes for Inference):
           **CONSTRAINT**: Treat the Focus-Intensity adverbs strictly as illustrative archetypes; do not copy them verbatim unless the context aligns perfectly, but use them to infer the most contextually accurate kinetic pulse based on the specific scene's focus.
           1. **Velocity**: Focus on speed and rapid translation (e.g., F1 racing, wingsuit diving).
@@ -1705,7 +1721,7 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
              - \`LOW\`: cautiously, tautly.
              - \`HIGH\`: intensely, strainingly.
              - \`VERY_HIGH\`: desperately, crushingly.
-        - **Material Delta Injection**: Describe the physical reaction of the subject's material ONLY (e.g., skin ripple, fabric flutter). **Strictly FORBID** describing atmosphere, dust, or light particles here.
+        - **Material Delta Injection**: Describe the physical reaction using matched **Visual Effect Candidates** from the \`material\` field in the depot. Focus strictly on the subject's material (e.g., skin ripple, fabric flutter). **Strictly FORBID** describing atmosphere, dust, or light particles here.
         - **Syntax**: Use causal conjunctions (e.g., "causing...", "triggering...") to ground the action in material reality.
       </step_3_4_semantic_infusion_and_material_delta>
     </step_3_primary_action_vector_injection>
@@ -1809,10 +1825,11 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
           - **Output**: The exact output from <step_4_kinetic_sentence_fabrication> (A single kinetic sentence).
         * IF <entity_list>.length == 0
           - **Source**: <step_2_2_environment_driven_anchor> AND <step_5_atmospheric_delta_refinement>.
-          - **Action**: **Prepend** the Location Subject to the Atmospheric Phrase.
-            * *Logic*: Since <step_5_atmospheric_delta_refinement> already describes the action, simply attach the subject: "[Location Subject], [Output of <step_5_atmospheric_delta_refinement>]."
-            * *Note*: Do NOT deconstruct <step_5_atmospheric_delta_refinement>. Treat it as a complete predicate phrase.
-          - **Output**: A complete descriptive sentence (e.g., "The canyon environment, subtle dust motes floating...").
+          - **Action**: **Kinetic Coupling** of the environment and atmosphere.
+            * *Logic*: Treat the [Location Subject] from <step_2_2_environment_driven_anchor> as the 'Actor' and the [Atmospheric/Lighting Delta] from <step_5_atmospheric_delta_refinement> as its 'Action'. Use the connector **"is"** to bridge them into a complete kinetic statement.
+            * *Note*: Do NOT deconstruct <step_5_atmospheric_delta_refinement>. Treat it as a continuous predicate following "is".
+          - **Output**: A complete descriptive sentence. 
+            * *Example*: "[Location Subject] **is** [Output of <step_5_atmospheric_delta_refinement>]." (e.g., "The smoldering WWII battlefield **is** enhanced by volumetric lighting and turbulent kinetic embers.")
       - **Final Output Verification**:
         - **Goal**: Verify the result matches the **[Primary Narrative Block]** requirement.
         - **Constraint**: The output MUST start with a Capital Letter and end with a Period.
@@ -1830,7 +1847,9 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
             * **Y-axis (Vertical Axis)**: The vertical line parallel to the frame's height.
           - **Parallax Flow Rule (Z-Axis Logic)**:
             * **Toward (+Z)**: Subject approaches the lens, decreasing $D(t)$, increasing visual scale and background blur.
-            * **Away from (-Z)**: Subject recedes, increasing $D(t)$, revealing more of "Landmarks" defined in <step_1_core_synthesis_principles>.
+            * **Away from (-Z)**: Subject recedes, increasing $D(t)$, revealing more of the **Spatial Anchors**.
+              - **Priority 1 (Kinetic Prop)**: IF <entity_list> contains \`prop\` \`role\` AND its physical position significantly impacts the subject's movement or spatial trajectory (e.g., as an obstacle, constraint, or grounding point), reveal more of these specific landmarks to validate spatial depth and physical interaction.
+              - **Priority 2 (Visual Landmark)**: IF no movement-affecting props are defined, reveal more of the background structures and vanishing points analyzed from \`<image_context>\`.
           - **The Director's Goal**: Select a Camera Vector ($\vec{C}$) that manages $D(t)$ and Parallax to prevent "Latent Space Collapse" while maximizing cinematic immersion.
         </spatial_coordinate_grounding>
         <definition_table>

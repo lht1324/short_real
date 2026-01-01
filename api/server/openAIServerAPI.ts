@@ -548,98 +548,77 @@ Instruction: Generate the scene instruction JSON.
             // [핵심] Physics Profile을 기반으로 물리 법칙 텍스트 생성 (Code Level Injection)
             // 메인 히어로 또는 씬에 등장하는 주요 엔티티들의 물리 속성을 추출하여 문자열로 변환
 
-            const activeEntityPhysicsList = isEntityListNotEmpty
-                ? entityManifestList.filter((entity) => {
-                    return !!(entity.physics_profile);
-                }).map((entity) => {
-                    const {
-                        material: materialList,
-                        action_context: actionContextList,
-                    } = entity.physics_profile as PhysicsProfile;
+            const uniqueMaterialKeys = new Set<'rigid' | 'viscoelastic' | 'brittle' | 'cloth' | 'fluid' | 'elastoplastic' | 'granular'>();
+            const uniqueActionContextKeys = new Set<'locomotion' | 'combat' | 'interaction' | 'aerodynamics' | 'passive' | 'velocity_max'>();
 
-                    // 강도별 데이터를 담을 임시 객체
-                    const intensityData = {
-                        very_low: { effects: new Set(), vocab: new Set(), camera: new Set(), velocity: new Set() },
-                        low: { effects: new Set(), vocab: new Set(), camera: new Set(), velocity: new Set() },
-                        high: { effects: new Set(), vocab: new Set(), camera: new Set(), velocity: new Set() },
-                        very_high: { effects: new Set(), vocab: new Set(), camera: new Set(), velocity: new Set() },
-                    };
+            entityManifestList.forEach(entity => {
+                entity.physics_profile?.material.forEach(m => uniqueMaterialKeys.add(m));
+                entity.physics_profile?.action_context.forEach(a => uniqueActionContextKeys.add(a));
+            });
 
-                    // 1. Material 데이터 분류
-                    materialList.forEach((materialKey) => {
-                        const data = PHYSICS_LIBRARY.material[materialKey];
-                        if (data) {
-                            // Very Low Intensity
-                            intensityData.very_low.effects.add(`${data.very_low_intensity.effect_tag}`);
-                            intensityData.very_low.effects.add(`${data.very_low_intensity.alt_tag}`);
-                            data.very_low_intensity.vocabulary.forEach(v => intensityData.very_low.vocab.add(v));
+            const uniqueMaterialVocabularyList = Array.from(uniqueMaterialKeys).map((key) => {
+                const {
+                    very_low_intensity,
+                    low_intensity,
+                    high_intensity,
+                    very_high_intensity,
+                } = PHYSICS_LIBRARY.material[key]
 
-                            // Low Intensity
-                            intensityData.low.effects.add(`${data.low_intensity.effect_tag}`);
-                            intensityData.low.effects.add(`${data.low_intensity.alt_tag}`);
-                            data.low_intensity.vocabulary.forEach(v => intensityData.low.vocab.add(v));
-
-                            // High Intensity
-                            intensityData.high.effects.add(`${data.high_intensity.effect_tag}`);
-                            intensityData.high.effects.add(`${data.high_intensity.alt_tag}`);
-                            data.high_intensity.vocabulary.forEach(v => intensityData.high.vocab.add(v));
-
-                            // Very High Intensity
-                            intensityData.very_high.effects.add(`${data.very_high_intensity.effect_tag}`);
-                            intensityData.very_high.effects.add(`${data.very_high_intensity.alt_tag}`);
-                            data.very_high_intensity.vocabulary.forEach(v => intensityData.very_high.vocab.add(v));
-                        }
-                    });
-
-                    // 2. Action Context 데이터 분류
-                    actionContextList.forEach((contextKey) => {
-                        const data = PHYSICS_LIBRARY.action_context[contextKey];
-                        if (data) {
-                            // Very Low Intensity
-                            intensityData.very_low.velocity.add(data.very_low_intensity.speed_term);
-                            data.very_low_intensity.vocabulary.forEach(v => intensityData.very_low.vocab.add(v));
-
-                            // Low Intensity
-                            intensityData.low.velocity.add(data.low_intensity.speed_term);
-                            data.low_intensity.vocabulary.forEach(v => intensityData.low.vocab.add(v));
-
-                            // High Intensity
-                            intensityData.high.velocity.add(data.high_intensity.speed_term);
-                            data.high_intensity.vocabulary.forEach(v => intensityData.high.vocab.add(v));
-
-                            // Very High Intensity
-                            intensityData.very_high.velocity.add(data.very_high_intensity.speed_term);
-                            data.very_high_intensity.vocabulary.forEach(v => intensityData.very_high.vocab.add(v));
-                        }
-                    });
-
-                    // 3. 기존 용어를 유지한 포맷팅 (Low/High 블록으로 구분)
-                    return `
-[Entity ID: ${entity.id}]
+                return `
+[physics_profile Field: material]
+[physics_profile Value: ${key}]
 **INTENSITY_TIER: VERY_LOW (Micro-Stasis / Latent Flux / Absolute Stillness)**
-- **Visual Effect Candidates**: ${Array.from(intensityData.very_low.effects).join(' OR ')}
-- **Visual Vocabulary Pool**: ${Array.from(intensityData.very_low.vocab).join(', ')}
-- **Velocity Options**: ${Array.from(intensityData.very_low.velocity).join(', ')}
+- **Visual Effect Candidates**: ${very_low_intensity.effect_tag} OR ${very_low_intensity.alt_tag}
+- **Visual Vocabulary Pool**: ${very_low_intensity.vocabulary.join(', ')}
 
 **INTENSITY_TIER: LOW (Fluid Motion / Rhythmic Drift / Subtle Flow)**
-- **Visual Effect Candidates**: ${Array.from(intensityData.low.effects).join(' OR ')}
-- **Visual Vocabulary Pool**: ${Array.from(intensityData.low.vocab).join(', ')}
-- **Velocity Options**: ${Array.from(intensityData.low.velocity).join(', ')}
+- **Visual Effect Candidates**: ${low_intensity.effect_tag} OR ${low_intensity.alt_tag}
+- **Visual Vocabulary Pool**: ${low_intensity.vocabulary.join(', ')}
 
 **INTENSITY_TIER: HIGH (Decisive Kinetic / Structural Strain / High Momentum)**
-- **Visual Effect Candidates**: ${Array.from(intensityData.high.effects).join(' OR ')}
-- **Visual Vocabulary Pool**: ${Array.from(intensityData.high.vocab).join(', ')}
-- **Velocity Options**: ${Array.from(intensityData.high.velocity).join(', ')}
+- **Visual Effect Candidates**: ${high_intensity.effect_tag} OR ${high_intensity.alt_tag}
+- **Visual Vocabulary Pool**: ${high_intensity.vocabulary.join(', ')}
 
 **INTENSITY_TIER: VERY_HIGH (Explosive Chaos / Hyper-Velocity / Kinetic Failure)**
-- **Visual Effect Candidates**: ${Array.from(intensityData.very_high.effects).join(' OR ')}
-- **Visual Vocabulary Pool**: ${Array.from(intensityData.very_high.vocab).join(', ')}
-- **Velocity Options**: ${Array.from(intensityData.very_high.velocity).join(', ')}
-`;
-                })
-                    .filter(Boolean)
-                    .join('\n')
-                : '';
+- **Visual Effect Candidates**: ${very_high_intensity.effect_tag} OR ${very_high_intensity.alt_tag}
+- **Visual Vocabulary Pool**: ${very_high_intensity.vocabulary.join(', ')}
+`
+            });
+
+            const uniqueActionContextVocabularyList = Array.from(uniqueActionContextKeys).map((key) => {
+                const {
+                    very_low_intensity,
+                    low_intensity,
+                    high_intensity,
+                    very_high_intensity,
+                } = PHYSICS_LIBRARY.action_context[key]
+
+                return `
+[physics_profile Field: action_context]
+[physics_profile Value: ${key}]
+**INTENSITY_TIER: VERY_LOW (Micro-Stasis / Latent Flux / Absolute Stillness)**
+- **Velocity Options**: ${very_low_intensity.speed_term}
+- **Visual Vocabulary Pool**: ${very_low_intensity.vocabulary.join(', ')}
+
+**INTENSITY_TIER: LOW (Fluid Motion / Rhythmic Drift / Subtle Flow)**
+- **Velocity Options**: ${low_intensity.speed_term}
+- **Visual Vocabulary Pool**: ${low_intensity.vocabulary.join(', ')}
+
+**INTENSITY_TIER: HIGH (Decisive Kinetic / Structural Strain / High Momentum)**
+- **Velocity Options**: ${high_intensity.speed_term}
+- **Visual Vocabulary Pool**: ${high_intensity.vocabulary.join(', ')}
+
+**INTENSITY_TIER: VERY_HIGH (Explosive Chaos / Hyper-Velocity / Kinetic Failure)**
+- **Velocity Options**: ${very_high_intensity.speed_term}
+- **Visual Vocabulary Pool**: ${very_high_intensity.vocabulary.join(', ')}
+`
+            });
+
+            // 2. 고유 키에 대해서만 라이브러리 데이터 추출 (id 대신 타입 표기)
+            const globalVocabularyDepot = [
+                ...uniqueMaterialVocabularyList,
+                ...uniqueActionContextVocabularyList
+            ].join('\n');
 
             const imageGenPromptSubjectList: FluxPromptSubject[] = imageGenPrompt.subjects ?? [];
             const mappedEntityList = isEntityListNotEmpty
@@ -666,6 +645,14 @@ Instruction: Generate the scene instruction JSON.
                     };
                 })
                 : [];
+
+            const mappedMasterStyleInfo = {
+                ...masterStyleInfo,
+                optics: {
+                    ...masterStyleInfo.optics,
+                    defaultISO: imageGenPrompt.camera.ISO,
+                }
+            }
             // 4. User Message 구성 (physics_instruction_set 주입)
             const userMessage = `
 <input_context>
@@ -675,19 +662,15 @@ Instruction: Generate the scene instruction JSON.
     <target_duration>${targetDuration}seconds</target_duration>
   </video_metadata>
   <vocabulary_depot>
-    **RESOURCE POOL**: Select keywords from here to construct the prompt.
-    DO NOT use these as descriptions. Use them as tags.
-    ${JSON.stringify(activeEntityPhysicsList, null, 2)}
+    **GLOBAL PHYSICS RESOURCE POOL**: 
+    This pool contains technical vocabulary mapped to physics_profile keys.
+    Refer to <entity_list>.[n].\`physics_profile\` and match the 'Field' and 'Value' to select descriptors from the locked INTENSITY_TIER.
+    
+    ${globalVocabularyDepot}
   </vocabulary_depot>
   <scene_narration>${sceneNarration}</scene_narration>
   <master_style_guide>
-    ${JSON.stringify({
-                ...masterStyleInfo,
-                optics: {
-                    ...masterStyleInfo.optics,
-                    defaultISO: imageGenPrompt.camera.ISO,
-                }
-            }, null, 2)}
+    ${JSON.stringify(mappedMasterStyleInfo, null, 2)}
   </master_style_guide>
   <entity_list>
     ${JSON.stringify(mappedEntityList, null, 2)}
