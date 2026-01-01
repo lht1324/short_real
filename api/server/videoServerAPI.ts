@@ -55,13 +55,14 @@ export const videoServerAPI = {
         }
         const imageUrl = data.signedUrl;
 
-        const is1_0ProFast = sceneData.sceneDuration < 2.85;
+        const is1_0ProFast = sceneData.sceneDuration < 2.9;
 
         let newRequestId: string;
         const baseInputData = {
             image_url: imageUrl,
             aspect_ratio: aspectRatio,
             camera_fixed: false,
+            enable_safety_checker: false,
         }
 
         if (!is1_0ProFast && !isViolence) {

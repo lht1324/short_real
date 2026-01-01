@@ -615,7 +615,7 @@ Instruction: Generate the scene instruction JSON.
 
                     // 3. 기존 용어를 유지한 포맷팅 (Low/High 블록으로 구분)
                     return `
-[Entity Role: ${entity.role}]
+[Entity ID: ${entity.id}]
 **INTENSITY_TIER: VERY_LOW (Micro-Stasis / Latent Flux / Absolute Stillness)**
 - **Visual Effect Candidates**: ${Array.from(intensityData.very_low.effects).join(' OR ')}
 - **Visual Vocabulary Pool**: ${Array.from(intensityData.very_low.vocab).join(', ')}
