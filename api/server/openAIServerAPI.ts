@@ -420,7 +420,7 @@ Instruction: Generate the scene instruction JSON.
                 ],
                 response_format: { type: 'json_object' },
                 reasoning_effort: 'high',
-                max_completion_tokens: 20480,
+                max_completion_tokens: 40960,
             });
 
             console.log(`Scene #${sceneNumber} postImageGenPrompt() usage: `, JSON.stringify(completion.usage))
@@ -638,6 +638,8 @@ Instruction: Generate the scene instruction JSON.
                         // 베이스 이미지의 포즈를 주입하여 Toward/Away 벡터 오판단 방지
                         visual_anchor_initial_pose: visualAnchor?.pose ?? "",
                         physics_profile: entity.physics_profile,
+
+                        description: visualAnchor?.description ?? "",
 
                         // 4. 보조 식별 정보
                         hair: entity.appearance.hair,

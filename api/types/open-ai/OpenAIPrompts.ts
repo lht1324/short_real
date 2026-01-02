@@ -472,7 +472,7 @@ export const POST_MASTER_STYLE_INFO_PROMPT = `
           "role": "main_hero" | "sub_character" | "background_extra" | "prop",
           "type": "human" | "creature" | "object" | "machine" | "animal" | "hybrid",
           "appearance_scenes": "number[]",
-          "demographics": "string (REQUIRED: Comma-separated string formatted strictly according to the Type Classification Schema in <task_2_entity_manifest> section. Examples: Human='Era, Role, Gender...', Object='Era, Item, Detail'. DO NOT use 'N/A' fillers.)",
+          "demographics": "string (REQUIRED: Comma-separated string formatted strictly according to the Type Classification Schema in <task_1_entity_manifest> section. Examples: Human='Era, Role, Gender...', Object='Era, Item, Detail'. DO NOT use 'N/A' fillers.)",
           "appearance": {
             "clothing_or_material": "string (REQUIRED: Context-Aware & Neutral visual description. Must imply texture/physics.)";
             "position_descriptor": "string";
@@ -2035,10 +2035,17 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
             * **\`object\`**: Extract the \`[ITEM NAME]\` (e.g., "Antique Pocket Watch" -> "The watch").
             * **\`hybrid\`**: Extract the \`[HYBRID TYPE]\` (e.g., "Cyborg Mercenary" -> "The cyborg").
       - **Verb Selection Rule**:
-        - **\`INTENSITY_TIER\`-Alignment**: The [Verb-ing] MUST be the primary action identified in <step_3_primary_action_vector_injection>, maintaining strict semantic consistency with the locked **\`INTENSITY_TIER\`**.
-          **Examples**:
-            * \`VERY_LOW\`: "The woman is **breathing**" (NOT "panting").
-            * \`VERY_HIGH\`: "The building is **collapsing**" (NOT "shaking").
+        * **IF <entity_list> is NOT EMPTY:
+          - The [Verb-ing] MUST be the primary action identified in <step_3_primary_action_vector_injection>.
+          - **Constraint**: Maintain strict semantic consistency with the locked **\`INTENSITY_TIER\`**.
+          - **Examples by \`INTENSITY_TIER\`**:
+            * **\`VERY_LOW\` (Stasis)**: "breathing", "observing", "floating", "sleeping"
+            * **\`LOW\` (Fluid)**: "walking", "swaying", "drifting", "gliding"
+            * **\`HIGH\` (Active)**: "running", "fighting", "driving", "shaking"
+            * **\`VERY_HIGH\` (Chaos)**: "exploding", "collapsing", "shattering", "erupting"
+        * **IF <entity_list> is EMPTY**:
+          - Infer the [Atmospheric Verb-ing] directly from the **Environmental Dynamics** analyzed in <step_0_kinetic_energy_profiling> (e.g., "raining", "glowing", "burning", "flowing").
+          - **Examples**: "raining", "glowing", "burning", "flowing", "snowing", "surging", "crumbling"
       - **Plural Priority Rule**:
         - **Different Types**: If subjects are performing the same action, prioritize the **main_hero** or the most massive subject to avoid visual clutter.
       - **Grammar & Aggregation Rules**:
