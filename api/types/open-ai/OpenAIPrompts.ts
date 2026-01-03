@@ -1050,63 +1050,51 @@ export const POST_IMAGE_GEN_PROMPT_PROMPT = `
       - *Context Examples*: Confrontation → "looming behind"; Pinned → "against ropes/wall"
       - *Vocabulary Patterns*: "Pinned against the ropes in the background", "Looming directly behind the subject".
   </entity_positioning_rules>
-  <formatting_constraint>
-    **CRITICAL OUTPUT FORMATTING RULE: MINIFICATION**
-    - You must output the final JSON object in **Strict Minified Format**.
-    - **NO** whitespace, **NO** newlines, **NO** indentation between keys and values.
-    - Example: {"key":"value","array":[1,2]} (Correct)
-    - NOT: { "key": "value" } (Incorrect)
-    - This applies to the entire JSON structure, including nested objects and arrays.
-    - Exception: Do NOT remove spaces *inside* string values (e.g., NO "High contrast" -> "Highcontrast", NO "I'm a boy. She is a girl" -> "I'maboy.Sheisagirl").
-  </formatting_constraint>
   <output_schema>
     Return a single JSON object.
     {
-      "updated_entity_manifest": [ 
-        {
-          "id": "string", // Must match input <entity_list>.[n].\`id\`
-          "physics_profile": {
-            // Derived from <visual_texture_layer> Step 1 (Collect ALL applicable)
-            "material": ("cloth" | "viscoelastic" | "rigid" | "fluid" | "brittle" | "granular" | "elastoplastic")[],
-
-            // Derived from <visual_texture_layer> Step 2 (Collect ALL applicable)
-            "action_context": ("locomotion" | "combat" | "aerodynamics" | "interaction" | "passive" | "velocity_max")[]
-          },
-          "appearance": { 
-            "clothing_or_material": "string", 
-            "body_features": "string",
-            "position_descriptor": "string",
-          },
-          "state": {
-              "pose": "string";
-              "expression": "string";
-          }
+      "updated_entity_manifest": {
+        "id": "string", // Must match input <entity_list>.[n].\`id\`
+        "physics_profile": {
+          // Derived from <visual_texture_layer> Step 1 (Collect ALL applicable)
+          "material": ("cloth" | "viscoelastic" | "rigid" | "fluid" | "brittle" | "granular" | "elastoplastic")[],
+          // Derived from <visual_texture_layer> Step 2 (Collect ALL applicable)
+          "action_context": ("locomotion" | "combat" | "aerodynamics" | "interaction" | "passive" | "velocity_max")[]
+        },
+        "appearance": { 
+          "clothing_or_material": "string", 
+          "body_features": "string",
+          "position_descriptor": "string",
+        },
+        "state": {
+            "pose": "string";
+            "expression": "string";
         }
-      ],
+      }[],
       "image_gen_prompt": {
-          "scene": string;
-          "subjects": {
-            "id": "string"; // Must match input <entity_list>.[n].\`id\`
-            "type": string;
-            "description": string;
-            "pose": string;
-            "position": 'foreground' | 'midground' | 'background';
-          }[];
-          "style": string;
-          "color_palette": string[]; // RGB Hex (#[00~FF][00~FF][00~FF])
-          "lighting": string;
-          "mood": string;
-          "background": string;
-          "composition": "rule of thirds" | "circular arrangement" | "minimalist negative space" | "S-curve" | "vanishing point center" | "dynamic off-center" | "leading leads" | "golden spiral" | "diagonal energy" | "strong verticals" | "triangular arrangement";
-          "camera": {
-            "angle": "eye level" | "low angle" | "slightly low" | "bird's-eye" | "worm's-eye" | "over-the-shoulder" | "isometric";
-            "distance": "close-up" | "medium close-up" | "medium shot" | "medium wide" | "wide shot" | "extreme wide";
-            "focus": "deep focus" | "macro focus" | "soft background" | "selective focus" | "sharp on subject";
-            "lens": "14mm" | "24mm" | "35mm" | "50mm" | "70mm" | "85mm";
-            "fNumber": string;
-            "ISO": number;
-          };
-          "effects": string[];
+        "scene": string;
+        "subjects": {
+          "id": "string"; // Must match input <entity_list>.[n].\`id\`
+          "type": string;
+          "description": string;
+          "pose": string;
+          "position": 'foreground' | 'midground' | 'background';
+        }[];
+        "style": string;
+        "color_palette": string[]; // RGB Hex (#[00~FF][00~FF][00~FF])
+        "lighting": string;
+        "mood": string;
+        "background": string;
+        "composition": "rule of thirds" | "circular arrangement" | "minimalist negative space" | "S-curve" | "vanishing point center" | "dynamic off-center" | "leading leads" | "golden spiral" | "diagonal energy" | "strong verticals" | "triangular arrangement";
+        "camera": {
+          "angle": "eye level" | "low angle" | "slightly low" | "bird's-eye" | "worm's-eye" | "over-the-shoulder" | "isometric";
+          "distance": "close-up" | "medium close-up" | "medium shot" | "medium wide" | "wide shot" | "extreme wide";
+          "focus": "deep focus" | "macro focus" | "soft background" | "selective focus" | "sharp on subject";
+          "lens": "14mm" | "24mm" | "35mm" | "50mm" | "70mm" | "85mm";
+          "fNumber": string;
+          "ISO": number;
+        };
+        "effects": string[];
       },
       "image_gen_prompt_sentence": string; // A single sentence from <prompt_authoring_protocol>.<unit_4_natural_language_sentence_generation>
     }
@@ -1448,15 +1436,6 @@ export const POST_IMAGE_GEN_PROMPT_NO_ENTITIES_PROMPT = `
       - **Forbidden**: Brand names, random words, taxi roof text, storefront signs unless explicitly input.
       - **Integration**: Apply AFTER all other rules. Override generic signage descriptions.
   </execution_rules>
-  <formatting_constraint>
-    **CRITICAL OUTPUT FORMATTING RULE: MINIFICATION**
-    - You must output the final JSON object in **Strict Minified Format**.
-    - **NO** whitespace, **NO** newlines, **NO** indentation between keys and values.
-    - Example: {"key":"value","array":[1,2]} (Correct)
-    - NOT: { "key": "value" } (Incorrect)
-    - This applies to the entire JSON structure, including nested objects and arrays.
-    - Exception: Do NOT remove spaces *inside* string values (e.g., NO "High contrast" -> "Highcontrast", NO "I'm a boy. She is a girl" -> "I'maboy.Sheisagirl").
-  </formatting_constraint>
   <output_schema>
     Return a single JSON object.
     {
@@ -1811,12 +1790,17 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
       - **Logic: The Construction Logic**:
         - Check <entity_list>.length and execute the corresponding construction protocol.
         * IF <entity_list>.length >= 2:
-          - **Source**: The set of sentences from <step_4_kinetic_sentence_fabrication>.
+          - **Source**: The set of sentences derived from <step_2_contextual_anchor_assembly> and <step_3_primary_action_vector_injection>.
           - **Action**: Orchestrate multiple sentences into a single **"Cohesive Paragraph"**.
-            1. **Prioritize**: Sort sentences by <entity_list>.[n].\`role\` (\`main_hero\` > \`sub_character\` > \`background_extra\` > \`prop\`).
-               - **Tie-Breaking Rule**: IF multiple entities share the same role (e.g., two \`sub_characters\`), determine priority by analyzing <image_context> and <scene_narration>.
-                 * **Criterion A (Visual Prominence)**: Prioritize the entity closer to the **Foreground** or **Center** based on <entity_list>.[n].\`position_descriptor\`.
-                 * **Criterion B (Narrative Urgency)**: Prioritize the entity performing a more **Active/Aggressive** action (e.g., "shooting" > "standing").
+            1. **Prioritize**: Determine sentence order using this **Cascading Logic**.
+               - **Step A: Narrative Alignment (Primary Key)**:
+                 * **Target**: Identify the Subject, Object, and Main Action in **<scene_narration>**.
+                 * **Candidate**: Check **Spatial-Visual Mapping Handle** (from <step_2_contextual_anchor_assembly>) and **Action Data Components** (from <step_3_primary_action_vector_injection>) of each <entity_list>.[n].
+                 * **Rule**: Prioritize entities where the **Handle** matches the Narrative's Subject/Object, OR the **Action** matches the Narrative's Event. Subject takes precedence over Object.
+               - **Step B: Hierarchy Resolution (Secondary Keys)**:
+                 * **Condition 1 (Abstract Fallback)**: IF Step A yields no matches because of abstract/neutral <scene_narration>, sort ALL entities by <entity_list>.[n].\`role\`: \`main_hero\` > \`sub_character\` > \`background_extra\` > \`prop\`.
+                 * **Condition 2 (Tie-Breaking)**: IF multiple entities have equal relevance in Step A (e.g., both mentioned), sort them by <entity_list>.[n].\`role\`.
+                 * **Condition 3 (Visual Fallback)**: IF all of <entity_list>.[n].\`role\` are also identical (e.g., two or more \`sub_characters\`), prioritize based on <entity_list>.[n].\`position_descriptor\`: \`Extreme Close-up\`/\`Foreground\` > \`Midground\` > \`Background\`.
             2. **Connect**: Link sentences using temporal connectors based on the **Narrative Context**.
                * Use **'while'** or **'simultaneously'** for parallel actions (Default).
                * Use **'then'** or **'followed by'** ONLY if there is a clear trigger-reaction chain.
@@ -2081,15 +2065,6 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
           * *War*: "The battlefield is smoldering" (Extracted from 'WWII Battlefield' archetype)
     </step_10_short_logic_synthesis>
   </processing_logic>
-  <formatting_constraint>
-    **CRITICAL OUTPUT FORMATTING RULE: MINIFICATION**
-    - You must output the final JSON object in **Strict Minified Format**.
-    - **NO** whitespace, **NO** newlines, **NO** indentation between keys and values.
-    - Example: {"key":"value","array":[1,2]} (Correct)
-    - NOT: { "key": "value" } (Incorrect)
-    - This applies to the entire JSON structure, including nested objects and arrays.
-    - Exception: Do NOT remove spaces *inside* string values (e.g., NO "High contrast" -> "Highcontrast", NO "I'm a boy. She is a girl" -> "I'maboy.Sheisagirl").
-  </formatting_constraint>
   <output_schema>
     Return a single JSON object with the following structure. Ensure all fields are populated based on the internal reasoning of the Cinematic Director role.
     {

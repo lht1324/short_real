@@ -26,6 +26,114 @@ enum OpenAIModel {
     GPT_O4_MINI = "o4-mini-2025-04-16",
 }
 
+const imageGenResponseFormat: OpenAI.ResponseFormatJSONSchema = {
+    type: "json_schema",
+    json_schema: {
+        name: "image_gen_response",
+        strict: true, // [중요] 스키마 강제
+        schema: {
+            type: "object",
+            properties: {
+                image_gen_prompt: {
+                    type: "object",
+                    properties: {
+                        // FluxPrompt 구조 (간소화됨, 필요시 상세화 가능)
+                        prompt: { type: "string" }, // 예시 필드
+                        negative_prompt: { type: ["string", "null"] }, // 예시 필드
+                        // ... FluxPrompt의 실제 필드들을 여기에 정의하세요 ...
+                    },
+                    required: ["prompt"], // FluxPrompt 필수 필드들
+                    additionalProperties: false
+                },
+                image_gen_prompt_sentence: { type: "string" },
+                updated_entity_manifest: {
+                    type: ["array", "null"], // Optional 처리
+                    items: {
+                        type: "object",
+                        properties: {
+                            id: { type: "string" },
+                            // Omit<'role' | 'type' ...> 적용된 필드들
+                            physics_profile: {
+                                type: "object",
+                                properties: {
+                                    material: { type: "array", items: { type: "string" } },
+                                    action_context: { type: "array", items: { type: "string" } }
+                                },
+                                required: ["material", "action_context"],
+                                additionalProperties: false
+                            },
+                            appearance: {
+                                type: "object",
+                                properties: {
+                                    clothing_or_material: { type: "string" },
+                                    body_features: { type: "string" },
+                                    position_descriptor: { type: "string" }
+                                },
+                                required: ["clothing_or_material", "body_features", "position_descriptor"],
+                                additionalProperties: false
+                            },
+                            state: {
+                                type: "object",
+                                properties: {
+                                    pose: { type: "string" },
+                                    expression: { type: "string" }
+                                },
+                                required: ["pose", "expression"],
+                                additionalProperties: false
+                            }
+                        },
+                        required: ["id", "physics_profile", "appearance", "state"],
+                        additionalProperties: false
+                    }
+                }
+            },
+            required: [
+                "image_gen_prompt",
+                "image_gen_prompt_sentence",
+                "updated_entity_manifest" // null 허용이므로 required에 포함
+            ],
+            additionalProperties: false
+        }
+    }
+}
+
+const videoGenResponseFormat: OpenAI.ResponseFormatJSONSchema = {
+    type: "json_schema",
+    json_schema: {
+        name: "video_gen_response",
+        strict: true,
+        schema: {
+            type: "object",
+            properties: {
+                logical_bridge: {
+                    type: "object",
+                    properties: {
+                        identity_logic: { type: "string" },
+                        action_focus: { type: "string" },
+                        ambiguous_points: {
+                            type: "array",
+                            items: { type: "string" }
+                        }
+                    },
+                    required: ["identity_logic", "action_focus", "ambiguous_points"],
+                    additionalProperties: false
+                },
+                reasoning: { type: "string" },
+                video_gen_prompt: { type: "string" },
+                video_gen_prompt_short: { type: "string" }
+            },
+            required: [
+                "logical_bridge",
+                "reasoning",
+                "video_gen_prompt",
+                "video_gen_prompt_short"
+            ],
+            additionalProperties: false
+        }
+    }
+};
+
+
 export const openAIServerAPI = {
     async postScript(userPrompt: string): Promise<ScriptGenerationResponse> {
         try {
@@ -413,14 +521,18 @@ Instruction: Generate the scene instruction JSON.
 
             const client = new OpenAI({ apiKey });
             const completion = await client.chat.completions.create({
-                model: OpenAIModel.GPT_O4_MINI,
+                // model: OpenAIModel.GPT_O4_MINI,
+                model: OpenAIModel.GPT_4O_MINI,
                 messages: [
                     { role: 'developer', content: developerMessage },
                     { role: 'user', content: userMessage }
                 ],
-                response_format: { type: 'json_object' },
-                reasoning_effort: 'high',
-                max_completion_tokens: 40960,
+                response_format: imageGenResponseFormat,
+                // response_format: { type: 'json_object' },
+                // reasoning_effort: 'medium',
+                // max_completion_tokens: 40960,
+                max_completion_tokens: 16384,
+                temperature: 0.7,
             });
 
             console.log(`Scene #${sceneNumber} postImageGenPrompt() usage: `, JSON.stringify(completion.usage))
@@ -439,6 +551,7 @@ Instruction: Generate the scene instruction JSON.
 
             // JSON 유효성 검증
             try {
+                console.log(`Scene #${sceneNumber} raw generated content: ${generatedContent}`)
                 const instructionJSON: {
                     image_gen_prompt: FluxPrompt;
                     image_gen_prompt_sentence: string;
@@ -694,7 +807,8 @@ Instruction: Generate the scene instruction JSON.
             // OpenAI SDK 클라이언트 초기화 및 API 호출
             const client = new OpenAI({ apiKey });
             const completion = await client.chat.completions.create({
-                model: OpenAIModel.GPT_O4_MINI,
+                // model: OpenAIModel.GPT_O4_MINI,
+                model: OpenAIModel.GPT_4O_MINI,
                 messages: [
                     { role: 'developer', content: developerMessage },
                     {
@@ -714,9 +828,11 @@ Instruction: Generate the scene instruction JSON.
                         ]
                     }
                 ],
-                reasoning_effort: 'high',
-                response_format: { type: 'json_object' },
-                max_completion_tokens: 20480,
+                // reasoning_effort: 'medium',
+                // response_format: { type: 'json_object' },
+                response_format: videoGenResponseFormat,
+                // max_completion_tokens: 20480,
+                max_completion_tokens: 16384,
             });
 
             console.log(`Scene #${sceneNumber} postVideoGenPrompt() usage: `, JSON.stringify(completion.usage))
