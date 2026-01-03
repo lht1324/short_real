@@ -172,33 +172,36 @@ export const POST_MASTER_STYLE_INFO_PROMPT = `
     3. **\`appearance_scenes\`**: List of scenes where the entity is present or implied.
        - **Format**: Strictly output as an **Integer Array** (e.g., \`[1, 2, 5]\`).
        * **1-Based Indexing**: Scene numbers must strictly correspond to the provided script sequence, starting at Scene 1.
-       * **Dynamic Pacing Protocol (DURATION-DEPENDENT Logic)**:
-         Apply the following logic based on the provided <video_duration> and <full_script_context>.\`length\`:
-         **Variables**:
-           * **[Video Duration]**: <video_duration>
-           * **[Scene Count]**: <full_script_context>.\`length\`
-         **Rules**:
-           * **Rounding Rule**: Percent mandates MUST be converted to integer scene counts using ceil([Scene Count] * ratio); e.g., 80% of 5 scenes => ceil(4.0) => 4 scenes.
-         **[CASE A: Short-Form ([Video Duration] < 60 secs)]** -> *High Saturation Mode*
-         - **Objective**: Maximize viewer retention via constant character presence.
-         - **Mandate**: The \`role\`: \`main_hero\` Entity MUST appear in **at least 80%** of all scenes.
-         - **Entity Allocation**:
-           1. **First Scene Anchor**: IF a \`main_hero\` exists, they MUST be assigned to **Scene 1** (Establishing/Intro), even if the script is purely atmospheric (use implied presence/silhouette).
-           2. **No "Dead Air"**: Do NOT allow consecutive empty scenes. Every scene must feature either the \`main_hero\` or a narrative-critical \`prop\`.
-         **[CASE B: Long-Form ([Video Duration] >= 60 secs)]** -> *Rhythmic Breathing Mode*
-         - **Objective**: Balance narrative tension with atmospheric release.
-         - **Mandate**: The \`role\`: \`main_hero\` Entity should appear in roughly **50-60%** of scenes to allow for world-building.
-         - **Entity Allocation**:
-           1. **First Scene Anchor**: IF a \`main_hero\` exists, they MUST be assigned to **Scene 1**.
-           2. **Breathing Room**: You MAY omit entities for purely environmental scenes (max 1 consecutive scene) to create pacing pauses, BUT only if the previous scene had high action intensity.
-       * **Contextual & Symbolic Inference - CRITICAL**: 
-         * **Action**: Analyze the narration. If the script implies an action (e.g., "The gun fired") OR an **abstract emotional state** (e.g., "The cost of victory"), you **MUST** assign an entity to embody it.
-         * **Guideline**: 
-           - For action: Assign the doer (e.g., Tank, Soldier).
-           - For emotion/aftermath: Assign the **\`main_hero\`** (to show reaction) or a key **\`prop\`** (to show symbolism).
-         * *Goal*: Prevent empty scenes during emotional climaxes.
+       * **Entity-Centric Scene Validation Protocol (CRITICAL)**:
+         - You must iterate through EVERY scene number (1 to N) and apply this **3-Gate Filtration Logic** to determine if THIS entity belongs there.
+         **Gate 1: The Explicit Call (Is the entity named?)**
+           - Check the narration and scene content.
+           - **IF** the entity is explicitly named, referenced by pronoun (e.g., "he/she/it"), or performs a specific action described in <full_script_context>.[n].\`sceneNarration\`:
+             -> **PASS**. (Proceed to Gate 3).
+           - **IF NO**: Proceed to Gate 2.
+         **Gate 2: The Implicit Habitat (Is this their natural place?)**
+           - Check the compatibility between the Scene's Location and the Entity's \`role\`/\`type\`.
+           - **IF** the location is the entity's primary domain (e.g., Pilot in a Cockpit, Soldier in a Trench, Shark in the Sea) AND their presence functions as a natural part of the environment:
+             -> **PASS**. (Proceed to Gate 3).
+           - **IF NO** (e.g., Tank in a Bedroom, Infantry in High-Altitude Sky, Civilian in a burning reactor): 
+             -> **FAIL**. Do NOT assign this scene number. (STOP).
+         **Gate 3: The Physical Veto (Is it physically possible?)**
+           - Final Reality Check. Even if Gate 1 or 2 is passed, check for fundamental physics/logic violations.
+           - **Rule**: If the entity cannot logically exist in the environment without external aid not mentioned in <full_script_context>.[n].\`sceneNarration\`
+             **Examples**:
+               * NO - Human floating in mid-air; YES - Paratrooper with parachutes floating in mid-air 
+               * NO - Submarine on a highway; YES - Sports car on a highway
+               * NO - Dog in a deep blue sea; YES - Shark in a deep blue sea
+             -> **FAIL**. Do NOT assign this scene number. (STOP).
+           - **The "Supernatural & Narrative" Exception**:
+             - **Check**: Does <video_metadata>.<video_title> and <video_metadata>.<video_description> (Genre) or <full_script_context> (Plot) involve unrealistic things? (e.g., Magic, Sci-Fi, Dreams, or Superpowers)
+             - **Override**: IF YES, and the entity's nature justifies it (e.g., Superman flying, Ghost passing walls) -> **BYPASS** the Standard Rule and **ASSIGN** the scene.
+           - **IF SAFE OR EXEMPT**: **ASSIGN** this scene number to the array.
+       * **The "Empty Scene" Outcome**:
+         - If a specific scene number fails the validation for **ALL** entities (i.e., no one claims the scene), it will naturally result in a scene with NO entities.
+         - **Instruction**: ACCEPT this outcome. Do NOT force an entity into a scene just to fill a void.
        * **Co-occurrence**: 
-         * Scene numbers are **NOT exclusive**. Multiple entities can (and should) share the same scene number if they appear together. 
+         - Multiple entities can and should share the same scene number if they all pass the validation logic.
     4. **\`type\`**: The fundamental biological or structural category of the entity.
        * **\`human\`**: Natural humans only.
        * **\`machine\`**: Robots, vehicles, mechs, or any technological appliances.
