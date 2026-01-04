@@ -30,72 +30,154 @@ const imageGenResponseFormat: OpenAI.ResponseFormatJSONSchema = {
     type: "json_schema",
     json_schema: {
         name: "image_gen_response",
-        strict: true, // [중요] 스키마 강제
+        strict: true,
         schema: {
             type: "object",
             properties: {
+                // 1. image_gen_prompt (FluxPrompt 인터페이스 완벽 매핑)
                 image_gen_prompt: {
                     type: "object",
                     properties: {
-                        // FluxPrompt 구조 (간소화됨, 필요시 상세화 가능)
-                        prompt: { type: "string" }, // 예시 필드
-                        negative_prompt: { type: ["string", "null"] }, // 예시 필드
-                        // ... FluxPrompt의 실제 필드들을 여기에 정의하세요 ...
+                        scene: { type: "string" },
+                        subjects: {
+                            type: "array",
+                            items: {
+                                type: "object",
+                                properties: {
+                                    id: { type: "string" },
+                                    type: { type: "string" },
+                                    description: { type: "string" },
+                                    clothes: { type: "string" },
+                                    accessories: { type: "string" },
+                                    pose: { type: "string" },
+                                    position: {
+                                        type: "string",
+                                        enum: ["foreground", "midground", "background"]
+                                    }
+                                },
+                                required: ["id", "type", "description", "clothes", "accessories", "pose", "position"],
+                                additionalProperties: false
+                            }
+                        },
+                        style: { type: "string" },
+                        color_palette: { type: "array", items: { type: "string" } },
+                        lighting: { type: "string" },
+                        mood: { type: "string" },
+                        background: { type: "string" },
+                        composition: {
+                            type: "string",
+                            enum: [
+                                "rule of thirds", "circular arrangement", "minimalist negative space", "S-curve",
+                                "vanishing point center", "dynamic off-center", "leading leads", "golden spiral",
+                                "diagonal energy", "strong verticals", "triangular arrangement", "framed by foreground"
+                            ]
+                        },
+                        camera: {
+                            type: "object",
+                            properties: {
+                                angle: {
+                                    type: "string",
+                                    enum: ["eye level", "low angle", "slightly low", "birds-eye", "worms-eye", "over-the-shoulder", "isometric"]
+                                },
+                                distance: {
+                                    type: "string",
+                                    enum: ["close-up", "medium close-up", "medium shot", "medium wide", "wide shot", "extreme wide"]
+                                },
+                                focus: {
+                                    type: "string",
+                                    enum: ["deep focus", "macro focus", "soft background", "selective focus", "sharp on subject"]
+                                },
+                                lens: {
+                                    type: "string",
+                                    enum: ["14mm", "24mm", "35mm", "50mm", "70mm", "85mm"]
+                                },
+                                fNumber: { type: "string" },
+                                ISO: { type: "number" }
+                            },
+                            required: ["angle", "distance", "focus", "lens", "fNumber", "ISO"],
+                            additionalProperties: false
+                        },
+                        effects: { type: "array", items: { type: "string" } }
                     },
-                    required: ["prompt"], // FluxPrompt 필수 필드들
+                    // FluxPrompt의 모든 필드를 필수(required)로 지정
+                    required: [
+                        "scene", "subjects", "style", "color_palette", "lighting", "mood",
+                        "background", "composition", "camera", "effects"
+                    ],
                     additionalProperties: false
                 },
+
+                // 2. image_gen_prompt_sentence
                 image_gen_prompt_sentence: { type: "string" },
+
+                // 3. updated_entity_manifest (Entity 인터페이스 매핑)
+                // Omit<Entity, 'role' | 'type' | 'appearance_scenes' | 'demographics'>[]
                 updated_entity_manifest: {
-                    type: ["array", "null"], // Optional 처리
+                    type: ["array", "null"], // Optional이므로 null 허용
                     items: {
                         type: "object",
                         properties: {
                             id: { type: "string" },
-                            // Omit<'role' | 'type' ...> 적용된 필드들
+                            // physics_profile (optional in TS -> nullable in schema)
                             physics_profile: {
-                                type: "object",
+                                type: ["object", "null"],
                                 properties: {
-                                    material: { type: "array", items: { type: "string" } },
-                                    action_context: { type: "array", items: { type: "string" } }
+                                    material: {
+                                        type: "array",
+                                        items: {
+                                            type: "string",
+                                            enum: ["rigid", "viscoelastic", "brittle", "cloth", "fluid", "elastoplastic", "granular"]
+                                        }
+                                    },
+                                    action_context: {
+                                        type: "array",
+                                        items: {
+                                            type: "string",
+                                            enum: ["locomotion", "combat", "interaction", "aerodynamics", "passive", "velocitymax"]
+                                        }
+                                    }
                                 },
                                 required: ["material", "action_context"],
                                 additionalProperties: false
                             },
+                            // appearance object
                             appearance: {
                                 type: "object",
                                 properties: {
                                     clothing_or_material: { type: "string" },
-                                    body_features: { type: "string" },
-                                    position_descriptor: { type: "string" }
+                                    // Entity.ts에서 hair, accessories, bodyfeatures는 optional임 -> null 허용
+                                    hair: { type: ["string", "null"] },
+                                    accessories: { type: ["string", "null"] },
+                                    body_features: { type: ["string", "null"] },
+                                    position_descriptor: { type: ["string", "null"] }
                                 },
-                                required: ["clothing_or_material", "body_features", "position_descriptor"],
+                                // strict 모드에서는 optional 필드도 required 목록에 넣고 타입에 null을 허용해야 함
+                                required: ["clothing_or_material", "hair", "accessories", "body_features", "position_descriptor"],
                                 additionalProperties: false
                             },
+                            // state object (optional in TS -> nullable in schema)
                             state: {
-                                type: "object",
+                                type: ["object", "null"],
                                 properties: {
                                     pose: { type: "string" },
-                                    expression: { type: "string" }
+                                    expression: { type: ["string", "null"] }
                                 },
                                 required: ["pose", "expression"],
                                 additionalProperties: false
                             }
                         },
+                        // Entity의 필수 키들 (Omit 된 것 제외하고 남은 것들)
                         required: ["id", "physics_profile", "appearance", "state"],
                         additionalProperties: false
                     }
                 }
             },
-            required: [
-                "image_gen_prompt",
-                "image_gen_prompt_sentence",
-                "updated_entity_manifest" // null 허용이므로 required에 포함
-            ],
+            // 최상위 required
+            required: ["image_gen_prompt", "image_gen_prompt_sentence", "updated_entity_manifest"],
             additionalProperties: false
         }
     }
-}
+};
 
 const videoGenResponseFormat: OpenAI.ResponseFormatJSONSchema = {
     type: "json_schema",
