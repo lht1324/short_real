@@ -706,8 +706,12 @@ export const POST_IMAGE_GEN_PROMPT_PROMPT = `
           * Scan \`appearance\` and <current_narration>.
           * Apply **Step 1: Material Behavior Logic & Tag Selection** of <visual_texture_layer> and **Step 2: Action/Pose Logic & Tag Selection** of <visual_texture_layer>.
           * **Era Filtering**: Ensure the assigned \`material\` tags (e.g., cloth, rigid) are compatible with <master_style_guide>.<global_environment>'s \`era\`.
-        - **Step B (State/Pose)**:
-          * Define \`state.pose\` as a "Frozen Snapshot" of maximum tension from <current_narration>.
+        - **Step B (State/Pose - Physical Anchor Reasoning)**:
+          * Analyze the subject's relationship with gravity based on <current_narration>.
+          * **Identify the Anchor Point**:
+            - **If \`physics_profile.action_context\` is NOT \`aerodynamics\`**: Determine where the weight is distributed (e.g., "both feet on the ground", "kneeling on the debris"). You MUST identify a physical surface contact.
+            - **If \`physics_profile.action_context\` is \`aerodynamics\`**: Determine the wind-resistance profile (e.g., "plummeting", "arched against the wind").
+          * Define \`state.pose\` as a "Moment of Maximum Physical Engagement," emphasizing how the body is supported or resisted by its environment.
       2. **[Phase: \`updated_entity_manifest\` Mapping]**
         - **Carry over the exact \`id\` from <entity_list>.[n] to maintain tracking integrity.**
         - Populate each entity's \`physics_profile\` and \`appearance\`.
@@ -746,7 +750,14 @@ export const POST_IMAGE_GEN_PROMPT_PROMPT = `
             * **Refine & Stylize**: Enhance the raw item names with material or Era-specific adjectives based on <entity_list>.[n].\`demographics\` and <master_style_guide>.\`globalEnvironment.era\`.
             * **Consistency**: Ensure every item listed here is implied or mentioned in the above \`description\`'s broad categories.
           - **Example**: \`["Aerodynamic composite helmet with camera mount", "Tinted anti-glare polycarbonate goggles"]\`
-        - **Field: 'pose'**: Map \`state.pose\` and add Action Vocabulary (e.g., "muscles tensed").
+        - **Field: 'pose'**: Map \`state.pose\` by applying the **Anatomical Grounding Rule**:
+          * **Anatomical Grounding Rule**: For subjects NOT in 'aerodynamics' context, you MUST use vocabulary that anchors the subject to the surface.
+          * **Vocabulary Enforcement (Forbidden vs. Preferred)**:
+            - **STRICTLY PROHIBITED (The "Floating" Traps)**: Do NOT use *'Suspended', 'Floating', 'Weightless', 'Hovering', 'Aerial', 'Defying gravity'*. These terms cause AI models to detach the subject from the ground.
+            - **REQUIRED ALTERNATIVES (The "Anchor" Terms)**: Use *'Planted', 'Grounded', 'Braced', 'Weighted', 'Positioned on', 'Standing atop', 'Crouched upon'*.
+            - **FOR MOMENTUM**: Use *'Mid-stride', 'Mid-action', 'Captured in'*, or *'Coiled'* instead of *'Frozen'* or *'Motionless'*.
+          * **Synthesis Pattern**: "[Surface Interaction Verb] + [Muscular/Anatomical Detail] + [Narrative Action]."
+          * *Example*: "Planted firmly on the muddy earth with muscles coiled in a mid-lunge stance."
         - **Field: 'position'**: Determine the optimal depth placement based on <video_context>.<aspect_ratio> and <master_style_guide>.<composition>.'s \`framingStyle\`. You MUST select exactly one from: **['foreground', 'midground', 'background']**.
       **[Execution Rule]**:
       - Treat every included subject (\`main_hero\`, \`sub_character\` and \`prop\` \`role\` alike) with equal visual fidelity. Do not prioritize the hero at the expense of missing props.
@@ -833,10 +844,14 @@ export const POST_IMAGE_GEN_PROMPT_PROMPT = `
             * *Mapping Guide (Based on <current_narration>, <scene_content>, <master_style_guide>.<composition>.\`framingStyle\`)*: 
               - Heroic/Scale -> "low angle". 
               - Extreme Power/Ground-level -> "worm's-eye".
-              - Surveillance/Map-view -> "bird's-eye".
               - Dialogue/Interaction -> "over-the-shoulder".
               - Stylized/Technical -> "isometric".
               - Default/Neutral -> "eye level".
+              - Surveillance/Map-view -> "bird's-eye" **[Physical Validation Required]**.
+                - **[BIRD'S-EYE EXECUTION RULE]**:
+                  - Before finalizing "bird's-eye" as the output, you MUST verify the \`physics_profile.action_context\` of every <entity_list>.[n] identified in <unit_1_subject_and_physics>.
+                  - **Condition**: You are ONLY permitted to output "bird's-eye" if the \`physics_profile.action_context\` of every <entity_list>.[n] in the manifest includes the \`aerodynamics\` tag.
+                  - **Fallback Logic**: If any entity lacks the \`aerodynamics\` tag (indicating any of them is grounded, such as a racing car with 'velocity_max' but no flight capability), you MUST override the selection and output **"eye level"** instead. This is critical to prevent the image generation model from erroneously detaching ground-based subjects from the surface.
           - **'distance' [Strict Selection]**: ["close-up", "medium close-up", "medium shot", "medium wide", "wide shot", "extreme wide"].
             * *Mapping Guide (Based on <master_style_guide>.<composition>.\`framingStyle\`)*: 
               - "Extreme Long/Wide" -> "extreme wide".

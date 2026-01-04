@@ -133,7 +133,7 @@ const imageGenResponseFormat: OpenAI.ResponseFormatJSONSchema = {
                                         type: "array",
                                         items: {
                                             type: "string",
-                                            enum: ["locomotion", "combat", "interaction", "aerodynamics", "passive", "velocitymax"]
+                                            enum: ["locomotion", "combat", "interaction", "aerodynamics", "passive", "velocity_max"]
                                         }
                                     }
                                 },
