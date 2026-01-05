@@ -1035,6 +1035,10 @@ export const POST_IMAGE_GEN_PROMPT_PROMPT = `
           * **IF [Canvas_Type] is "Vertical"**:
             - If "Anamorphic" -> ["oval bokeh", "vertical light leaks", "soft edge bloom"]. (Note: Strips horizontal-specific flares).
             - If "Wide-Angle" -> ["sharp focus edges", "unfiltered clarity"]. (Note: Removes barrel distortion to prevent limb stretching).
+        - **[Final Integration Rule]**:
+          - **MUST**: Collect all triggered strings from Source 1, 2, and 3.
+          - **MUST**: Merge them into one single, flat array: \`["source1-effect-1", "source1-effect2", "source1-effect-3", ... , source3-effect-n]\`.
+          - **Constraint**: If \`camera.focus\` is "deep focus", discard any "bokeh" or "blur" related keywords from the final array.
         **[Execution Rule]**:
           - Combine all triggered keywords into a single flat array.
           - If focus is "deep focus", remove any "bokeh" or "blur" keywords from this array.
@@ -1058,14 +1062,14 @@ export const POST_IMAGE_GEN_PROMPT_PROMPT = `
             * Scan \`subjects\` array. Identify the **Primary Subject** based on \`role\` priority: \`main_hero\` > \`sub_character\` > \`prop\`.
             * Use this Primary Subject for the main clause of the sentence.
           - **Logic (Condition A: If \`subjects\` is NOT EMPTY)**:
-            "[Article] [\`camera.angle\`] [\`camera.distance\`] captures [\`subjects[n].description\`][Detail_Clause] [who is/which is] [\`subjects[n].pose\`] [\`subjects[n].position\`]."
+            "[A/An] [\`camera.angle\`] [\`camera.distance\`] captures [\`subjects[n].description\`][Detail_Clause] [who is/which is] [\`subjects[n].pose\`] [\`subjects[n].position\`]."
             * **Connector Logic**: 
               - If \`subjects[n].role\` is \`main_hero\` or \`sub_character\`: use "**who is**".
               - If \`subjects[n].role\` is \`prop\`: use "**which is**" or skip connector directly.
           - **Logic (Condition B: If \`subjects\` is EMPTY)**:
             "[Article] [\`camera.angle\`] [\`camera.distance\`] focuses entirely on the [\`scene\`] elements."
           - **Variables**: \`camera.angle\`, \`camera.distance\`, \`subjects\` (including \`clothes\`, \`accessories\`, \`role\`), \`scene\`.
-          - **Instruction ([Detail_Clause] Construction)**:
+          - **Instruction ([Detail_Clause] Enhancement)**:
             * You MUST construct the \`[Detail_Clause]\` by intelligently combining \`subjects[n].clothes\` and \`subjects[n].accessories\`.
             * **Array Flattening Rule**: For \`accessories\` (string array), join the items with commas or "and" (e.g., ["hat", "watch"] -> "a hat and a watch"). Do NOT output brackets or quotes.
             * **Smart Assembly Rule**:
@@ -1073,6 +1077,7 @@ export const POST_IMAGE_GEN_PROMPT_PROMPT = `
               - **Clothes Only**: ", clad in [\`clothes\`],"
               - **Accessories Only**: ", featuring [flattened_accessories],"
               - **Neither**: (Leave blank)
+            * If \`role\` is \`prop\`: Replace "dressed in/clad in" with "**encased in**" or "**featuring a [\`clothes\`] surface**".
             * **Flow Check**: Ensure NO dangling prepositions (e.g., "dressed in ,") and ensure the clause transitions smoothly into "who is [\`pose\`]".
           - **Instruction (Multi-Subject Handling)**:
             * If multiple subjects exist, append remaining subjects to the sentence using **Contextual Bridges**.
@@ -1086,7 +1091,7 @@ export const POST_IMAGE_GEN_PROMPT_PROMPT = `
           - **Variables**: \`background\`, \`composition\`, \`mood\`, \`lighting\`, \`color_palette\`, (\`scene\` only in Condition A).
           - *Instruction*: List the Hex codes in brackets exactly as provided (e.g., "(#RRGGBB, #RRGGBB, #RRGGBB)").
         **[Sentence 3: Technical Specifications]**
-          - **Logic**: "Rendered in a [\`style\`], this image is captured with a [\`camera.lens\`] lens at [\`camera.fNumber\`] for [\`camera.focus\`] and ISO [\`camera.ISO\`], featuring [\`effects\`]."
+          - **Logic**: "Rendered in [\`style\`], this image is captured with a [\`camera.lens\`] lens at [\`camera.fNumber\`] for [\`camera.focus\`] and ISO [\`camera.ISO\`], featuring [\`effects\`]."
           - **Variables**: \`style\`, \`camera.lens\`, \`camera.fNumber\`, \`camera.focus\`, \`camera.ISO\`, \`effects\`.
           - *Instruction*: Join the \`effects\` array with commas and "and" to form a fluent descriptive clause.
       **Final Quality Check**:
