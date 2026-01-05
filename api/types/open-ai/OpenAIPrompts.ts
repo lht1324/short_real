@@ -807,6 +807,13 @@ export const POST_IMAGE_GEN_PROMPT_PROMPT = `
     <unit_3_optical_and_technical>
       **UNIT 3: OPTICAL & TECHNICAL REASONING**
       **Goal**: Translate <master_style_guide> technical specs into precise digital camera metadata (\`camera\` object), technical \`effects\`, and \`color_palette\`.
+      0. **[Internal Reasoning: Canvas Type Determination]**
+        - **Action**: Before determining any technical values, analyze the numerical values in <video_context>.<aspect_ratio>.
+        - **Logic**:
+          - **IF width < height** (e.g., "9:16", "2:3", "4:5"): Set **[Canvas_Type]** to **"Vertical"**.
+          - **IF width > height** (e.g., "16:9", "21:9", "3:2"): Set **[Canvas_Type]** to **"Horizontal"**.
+          - **IF width == height** (e.g., "1:1"): Set **[Canvas_Type]** to **"Square"**.
+        - **Constraint**: This **[Canvas_Type]** is a mandatory global filter. Every subsequent selection in <unit_3_optical_and_technical> and <unit_4_natural_language_sentence_generation> must be cross-referenced with this type to ensure visual-spatial alignment.
       1. **[Field: 'color_palette'] - Chromatic Fidelity & Intensity Mapping**
         - **Action**: Analyze the 8 Hex fields in <master_style_guide>.<color_and_light>.\`globalHexPalette\`.
           **Definition of each field in <master_style_guide>.<color_and_light>.\`globalHexPalette\`**:
@@ -840,40 +847,105 @@ export const POST_IMAGE_GEN_PROMPT_PROMPT = `
         - **Rule 1 (Strict Selection)**: For fields with a provided **[List]**, you MUST select exactly ONE value from that list. 
         - **Rule 2 (Formatted Output)**: Follow the specified string/number format strictly.
         - **Field: 'camera'**:
-          - **'angle' [Strict Selection]**: ["eye level", "low angle", "slightly low", "bird's-eye", "worm's-eye", "over-the-shoulder", "isometric"].
-            * *Mapping Guide (Based on <current_narration>, <scene_content>, <master_style_guide>.<composition>.\`framingStyle\`)*: 
-              - Heroic/Scale -> "low angle". 
-              - Extreme Power/Ground-level -> "worm's-eye".
-              - Dialogue/Interaction -> "over-the-shoulder".
-              - Stylized/Technical -> "isometric".
-              - Default/Neutral -> "eye level".
-              - Surveillance/Map-view -> "bird's-eye" **[Physical Validation Required]**.
-                - **[BIRD'S-EYE EXECUTION RULE]**:
-                  - Before finalizing "bird's-eye" as the output, you MUST verify the \`physics_profile.action_context\` of every <entity_list>.[n] identified in <unit_1_subject_and_physics>.
-                  - **Condition**: You are ONLY permitted to output "bird's-eye" if the \`physics_profile.action_context\` of every <entity_list>.[n] in the manifest includes the \`aerodynamics\` tag.
-                  - **Fallback Logic**: If any entity lacks the \`aerodynamics\` tag (indicating any of them is grounded, such as a racing car with 'velocity_max' but no flight capability), you MUST override the selection and output **"eye level"** instead. This is critical to prevent the image generation model from erroneously detaching ground-based subjects from the surface.
-          - **'distance' [Strict Selection]**: ["close-up", "medium close-up", "medium shot", "medium wide", "wide shot", "extreme wide"].
-            * *Mapping Guide (Based on <master_style_guide>.<composition>.\`framingStyle\`)*: 
-              - "Extreme Long/Wide" -> "extreme wide".
-              - "Long/Wide" -> "wide shot".
-              - "Full/Medium Wide" -> "medium wide".
-              - "Medium/Waist" -> "medium shot".
-              - "Bust/Chest" -> "medium close-up".
-              - "Face/Detail" -> "close-up".
-          - **'focus' [Strict Selection]**: ["deep focus", "macro focus", "soft background", "selective focus", "sharp on subject"].
-            * **Mapping Guide (Based on <master_style_guide>.<optics>.\`focusDepth\`)**:
-              - If "Deep" -> ALWAYS "deep focus".
-              - If "Shallow":
-                - If \`distance\` is "close-up" -> "macro focus"
-                - If \`distance\` is "medium close-up" or "medium shot" -> "soft background"
-                - If \`distance\` is "medium wide", "wide shot", or "extreme wide" -> "selective focus"
-              - If "Selective" -> "selective focus".
-              - If none of the above -> "sharp on subject".
-          - **'lens' [Strict Selection]**: ["14mm", "24mm", "35mm", "50mm", "70mm", "85mm"].
-            * *Mapping Guide (Based on <master_style_guide>.<optics>.\`lensType\`)*: 
-              - "Wide-Angle" -> "14mm" or "24mm".
-              - "Spherical" -> "35mm" or "50mm".
-              - "Anamorphic/Macro" -> "70mm" or "85mm".
+          - **'angle' [Context-Aware Mapping]**: 
+            - **Action**: Map <current_narration>, <scene_content> and <master_style_guide>.<composition>.\`framingStyle\` to a specific technical angle based on **[Canvas_Type]** to ensure physical grounding and visual stability.
+            * **[Aspect-Ratio Translation Table]**:
+              - **IF [Canvas_Type] is "Horizontal"**:
+                  * "Default/Neutral" -> **"eye level"**
+                  * "Heroic/Scale" -> **"low angle"**
+                  * "Extreme Power/Ground-level" -> **"worm's-eye"**
+                  * "Dialogue/Interaction" -> **"over-the-shoulder"**
+                  * "Surveillance/Map-view" -> **"bird's-eye"**
+                  - **[BIRD'S-EYE EXECUTION RULE]**:
+                    - Before finalizing "bird's-eye" as the output, you MUST verify the \`physics_profile.action_context\` of every <entity_list>.[n] identified in <unit_1_subject_and_physics>.
+                    - **Condition**: You are ONLY permitted to output "bird's-eye" if the \`physics_profile.action_context\` of every <entity_list>.[n] in the manifest includes the \`aerodynamics\` tag.
+                    - **Fallback Logic**: If any entity lacks the \`aerodynamics\` tag (indicating any of them is grounded, such as a racing car with 'velocity_max' but no flight capability), you MUST override the selection and output "high angle shot looking down" (or "elevated view") instead. This is critical to prevent the image generation model from erroneously detaching ground-based subjects from the surface.
+                * "Stylized/Technical" -> **"isometric"**
+              - **IF [Canvas_Type] is "Vertical"**:
+                  * "Default/Neutral" -> **"eye level"**
+                  * "Heroic/Scale" -> **"low angle"**
+                  * "Extreme Power/Ground-level" -> **"low angle"**
+                  * "Dialogue/Interaction" -> **"over-the-shoulder"**
+                  * "Surveillance/Map-view" -> **"high angle shot looking down"**
+                  * "Stylized/Technical" -> **"slightly low"**
+              - **IF [Canvas_Type] is "Square"**:
+                  * "Default/Neutral" -> **"eye level"**
+                  * "Heroic/Scale" -> **"slightly low"**
+                  * "Extreme Power/Ground-level" -> **"low angle"**
+                  * "Dialogue/Interaction" -> **"eye level"**
+                  * "Surveillance/Map-view" -> **"high angle"**
+                  * "Stylized/Technical" -> **"eye level"**
+            - **Constraint**: Do not output the source intent labels. Output ONLY the **Final Optimized Keyword** into \`image_gen_prompt.camera.angle\` and \`image_gen_prompt_sentence\`.
+          - **'distance' [Context-Aware Mapping]**: 
+            - **Action**: Map <master_style_guide>.<composition>.\`framingStyle\` to a specific keyword based on the **[Canvas_Type]** to fulfill the narrative intent while preventing technical artifacts.
+            * **[Aspect-Ratio Translation Table]**:
+              - **IF [Canvas_Type] is "Horizontal"**:
+                  * "Extreme Long/Wide" -> **"extreme wide shot"**
+                  * "Long/Wide" -> **"wide shot"**
+                  * "Full/Medium Wide" -> **"medium wide shot"**
+                  * "Medium/Waist" -> **"medium shot"**
+                  * "Bust/Chest" -> **"medium close-up"**
+                  * "Face/Detail" -> **"close-up"**
+              - **IF [Canvas_Type] is "Vertical"**:
+                  * "Extreme Long/Wide" -> **"vertical panoramic environmental shot"**
+                  * "Long/Wide" -> **"full-length vertical capture"**
+                  * "Full/Medium Wide" -> **"full-body shot"**
+                  * "Medium/Waist" -> **"medium full shot"**
+                  * "Bust/Chest" -> **"medium close-up"**
+                  * "Face/Detail" -> **"close-up"**
+              - **IF [Canvas_Type] is "Square"**:
+                  * "Extreme Long/Wide" -> **"wide-angle square shot"**
+                  * "Long/Wide" -> **"full-frame environmental shot"**
+                  * "Full/Medium Wide" -> **"medium-wide centered shot"**
+                  * "Medium/Waist" -> **"medium shot"**
+                  * "Bust/Chest" -> **"medium close-up"**
+                  * "Face/Detail" -> **"close-up"**
+            - **Constraint**: Do not output the source intent (e.g., "Long/Wide"). Output ONLY the **Final Optimized Keyword** into \`image_gen_prompt.camera.distance\` and \`image_gen_prompt_sentence\`.
+          - **'focus' [Context-Aware Mapping]**: 
+            - **Action**: Map <master_style_guide>.<optics>.\`focusDepth\` to a technical focus term optimized for the **[Canvas_Type]** and the chosen **'distance'**.
+            * **[Aspect-Ratio Translation Table]**:
+              - **IF [Canvas_Type] is "Horizontal"**:
+                  * "Deep" -> **"deep focus"**
+                  * "Shallow":
+                    * IF 'distance' is "close-up" -> **"macro focus"**
+                    * IF 'distance' is "medium..." -> **"cinematic background blur"**
+                    * IF 'distance' is "wide..." -> **"selective focus"**
+                  * "Selective" -> **"selective focus"**
+                  * Default -> **"sharp on subject"**
+              - **IF [Canvas_Type] is "Vertical"**:
+                  * "Deep" -> **"sharp focus throughout the vertical frame"**
+                  * "Shallow":
+                    - IF 'distance' is "close-up" -> **"macro detail focus"**
+                    - IF 'distance' is "medium..." -> **"soft blurred background"**
+                    - IF 'distance' is "wide..." -> **"subtle subject isolation"**
+                  * "Selective" -> **"selective focus"**
+                  * Default -> **"sharp on subject"**
+              - **IF [Canvas_Type] is "Square"**:
+                  * "Deep" -> **"deep focus"**
+                  * "Shallow" -> **"bokeh-rich background"**
+                  * "Selective" -> **"selective focus"**
+                  * Default -> **"sharp on subject"**
+            - **Constraint**: Do not output the source intent labels (e.g., "Deep", "Shallow"). Output ONLY the **Final Optimized Keyword** into \`image_gen_prompt.camera.focus\` and \`image_gen_prompt_sentence\`.
+          - **'lens' [Context-Aware Mapping]**: 
+            - **Action**: Map \`<master_style_guide>.<optics>.lensType\` to a specific focal length (mm) optimized for the **[Canvas_Type]** to prevent subject distortion and aspect-ratio artifacts.
+            * **[Aspect-Ratio Translation Table]**:
+              - **IF [Canvas_Type] is "Horizontal"**:
+                  * "Wide-Angle" -> **"14mm"** or **"24mm"**
+                  * "Spherical" -> **"35mm"** or **"50mm"**
+                  * "Anamorphic" -> **"70mm"** or **"85mm"**
+                  * "Macro" -> **"85mm macro"**
+              - **IF [Canvas_Type] is "Vertical"**:
+                  * **CRITICAL**: Avoid ultra-wide and anamorphic labels to prevent letterboxing and limb stretching.
+                  * "Wide-Angle" -> **"35mm"** (Moderate wide-angle that preserves human proportions)
+                  * "Spherical" -> **"50mm"**
+                  * "Anamorphic" -> **"50mm"** or **"85mm"** (Note: Strictly use spherical focal lengths to block 'Cinemascope' artifacts)
+                  * "Macro" -> **"85mm"**
+              - **IF [Canvas_Type] is "Square"**:
+                  * "Wide-Angle" -> **"24mm"**
+                  * "Spherical" -> **"50mm"**
+                  * "Anamorphic" -> **"50mm"**
+                  * "Macro" -> **"85mm"**
+            - **Constraint**: Do not output the source intent labels (e.g., "Anamorphic"). Output ONLY the **Final mm Value** (e.g., "50mm") into \`image_gen_prompt.camera.lens\` and \`image_gen_prompt_sentence\`.
           - **'fNumber' [Format: string]**: 
             * **Action**: Define the aperture value as a string (Pattern: "f/X.X").
             * *Mapping Guide (Based on <master_style_guide>.<optics>.\`focusDepth\`)*:
@@ -887,25 +959,49 @@ export const POST_IMAGE_GEN_PROMPT_PROMPT = `
               - If "High-Key", you may decrease it by up to 1 stop from default (min 100).
               - If "Natural", Strictly adhere to <master_style_guide>.<optics>.\`defaultISO\` to maintain a balanced, unmanipulated sensor response that reflects standard lighting conditions.
             * **Constraint**: Output exactly one integer.
-        - **Field: 'composition' [Strict Selection]**: 
-          - **[List]**: ["rule of thirds", "circular arrangement", "minimalist negative space", "S-curve", "vanishing point center", "dynamic off-center", "leading leads", "golden spiral", "diagonal energy", "strong verticals", "triangular arrangement"].
-          - **Mapping Guide (Based on <master_style_guide>.<composition> and Narrative Tone)**:
-            * **Stability & Balance**: 
-              - "Symmetry/Perspective" -> "vanishing point center".
-              - "Natural Balance" -> "rule of thirds".
-              - "Strength/Architecture" -> "strong verticals".
-            * **Dynamic & Tension**:
-              - "Action/High Energy" -> "diagonal energy" or "dynamic off-center".
-              - "Complex Motion" -> "triangular arrangement" or "S-curve".
-            * **Focus & Flow**:
-              - "Depth/Immersion" -> "leading leads" or "vanishing point center".
-              - "Aesthetic Perfection" -> "golden spiral" or "circular arrangement".
-            * **Isolation & Minimalist**:
-              - "Solitude/Focus" -> "minimalist negative space".
+        - **Field: 'composition' [Context-Aware Mapping]**: 
+          - **Action**: Map <master_style_guide>.<composition> and Narrative Tone into a cinematic composition technique optimized for the **[Canvas_Type]** to ensure balanced spatial distribution and narrative flow.
+          * **[Aspect-Ratio Translation Table]**:
+            - **IF [Canvas_Type] is "Horizontal"**:
+                * "Symmetry/Perspective" -> **"vanishing point center"** (Maximizes depth in wide frames)
+                * "Natural Balance" -> **"rule of thirds"**
+                * "Strength/Architecture" -> **"strong horizontal lines"**
+                * "Action/High Energy" -> **"diagonal energy"** or **"dynamic off-center"**
+                * "Complex Motion" -> **"S-curve through the horizon"**
+                * "Depth/Immersion" -> **"leading lines toward the horizon"**
+                * "Solitude/Focus" -> **"minimalist negative space"**
+            - **IF [Canvas_Type] is "Vertical"**:
+                * "Symmetry/Perspective" -> **"centered vertical symmetry"**
+                * "Natural Balance" -> **"vertical rule of thirds"**
+                * "Strength/Architecture" -> **"strong verticals"** (Emphasizes height and scale)
+                * "Action/High Energy" -> **"steep diagonal tension"**
+                * "Complex Motion" -> **"vertical S-curve"** or **"triangular arrangement"**
+                * "Depth/Immersion" -> **"low-to-high leading lines"**
+                * "Aesthetic Perfection" -> **"vertical golden spiral"**
+                * "Solitude/Focus" -> **"vertical minimalist negative space"**
+            - **IF [Canvas_Type] is "Square"**:
+                * "Symmetry/Perspective" -> **"central symmetry"**
+                * "Natural Balance" -> **"rule of thirds"**
+                * "Focus & Flow" -> **"circular arrangement"** or **"centered framing"**
+                * "Isolation" -> **"minimalist negative space"**
+          - **Constraint**: Do not output the source intent labels. Output ONLY the **Final Cinematic Term** into \`image_gen_prompt.composition\` and \`image_gen_prompt_sentence\`.
         **[Execution Rule]**:
         - Accuracy and adherence to the predefined pick-lists are mandatory to pass system validation.
       3. **[Field: 'style', 'lighting', 'mood'] - Atmospheric Anchoring**
         - **Action**: Synthesize raw technical data into descriptive strings while maintaining cross-reference stability with the 'camera' object.
+        - **Field: 'style' [Context-Aware Mapping]**:
+          - **Action**: Synthesize a technical rendering style by combining <master_style_guide>.<fidelity>.\`textureDetail\` and <master_style_guide>.<fidelity>.\`grainLevel\`, filtered through **[Canvas_Type]**. 
+          - **Constraint**: Strictly exclude \`resolutionTarget\` (e.g., 4K, 8K) and \`era\` from this field to prevent technical artifacts and color bias.
+          * **[Aspect-Ratio Translation Table]**:
+            - **IF [Canvas_Type] is "Horizontal"**:
+              * **Mapping**: "Professional cinematic RAW aesthetic with [\`textureDetail\`] detail and [\`grainLevel\`] grain."
+              * **Note**: Maintains high-end cinematic texture for 16:9 frames.
+            - **IF [Canvas_Type] is "Vertical"**:
+              * **Mapping**: "High-fidelity RAW portrait photography with [\`textureDetail\`] surface detail and [\`grainLevel\`] organic texture."
+              * **CRITICAL**: Use "Portrait photography" to align with vertical datasets. Strictly avoid "Cinematic" or "4K" to prevent letterboxing.
+            - **IF [Canvas_Type] is "Square"**:
+              * **Mapping**: "Balanced RAW texture style with [\`textureDetail\`] and [\`grainLevel\`] definition."
+          - **Constraint**: Output ONLY the **Final Style String** into \`image_gen_prompt.style\` and \`image_gen_prompt_sentence\`.
         - **Field: 'style' [Format: string]**:
           * **Source**: <master_style_guide>.<fidelity>.\`textureDetail\`, <master_style_guide>.<fidelity>.\`grainLevel\`, and <video_context>.<video_description>.
           * **Mapping Guide**: 
@@ -923,25 +1019,25 @@ export const POST_IMAGE_GEN_PROMPT_PROMPT = `
             - **Infer** the emotional atmosphere by combining the narrative theme (from title) with the color theory of \`tonality\`.
             - *Example*: If Title is "Last Stand" and Tonality is "Warm earth tones" -> "Exhilarating yet somber atmosphere with a sense of grounded grit."
           * **Constraint**: Do NOT include camera technicals (ISO, lens, etc.) to prevent data conflict.
-      4. **[Field: 'effects'] - Technical Fidelity Boosters**
-        - **Action**: Generate an array of technical keywords based on the fidelity and optical hardware specs.
-        - **Rule**: Every effect must support the resolution and texture standards defined in the MasterStyle.
-        - **Source 1: <master_style_guide>.<fidelity>.\`grainLevel\`**
-          * Mapping:
-            - "Gritty" -> ["heavy film grain", "analog noise", "visible texture"].
-            - "Filmic" -> ["subtle film grain", "cinematic film texture"].
-            - "Clean" -> ["low noise", "clean digital sensor finish"].
-        - **Source 2: <master_style_guide>.<fidelity>.\`resolutionTarget\`**
-          * Mapping:
-            - Always include the specific target: ["8K resolution", "hyper-detailed"] or ["4K UHD", "sharp textures"] or ["35mm film scan", "analog softness"].
-        - **Source 3: <master_style_guide>.<optics>.\`lensType\` (Artifact Injection)**
-          * Mapping:
-            - If "Anamorphic" -> Add ["oval bokeh", "anamorphic lens flares", "horizontal light streaks"].
-            - If "Macro" -> Add ["intricate surface detail", "microscopic texture"].
-            - If "Wide-Angle" -> Add ["slight barrel distortion", "expansive field of view"].
+      - **[Field: 'effects'] - Context-Aware Artifact Management**
+        - **Action**: Generate a flat array of technical keywords based on **[Canvas_Type]**, ensuring zero conflict with aspect ratio.
+        - **Source 1: <master_style_guide>.<fidelity>.\`grainLevel\`** (Grain consistency)
+          - [No Change]: "Gritty" -> ["heavy film grain"], "Filmic" -> ["subtle film grain"], "Clean" -> ["clean digital sensor finish"].
+        - **Source 2: <master_style_guide>.<fidelity>.\`resolutionTarget\`** (Ratio-Safe Fidelity)
+          * **IF [Canvas_Type] is "Horizontal"**:
+            - Use numeric targets: ["4K UHD", "8K resolution", "ultra-sharp details"].
+          * **IF [Canvas_Type] is "Vertical" or "Square"**:
+            - **CRITICAL**: Use descriptive targets ONLY: ["highly defined textures", "hyper-detailed rendering", "extreme visual fidelity"]. (Prevents letterboxing by avoiding '4K/8K' tokens).
+        - **Source 3: <master_style_guide>.<optics>.\`lensType\`** (Optical Alignment)
+          * **IF [Canvas_Type] is "Horizontal"**:
+            - If "Anamorphic" -> ["oval bokeh", "anamorphic lens flares", "horizontal light streaks"].
+            - If "Wide-Angle" -> ["slight barrel distortion", "expansive field of view"].
+          * **IF [Canvas_Type] is "Vertical"**:
+            - If "Anamorphic" -> ["oval bokeh", "vertical light leaks", "soft edge bloom"]. (Note: Strips horizontal-specific flares).
+            - If "Wide-Angle" -> ["sharp focus edges", "unfiltered clarity"]. (Note: Removes barrel distortion to prevent limb stretching).
         **[Execution Rule]**:
-        - Combine all triggered keywords into a single flat array.
-        - Ensure effects do not contradict the 'camera.focus' setting (e.g., no "background blur" effects if focus is "deep focus").
+          - Combine all triggered keywords into a single flat array.
+          - If focus is "deep focus", remove any "bokeh" or "blur" keywords from this array.
       **[Execution Rule]**:
       - All camera values must be physically plausible and consistent with the MasterStyle standard.
     </unit_3_optical_and_technical>
