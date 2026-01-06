@@ -74,7 +74,7 @@ export async function POST(request: NextRequest) {
                 videoTitle,
                 videoDescription,
                 entityManifestList.filter((entity) => {
-                    return entity.appearance_scenes.includes(sceneData.sceneNumber);
+                    return sceneData.sceneCastingEntityIdList?.includes(entity.id) === true;
                 }),
             );
 

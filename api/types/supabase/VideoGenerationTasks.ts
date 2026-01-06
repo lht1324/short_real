@@ -75,6 +75,7 @@ export interface SceneData {
     sceneEntityManifestList?: Entity[];
     requestId?: string;
     sceneSubtitleSegments?: SubtitleSegment[];
+    sceneCastingEntityIdList?: string[];
     status: SceneGenerationStatus;
 }
 

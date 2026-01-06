@@ -392,41 +392,6 @@ export const videoServerAPI = {
             return true;
         } catch (error) {
             console.error(`[Merge Service] 최종 영상 병합 중 에러:`, error);
-            // 실패 시 Task 상태 'failed'로 업데이트
-
-            if (generationTaskId) {
-                const generationTask = await videoGenerationTasksServerAPI.getVideoGenerationTaskById(generationTaskId);
-
-                if (generationTask) {
-                    const mappedList: SceneData[] = generationTask?.scene_breakdown_list.map((sceneData) => {
-                        return {
-                            ...sceneData,
-                            status: SceneGenerationStatus.IN_PROGRESS,
-                        }
-                    });
-                    const requestIdList = mappedList.map((sceneData) => {
-                        return sceneData.requestId!;
-                    });
-
-                    await videoGenerationTasksServerAPI.patchVideoGenerationTask(
-                        generationTaskId,
-                        {
-                            scene_breakdown_list: mappedList,
-                        }
-                    );
-
-                    // 처리된 영상 파일들 삭제
-                    const filesToDelete = requestIdList.map(requestId => `${generationTaskId}/${requestId}.mp4`);
-                    const { error: deleteError } = await supabase.storage
-                        .from('processed_video_storage')
-                        .remove(filesToDelete);
-
-                    if (deleteError) {
-                        console.error('처리된 영상 파일 삭제 중 에러:', deleteError);
-                    }
-
-                }
-            }
             await videoGenerationTasksServerAPI.patchVideoGenerationTask(generationTaskId, {
                 is_generation_failed: true,
             })

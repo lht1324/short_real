@@ -556,3 +556,100 @@ AmbiguousPoint[0]: Intensity Tier Selection Ambiguity at <step_0_kinetic_energy_
 AmbiguousPoint[1]: Atmospheric Delta Decision at <step_5_atmospheric_delta_refinement>:Stage-1 rules on direct contact vs passive particles conflicted; we opted to skip wake effects and use ambient haze and dust motes instead.
 videoGenPrompt: The center background medium tank with chipped olive-drab paint is swaying gently, causing light-catching edges, amidst atmospheric haze and dust motes, captured with Anamorphic lens with 9:16 portrait cinema and vertical layering, Truck Right smoothly tracking the center background medium tank with chipped olive-drab paint, rendered in Authentic raw textures in 4k fidelity with fine cinematic film grain, while the initial structural integrity of the tank and environment remains perfectly intact and consistent throughout the motion.
 videoGenPromptShort: The tank is swaying.
+
+
+ POST /api/video/process/video?taskId=f7fa12ea-53ee-47f7-a14e-a15b31875399 200 in 42s (compile: 5.9s, render: 35.8s)
+○ Compiling /webhook/fal-ai/video ...
+ POST /webhook/fal-ai/video?taskId=f7fa12ea-53ee-47f7-a14e-a15b31875399&isRetriedByViolence=false 200 in 3.7s (compile: 3.7s, render: 22ms)
+ POST /webhook/fal-ai/video?taskId=f7fa12ea-53ee-47f7-a14e-a15b31875399&isRetriedByViolence=false 200 in 76ms (compile: 65ms, render: 12ms)
+ POST /api/video/process/speed/before?taskId=f7fa12ea-53ee-47f7-a14e-a15b31875399&isRetriedByViolence=false 200 in 5.2s (compile: 1584ms, render: 3.6s)
+ POST /api/video/process/speed/before?taskId=f7fa12ea-53ee-47f7-a14e-a15b31875399&isRetriedByViolence=false 200 in 5.1s (compile: 1488ms, render: 3.6s)
+ POST /webhook/fal-ai/video?taskId=f7fa12ea-53ee-47f7-a14e-a15b31875399&isRetriedByViolence=false 200 in 49ms (compile: 37ms, render: 12ms)
+ POST /api/video/process/speed/before?taskId=f7fa12ea-53ee-47f7-a14e-a15b31875399&isRetriedByViolence=false 200 in 1829ms (compile: 15ms, render: 1814ms)
+ POST /webhook/fal-ai/video?taskId=f7fa12ea-53ee-47f7-a14e-a15b31875399&isRetriedByViolence=false 200 in 24ms (compile: 15ms, render: 9ms)
+ POST /webhook/fal-ai/video?taskId=f7fa12ea-53ee-47f7-a14e-a15b31875399&isRetriedByViolence=false 200 in 22ms (compile: 15ms, render: 7ms)
+ POST /webhook/fal-ai/video?taskId=f7fa12ea-53ee-47f7-a14e-a15b31875399&isRetriedByViolence=false 200 in 32ms (compile: 16ms, render: 16ms)
+ POST /api/video/process/speed/before?taskId=f7fa12ea-53ee-47f7-a14e-a15b31875399&isRetriedByViolence=false 200 in 3.0s (compile: 22ms, render: 3.0s)
+ POST /api/video/process/speed/before?taskId=f7fa12ea-53ee-47f7-a14e-a15b31875399&isRetriedByViolence=false 200 in 2.2s (compile: 16ms, render: 2.1s)
+ POST /api/video/process/speed/before?taskId=f7fa12ea-53ee-47f7-a14e-a15b31875399&isRetriedByViolence=false 200 in 3.1s (compile: 36ms, render: 3.1s)
+ POST /webhook/replicate/video/speed?taskId=f7fa12ea-53ee-47f7-a14e-a15b31875399&requestId=25b568d0-65b5-4783-957a-f5c1815f1e5f 200 in 819ms (compile: 805ms, render: 14ms)
+ POST /webhook/replicate/video/speed?taskId=f7fa12ea-53ee-47f7-a14e-a15b31875399&requestId=de49fcdd-ed7a-476b-804e-5df393efec7b 200 in 76ms (compile: 62ms, render: 13ms)
+Speed Webhook: Scene 25b568d0-65b5-4783-957a-f5c1815f1e5f finished. Progress: 1/8
+ POST /api/video/process/speed/after?taskId=f7fa12ea-53ee-47f7-a14e-a15b31875399&requestId=25b568d0-65b5-4783-957a-f5c1815f1e5f 200 in 2.9s (compile: 851ms, render: 2.1s)
+Speed Webhook: Scene de49fcdd-ed7a-476b-804e-5df393efec7b finished. Progress: 2/8
+ POST /api/video/process/speed/after?taskId=f7fa12ea-53ee-47f7-a14e-a15b31875399&requestId=de49fcdd-ed7a-476b-804e-5df393efec7b 200 in 2.6s (compile: 26ms, render: 2.5s)
+ POST /webhook/replicate/video/speed?taskId=f7fa12ea-53ee-47f7-a14e-a15b31875399&requestId=271efde4-716a-4cd2-a8d5-736057a37bed 200 in 30ms (compile: 23ms, render: 8ms)
+Speed Webhook: Scene 271efde4-716a-4cd2-a8d5-736057a37bed finished. Progress: 3/8
+ POST /api/video/process/speed/after?taskId=f7fa12ea-53ee-47f7-a14e-a15b31875399&requestId=271efde4-716a-4cd2-a8d5-736057a37bed 200 in 2.0s (compile: 20ms, render: 2.0s)
+ POST /webhook/replicate/video/speed?taskId=f7fa12ea-53ee-47f7-a14e-a15b31875399&requestId=b12404ee-abef-45fe-b5ac-e9920df396cd 200 in 23ms (compile: 16ms, render: 8ms)
+Speed Webhook: Scene b12404ee-abef-45fe-b5ac-e9920df396cd finished. Progress: 4/8
+ POST /api/video/process/speed/after?taskId=f7fa12ea-53ee-47f7-a14e-a15b31875399&requestId=b12404ee-abef-45fe-b5ac-e9920df396cd 200 in 2.0s (compile: 15ms, render: 1991ms)
+ POST /webhook/replicate/video/speed?taskId=f7fa12ea-53ee-47f7-a14e-a15b31875399&requestId=3724d142-87ec-4b0a-b74c-44cbb991508a 200 in 34ms (compile: 15ms, render: 19ms)
+Speed Webhook: Scene 3724d142-87ec-4b0a-b74c-44cbb991508a finished. Progress: 5/8
+ POST /api/video/process/speed/after?taskId=f7fa12ea-53ee-47f7-a14e-a15b31875399&requestId=3724d142-87ec-4b0a-b74c-44cbb991508a 200 in 1507ms (compile: 18ms, render: 1489ms)
+ POST /webhook/replicate/video/speed?taskId=f7fa12ea-53ee-47f7-a14e-a15b31875399&requestId=2330f341-f09d-4c33-affe-272e14cc3e88 200 in 22ms (compile: 15ms, render: 7ms)
+Speed Webhook: Scene 2330f341-f09d-4c33-affe-272e14cc3e88 finished. Progress: 6/8
+ POST /api/video/process/speed/after?taskId=f7fa12ea-53ee-47f7-a14e-a15b31875399&requestId=2330f341-f09d-4c33-affe-272e14cc3e88 200 in 1849ms (compile: 13ms, render: 1836ms)
+ POST /webhook/fal-ai/video?taskId=f7fa12ea-53ee-47f7-a14e-a15b31875399&isRetriedByViolence=false 200 in 33ms (compile: 16ms, render: 17ms)
+ POST /api/video/process/speed/before?taskId=f7fa12ea-53ee-47f7-a14e-a15b31875399&isRetriedByViolence=false 200 in 3.4s (compile: 100ms, render: 3.3s)
+ POST /webhook/fal-ai/video?taskId=f7fa12ea-53ee-47f7-a14e-a15b31875399&isRetriedByViolence=false 200 in 20ms (compile: 13ms, render: 7ms)
+ POST /webhook/replicate/video/speed?taskId=f7fa12ea-53ee-47f7-a14e-a15b31875399&requestId=a36d5b3e-1752-44bb-a47c-715b02b5d168 200 in 47ms (compile: 30ms, render: 18ms)
+ POST /api/video/process/speed/before?taskId=f7fa12ea-53ee-47f7-a14e-a15b31875399&isRetriedByViolence=false 200 in 3.0s (compile: 14ms, render: 3.0s)
+Speed Webhook: Scene a36d5b3e-1752-44bb-a47c-715b02b5d168 finished. Progress: 7/8
+ POST /api/video/process/speed/after?taskId=f7fa12ea-53ee-47f7-a14e-a15b31875399&requestId=a36d5b3e-1752-44bb-a47c-715b02b5d168 200 in 2.1s (compile: 72ms, render: 2.1s)
+ POST /webhook/replicate/video/speed?taskId=f7fa12ea-53ee-47f7-a14e-a15b31875399&requestId=4ed4c144-42c2-47bd-8d4b-a30f577fbb6b 200 in 21ms (compile: 14ms, render: 7ms)
+Speed Webhook: Scene 4ed4c144-42c2-47bd-8d4b-a30f577fbb6b finished. Progress: 8/8
+모든 Scene 처리 완료. 최종 병합을 시작합니다: f7fa12ea-53ee-47f7-a14e-a15b31875399
+ POST /api/video/process/speed/after?taskId=f7fa12ea-53ee-47f7-a14e-a15b31875399&requestId=4ed4c144-42c2-47bd-8d4b-a30f577fbb6b 200 in 2.6s (compile: 109ms, render: 2.5s)
+[Merge Service] Task 데이터 조회: f7fa12ea-53ee-47f7-a14e-a15b31875399
+최종 영상 병합 요청 수신: f7fa12ea-53ee-47f7-a14e-a15b31875399
+[Merge Service] 음성 파일 URL 조회
+[Merge Service] 최종 영상 병합 완료
+[Merge Service] 최종 영상 병합 중 에러: Error: 최종 영상 다운로드 실패: Service Unavailable
+    at Object.postFinalVideo (api/server/videoServerAPI.ts:374:23)
+    at async POST (app/api/video/merge/route.ts:53:39)
+  372 |
+  373 |             if (!finalVideoResponse.ok) {
+> 374 |                 throw new Error(`최종 영상 다운로드 실패: ${finalVideoResponse.statusText}`);
+      |                       ^
+  375 |             }
+  376 |
+  377 |             const finalVideoBuffer = await finalVideoResponse.arrayBuffer();
+영상 병합 엔드포인트 에러: Error: Merging processed videos failed.
+    at POST (app/api/video/merge/route.ts:56:19)
+  54 |
+  55 |         if (!isMergingVideoSuccess) {
+> 56 |             throw new Error("Merging processed videos failed.")
+     |                   ^
+  57 |         }
+  58 |
+  59 |         console.log(`최종 영상 병합 완료.`);
+Merging processed videos failed.
+ POST /api/video/merge?taskId=f7fa12ea-53ee-47f7-a14e-a15b31875399 500 in 55s (compile: 2.1s, render: 53s)
+ OPTIONS /api/video/task/f7fa12ea-53ee-47f7-a14e-a15b31875399/retry 204 in 3.1s (compile: 3.1s, render: 19ms)
+ POST /api/video/task/f7fa12ea-53ee-47f7-a14e-a15b31875399/retry 200 in 1502ms (compile: 17ms, render: 1485ms)
+[Merge Service] Task 데이터 조회: f7fa12ea-53ee-47f7-a14e-a15b31875399
+최종 영상 병합 요청 수신: f7fa12ea-53ee-47f7-a14e-a15b31875399
+[Merge Service] 음성 파일 URL 조회
+[Merge Service] 최종 영상 병합 중 에러: Error: Scene #2 signed URL 생성 실패: {"name":"StorageApiError","message":"Object not found","status":400,"statusCode":"404"}
+    at eval (api/server/videoServerAPI.ts:342:27)
+    at async Object.postFinalVideo (api/server/videoServerAPI.ts:346:49)
+    at async POST (app/api/video/merge/route.ts:53:39)
+  340 |
+  341 |                 if (error || !data?.signedUrl) {
+> 342 |                     throw new Error(`Scene #${sceneData.sceneNumber} signed URL 생성 실패: ${JSON.stringify(error)}`)
+      |                           ^
+  343 |                 }
+  344 |                 return data.signedUrl;
+  345 |             });
+영상 병합 엔드포인트 에러: Error: Merging processed videos failed.
+    at POST (app/api/video/merge/route.ts:56:19)
+  54 |
+  55 |         if (!isMergingVideoSuccess) {
+> 56 |             throw new Error("Merging processed videos failed.")
+     |                   ^
+  57 |         }
+  58 |
+  59 |         console.log(`최종 영상 병합 완료.`);
+Merging processed videos failed.
+ POST /api/video/merge?taskId=f7fa12ea-53ee-47f7-a14e-a15b31875399&isRetry=true 500 in 2.4s (compile: 438ms, render: 1977ms)

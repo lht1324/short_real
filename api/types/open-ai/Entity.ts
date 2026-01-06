@@ -28,9 +28,7 @@ export interface Entity {
     /** 시각적/의미적 분류 (VLM 이해용 보조 태그) */
     type: 'human' | 'creature' | 'object' | 'machine' | 'animal' | 'hybrid';
 
-    appearance_scenes: number[];
-
-    demographics: string; // 예: "African American, 30s"
+    demographics: string; // type별 구조 정의 다 되어 있음. 프롬프트 참고
 
     appearance: {
         /** * 재질감을 암시하는 텍스처 설명 (Deep Research - Dimension 2 반영)
@@ -52,9 +50,7 @@ export interface Entity {
         expression?: string;
     };
 
-    /** * [New] 물리 엔진 라우팅을 위한 핵심 프로필
-     * 기존 'biotype'을 대체하며, 영상 생성 프롬프트 조립 시 Key로 사용됨.
-     */
+    // [New] 물리 엔진 라우팅을 위한 핵심 프로필. 영상 생성 프롬프트 조립 시 Key로 사용됨.
     physics_profile?: PhysicsProfile;
 }
 

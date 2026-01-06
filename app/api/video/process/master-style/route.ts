@@ -110,11 +110,24 @@ export async function POST(request: NextRequest) {
 
         const masterStylePositivePromptInfo = postMasterStyleInfoResult.masterStyleInfo;
         const entityManifestList = postMasterStyleInfoResult.entityManifestList;
+        const sceneCastingDataList = postMasterStyleInfoResult.sceneCastingDataList;
 
         const patchVideoGenerationTaskStatusFinalResult = await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, {
             status: VideoGenerationTaskStatus.GENERATING_IMAGE_PROMPT,
             master_style_info: masterStylePositivePromptInfo,
             entity_manifest_list: entityManifestList,
+            scene_breakdown_list: sceneDataList.map((sceneData) => {
+                const sceneCastingData = sceneCastingDataList?.find((sceneCastingData) => {
+                    return sceneCastingData.sceneNumber === sceneData.sceneNumber;
+                });
+
+                const sceneCastingIdList = sceneCastingData?.castIdList;
+
+                return {
+                    ...sceneData,
+                    sceneCastingEntityIdList: sceneCastingIdList,
+                }
+            })
         });
 
         // // TEST!!

@@ -48,7 +48,10 @@ const imageGenResponseFormat: OpenAI.ResponseFormatJSONSchema = {
                                     type: { type: "string" },
                                     description: { type: "string" },
                                     clothes: { type: "string" },
-                                    accessories: { type: "string" },
+                                    accessories: {
+                                        type: "array",
+                                        items: { type: "string" },
+                                    },
                                     pose: { type: "string" },
                                     position: {
                                         type: "string",
@@ -64,33 +67,14 @@ const imageGenResponseFormat: OpenAI.ResponseFormatJSONSchema = {
                         lighting: { type: "string" },
                         mood: { type: "string" },
                         background: { type: "string" },
-                        composition: {
-                            type: "string",
-                            enum: [
-                                "rule of thirds", "circular arrangement", "minimalist negative space", "S-curve",
-                                "vanishing point center", "dynamic off-center", "leading leads", "golden spiral",
-                                "diagonal energy", "strong verticals", "triangular arrangement", "framed by foreground"
-                            ]
-                        },
+                        composition: { type: "string" },
                         camera: {
                             type: "object",
                             properties: {
-                                angle: {
-                                    type: "string",
-                                    enum: ["eye level", "low angle", "slightly low", "birds-eye", "worms-eye", "over-the-shoulder", "isometric"]
-                                },
-                                distance: {
-                                    type: "string",
-                                    enum: ["close-up", "medium close-up", "medium shot", "medium wide", "wide shot", "extreme wide"]
-                                },
-                                focus: {
-                                    type: "string",
-                                    enum: ["deep focus", "macro focus", "soft background", "selective focus", "sharp on subject"]
-                                },
-                                lens: {
-                                    type: "string",
-                                    enum: ["14mm", "24mm", "35mm", "50mm", "70mm", "85mm"]
-                                },
+                                angle: { type: "string" },
+                                distance: { type: "string" },
+                                focus: { type: "string" },
+                                lens: { type: "string" },
                                 fNumber: { type: "string" },
                                 ISO: { type: "number" }
                             },
@@ -385,6 +369,10 @@ Instruction: Process the input data and return the JSON output according to the 
         success: boolean;
         masterStyleInfo?: MasterStyleInfo;
         entityManifestList?: InitialEntityManifestItem[];
+        sceneCastingDataList?: {
+            sceneNumber: number;
+            castIdList: string[];
+        }[];
         error?: {
             message: string;
             code: string
@@ -438,7 +426,7 @@ Instruction: Analyze the input <target_aspect_ratio>, <style_guidelines>, <full_
                 ],
                 response_format: { type: "json_object" },
                 reasoning_effort: 'medium',
-                max_completion_tokens: 8192, // [팁] Entity Manifest가 길어질 수 있으므로 토큰 한도를 넉넉히 늘렸습니다.
+                max_completion_tokens: 12288, // [팁] Entity Manifest가 길어질 수 있으므로 토큰 한도를 넉넉히 늘렸습니다.
             });
 
             console.log(`postMasterStylePrompt() usage: `, JSON.stringify(completion.usage))
@@ -469,6 +457,11 @@ Instruction: Analyze the input <target_aspect_ratio>, <style_guidelines>, <full_
                         }[],
                         scene_empty_reasoning: string
                     }[];
+                    sceneCastingList: {
+                        scene_number: number;
+                        castIdList: string[];
+                        casting_logic: string;
+                    }[],
                 } = JSON.parse(generatedResult);
 
                 for (const entityReasoningData of parsedData.entityReasoningList) {
@@ -489,21 +482,28 @@ Instruction: Analyze the input <target_aspect_ratio>, <style_guidelines>, <full_
                     }
                 }
 
+                for (const sceneCastingData of parsedData.sceneCastingList.sort((a, b) => a.scene_number - b.scene_number)) {
+                    const {
+                        scene_number: sceneNumber,
+                        castIdList,
+                        casting_logic: castingLogic,
+                    } = sceneCastingData;
+
+                    console.log(`Scene #${sceneNumber} Cast: ${castIdList.join(', ')}`);
+                    console.log(`Scene #${sceneNumber} Casting Logic: ${castingLogic}`);
+                }
+
                 return {
                     success: true,
                     // 구조 분해 할당
                     masterStyleInfo: parsedData.masterStyleInfo,
-                    entityManifestList: parsedData.entityManifest.map((entity) => {
+                    entityManifestList: parsedData.entityManifest, // 추출된 캐릭터 시트 반환
+                    sceneCastingDataList: parsedData.sceneCastingList.map((sceneCasting) => {
                         return {
-                            ...entity,
-                            appearance_scenes: entity.appearance_scenes.map((appearanceSceneNumber) => {
-                                // 방어 로직 (실제 문자열로 들어가는 케이스 발견)
-                                return typeof appearanceSceneNumber === "string"
-                                    ? parseInt(appearanceSceneNumber)
-                                    : appearanceSceneNumber;
-                            }),
+                            sceneNumber: sceneCasting.scene_number,
+                            castIdList: sceneCasting.castIdList,
                         }
-                    }), // 추출된 캐릭터 시트 반환
+                    })
                 };
 
             } catch (parseError) {
@@ -637,7 +637,7 @@ Instruction: Generate the scene instruction JSON.
                 const instructionJSON: {
                     image_gen_prompt: FluxPrompt;
                     image_gen_prompt_sentence: string;
-                    updated_entity_manifest?: Omit<Entity, 'role' | 'type' | 'appearance_scenes' | 'demographics'>[]
+                    updated_entity_manifest?: Omit<Entity, 'role' | 'type' | 'demographics'>[]
                 } = JSON.parse(generatedContent);
 
                 const imageGenPrompt = instructionJSON.image_gen_prompt;
@@ -676,7 +676,6 @@ Instruction: Generate the scene instruction JSON.
                             id: instruction.id,
                             physics_profile: instruction.physics_profile,
                             type: originalEntity.type,
-                            appearance_scenes: originalEntity.appearance_scenes,
                             demographics: originalEntity.demographics,
                             appearance: {
                                 ...originalEntity.appearance,

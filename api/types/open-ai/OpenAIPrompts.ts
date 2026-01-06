@@ -169,47 +169,14 @@ export const POST_MASTER_STYLE_INFO_PROMPT = `
        * **\`sub_character\`**: Supporting characters who interact with the hero or have distinct roles.
        * **\`background_extra\`**: Generic crowd members or people who do not drive the plot.
        * **\`prop\`**: Key objects or environmental elements that are crucial to the scene's action but are not sentient actors.
-    3. **\`appearance_scenes\`**: List of scenes where the entity is present or implied.
-       - **Format**: Strictly output as an **Integer Array** (e.g., \`[1, 2, 5]\`).
-       * **1-Based Indexing**: Scene numbers must strictly correspond to the provided script sequence, starting at Scene 1.
-       * **Entity-Centric Scene Validation Protocol (CRITICAL)**:
-         - You must iterate through EVERY scene number (1 to N) and apply this **3-Gate Filtration Logic** to determine if THIS entity belongs there.
-         **Gate 1: The Explicit Call (Is the entity named?)**
-           - Check the narration and scene content.
-           - **IF** the entity is explicitly named, referenced by pronoun (e.g., "he/she/it"), or performs a specific action described in <full_script_context>.[n].\`sceneNarration\`:
-             -> **PASS**. (Proceed to Gate 3).
-           - **IF NO**: Proceed to Gate 2.
-         **Gate 2: The Implicit Habitat (Is this their natural place?)**
-           - Check the compatibility between the Scene's Location and the Entity's \`role\`/\`type\`.
-           - **IF** the location is the entity's primary domain (e.g., Pilot in a Cockpit, Soldier in a Trench, Shark in the Sea) AND their presence functions as a natural part of the environment:
-             -> **PASS**. (Proceed to Gate 3).
-           - **IF NO** (e.g., Tank in a Bedroom, Infantry in High-Altitude Sky, Civilian in a burning reactor): 
-             -> **FAIL**. Do NOT assign this scene number. (STOP).
-         **Gate 3: The Physical Veto (Is it physically possible?)**
-           - Final Reality Check. Even if Gate 1 or 2 is passed, check for fundamental physics/logic violations.
-           - **Rule**: If the entity cannot logically exist in the environment without external aid not mentioned in <full_script_context>.[n].\`sceneNarration\`
-             **Examples**:
-               * NO - Human floating in mid-air; YES - Paratrooper with parachutes floating in mid-air 
-               * NO - Submarine on a highway; YES - Sports car on a highway
-               * NO - Dog in a deep blue sea; YES - Shark in a deep blue sea
-             -> **FAIL**. Do NOT assign this scene number. (STOP).
-           - **The "Supernatural & Narrative" Exception**:
-             - **Check**: Does <video_metadata>.<video_title> and <video_metadata>.<video_description> (Genre) or <full_script_context> (Plot) involve unrealistic things? (e.g., Magic, Sci-Fi, Dreams, or Superpowers)
-             - **Override**: IF YES, and the entity's nature justifies it (e.g., Superman flying, Ghost passing walls) -> **BYPASS** the Standard Rule and **ASSIGN** the scene.
-           - **IF SAFE OR EXEMPT**: **ASSIGN** this scene number to the array.
-       * **The "Empty Scene" Outcome**:
-         - If a specific scene number fails the validation for **ALL** entities (i.e., no one claims the scene), it will naturally result in a scene with NO entities.
-         - **Instruction**: ACCEPT this outcome. Do NOT force an entity into a scene just to fill a void.
-       * **Co-occurrence**: 
-         - Multiple entities can and should share the same scene number if they all pass the validation logic.
-    4. **\`type\`**: The fundamental biological or structural category of the entity.
+    3. **\`type\`**: The fundamental biological or structural category of the entity.
        * **\`human\`**: Natural humans only.
        * **\`machine\`**: Robots, vehicles, mechs, or any technological appliances.
        * **\`creature\`**: Fantasy beasts, aliens, or mythological monsters.
        * **\`animal\`**: Real-world non-human animals.
        * **\`object\`**: Passive items, weapons, furniture, or static props.
        * **\`hybrid\`**: Entities combining categories (e.g., cyborgs, plant-humanoids).
-    5. **\`demographics\`**: A strictly formatted context string based on the assigned \`type\`.
+    4. **\`demographics\`**: A strictly formatted context string based on the assigned \`type\`.
        - **Protocol**: Start with the **[ERA / PERIOD]** (identified from the script) as the Single Source of Truth.
        - **Constraint**: Do NOT add extra fields or placeholders (e.g., 'N/A') unless explicitly required by the structure below.
        - **Structures by \`type\`**:
@@ -268,7 +235,7 @@ export const POST_MASTER_STYLE_INFO_PROMPT = `
            3. "Bio-Horror, Mutated Subject, Male, Lab-Grown, Unknown Age"
            4. "Steampunk, Clockwork Android, Female, Victorian London, Manufactured"
            5. "Mythology, Minotaur, Male, Cretan Labyrinth, Adult"
-    6. **\`appearance\`**: The comprehensive visual definition of the entity. 
+    5. **\`appearance\`**: The comprehensive visual definition of the entity. 
        - **Global Guidelines**: All sub-fields must strictly adhere to the following protocols to ensure era-consistency and ethical neutrality.
        **[Strict Contextual & Neutrality Protocols]**
          - **Political/Religious Neutrality**
@@ -283,7 +250,7 @@ export const POST_MASTER_STYLE_INFO_PROMPT = `
            - **Social Check**: Adhere to the gender and class norms of the established Era unless the character is an explicit exception (e.g., a female warrior in the Middle Ages).
            - **Event Check**: Ensure attire and grooming match the social occasion (e.g., formal gala requires period-appropriate formal wear).
          - **General Constraint**: Only define **PERMANENT** physical traits. Do not include temporary states (e.g., running, kneeling, bleeding).
-       6.1. **\`clothing_or_material\`**: Detailed description of the entity's surface material or attire.
+       5.1. **\`clothing_or_material\`**: Detailed description of the entity's surface material or attire.
           - **Physics Engine Protocol**: Describe the **texture, weight, and hardness** to imply physical behavior (e.g., Rigid, Cloth, Viscoelastic, Fluid).
           - **Political/Religious Neutrality & TPO Check**: Ensure attire matches the Era's tech level and social norms. Translate generic terms into era-specific materials (e.g., 'Pilot' -> 'Leather and canvas' for WWII, 'Polymer and hex-mesh' for Sci-Fi).
           - **Instruction**: Focus on how the material interacts with light and movement (e.g., "Roughspun wool that absorbs light," "Polished chrome that reflects the environment").
@@ -292,34 +259,32 @@ export const POST_MASTER_STYLE_INFO_PROMPT = `
             - *Cyberpunk Machine*: "Matte-black carbon fiber chassis with scratch-resistant ceramic coating and glowing neon sub-dermal layers." -> Implies Rigid/Composite physics.
             - *Fantasy Creature*: "Translucent gelatinous skin with visible internal organs and a slime-coated surface." -> Implies Fluid/Amorphous physics.
           - **Constraint**: Do not include temporary states (e.g., "torn," "bloody") unless they are permanent character traits.
-       6.2. **\`position_descriptor\`**: The default spatial orientation and framing tendency of the entity.
+       5.2. **\`position_descriptor\`**: The default spatial orientation and framing tendency of the entity.
           - **Goal**: Establishes a consistent visual "anchor" for the entity across different scenes.
           - **Protocol**: Define where the entity is usually placed within the frame and its primary orientation relative to the camera.
           - **Keywords**: Use technical composition terms such as 'foreground anchor', 'center-weighted', 'looming background presence', 'eye-level profile', or 'rule-of-thirds offset'.
           - **Example**: "Usually a looming background presence to emphasize scale" or "Always center-weighted with a direct gaze at the camera."
-       6.3. **\`hair\`**: Description of the entity's hair or head grooming.
+       5.3. **\`hair\`**: Description of the entity's hair or head grooming.
           - **Protocol**: Define style, color, and texture (e.g., "Slicked-back charcoal black hair with a greasy sheen," "Braided copper-toned mane").
           - **Era Check**: Ensure the grooming style is appropriate for the [ERA/PERIOD] from \`demographics\` (e.g., no modern fades in a medieval setting).
           - **Format**: Single string. Leave as an empty string if not applicable (e.g., for machines or bald characters).
-       6.4. **\`accessories\`**: A list of portable items, jewelry, or tools equipped by the entity.
+       5.4. **\`accessories\`**: A list of portable items, jewelry, or tools equipped by the entity.
           - **Format**: Strictly output as an **Array of Strings** (e.g., \`["Vintage gold pocket watch", "Leather holster", "Scored bronze bracer"]\`).
           - **Political/Religious Neutrality Check**: Apply the Political/Religious Neutrality Protocol—do not include symbols like crosses or specific insignias unless narrative-critical.
           - **TPO Check**: Ensure the items match the technology level of the era.
-       6.5. **\`body_features\`**: Permanent physical characteristics of the entity's form.
+       5.5. **\`body_features\`**: Permanent physical characteristics of the entity's form.
           - **Protocol**: Describe build, height, or distinct markings (e.g., "Tall and wiry frame," "Jagged scar across the left cheek," "Intricate geometric tattoos on the forearms").
           - **Constraint**: Only include **PERMANENT** traits. Do not include temporary states like "bleeding," "sweating," or "bruised" unless they are a constant part of the character's design.
           - **Format**: Single string.
-    **Scene-by-Scene Validation (Reasoning)**:
-      - You must generate a \`entityReasoningList\` that iterates through **EVERY SCENE** in the script.
-      - **Structure**: For each \`scene_number\`:
-        1. **If entities appear**:
-           - Populate \`entity_reasoning_list\` with every entity present in that scene.
-           - Provide \`reasoning\` citing specific words or context from the narration (e.g., "Script says 'The tank fired', so ID:tank is required").
-           - Set \`scene_empty_reasoning\` to \`""\`.
-        2. **If NO entities appear (Empty Scene)**:
-           - Leave \`entity_reasoning_list\` as \`[]\`.
-           - **MANDATORY**: Fill \`scene_empty_reasoning\` explaining *why* the scene is devoid of characters (e.g., "Wide establishing shot of the ruined city skyline", "Atmospheric shot of storm clouds gathering").
-      - **Goal**: This ensures that empty scenes are intentional artistic choices, not errors.
+    **Scene-by-Scene Validation (Reasoning Logic)**
+      Perform the following validation logic for **EVERY SCENE** (\`scene_number\`) without exception:
+      1. **Entity Presence (When entities are present)**:
+        - \`entity_reasoning_list\`: Populate with every entity appearing in the scene. Provide a \`reasoning\` citing specific words or context from the narration. (e.g., "Script mentions 'The tank fired', therefore ID:tank is required").
+        - \`scene_empty_reasoning\`: Must be set to \`""\`.
+      2. **Empty Scene (When NO entities are present)**:
+        - \`entity_reasoning_list\`: Must be an empty list \`[]\`.
+        - \`scene_empty_reasoning\`: **[MANDATORY]** Provide a detailed explanation of why the scene is intentionally devoid of characters/entities. (e.g., "A wide establishing shot of the ruined city skyline to set the mood", "An atmospheric close-up of storm clouds gathering").
+      **Goal**: This process ensures that every empty scene is a deliberate artistic choice for narrative flow, rather than an accidental omission or error.
   </task_1_entity_manifest>
   <task_2_master_style_engineering>
     **Goal**: Synthesize <video_metadata>, <target_aspect_ratio>, <style_guidelines>, and <full_script_context> into a rigid technical configuration (\`masterStyleInfo\` of <output_schema>). You must stop describing subjective feelings and start defining the physical laws of optics and light. Each field must be derived through an independent inference protocol.
@@ -422,6 +387,38 @@ export const POST_MASTER_STYLE_INFO_PROMPT = `
         - **Inference Protocol**: 
           - Map the raw ratio to a technical cinema standard (e.g., "9:16 Portrait Cinema," "2.35:1 Anamorphic Widescreen," "1:1 Social Media Square").
   </task_2_master_style_engineering>
+  <task_3_scene_casting>
+    **Goal**: Populate the \`sceneCastingList\` in <output_schema> by iterating through every scene in <full_script_context>. You must apply a logic-gate system to ensure narrative continuity and physical realism.
+    **[The Physical Veto Protocol]**
+      - **Definition**: A mandatory reality check applied before any \`entityManifest[n]\` is finalized in \`sceneCastingList[n].castIdList\`.
+      - **Logic**: You MUST compare the **Physical Scale** and **Environmental Requirements** of the entity against the **Action/Setting** described in the current <full_script_context>[n].\`sceneNarration\`.
+      - **Veto Criteria**:
+        * **Scale Incompatibility**: e.g., A "Extreme Close-up of a flower" cannot contain a "Giant Mecha".
+        * **Environmental Absence**: e.g., A "Pilot" cannot exist in a ground-level scene without a "Cockpit" or "Aircraft" being present or implied in the narrative.
+        * **Physics Violation**: e.g., A "Heavy Tank" cannot be "Floating in clouds" unless the Genre (from <video_metadata>.<video_title> and <video_metadata>.<video_description>) explicitly allows it.
+      - **Action**: If \`entityManifest[n]\` fails this protocol, it MUST be excluded from the \`castIdList\`, regardless of any other assignment rules.
+    **[Casting Assignment Logic]**
+      - For each scene, execute the following steps in order:
+      **Step 1. Direct & Action-based Assignment**
+        - Identify entities whose \`id\`, \`role\`, or specific action-verbs (e.g., "The soldier runs" -> ID:soldier) are explicitly mentioned in the \`sceneNarration\`.
+        - Apply the **[Physical Veto Protocol]** to these candidates.
+        - Add all entities that pass the protocol to the \`castIdList\`.
+      **Step 2. IF \`castIdList\` is EMPTY after Step 1 (including cases where candidates were mentioned but Vetoed)**:
+      - **Action**: Scan the entire \`entityManifest\` to find candidates that are "Contextually Appropriate" (not strange) for the current scene.
+      - **Filtering**: Apply the **[Physical Veto Protocol]** to ALL entities in the manifest.
+      - **Selection (The "Most Suitable" Rule)**: 
+        * From the entities that PASSED the veto, select **EXACTLY ONE** "Most Suitable Entity" based on narrative priority:
+        * **Priority Order**: \`main_hero\` > \`sub_character\` > \`background_extra\` > \`prop\`.
+      - **Outcome**: 
+        * IF a suitable entity is found: Add that **single entity** to the \`castIdList\`.
+        * IF NO entity passes the Physical Veto (e.g., all entities are physically illogical for this scene): Keep the \`castIdList\` empty and proceed to Step 3.
+      **Step 3. IF \`castIdList\` is STILL EMPTY after Step 2**:
+        - Leave \`sceneCastingList[n].castIdList\` EMPTY.
+        - Explain the atmospheric or environmental focus in the \`casting_logic\`.
+    **[Field Specification: \`casting_logic\`]**
+      - State exactly which rule triggered the assignment (Direct, Hero Fallback, or Empty).
+      - If an entity was mentioned in the script but Vetoed, you MUST explain why (e.g., "ID:pilot mentioned but Vetoed due to ground-level medium shot scale").
+  </task_3_scene_casting>
   <formatting_constraint>
     **CRITICAL OUTPUT FORMATTING RULE: MINIFICATION**
     - You must output the final JSON object in **Strict Minified Format**.
@@ -474,7 +471,6 @@ export const POST_MASTER_STYLE_INFO_PROMPT = `
           "id": "string (snake_case unique id)",
           "role": "main_hero" | "sub_character" | "background_extra" | "prop",
           "type": "human" | "creature" | "object" | "machine" | "animal" | "hybrid",
-          "appearance_scenes": "number[]",
           "demographics": "string (REQUIRED: Comma-separated string formatted strictly according to the Type Classification Schema in <task_1_entity_manifest> section. Examples: Human='Era, Role, Gender...', Object='Era, Item, Detail'. DO NOT use 'N/A' fillers.)",
           "appearance": {
             "clothing_or_material": "string (REQUIRED: Context-Aware & Neutral visual description. Must imply texture/physics.)";
@@ -497,6 +493,13 @@ export const POST_MASTER_STYLE_INFO_PROMPT = `
           "scene_empty_reasoning": "string (REQUIRED if \`entity_reasoning_list\` is empty. Explain why NO entities are present. E.g., 'Atmospheric shot of the sky, no actors needed.' If entities exist, leave as empty string \"\".)"
         }
       ];
+      "sceneCastingList": [
+        {
+          "scene_number": "number (Integer, starting from 1, matching the script sequence)",
+          "castIdList": "string[] (Must match an ids from \`entityManifest\`)",
+          "casting_logic": "string (REQUIRED: Explain why these entities were selected and how physical consistency was verified.)"
+        }
+      ]
     }
   </output_schema>
 </developer_instruction>
@@ -1062,29 +1065,54 @@ export const POST_IMAGE_GEN_PROMPT_PROMPT = `
             * Scan \`subjects\` array. Identify the **Primary Subject** based on \`role\` priority: \`main_hero\` > \`sub_character\` > \`prop\`.
             * Use this Primary Subject for the main clause of the sentence.
           - **Logic (Condition A: If \`subjects\` is NOT EMPTY)**:
-            "[A/An] [\`camera.angle\`] [\`camera.distance\`] captures [\`subjects[n].description\`][Detail_Clause] [who is/which is] [\`subjects[n].pose\`] [\`subjects[n].position\`]."
+            - For each subject in the subjects array, locate the corresponding \`Entity\` within the <entity_list> whose id matches \`subjects[n].id\` to retrieve its fixed identity and appearance data.
+            - **Variables**: \`image_gen_prompt.camera.angle\`, \`image_gen_prompt.camera.distance\`, \`image_gen_prompt.scene\`, \`image_gen_prompt.subjects[n].pose\`, \`image_gen_prompt.subjects[n].position\`, \`image_gen_prompt.subjects[n].accessories\`, \`Entity.role\`, \`Entity.type\`, \`Entity.demographics\`, \`Entity.appearance.body_features\`, \`Entity.appearance.hair\`, \`Entity.appearance.clothing_or_material\`
+            - **\`Entity.demographics\` Structure:
+              - Index 0: **[ERA/PERIOD]** (Strictly use as the primary temporal anchor)
+              - Index 1: **[ROLE | (MODEL NAME/TYPE) | (SPECIES/ARCHETYPE) | SPECIES | ITEM NAME | HYBRID TYPE]** (The core noun for the subject)
+              **Structures by \`Entity.type\`**:
+                * **\`human\`**: \`[ERA/PERIOD], [ROLE], [GENDER], [ORIGIN/ETHNICITY], [AGE]\`
+                * **\`machine\`**: \`[ERA/PERIOD], [MODEL NAME/TYPE], [PRODUCTION YEAR/SPEC]\`
+                * **\`creature\`**: \`[ERA/PERIOD], [SPECIES/ARCHETYPE], [GENDER/\`N/A\`], [AGE/MATURITY]\`
+                * **\`animal\`**: \`[ERA/PERIOD], [SPECIES], [AGE/MATURITY]\`
+                * **\`object\`**: \`[ERA/PERIOD], [ITEM NAME], [CRAFTSMANSHIP/DETAIL]\`
+                * **\`hybrid\`**: \`[ERA/PERIOD], [HYBRID TYPE], [GENDER], [ORIGIN/ETHNICITY], [AGE]\`
+            - **Instruction ([Detail_Clause] Enhancement)**:
+              * You MUST construct \`[Detail_Clause]\` by assembling fixed Entity data and dynamic subject data in a specific order.
+              * **Source Data Mapping**:
+                - **[Features]**: \`Entity.appearance.hair\` (conditional) + \`Entity.appearance.body_features\`
+                - **[Material/Clothing]**: \`Entity.appearance.clothing_or_material\`
+                - **[Accessories]**: flattened \`image_gen_prompt.subjects[n].accessories\`
+              * **Pre-check (Headwear Logic)**:
+                - Before adding \`Entity.appearance.hair\`, scan the \`accessories\` array.
+                - If array contains headwear keywords (e.g., "helmet", "hat", "cap", "hood", "beret", "headwrap"), DO NOT include the hair description in \`[Detail_Clause]\`.
+              * **Smart Assembly Sequence (Human/Creature)**:
+                1. **Start with Features**: If \`hair\` (and passes pre-check) or \`body_features\` exist, start with ", with [hair] and [body_features]" (adjust conjunctions if only one exists).
+                2. **Add Clothing Anchor**: Append ", clad in [clothing_or_material]".
+                3. **Add Accessories**: Append ", equipped with [flattened_accessories]".
+                * *Flow Check*: Ensure smooth transitions. If a preceding section is missing, ensure the leading comma/conjunction of the next section is adjusted accordingly to avoid grammar errors (e.g., ", clad in...").
+              * **Smart Assembly Sequence (Machine/Object/Prop)**:
+                - Skip [Features] step.
+                - Instead of "clad in/equipped with", use tech-appropriate connectors for materials and parts.
+                - **Preferred Connectors**: ", finished in [clothing_or_material]", ", constructed from [clothing_or_material]", or ", featuring a [clothing_or_material] exterior surface and [flattened_accessories]".
+              * **Final Flow Check**: Ensure NO dangling prepositions at the end of the clause and ensure it transitions smoothly into "who is/which is [\`pose\`]".
+            - **Instruction (Multi-Subject Handling)**:
+              * If multiple subjects exist in the \`subjects\` array, append them to the sentence using **Contextual Bridges**.
+              * **Crucial Rule**: For EVERY secondary subject (n > 0), you MUST perform the same **ID-mapping** and **[Subject_Identity] + [Detail_Clause] assembly** used for the Primary Subject.
+              * **Bridge Logic(By \`Entity.role\`)**:
+                - **For \`main_hero\` or \`sub_character\`**:
+                  - Use Connector: ", while [\`image_gen_prompt.subjects[n].position\`] [Subject_Identity][Detail_Clause] **is** [\`image_gen_prompt.subjects[n].pose\`]"
+                - **For \`prop\`**:
+                  - Use Connector: ", with [Subject_Identity][Detail_Clause] **[participle form of \`image_gen_prompt.subjects[n].pose\`]** [\`image_gen_prompt.subjects[n].position\`]"
+                  - *Note*: Convert the \`image_gen_prompt.subjects[n].pose\` into a participle (e.g., "crushing" instead of "crushed", "glowing" instead of "glows").
+              * **Example Construction**:
+                - "...captures the **1944 WWII infantry soldier(Primary)**..., **while in the background(Position) a 1944 WWII heavy tank(Secondary Identity), finished in matte olive drab(Detail_Clause), is crushing debris(Pose).**"
+            **Format**: "[A/An] [\`camera.angle\`] [\`camera.distance\`] captures [\`subjects[n].description\`][Detail_Clause] [who is/which is] [\`subjects[n].pose\`] [\`subjects[n].position\`]."
             * **Connector Logic**: 
               - If \`subjects[n].role\` is \`main_hero\` or \`sub_character\`: use "**who is**".
               - If \`subjects[n].role\` is \`prop\`: use "**which is**" or skip connector directly.
           - **Logic (Condition B: If \`subjects\` is EMPTY)**:
-            "[Article] [\`camera.angle\`] [\`camera.distance\`] focuses entirely on the [\`scene\`] elements."
-          - **Variables**: \`camera.angle\`, \`camera.distance\`, \`subjects\` (including \`clothes\`, \`accessories\`, \`role\`), \`scene\`.
-          - **Instruction ([Detail_Clause] Enhancement)**:
-            * You MUST construct the \`[Detail_Clause]\` by intelligently combining \`subjects[n].clothes\` and \`subjects[n].accessories\`.
-            * **Array Flattening Rule**: For \`accessories\` (string array), join the items with commas or "and" (e.g., ["hat", "watch"] -> "a hat and a watch"). Do NOT output brackets or quotes.
-            * **Smart Assembly Rule**:
-              - **Both Present**: ", dressed in [\`clothes\`] and equipped with [flattened_accessories],"
-              - **Clothes Only**: ", clad in [\`clothes\`],"
-              - **Accessories Only**: ", featuring [flattened_accessories],"
-              - **Neither**: (Leave blank)
-            * If \`role\` is \`prop\`: Replace "dressed in/clad in" with "**encased in**" or "**featuring a [\`clothes\`] surface**".
-            * **Flow Check**: Ensure NO dangling prepositions (e.g., "dressed in ,") and ensure the clause transitions smoothly into "who is [\`pose\`]".
-          - **Instruction (Multi-Subject Handling)**:
-            * If multiple subjects exist, append remaining subjects to the sentence using **Contextual Bridges**.
-            * **Bridge Logic**:
-              - For \`main_hero\` or \`sub_character\` \`role\`: ", while [position] [\`Subject.description\`][Detail_Clause] **is** [\`Subject.pose\`]"
-              - For \`prop\` \`role\`: ", with [\`Subject.description\`][Detail_Clause] **[participle form of pose]** [position]"
-              * *Example*: "...captures the Boxer..., while in the background the Referee is signaling..."
+            **Format**: "[Article] [\`camera.angle\`] [\`camera.distance\`] focuses entirely on the [\`scene\`] elements."
         **[Sentence 2: The Environment & Atmosphere]**
           - **Logic (Condition A: If \`subjects\` is NOT EMPTY)**: "The scene is set in [\`background\`], depicting [\`scene\`] with a [\`composition\`] composition, where the atmosphere is [\`mood\`], illuminated by [\`lighting\`] and a color palette of [\`color_palette\`]."
           - **Logic (Condition B: If \`subjects\` is EMPTY)**: "The setting features [\`background\`] arranged in a [\`composition\`] composition, where the atmosphere is [\`mood\`], illuminated by [\`lighting\`] and a color palette of [\`color_palette\`]."
@@ -1193,6 +1221,8 @@ export const POST_IMAGE_GEN_PROMPT_PROMPT = `
           "id": "string"; // Must match input <entity_list>.[n].\`id\`
           "type": string;
           "description": string;
+          "clothes": string;
+          "accessories": string[];
           "pose": string;
           "position": 'foreground' | 'midground' | 'background';
         }[];
@@ -1201,12 +1231,12 @@ export const POST_IMAGE_GEN_PROMPT_PROMPT = `
         "lighting": string;
         "mood": string;
         "background": string;
-        "composition": "rule of thirds" | "circular arrangement" | "minimalist negative space" | "S-curve" | "vanishing point center" | "dynamic off-center" | "leading leads" | "golden spiral" | "diagonal energy" | "strong verticals" | "triangular arrangement";
+        "composition": string;
         "camera": {
-          "angle": "eye level" | "low angle" | "slightly low" | "bird's-eye" | "worm's-eye" | "over-the-shoulder" | "isometric";
-          "distance": "close-up" | "medium close-up" | "medium shot" | "medium wide" | "wide shot" | "extreme wide";
-          "focus": "deep focus" | "macro focus" | "soft background" | "selective focus" | "sharp on subject";
-          "lens": "14mm" | "24mm" | "35mm" | "50mm" | "70mm" | "85mm";
+          "angle": string;
+          "distance": string;
+          "focus": string;
+          "lens": string;
           "fNumber": string;
           "ISO": number;
         };
@@ -1556,27 +1586,27 @@ export const POST_IMAGE_GEN_PROMPT_NO_ENTITIES_PROMPT = `
     Return a single JSON object.
     {
       "image_gen_prompt": {
-          "scene": string;
-          "subjects": {
-            "type": string;
-            "description": string;
-            "pose": string;
-            "position": string;
-          }[];
-          "style": string;
-          "color_palette": string[]; // RGB Hex (#[00~FF][00~FF][00~FF])
-          "lighting": string;
-          "mood": string;
-          "composition": "rule of thirds" | "circular arrangement" | "minimalist negative space" | "S-curve" | "vanishing point center" | "dynamic off-center" | "leading leads" | "golden spiral" | "diagonal energy" | "strong verticals" | "triangular arrangement";
-          "camera": {
-            "angle": "eye level" | "low angle" | "slightly low" | "bird's-eye" | "worm's-eye" | "isometric";
-            "distance": "close-up" | "medium close-up" | "medium shot" | "medium wide" | "wide shot" | "extreme wide";
-            "focus": "deep focus" | "macro focus" | "soft background" | "selective focus" | "sharp on subject";
-            "lens": "14mm" | "24mm" | "35mm" | "50mm" | "70mm" | "85mm";
-            "fNumber": string;
-            "ISO": number;
-          };
-          "effects": string[];
+        "scene": string;
+        "subjects": {
+          "type": string;
+          "description": string;
+          "pose": string;
+          "position": string;
+        }[];
+        "style": string;
+        "color_palette": string[]; // RGB Hex (#[00~FF][00~FF][00~FF])
+        "lighting": string;
+        "mood": string;
+        "composition": string;
+        "camera": {
+          "angle": string;
+          "distance": string;
+          "focus": string;
+          "lens": string;
+          "fNumber": string;
+          "ISO": number;
+        };
+        "effects": string[];
       },
       "image_gen_prompt_sentence": string; // A single sentence from <prompt_authoring_protocol>.<unit_4_natural_language_sentence_generation>
     }
