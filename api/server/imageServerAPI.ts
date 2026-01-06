@@ -25,14 +25,14 @@ export const imageServerAPI = {
             let imageUrl: string;
 
             try {
-                const output = await falAIClient.subscribe('fal-ai/imagen4/preview', {
+                const output = await falAIClient.subscribe('fal-ai/nano-banana', {
                     input: {
                         prompt: imageGenPromptSentence,
                         num_images: 1,
                         aspect_ratio: "9:16",
                         output_format: "jpeg",
                         sync_mode: false,
-                        // limit_generations: false,
+                        limit_generations: false,
                     }
                 });
 
