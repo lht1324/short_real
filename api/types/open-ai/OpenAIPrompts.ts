@@ -2146,70 +2146,6 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
       - **[Task_3: Final Output Mapping]**:
         - **Destination**: Output the resulting paragraph to the \`video_gen_prompt\` field in <output_schema>.
     </step_9_final_assembly_protocol>
-    <step_10_short_logic_synthesis>
-      - **Goal**: Produce a "Zero-Fluff Binary" prompt strictly following the **[Subject] + [is/are] + [Verb-ing]** format to put in \`video_gen_prompt_short\` of <output_schema>.
-      - **Logic: Strategic Subject Extraction**:
-        - **If <entity_list> is EMPTY**: 
-          - Extract the single most dominant noun from **<master_style_guide>.\`globalEnvironment.locationArchetype\`**. (e.g., "Neon Tokyo Urban Core" -> "The city").
-          - **Formula**: "The [Location Noun] is [Atmospheric Verb-ing]" (e.g., "The battlefield is smoldering").
-        - **If <entity_list> is not EMPTY**:
-          - Based on the \`type\` of <entity_list>, extract ONLY the designated "Subject Noun" from the \`demographics\` of <entity_list> by following below **Demographics Structure** and **Extraction Rule**:
-          - **Demographics Structure**:
-            * **\`human\`**: \`[ERA / PERIOD], [ROLE], [GENDER], [ORIGIN / ETHNICITY], [AGE]\`
-            * **\`machine\`**: \`[ERA / PERIOD], [MODEL NAME / TYPE], [PRODUCTION YEAR / SPEC]\`
-            * **\`creature\`**: \`[ERA / PERIOD], [SPECIES / ARCHETYPE], [GENDER / \`N/A\`], [AGE / MATURITY]\`
-            * **\`animal\`**: \`[ERA / PERIOD], [SPECIES], [AGE / MATURITY]\`
-            * **\`object\`**: \`[ERA / PERIOD], [ITEM NAME], [CRAFTSMANSHIP / DETAIL]\`
-            * **\`hybrid\`**: \`[ERA / PERIOD], [HYBRID TYPE], [GENDER], [ORIGIN / ETHNICITY], [AGE]\`
-          - **Extraction Rule**:
-            * **\`human\`**: Extract the \`[ROLE]\` field (e.g., "Infantry Soldier" -> "The soldier").
-            * **\`machine\`**: Extract the \`[MODEL NAME / TYPE]\` (e.g., "M4 Sherman Tank" -> "The tank").
-            * **\`creature/animal\`**: Extract the \`[SPECIES / ARCHETYPE]\` (e.g., "Sabertooth Tiger" -> "The tiger").
-            * **\`object\`**: Extract the \`[ITEM NAME]\` (e.g., "Antique Pocket Watch" -> "The watch").
-            * **\`hybrid\`**: Extract the \`[HYBRID TYPE]\` (e.g., "Cyborg Mercenary" -> "The cyborg").
-      - **Verb Selection Rule**:
-        * **IF <entity_list> is NOT EMPTY:
-          - The [Verb-ing] MUST be the primary action identified in <step_3_primary_action_vector_injection>.
-          - **Constraint**: Maintain strict semantic consistency with the locked **\`INTENSITY_TIER\`**.
-          - **Examples by \`INTENSITY_TIER\`**:
-            * **\`VERY_LOW\` (Stasis)**: "breathing", "observing", "floating", "sleeping"
-            * **\`LOW\` (Fluid)**: "walking", "swaying", "drifting", "gliding"
-            * **\`HIGH\` (Active)**: "running", "fighting", "driving", "shaking"
-            * **\`VERY_HIGH\` (Chaos)**: "exploding", "collapsing", "shattering", "erupting"
-        * **IF <entity_list> is EMPTY**:
-          - Infer the [Atmospheric Verb-ing] directly from the **Environmental Dynamics** analyzed in <step_0_kinetic_energy_profiling> (e.g., "raining", "glowing", "burning", "flowing").
-          - **Examples**: "raining", "glowing", "burning", "flowing", "snowing", "surging", "crumbling"
-      - **Plural Priority Rule**:
-        - **Different Types**: If subjects are performing the same action, prioritize the **main_hero** or the most massive subject to avoid visual clutter.
-      - **Grammar & Aggregation Rules**:
-        - **Singular**: "The [Subject] is [Verb-ing]"
-        - **Plural (Same Type)**: "The [Subject]s are [Verb-ing]"
-        - **Plural (Different Types)**: Only if they perform the same action. "[Subject A] and [Subject B] (Optional: and [Subject C] and ...) are [Verb-ing]".
-      - **Strict Prohibitions**:
-        * **NO era in [Subject]** (The [ERA / PERIOD] field in the structure is for reference only and must be excluded from the final noun).
-        * NO demographics details in [Subject]
-      - **Examples**:
-        * **Constraint (Anti-Plagiarism)**: These examples are for **SYNTAX AND FORMAT REFERENCE ONLY**; do NOT copy specific values unless they strictly align with the provided <entity_list> or <video_metadata>.
-        - **[Singular Case]**
-          * *Human*: "The soldier is sprinting" (Extracted from 'Infantry Soldier')
-          * *Machine*: "The drone is hovering" (Extracted from 'DJI Mavic Drone')
-          * *Animal*: "The tiger is leaping" (Extracted from 'Sabertooth Tiger')
-          * *Object*: "The bomb is falling" (Extracted from 'Aerial Bomb')
-        - **[Plural Case]**
-          - **[Same Type]**
-            * *Humans*: "The boxers are fighting"
-            * *Machines*: "The tanks are rumbling"
-            * *Creatures*: "The orcs are shouting"
-          - **[Different Type]**
-            * *Human Mix*: "The man and woman are kissing"
-            * *Hybrid Mix*: "The knight and horse are charging"
-            * *Subject Mix*: "The pilot and plane are banking"
-        - **[Empty Entity Case]**
-          * *Natural*: "The ocean is crashing" (Extracted from 'Coastal Cliff' archetype)
-          * *Weather*: "The storm is raging" (Extracted from 'Thunderstorm' archetype)
-          * *Urban*: "The city is glowing" (Extracted from 'Cyberpunk Metropolis' archetype)
-          * *War*: "The battlefield is smoldering" (Extracted from 'WWII Battlefield' archetype)
-    </step_10_short_logic_synthesis>
   </processing_logic>
   <output_schema>
     Return a single JSON object with the following structure. Ensure all fields are populated based on the internal reasoning of the Cinematic Director role.
@@ -2221,7 +2157,6 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
       },
       "reasoning": "string (Provide a detailed justification for: 1) The specific tags selected from the vocabulary_depot, 2) The choice of camera tech based on MasterStyleInfo, and 3) The atmospheric strategy to prevent freezing.)",
       "video_gen_prompt": "string (The final technical prompt assembled using the 5-stage Kinetic Anchor Protocol: [Anchor] + [Primary Action Vector] + [Atmospheric Delta] + [Cinematic Camera Vector] + [Style Modifiers].)",
-      "video_gen_prompt_short": "string (The simplified version using the Short Logic: [Subject] + [is/are] + [Verb-ing].)"
     }
   </output_schema>
   <constraints>
@@ -2243,7 +2178,6 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
     5. **Semantic Purity & Format Protocol**:
       - **Jargon over Fluff**: Replace subjective adjectives ("breathtaking", "epic") with technical cinematography and physical terms.
       - **\`video_gen_prompt\`**: MUST NOT use brackets \`[]\` or symbols. Weave all keywords and technical jargon from <vocabulary_depot> naturally into the directorial prose as adjectives or adverbs.
-      - **\`video_gen_prompt_short\`**: Strictly follow the **[Subject] + [is/are] + [Verb-ing]** binary logic. **DO NOT use brackets or technical tags.** (Zero-Fluff Rule).
     6. **Contextual Fidelity (The Plagiarism Guard)**:
       - Derive all cinematic decisions strictly from the provided <image_context>, <scene_narration>, <entity_list>, and <master_style_guide>.
       - **Instruction**: Logics in <processing_logic> are **Functional Algorithms**, not suggestions. The final output must be the result of this calculated reasoning.

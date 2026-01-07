@@ -1,21 +1,15 @@
 import {
     SceneData,
-    SceneGenerationStatus,
     VideoGenerationTask,
 } from '@/api/types/supabase/VideoGenerationTasks';
 import {
-    VIDEO_ASPECT_RATIOS,
-    VIDEO_GENERATION_STATUS,
     VIDEO_RESOLUTIONS,
-    VideoAspectRatio,
     VideoResolution
 } from "@/lib/ReplicateData";
 import Replicate from "replicate";
 import {videoGenerationTasksServerAPI} from "@/api/server/videoGenerationTasksServerAPI";
 import {createSupabaseServiceRoleClient} from "@/lib/supabaseServiceRole";
 import {ALL_FORMATS, Input, UrlSource} from "mediabunny";
-import {FalAIClient} from "@/lib/fal-ai/FalAIClient";
-import {FalAIService} from "@/lib/fal-ai/FalAIService";
 import {fal} from "@fal-ai/client";
 
 export const videoServerAPI = {
@@ -55,7 +49,6 @@ export const videoServerAPI = {
         }
         const imageUrl = data.signedUrl;
 
-        let newRequestId: string;
         const baseInputData = {
             image_url: imageUrl,
             aspect_ratio: aspectRatio,
@@ -63,54 +56,25 @@ export const videoServerAPI = {
             enable_safety_checker: false,
         }
 
-        if (!isViolence) {
-            const safeDuration = sceneData.sceneDuration + 0.2 < 4.2
-                ? 4
-                : sceneData.sceneDuration + 0.2 > 12.2
-                    ? 12
-                    : Math.round(sceneData.sceneDuration + 0.2);
-            const inputData = {
-                ...baseInputData,
-                prompt: sceneData.videoGenPrompt ?? "A cinematic video",
-                duration: safeDuration.toString() as "4" | "5" | "6" | "7" | "8" | "9" | "10" | "11" | "12", // 4-12
-                resolution: videoResolution as "480p" | "720p",
-                generate_audio: false,
-            }
-
-            const { request_id: requestId } = await falAIClient.queue.submit('fal-ai/bytedance/seedance/v1.5/pro/image-to-video', {
-                input: inputData,
-                webhookUrl: webhookUrl,
-            });
-
-            newRequestId = requestId;
-        } else {
-            const safeDuration = sceneData.sceneDuration < 2
-                ? 2
-                : sceneData.sceneDuration > 12
-                    ? 12
-                    : Math.round(sceneData.sceneDuration);
-            const inputData = {
-                ...baseInputData,
-                prompt: sceneData.videoGenPromptShort ?? "A cinematic video",
-                duration: safeDuration.toString() as "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" | "10" | "11" | "12", // 2-12
-                resolution: videoResolution as "480p" | "720p" | "1080p",
-                // FalAI
-                enable_safety_checker: false,
-            }
-
-            const { request_id: requestId } = await falAIClient.queue.submit('fal-ai/bytedance/seedance/v1/pro/fast/image-to-video', {
-                input: inputData,
-                webhookUrl: webhookUrl,
-            });
-
-            newRequestId = requestId;
+        const safeDuration = sceneData.sceneDuration + 0.2 < 4.2
+            ? 4
+            : sceneData.sceneDuration + 0.2 > 12.2
+                ? 12
+                : Math.round(sceneData.sceneDuration + 0.2);
+        const inputData = {
+            ...baseInputData,
+            prompt: sceneData.videoGenPrompt ?? "A cinematic video",
+            duration: safeDuration.toString() as "4" | "5" | "6" | "7" | "8" | "9" | "10" | "11" | "12", // 4-12
+            resolution: videoResolution as "480p" | "720p",
+            generate_audio: false,
         }
 
-        // Seedance 1.5 Pro 출시. 1.0 Pro Fast와 동일하거나 어쩌면 더 저렴.
-        // 폭력 센서 존재. 안 위험한 장면에선 Seedance 1.5 Pro, 위험한 장면에선 Seedance 1.0 Pro Fast 사용하는 투 트랙 (Safety checker 유무)
-        // SceneData 분리하는 단계부터 아예 폭력 여부 검증해서 요금 부과?
+        const { request_id: requestId } = await falAIClient.queue.submit('fal-ai/bytedance/seedance/v1.5/pro/image-to-video', {
+            input: inputData,
+            webhookUrl: webhookUrl,
+        });
 
-        return newRequestId;
+        return requestId;
     },
 
     /**

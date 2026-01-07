@@ -186,7 +186,6 @@ const videoGenResponseFormat: OpenAI.ResponseFormatJSONSchema = {
                 },
                 reasoning: { type: "string" },
                 video_gen_prompt: { type: "string" },
-                video_gen_prompt_short: { type: "string" }
             },
             required: [
                 "logical_bridge",
@@ -720,7 +719,6 @@ Instruction: Generate the scene instruction JSON.
     ): Promise<{
         success: boolean;
         videoGenPrompt?: string;
-        videoGenPromptShort?: string;
         error?: { message: string; code: string }
     }> {
         try {
@@ -938,7 +936,6 @@ Instruction: Generate the scene instruction JSON.
                     },
                     reasoning: string;
                     video_gen_prompt: string;
-                    video_gen_prompt_short: string;
                 } = JSON.parse(generatedContent);
                 const {
                     identity_logic: identityLogic,
@@ -958,12 +955,10 @@ Instruction: Generate the scene instruction JSON.
                     console.log(`Scene #${sceneNumber} doesn't have Ambiguous Points`);
                 }
                 console.log(`videoGenPrompt: ${parsedJson.video_gen_prompt}`);
-                console.log(`videoGenPromptShort: ${parsedJson.video_gen_prompt_short}`);
 
                 return {
                     success: true,
                     videoGenPrompt: parsedJson.video_gen_prompt,
-                    videoGenPromptShort: parsedJson.video_gen_prompt_short,
                 }
             } catch (parseError) {
                 console.error('JSON Parse Failed:', parseError);
