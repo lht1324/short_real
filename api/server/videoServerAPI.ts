@@ -95,9 +95,22 @@ export const videoServerAPI = {
         });
 
         try {
-            let ffmpegArgs: string;
-            const isCutting = targetDuration + 0.2 <= 4.0;
+            // 1. MediaBunny를 사용해 영상 정보 확인 (실제 생성된 길이 측정)
+            const mediaBunnyInput = new Input({
+                source: new UrlSource(replicateVideoUrl),
+                formats: ALL_FORMATS,
+            });
 
+            let ffmpegArgs: string;
+            const totalNeeded = targetDuration + 0.2;
+            const generatedVideoDuration = await mediaBunnyInput.computeDuration();
+
+            // 조건 1: 4.0초 미만은 무조건 4초가 나오니까 넉넉함 (기존 로직)
+            // 조건 2: 반올림 결과가 원본보다 크면(X.5 이상), 넉넉함 (제안하신 로직)
+            const isCutting = (totalNeeded <= 4.0) || (generatedVideoDuration >= totalNeeded);
+
+            // 결국 반올림해서 생성된 건데, 빠른 배속 걸어줘야 하는 경우엔 잘라주는 게 맞는 건가?
+            // videoGenPrompt도 봐야 한다
             if (isCutting) {
                 // [Case 1] 자르기 모드 (Target <= 3.8s)
                 // 4초 이상의 영상에서 앞부분 0.2초를 버리고, 거기서부터 Target만큼만 씀.
@@ -105,12 +118,6 @@ export const videoServerAPI = {
                 ffmpegArgs = `-ss 0.2 -t ${targetDuration} -c:v libx264 -c:a copy`;
             } else {
                 // [Case 2] 배율 모드 (Target >= 3.9s)
-                // 1. MediaBunny를 사용해 영상 정보 확인 (실제 생성된 길이 측정)
-                const mediaBunnyInput = new Input({
-                    source: new UrlSource(replicateVideoUrl),
-                    formats: ALL_FORMATS,
-                });
-
                 const generatedVideoDuration = await mediaBunnyInput.computeDuration();
 
                 // 2. 가용 길이 계산 (실제 길이 - 앞부분 0.2초)

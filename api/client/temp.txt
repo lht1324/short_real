@@ -477,179 +477,57 @@ videoGenPromptShort: The jumper is skimming
 WWII
 
 Scene #1 postVideoGenPrompt() Result
-Identity Logic: The soldier's 1944 WWII infantry identity and cloth uniform with steel helmet details are carried through by anchoring his midground position and helmet trait in the kinetic mapping, ensuring his era and role remain visually consistent during motion.
-Action Focus: Transformed the broad chaos narrative into a precise continuous action of the soldier bracing, highlighting his physical tension and fabric response as the core kinetic event.
-Reasoning: We selected billowing folds from the High tier cloth material effects to ground the soldier's fabric movement in structural strain physics while omitting rigid metal tags to focus on visible uniform motion. For atmosphere we used granular dust puffs and backward dust trails allowed by High tier interactions on a loose battlefield, anchored by volumetric lighting to maintain depth without adding ungrounded elements. The cinematography follows the master style guide's anamorphic lens with 9:16 portrait framing and vertical layering and uses an optical Crash Zoom In to introduce motion despite a static subject, ensuring axis conflict rules are respected. A fine cinematic film grain texture in 4k fidelity was appended to preserve surface details and prevent visual freezing.
-Ambiguous Points
-AmbiguousPoint[0]: Ambiguity at step0 kinetic profiling: chosen HIGH tier balancing chaotic war narration with a passive subject stance.
-AmbiguousPoint[1]: Ambiguity determining Continuous vs Temporary action in step_3_1_action_type_decision for the soldier's static posture; resolved with Continuous.
-AmbiguousPoint[2]: Ambiguity in step7_2_vector_matching_protocol selecting camera technique for a static subject; opted for Crash Zoom In to introduce kinetic energy.
-videoGenPrompt: The right midground soldier with a dented steel helmet is bracing intensely, causing billowing folds, amidst dust puffs rising, while dust trails drift backward, all enhanced by volumetric lighting and ember streaks, captured with Anamorphic lens with 9:16 portrait cinema framing and vertical layering, Crash Zoom In aggressively tracking the right midground soldier with a dented steel helmet, rendered in Authentic raw textures with fine cinematic film grain in 4k fidelity, while the initial structural integrity of the subject and environment remains perfectly intact and consistent throughout the motion.
-videoGenPromptShort: The soldier is bracing
+Identity Logic: The subject retains the identity of an 'Infantry Soldier' during motion. The physical essence is preserved by maintaining the soldier's uniform and posture, ensuring realistic movement representative of a soldier engaged in wartime combat without losing the realism of the era (1944).
+Action Focus: The raw narration depicting 'chaos and war' is translated into high-impact kinetic verbs that illustrate decisive movement and action, emphasizing not just the chaos of the battlefield but the emotional turmoil faced by soldiers in combat.
+Reasoning: 1) The selected tags from the vocabulary depot were drawn from the 'action_context' of combat, highlighting high momentum actions suitable for the military environment (e.g., fabric flutter, snapping impact motion). 2) The camera technology was determined to align with 'Anamorphic lens' for cinematic depth and stylistic framing, ideally suited for capturing the vastness of the battlefield in a deeply engaging way. 3) The atmospheric strategy is crafted to include dynamic elements that reflect the chaos of warfare (e.g., surface wear and structural stress of the environment), thus preventing any static freeze by ensuring all elements have kinetic elements engaged.
+Scene #1 doesn't have Ambiguous Points
+videoGenPrompt: The center-weighted infantry soldier, gripped tightly around his M1 Garand rifle, snaps forward with explosive kinetic force, causing heavy ripples in the air amidst the clouds of smoke from distant explosions, while thick dust swirls around him, all enhanced by volumetric lighting and dynamic turbulence. His raw textures remain perfectly intact and consistent throughout the motion.
 
 Scene #2 postVideoGenPrompt() Result
-Identity Logic: The soldier's 1944 infantry heritage and uniform details are preserved as stable visual anchors through the uniform's drape reference, while the tank's riveted plating and mid-ground framing maintain its mechanical essence during motion.
-Action Focus: We elevated the raw narrative of rumbling tanks into precise kinetic verbs—'is rumbling powerfully' for the tank and 'staggers powerfully' for the soldier—to anchor forceful structural strain.
-Reasoning: Selected 'staggers' and 'is rumbling' with 'powerfully' from the HIGH-tier physics pool to convey heavy structural strain for the soldier (skin rippling) and tank (structural dents). Rack Focus was chosen as a singular optical shift to reorient focus between foreground soldier and midground tank without spatial-axis conflict. Dust clouds were introduced as granular displacement to prevent background freezing, obeying Tier HIGH's reactive surface amplification and lateral drift for optical Rack Focus, enhanced by volumetric lighting and dust grit for depth.
+Identity Logic: The essence of the tank’s identity as a medium tank from 1944 is preserved through its static positioning and formidable presence, emphasizing its role as a potent instrument of warfare. Its physical attributes and historical context are maintained without introducing new elements during motion.
+Action Focus: The raw narration of tanks rumbling translates into a high-impact kinetic verb focused on the tank's movement, specifically capturing its substantial presence amidst the chaos of war.
+Reasoning: The vocabulary selected from the `vocabulary_depot` focused on the 'passive' `action_context`, aligning with the 'very low' intensity tier due to the tank's static positioning, and its rigid 'material' profile. The choice of camera tech, featuring an anamorphic lens and deep focus, supports the portrayal of a powerful scene set in a WWII battlefield. The atmospheric strategy is designed to prevent freezing by suggesting kinetic dirt displacement surrounding the tank without over-speculating on external agents or actions unrelated to it.
 Scene #2 doesn't have Ambiguous Points
-videoGenPrompt: The left foreground soldier in olive drab uniform staggers powerfully, causing skin rippling, while the center midground tank with riveted steel plating is rumbling powerfully, causing structural dents, amidst dust clouds swirling around the subjects, while drifting laterally, all enhanced by volumetric lighting and dust grit, captured with Anamorphic lens with 9:16 portrait cinema and vertical layering, Rack Focus aggressively tracking the left foreground soldier, rendered in Authentic raw textures with fine cinematic film grain in 4k fidelity, while the initial structural integrity of the subject and environment remains perfectly intact and consistent throughout the motion.
-videoGenPromptShort: The soldier is staggering.
+videoGenPrompt: The towering medium tank with its turret angled forward, crushing debris amidst a cloud of kicked-up dust, is positioned as a looming presence on the scarred battlefield, surrounded by muted desaturated earth-tones and high-contrast cool shadows, captured with an anamorphic lens in low-key exposure and rendered in raw fidelity, while the initial structural integrity of the tank and environment remains perfectly intact and consistent throughout the motion.
 
 Scene #3 postVideoGenPrompt() Result
-Identity Logic: The mapping handle integrates the soldier's era-specific infantry role and distinctive mud-caked leather boots to anchor his identity, while a positive structural preservation directive ensures his uniform, equipment, and form remain consistent throughout the motion.
-Action Focus: I translated the narration of charging soldiers into a continuous high-momentum verb 'charging' with a 'rapidly' adverb to convey decisive acceleration and preserved the kinetic pulse focus on velocity.
-Reasoning: I selected HIGH-tier Fabric Flutter from the cloth material profile and the 'rapidly' velocity adverb from locomotion to match the decisive charge. I applied the master style's Anamorphic lens and 9:16 portrait cinema with vertical layering for a low-key midday look, then chose Dolly-In and Handheld Shaky to aggressively push toward the soldier and emphasize barbed wire clearance under high-risk. For atmosphere, I used HIGH-tier rules to amplify muddy water displacement, describing splashing around his feet and backward-droplet counter-flow to prevent freezing, all anchored by volumetric lighting and mud grit for realistic particle depth.
-Ambiguous Points
-AmbiguousPoint[0]: In step_7_2_vector_matching_protocol: conflict between D(t) management (favoring Dolly-Out) and risk status rule; I prioritized risk-based clearance and chose Dolly-In past the barbed wire.
-AmbiguousPoint[1]: In step_5_atmospheric_delta_refinement: stage4 tag selection was not explicit for muddy battlefield; I inferred 'mud grit' as the plausible technical descriptor for splashed soil particles.
-videoGenPrompt: The center foreground infantry soldier with mud-caked leather boots is charging rapidly, causing fabric flutter, amidst muddy water splashing around his feet while droplets drift backward, all enhanced by volumetric lighting and mud grit, captured with Anamorphic lens with 9:16 portrait cinema and vertical layering, Dolly-In and Handheld Shaky aggressively pushing toward the center foreground infantry soldier with mud-caked leather boots, rendered in Authentic raw textures with fine cinematic film grain in 4k fidelity, while the initial structural integrity of the subject and environment remains perfectly intact and consistent throughout the motion.
-videoGenPromptShort: The soldier is charging.
+Identity Logic: The soldier's identity as an 'Infantry Soldier' from 1944 WWII is maintained through a detailed visual anchor that includes his posture and gear, consistent with the historical context of the theme.
+Action Focus: The raw narration of soldiers charging into the fray is translated into dynamic kinetic verbs like 'charging', indicating high momentum and intensity reflective of combat scenarios.
+Reasoning: 1) Tags selected from the vocabulary_depot were based on the soldier's context of combat and locomotion, aligned with the high-intensity action described in the scene. The choice of 'Explosive Kinetic Force' from the combat action context aligns with the high urgency of the scene. 2) The camera technique selected corresponds with the Anamorphic lens for its wide field of view and ability to capture depth, enhancing the visual storytelling in a battlefield scenario. The vertical layering framing style complements the historical setting, focusing on the soldier while capturing the atmosphere. 3) The atmospheric strategy is developed to ensure the dust and smoke effects don't freeze the frame, maintaining motion and engagement with the chaos of battle, resulting in deeper dynamics in the visual output.
+Scene #3 doesn't have Ambiguous Points
+videoGenPrompt: The center-weighted soldier in a worn olive drab wool uniform is charging fiercely, causing his fabric to billow under heavy ripple as he interacts with the battle-scarred terrain, enhanced by tumultuous smoke swirling around and incandescent sparks erupting from nearby explosions, captured with an anamorphic lens in 4k resolution, featuring low-key lighting and crisp details, while the initial structural integrity of the subject remains perfectly intact and consistent throughout the motion.
 
 Scene #4 postVideoGenPrompt() Result
-Identity Logic: The subject’s era and role are maintained by labeling him as an infantry soldier in olive drab uniform, anchoring his 1944 WWII identity and physical presence during movement.
-Action Focus: We translated the broad narration of Normandy bravery into a specific kinetic emphasis on rapid advancement, capturing the decisive forward motion with precise material reactions like fabric flutter and skin rippling.
-Reasoning: The HIGH intensity tier was chosen to reflect decisive battlefield momentum. From the cloth material profile we selected fabric flutter to illustrate high-momentum drape distortions, and from the viscoelastic profile we applied skin rippling to convey myological tension. The camera uses an anamorphic lens with 9:16 portrait cinema framing and vertical layering drawn from the master style guide, paired with Dolly-Out for spatial clearance from the high-risk barbed wire and Handheld Shaky for visceral grit, respecting the lighting setup’s low-key sun. Atmospheric sand puffs were allowed by the HIGH threshold on a loose beach surface, flowing oppositely to the Dolly-Out vector and grounded with volumetric lighting and sand grit tags to avoid background freezing.
-Ambiguous Points
-AmbiguousPoint[0]: Ambiguity at step_3_1_action_type_decision: mid-stride pose could imply running or walking, I chose continuous locomotion based on forward weight shift to determine sustained motion.
-AmbiguousPoint[1]: Ambiguity at step_3_4_material_delta_injection: multiple material fields present, I focused on cloth flutter and skin rippling from cloth and viscoelastic profiles, omitting rigid effects due to unclear collision context.
-videoGenPrompt: The right foreground infantry soldier in olive drab uniform is advancing rapidly, causing fabric flutter and skin rippling, amidst sand puffs swirling around the boots, while the puffs stream toward the lens, all enhanced by volumetric lighting and sand grit, captured with Anamorphic lens with 9:16 portrait cinema framing and vertical layering, Dolly-Out and Handheld Shaky aggressively tracking the right foreground infantry soldier in olive drab uniform, rendered in Authentic raw textures with fine cinematic film grain in 4k fidelity, while the initial structural integrity of the subject and environment remains perfectly intact and consistent throughout the motion.
-videoGenPromptShort: The soldier is advancing.
+Identity Logic: The soldier, representing the main hero of the scene, is defined as a 1944 WWII infantry soldier, which aligns with the era specified in the metadata, embodying both the role and physical essence through his worn olive drab uniform and posture, emphasizing readiness and bravery.
+Action Focus: The narration emphasizes bravery emerging from the beaches of Normandy, which contextualizes the soldier's decisive stance and preparedness for combat. This intensity is captured by translating 'bravery emerged' into a kinetic action that encapsulates the soldier's poised readiness and vigilance.
+Reasoning: The vocabulary selected reflects a mix of 'combat' and 'locomotion', influenced by the soldier's stance and readiness to engage. The visual vocabulary incorporates details of fabric flutter due to the natural movement combined with structural strain as the soldier prepares for potential movement. The camera technique chosen leverages an anamorphic lens emphasizing depth and backdrop chaos to maximize the contrast of the soldier's calmness against the battlefield turmoil. To prevent freezing in the atmospheric effects, utilizing dust and debris swirling around the soldier creates a dynamic interaction with the action context, making the scene feel alive while respecting the constraints of the HIGH intensity tier.
+Scene #4 doesn't have Ambiguous Points
+videoGenPrompt: The center-weighted infantry soldier in worn olive drab wool uniform stands poised with a forward gaze as heavy ripples of wind tug at his clothing, amidst swirling dust and smoke from distant explosions, captured with an anamorphic lens alongside aggressive dolly-in, rendered in raw filmic texture in 4K resolution, while the initial structural integrity of the soldier and the environment remains perfectly intact and consistent throughout the motion.
 
 Scene #5 postVideoGenPrompt() Result
-Identity Logic: We anchored the 1944 WWII infantry soldier and fighter pilot identities by using mapping handles with the soldier's steel helmet and the pilot's goggles, preserving their era, role, and physical essence through the dynamic sequence.
-Action Focus: We translated the metaphor of pilots dancing with death into concrete high-momentum verbs like staggers aggressively and is banking rapidly, focusing on tangible structural strain and aerodynamic flow.
-Reasoning: We selected material tags from the HIGH intensity tier to reflect structural strain: billowing folds and dynamic creases for cloth reaction on both soldier and pilot. We chose an anamorphic lens with 9:16 Portrait Cinema and Vertical Layering from the master style guide to match the desired aesthetic, then applied a rightward truck to sync with the lateral subject vector. The camera intensity adverb aggressively matches the HIGH tier. For atmosphere, we followed the three-stage protocol: clouds are a loose medium under HIGH tier so we allowed interactive particle flows with cloud wisps swirling and air ripples drifting leftward opposite the truck, all anchored by volumetric lighting and contrail streaks to prevent background freezing.
-Ambiguous Points
-AmbiguousPoint[0]: Ambiguity in determining the soldier's horizontal anchor led to choosing 'center' for consistent framing.
-AmbiguousPoint[1]: Ambiguity in connecting multi-entity actions in step_6 led to using a single sentence with a 'while' connector.
-AmbiguousPoint[2]: Ambiguity in inferring the primary subject vector for the camera led to selecting lateral motion based on the plane's orientation.
-videoGenPrompt: The center background soldier with a steel helmet staggers aggressively, causing billowing folds, while the center foreground pilot with goggles is banking rapidly, causing dynamic creases, amidst cloud wisps swirling around the aircraft, while air ripples drifting leftward, all enhanced by volumetric lighting and contrail streaks, captured with Anamorphic lens with 9:16 Portrait Cinema and Vertical Layering, Truck Right aggressively tracking the center foreground pilot with goggles, rendered in Authentic raw textures with fine cinematic film grain in 4k fidelity, while the initial structural integrity of the subject and environment remains perfectly intact and consistent throughout the motion.
-videoGenPromptShort: The soldier is staggering
+Identity Logic: The fighter pilot's role as a sub-character from the 1944 WWII era is preserved through his depicted action and stress on the material and action context of aerodynamics and locomotion while flying. His attire and grip on the controls establish his identity, ensuring continuity in the kinetic motion sequence.
+Action Focus: The narrative transitions from a simple description of aerial maneuvers to the high-impact kinetic verb 'navigating,' which encapsulates the action and urgency of aerial dogfighting.
+Reasoning: The selected tags from the vocabulary depot align with the high-intensity kinetic actions of the pilots during WWII. The camera tech is based on the Anamorphic lens with deep focus to capture the dramatic aerial scenes. The atmospheric strategy prevents freezing by ensuring dynamic lighting and particle movement that reflect the chaos of aerial combat.
+Scene #5 doesn't have Ambiguous Points
+videoGenPrompt: The focused fighter pilot is navigating aggressively, gripping the controls tightly as he leans into a turbulent ascent, while vibrant clouds churn around him, all enhanced by directional key lighting and fine cinematic film grain in 4K fidelity.
 
 Scene #6 postVideoGenPrompt() Result
-Identity Logic: We preserved the 1944 WWII infantry soldier's era and role by anchoring his olive drab wool uniform, steel helmet and canvas ammunition belt in the left midground and maintained the aerial bomb's glossy metal casing and steel fins intact during its descent.
-Action Focus: We translated 'Bombs fell like rain' into hyper-velocity verbs by rendering the bomb as plummeting blindingly and the soldier's braced stance as tenses violently while lurching backward, shifting from metaphor to direct kinetic impact.
-Reasoning: By locking VERY_HIGH intensity from the narration's explosive tone, we selected the depot's top-tier tags: violent fabric whipping to show the uniform's extreme flutter, incandescent sparks for the bomb's steel fins, and high-velocity particle ejecta for granular debris. The camera leverages an Anamorphic lens with 9:16 portrait cinema framing and vertical layering as per the master guide's low-key directional lighting, using Crash Zoom In and Handheld Shaky to convey hyper-velocity without axis conflict. To prevent background freezing, we applied the VERY_HIGH threshold to freely generate a debris cloud and shockwave anchored by volumetric lighting and enforced radial particle contraction to match the optical zoom.
-Ambiguous Points
-AmbiguousPoint[0]: In step_2_1 the 'Rule-of-thirds offset framing' did not specify left or right placement so I inferred a left alignment for the soldier's position.
-AmbiguousPoint[1]: In step_3_1 it was unclear whether the shockwave should be the soldier's secondary action so I chose lurching backward as his simultaneous reaction.
-AmbiguousPoint[2]: In step_7_2 selecting Crash Zoom In and Handheld Shaky was a judgement call to introduce artificial camera motion under a static subject vector and VERY_HIGH intensity.
-videoGenPrompt: The left midground soldier with canvas ammunition belt tenses violently while lurching backward, causing violent fabric whipping, while the center foreground bomb with reinforced steel fins is plummeting blindingly, causing incandescent sparks, amidst debris cloud propagating while particles contract inward, all enhanced by volumetric lighting and high-velocity particle ejecta, captured with Anamorphic lens with 9:16 portrait cinema framing and vertical layering, Crash Zoom In and Handheld Shaky violently tracking the left midground soldier with canvas ammunition belt, rendered in Authentic raw textures with fine cinematic film grain in 4k fidelity, while the initial structural integrity of the subject and environment remains perfectly intact and consistent throughout the motion.
-videoGenPromptShort: The soldier is tensing
+Identity Logic: The prop, an aerial bomb from the 1944 WWII era, maintains its identity through its material description as rigid and its specified physical properties, including being in a free-fall orientation. This aligns with the action context which indicates passive movement, ensuring the bomb's historical and visual essence is preserved throughout the kinetic sequence.
+Action Focus: The transition from a passive depiction of the bomb in free fall to a high-impact kinetic vector involves expressing the bomb's descent as a central action in the scene, capturing the momentum and visual impact as it approaches its target.
+Reasoning: The tags selected from the vocabulary_depot are derived from the rigid material classification of the bomb which aligns with HIGH intensity descriptors reflecting decisive kinetic action, such as 'decisive kinetic/structural strain'. The camera tech utilizes an Anamorphic lens to capture the vertical layering inherent in the framing style, ensuring immersive depth, while adhering to the LOW-key lighting setup to enhance the somber WWII ambiance. The atmospheric strategy avoids freezing by focusing on the bomb's descent and surrounding debris which reinforces the chaos without violating the zero-redundancy rule for static details.
+Scene #6 doesn't have Ambiguous Points
+videoGenPrompt: The foreground anchor bomb in free-fall orientation jettisons downward rapidly, causing incandescent sparks to erupt around it, while thick smoke billows upwards amidst the backdrop of ruins, captured with Anamorphic lens and Dolly-In aggressively focusing on the descent, rendered in raw texture quality with filmic grain in 4K resolution, while the initial structural integrity of the bomb and environment remains perfectly intact and consistent throughout the motion.
 
 Scene #7 postVideoGenPrompt() Result
-Identity Logic: The soldier’s WWII infantry role and era are preserved by referencing his combat identity and era-appropriate uniform in the mapping handle while describing only his micro-movement delta.
-Action Focus: The broad theme of costly victory is distilled into a singular life sign by shifting from metaphorical blood and tears to the precise kinetic moment of ‘breathing barely’.
-Reasoning: We selected ‘static drape’ from the cloth material pool under VERY_LOW to convey the uniform’s micro-stasis. The atmospheric tags ‘volumetric lighting’ and ‘micro-flux brownian motion’ comply with the passive particle allowance and avoid freezing. Rack Focus was chosen as an optical shift to introduce movement in the low-key, deep-focus anamorphic aesthetic specified by the master guide. Style descriptors convert raw texture detail and filmic grain into natural prose to preserve fidelity and anchor consistency.
-Ambiguous Points
-AmbiguousPoint[0]: Step2.1: The choice of the dented steel helmet as the visual distinguisher for the mapping handle was unclear among his uniform details; helmet was selected for high contrast.
-AmbiguousPoint[1]: Step5: It was ambiguous whether the soldier’s barely perceptible breathing should disturb dust motes; per Stage1 rules we omitted any subject-atmosphere interaction.
-videoGenPrompt: The right foreground soldier in a dented steel helmet is breathing barely, causing static drape, enhanced by volumetric lighting and micro-flux brownian motion, captured with Anamorphic lens with 9:16 portrait cinema framing and vertical layering, Rack Focus subtly tracking the right foreground soldier in a dented steel helmet, rendered in Authentic raw textures with fine cinematic film grain in 4k fidelity, while the initial structural integrity of the subject remains perfectly intact and consistent throughout the motion.
-videoGenPromptShort: The soldier is breathing
+Identity Logic: The story preserves the essence of the Infantry Soldier from 1944 by focusing on his role, material importance, and emotional state, ensuring the depiction remains authentic as the chaos of war unfolds.
+Action Focus: The narrative transitions from a descriptive phrase about victory to the kinetic action of the soldier, emphasizing both his emotional fatigue and his readiness for the chaos of battle.
+Reasoning: 1) Selected tags from the vocabulary_depot were chosen based on the soldier's action_context under high kinetic energy, highlighting the fabric and muscle reactions under combat conditions. The focus is on dynamics and reactions consistent with physical strain and movement. 2) The chosen camera technology includes an anamorphic lens setup that allows for deep focus, enhancing the depth of the battlefield. The low-key exposure vibe represents the muted colors and the somber tone of war. 3) The atmospheric strategy supports the depiction of an immersive environment, enhancing cinematic tension, with emphasis on textures and light dynamics to reflect the gritty nature of the battlefield.
+Scene #7 doesn't have Ambiguous Points
+videoGenPrompt: The center-weighted infantry soldier, emotionally exhausted yet resolute, stands firmly amid the chaos, gazing ahead as the wind billows through his worn olive drab uniform, while heavy ripple effects animate the fabric, enhancing the somber atmosphere of the scarred European WWII battlefield, captured with an anamorphic lens, dolly-in aggressively, rendered in raw textures and filmic grain in stunning 4K resolution, while maintaining absolute consistency of the subject's form and environmental details throughout the motion.
 
 Scene #8 postVideoGenPrompt() Result
-Identity Logic: We preserved the tank’s WWII medium machine essence by extracting its model name “Medium Tank” and anchoring it with its center-background position and chipped olive-drab paint to maintain its visual identity through motion.
-Action Focus: We transformed the abstract metaphor of battle’s forging fires into a subtle low-intensity fluid movement by focusing on the tank’s idle flux and passive sway to reflect latent inertia.
-Reasoning: From the depot, for material: rigid at LOW we selected the Visual Vocabulary "light-catching edges"; for action_context: passive at LOW we used the Flow focus term passive swaying. Camera choice used the master style Anamorphic lens, 9:16 portrait framing, vertical layering to satisfy the low-key midday sun aesthetic; Truck Right was chosen because the tank’s vector is effectively Static, adding lateral reveal with fluid motion. Atmospherics obeyed the LOW threshold: we omitted wake trails and instead applied passive volumetric atmospheric haze with dust motes to avoid freezing.
-Ambiguous Points
-AmbiguousPoint[0]: Intensity Tier Selection Ambiguity at <step_0_kinetic_energy_profiling>:The narration implied high chaos but the image showed only gentle embers, so we chose LOW to match visible fluid drift.
-AmbiguousPoint[1]: Atmospheric Delta Decision at <step_5_atmospheric_delta_refinement>:Stage-1 rules on direct contact vs passive particles conflicted; we opted to skip wake effects and use ambient haze and dust motes instead.
-videoGenPrompt: The center background medium tank with chipped olive-drab paint is swaying gently, causing light-catching edges, amidst atmospheric haze and dust motes, captured with Anamorphic lens with 9:16 portrait cinema and vertical layering, Truck Right smoothly tracking the center background medium tank with chipped olive-drab paint, rendered in Authentic raw textures in 4k fidelity with fine cinematic film grain, while the initial structural integrity of the tank and environment remains perfectly intact and consistent throughout the motion.
-videoGenPromptShort: The tank is swaying.
-
-
- POST /api/video/process/video?taskId=f7fa12ea-53ee-47f7-a14e-a15b31875399 200 in 42s (compile: 5.9s, render: 35.8s)
-○ Compiling /webhook/fal-ai/video ...
- POST /webhook/fal-ai/video?taskId=f7fa12ea-53ee-47f7-a14e-a15b31875399&isRetriedByViolence=false 200 in 3.7s (compile: 3.7s, render: 22ms)
- POST /webhook/fal-ai/video?taskId=f7fa12ea-53ee-47f7-a14e-a15b31875399&isRetriedByViolence=false 200 in 76ms (compile: 65ms, render: 12ms)
- POST /api/video/process/speed/before?taskId=f7fa12ea-53ee-47f7-a14e-a15b31875399&isRetriedByViolence=false 200 in 5.2s (compile: 1584ms, render: 3.6s)
- POST /api/video/process/speed/before?taskId=f7fa12ea-53ee-47f7-a14e-a15b31875399&isRetriedByViolence=false 200 in 5.1s (compile: 1488ms, render: 3.6s)
- POST /webhook/fal-ai/video?taskId=f7fa12ea-53ee-47f7-a14e-a15b31875399&isRetriedByViolence=false 200 in 49ms (compile: 37ms, render: 12ms)
- POST /api/video/process/speed/before?taskId=f7fa12ea-53ee-47f7-a14e-a15b31875399&isRetriedByViolence=false 200 in 1829ms (compile: 15ms, render: 1814ms)
- POST /webhook/fal-ai/video?taskId=f7fa12ea-53ee-47f7-a14e-a15b31875399&isRetriedByViolence=false 200 in 24ms (compile: 15ms, render: 9ms)
- POST /webhook/fal-ai/video?taskId=f7fa12ea-53ee-47f7-a14e-a15b31875399&isRetriedByViolence=false 200 in 22ms (compile: 15ms, render: 7ms)
- POST /webhook/fal-ai/video?taskId=f7fa12ea-53ee-47f7-a14e-a15b31875399&isRetriedByViolence=false 200 in 32ms (compile: 16ms, render: 16ms)
- POST /api/video/process/speed/before?taskId=f7fa12ea-53ee-47f7-a14e-a15b31875399&isRetriedByViolence=false 200 in 3.0s (compile: 22ms, render: 3.0s)
- POST /api/video/process/speed/before?taskId=f7fa12ea-53ee-47f7-a14e-a15b31875399&isRetriedByViolence=false 200 in 2.2s (compile: 16ms, render: 2.1s)
- POST /api/video/process/speed/before?taskId=f7fa12ea-53ee-47f7-a14e-a15b31875399&isRetriedByViolence=false 200 in 3.1s (compile: 36ms, render: 3.1s)
- POST /webhook/replicate/video/speed?taskId=f7fa12ea-53ee-47f7-a14e-a15b31875399&requestId=25b568d0-65b5-4783-957a-f5c1815f1e5f 200 in 819ms (compile: 805ms, render: 14ms)
- POST /webhook/replicate/video/speed?taskId=f7fa12ea-53ee-47f7-a14e-a15b31875399&requestId=de49fcdd-ed7a-476b-804e-5df393efec7b 200 in 76ms (compile: 62ms, render: 13ms)
-Speed Webhook: Scene 25b568d0-65b5-4783-957a-f5c1815f1e5f finished. Progress: 1/8
- POST /api/video/process/speed/after?taskId=f7fa12ea-53ee-47f7-a14e-a15b31875399&requestId=25b568d0-65b5-4783-957a-f5c1815f1e5f 200 in 2.9s (compile: 851ms, render: 2.1s)
-Speed Webhook: Scene de49fcdd-ed7a-476b-804e-5df393efec7b finished. Progress: 2/8
- POST /api/video/process/speed/after?taskId=f7fa12ea-53ee-47f7-a14e-a15b31875399&requestId=de49fcdd-ed7a-476b-804e-5df393efec7b 200 in 2.6s (compile: 26ms, render: 2.5s)
- POST /webhook/replicate/video/speed?taskId=f7fa12ea-53ee-47f7-a14e-a15b31875399&requestId=271efde4-716a-4cd2-a8d5-736057a37bed 200 in 30ms (compile: 23ms, render: 8ms)
-Speed Webhook: Scene 271efde4-716a-4cd2-a8d5-736057a37bed finished. Progress: 3/8
- POST /api/video/process/speed/after?taskId=f7fa12ea-53ee-47f7-a14e-a15b31875399&requestId=271efde4-716a-4cd2-a8d5-736057a37bed 200 in 2.0s (compile: 20ms, render: 2.0s)
- POST /webhook/replicate/video/speed?taskId=f7fa12ea-53ee-47f7-a14e-a15b31875399&requestId=b12404ee-abef-45fe-b5ac-e9920df396cd 200 in 23ms (compile: 16ms, render: 8ms)
-Speed Webhook: Scene b12404ee-abef-45fe-b5ac-e9920df396cd finished. Progress: 4/8
- POST /api/video/process/speed/after?taskId=f7fa12ea-53ee-47f7-a14e-a15b31875399&requestId=b12404ee-abef-45fe-b5ac-e9920df396cd 200 in 2.0s (compile: 15ms, render: 1991ms)
- POST /webhook/replicate/video/speed?taskId=f7fa12ea-53ee-47f7-a14e-a15b31875399&requestId=3724d142-87ec-4b0a-b74c-44cbb991508a 200 in 34ms (compile: 15ms, render: 19ms)
-Speed Webhook: Scene 3724d142-87ec-4b0a-b74c-44cbb991508a finished. Progress: 5/8
- POST /api/video/process/speed/after?taskId=f7fa12ea-53ee-47f7-a14e-a15b31875399&requestId=3724d142-87ec-4b0a-b74c-44cbb991508a 200 in 1507ms (compile: 18ms, render: 1489ms)
- POST /webhook/replicate/video/speed?taskId=f7fa12ea-53ee-47f7-a14e-a15b31875399&requestId=2330f341-f09d-4c33-affe-272e14cc3e88 200 in 22ms (compile: 15ms, render: 7ms)
-Speed Webhook: Scene 2330f341-f09d-4c33-affe-272e14cc3e88 finished. Progress: 6/8
- POST /api/video/process/speed/after?taskId=f7fa12ea-53ee-47f7-a14e-a15b31875399&requestId=2330f341-f09d-4c33-affe-272e14cc3e88 200 in 1849ms (compile: 13ms, render: 1836ms)
- POST /webhook/fal-ai/video?taskId=f7fa12ea-53ee-47f7-a14e-a15b31875399&isRetriedByViolence=false 200 in 33ms (compile: 16ms, render: 17ms)
- POST /api/video/process/speed/before?taskId=f7fa12ea-53ee-47f7-a14e-a15b31875399&isRetriedByViolence=false 200 in 3.4s (compile: 100ms, render: 3.3s)
- POST /webhook/fal-ai/video?taskId=f7fa12ea-53ee-47f7-a14e-a15b31875399&isRetriedByViolence=false 200 in 20ms (compile: 13ms, render: 7ms)
- POST /webhook/replicate/video/speed?taskId=f7fa12ea-53ee-47f7-a14e-a15b31875399&requestId=a36d5b3e-1752-44bb-a47c-715b02b5d168 200 in 47ms (compile: 30ms, render: 18ms)
- POST /api/video/process/speed/before?taskId=f7fa12ea-53ee-47f7-a14e-a15b31875399&isRetriedByViolence=false 200 in 3.0s (compile: 14ms, render: 3.0s)
-Speed Webhook: Scene a36d5b3e-1752-44bb-a47c-715b02b5d168 finished. Progress: 7/8
- POST /api/video/process/speed/after?taskId=f7fa12ea-53ee-47f7-a14e-a15b31875399&requestId=a36d5b3e-1752-44bb-a47c-715b02b5d168 200 in 2.1s (compile: 72ms, render: 2.1s)
- POST /webhook/replicate/video/speed?taskId=f7fa12ea-53ee-47f7-a14e-a15b31875399&requestId=4ed4c144-42c2-47bd-8d4b-a30f577fbb6b 200 in 21ms (compile: 14ms, render: 7ms)
-Speed Webhook: Scene 4ed4c144-42c2-47bd-8d4b-a30f577fbb6b finished. Progress: 8/8
-모든 Scene 처리 완료. 최종 병합을 시작합니다: f7fa12ea-53ee-47f7-a14e-a15b31875399
- POST /api/video/process/speed/after?taskId=f7fa12ea-53ee-47f7-a14e-a15b31875399&requestId=4ed4c144-42c2-47bd-8d4b-a30f577fbb6b 200 in 2.6s (compile: 109ms, render: 2.5s)
-[Merge Service] Task 데이터 조회: f7fa12ea-53ee-47f7-a14e-a15b31875399
-최종 영상 병합 요청 수신: f7fa12ea-53ee-47f7-a14e-a15b31875399
-[Merge Service] 음성 파일 URL 조회
-[Merge Service] 최종 영상 병합 완료
-[Merge Service] 최종 영상 병합 중 에러: Error: 최종 영상 다운로드 실패: Service Unavailable
-    at Object.postFinalVideo (api/server/videoServerAPI.ts:374:23)
-    at async POST (app/api/video/merge/route.ts:53:39)
-  372 |
-  373 |             if (!finalVideoResponse.ok) {
-> 374 |                 throw new Error(`최종 영상 다운로드 실패: ${finalVideoResponse.statusText}`);
-      |                       ^
-  375 |             }
-  376 |
-  377 |             const finalVideoBuffer = await finalVideoResponse.arrayBuffer();
-영상 병합 엔드포인트 에러: Error: Merging processed videos failed.
-    at POST (app/api/video/merge/route.ts:56:19)
-  54 |
-  55 |         if (!isMergingVideoSuccess) {
-> 56 |             throw new Error("Merging processed videos failed.")
-     |                   ^
-  57 |         }
-  58 |
-  59 |         console.log(`최종 영상 병합 완료.`);
-Merging processed videos failed.
- POST /api/video/merge?taskId=f7fa12ea-53ee-47f7-a14e-a15b31875399 500 in 55s (compile: 2.1s, render: 53s)
- OPTIONS /api/video/task/f7fa12ea-53ee-47f7-a14e-a15b31875399/retry 204 in 3.1s (compile: 3.1s, render: 19ms)
- POST /api/video/task/f7fa12ea-53ee-47f7-a14e-a15b31875399/retry 200 in 1502ms (compile: 17ms, render: 1485ms)
-[Merge Service] Task 데이터 조회: f7fa12ea-53ee-47f7-a14e-a15b31875399
-최종 영상 병합 요청 수신: f7fa12ea-53ee-47f7-a14e-a15b31875399
-[Merge Service] 음성 파일 URL 조회
-[Merge Service] 최종 영상 병합 중 에러: Error: Scene #2 signed URL 생성 실패: {"name":"StorageApiError","message":"Object not found","status":400,"statusCode":"404"}
-    at eval (api/server/videoServerAPI.ts:342:27)
-    at async Object.postFinalVideo (api/server/videoServerAPI.ts:346:49)
-    at async POST (app/api/video/merge/route.ts:53:39)
-  340 |
-  341 |                 if (error || !data?.signedUrl) {
-> 342 |                     throw new Error(`Scene #${sceneData.sceneNumber} signed URL 생성 실패: ${JSON.stringify(error)}`)
-      |                           ^
-  343 |                 }
-  344 |                 return data.signedUrl;
-  345 |             });
-영상 병합 엔드포인트 에러: Error: Merging processed videos failed.
-    at POST (app/api/video/merge/route.ts:56:19)
-  54 |
-  55 |         if (!isMergingVideoSuccess) {
-> 56 |             throw new Error("Merging processed videos failed.")
-     |                   ^
-  57 |         }
-  58 |
-  59 |         console.log(`최종 영상 병합 완료.`);
-Merging processed videos failed.
- POST /api/video/merge?taskId=f7fa12ea-53ee-47f7-a14e-a15b31875399&isRetry=true 500 in 2.4s (compile: 438ms, render: 1977ms)
+Identity Logic: The subject's essence as a 1944 Infantry Soldier is preserved through the articulation of his context-heavy actions and attire, aligning with the historical setting of World War II. His male identity, athletic build, and the fatigue of war are evoked through the physical and emotional gravitas portrayed while maintaining accurate attributes like the olive drab wool uniform and the M1 Garand rifle.
+Action Focus: The transition from the static image of a soldier standing resolute to a dynamic portrayal involves kinetic verbs such as 'engaging', 'storming', and 'charging', which encapsulates the chaos and motion inherent to wartime actions.
+Reasoning: The selected tags from the vocabulary_depot were aimed at encapsulating the energy of war. The use of 'Fabric Flutter' and 'Dynamic Creases' aligns with the 'HIGH' INTENSITY_TIER due to the kinetic energy expressed as soldiers move through the battlefield. The camera technique chosen utilizes an Anamorphic lens with deep focus, adhering to the master style guide's low-key vibe, allowing for emotional depth while showcasing the chaotic environment of warfare. The atmospheric strategy includes sparse detail in terms of lighting with muted, desaturated tones to contribute to the dramatic tension while retaining clarity without freezing the background.
+Scene #8 doesn't have Ambiguous Points
+videoGenPrompt: The center-weighted infantry soldier in a worn olive drab uniform is engaging fiercely in the WWII battlefield, while visible billowing folds of cloth flutter dynamically in the wind amidst thick smoke and dust particles swirling around, captured with an Anamorphic lens, framed via vertical layering in stunning 4K resolution, while the initial structural integrity of the subject remains perfectly intact and consistent throughout the motion.
