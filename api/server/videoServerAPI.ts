@@ -55,8 +55,6 @@ export const videoServerAPI = {
         }
         const imageUrl = data.signedUrl;
 
-        const is1_0ProFast = sceneData.sceneDuration < 2.9;
-
         let newRequestId: string;
         const baseInputData = {
             image_url: imageUrl,
@@ -65,12 +63,12 @@ export const videoServerAPI = {
             enable_safety_checker: false,
         }
 
-        if (!is1_0ProFast && !isViolence) {
-            const safeDuration = sceneData.sceneDuration < 4
+        if (!isViolence) {
+            const safeDuration = sceneData.sceneDuration + 0.2 < 4.2
                 ? 4
-                : sceneData.sceneDuration > 12
+                : sceneData.sceneDuration + 0.2 > 12.2
                     ? 12
-                    : Math.round(sceneData.sceneDuration);
+                    : Math.round(sceneData.sceneDuration + 0.2);
             const inputData = {
                 ...baseInputData,
                 prompt: sceneData.videoGenPrompt ?? "A cinematic video",
@@ -120,50 +118,62 @@ export const videoServerAPI = {
      * Supabase Storage에 업로드한 뒤 최종 URL을 반환합니다.
      * @param replicateVideoUrl - Replicate에서 받은 원본 영상 URL
      * @param targetDuration - 목표 영상 길이 (초)
-     * @param taskId - 작업 Row ID
-     * @param requestId - 영상 생성 요청 ID
      */
     async postProcessedVideo(
         replicateVideoUrl: string,
         targetDuration: number,
-        taskId: string,
-        requestId: string,
     ): Promise<{
         success: boolean,
-        predictionId?: string,
+        processedVideoUrl?: string,
     }> {
         const replicate = new Replicate({
             auth: process.env.REPLICATE_API_TOKEN,
         });
 
         try {
-            // 1. MediaBunny를 사용해 영상 정보 확인
-            const mediaBunnyInput = new Input({
-                source: new UrlSource(replicateVideoUrl),
-                formats: ALL_FORMATS,
-            });
+            let ffmpegArgs: string;
+            const isCutting = targetDuration + 0.2 <= 4.0;
 
-            const actualDuration = await mediaBunnyInput.computeDuration();
+            if (isCutting) {
+                // [Case 1] 자르기 모드 (Target <= 3.8s)
+                // 4초 이상의 영상에서 앞부분 0.2초를 버리고, 거기서부터 Target만큼만 씀.
+                // 배율 변화 없음. 화질 손상 없음.
+                ffmpegArgs = `-ss 0.2 -t ${targetDuration} -c:v libx264 -c:a copy`;
+            } else {
+                // [Case 2] 배율 모드 (Target >= 3.9s)
+                // 1. MediaBunny를 사용해 영상 정보 확인 (실제 생성된 길이 측정)
+                const mediaBunnyInput = new Input({
+                    source: new UrlSource(replicateVideoUrl),
+                    formats: ALL_FORMATS,
+                });
 
-            // 2. 속도 배율 계산 (소수점 6자리로 제한)
-            const videoPtsRatio = parseFloat((targetDuration / actualDuration).toFixed(6));
+                const generatedVideoDuration = await mediaBunnyInput.computeDuration();
 
-            const webhookUrl = `${process.env.BASE_URL!}/webhook/replicate/video/speed?taskId=${taskId}&requestId=${requestId}`
-            const prediction = await replicate.predictions.create({
-                version: "lht1324/ffmpeg-video-speed-modifier:2a804bdac8858f5d67e47360210214e5d97e6f572cb3621299b03dfe5a6555f0",
-                input: {
-                    video: replicateVideoUrl,
-                    pts_ratio: videoPtsRatio,
-                },
-                webhook: webhookUrl,
-                webhook_events_filter: ["completed"],
-            });
+                // 2. 가용 길이 계산 (실제 길이 - 앞부분 0.2초)
+                const availableDuration = generatedVideoDuration - 0.2;
+
+                // 3. 속도 배율 계산 (소수점 6자리로 제한)
+                // ptsRatio = 목표 / 가용 -> 이 값이 1보다 크면 영상이 느려짐(Slow), 작으면 빨라짐(Fast)
+                const videoPtsRatio = (targetDuration / availableDuration).toFixed(6);
+
+                // 명령어: 0.2초 스킵 + 배율 적용
+                ffmpegArgs = `-ss 0.2 -filter:v "setpts=${videoPtsRatio}*PTS" -c:v libx264 -c:a copy`;
+            }
+
+            const processedVideoUrl = await replicate.run(
+                'lht1324/ffmpeg-sandbox-2:06262bdc243f9afe6d1b9a8d338ab536044d0604ce4c420c9cde7ee7fe781339',
+                {
+                    input: {
+                        video_urls: JSON.stringify([replicateVideoUrl]),
+                        ffmpeg_args: ffmpegArgs,
+                    }
+                }
+            )
 
             return {
                 success: true,
-                predictionId: prediction.id
+                processedVideoUrl: processedVideoUrl.toString(),
             };
-
         } catch (error) {
             console.error("영상 처리 중 에러 발생:", error);
             return {
@@ -308,8 +318,9 @@ export const videoServerAPI = {
 
     async postFinalVideo(generationTaskId: string, videoGenerationTask: VideoGenerationTask) {
         const supabase = createSupabaseServiceRoleClient();
-        const falAIClient = new FalAIClient();
-        const falAIService = new FalAIService(falAIClient);
+        const replicate = new Replicate({
+            auth: process.env.REPLICATE_API_TOKEN,
+        });
 
         try {
             // 1. 필요한 데이터 조회 (영상 리스트, 음성 URL)
@@ -345,30 +356,22 @@ export const videoServerAPI = {
             });
             const processedVideoSignedUrlList = await Promise.all(getSignedUrlPromises);
 
-            const mergeVideosRequest = {
-                video_urls: processedVideoSignedUrlList,
-                target_fps: 24,
-                image_size: 'portrait_16_9' as ("portrait_16_9" | "square_hd" | "square" | "portrait_4_3" | "landscape_4_3" | "landscape_16_9" | {
-                    width: number;
-                    height: number;
-                } | undefined),
-            }
-            const mergeVideosResponse = await falAIService.mergeVideos(mergeVideosRequest);
-            const mergeVideoResult = mergeVideosResponse.data;
-
-            const mergeVideoAndAudioRequest = {
-                video_url: mergeVideoResult.video.url,
+            const videoMergeInput = {
                 audio_url: audioUrl,
-                start_offset: 0,
+                video_urls: JSON.stringify(processedVideoSignedUrlList),
+                ffmpeg_args: "-c:v copy -c:a aac",
             }
-            const mergeVideoAndAudioResponse = await falAIService.mergeAudioVideo(mergeVideoAndAudioRequest);
-            const mergeVideoAndAudioResult = mergeVideoAndAudioResponse.data;
+            const finalVideoUrl = await replicate.run(
+                "lht1324/ffmpeg-sandbox-2:06262bdc243f9afe6d1b9a8d338ab536044d0604ce4c420c9cde7ee7fe781339",
+                {
+                    input: videoMergeInput,
+                },
+            )
 
             console.log(`[Merge Service] 최종 영상 병합 완료`);
 
             // 5.5. Fal AI에서 최종 병합된 영상을 다운로드하여 Supabase Storage에 업로드
-            const finalVideoUrl = mergeVideoAndAudioResult.video.url;
-            const finalVideoResponse = await fetch(finalVideoUrl);
+            const finalVideoResponse = await fetch(finalVideoUrl.toString());
 
             if (!finalVideoResponse.ok) {
                 throw new Error(`최종 영상 다운로드 실패: ${finalVideoResponse.statusText}`);

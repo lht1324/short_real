@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
         }
 
         internalFireAndForgetFetch(
-            `${process.env.BASE_URL}/api/video/process/speed/before?taskId=${taskId}&isRetriedByViolence=${isRetriedByViolence}`,
+            `${process.env.BASE_URL}/api/video/process/speed?taskId=${taskId}&isRetriedByViolence=${isRetriedByViolence}`,
             {
                 method: 'POST',
             },

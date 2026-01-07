@@ -7,6 +7,8 @@ import {getIsValidRequestS2S} from "@/utils/getIsValidRequest";
 import {createSupabaseServiceRoleClient} from "@/lib/supabaseServiceRole";
 import {getErrorMessage} from "@/utils/ErrorUtils";
 import {FalAiErrorDetail} from "@/api/types/fal-ai/FalAIResponse";
+import {VideoGenerationTaskStatus} from "@/api/types/supabase/VideoGenerationTasks";
+import {internalFireAndForgetFetch} from "@/utils/internalFetch";
 
 export async function POST(request: NextRequest) {
     if (!getIsValidRequestS2S(request)) {
@@ -117,12 +119,75 @@ export async function POST(request: NextRequest) {
             const postProcessedVideoResult = await videoServerAPI.postProcessedVideo(
                 videoUrl,
                 targetDuration,
-                taskId,
-                requestId
             );
 
-            if (!postProcessedVideoResult.success) {
+            if (!postProcessedVideoResult.success || !postProcessedVideoResult.processedVideoUrl) {
                 throw new Error(`Video processing request failed.`);
+            }
+
+            const processedVideoUrl = postProcessedVideoResult.processedVideoUrl;
+
+            // 6. 결과 영상 다운로드
+            // Replicate output은 URL 문자열입니다.
+            const videoResponse = await fetch(processedVideoUrl);
+            if (!videoResponse.ok) throw new Error(`Download failed: ${videoResponse.statusText}`);
+            const videoBuffer = await videoResponse.arrayBuffer();
+
+            // 7. Supabase Storage 업로드
+            // 파일명 규칙: [taskId]/[requestId].mp4
+            const newFileName = `${taskId}/${requestId}.mp4`;
+            const { error: uploadError } = await supabase.storage
+                .from('processed_video_storage')
+                .upload(newFileName, videoBuffer, {
+                    contentType: 'video/mp4',
+                    upsert: true
+                });
+
+            if (uploadError) {
+                throw new Error(`Storage upload failed: ${uploadError.message}`);
+            }
+
+            // =========================================================
+            // [병합 트리거] "내가 마지막인가?" 확인 로직
+            // =========================================================
+
+            // 9. RPC 호출 (Atomic하게 카운트 증가 및 조회)
+            const { data: countResult, error: rpcError } = await supabase.rpc(
+                "increment_and_get_scene_count",
+                {
+                    task_id: videoGenerationTask.id,
+                    target_request_id: requestId,
+                }
+            );
+
+            if (rpcError) {
+                console.error("RPC Error:", rpcError);
+                // RPC 실패 시 로직 중단해야 안전함
+                throw new Error("RPC Execution Failed");
+            }
+            const {
+                processed_count: processedCount,
+                total_count: totalCount,
+            } = countResult;
+
+            console.log(`Speed Webhook: Scene ${requestId} finished. Progress: ${processedCount}/${totalCount}`);
+
+            // 10. 모든 씬 완료 시 병합(Merge) 엔드포인트 호출
+            if (processedCount === totalCount) {
+                console.log(`모든 Scene 처리 완료. 최종 병합을 시작합니다: ${taskId}`);
+
+                // 상태 변경: STITCHING_VIDEOS
+                await videoGenerationTasksServerAPI.patchVideoGenerationTaskStatus(
+                    taskId,
+                    VideoGenerationTaskStatus.STITCHING_VIDEOS
+                );
+
+                // 병합 엔드포인트 호출 (Fire and Forget)
+                // 주의: 서버 사이드 fetch이므로 process.env.BASE_URL(절대 경로) 필수
+
+                internalFireAndForgetFetch(`${process.env.BASE_URL}/api/video/merge?taskId=${taskId}`, {
+                    method: 'POST',
+                });
             }
 
             return getNextBaseResponse({
