@@ -176,8 +176,12 @@ const videoGenResponseFormat: OpenAI.ResponseFormatJSONSchema = {
                     properties: {
                         identity_logic: { type: "string" },
                         action_focus: { type: "string" },
+                        intensity_tier: { type: "string" },
+                        camera_actions: { type: "string" },
+                        camera_selected_reason: { type: "string" },
+                        camera_unselected_reason: { type: "string" },
                     },
-                    required: ["identity_logic", "action_focus"],
+                    required: ["identity_logic", "action_focus", "intensity_tier", "camera_actions", "camera_selected_reason", "camera_unselected_reason"],
                     additionalProperties: false
                 },
                 reasoning: { type: "string" },
@@ -943,6 +947,10 @@ Instruction: Generate the scene instruction JSON.
                     logical_bridge: {
                         identity_logic: string;
                         action_focus: string;
+                        intensity_tier: string;
+                        camera_actions: string;
+                        camera_selected_reason: string;
+                        camera_unselected_reason: string;
                     },
                     reasoning: string;
                     video_gen_prompt: string;
@@ -950,6 +958,10 @@ Instruction: Generate the scene instruction JSON.
                 const {
                     identity_logic: identityLogic,
                     action_focus: actionFocus,
+                    intensity_tier: intensityTier,
+                    camera_actions: cameraActions,
+                    camera_selected_reason: cameraSelectedReason,
+                    camera_unselected_reason: cameraUnselectedReason,
                 } = parsedJson.logical_bridge;
 
 
@@ -957,6 +969,15 @@ Instruction: Generate the scene instruction JSON.
                 console.log(`Identity Logic: ${identityLogic}`);
                 console.log(`Action Focus: ${actionFocus}`)
                 console.log(`Reasoning: ${parsedJson.reasoning}`);
+                console.log(`Selected INTENSITY_TIER: ${intensityTier}`);
+                console.log(`Selected Camera Actions: ${cameraActions}`);
+                if (cameraSelectedReason.length !== 0) {
+                    console.log(`Camera Selected Reason: ${cameraSelectedReason}`);
+                } else if (cameraUnselectedReason.length !== 0) {
+                    console.log(`Camera Unselected Reason: ${cameraUnselectedReason}`);
+                } else {
+                    console.log(`Both Camera Selected Reason and Camera Unselected Reason are empty.`);
+                }
                 console.log(`videoGenPrompt: ${parsedJson.video_gen_prompt}`);
 
                 return {

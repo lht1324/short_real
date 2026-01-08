@@ -2216,9 +2216,14 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
       "logical_bridge": {
         "identity_logic": "string (Define how the subject's era, role, and physical essence from the <entity_list> and metadata are preserved during motion.)",
         "action_focus": "string (Explain the conceptual shift from the raw narration to the high-impact kinetic verb used in the prompt.)",
+        "intensity_tier": "string (Selected ONE \`INTENSITY_TIER\` from <step_0_kinetic_energy_profiling>)",
+        "camera_actions": "string (Selected \`Cinematic Technique\`s in <step_0_kinetic_energy_profiling>.<definition_table> from <step_7_cinematic_camera_vector_design>)",
+        "camera_selected_reason": "string(Explain why you chose that \`Cinematic Technique\`s. If you didn't choose, leave this empty.)",
+        "camera_unselected_reason": "string(Explain why you didn't choose any \`Cinematic Technique\`. If you chose, leave this empty.)",
       },
       "reasoning": "string (Provide a detailed justification for: 1) The specific tags selected from the vocabulary_depot, 2) The choice of camera tech based on MasterStyleInfo, and 3) The atmospheric strategy to prevent freezing.)",
       "video_gen_prompt": "string (The final technical prompt assembled using the 5-stage Kinetic Anchor Protocol: [Anchor] + [Primary Action Vector] + [Atmospheric Delta] + [Cinematic Camera Vector] + [Style Modifiers].)",
+    }
     }
   </output_schema>
   <constraints>
