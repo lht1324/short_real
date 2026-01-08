@@ -1641,28 +1641,34 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
          - The values in <vocabulary_depot> are derived from <entity_list>. 
          - **IF <vocabulary_depot> is EMPTY** (due to empty entities), you represent the Physics Engine. You MUST **infer** context-appropriate physics jargon based on the **Environment** and **Narrative** (e.g., use 'Neon Refraction' for Cyberpunk City, 'Dust Motes' for Ruins).
          - **Constraint**: Do NOT hallucinate new physical objects (e.g., do not add 'steam vents' if no vents are visible). Limit inference to atmospheric particles, lighting physics, and surface reactions.
-       - **Quad-Tier Intensity Architecture**: This block contains physics-based technical data categorized into four discrete physical states. All selections must strictly match the locked **\`INTENSITY_TIER\`**:
+       - **Quad-Tier Intensity Architecture**: This block contains physics-based technical data categorized into four discrete physical states. All selections must strictly match the locked **\`INTENSITY_TIER\`** of the specific entity being processed:
          * **\`VERY_LOW\`**: (Micro-Stasis / Latent Flux) - Focus on high-fidelity textures, subtle light behavior, and Brownian motion.
          * **\`LOW\`**: (Fluid Motion / Rhythmic Flow) - Focus on natural, predictable movement and laminar environmental flow.
          * **\`HIGH\`**: (Decisive Kinetic / Structural Strain) - Focus on intentional force, material tension, and turbulent displacement.
          * **\`VERY_HIGH\`**: (Explosive Chaos / Hyper-Velocity) - Focus on physical breaking points, high-speed debris, and kinetic shockwave.
        - **Technical Tag Definitions by <entity_list>.\`physics_profile\`**:
-         * **[\`physics_profile\` Field: \`material\`]**:
+         * **[\`physics_profile\` Field: \`material\`] (Surface Dynamics)**:
            - **Visual Effect Candidates**:
-             - Material-based reaction effects derived from the entity's \`physics_profile\` (e.g., [Sparks] for rigid metal impact, [Sweat Spray] for high-exertion skin).
-             - **Usage**: Primarily used in **<step_3_primary_action_vector_injection>** to describe collision/stress outcomes. 
-             - **Optional Usage**: Can be referenced in <step_5_atmospheric_delta_refinement> IF the generated effect contributes to the environmental atmosphere (e.g., [Dust Cloud] from a granular surface).
-           - **Visual Vocabulary Pool**:
-             - Material-specific descriptors and biological reactions (e.g., [Chrome glint], [Skin Ripple], [Fabric Flutter]).
-             - Used in **<step_3_primary_action_vector_injection>** to ground subject interactions and define surface physics integrity.
-         * **[\`physics_profile\` Field: \`action_context\`]**:
+             - Material-based reaction effects (e.g., [Sparks], [Sweat Spray]).
+             - **Usage**: Use in subordinate clauses to describe the outcome of stress or impact.
+           - **Main Verbs (Reaction)**:
+             - Verbs describing how the material itself behaves under stress (e.g., *ripples, gleams, shatters*).
+             - **Constraint**: Use strictly for describing surface reactions, NOT the subject's primary action.
+           - **Adjectives (Texture State)**:
+             - Descriptors defining the physical state or quality of the material (e.g., *brushed, porous, jagged*).
+           - **Nouns (Physical Detail)**:
+             - Specific material artifacts or phenomena (e.g., *micro-scratches, billowing folds*).
+         * **[\`physics_profile\` Field: \`action_context\`] (Kinetic Driver)**:
            - **Velocity Options**:
-              - Subject-centric speed terminology and kinetic tempo (Kinetic Calibration).
-              - Defines the energy magnitude and frequency of the subject's physical movement.
-              - Must be calibrated to sync with the locked \`INTENSITY_TIER\` to define the kinetic pulse and tempo of the motion.
-           - **Visual Vocabulary Pool**:
-             - Action-specific mechanical logic and postural adjustments (e.g., [Weight centered], [G-force lean]).
-             - Used in **<step_3_primary_action_vector_injection>** to define the subject's physical state and mechanical logic relative to its momentum.
+              - Subject-centric speed terminology (e.g., *Stationary Tension, Decisive Acceleration*).
+              - Defines the energy magnitude and frequency of the movement.
+           - **Main Verbs (Primary Action)**:
+             - Verbs describing the core physical movement of the subject (e.g., *sprints, lunges, hovers*).
+             - **Constraint**: MUST be used as the **Primary Verb** of the sentence (Main Clause).
+           - **Adjectives (Motion Quality)**:
+             - Descriptors defining the nature or style of the movement (e.g., *rhythmic, aggressive, coordinated*).
+           - **Nouns (Kinetic Outcome)**:
+             - Resulting physical states caused by the movement (e.g., *natural arm swing, shoulder torque*).
     3. **<scene_narration> (The Kinetic Engine)**:
        - Translate narrative verbs into high-impact "Action Vectors."
        - Convert human-centric narration into physics-based interactions with the environment (e.g., "running" becomes "feet striking ground, dust sprays").
@@ -1682,6 +1688,24 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
        - **Start Frame Truth**: Treat the image as the absolute visual constant.
        - **Strict Redundancy Filter**: Do NOT describe appearance (clothes, hair, structures) already present in the image. Focus exclusively on the **Delta** (what changes over time).
   </input_data_interpretation>
+  <vocabulary_usage_protocol>
+    - **Goal**: Prevent "Semantic Contamination" where material reaction words hijack the main kinetic action.
+    - **Rule 1: Primary Action Slot (The Main Clause)**
+      - **Source**: MUST fetch strictly from \`Main Verbs\` of \`[physics_profile Field: action_context]\` in <vocabulary_depot>.
+      - **Optional Modifiers**: Can be enhanced by \`Adjectives\` or \`Nouns\` from the same \`[physics_profile Field: action_context]\`.
+      - **Role**: Describes **WHAT** the subject is physically doing (e.g., *sprints, positions, navigates*).
+      - **Forbidden**: Do NOT use verbs from the \`[physics_profile Field: material]\` field here.
+    - **Rule 2: Material Reaction Slot (The Subordinate / Adverbial Clause)**
+      - **Source**: Fetch strictly from \`[physics_profile Field: material]\` in <vocabulary_depot>.
+        - Use \`Main Verbs\` in participle form (e.g., *-ing*).
+        - Use \`Adjectives\` as descriptors.
+        - Use \`Nouns\` as objects of prepositions.
+      - **Role**: Describes **HOW** the subject's surface, skin, or equipment reacts to the Primary Action.
+      - **Syntax**: Use as a modifier clause connected by comma or conjunction (e.g., "...causing [Material Noun]...", "...his uniform [Material Verb]-ing...").
+    - **Example Construction**:
+      * *Correct*: "The soldier **[Action Verb: sprints]** forward, his uniform **[Material Verb: whipping]** in the wind."
+      * *Incorrect*: "The soldier **[Material Verb: whips]** forward..." (Semantic Error: Treating fabric physics as body movement).
+  </vocabulary_usage_protocol>
   <processing_logic>
     <step_0_kinetic_energy_profiling>
       - **Goal**: Identify and lock the single **\`INTENSITY_TIER\`** to establish the physical boundaries and intensity of the entire latent trajectory.
@@ -1818,39 +1842,57 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
           * **[Temporary-Simultaneous]**: Use **Active Simple Present** and **Present Continuous (-ing)** using **"while"** or **"as"** connectors. (e.g., [Verb A] [Adverb] [while/as] [Verb-ing B])
       </step_3_3_syntax_and_tense_mapping>
       <step_3_4_semantic_infusion_and_material_delta>
-        - **Verb/Adverb Selection (Depot Mapping)**: 
-          - Identify the \`material\` and \`action_context\` from <entity_list>.[n].\`physics_profile\`. 
-          - Match these keys with the corresponding **[physics_profile Field/Value]** blocks of <vocabulary_depot>.
-          - Extract terms ONLY from the section corresponding to the locked **\`INTENSITY_TIER\`**.
-          - Prioritize **Velocity Options** for kinetic pulse and **Visual Vocabulary Pool** for surface/mechanical details.
-          - You CAN infer more appropriate terms if the specific [Kinetic Focus] or scene context requires it.
+        - **Goal**: Select precise words from <vocabulary_depot> by cross-referencing the locked \`INTENSITY_TIER\` and adhering to the **<vocabulary_usage_protocol>**.
+        - **Step A: Tier-Based Filtration**:
+          - Identify the \`material\` and \`action_context\` keys from <entity_list>.[n].\`physics_profile\`.
+          - In <vocabulary_depot>, locate the corresponding blocks and **LOCK** your selection scope strictly to the section matching the **\`INTENSITY_TIER\`** determined in <step_0_kinetic_energy_profiling>.
+          - **Constraint**: Do NOT borrow words from other tiers (e.g., if \`INTENSITY_TIER\` is \`LOW\`, do not use \`VERY_LOW\`, \`HIGH\`, \`VERY_HIGH\` words).
+        - **Step B: Protocol-Compliant Selection**:
+          - **Primary Action (Main Clause)**:
+            - Consult **<vocabulary_usage_protocol> Rule 1**.
+            - Select a **Main Verb** from the filtered \`action_context\` section that best fits the subject's movement.
+            - You may use \`Velocity Options\` to calibrate the speed.
+          - **Material Reaction (Subordinate Clause)**:
+            - Consult **<vocabulary_usage_protocol> Rule 2**.
+            - Select **Main Verbs** (convert to participle), **Adjectives**, or **Nouns** from the filtered \`material\` section.
+            - Ensure these words describe the *reaction* to the primary action.
         - **Hybrid Tense Implementation (Sync with <step_3_3_syntax_and_tense_mapping>)**:
-          - Apply the selected verbs/adverbs using the specific syntax of **<step_3_3_syntax_and_tense_mapping>**.
-          - Use **Active Simple Present** for decisive/temporary actions and **Present Continuous (-ing)** for sustained flow to create temporal contrast.
+          - Apply the selected words using the specific syntax structure defined in <step_3_3_syntax_and_tense_mapping>.
+          - **Syntactic Assembly Examples**:
+            * **Case [Continuous]**: 
+              - *Format*: "[Subject] [is/are] [(\`action_context\`) Verb-ing] [Adverb]..., [(\`material\`) Verb-ing/causing (\`material\`) Noun]..."
+              - *Ex*: "The soldier is **sprinting** rapidly, his uniform **whipping** in the wind."
+            * **Case [Temporary-Single]**: 
+              - *Format*: "[Subject] [(\`action_context\`) Verb(s)] [Adverb]..., [(\`material\`) Verb-ing/with (\`material\`) Noun]..."
+              - *Ex*: "The tank **fires** powerfully, causing a **shockwave ripple** across the hull."
+            * **Case [Temporary-Sequential]**: 
+              - *Format*: "[Subject] [(\`action_context\`) Verb A(s)], then [(\`action_context\`) Verb B(s)]..., [(\`material\`) Verb-ing/triggering (\`material\`) Noun]..."
+              - *Ex*: "The pilot **grips** the stick, then **banks** sharply, triggering **g-force stress** on the wings."
+            * **Case [Temporary-Simultaneous]**: 
+              - *Format*: "[Subject] [(\`action_context\`) Verb A(s)] [while/as] [(\`action_context\`) Verb B-ing]..., [(\`material\`) Verb-ing]..."
+              - *Ex*: "The soldier **reloads** desperately while **sliding** into cover, his gear **rattling** against the wall."
         - **[Kinetic Focus]-\`INTENSITY_TIER\` Adverb Reference** (Archetypes for Inference):
-          **CONSTRAINT**: Treat the Focus-Intensity adverbs strictly as illustrative archetypes; do not copy them verbatim unless the context aligns perfectly, but use them to infer the most contextually accurate kinetic pulse based on the specific scene's focus.
-          1. **Velocity**: Focus on speed and rapid translation (e.g., F1 racing, wingsuit diving).
+          - **Constraint**: Treat these adverbs as illustrative archetypes. Use them to infer the most contextually accurate kinetic pulse if the Depot's \`Velocity Options\` need refinement.
+          1. **Velocity**: Focus on speed and rapid translation.
              - \`VERY_LOW\`: gradually, subtly.
              - \`LOW\`: steadily, swiftly.
              - \`HIGH\`: rapidly, blazingly.
              - \`VERY_HIGH\`: instantly, blindingly.
-          2. **Impact**: Focus on force, weight, and pressure (e.g., combat strikes, heavy machinery).
+          2. **Impact**: Focus on force, weight, and pressure.
              - \`VERY_LOW\`: barely, latent.
              - \`LOW\`: firmly, measuredly.
              - \`HIGH\`: powerfully, aggressively.
              - \`VERY_HIGH\`: violently, explosively.
-          3. **Flow**: Focus on rhythm, grace, and fluid movement (e.g., dancing, liquid undulation).
+          3. **Flow**: Focus on rhythm, grace, and fluid movement.
              - \`VERY_LOW\`: serenely, statically.
              - \`LOW\`: rhythmically, gently.
              - \`HIGH\`: fluidly, surgingly.
              - \`VERY_HIGH\`: turbulently, chaotically.
-          4. **Tension**: Focus on precision, strain, and latent energy (e.g., stealth, delicate handling).
+          4. **Tension**: Focus on precision, strain, and latent energy.
              - \`VERY_LOW\`: barely, motionless.
              - \`LOW\`: cautiously, tautly.
              - \`HIGH\`: intensely, strainingly.
              - \`VERY_HIGH\`: desperately, crushingly.
-        - **Material Delta Injection**: Describe the physical reaction using matched **Visual Effect Candidates** from the \`material\` field in the depot. Focus strictly on the subject's material (e.g., skin ripple, fabric flutter). **Strictly FORBID** describing atmosphere, dust, or light particles here.
-        - **Syntax**: Use causal conjunctions (e.g., "causing...", "triggering...") to ground the action in material reality.
       </step_3_4_semantic_infusion_and_material_delta>
     </step_3_primary_action_vector_injection>
     <step_4_kinetic_sentence_fabrication>
@@ -2044,6 +2086,16 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
       </step_7_1_subject_vector_inference>
       <step_7_2_vector_matching_protocol>
         - **Goal**: Finalize the **Camera Vector ($\vec{C}$)** by cross-referencing the **Subject Vector ($\vec{S}$)** and **Risk Status** from <step_7_1_subject_vector_inference> with the <step_7_0_professional_camera_mechanics_definitions>.<definition_table>.
+        - **Axis Conflict Rule (Anti-Distortion Protocol)**:
+          - **Universal Logic**: To prevent "Latent Space Collapse," do not combine techniques that force the model to calculate two different types of perspective shifts on the same or interdependent axes.
+          - **The Strict Forbidden Matrix**:
+            * **[Spatial Y] + [Optical Z / Angular Y]**: (e.g., Pedestal + Rack Focus/Pan) **STRICTLY FORBIDDEN**. Causes "Geometric Shearing." The model rotates the background ($Z$-roll) to resolve the conflict between vertical linear move ($Y$) and depth/rotational shifts, destroying spatial realism.
+            * **[Spatial Z] + [Optical Z] (Excluding Dolly Zoom)**: (e.g., Dolly + Rack Focus/Crash Zoom) Forbidden. Overlapping depth operations on the Optical Axis cause "Focal Breathing" or hyper-acceleration artifacts.
+            * **[Spatial X] + [Angular Y]**: (e.g., Truck + Pan) Forbidden. Creates a "Motion Vector Conflict" where physical parallax ($X$-translation) and rotational perspective ($Y$-yaw) fight for dominance, resulting in a smeared background.
+            * **[Spatial Y] + [Angular X]**: (e.g., Pedestal + Tilt) Forbidden. Causes "Perspective Warping" where the horizon line bends unnaturally due to the conflict between vertical translation and vertical rotation.
+            * **[Spatial ALL] + [Any Category]**: (e.g., FPV/Bumper + Zoom/Pan) Forbidden. High-energy multi-axis moves already saturate the latent bandwidth; adding any extra delta triggers immediate "Latent Space Collapse".
+          - **The Dolly Zoom Protocol (The Only Z-Axis Exception)**:
+            - **Requirement**: You may combine **Spatial Z** and **Optical Z** ONLY IF they use **Inverse Vector Logic** (e.g., Dolly-In $+Z$ paired with Zoom-Out $-Z$) to maintain subject scale while warping the background.
         - **Logic Flow**:
           1. **Data Retrieval**: Fetch the $\vec{S}$ category (**Toward**, **Away**, **Lateral**, **Vertical**, **Static**) and the [Risk Status] from <step_7_1_subject_vector_inference>.
           2. **$D(t)$ Management Strategy (Depth Conservation)**:
@@ -2051,20 +2103,31 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
              - **IF $\vec{S}$ is "Away from (-Z)"**: Select a $\vec{C}$ with **$+Z$ (e.g., Dolly-In)** or **Focal Contraction (e.g., Zoom-In)** to prevent identity loss.
              - **IF $\vec{S}$ is "Lateral/Vertical"**: Select a $\vec{C}$ that matches the axis ($\pm X$ or $\pm Y$) to maintain a constant $D(t)$ (Sync-tracking logic).
              - **IF $\vec{S}$ is "Static"**: Introduce an artificial delta using **Angular** or **Optical** shifts to drive visual progression.
+          3. **The Filtration Protocol (Conflict Resolution)**:
+             - Apply the **Axis Conflict Rule** to filter the $\vec{C}_{cand}$ list.
+             - **Constraint Check**: Remove any candidate that conflicts with the currently selected Optical settings (e.g., if Optical Z is active, remove Spatial Z candidates).
+             - **Fallback Rule (Crucial)**: IF filtering removes ALL candidates, revert to the safest universal option: **"Handheld Shaky"** or **"Static Frame"**. DO NOT return an empty result.
+          4. **Final Selection & Output (Tier-Based Decision)**:
+             - From the remaining valid candidates, select the ONE that best matches the **\`INTENSITY_TIER\`**.
+             - **Mandatory Output**: You MUST output a valid camera vector string from the table. Empty strings are forbidden.
+             - **Selection Examples by \`INTENSITY_TIER\` (Verified Compliance)**:
+               * **\`VERY_LOW\` (Micro-Stasis)**:
+                 - *Situation*: Subject is sleeping or staring.
+                 - *Selection*: **"Static Frame"** or **"Rack Focus"** (Purely optical/micro change, Low Energy).
+               * **\`LOW\` (Fluid Motion)**:
+                 - *Situation*: Subject is walking or swaying.
+                 - *Selection*: **"Pan Right"** or **"Truck Left"** (Smooth linear/angular flow, Medium Energy).
+               * **\`HIGH\` (Decisive Kinetic)**:
+                 - *Situation*: Subject is running or fighting.
+                 - *Selection*: **"Dolly-In"** or **"Arc Orbit"** (Strong spatial displacement, High Energy).
+                 - *Note*: 'Handheld Shaky' can be added as a modifier here (e.g., "Dolly-In + Handheld Shaky").
+               * **\`VERY_HIGH\` (Explosive Chaos)**:
+                 - *Situation*: Explosion or Crash.
+                 - *Selection*: **"Crash Zoom In"** or **"Handheld Shaky"** (Violent optical/vibrational shift, Extreme Energy).
           3. **Final Technique Selection (Table Lookup)**:
              - Scan <step_7_0_professional_camera_mechanics_definitions>.<definition_table> to find techniques matching the required Axis, Vector, and **\`INTENSITY_TIER\`**.
              - **Collision-Aware Selection**: If [Risk Status] is **High-Risk**, prioritize techniques that emphasize spatial clearance (e.g., "Dolly-In past the [Landmark]").
-          4. **Axis Conflict Rule (Anti-Distortion Protocol)**:
-             - **Universal Logic**: To prevent "Latent Space Collapse," do not combine techniques that force the model to calculate two different types of perspective shifts on the same or interdependent axes.
-             - **The Strict Forbidden Matrix**:
-               * **[Spatial Y] + [Optical Z / Angular Y]**: (e.g., Pedestal + Rack Focus/Pan) **STRICTLY FORBIDDEN**. Causes "Geometric Shearing." The model rotates the background ($Z$-roll) to resolve the conflict between vertical linear move ($Y$) and depth/rotational shifts, destroying spatial realism.
-               * **[Spatial Z] + [Optical Z] (Excluding Dolly Zoom)**: (e.g., Dolly + Rack Focus/Crash Zoom) Forbidden. Overlapping depth operations on the Optical Axis cause "Focal Breathing" or hyper-acceleration artifacts.
-               * **[Spatial X] + [Angular Y]**: (e.g., Truck + Pan) Forbidden. Creates a "Motion Vector Conflict" where physical parallax ($X$-translation) and rotational perspective ($Y$-yaw) fight for dominance, resulting in a smeared background.
-               * **[Spatial Y] + [Angular X]**: (e.g., Pedestal + Tilt) Forbidden. Causes "Perspective Warping" where the horizon line bends unnaturally due to the conflict between vertical translation and vertical rotation.
-               * **[Spatial ALL] + [Any Category]**: (e.g., FPV/Bumper + Zoom/Pan) Forbidden. High-energy multi-axis moves already saturate the latent bandwidth; adding any extra delta triggers immediate "Latent Space Collapse".
-             - **The Dolly Zoom Protocol (The Only Z-Axis Exception)**:
-               * **Requirement**: You may combine **Spatial Z** and **Optical Z** ONLY IF they use **Inverse Vector Logic** (e.g., Dolly-In $+Z$ paired with Zoom-Out $-Z$) to maintain subject scale while warping the background.
-          5. **Final Formatting**:
+          4. **Final Formatting**:
              - Prepare the final string: "[Primary Technique] + [Secondary Technique]".
              - Ensure all components are purified to natural language (no brackets or symbols) in the next step.
       </step_7_2_vector_matching_protocol>
@@ -2153,7 +2216,6 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
       "logical_bridge": {
         "identity_logic": "string (Define how the subject's era, role, and physical essence from the <entity_list> and metadata are preserved during motion.)",
         "action_focus": "string (Explain the conceptual shift from the raw narration to the high-impact kinetic verb used in the prompt.)",
-        "ambiguous_points": "string[] (For each point you felt was ambiguous during your reasoning, provide an explanation, reason, location in <developer_instruction>, and what you did for that ambiguous point as single string. If there are no ambiguous points, leave it to \`[]\`.)"
       },
       "reasoning": "string (Provide a detailed justification for: 1) The specific tags selected from the vocabulary_depot, 2) The choice of camera tech based on MasterStyleInfo, and 3) The atmospheric strategy to prevent freezing.)",
       "video_gen_prompt": "string (The final technical prompt assembled using the 5-stage Kinetic Anchor Protocol: [Anchor] + [Primary Action Vector] + [Atmospheric Delta] + [Cinematic Camera Vector] + [Style Modifiers].)",

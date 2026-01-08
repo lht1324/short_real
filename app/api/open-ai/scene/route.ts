@@ -181,8 +181,27 @@ export async function POST(request: NextRequest): Promise<NextResponse<PostOpenA
             };
         });
 
+        const sceneDataListWithSceneDuration = sceneDataList.map((sceneData, index) => {
+            const isLastScene = index === sceneDataList.length - 1;
+            const currentSceneSegmentList = sceneData.sceneSubtitleSegments ?? [];
+            let actualSceneDuration: number;
+
+            if (isLastScene) {
+                actualSceneDuration = currentSceneSegmentList[currentSceneSegmentList.length - 1].endSec - currentSceneSegmentList[0].startSec + 0.75; // 여운
+            } else {
+                const nextSceneSegmentList = sceneDataList[index + 1].sceneSubtitleSegments ?? [];
+
+                actualSceneDuration = nextSceneSegmentList[0].startSec - currentSceneSegmentList[0].startSec;
+            }
+
+            return {
+                ...sceneData,
+                sceneDuration: actualSceneDuration,
+            }
+        });
+
         const patchVideoGenerationTaskRequest: Partial<VideoGenerationTask> = {
-            scene_breakdown_list: sceneDataList,
+            scene_breakdown_list: sceneDataListWithSceneDuration,
             subtitle_segment_list: voiceGenerationResult.subtitleSegmentList,
             video_title: postSceneSegmentationResult.videoTitle,
             video_description: postSceneSegmentationResult.videoDescription,
@@ -214,7 +233,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<PostOpenA
             status: 200,
             data: {
                 taskId: videoGenerationTask.id,
-                sceneDataList: sceneDataList,
+                sceneDataList: sceneDataListWithSceneDuration,
                 videoTitle: postSceneSegmentationResult.videoTitle,
                 videoDescription: postSceneSegmentationResult.videoDescription,
             }

@@ -17,7 +17,7 @@ import {
     POST_MUSIC_GENERATION_DATA_PROMPT,
 } from "@/api/types/open-ai/OpenAIPrompts";
 import {MusicGenerationData} from "@/api/types/suno-api/MusicGenerationData";
-import {Entity, InitialEntityManifestItem, PhysicsProfile} from "@/api/types/open-ai/Entity";
+import {Entity, InitialEntityManifestItem} from "@/api/types/open-ai/Entity";
 import {PHYSICS_LIBRARY} from "@/api/types/open-ai/PhysicsPromptLibrary";
 import {FluxPrompt, FluxPromptSubject} from "@/api/types/open-ai/FluxPrompt";
 
@@ -176,12 +176,8 @@ const videoGenResponseFormat: OpenAI.ResponseFormatJSONSchema = {
                     properties: {
                         identity_logic: { type: "string" },
                         action_focus: { type: "string" },
-                        ambiguous_points: {
-                            type: "array",
-                            items: { type: "string" }
-                        }
                     },
-                    required: ["identity_logic", "action_focus", "ambiguous_points"],
+                    required: ["identity_logic", "action_focus"],
                     additionalProperties: false
                 },
                 reasoning: { type: "string" },
@@ -191,7 +187,6 @@ const videoGenResponseFormat: OpenAI.ResponseFormatJSONSchema = {
                 "logical_bridge",
                 "reasoning",
                 "video_gen_prompt",
-                "video_gen_prompt_short"
             ],
             additionalProperties: false
         }
@@ -761,19 +756,27 @@ Instruction: Generate the scene instruction JSON.
 [physics_profile Value: ${key}]
 **INTENSITY_TIER: VERY_LOW (Micro-Stasis / Latent Flux / Absolute Stillness)**
 - **Visual Effect Candidates**: ${very_low_intensity.effect_tag} OR ${very_low_intensity.alt_tag}
-- **Visual Vocabulary Pool**: ${very_low_intensity.vocabulary.join(', ')}
+- **Main Verbs**: ${very_low_intensity.vocabulary.verbs.join(', ')}
+- **Adjectives**: ${very_low_intensity.vocabulary.adjectives.join(', ')}
+- **Nouns**: ${very_low_intensity.vocabulary.nouns.join(', ')}
 
 **INTENSITY_TIER: LOW (Fluid Motion / Rhythmic Drift / Subtle Flow)**
 - **Visual Effect Candidates**: ${low_intensity.effect_tag} OR ${low_intensity.alt_tag}
-- **Visual Vocabulary Pool**: ${low_intensity.vocabulary.join(', ')}
+- **Main Verbs**: ${low_intensity.vocabulary.verbs.join(', ')}
+- **Adjectives**: ${low_intensity.vocabulary.adjectives.join(', ')}
+- **Nouns**: ${low_intensity.vocabulary.nouns.join(', ')}
 
 **INTENSITY_TIER: HIGH (Decisive Kinetic / Structural Strain / High Momentum)**
 - **Visual Effect Candidates**: ${high_intensity.effect_tag} OR ${high_intensity.alt_tag}
-- **Visual Vocabulary Pool**: ${high_intensity.vocabulary.join(', ')}
+- **Main Verbs**: ${high_intensity.vocabulary.verbs.join(', ')}
+- **Adjectives**: ${high_intensity.vocabulary.adjectives.join(', ')}
+- **Nouns**: ${high_intensity.vocabulary.nouns.join(', ')}
 
 **INTENSITY_TIER: VERY_HIGH (Explosive Chaos / Hyper-Velocity / Kinetic Failure)**
 - **Visual Effect Candidates**: ${very_high_intensity.effect_tag} OR ${very_high_intensity.alt_tag}
-- **Visual Vocabulary Pool**: ${very_high_intensity.vocabulary.join(', ')}
+- **Main Verbs**: ${very_high_intensity.vocabulary.verbs.join(', ')}
+- **Adjectives**: ${very_high_intensity.vocabulary.adjectives.join(', ')}
+- **Nouns**: ${very_high_intensity.vocabulary.nouns.join(', ')}
 `
             });
 
@@ -790,19 +793,27 @@ Instruction: Generate the scene instruction JSON.
 [physics_profile Value: ${key}]
 **INTENSITY_TIER: VERY_LOW (Micro-Stasis / Latent Flux / Absolute Stillness)**
 - **Velocity Options**: ${very_low_intensity.speed_term}
-- **Visual Vocabulary Pool**: ${very_low_intensity.vocabulary.join(', ')}
+- **Main Verbs**: ${very_low_intensity.vocabulary.verbs.join(', ')}
+- **Adjectives**: ${very_low_intensity.vocabulary.adjectives.join(', ')}
+- **Nouns**: ${very_low_intensity.vocabulary.nouns.join(', ')}
 
 **INTENSITY_TIER: LOW (Fluid Motion / Rhythmic Drift / Subtle Flow)**
 - **Velocity Options**: ${low_intensity.speed_term}
-- **Visual Vocabulary Pool**: ${low_intensity.vocabulary.join(', ')}
+- **Main Verbs**: ${low_intensity.vocabulary.verbs.join(', ')}
+- **Adjectives**: ${low_intensity.vocabulary.adjectives.join(', ')}
+- **Nouns**: ${low_intensity.vocabulary.nouns.join(', ')}
 
 **INTENSITY_TIER: HIGH (Decisive Kinetic / Structural Strain / High Momentum)**
 - **Velocity Options**: ${high_intensity.speed_term}
-- **Visual Vocabulary Pool**: ${high_intensity.vocabulary.join(', ')}
+- **Main Verbs**: ${high_intensity.vocabulary.verbs.join(', ')}
+- **Adjectives**: ${high_intensity.vocabulary.adjectives.join(', ')}
+- **Nouns**: ${high_intensity.vocabulary.nouns.join(', ')}
 
 **INTENSITY_TIER: VERY_HIGH (Explosive Chaos / Hyper-Velocity / Kinetic Failure)**
 - **Velocity Options**: ${very_high_intensity.speed_term}
-- **Visual Vocabulary Pool**: ${very_high_intensity.vocabulary.join(', ')}
+- **Main Verbs**: ${very_high_intensity.vocabulary.verbs.join(', ')}
+- **Adjectives**: ${very_high_intensity.vocabulary.adjectives.join(', ')}
+- **Nouns**: ${very_high_intensity.vocabulary.nouns.join(', ')}
 `
             });
 
@@ -932,7 +943,6 @@ Instruction: Generate the scene instruction JSON.
                     logical_bridge: {
                         identity_logic: string;
                         action_focus: string;
-                        ambiguous_points: string[];
                     },
                     reasoning: string;
                     video_gen_prompt: string;
@@ -940,7 +950,6 @@ Instruction: Generate the scene instruction JSON.
                 const {
                     identity_logic: identityLogic,
                     action_focus: actionFocus,
-                    ambiguous_points: ambiguousPoints,
                 } = parsedJson.logical_bridge;
 
 
@@ -948,12 +957,6 @@ Instruction: Generate the scene instruction JSON.
                 console.log(`Identity Logic: ${identityLogic}`);
                 console.log(`Action Focus: ${actionFocus}`)
                 console.log(`Reasoning: ${parsedJson.reasoning}`);
-                if (ambiguousPoints.length !== 0) {
-                    console.log("Ambiguous Points");
-                    ambiguousPoints.forEach((ambiguousPoint, index) => console.log(`AmbiguousPoint[${index}]: ${ambiguousPoint}`));
-                } else {
-                    console.log(`Scene #${sceneNumber} doesn't have Ambiguous Points`);
-                }
                 console.log(`videoGenPrompt: ${parsedJson.video_gen_prompt}`);
 
                 return {

@@ -5,139 +5,245 @@ export const PHYSICS_LIBRARY = {
         rigid: {
             very_low_intensity: {
                 effect_tag: "None", alt_tag: "Micro-texture Integrity",
-                vocabulary: ["Anisotropic highlights", "Micro-scratches", "Brushed grain", "Matte metallic finish", "Oxidized patina", "Specular occlusion"]
+                vocabulary: {
+                    verbs: ["gleam", "reflect", "hold", "remain"],
+                    adjectives: ["anisotropic", "brushed", "matte", "oxidized", "solid"],
+                    nouns: ["micro-scratches", "brushed grain", "matte metallic finish", "oxidized patina", "specular occlusion"]
+                }
             },
             low_intensity: {
                 effect_tag: "None", alt_tag: "Lustrous Reflection",
-                vocabulary: ["Chrome glint", "Fresnel reflection", "Specular bloom", "Polished sheen", "Light-catching edges", "Metallic luster"]
+                vocabulary: {
+                    verbs: ["glint", "shimmer", "shine", "catch light"],
+                    adjectives: ["lustrous", "polished", "reflective", "metallic"],
+                    nouns: ["chrome glint", "fresnel reflection", "specular bloom", "polished sheen", "light-catching edges"]
+                }
             },
             high_intensity: {
                 effect_tag: "Surface Wear", alt_tag: "Structural Stress",
-                vocabulary: ["Surface shearing", "Pitted erosion", "Abrasive scuffs", "Structural dents", "Paint chipping", "Thermal discoloration"]
+                vocabulary: {
+                    verbs: ["grind", "scrape", "shear", "dent"],
+                    adjectives: ["pitted", "abrasive", "chipped", "discolored"],
+                    nouns: ["surface shearing", "pitted erosion", "abrasive scuffs", "structural dents", "paint chipping"]
+                }
             },
             very_high_intensity: {
                 effect_tag: "Sparks", alt_tag: "Kinetic Failure",
-                vocabulary: ["Incandescent sparks", "Molten metal droplets", "Structural warping", "White-hot friction", "Jagged shearing", "Fragmentation"]
+                vocabulary: {
+                    verbs: ["spark", "warp", "shear", "fragment", "shatter"],
+                    adjectives: ["incandescent", "molten", "jagged", "white-hot"],
+                    nouns: ["incandescent sparks", "molten metal droplets", "structural warping", "white-hot friction", "jagged shearing"]
+                }
             }
         },
-
         // [Viscoelastic] 점탄성체: 피부, 근육, 고무, 유기 조직 등
         viscoelastic: {
             very_low_intensity: {
                 effect_tag: "None", alt_tag: "Epidermal Depth",
-                vocabulary: ["Subsurface scattering", "Porous micro-detail", "Translucent depth", "Fine vellus hair", "Dermal texture", "Natural skin elasticity"]
+                vocabulary: {
+                    verbs: ["breathe", "rest", "absorb", "soften"],
+                    adjectives: ["porous", "translucent", "fine", "dermal", "elastic"],
+                    nouns: ["subsurface scattering", "porous micro-detail", "translucent depth", "fine vellus hair", "natural skin elasticity"]
+                }
             },
             low_intensity: {
                 effect_tag: "None", alt_tag: "Surface Vitality",
-                vocabulary: ["Oily sheen", "Hydrated pores", "Specular sweat film", "Subtle flush", "Epidermal gloss", "Lustrous skin-tightness"]
+                vocabulary: {
+                    verbs: ["glisten", "hydrate", "flush", "glow"],
+                    adjectives: ["oily", "hydrated", "specular", "lustrous", "tight"],
+                    nouns: ["oily sheen", "hydrated pores", "specular sweat film", "subtle flush", "epidermal gloss"]
+                }
             },
             high_intensity: {
                 effect_tag: "Skin Ripple", alt_tag: "Myological Tension",
-                vocabulary: ["Muscle torque", "Skin rippling", "Subcutaneous vibration", "Bulging veins", "Tense muscle definition", "Flesh recoil"]
+                vocabulary: {
+                    verbs: ["ripple", "bulge", "tense", "recoil", "flex"],
+                    adjectives: ["rippling", "bulging", "tense", "defined", "strained"],
+                    nouns: ["muscle torque", "skin rippling", "subcutaneous vibration", "bulging veins", "tense muscle definition"]
+                }
             },
             very_high_intensity: {
                 effect_tag: "Sweat Spray", alt_tag: "Impact Trauma",
-                vocabulary: ["Aerosolized sweat spray", "Violent tissue deformation", "Shockwave propagation", "Muscle convulsion", "Extreme skin stretching", "Bruise-tinted flush"]
+                vocabulary: {
+                    verbs: ["spray", "deform", "propagate", "convulse", "stretch"],
+                    adjectives: ["aerosolized", "violent", "distorted", "bruised"],
+                    nouns: ["aerosolized sweat spray", "violent tissue deformation", "shockwave propagation", "muscle convulsion", "extreme skin stretching"]
+                }
             }
         },
-
         // [Brittle] 취성체: 유리, 얼음, 도자기, 수정 등
         brittle: {
             very_low_intensity: {
                 effect_tag: "None", alt_tag: "Crystalline Clarity",
-                vocabulary: ["Internal refraction", "Prismatic glint", "Caustic focus", "Crystalline clarity", "Edge-lit transparency", "Vitreous luster"]
+                vocabulary: {
+                    verbs: ["refract", "focus", "transmit", "clarify"],
+                    adjectives: ["crystalline", "prismatic", "caustic", "edge-lit", "vitreous"],
+                    nouns: ["internal refraction", "prismatic glint", "caustic focus", "crystalline clarity", "edge-lit transparency"]
+                }
             },
             low_intensity: {
                 effect_tag: "None", alt_tag: "Optical Flux",
-                vocabulary: ["Micro-fracture glint", "Spectral dispersion", "Surface clarity", "Sharp specular pings", "Chromatic aberration in-glass"]
+                vocabulary: {
+                    verbs: ["disperse", "ping", "glint", "distort"],
+                    adjectives: ["micro-fractured", "spectral", "sharp", "chromatic"],
+                    nouns: ["micro-fracture glint", "spectral dispersion", "surface clarity", "sharp specular pings", "chromatic aberration"]
+                }
             },
             high_intensity: {
                 effect_tag: "Cracks", alt_tag: "Fracture Initiation",
-                vocabulary: ["Spider-webbing cracks", "Stress fracturing", "Chipped facets", "Internal splintering", "Jagged edge formation", "Structural fissures"]
+                vocabulary: {
+                    verbs: ["crack", "splinter", "chip", "fissure"],
+                    adjectives: ["spider-webbed", "jagged", "chipped", "fractured"],
+                    nouns: ["spider-webbing cracks", "stress fracturing", "chipped facets", "internal splintering", "structural fissures"]
+                }
             },
             very_high_intensity: {
                 effect_tag: "Shards", alt_tag: "Kinetic Fragmentation",
-                vocabulary: ["Explosive shards", "Kinetic glass fragments", "Crystalline dust burst", "Jagged projectile debris", "Fractal shattering", "Prismatic explosion"]
+                vocabulary: {
+                    verbs: ["shatter", "burst", "explode", "fragment"],
+                    adjectives: ["explosive", "kinetic", "jagged", "fractal"],
+                    nouns: ["explosive shards", "kinetic glass fragments", "crystalline dust burst", "jagged projectile debris", "fractal shattering"]
+                }
             }
         },
-
         // [Cloth] 직물: 옷감, 머리카락, 깃발 등
         cloth: {
             very_low_intensity: {
                 effect_tag: "None", alt_tag: "Textile Integrity",
-                vocabulary: ["Finely-stitched weave", "Frayed fiber detail", "Matte fiber finish", "Static drape", "Coarse textile grain", "Interwoven texture"]
+                vocabulary: {
+                    verbs: ["drape", "hang", "settle", "weave"],
+                    adjectives: ["finely-stitched", "frayed", "matte", "static", "coarse"],
+                    nouns: ["finely-stitched weave", "frayed fiber detail", "matte fiber finish", "static drape", "coarse textile grain"]
+                }
             },
             low_intensity: {
                 effect_tag: "None", alt_tag: "Soft Aerodynamics",
-                vocabulary: ["Satin sheen", "Velvet pile", "Gentle swaying", "Rhythmic hem-drift", "Soft silk-sheen", "Micro-flutter"]
+                vocabulary: {
+                    verbs: ["sway", "drift", "flutter", "sheen"],
+                    adjectives: ["satin", "velvet", "gentle", "rhythmic", "soft"],
+                    nouns: ["satin sheen", "velvet pile", "gentle swaying", "rhythmic hem-drift", "micro-flutter"]
+                }
             },
             high_intensity: {
                 effect_tag: "Fabric Flutter", alt_tag: "Aerodynamic Drag",
-                vocabulary: ["Billowing folds", "Snap-back tension", "Wind-drag resistance", "Heavy ripple", "Fabric snapping", "Dynamic creases"]
+                vocabulary: {
+                    verbs: ["billow", "snap", "drag", "crease", "whip"],
+                    adjectives: ["billowing", "snapping", "dynamic", "heavy"],
+                    nouns: ["billowing folds", "snap-back tension", "wind-drag resistance", "heavy ripple", "dynamic creases"]
+                }
             },
             very_high_intensity: {
                 effect_tag: "Violent Flapping", alt_tag: "Material Failure",
-                vocabulary: ["Violent fabric whipping", "Aerodynamic turbulence", "Material shredding", "High-frequency vibration", "Tearing seams", "Kinetic drag-lines"]
+                vocabulary: {
+                    verbs: ["flap", "shred", "tear", "vibrate"],
+                    adjectives: ["violent", "turbulent", "high-frequency", "torn"],
+                    nouns: ["violent fabric whipping", "aerodynamic turbulence", "material shredding", "high-frequency vibration", "tearing seams"]
+                }
             }
         },
-
         // [Fluid] 유체: 물, 피, 기름, 냉각수 등
         fluid: {
             very_low_intensity: {
                 effect_tag: "None", alt_tag: "Surface Tension",
-                vocabulary: ["Glassy meniscus", "Deep volumetric clarity", "Static caustics", "Suspended particulates", "Liquid depth", "Molecular cohesion"]
+                vocabulary: {
+                    verbs: ["suspend", "pool", "stagnate", "cohere"],
+                    adjectives: ["glassy", "deep", "static", "liquid"],
+                    nouns: ["glassy meniscus", "deep volumetric clarity", "static caustics", "suspended particulates", "molecular cohesion"]
+                }
             },
             low_intensity: {
                 effect_tag: "None", alt_tag: "Rhythmic Flow",
-                vocabulary: ["Concentric ripples", "Gentle surface flux", "Undulating current", "Micro-droplets", "Refractive distortions", "Soft liquid-glides"]
+                vocabulary: {
+                    verbs: ["ripple", "undulate", "flow", "distort", "glide"],
+                    adjectives: ["concentric", "gentle", "undulating", "soft"],
+                    nouns: ["concentric ripples", "gentle surface flux", "undulating current", "micro-droplets", "refractive distortions"]
+                }
             },
             high_intensity: {
                 effect_tag: "Mist", alt_tag: "Kinetic Turbulence",
-                vocabulary: ["Turbulent swirl", "Aerosolized mist", "Droplet trails", "Foaming current", "Viscous flow", "Streaming liquid lines"]
+                vocabulary: {
+                    verbs: ["churn", "swirl", "stream", "foam", "mist"],
+                    adjectives: ["turbulent", "aerosolized", "foaming", "viscous"],
+                    nouns: ["turbulent swirl", "aerosolized mist", "droplet trails", "foaming current", "streaming liquid lines"]
+                }
             },
             very_high_intensity: {
                 effect_tag: "Splash Burst", alt_tag: "Hydraulic Impact",
-                vocabulary: ["Explosive splash burst", "Foam eruption", "High-contrast liquid crown", "Violent spray", "Turbulent vortex", "Kinetic splatter"]
+                vocabulary: {
+                    verbs: ["erupt", "burst", "splash", "splatter", "spray"],
+                    adjectives: ["explosive", "violent", "high-contrast", "kinetic"],
+                    nouns: ["explosive splash burst", "foam eruption", "high-contrast liquid crown", "violent spray", "kinetic splatter"]
+                }
             }
         },
-
         // [Elastoplastic] 점소성체: 진흙, 고무, 젤리, 끈적이는 물질 등
         elastoplastic: {
             very_low_intensity: {
                 effect_tag: "None", alt_tag: "Viscous Cohesion",
-                vocabulary: ["Sticky glossy texture", "Surface memory", "Matte viscous finish", "Opaque density", "Cohesive surface tension"]
+                vocabulary: {
+                    verbs: ["stick", "adhere", "settle", "cohere"],
+                    adjectives: ["sticky", "glossy", "matte", "opaque", "cohesive"],
+                    nouns: ["sticky glossy texture", "surface memory", "matte viscous finish", "opaque density", "cohesive surface tension"]
+                }
             },
             low_intensity: {
                 effect_tag: "None", alt_tag: "Plastic Flux",
-                vocabulary: ["Slow-motion indentation", "Viscous sheen", "Self-healing surface", "Ductile flow", "Soft deformation"]
+                vocabulary: {
+                    verbs: ["indent", "flow", "heal", "deform"],
+                    adjectives: ["slow-motion", "viscous", "self-healing", "ductile"],
+                    nouns: ["slow-motion indentation", "viscous sheen", "self-healing surface", "ductile flow", "soft deformation"]
+                }
             },
             high_intensity: {
                 effect_tag: "Deformation", alt_tag: "Material Strain",
-                vocabulary: ["Deep cratering", "Stretching tendrils", "Material elongation", "Permanent indentation", "Viscous drag"]
+                vocabulary: {
+                    verbs: ["crater", "stretch", "elongate", "drag"],
+                    adjectives: ["deep", "stretching", "permanent", "viscous"],
+                    nouns: ["deep cratering", "stretching tendrils", "material elongation", "permanent indentation", "viscous drag"]
+                }
             },
             very_high_intensity: {
                 effect_tag: "Splat", alt_tag: "Viscous Ejection",
-                vocabulary: ["Explosive splat pattern", "Viscous fragmentation", "Adhesive splatter", "Heavy impact squish", "Material rupture"]
+                vocabulary: {
+                    verbs: ["splat", "fragment", "splatter", "rupture"],
+                    adjectives: ["explosive", "adhesive", "heavy", "ruptured"],
+                    nouns: ["explosive splat pattern", "viscous fragmentation", "adhesive splatter", "heavy impact squish", "material rupture"]
+                }
             }
         },
-
         // [Granular] 입립체: 모래, 먼지, 자갈, 화약 등
         granular: {
             very_low_intensity: {
                 effect_tag: "None", alt_tag: "Particulate Stillness",
-                vocabulary: ["Settled dust motes", "Coarse mineral grain", "Rough surface shadow", "Granular stasis", "Crystalline grit"]
+                vocabulary: {
+                    verbs: ["settle", "rest", "accumulate", "dust"],
+                    adjectives: ["settled", "coarse", "rough", "granular"],
+                    nouns: ["settled dust motes", "coarse mineral grain", "rough surface shadow", "granular stasis", "crystalline grit"]
+                }
             },
             low_intensity: {
                 effect_tag: "None", alt_tag: "Micro-drift",
-                vocabulary: ["Surface skittering", "Micro-drift", "Eolian transport", "Low-density particulate flux", "Subtle dust shimmer"]
+                vocabulary: {
+                    verbs: ["skitter", "drift", "transport", "shimmer"],
+                    adjectives: ["surface", "eolian", "low-density", "subtle"],
+                    nouns: ["surface skittering", "micro-drift", "eolian transport", "low-density particulate flux", "subtle dust shimmer"]
+                }
             },
             high_intensity: {
                 effect_tag: "Dust Trail", alt_tag: "Aerosolized Density",
-                vocabulary: ["Streaming particle trails", "Airborne density", "Eddying dust", "Gravel shifting", "Swirling grit"]
+                vocabulary: {
+                    verbs: ["stream", "eddy", "shift", "swirl"],
+                    adjectives: ["streaming", "airborne", "eddying", "shifting"],
+                    nouns: ["streaming particle trails", "airborne density", "eddying dust", "gravel shifting", "swirling grit"]
+                }
             },
             very_high_intensity: {
                 effect_tag: "Dust Cloud", alt_tag: "Volumetric Eruption",
-                vocabulary: ["Volumetric dust eruption", "Gravel spray", "Kinetic grit burst", "Debris cloud propagation", "High-velocity particle ejecta"]
+                vocabulary: {
+                    verbs: ["erupt", "spray", "burst", "propagate", "eject"],
+                    adjectives: ["volumetric", "kinetic", "high-velocity"],
+                    nouns: ["volumetric dust eruption", "gravel spray", "kinetic grit burst", "debris cloud propagation", "high-velocity particle ejecta"]
+                }
             }
         }
     },
@@ -146,145 +252,212 @@ export const PHYSICS_LIBRARY = {
     action_context: {
         // [Locomotion] 이동: 걷기, 달리기, 주행 등
         locomotion: {
-            // VERY_LOW: 정지 상태에서의 대치 시점 선택
             very_low_intensity: {
                 speed_term: "Stationary Tension",
-                vocabulary: ["Weight centered", "Latent kinetic energy", "Static stance", "Poised footing"]
+                vocabulary: {
+                    verbs: ["stand", "wait", "poise", "ground"],
+                    adjectives: ["weighted", "latent", "static", "poised"],
+                    nouns: ["weight centered", "latent kinetic energy", "static stance", "poised footing"]
+                }
             },
-            // LOW: 리드미컬한 이동 시 추격 혹은 선도 선택
             low_intensity: {
                 speed_term: "Rhythmic Pace",
-                vocabulary: ["Balanced stride", "Heel-to-toe roll", "Fluid rhythmic walking", "Natural arm swing"]
+                vocabulary: {
+                    verbs: ["stride", "pace", "walk", "swing"],
+                    adjectives: ["balanced", "rhythmic", "fluid", "natural"],
+                    nouns: ["balanced stride", "heel-to-toe roll", "fluid rhythmic walking", "natural arm swing"]
+                }
             },
-            // HIGH: 결정적 가속 시 피사체와의 상대 속도 방향 결정 (역행 방지 핵심)
             high_intensity: {
                 speed_term: "Decisive Acceleration",
-                vocabulary: ["Leaning into turn", "Forward momentum", "Aggressive stride", "Suspension compression"]
+                vocabulary: {
+                    verbs: ["lean", "stride", "compress", "push"],
+                    adjectives: ["aggressive", "forward", "driving"],
+                    nouns: ["leaning into turn", "forward momentum", "aggressive stride", "suspension compression"]
+                }
             },
-            // VERY_HIGH: 초고속 상황에서 지면 밀착형 시점의 전후방 선택
             very_high_intensity: {
                 speed_term: "High-Velocity Motion Blur",
-                vocabulary: ["Airborne phase", "Mid-stride extension", "Directional motion blur", "Ground-level slipstream"]
+                vocabulary: {
+                    verbs: ["soar", "extend", "blur", "slipstream"],
+                    adjectives: ["airborne", "mid-stride", "directional", "ground-level"],
+                    nouns: ["airborne phase", "mid-stride extension", "directional motion blur", "ground-level slipstream"]
+                }
             }
         },
-
         // [Combat] 전투: 타격, 방어, 투척 등
         combat: {
-            // VERY_LOW: 대치 중인 주체 사이의 심리적 압박감 방향 선택
             very_low_intensity: {
                 speed_term: "Tense Stillness",
-                vocabulary: ["Focused gaze", "Muscle coiled", "Measured breathing", "Pre-strike stasis"]
+                vocabulary: {
+                    verbs: ["focus", "coil", "breathe", "stare"],
+                    adjectives: ["focused", "coiled", "measured", "pre-strike"],
+                    nouns: ["focused gaze", "muscle coiled", "measured breathing", "pre-strike stasis"]
+                }
             },
-            // LOW: 전술적 거리를 좁히거나 벌리는 움직임 선택
             low_intensity: {
                 speed_term: "Controlled Maneuver",
-                vocabulary: ["Technical positioning", "Guard raised", "Center of gravity shift", "Defensive pivoting"]
+                vocabulary: {
+                    verbs: ["position", "raise", "shift", "pivot"],
+                    adjectives: ["technical", "guarded", "centered", "defensive"],
+                    nouns: ["technical positioning", "guard raised", "center of gravity shift", "defensive pivoting"]
+                }
             },
-            // HIGH: 타격 방향에 따른 즉각적인 시선 회전 선택
             high_intensity: {
                 speed_term: "Explosive Kinetic Force",
-                vocabulary: ["Fist extended", "Shoulder torque", "Hip rotation", "Snapping impact motion"]
+                vocabulary: {
+                    verbs: ["extend", "torque", "rotate", "snap"],
+                    adjectives: ["explosive", "snapping", "extended", "rotating"],
+                    nouns: ["fist extended", "shoulder torque", "hip rotation", "snapping impact motion"]
+                }
             },
-            // VERY_HIGH: 타격의 에너지를 추격할지, 피격의 반동을 묘사할지 선택 (물리적 인과관계 확정)
             very_high_intensity: {
                 speed_term: "Sudden Recoil & Impact",
-                vocabulary: ["Impact tremor", "Recoiling from blow", "Face contorted", "Propagating shockwave"]
+                vocabulary: {
+                    verbs: ["tremble", "recoil", "contort", "propagate"],
+                    adjectives: ["impacted", "recoiling", "contorted", "shockwave-driven"],
+                    nouns: ["impact tremor", "recoiling from blow", "face contorted", "propagating shockwave"]
+                }
             }
         },
-
         // [Interaction] 상호작용: 잡기, 조작, 터치 등
         interaction: {
-            // VERY_LOW: 접촉 직전, 물체와의 위치 관계를 정의하는 시점 선택
             very_low_intensity: {
                 speed_term: "Delicate Stasis",
-                vocabulary: ["Fingertips hovering", "Light tactile contact", "Palm pressed flat", "Static grip"]
+                vocabulary: {
+                    verbs: ["hover", "touch", "press", "grip"],
+                    adjectives: ["light", "tactile", "static", "flat"],
+                    nouns: ["fingertips hovering", "light tactile contact", "palm pressed flat", "static grip"]
+                }
             },
-            // LOW: 정밀 조작 시 움직임에 동기화할지, 고정해서 관찰할지 선택
             low_intensity: {
                 speed_term: "Real-time Precision",
-                vocabulary: ["Fingertips grazing", "Precise handling", "Articulated finger movement", "Soft manipulation"]
+                vocabulary: {
+                    verbs: ["graze", "handle", "articulate", "manipulate"],
+                    adjectives: ["precise", "articulated", "soft", "grazing"],
+                    nouns: ["fingertips grazing", "precise handling", "articulated finger movement", "soft manipulation"]
+                }
             },
-            // HIGH: 잡기/당기기 등의 결정적 동작 시 시선 집중도와 초점 이동 방향 선택
             high_intensity: {
                 speed_term: "Decisive Grip",
-                vocabulary: ["Firm traction", "Knuckles white", "Tense hold", "Intentional pull"]
+                vocabulary: {
+                    verbs: ["pull", "grip", "hold", "tense"],
+                    adjectives: ["firm", "white-knuckled", "tense", "intentional"],
+                    nouns: ["firm traction", "knuckles white", "tense hold", "intentional pull"]
+                }
             },
-            // VERY_HIGH: 급격한 탈취나 파괴적 상호작용 시 줌의 방향 선택 (시각적 충격량 제어)
             very_high_intensity: {
                 speed_term: "Violent Interaction",
-                vocabulary: ["Sudden snatch", "Crushing force", "White-knuckled tension", "Kinetic wrenching"]
+                vocabulary: {
+                    verbs: ["snatch", "crush", "wrench", "rip"],
+                    adjectives: ["sudden", "crushing", "violent", "kinetic"],
+                    nouns: ["sudden snatch", "crushing force", "white-knuckled tension", "kinetic wrenching"]
+                }
             }
         },
-
         // [Aerodynamics] 공기역학: 비행, 낙하, 항력 등
         aerodynamics: {
-            // VERY_LOW: 공중 부양 시 정적인 고정과 미세한 대기 흐름의 반영 선택
             very_low_intensity: {
                 speed_term: "Static Float",
-                vocabulary: ["Hovering stasis", "Subtle air current flux", "Neutral buoyancy"]
+                vocabulary: {
+                    verbs: ["hover", "float", "drift", "suspend"],
+                    adjectives: ["static", "subtle", "neutral", "buoyant"],
+                    nouns: ["hovering stasis", "subtle air current flux", "neutral buoyancy"]
+                }
             },
-            // LOW: 하강 혹은 활공 시 피사체를 중심으로 한 회전 방향 선택
             low_intensity: {
                 speed_term: "Smooth Descent/Glide",
-                vocabulary: ["Streamlined posture", "Wind-resistance tuck", "Controlled banking", "Stable pitch"]
+                vocabulary: {
+                    verbs: ["glide", "tuck", "bank", "pitch"],
+                    adjectives: ["streamlined", "controlled", "stable", "smooth"],
+                    nouns: ["streamlined posture", "wind-resistance tuck", "controlled banking", "stable pitch"]
+                }
             },
-            // HIGH: 고속 비행 시 전진감을 극대화하기 위한 위치 관계 선택 (역행 방지 핵심)
             high_intensity: {
                 speed_term: "Rapid Velocity Change",
-                vocabulary: ["Body arched", "G-force lean", "Arms swept back", "Aero-dynamic drag lines"]
+                vocabulary: {
+                    verbs: ["arch", "lean", "sweep", "drag"],
+                    adjectives: ["arched", "g-force-induced", "swept-back", "aerodynamic"],
+                    nouns: ["body arched", "g-force lean", "arms swept back", "aero-dynamic drag lines"]
+                }
             },
-            // VERY_HIGH: 초고속 낙하/비행 시 피사체를 앞지를 것인지, 바짝 붙을 것인지 선택
             very_high_intensity: {
                 speed_term: "Hyperlapse, Speed Lines",
-                vocabulary: ["Free-falling orientation", "Terminal velocity", "Violent turbulence", "Extreme motion blur"]
+                vocabulary: {
+                    verbs: ["fall", "plummet", "jettison", "blur"],
+                    adjectives: ["free-falling", "terminal", "violent", "extreme"],
+                    nouns: ["free-falling orientation", "terminal velocity", "violent turbulence", "extreme motion blur"]
+                }
             }
         },
-
         // [Passive] 수동적 상태: 충격 수용, 대기, 피격 등
         passive: {
-            // VERY_LOW: 힘이 닥치기 전, 피사체의 인내와 주변 상황의 대조 선택
             very_low_intensity: {
                 speed_term: "Absolute Rest",
-                vocabulary: ["Relaxed limbs", "Grounded footing", "Inertial stasis"]
+                vocabulary: {
+                    verbs: ["rest", "ground", "relax", "settle"],
+                    adjectives: ["relaxed", "grounded", "inertial", "motionless"],
+                    nouns: ["relaxed limbs", "grounded footing", "inertial stasis"]
+                }
             },
-            // LOW: 미세한 힘의 작용 시 피사체에 집중할지, 충격의 전파를 보여줄지 선택
             low_intensity: {
                 speed_term: "Idle Flux",
-                vocabulary: ["Slouched posture", "Resting weight", "Subtle weight shift", "Passive swaying"]
+                vocabulary: {
+                    verbs: ["slouch", "rest", "shift", "sway"],
+                    adjectives: ["slouched", "resting", "subtle", "passive"],
+                    nouns: ["slouched posture", "resting weight", "subtle weight shift", "passive swaying"]
+                }
             },
-            // HIGH: 물리적 변위 발생 시 충격 방향에 따른 실시간 대응 선택
             high_intensity: {
                 speed_term: "Kinetic Displacement",
-                vocabulary: ["Sharp flinch", "Staggering back", "Torso jolt", "Center of mass disruption"]
+                vocabulary: {
+                    verbs: ["flinch", "stagger", "jolt", "disrupt"],
+                    adjectives: ["sharp", "staggering", "disrupted"],
+                    nouns: ["sharp flinch", "staggering back", "torso jolt", "center of mass disruption"]
+                }
             },
-            // VERY_HIGH: 폭발적 충격 시 에너지의 작용축(수직/수평)과 급격한 시야 변화 선택
             very_high_intensity: {
                 speed_term: "Violent Recoil",
-                vocabulary: ["Unexpected lurch", "Impact-driven flight", "Shockwave propagation", "Whiplash motion"]
+                vocabulary: {
+                    verbs: ["lurch", "fly", "propagate", "whip"],
+                    adjectives: ["unexpected", "impact-driven", "shockwave-induced", "whiplash"],
+                    nouns: ["unexpected lurch", "impact-driven flight", "shockwave propagation", "whiplash motion"]
+                }
             }
         },
-
         // [Velocity Max] 초고속: 가속의 정점
         velocity_max: {
-            // VERY_LOW: 가속 직전의 잠재적 에너지와 정면의 압박감 대칭
             very_low_intensity: {
                 speed_term: "Latent Velocity",
-                vocabulary: ["Vibration at rest", "Humming power", "Aerodynamic readiness"]
+                vocabulary: {
+                    verbs: ["vibrate", "hum", "ready", "charge"],
+                    adjectives: ["vibrating", "humming", "ready", "latent"],
+                    nouns: ["vibration at rest", "humming power", "aerodynamic readiness"]
+                }
             },
-            // LOW: 일정한 고속 주행 시 배경이 흐르는 파라락스 방향 선택
             low_intensity: {
                 speed_term: "Consistent High Speed",
-                vocabulary: ["Motion-blurred edges", "Background streaking", "Smooth translation"]
+                vocabulary: {
+                    verbs: ["blur", "streak", "translate", "flow"],
+                    adjectives: ["motion-blurred", "streaking", "smooth", "consistent"],
+                    nouns: ["motion-blurred edges", "background streaking", "smooth translation"]
+                }
             },
-            // HIGH: 지면/근접 시점에서 속도의 '입구'와 '출구' 시점 선택
             high_intensity: {
                 speed_term: "Warp Speed Effect",
-                vocabulary: ["Speed lines", "Visual streaking", "Environmental blur", "Rapid optical flow"]
+                vocabulary: {
+                    verbs: ["streak", "blur", "warp", "rush"],
+                    adjectives: ["visual", "environmental", "rapid", "optical"],
+                    nouns: ["speed lines", "visual streaking", "environmental blur", "rapid optical flow"]
+                }
             },
-            // VERY_HIGH: 피사체를 프레임에 고정할지, 가속도로 추월할지 선택 (역행 현상 제어의 핵심)
             very_high_intensity: {
                 speed_term: "Hyperlapse, Extreme G-force",
-                vocabulary: ["Silhouette distorted by speed", "Anamorphic light streaks", "Background liquefaction"]
+                vocabulary: {
+                    verbs: ["distort", "streak", "liquefy", "warp"],
+                    adjectives: ["anamorphic", "distorted", "liquefied", "extreme"],
+                    nouns: ["silhouette distorted by speed", "anamorphic light streaks", "background liquefaction"]
+                }
             }
         }
     }
