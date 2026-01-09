@@ -1638,8 +1638,8 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
        - Use <video_title> and <video_description> to establish the overall narrative "Vector of Change."
     2. **<vocabulary_depot> (The Semantic Physics Engine)**:
        - **Exception Handling (Empty Depot Protocol)**: 
-         - The values in <vocabulary_depot> are derived from <entity_list>. 
-         - **IF <vocabulary_depot> is EMPTY** (due to empty entities), you represent the Physics Engine. You MUST **infer** context-appropriate physics jargon based on the **Environment** and **Narrative** (e.g., use 'Neon Refraction' for Cyberpunk City, 'Dust Motes' for Ruins).
+         - The values in <vocabulary_depot> are derived from <entity_list>.
+         - **IF <vocabulary_depot> is EMPTY** (due to empty entities), you represent the Physics Engine. You MUST **SELECT** context-appropriate physics jargon from your **general knowledge** based on the Environment and Narrative (e.g., use 'Neon Refraction' for Cyberpunk City, 'Dust Motes' for Ruins).
          - **Constraint**: Do NOT hallucinate new physical objects (e.g., do not add 'steam vents' if no vents are visible). Limit inference to atmospheric particles, lighting physics, and surface reactions.
        - **Quad-Tier Intensity Architecture**: This block contains physics-based technical data categorized into four discrete physical states. All selections must strictly match the locked **\`INTENSITY_TIER\`** of the specific entity being processed:
          * **\`VERY_LOW\`**: (Micro-Stasis / Latent Flux) - Focus on high-fidelity textures, subtle light behavior, and Brownian motion.
@@ -1712,7 +1712,7 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
       - **Inference Logic**: 
         1. **Narrative Intensity Analysis (Mood Extraction)**: 
            - Analyze <scene_narration> **ONLY** to gauge the **Energy Level** and **Emotional Urgency**.
-           - **Strict Isolation**: Do **NOT** use metaphors of <scene_narration> to infer physical direction or spatial vectors. Treat metaphors (e.g., "skyrocketing", "crashing") purely as intensity indicators, not physics instructions.
+           - **Strict Isolation**: Do **NOT** use metaphors of <scene_narration> to extract physical direction or spatial vectors. Treat metaphors (e.g., "skyrocketing", "crashing") purely as intensity/vibe indicators, not physics instructions.
         2. **Actor vs. Environment Pivot**: 
            - **IF <entity_list> is NOT EMPTY**: Evaluate the <entity_list>.[n].\`type\` and <entity_list>.[n].\`physics_profile\` to determine inherent mass and action capacity (e.g., a \`machine\` in \`combat\` state).
            - **IF <entity_list> is EMPTY**: Pivot the analysis entirely to the **Environmental Dynamics**. Treat the background, weather, and light as the primary "Actors" (e.g., a "Neon City" in "locomotion" context implies camera-driven energy).
@@ -1722,7 +1722,7 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
         * **\`LOW\`**: Choose if the scene is defined by **Fluid Motion** (e.g., rhythmic walking, gentle swaying, consistent natural flow, smooth transitions).
         * **\`HIGH\`**: Choose if the scene is defined by **Decisive Kinetic** energy (e.g., intentional strikes, running, mechanical shifts, heavy mass movement, "breakneck" metaphors).
         * **\`VERY_HIGH\`**: Choose if the scene reaches **Explosive Chaos** (e.g., high-impact collisions, shattering, hyper-velocity, total physical failure, "earth-shattering" metaphors).
-      - **Output Requirement**: This profile acts as a **Global Latent Filter**. The selected \`INTENSITY_TIER\` strictly dictates the energy level of word choices in all later <step_n>, regardless of whether data is drawn from <vocabulary_depot> or inferred.
+      - **Output Requirement**: This profile acts as a **Global Latent Filter**. The selected \`INTENSITY_TIER\` strictly dictates the energy level of word choices in all later <step_n>, regardless of whether data is drawn from <vocabulary_depot>.
     </step_0_kinetic_energy_profiling>
     <step_1_core_synthesis_principles>
       - **The Universal Golden Formula**: 
@@ -1789,7 +1789,7 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
           * **Constraint**: Convert Proper Nouns to Common Noun Archetypes (e.g., "Sherlock" -> "Detective").
         - **Phase 2: Spatial Anchor Integration (3D Positioning)**:
           * **Depth Anchor**: Extract the depth plane (e.g., Foreground, Midground, Background) from <entity_list>.[n].\`appearance.position_descriptor\`.
-          * **Horizontal Anchor**: Infer the horizontal position (Select: "Left", "Center", or "Right") by analyzing the <image_context>.
+          * **Horizontal Anchor**: Extract the horizontal position of each <entity_list>.[n] (Select: "Left", "Center", or "Right") by analyzing the <image_context>.
         - **Phase 3: Visual Anchor Selection (Identity Lock)**:
           * Select a minimal, high-contrast visual trait from <entity_list>.[n].\`appearance.clothing_or_material\` or <entity_list>.[n].\`accessories\`.
           * **Rule**: Use color or distinct material to "lock" the identity (e.g., "in red shorts", "with a silver helmet").
@@ -1872,7 +1872,7 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
               - *Format*: "[Subject] [(\`action_context\`) Verb A(s)] [while/as] [(\`action_context\`) Verb B-ing]..., [(\`material\`) Verb-ing]..."
               - *Ex*: "The soldier **reloads** desperately while **sliding** into cover, his gear **rattling** against the wall."
         - **[Kinetic Focus]-\`INTENSITY_TIER\` Adverb Reference** (Archetypes for Inference):
-          - **Constraint**: Treat these adverbs as illustrative archetypes. Use them to infer the most contextually accurate kinetic pulse if the Depot's \`Velocity Options\` need refinement.
+          - **Constraint**: Treat these adverbs as a **Closed List**. You MUST **SELECT** the exact adverb from this list that matches the scene's **Kinetic Focus**. Do NOT generate synonyms or new adverbs.
           1. **Velocity**: Focus on speed and rapid translation.
              - \`VERY_LOW\`: gradually, subtly.
              - \`LOW\`: steadily, swiftly.
@@ -1941,7 +1941,7 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
            * **\`VERY_HIGH\` (Physics Unbound)**: 
              - **Rule**: Remove thresholds. Maximize visibility (Shockwave, Debris allowed everywhere).
         2. **Stage 2: Material Feasibility (Source Check)**:
-           - **Rule**: You may ONLY generate particles if the **Source Material** exists in the scene or is inferred from the Environment.
+           - **Rule**: You may ONLY generate particles if the **Source Material** exists in the scene or is extracted from the Environment.
            - *Example*: Do NOT generate "Sand" in a "Space Station". Do NOT generate "Rain" indoors unless there's a leak.
         3. **Stage 3: Optical Counter-Flow Rule**:
            - **Physical Moves ($\vec{C} \neq 0$)**: Particles move in the **Opposite Direction** of the Camera Vector (e.g., Dolly In +Z → Flow -Z).
@@ -1957,8 +1957,8 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
       - **[Slot_3: Volumetric Lighting Anchor] (The Depth Foundation)**:
         - **Source**: Select ONE: [\`Volumetric lighting\`, \`Cinematic silhouette\`, \`Atmospheric haze\`, \`Dynamic refraction\`].
         - **Role**: Essential for creating spatial depth in No-Audio generation.
-      - **[Slot_4: Inferred Technical Tags] (Contextual Essence)**:
-        - **Logic**: Infer physically accurate tags (e.g., Heat Haze, Sand Grit, Neon Rain).
+      - **[Slot_4: Selected Technical Tags] (Contextual Essence)**:
+        - **Logic**: Select physically accurate tags (e.g., Heat Haze, Sand Grit, Neon Rain).
         - **Format**: Purify into natural descriptors for the final assembly.
       - **The Atmospheric Assembly Formula ([Atmospheric/Lighting Delta] of **Component Definition** in <step_1_core_synthesis_principles>)**:
         - **Logic**: Check if [Slot_1] or [Slot_2] is "NONE".
@@ -2057,11 +2057,11 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
              - *Look for*: Hair/Clothing blowing back (implies Forward Motion), Suspension compression (implies Braking/Turning), Muscle tension/leaning (implies Intent to Move).
              - *Reasoning*: If gravity is the only visible force (draping straight down), the subject is likely **Static**.
           2. **Lens 2: Socio-Physical Context (Intent & Conventions)**:
-             - *Goal*: Infer the subject's **intended facing direction** and **likely motion direction** using scene-level conventions, roles, and interactions — not object-specific heuristics.
+             - *Goal*: Extract the subject's **intended facing direction** and **likely motion direction** using scene-level conventions, roles, and interactions — not object-specific heuristics.
              - *Look for (Domain-Agnostic Cues)*:
                - **Attention & Intent**: Where is attention directed? (gaze line, head orientation, torso orientation, pointing/aiming, tool usage).
                - **Interaction Affordances**: Which side is used to interact with the world? (hands toward controls/handles, mouth toward food/mic, sensors/lenses aimed at target, weapon muzzle direction).
-               - **Group Consensus**: In crowds/flocks/formations, infer the dominant heading by majority alignment and shared attention target.
+               - **Group Consensus**: In crowds/flocks/formations, extract the dominant heading by majority alignment and shared attention target.
                - **Rule-governed Flow**: Any structured flow implied by the environment (queues, lanes, stage/audience setup, doorway orientation, signage/markings), and how the subject aligns with it.
                - **Vehicle Subcase (Optional)**: Use lighting/geometry only as supporting evidence (headlights/tail lights, cockpit orientation), but do not treat color alone as decisive in neon/reflection-heavy scenes.
              - *Reasoning (Robust)*:
@@ -2146,17 +2146,25 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
             * \`LOW\`: "smoothly"
             * \`HIGH\`: "aggressively"
             * \`VERY_HIGH\`: "violently"
+        - **[Slot_Connector: Interaction Verb] (The Bridge)**:
+          - **Logic**: Select a participle verb that mechanically aligns with the [Cinematic Technique] chosen in [Slot_2].
+          - **Mapping Rule (Refer to <definition_table>)**:
+            * IF [Slot_2] is **Z-axis/Approaching** (Dolly-In, Zoom In) -> Use "pushing toward" or "closing in on"
+            * IF [Slot_2] is **Z-axis/Receding** (Dolly-Out, Zoom Out) -> Use "pulling back from" or "revealing"
+            * IF [Slot_2] is **Lateral/Tracking** (Truck, Pan, Arc) -> Use "tracking" or "following"
+            * IF [Slot_2] is **Static/Optical** (Static, Rack Focus) -> Use "observing" or "focusing on"
+            * IF [Slot_2] is **Aggressive/High Energy** (Crash Zoom, Shaky) -> Use "rushing at" or "impactfully framing"
         - **[Slot_4: Trajectory Focus & Anchor] (Spatial Target)**:
           - **Source**: The valid anchor from Step 2 (Either the \`Mapping Handle\` from <step_2_1_entity_driven_mapping> OR the \`Location Archetype\` from <step_2_2_environment_driven_anchor>).
           - **Logic**: Define the relationship between the camera and the target. IF <entity_list>.length == 0, focus on the "Environment Core" (e.g., "tracking the canyon's depth").
         - **The Cinematic Camera Formula ([Cinematic Camera Vector] of **Component Definition** in <step_1_core_synthesis_principles>)**:
-          - **Assembly**: "[Slot_1], [Slot_2] [Slot_3] [Slot_4]."
+          - **Assembly**: "[Slot_1], [Slot_2] [Slot_3] [Slot_Connector] [Slot_4]"
           - **Constraint**: The final output MUST be a single, organic sentence. Do not use technical markers, brackets(\`[]\`) or symbol(e.g, \`+\`). Ensure a natural flow.
         - **Final Assembly Examples by \`INTENSITY_TIER\`**:
-          * **\`VERY_LOW\`**: "Macro lens with tight 4:5 framing, Static Frame and subtle Rack Focus steadily observing the blooming petal."
-          * **\`LOW\`**: "Wide angle lens with 16:9 cinematic framing, Truck Right smoothly tracking the walking pedestrian."
-          * **\`HIGH\`**: "Anamorphic lens with 9:16 portrait cinema, Dolly-In and Handheld Shaky aggressively pushing toward the wingsuit jumper."
-          * **\`VERY_HIGH\`**: "FPV Drone lens with 16:9 immersive framing, FPV Drone Shot and Handheld Shaky violently chasing the speeding sports car."
+          * **\`VERY_LOW\`**: "Macro lens with tight 4:5 framing, Static Frame and subtle Rack Focus steadily observing the blooming petal"
+          * **\`LOW\`**: "Wide angle lens with 16:9 cinematic framing, Truck Right smoothly tracking the walking pedestrian"
+          * **\`HIGH\`**: "Anamorphic lens with 9:16 portrait cinema, Dolly-In and Handheld Shaky aggressively pushing toward the wingsuit jumper"
+          * **\`VERY_HIGH\`**: "FPV Drone lens with 16:9 immersive framing, FPV Drone Shot and Handheld Shaky violently chasing the speeding sports car"
       </step_7_3_cinematic_camera_vector_assembly>
     </step_7_cinematic_camera_vector_design>
     <step_8_style_and_stability_modifiers>
@@ -2197,7 +2205,7 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
                - *Connector*: Use natural transitions like [", amidst "], [", while "], or [", surrounded by "] to bridge with the narrative.
           3. **[Cinematic Camera Vector]**:
              - **Source**: Inject output from <step_7_cinematic_camera_vector_design>.
-             - *Connector*: Use observational transitions like [", captured with "], [", observed by "], or [", framed via "] to integrate the camera movement naturally.
+             - *Connector*: **MANDATORY**. Prepend a bridge phrase such as [", captured with "] or [", filmed using "] to link the narrative to the camera settings.
           4. **[Style]**:
              - **Source**: Inject output from <step_8_style_and_stability_modifiers>.
              - *Connector*: Use aesthetic transitions like [", rendered in "], [", featuring "], or [", presented with "] to append style tags fluidly.
@@ -2214,16 +2222,49 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
     Return a single JSON object with the following structure. Ensure all fields are populated based on the internal reasoning of the Cinematic Director role.
     {
       "logical_bridge": {
+        "intensity_tier": "string (Selected ONE \`INTENSITY_TIER\` from <step_0_kinetic_energy_profiling>)",
+        "intensity_tier_selected_reason": "string (Explain why you chose that \INTENSITY_TIER\` based on what.)",
         "identity_logic": "string (Define how the subject's era, role, and physical essence from the <entity_list> and metadata are preserved during motion.)",
         "action_focus": "string (Explain the conceptual shift from the raw narration to the high-impact kinetic verb used in the prompt.)",
-        "intensity_tier": "string (Selected ONE \`INTENSITY_TIER\` from <step_0_kinetic_energy_profiling>)",
-        "camera_actions": "string (Selected \`Cinematic Technique\`s in <step_0_kinetic_energy_profiling>.<definition_table> from <step_7_cinematic_camera_vector_design>)",
-        "camera_selected_reason": "string(Explain why you chose that \`Cinematic Technique\`s. If you didn't choose, leave this empty.)",
-        "camera_unselected_reason": "string(Explain why you didn't choose any \`Cinematic Technique\`. If you chose, leave this empty.)",
+        "primary_narrative_block": {
+          "entity_id": "string (Each <entity_list>.[n]'s \`id\`.)",
+          "raw_sentence": "string (The extracted each <entity_list>.[n]'s sentence from <step_4_kinetic_sentence_fabrication>.**The Assembly Line**.)",
+          "action_type": "enum ["Continuous" | "Temporary-Single" | "Temporary-Sequential" | "Temporary-Simultaneous"] (\`sentence\`'s **Action Type** from <step_3_1_action_type_decision>.)",
+          "action_type_reason": "string (Explain why you chose \`sentence\`'s **Action Type** based on what.)",
+          "verb_reason": "string ("The reason why you chose ([(\`action_context\`) Verb] by using \`INTENSITY_TIER\` and \`action_context\`.)",
+          "adverb_reason": "string ("The reason why you chose [(\`action_context\`) Verb] by using \`INTENSITY_TIER\` and \`action_context\` if **Action Type** is \`[Continuous]\` or \`[Temporary-Single]\`. If **Action Type** is not \`[Continuous]\` or \`[Temporary-Single]\`, leave this empty.)"
+        }[],
+        "atmospheric_lighting_delta": {
+          "selected_atmospheric_or_lighting_layer": "string (Selected **[Slot_n]** from <step_5_atmospheric_delta_refinement>.)",
+          "selected_reason": "string (Explain why you chose \`selected_atmospheric_or_lighting_layer\` from <step_5_atmospheric_delta_refinement> based on what.)"
+        }[],
+        "cinematic_camera_vectors": {
+          // Subject & Camera Axis Ref: [X: Screen Left <-> Screen Right], [Y: Screen Bottom <-> Screen Top], [Z: Deep Background <-> Screen Surface]
+          "selected_camera_actions": {
+            "camera_action": "string (Selected Camera Action from <step_7_2_vector_matching_protocol>.)",
+            "camera_action_reason": "string (Explain why you chose \`camera_action\` based on what.)",
+          },
+          "subject_delta": {
+            "x": "string (Select ONE from ['-', '0', '+'].)", 
+            "y": "string (Select ONE from ['-', '0', '+'].)",
+            "z": "string (Select ONE from ['-', '0', '+'].)"
+          },
+          "camera_delta": {
+            "x": "string (Select ONE from ['-', '0', '+'].)",
+            "y": "string (Select ONE from ['-', '0', '+'].)",
+            "z": "string (Select ONE from ['-', '0', '+'].)"
+          }
+          "vector_reasoning": "string (Briefly explain why these values were derived from the image context. e.g., 'Subject walks towards the screen (+Z), so Camera dollies in (+Z) to amplify impact.')"
+        },
+        "style": {
+          "slot_1": "string (Selected **[Slot_1] from <step_8_style_and_stability_modifiers>.)",
+          "slot_2": "string (Selected **[Slot_2] from <step_8_style_and_stability_modifiers>.)",
+          "slot_1_reason": "string (Explain why you chose [Slot_1] from <step_8_style_and_stability_modifiers>.)",
+          "slot_2_reason": "string (Explain why you chose [Slot_2] from <step_8_style_and_stability_modifiers>.)",
+        }
       },
       "reasoning": "string (Provide a detailed justification for: 1) The specific tags selected from the vocabulary_depot, 2) The choice of camera tech based on MasterStyleInfo, and 3) The atmospheric strategy to prevent freezing.)",
       "video_gen_prompt": "string (The final technical prompt assembled using the 5-stage Kinetic Anchor Protocol: [Anchor] + [Primary Action Vector] + [Atmospheric Delta] + [Cinematic Camera Vector] + [Style Modifiers].)",
-    }
     }
   </output_schema>
   <constraints>
@@ -2244,7 +2285,7 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
       - **Geometry Protection**: Prevent "Geometric Shearing" by ensuring linear moves (Pedestal) do not conflict with rotational shifts (Tilt) on the same axis.
     5. **Semantic Purity & Format Protocol**:
       - **Jargon over Fluff**: Replace subjective adjectives ("breathtaking", "epic") with technical cinematography and physical terms.
-      - **\`video_gen_prompt\`**: MUST NOT use brackets \`[]\` or symbols. Weave all keywords and technical jargon from <vocabulary_depot> naturally into the directorial prose as adjectives or adverbs.
+      - **\`video_gen_prompt\`**: MUST NOT use brackets \`[]\` or markdown symbols like '+' or '**'. Weave all keywords and technical jargon from <vocabulary_depot> naturally into the directorial prose as adjectives or adverbs.
     6. **Contextual Fidelity (The Plagiarism Guard)**:
       - Derive all cinematic decisions strictly from the provided <image_context>, <scene_narration>, <entity_list>, and <master_style_guide>.
       - **Instruction**: Logics in <processing_logic> are **Functional Algorithms**, not suggestions. The final output must be the result of this calculated reasoning.

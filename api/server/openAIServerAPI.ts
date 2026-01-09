@@ -174,14 +174,92 @@ const videoGenResponseFormat: OpenAI.ResponseFormatJSONSchema = {
                 logical_bridge: {
                     type: "object",
                     properties: {
+                        intensity_tier: { type: "string" },
+                        intensity_tier_selected_reason: { type: "string" },
                         identity_logic: { type: "string" },
                         action_focus: { type: "string" },
-                        intensity_tier: { type: "string" },
-                        camera_actions: { type: "string" },
-                        camera_selected_reason: { type: "string" },
-                        camera_unselected_reason: { type: "string" },
+                        primary_narrative_block: {
+                            type: "array",
+                            items: {
+                                type: "object",
+                                properties: {
+                                    entity_id: { type: "string" },
+                                    raw_sentence: { type: "string" },
+                                    action_type: { type: "string" },
+                                    action_type_reason: { type: "string" },
+                                    verb_reason: { type: "string" },
+                                    adverb_reason: { type: "string" },
+                                },
+                                required: ["entity_id", "raw_sentence", "action_type", "action_type_reason", "verb_reason", "adverb_reason"],
+                                additionalProperties: false
+                            }
+                        },
+                        atmospheric_lighting_delta: {
+                            type: "array",
+                            items: {
+                                type: "object",
+                                properties: {
+                                    selected_atmospheric_or_lighting_layer: { type: "string" },
+                                    selected_reason: { type: "string" },
+                                },
+                                required: ["selected_atmospheric_or_lighting_layer", "selected_reason"],
+                                additionalProperties: false,
+                            }
+                        },
+                        cinematic_camera_vectors: {
+                            type: "object",
+                            properties: {
+                                // Subject & Camera Axis Ref: [X: Screen Left <-> Screen Right], [Y: Screen Bottom <-> Screen Top], [Z: Deep Background <-> Screen Surface]
+                                selected_camera_actions: {
+                                    type: "array",
+                                    items: {
+                                        type: "object",
+                                        properties: {
+                                            camera_action: { type: "string" },
+                                            camera_action_reason: { type: "string" },
+                                        },
+                                        required: ["camera_action", "camera_action_reason"],
+                                        additionalProperties: false,
+                                    },
+                                },
+                                subject_delta: {
+                                    type: "object",
+                                    properties: {
+                                        x: { type: "string" },
+                                        y: { type: "string" },
+                                        z: { type: "string" },
+                                    },
+                                    required: ["x", "y", "z"],
+                                    additionalProperties: false,
+                                },
+                                camera_delta: {
+                                    type: "object",
+                                    properties: {
+                                        x: { type: "string" },
+                                        y: { type: "string" },
+                                        z: { type: "string" },
+                                    },
+                                    required: ["x", "y", "z"],
+                                    additionalProperties: false,
+                                },
+                                vector_reasoning: { type: "string" },
+                            },
+                            required: ["subject_delta", "camera_delta", "vector_reasoning"],
+                            additionalProperties: false,
+                        },
+                        style: {
+                            type: "object",
+                            properties: {
+                                slot_1: { type: "string" },
+                                slot_2: { type: "string" },
+                                slot_1_reason: { type: "string" },
+                                slot_2_reason: { type: "string" },
+                            },
+                            required: ["slot_1", "slot_2", "slot_1_reason", "slot_2_reason"],
+                            additionalProperties: false,
+                        }
                     },
-                    required: ["identity_logic", "action_focus", "intensity_tier", "camera_actions", "camera_selected_reason", "camera_unselected_reason"],
+                    required: ["intensity_tier", "intensity_tier_selected_reason", "identity_logic", "action_focus", "primary_narrative_block", "atmospheric_lighting_delta", "cinematic_camera_vectors", "style"],
                     additionalProperties: false
                 },
                 reasoning: { type: "string" },
@@ -945,39 +1023,134 @@ Instruction: Generate the scene instruction JSON.
             try {
                 const parsedJson: {
                     logical_bridge: {
+                        intensity_tier: string;
+                        intensity_tier_selected_reason: string;
                         identity_logic: string;
                         action_focus: string;
-                        intensity_tier: string;
-                        camera_actions: string;
-                        camera_selected_reason: string;
-                        camera_unselected_reason: string;
+                        primary_narrative_block: {
+                            entity_id: string;
+                            raw_sentence: string;
+                            action_type: string;
+                            action_type_reason: string;
+                            verb_reason: string;
+                            adverb_reason: string;
+                        }[];
+                        atmospheric_lighting_delta: {
+                            selected_atmospheric_or_lighting_layer: string;
+                            selected_reason: string;
+                        }[];
+                        cinematic_camera_vectors: {
+                            selected_camera_actions: {
+                                camera_action: string;
+                                camera_action_reason: string;
+                            }[];
+                            subject_delta: {
+                                x: string;
+                                y: string;
+                                z: string;
+                            };
+                            camera_delta: {
+                                x: string;
+                                y: string;
+                                z: string;
+                            };
+                            vector_reasoning: string,
+                        };
+                        style: {
+                            slot_1: string;
+                            slot_2: string;
+                            slot_1_reason: string;
+                            slot_2_reason: string;
+                        }
                     },
                     reasoning: string;
                     video_gen_prompt: string;
                 } = JSON.parse(generatedContent);
                 const {
+                    intensity_tier: intensityTier,
+                    intensity_tier_selected_reason: intensityTierSelectedReason,
                     identity_logic: identityLogic,
                     action_focus: actionFocus,
-                    intensity_tier: intensityTier,
-                    camera_actions: cameraActions,
-                    camera_selected_reason: cameraSelectedReason,
-                    camera_unselected_reason: cameraUnselectedReason,
+                    primary_narrative_block: primaryNarrativeBlock,
+                    atmospheric_lighting_delta: atmosphericLightingDelta,
+                    cinematic_camera_vectors: {
+                        selected_camera_actions: selectedCameraActions,
+                        subject_delta: subjectDelta,
+                        camera_delta: cameraDelta,
+                        vector_reasoning: vectorReasoning,
+                    },
+                    style: {
+                        slot_1: slot1,
+                        slot_2: slot2,
+                        slot_1_reason: slot1Reason,
+                        slot_2_reason: slot2Reason,
+                    }
                 } = parsedJson.logical_bridge;
 
 
                 console.log(`Scene #${sceneNumber} postVideoGenPrompt() Result`);
-                console.log(`Identity Logic: ${identityLogic}`);
-                console.log(`Action Focus: ${actionFocus}`)
-                console.log(`Reasoning: ${parsedJson.reasoning}`);
                 console.log(`Selected INTENSITY_TIER: ${intensityTier}`);
-                console.log(`Selected Camera Actions: ${cameraActions}`);
-                if (cameraSelectedReason.length !== 0) {
-                    console.log(`Camera Selected Reason: ${cameraSelectedReason}`);
-                } else if (cameraUnselectedReason.length !== 0) {
-                    console.log(`Camera Unselected Reason: ${cameraUnselectedReason}`);
-                } else {
-                    console.log(`Both Camera Selected Reason and Camera Unselected Reason are empty.`);
+                console.log(`INTENSITY_TIER Selected Reason: ${intensityTierSelectedReason}`);
+                console.log(`Identity Logic: ${identityLogic}`);
+                console.log(`Action Focus: ${actionFocus}`);
+
+                if (primaryNarrativeBlock.length !== 0) {
+                    console.log("- - - Primary Narrative Block - - -");
+                    primaryNarrativeBlock.forEach((primaryNarrativeData) => {
+                        const {
+                            entity_id: entityId,
+                            raw_sentence: rawSentence,
+                            action_type: actionType,
+                            action_type_reason: actionTypeReason,
+                            verb_reason: verbReason,
+                            adverb_reason: adverbReason,
+                        } = primaryNarrativeData;
+
+                        console.log(`Entity[${entityId}]`);
+                        console.log(`Raw Sentence: ${rawSentence}`);
+                        console.log(`Action Type: ${actionType}`);
+                        console.log(`Action Type Reason: ${actionTypeReason}`);
+                        console.log(`Verb Reason: ${verbReason}`);
+                        console.log(`Adverb Reason: ${adverbReason}`);
+                    })
                 }
+
+                if (atmosphericLightingDelta.length !== 0) {
+                    console.log("- - - Atmospheric Lighting Delta - - -");
+                    atmosphericLightingDelta.forEach((lightingDelta) => {
+                        const {
+                            selected_atmospheric_or_lighting_layer: selectedAtmosphericOrLightingLayer,
+                            selected_reason: selectedReason,
+                        } = lightingDelta;
+
+                        console.log(`Delta: ${selectedAtmosphericOrLightingLayer}`);
+                        console.log(`Delta Reason: ${selectedReason}`);
+                    })
+                }
+
+                console.log("- - - Cinematic Camera Vectors - - -");
+                if (selectedCameraActions.length !== 0) {
+                    selectedCameraActions.forEach((cameraActionData, index) => {
+                        const {
+                            camera_action: cameraAction,
+                            camera_action_reason: cameraActionReason,
+                        } = cameraActionData;
+
+                        console.log(`Camera Action ${index + 1}: ${cameraAction}`);
+                        console.log(`Camera Action ${index + 1} Reason: ${cameraActionReason}`);
+                    })
+                }
+                console.log(`Subject Delta: ${subjectDelta.x}, ${subjectDelta.y}, ${subjectDelta.z}`);
+                console.log(`Camera Delta: ${cameraDelta.x}, ${cameraDelta.y}, ${cameraDelta.z}`);
+                console.log(`Camera Vectors Reasoning: ${vectorReasoning}`);
+
+                console.log("- - - Style - - -");
+                console.log(`Style Slot 1: ${slot1}`);
+                console.log(`Style Slot 2: ${slot2}`);
+                console.log(`Style Slot 1 Reason: ${slot1Reason}`);
+                console.log(`Style Slot 2 Reason: ${slot2Reason}`);
+
+                console.log(`Reasoning: ${parsedJson.reasoning}`);
                 console.log(`videoGenPrompt: ${parsedJson.video_gen_prompt}`);
 
                 return {
