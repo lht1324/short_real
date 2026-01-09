@@ -244,7 +244,7 @@ const videoGenResponseFormat: OpenAI.ResponseFormatJSONSchema = {
                                 },
                                 vector_reasoning: { type: "string" },
                             },
-                            required: ["subject_delta", "camera_delta", "vector_reasoning"],
+                            required: ["selected_camera_actions", "subject_delta", "camera_delta", "vector_reasoning"],
                             additionalProperties: false,
                         },
                         style: {
