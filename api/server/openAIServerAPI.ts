@@ -1023,8 +1023,16 @@ Instruction: Generate the scene instruction JSON.
             try {
                 const parsedJson: {
                     logical_bridge: {
-                        intensity_tier: string;
-                        intensity_tier_selected_reason: string;
+                        scene_fundamental_data: {
+                            scene_summary: string;
+                            scene_summary_reason: string;
+                            primary_movement: string;
+                            primary_movement_reason: string;
+                            narrative_vibe: string;
+                            narrative_vibe_reason: string;
+                            intensity_tier: string;
+                            intensity_tier_selected_reason: string;
+                        };
                         identity_logic: string;
                         action_focus: string;
                         primary_narrative_block: {
@@ -1067,8 +1075,16 @@ Instruction: Generate the scene instruction JSON.
                     video_gen_prompt: string;
                 } = JSON.parse(generatedContent);
                 const {
-                    intensity_tier: intensityTier,
-                    intensity_tier_selected_reason: intensityTierSelectedReason,
+                    scene_fundamental_data: {
+                        scene_summary: sceneSummary,
+                        scene_summary_reason: sceneSummaryReason,
+                        primary_movement: primaryMovement,
+                        primary_movement_reason: primaryMovementReason,
+                        narrative_vibe: narrativeVibe,
+                        narrative_vibe_reason: narrativeVibeReason,
+                        intensity_tier: intensityTier,
+                        intensity_tier_selected_reason: intensityTierSelectedReason,
+                    },
                     identity_logic: identityLogic,
                     action_focus: actionFocus,
                     primary_narrative_block: primaryNarrativeBlock,

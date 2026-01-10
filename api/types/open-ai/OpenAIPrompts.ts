@@ -1708,21 +1708,35 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
   </vocabulary_usage_protocol>
   <processing_logic>
     <step_0_kinetic_energy_profiling>
-      - **Goal**: Identify and lock the single **\`INTENSITY_TIER\`** to establish the physical boundaries and intensity of the entire latent trajectory.
-      - **Inference Logic**: 
-        1. **Narrative Intensity Analysis (Mood Extraction)**: 
-           - Analyze <scene_narration> **ONLY** to gauge the **Energy Level** and **Emotional Urgency**.
-           - **Strict Isolation**: Do **NOT** use metaphors of <scene_narration> to extract physical direction or spatial vectors. Treat metaphors (e.g., "skyrocketing", "crashing") purely as intensity/vibe indicators, not physics instructions.
-        2. **Actor vs. Environment Pivot**: 
-           - **IF <entity_list> is NOT EMPTY**: Evaluate the <entity_list>.[n].\`type\` and <entity_list>.[n].\`physics_profile\` to determine inherent mass and action capacity (e.g., a \`machine\` in \`combat\` state).
-           - **IF <entity_list> is EMPTY**: Pivot the analysis entirely to the **Environmental Dynamics**. Treat the background, weather, and light as the primary "Actors" (e.g., a "Neon City" in "locomotion" context implies camera-driven energy).
-        3. **Environmental Stability Assessment**: Evaluate <image_context> (t=0) for environmental stability (e.g., a quiet boutique vs a chaotic street).
-      - **\`INTENSITY_TIER\` Classification (Select Exactly ONE)**:
-        * **\`VERY_LOW\`**: Choose if the scene is defined by **Micro-Stasis** (e.g., subtle breathing, light flickering, near-perfect stillness, "frozen" moments).
-        * **\`LOW\`**: Choose if the scene is defined by **Fluid Motion** (e.g., rhythmic walking, gentle swaying, consistent natural flow, smooth transitions).
-        * **\`HIGH\`**: Choose if the scene is defined by **Decisive Kinetic** energy (e.g., intentional strikes, running, mechanical shifts, heavy mass movement, "breakneck" metaphors).
-        * **\`VERY_HIGH\`**: Choose if the scene reaches **Explosive Chaos** (e.g., high-impact collisions, shattering, hyper-velocity, total physical failure, "earth-shattering" metaphors).
-      - **Output Requirement**: This profile acts as a **Global Latent Filter**. The selected \`INTENSITY_TIER\` strictly dictates the energy level of word choices in all later <step_n>, regardless of whether data is drawn from <vocabulary_depot>.
+      <step_0_1_scene_blueprint>
+        **Goal**: Create a raw visual sketch of the scene before determining technical specs.
+        **Context Analysis Rules**:
+          1. **Decouple Mood from Motion**: A "tense" scene does not always mean "fast" movement. (e.g., A sniper holding breath is HIGH tension but ZERO motion).
+          2. **Visual Reality Check**: Based on the provided image and narration, describe WHAT is actually moving physically.
+          3. **Determine Scene Nature**: Is this scene about "Action" (running, fighting) or "Status" (waiting, staring, atmosphere)?
+        **Output Format**:
+          - **Scene Summary**: [Briefly describe what happens in <video_metadata>.<target_duration>]
+          - **Primary Movement**: [Describe the main physical action. If none, write "Static / Micro-movement only"]
+          - **Narrative Vibe**: [Describe the mood]
+          - **Conflict Check**: [Does the Vibe match the Movement? (e.g., High Tension vs. Static Body)]
+      </step_0_1_scene_blueprint>
+      <step_0_2_kinetic_profiling>
+        **Goal**: Translate the **Primary Movement** from <step_0_1_scene_blueprint> into a strict physical \`INTENSITY_TIER\`.
+        **Critical Logic Rule (The Physics Filter)**:
+          - Ignore \`Narrative Vibe\`. Focus ONLY on \`Primary Movement\`.
+          - **High Tension ≠ High Movement**: Even if the scene is "terrifying" or "urgent", if the subject is standing still, the \`INTENSITY_TIER\` MUST be \`VERY_LOW\` or \`LOW\`.
+        **\`INTENSITY_TIER\` Mapping Guide**:
+          * \`VERY_LOW\`: Static, breathing, blinking, micro-movements. (e.g., Sniper aiming from concealment, character sleeping)
+          * \`LOW\`: Slow head turns, talking, hand gestures, slow walking.
+          * \`HIGH\`: Running, fighting, fast driving, rapid urgency.
+          * \`VERY_HIGH\`: Explosions, sprinting, chaotic destruction, warp speed.
+        **Action Required**:
+          1. Review \`Primary Movement\` & \`Conflict Check\` from Step 0.1.
+          2. Assign the Tier based strictly on the Mapping Guide above.
+        **Output Format**:
+          - **Reasoning**: [Explain the choice. E.g., "Narrative is tense, but movement is static. Physics wins."]
+          - **\`INTENSITY_TIER\`**: [Select one: \`VERY_LOW\` / \`LOW\` / \`HIGH\` / \`VERY_HIGH\`]
+      </step_0_2_kinetic_profiling>
     </step_0_kinetic_energy_profiling>
     <step_1_core_synthesis_principles>
       - **The Universal Golden Formula**: 
@@ -1955,10 +1969,27 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
         - **Counter-Flow Rule**: Describe particle flow relative to the lens strictly following the **Stage 3: Optical Counter-Flow Rule** (Radial/Lateral for Optical, Opposite for Physical).
         - **Logic**: Describe particle flow relative to the lens based on the rule (e.g., Dolly-In $+Z → Flow $-Z$).
       - **[Slot_3: Volumetric Lighting Anchor] (The Depth Foundation)**:
-        - **Source**: Select ONE: [\`Volumetric lighting\`, \`Cinematic silhouette\`, \`Atmospheric haze\`, \`Dynamic refraction\`].
-        - **Role**: Essential for creating spatial depth in No-Audio generation.
+        - **Logic**: Select the lighting style that best amplifies the **Narrative Vibe** (from <step_0_kinetic_energy_profiling>.<step_0_1_scene_blueprint>) while respecting physical consistency.
+        - **Source Mapping**:
+          * *High Tension / Mystery* → Select: [\`Cinematic silhouette\`, \`Low-key contrast\`, \`Deep shadow falloff\`]
+          * *Emotional / Melancholic* → Select: [\`Atmospheric haze\`, \`Soft diffusion\`, \`Muted tonal depth\`]
+          * *Hopeful / Divine* → Select: [\`Volumetric lighting\`, \`God rays\`, \`High-key bloom\`]
+          * *Action / Sharp Reality* → Select: [\`Dynamic refraction\`, \`Hard rim lighting\`, \`Specular highlights\`]
+        - **Role**: Essential for creating spatial depth and emotional tone in No-Audio generation.
       - **[Slot_4: Selected Technical Tags] (Contextual Essence)**:
-        - **Logic**: Select physically accurate tags (e.g., Heat Haze, Sand Grit, Neon Rain).
+        - **Logic**: Select technical tags that are physically accurate AND reinforce the **Narrative Vibe**.
+        - **Selection Strategy**:
+          * If **\`INTENSITY_TIER\`** is \`VERY_LOW\` (Static):
+            - *Tense Vibe*: \`High Contrast\`, \`Gritty Texture\`, \`Cold Color Grading\`, \`Deep Shadows\`.
+            - *Calm Vibe*: \`Soft Lighting\`, \`Clean Focus\`, \`Minimalist Composition\`, \`Warm Tone\`.
+          * If **\`INTENSITY_TIER\`** is \`LOW\` (Slow/Gentle):
+            - *Tense Vibe*: \`Unsettling Haze\`, \`Sharp Edges\`, \`Low-Key Lighting\`.
+            - *Calm Vibe*: \`Ethereal Glow\`, \`Dreamy Bokeh\`, \`Pastel Colors\`, \`Soft Diffusion\`.
+          * If **\`INTENSITY_TIER\`** is \`HIGH\` (Active):
+            - *Tense Vibe*: \`Jagged Motion Blur\`, \`Harsh Highlights\`, \`Chaotic Dust\`.
+            - *Joyful/Active Vibe*: \`Bright Streaks\`, \`Vibrant Saturation\`, \`Clear Motion\`.
+          * If **\`INTENSITY_TIER\`** is \`VERY_HIGH\` (Chaos):
+            - Use "Maximalist" tags regardless of Vibe to support the physics (e.g., \`Heavy Motion Blur\`, \`Shockwave Distortion\`, \`Flying Debris\`, \`Chromatic Aberration\`).
         - **Format**: Purify into natural descriptors for the final assembly.
       - **The Atmospheric Assembly Formula ([Atmospheric/Lighting Delta] of **Component Definition** in <step_1_core_synthesis_principles>)**:
         - **Logic**: Check if [Slot_1] or [Slot_2] is "NONE".
@@ -2012,20 +2043,46 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
     <step_7_cinematic_camera_vector_design>
       <step_7_0_professional_camera_mechanics_definitions>
         <spatial_coordinate_grounding>
-          - **Origin (0,0,0)**: The focal point of the camera lens at t=0.
-          - **Camera Position $C(t)$**: The physical location of the lens in 3D space, determining the perspective anchor.
-          - **Subject Position $S(t)$**: The subject's spatial coordinate derived from <image_context>, <entity_list>.[n].\`position_descriptor\`, and <entity_list>.[n].\`visual_anchor_initial_pose\`.
-          - **Relative Distance $D(t)$**: The Euclidean distance $|S(t) - C(t)|$, critical for focal plane calculation.
-          - **Axis Definitions (Camera-Relative Coordinate System)**:
-            * **Z-axis (Optical Axis)**: The depth line piercing from the center of <image_context> through the subject's center into the background.
-            * **X-axis (Lateral Axis)**: The horizontal line parallel to the frame's width.
-            * **Y-axis (Vertical Axis)**: The vertical line parallel to the frame's height.
-          - **Parallax Flow Rule (Z-Axis Logic)**:
-            * **Toward (+Z)**: Subject approaches the lens, decreasing $D(t)$, increasing visual scale and background blur.
-            * **Away from (-Z)**: Subject recedes, increasing $D(t)$, revealing more of the **Spatial Anchors**.
-              - **Priority 1 (Kinetic Prop)**: IF <entity_list> contains \`prop\` \`role\` AND its physical position significantly impacts the subject's movement or spatial trajectory (e.g., as an obstacle, constraint, or grounding point), reveal more of these specific landmarks to validate spatial depth and physical interaction.
-              - **Priority 2 (Visual Landmark)**: IF no movement-affecting props are defined, reveal more of the background structures and vanishing points analyzed from \`<image_context>\`.
-          - **The Director's Goal**: Select a Camera Vector ($\vec{C}$) that manages $D(t)$ and Parallax to prevent "Latent Space Collapse" while maximizing cinematic immersion.
+          <fundamental_definitions>
+            - **Origin (0,0,0)**: The exact center of the 2D Screen Frame at t=0.
+            - **Coordinate System**: A strict "Screen-Space" system where directions are defined relative to the visual canvas, NOT the physical world.
+            - **Vector Entities**:
+              * **Camera ($\\vec{C}$)**: The movement of the viewpoint (lens) itself.
+              * **Subject ($\\vec{S}$)**: The movement of the entity within the frame.
+          </fundamental_definitions>
+          <unified_axis_rule>
+            - **Goal**: Eliminate ambiguity by enforcing a single directional standard for both Camera and Subject.
+            1. **X-Axis (Lateral Plane)**:
+               - **Negative (-X)**: Movement towards **Screen Left**.
+               - **Positive (+X)**: Movement towards **Screen Right**.
+            2. **Y-Axis (Vertical Plane)**:
+               - **Negative (-Y)**: Movement towards **Screen Bottom**.
+               - **Positive (+Y)**: Movement towards **Screen Top**.
+            3. **Z-Axis (Depth Plane - The Critical Standard)**:
+               - **Negative (-Z)**: Movement **OUT** of the screen (Towards the Foreground/Surface).
+                 * *Concept*: Proximity increases, Scale increases.
+               - **Positive (+Z)**: Movement **INTO** the screen (Towards the Background/Vanishing Point).
+                 * *Concept*: Proximity decreases, Scale decreases.
+          </unified_axis_rule>
+          <vector_behavior_matrix>
+            - **Logic**: How physical movements map to the Unified Axis Rule.
+            - **Axis Direction Table**:
+              | Axis | Vector | Camera Move Direction (Lens Physics) | Subject Move Direction (Entity Physics) |
+              | :--- | :--- | :--- | :--- |
+              | **X** | **$-X$** | Moves toward Screen Left | <entity_list>.[n] travels toward Screen Left |
+              | **X** | **$+X$** | Moves toward Screen Right | <entity_list>.[n] travels toward Screen Right |
+              | **Y** | **$-Y$** | Moves toward Screen Bottom | <entity_list>.[n] falls/crouches toward Bottom |
+              | **Y** | **$+Y$** | Moves toward Screen Top | <entity_list>.[n] jumps/rises toward Top |
+              | **Z** | **$-Z$** | Moves Away from Scene (Outward) | <entity_list>.[n] Approaches to Foreground (Coming Closer) |
+              | **Z** | **$+Z$** | Moves Into Scene (Inward) | Entity Recedes into Background (Moving Away) |
+          </vector_behavior_matrix>
+          <parallax_interaction_logic>
+            - **Distance $D(t)$**: The relative gap between Camera and Subject.
+            - **Conflict Check**:
+              * **High Impact / Collision**: If $\\vec{S} = -Z$ (Approaching) AND $\\vec{C} = +Z$ (Dolly In) -> $D(t)$ decreases rapidly. (Use for Intensity).
+              * **Sync / Tracking**: If $\\vec{S} = -Z$ (Approaching) AND $\\vec{C} = -Z$ (Dolly Out) -> $D(t)$ remains constant. (Use for Stability).
+              * **Chase / Follow**: If $\\vec{S} = +Z$ (Receding) AND $\\vec{C} = +Z$ (Dolly In) -> $D(t)$ remains constant. (Use for Pursuit).
+          </parallax_interaction_logic>
         </spatial_coordinate_grounding>
         <definition_table>
           | Cinematic Technique | Category | Axis | Vector ($\vec{C}$) | Physical Logic & Movement Constraints |
@@ -2068,11 +2125,11 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
                - Prefer **multi-cue triangulation** (attention + affordance + group flow) over any single cue.
                - If cues conflict or are weak, mark the vector as **Static or Low-Confidence** rather than forcing a directional claim.
           3. **Lens 3: Geometric Perspective (Vanishing Points)**:
-             - *Look for*: The scene's dominant vanishing point.
-             - *Reasoning*:
-               - **Toward (+Z)**: Subject faces *away* from the vanishing point, appearing to exit the frame.
-               - **Away (-Z)**: Subject faces *towards* the vanishing point, appearing to recede into depth.
-               - **Lateral ($\pm X$)**: Subject is oriented perpendicular to the depth axis.
+             - *Look for*: The scene's depth lines and the subject's orientation.
+             - *Mapping Rule*: Strictly follow <spatial_coordinate_grounding>.
+               - **Receding ($+Z$)**: Subject shows **back/dorsal side**, or gets smaller into the distance (Faces Vanishing Point).
+               - **Approaching ($-Z$)**: Subject shows **face/frontal side**, or looms larger toward the bottom edge (Faces Viewer).
+               - **Lateral ($\\pm X$)**: Subject shows **profile/side view** (Perpendicular to depth).
         - **The Visual Supremacy Rule (Conflict Resolution)**:
           - **IF** <scene_narration> implies motion (e.g., "racing", "speeding") **BUT** Visual Evidence (Lens 1-3) indicates stillness (e.g., Red light, Idling, Static posture):
           - **THEN**: You MUST prioritize **Visual Evidence**. Classify as **Static** or **Micro-Movement**.
@@ -2099,37 +2156,55 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
         - **Logic Flow**:
           1. **Data Retrieval**: Fetch the $\vec{S}$ category (**Toward**, **Away**, **Lateral**, **Vertical**, **Static**) and the [Risk Status] from <step_7_1_subject_vector_inference>.
           2. **$D(t)$ Management Strategy (Depth Conservation)**:
-             - **IF $\vec{S}$ is "Toward (+Z)"**: Select a $\vec{C}$ with **$-Z$ (e.g., Dolly-Out)** or **Focal Expansion (e.g., Zoom-Out)** to prevent lens clipping.
-             - **IF $\vec{S}$ is "Away from (-Z)"**: Select a $\vec{C}$ with **$+Z$ (e.g., Dolly-In)** or **Focal Contraction (e.g., Zoom-In)** to prevent identity loss.
-             - **IF $\vec{S}$ is "Lateral/Vertical"**: Select a $\vec{C}$ that matches the axis ($\pm X$ or $\pm Y$) to maintain a constant $D(t)$ (Sync-tracking logic).
-             - **IF $\vec{S}$ is "Static"**: Introduce an artificial delta using **Angular** or **Optical** shifts to drive visual progression.
+             - **IF $\\vec{S}$ is "Approaching ($-Z$)"**: 
+               - To Maintain $D(t)$ (Sync): Select $\\vec{C}$ with **$-Z$** (Move Outward).
+               - To Amplify Impact (Collision): Select $\\vec{C}$ with **$+Z$** (Move Inward).
+             - **IF $\\vec{S}$ is "Receding ($+Z$)"**:
+               - To Maintain $D(t)$ (Chase): Select $\\vec{C}$ with **$+Z$** (Move Inward).
+               - To Widen Context (Reveal): Select $\\vec{C}$ with **$-Z$** (Move Outward).
+             - **IF $\\vec{S}$ is "Lateral/Vertical"**: Select $\\vec{C}$ matching the Subject's Axis ($\\pm X$ or $\\pm Y$) to track.
           3. **The Filtration Protocol (Conflict Resolution)**:
              - Apply the **Axis Conflict Rule** to filter the $\vec{C}_{cand}$ list.
              - **Constraint Check**: Remove any candidate that conflicts with the currently selected Optical settings (e.g., if Optical Z is active, remove Spatial Z candidates).
              - **Fallback Rule (Crucial)**: IF filtering removes ALL candidates, revert to the safest universal option: **"Handheld Shaky"** or **"Static Frame"**. DO NOT return an empty result.
-          4. **Final Selection & Output (Tier-Based Decision)**:
-             - From the remaining valid candidates, select the ONE that best matches the **\`INTENSITY_TIER\`**.
-             - **Mandatory Output**: You MUST output a valid camera vector string from the table. Empty strings are forbidden.
-             - **Selection Examples by \`INTENSITY_TIER\` (Verified Compliance)**:
-               * **\`VERY_LOW\` (Micro-Stasis)**:
-                 - *Situation*: Subject is sleeping or staring.
-                 - *Selection*: **"Static Frame"** or **"Rack Focus"** (Purely optical/micro change, Low Energy).
-               * **\`LOW\` (Fluid Motion)**:
-                 - *Situation*: Subject is walking or swaying.
-                 - *Selection*: **"Pan Right"** or **"Truck Left"** (Smooth linear/angular flow, Medium Energy).
-               * **\`HIGH\` (Decisive Kinetic)**:
-                 - *Situation*: Subject is running or fighting.
-                 - *Selection*: **"Dolly-In"** or **"Arc Orbit"** (Strong spatial displacement, High Energy).
-                 - *Note*: 'Handheld Shaky' can be added as a modifier here (e.g., "Dolly-In + Handheld Shaky").
-               * **\`VERY_HIGH\` (Explosive Chaos)**:
-                 - *Situation*: Explosion or Crash.
-                 - *Selection*: **"Crash Zoom In"** or **"Handheld Shaky"** (Violent optical/vibrational shift, Extreme Energy).
-          3. **Final Technique Selection (Table Lookup)**:
-             - Scan <step_7_0_professional_camera_mechanics_definitions>.<definition_table> to find techniques matching the required Axis, Vector, and **\`INTENSITY_TIER\`**.
-             - **Collision-Aware Selection**: If [Risk Status] is **High-Risk**, prioritize techniques that emphasize spatial clearance (e.g., "Dolly-In past the [Landmark]").
-          4. **Final Formatting**:
-             - Prepare the final string: "[Primary Technique] + [Secondary Technique]".
-             - Ensure all components are purified to natural language (no brackets or symbols) in the next step.
+          4. **Final Selection & Output (Vector Logic & Vibe Split)**:
+             - **Logic**: Determine the Camera Vector ($\\vec{C}$) by calculating the relationship between the **Subject Vector ($\\vec{S}$)** and the **Intent** (Defined by \`INTENSITY_TIER\`), then applying a **Vibe Modifier** (Based on **Narrative Vibe**).
+             - **Selection Matrix by \`INTENSITY_TIER\`**:
+               * **\`INTENSITY_TIER\` = \`VERY_LOW\` (Intent: Stasis)**:
+                 - **Vector Rule**: Force $\\vec{C} = 0$.
+                 - **Base Select**: \`Static Frame\`.
+                 - **Vibe Modifier**:
+                   * If **Narrative Vibe** is Tense/Anxious: Add \`Handheld Shaky\`.
+                   * If **Narrative Vibe** is Emotional/Focus: Change Base to \`Rack Focus\`.
+                   * If **Narrative Vibe** is Grand/Observant: Keep \`Static Frame\` (Pure).
+               * **\`INTENSITY_TIER\` = \`LOW\` (Intent: Gentle Observation)**:
+                 - **Vector Rule**: Sync with $\\vec{S}$ (Parallax Sync).
+                 - **Base Select**: \`Dolly-In\`, \`Dolly-Out\`, \`Truck Left/Right\` (Match $\\vec{S}$).
+                 - **Vibe Modifier**:
+                   * If **Narrative Vibe** is Uneasy/Creepy: Add \`Handheld Shaky\`.
+                   * If **Narrative Vibe** is Dreamy/Surreal: Add \`Arc Orbit\` (Slow rotation around subject).
+                   * If **Narrative Vibe** is Intimate/Focus: Enforce \`Dolly-In\` (Slow push to subject).
+                   * If **Narrative Vibe** is Sad/Detached: Enforce \`Dolly-Out\` (Pulling away).
+               * **\`INTENSITY_TIER\` = \`HIGH\` (Intent: Active Pursuit/Impact)**:
+                 - **Vector Rule**: Pursuit (Same Direction) or Impact (Opposite Direction).
+                 - **Base Select**: \`Dolly-In/Out\`, \`Truck Left/Right\`, \`Pan Left/Right\`.
+                 - **Vibe Modifier**:
+                   * If **Narrative Vibe** is Chaotic/Combat: Add \`Handheld Shaky\`.
+                   * If **Narrative Vibe** is Heroic/Dynamic: Add \`Pedestal Up\` (Rising view).
+                   * If **Narrative Vibe** is Oppressive/Dominant: Add \`Pedestal Down\` (Lowers camera to make subject look huge).
+                   * If **Narrative Vibe** is Vertigo/Shock: Change Base to \`Dolly Zoom\` (Z-warp).
+               * **\`INTENSITY_TIER\` = \`VERY_HIGH\` (Intent: Chaos/Disorientation)**:
+                 - **Vector Rule**: Maximum Velocity.
+                 - **Base Select**: \`Crash Zoom In/Out\`, \`Pan Left/Right\` (Max Speed).
+                 - **Vibe Modifier**:
+                   * If **Narrative Vibe** is Catastrophic*: ALWAYS Add \`Handheld Shaky\`.
+                   * If **Narrative Vibe** is Speed/Rush*: Enforce \`Pan Left/Right\` to emphasize lateral velocity.
+             - **Combination Rule (Merge Logic)**:
+               * IF **Vibe Modifier** is a **Movement Technique** (e.g., \`Arc Orbit\`, \`Dolly-In/Out\`, \`Dolly Zoom\`, \`Pedestal Up/Down\`): 
+                 **OVERRIDE** the Base Select. (Use ONLY the Modifier).
+               * IF **Vibe Modifier** is a **Vibration/Filter** (e.g., \`Handheld Shaky\`): 
+                 **APPEND** to the Base Select. (Result: "Base + Modifier").
+             - **Mandatory Output**: Combine the selected Base Technique and Modifier into a valid string.
       </step_7_2_vector_matching_protocol>
       <step_7_3_cinematic_camera_vector_assembly>
         - **Goal**: Synthesize the finalized cinematic camera prompt into a seamless, natural language **Directorial Prose** that dictates the MMDiT engine's optical and spatial behavior.
@@ -2222,8 +2297,17 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
     Return a single JSON object with the following structure. Ensure all fields are populated based on the internal reasoning of the Cinematic Director role.
     {
       "logical_bridge": {
-        "intensity_tier": "string (Selected ONE \`INTENSITY_TIER\` from <step_0_kinetic_energy_profiling>)",
-        "intensity_tier_selected_reason": "string (Explain why you chose that \INTENSITY_TIER\` based on what.)",
+        "scene_fundamental_data": {
+          "scene_summary": "string (Created **Scene Summary** from <step_0_1_scene_blueprint>)",
+          "scene_summary_reason": "string (Explain why you decided that **Scene Summary** based on what.)",
+          "primary_movement": "string (Created **Primary Movement** from <step_0_1_scene_blueprint>)",
+          "primary_movement_reason": "string (Explain why you decided that **Primary Movement** based on what.)",
+          "narrative_vibe": "string (Created **Narrative Vibe** from <step_0_1_scene_blueprint>)",
+          "narrative_vibe_reason": "string (Explain why you decided that **Narrative Vibe** based on what.)",
+          "intensity_tier": "string (Selected ONE \`INTENSITY_TIER\` from <step_0_kinetic_energy_profiling>)",
+          "intensity_tier_selected_reason": "string (Explain why you chose that \INTENSITY_TIER\` based on what.)",
+        },
+        "narrative_vibe": "string (Selected
         "identity_logic": "string (Define how the subject's era, role, and physical essence from the <entity_list> and metadata are preserved during motion.)",
         "action_focus": "string (Explain the conceptual shift from the raw narration to the high-impact kinetic verb used in the prompt.)",
         "primary_narrative_block": {
