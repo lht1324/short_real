@@ -1120,10 +1120,10 @@ Instruction: Generate the scene instruction JSON.
                 console.log(`Scene #${sceneNumber} postVideoGenPrompt() Result`);
                 console.log(`Scene Summary: ${sceneSummary}`);
                 console.log(`Scene Summary Reason: ${sceneSummaryReason}`);
-                console.log(`Primary Movement: ${sceneSummary}`);
-                console.log(`Primary Movement Reason: ${sceneSummary}`);
-                console.log(`Narrative Vibe: ${sceneSummary}`);
-                console.log(`Narrative Vibe Reason: ${sceneSummary}`);
+                console.log(`Primary Movement: ${primaryMovement}`);
+                console.log(`Primary Movement Reason: ${primaryMovementReason}`);
+                console.log(`Narrative Vibe: ${narrativeVibe}`);
+                console.log(`Narrative Vibe Reason: ${narrativeVibeReason}`);
                 console.log(`Selected INTENSITY_TIER: ${intensityTier}`);
                 console.log(`INTENSITY_TIER Selected Reason: ${intensityTierSelectedReason}`);
                 console.log(`Identity Logic: ${identityLogic}`);
