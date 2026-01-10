@@ -174,8 +174,21 @@ const videoGenResponseFormat: OpenAI.ResponseFormatJSONSchema = {
                 logical_bridge: {
                     type: "object",
                     properties: {
-                        intensity_tier: { type: "string" },
-                        intensity_tier_selected_reason: { type: "string" },
+                        scene_fundamental_data: {
+                            type: "object",
+                            properties: {
+                                scene_summary: { type: "string" },
+                                scene_summary_reason: { type: "string" },
+                                primary_movement: { type: "string" },
+                                primary_movement_reason: { type: "string" },
+                                narrative_vibe: { type: "string" },
+                                narrative_vibe_reason: { type: "string" },
+                                intensity_tier: { type: "string" },
+                                intensity_tier_selected_reason: { type: "string" },
+                            },
+                            required: ["scene_summary", "scene_summary_reason", "primary_movement", "primary_movement_reason", "narrative_vibe", "narrative_vibe_reason", "intensity_tier", "intensity_tier_selected_reason"],
+                            additionalProperties: false
+                        },
                         identity_logic: { type: "string" },
                         action_focus: { type: "string" },
                         primary_narrative_block: {
@@ -259,7 +272,7 @@ const videoGenResponseFormat: OpenAI.ResponseFormatJSONSchema = {
                             additionalProperties: false,
                         }
                     },
-                    required: ["intensity_tier", "intensity_tier_selected_reason", "identity_logic", "action_focus", "primary_narrative_block", "atmospheric_lighting_delta", "cinematic_camera_vectors", "style"],
+                    required: ["scene_fundamental_data", "identity_logic", "action_focus", "primary_narrative_block", "atmospheric_lighting_delta", "cinematic_camera_vectors", "style"],
                     additionalProperties: false
                 },
                 reasoning: { type: "string" },
@@ -1105,6 +1118,12 @@ Instruction: Generate the scene instruction JSON.
 
 
                 console.log(`Scene #${sceneNumber} postVideoGenPrompt() Result`);
+                console.log(`Scene Summary: ${sceneSummary}`);
+                console.log(`Scene Summary Reason: ${sceneSummaryReason}`);
+                console.log(`Primary Movement: ${sceneSummary}`);
+                console.log(`Primary Movement Reason: ${sceneSummary}`);
+                console.log(`Narrative Vibe: ${sceneSummary}`);
+                console.log(`Narrative Vibe Reason: ${sceneSummary}`);
                 console.log(`Selected INTENSITY_TIER: ${intensityTier}`);
                 console.log(`INTENSITY_TIER Selected Reason: ${intensityTierSelectedReason}`);
                 console.log(`Identity Logic: ${identityLogic}`);
