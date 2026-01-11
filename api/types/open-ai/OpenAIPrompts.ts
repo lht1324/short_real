@@ -541,7 +541,7 @@ const SUBJECT_EXTRACTION_GUIDE = `
               - *Example*: "The Soldier"
             - **Case B: Multiple Entities** (Length >= 2)
               - **Step 1**: Check for ID Collision (Same Rank 1 Attribute? e.g., two "Soldiers", three "Boxers", five "Racers").
-                - **No Collision**: Use **"The"** prefix. (e.g., "The Soldier", "The Tank", "The Pilot", "The Racer", "The Knight").
+                - **No Collision**: Use **"The"** prefix. (e.g., "The Soldiers", "The Tanks", "The Pilots", "The Racers", "The Knights").
                 - **Collision**: Go to Step 2.
               - **Step 2 (Discriminator Selection)**:
                 - **Priority A (Positional)**: If Visual fails OR user prefers spatial clarity.
@@ -703,7 +703,7 @@ export const POST_IMAGE_GEN_PROMPT_PROMPT = `
   <prompt_authoring_protocol>
     <unit_1_subject_and_physics>
       **UNIT 1: SUBJECT & PHYSICS ENGINEERING**
-      **Goal**: Iterate through **EVERY** valid entry in <entity_list> and transform them into \`image_gen_prompt.subjects\` by synchronizing with <master_style_guide>.<global_environment>'s \`era\` and <master_style_guide>.<fidelity> standards. Do NOT omit any valid entity.
+      **Goal**: Iterate through **EVERY** valid entry in <entity_list> and transform them into \`image_gen_prompt.subjects\` by synchronizing with <master_style_guide>.<global_environment>.\`era\` and <master_style_guide>.<fidelity> standards. Do NOT omit any valid entity.
       1. **[Phase: Physics Derivation (Internal Reasoning)]**
         - **Step A (Physics Profile)**: 
           * Scan \`appearance\` and <current_narration>.
@@ -1077,14 +1077,18 @@ export const POST_IMAGE_GEN_PROMPT_PROMPT = `
                 * **\`animal\`**: \`[ERA/PERIOD], [SPECIES], [AGE/MATURITY]\`
                 * **\`object\`**: \`[ERA/PERIOD], [ITEM NAME], [CRAFTSMANSHIP/DETAIL]\`
                 * **\`hybrid\`**: \`[ERA/PERIOD], [HYBRID TYPE], [GENDER], [ORIGIN/ETHNICITY], [AGE]\`
+            - **Instruction (Demographic Anchoring)**:
+              * Construct the **[Demographic_Anchor]** string using \`Entity.demographics\`.
+              * **Rule**: Combine \`[ERA/PERIOD]\` + \`[ROLE | (MODEL NAME/TYPE) | (SPECIES/ARCHETYPE) | SPECIES | ITEM NAME | HYBRID TYPE]\` into a single noun phrase.
+              * **Examples**: "a 1944 WWII infantry soldier", "a Cyberpunk 2077 hacker", "a Jurassic Period T-Rex".
             - **Instruction ([Detail_Clause] Enhancement)**:
               * You MUST construct \`[Detail_Clause]\` by assembling fixed Entity data and dynamic subject data in a specific order.
               * **Source Data Mapping**:
                 - **[Features]**: \`Entity.appearance.hair\` (conditional) + \`Entity.appearance.body_features\`
                 - **[Material/Clothing]**: \`Entity.appearance.clothing_or_material\`
-                - **[Accessories]**: flattened \`image_gen_prompt.subjects[n].accessories\`
+                - **[Accessories]**: flattened \`Entity.appearance.accessories\`
               * **Pre-check (Headwear Logic)**:
-                - Before adding \`Entity.appearance.hair\`, scan the \`accessories\` array.
+                - Before adding \`Entity.appearance.hair\`, scan the \`Entity.appearance.accessories\` array.
                 - If array contains headwear keywords (e.g., "helmet", "hat", "cap", "hood", "beret", "headwrap"), DO NOT include the hair description in \`[Detail_Clause]\`.
               * **Smart Assembly Sequence (Human/Creature)**:
                 1. **Start with Features**: If \`hair\` (and passes pre-check) or \`body_features\` exist, start with ", with [hair] and [body_features]" (adjust conjunctions if only one exists).
@@ -1107,7 +1111,7 @@ export const POST_IMAGE_GEN_PROMPT_PROMPT = `
                   - *Note*: Convert the \`image_gen_prompt.subjects[n].pose\` into a participle (e.g., "crushing" instead of "crushed", "glowing" instead of "glows").
               * **Example Construction**:
                 - "...captures the **1944 WWII infantry soldier(Primary)**..., **while in the background(Position) a 1944 WWII heavy tank(Secondary Identity), finished in matte olive drab(Detail_Clause), is crushing debris(Pose).**"
-            **Format**: "[A/An] [\`camera.angle\`] [\`camera.distance\`] captures [\`subjects[n].description\`][Detail_Clause] [who is/which is] [\`subjects[n].pose\`] [\`subjects[n].position\`]."
+            **Format**: "[A/An] [\`camera.angle\`] [\`camera.distance\`] captures [Demographic_Anchor] [Detail_Clause] [who is/which is] [\`subjects[n].pose\`] [\`subjects[n].position\`]."
             * **Connector Logic**: 
               - If \`subjects[n].role\` is \`main_hero\` or \`sub_character\`: use "**who is**".
               - If \`subjects[n].role\` is \`prop\`: use "**which is**" or skip connector directly.

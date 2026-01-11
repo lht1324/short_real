@@ -131,7 +131,12 @@ const imageGenResponseFormat: OpenAI.ResponseFormatJSONSchema = {
                                     clothing_or_material: { type: "string" },
                                     // Entity.ts에서 hair, accessories, bodyfeatures는 optional임 -> null 허용
                                     hair: { type: ["string", "null"] },
-                                    accessories: { type: ["string", "null"] },
+                                    accessories: {
+                                        type: ["array", "null"],
+                                        items: {
+                                            type: "string",
+                                        }
+                                    },
                                     body_features: { type: ["string", "null"] },
                                     position_descriptor: { type: ["string", "null"] }
                                 },
@@ -699,9 +704,6 @@ Instruction: Generate the scene instruction JSON.
                     { role: 'user', content: userMessage }
                 ],
                 response_format: imageGenResponseFormat,
-                // response_format: { type: 'json_object' },
-                // reasoning_effort: 'medium',
-                // max_completion_tokens: 40960,
                 max_completion_tokens: 16384,
                 temperature: 0.7,
             });
