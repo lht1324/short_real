@@ -38,47 +38,39 @@ export const imageServerAPI = {
 
                 resultImageUrlList = output.data.images;
             } catch (error) {
-                const isPolicyViolation = error.body?.detail?.some((errorDetail: FalAiErrorDetail) =>
-                    errorDetail.type === 'content_policy_violation' ||
-                    errorDetail.msg?.includes('unsafe content') ||
-                    errorDetail.msg?.includes('content checker')
-                );
-
-                if (isPolicyViolation) {
-                    const output = await falAIClient.subscribe('fal-ai/flux-2', {
-                        input: {
-                            prompt: JSON.stringify({
-                                ...imageGenPrompt,
-                                subjects: imageGenPrompt.subjects.map((subject) => {
-                                    return {
-                                        type: subject.type,
-                                        description: subject.description,
-                                        pose: subject.pose,
-                                        position: subject.position,
-                                    }
-                                })
-                            }, null, 1)
-                                .replace(/\n\s*/g, ' ')
-                                .replace("fNumber", "f-number"),
-                            guidance_scale: 20,
-                            num_inference_steps: 50,
-                            image_size: "portrait_16_9",
-                            num_images: 1,
-                            acceleration: "none",
-                            enable_prompt_expansion: false,
-                            enable_safety_checker: false,
-                            output_format: "jpeg"
-                        }
-                    });
-                    resultImageUrlList = output.data.images;
-                } else {
-                    throw Error("Image generation failed.")
-                }
+                console.error(`Scene #${sceneNumber} Nano Banana Image generation Error: `, error);
+                const output = await falAIClient.subscribe('fal-ai/flux-2', {
+                    input: {
+                        prompt: JSON.stringify({
+                            ...imageGenPrompt,
+                            subjects: imageGenPrompt.subjects.map((subject) => {
+                                return {
+                                    type: subject.type,
+                                    description: subject.description,
+                                    pose: subject.pose,
+                                    position: subject.position,
+                                }
+                            })
+                        }, null, 1)
+                            .replace(/\n\s*/g, ' ')
+                            .replace("fNumber", "f-number"),
+                        guidance_scale: 20,
+                        num_inference_steps: 50,
+                        image_size: "portrait_16_9",
+                        num_images: 1,
+                        acceleration: "none",
+                        enable_prompt_expansion: false,
+                        enable_safety_checker: false,
+                        output_format: "jpeg"
+                    }
+                });
+                resultImageUrlList = output.data.images;
             }
 
             if (resultImageUrlList.length !== 0) {
                 imageUrl = resultImageUrlList[0].url;
             } else {
+                console.log("resultImageUrlList: ", JSON.stringify(resultImageUrlList));
                 throw Error("Image generation failed.")
             }
 

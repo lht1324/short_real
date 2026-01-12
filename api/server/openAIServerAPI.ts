@@ -728,7 +728,7 @@ Instruction: Generate the scene instruction JSON.
                 const instructionJSON: {
                     image_gen_prompt: FluxPrompt;
                     image_gen_prompt_sentence: string;
-                    updated_entity_manifest?: Omit<Entity, 'role' | 'type' | 'demographics'>[]
+                    updated_entity_manifest?: Omit<Entity, 'role' | 'type' | 'demographics'>[] | null
                 } = JSON.parse(generatedContent);
 
                 const imageGenPrompt = instructionJSON.image_gen_prompt;
@@ -738,19 +738,7 @@ Instruction: Generate the scene instruction JSON.
                 return {
                     success: true,
                     // imageGenPrompt: imageGenPrompt,
-                    imageGenPrompt: {
-                        ...imageGenPrompt,
-                        subjects: imageGenPrompt.subjects.map((subject) => {
-                            const matchedEntity = sceneEntityManifestList.find((entity) => entity.id === subject.id);
-
-                            if (!matchedEntity) throw Error("Generated imageGenPrompt data is invalid.")
-
-                            return {
-                                ...subject,
-                                role: matchedEntity.role as 'main_hero' | 'sub_character' | 'prop',
-                            }
-                        })
-                    },
+                    imageGenPrompt: imageGenPrompt,
                     imageGenPromptSentence: imageGenPromptSentence,
                     entityManifestList: updatedEntityManifestList ? updatedEntityManifestList.map(instruction => {
                         const originalEntity = sceneEntityManifestList.find((entityManifest) => {

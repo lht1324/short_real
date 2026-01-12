@@ -14,7 +14,6 @@ export interface FluxPrompt {
 export interface FluxPromptSubject {
     // 내수용
     id: string; // Entity 매칭용. 실 사용 시 매핑으로 제거 후 넣어주기
-    role: 'main_hero' | 'sub_character' | 'prop',
     // 실사용
     type: string;
     description: string;

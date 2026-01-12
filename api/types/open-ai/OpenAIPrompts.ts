@@ -158,8 +158,8 @@ export const POST_MASTER_STYLE_INFO_PROMPT = `
          * **Setting Analysis**: Determine the 'locationArchetype' based on recurring environmental descriptions.
   </input_data_interpretation>
   <task_1_entity_manifest>
-    Extract distinct subjects (characters, key objects) from <full_script_context> and define their PERMANENT attributes to initialize the \`entityManifest\` in <output_schema>.
-    This data serves as the foundation for the physics engine and visual consistency.
+    - Goal: Extract distinct subjects (characters, key objects) from <full_script_context> AND collective groups (crowds/swarms), and define their PERMANENT attributes to initialize the \`entityManifest\` in <output_schema>.
+    - This data serves as the foundation for the physics engine and visual consistency.
     **Field-Specific Instructions:**
     1. **\`id\`**: Unique identifier for the subject.
        - **Protocol**: Assign a simple, snake_case string (e.g., 'main_pilot', 'ancient_tomb'). 
@@ -167,7 +167,15 @@ export const POST_MASTER_STYLE_INFO_PROMPT = `
     2. **\`role\`**: The narrative importance of the entity within the project.
        * **\`main_hero\`**: The primary protagonist or the central focus of the story.
        * **\`sub_character\`**: Supporting characters who interact with the hero or have distinct roles.
-       * **\`background_extra\`**: Generic crowd members or people who do not drive the plot.
+       * **\`background_extra\`**: Generic crowd members or collective groups.
+         - **[Crowd Inference Logic]**: 
+           1. **Fact Check**: Does the location/history imply a crowd?
+             - **Examples**:
+               * Battlefield, Invasion of Normandy -> Army
+               * Downtown, Airport, French Revolution -> People
+               * Boxing ring, Football stadium -> Crowd
+           2. **Narrative Check**: Does the script mention terms that implies many people like "Army", "Crowd", "Chaos"?
+           3. **Mood Validation (VETO)**: If the scene explicitly describes "Silence", "Abandonment", or "Void", DO NOT create extras even if #1 or #2 of [Crowd Inference Logic] are true.
        * **\`prop\`**: Key objects or environmental elements that are crucial to the scene's action but are not sentient actors.
     3. **\`type\`**: The fundamental biological or structural category of the entity.
        * **\`human\`**: Natural humans only.
@@ -277,7 +285,11 @@ export const POST_MASTER_STYLE_INFO_PROMPT = `
           - **Constraint**: Only include **PERMANENT** traits. Do not include temporary states like "bleeding," "sweating," or "bruised" unless they are a constant part of the character's design.
           - **Format**: Single string.
     **Scene-by-Scene Validation (Reasoning Logic)**
-      Perform the following validation logic for **EVERY SCENE** (\`scene_number\`) without exception:
+      - Perform the following validation logic for **EVERY SCENE** (\`scene_number\`) without exception:
+      - Rule: Infer entities from the implication of the location/event and capture their \`role\` as \`background_extra\`.
+        - **Examples**:
+          * "Normandy Beach" implies "Invading Soldiers".
+          * "Busy Street" implies "Pedestrians".
       1. **Entity Presence (When entities are present)**:
         - \`entity_reasoning_list\`: Populate with every entity appearing in the scene. Provide a \`reasoning\` citing specific words or context from the narration. (e.g., "Script mentions 'The tank fired', therefore ID:tank is required").
         - \`scene_empty_reasoning\`: Must be set to \`""\`.
@@ -704,21 +716,30 @@ export const POST_IMAGE_GEN_PROMPT_PROMPT = `
     <unit_1_subject_and_physics>
       **UNIT 1: SUBJECT & PHYSICS ENGINEERING**
       **Goal**: Iterate through **EVERY** valid entry in <entity_list> and transform them into \`image_gen_prompt.subjects\` by synchronizing with <master_style_guide>.<global_environment>.\`era\` and <master_style_guide>.<fidelity> standards. Do NOT omit any valid entity.
-      1. **[Phase: Physics Derivation (Internal Reasoning)]**
-        - **Step A (Physics Profile)**: 
-          * Scan \`appearance\` and <current_narration>.
-          * Apply **Step 1: Material Behavior Logic & Tag Selection** of <visual_texture_layer> and **Step 2: Action/Pose Logic & Tag Selection** of <visual_texture_layer>.
-          * **Era Filtering**: Ensure the assigned \`material\` tags (e.g., cloth, rigid) are compatible with <master_style_guide>.<global_environment>'s \`era\`.
-        - **Step B (State/Pose - Physical Anchor Reasoning)**:
-          * Analyze the subject's relationship with gravity based on <current_narration>.
-          * **Identify the Anchor Point**:
-            - **If \`physics_profile.action_context\` is NOT \`aerodynamics\`**: Determine where the weight is distributed (e.g., "both feet on the ground", "kneeling on the debris"). You MUST identify a physical surface contact.
-            - **If \`physics_profile.action_context\` is \`aerodynamics\`**: Determine the wind-resistance profile (e.g., "plummeting", "arched against the wind").
-          * Define \`state.pose\` as a "Moment of Maximum Physical Engagement," emphasizing how the body is supported or resisted by its environment.
-      2. **[Phase: \`updated_entity_manifest\` Mapping]**
-        - **Carry over the exact \`id\` from <entity_list>.[n] to maintain tracking integrity.**
-        - Populate each entity's \`physics_profile\` and \`appearance\`.
-        - **Note**: This becomes the ground truth for how the subject moves and interacts with light.
+      1. **[Phase: \`updated_entity_manifest\` Mapping]**
+         - **Goal**: Update the every \`updated_entity_manifest[n].physics_profile\` and \`updated_entity_manifest[n].appearance\` for each entity based on the new narration.
+         - **Iteration**: Process ALL entities in <entity_list>.
+         - **Field: 'id'**: 
+           * **Rule**: Preserve exact input <entity_list>.[n].\`id\`.
+         - **Field: 'physics_profile'**: 
+           * **Source**: <current_narration>, <visual_texture_layer>.
+           * **Sub-Field 'material'**:
+             - **Logic**: Extract material keywords compatible with <master_style_guide>.<global_environment>.\`era\`.
+           * **Sub-Field 'action_context'**:
+             - **Logic**: Analyze <current_narration>'s verbs and context. Map to ALL applicable categories:
+               * **\`locomotion\`**: Linear movement (running, walking, driving).
+               * **\`combat\`**: Offensive/Defensive action (shooting, punching, guarding).
+               * **\`aerodynamics\`**: Air-based state (flying, falling, hovering).
+               * **\`interaction\`**: Object manipulation (holding, pulling, operating).
+               * **\`passive\`**: Low energy state (standing, sitting, sleeping).
+               * **\`velocity_max\`**: Extreme speed/blur (racing, explosions).
+         - **Field: 'appearance'**:
+           * **Source**: Input <entity_list>.[n].\`appearance\` and above Sub Field \`physics_profile\` impact.
+           * **Logic**: Do NOT change the core design (e.g., don't change "Wool" to "Silk"). ONLY add context-aware modifiers if necessary (e.g., "muddy", "wet", "torn").
+           * **Constraint**: Keep it concise. This is the source of truth, not the final poetic prompt.
+         - **Field: 'state' (Internal Logic)**:
+           * **Logic**: Derive the **Abstract Physical State** (Gravity relationship, Momentum).
+           * **Output**: This value IS outputted to JSON (\`updated_entity_manifest\`) and serves as the core logic for **[Phase: \`image_gen_prompt.subjects\` Mapping]**.
       3. **[Phase: \`image_gen_prompt.subjects\` Mapping]**
         - **Selection Protocol**:
           * **INCLUDE**: Any entity with role \`main_hero\`, \`sub_character\`, or \`prop\`.
@@ -753,14 +774,22 @@ export const POST_IMAGE_GEN_PROMPT_PROMPT = `
             * **Refine & Stylize**: Enhance the raw item names with material or Era-specific adjectives based on <entity_list>.[n].\`demographics\` and <master_style_guide>.\`globalEnvironment.era\`.
             * **Consistency**: Ensure every item listed here is implied or mentioned in the above \`description\`'s broad categories.
           - **Example**: \`["Aerodynamic composite helmet with camera mount", "Tinted anti-glare polycarbonate goggles"]\`
-        - **Field: 'pose'**: Map \`state.pose\` by applying the **Anatomical Grounding Rule**:
-          * **Anatomical Grounding Rule**: For subjects NOT in 'aerodynamics' context, you MUST use vocabulary that anchors the subject to the surface.
-          * **Vocabulary Enforcement (Forbidden vs. Preferred)**:
-            - **STRICTLY PROHIBITED (The "Floating" Traps)**: Do NOT use *'Suspended', 'Floating', 'Weightless', 'Hovering', 'Aerial', 'Defying gravity'*. These terms cause AI models to detach the subject from the ground.
-            - **REQUIRED ALTERNATIVES (The "Anchor" Terms)**: Use *'Planted', 'Grounded', 'Braced', 'Weighted', 'Positioned on', 'Standing atop', 'Crouched upon'*.
-            - **FOR MOMENTUM**: Use *'Mid-stride', 'Mid-action', 'Captured in'*, or *'Coiled'* instead of *'Frozen'* or *'Motionless'*.
-          * **Synthesis Pattern**: "[Surface Interaction Verb] + [Muscular/Anatomical Detail] + [Narrative Action]."
-          * *Example*: "Planted firmly on the muddy earth with muscles coiled in a mid-lunge stance."
+        - **Field: 'pose'**: Synthesize \`state.pose\` into a **High-Tension Snapshot** using the **Context-Aware Pose Protocol**:
+          * **Context Check**: Reference \`physics_profile.action_context\` (from **[Phase: \`updated_entity_manifest\` Mapping]**) and <current_narration>.
+          * **Mode A: Dynamic Action (\`locomotion\`, \`combat\`, \`veocity_max\`)**:
+            - **Goal**: Capture the *Peak Moment* of movement.
+            - **Rule**: Do NOT use static verbs like "Standing" or "Positioned". Use **Momentum Verbs** (e.g., *Sprinting, Charging, Recoiling, Lunging*).
+            - **Synthesis**: "**[Dynamic Verb]** + **[Body Tension/Direction]** + **[Environmental Interaction]**."
+            - *Example*: "Charging aggressively towards the camera, muscles tense mid-stride, with boots kicking up mud."
+          * **Mode B: Aerial/Impact (\`aerodynamics\`)**:
+            - **Goal**: Depict active flight or free-fall.
+            - **Rule**: ALLOW terms like "Mid-air", "Suspended", "Banking". Focus on wind resistance or G-force.
+            - *Example*: "Banking hard to the left, body pressed against the G-force, suspended against the clouds."
+          * **Mode C: Static/Passive (\`passive\`, \`interaction\`)**:
+            - **Goal**: Stable presence.
+            - **Rule**: Use **Anchoring Terms** (*Planted, Grounded, Seated*).
+            - *Example*: "Seated firmly in the cockpit, hands gripping the controls."
+          * **Anti-Blur Constraint**: Describe the *action* (e.g., "mid-air"), NOT the *time* (e.g., "starting to jump"). Freeze the frame at the most dramatic point.
         - **Field: 'position'**: Determine the optimal depth placement based on <video_context>.<aspect_ratio> and <master_style_guide>.<composition>.'s \`framingStyle\`. You MUST select exactly one from: **['foreground', 'midground', 'background']**.
       **[Execution Rule]**:
       - Treat every included subject (\`main_hero\`, \`sub_character\` and \`prop\` \`role\` alike) with equal visual fidelity. Do not prioritize the hero at the expense of missing props.
@@ -803,9 +832,19 @@ export const POST_IMAGE_GEN_PROMPT_PROMPT = `
           * **Vertical**: Emphasize vertical elements (towering walls, tall trees) and foreground-to-background depth.
           * **Horizontal**: Emphasize lateral breadth, vanishing points, and wide environmental assets.
           * **Square**: Focus on central symmetry and radial distribution of props.
+        - **Phase D (Collective Entity Injection - The 'Living' Background)**:
+          * **Input Check**: Scan <entity_list> for entities with \`role: 'background_extra'\`.
+          * **Condition 1 (Population Injection)**: IF \`background_extra\` entities exist (e.g., \`invading_army\`):
+            - **Action**: Integrate them into the background string as a **Mass Texture**.
+            - **Direction Mandate**: You MUST specify their collective movement vector (e.g., "charging inland", "retreating to the horizon") to prevent conflicting with the main subject's gaze.
+            - *Example*: "...rubble-strewn streets crowded with refugees fleeing towards the camera..."
+          * **Condition 2 (Pure Landscape)**: IF NO \`background_extra\` exists:
+            - **Action**: Describe ONLY static physical elements (terrain, weather, structures).
+            - **Constraint**: Do NOT mention people. Ensure the scene remains unpopulated as per the entity manifest.
       **[Execution Rule]**:
-      - NO subjects or characters are allowed in this field. 
-      - Every asset must match the material and technological limits of the \`era\`.
+        - **Subject Ban**: NO individual characters (\`main_hero\`, \`sub_character\`) are allowed in this field.
+        - **Exception**: Collective groups (\`background_extra\`) ARE allowed and must be treated as environmental texture.
+        - Every asset must match the material and technological limits of the \`era\`.
     </unit_2_context_and_environment>
     <unit_3_optical_and_technical>
       **UNIT 3: OPTICAL & TECHNICAL REASONING**
@@ -1215,8 +1254,8 @@ export const POST_IMAGE_GEN_PROMPT_PROMPT = `
           "position_descriptor": "string",
         },
         "state": {
-            "pose": "string";
-            "expression": "string";
+          "pose": "string";
+          "expression": "string";
         }
       }[],
       "image_gen_prompt": {
