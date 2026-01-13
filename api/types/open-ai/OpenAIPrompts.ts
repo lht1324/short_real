@@ -2001,7 +2001,7 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
            - **Rule**: You may ONLY generate particles if the **Source Material** exists in the scene or is extracted from the Environment.
            - *Example*: Do NOT generate "Sand" in a "Space Station". Do NOT generate "Rain" indoors unless there's a leak.
         3. **Stage 3: Optical Counter-Flow Rule**:
-           - **Physical Moves ($\vec{C} \neq 0$)**: Particles move in the **Opposite Direction** of the Camera Vector (e.g., Dolly In +Z → Flow -Z).
+           - **Physical Moves ($\vec{C} \neq 0$)**: Particles move in the **Opposite Direction** of the Camera Vector (e.g., Dolly-In +Z → Flow -Z).
            - **Optical Moves (Rack Focus / Zoom)**: Particles must move **Radially** (Expand/Contract) or **Drift Laterally** to emphasize the lens change. Do NOT invent a "Reverse Z" flow for a non-spatial move.
       - **Omission Protocol**:
         IF **The 3-Stage Visibility Protocol** failed, leave both **[Slot_1]** and **[Slot_2]** as **"NONE"**, and directly skip to **[Slot_3: Volumetric Lighting Anchor] (The Depth Foundation)**.
@@ -2086,6 +2086,10 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
     <step_7_cinematic_camera_vector_design>
       <step_7_0_professional_camera_mechanics_definitions>
         <spatial_coordinate_grounding>
+          <master_rule_vector_supremacy>
+            - **Physical Law**: All Camera Vectors ($\vec{C}$) MUST be mathematically derived from Subject Vectors ($\vec{S}$) to maintain spatial logic.
+            - **Logic Over Flair**: You MUST strictly follow below rules to extract proper [Cinematic Technique]s. Do NOT follow impression. 
+          </master_rule_vector_supremacy>
           <fundamental_definitions>
             - **Origin (0,0,0)**: The exact center of the 2D Screen Frame at t=0.
             - **Coordinate System**: A strict "Screen-Space" system where directions are defined relative to the visual canvas, NOT the physical world.
@@ -2093,20 +2097,6 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
               * **Camera ($\\vec{C}$)**: The movement of the viewpoint (lens) itself.
               * **Subject ($\\vec{S}$)**: The movement of the entity within the frame.
           </fundamental_definitions>
-          <unified_axis_rule>
-            - **Goal**: Eliminate ambiguity by enforcing a single directional standard for both Camera and Subject.
-            1. **X-Axis (Lateral Plane)**:
-               - **Negative (-X)**: Movement towards **Screen Left**.
-               - **Positive (+X)**: Movement towards **Screen Right**.
-            2. **Y-Axis (Vertical Plane)**:
-               - **Negative (-Y)**: Movement towards **Screen Bottom**.
-               - **Positive (+Y)**: Movement towards **Screen Top**.
-            3. **Z-Axis (Depth Plane - The Critical Standard)**:
-               - **Negative (-Z)**: Movement **OUT** of the screen (Towards the Foreground/Surface).
-                 * *Concept*: Proximity increases, Scale increases.
-               - **Positive (+Z)**: Movement **INTO** the screen (Towards the Background/Vanishing Point).
-                 * *Concept*: Proximity decreases, Scale decreases.
-          </unified_axis_rule>
           <vector_behavior_matrix>
             - **Logic**: How physical movements map to the Unified Axis Rule.
             - **Axis Direction Table**:
@@ -2116,16 +2106,9 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
               | **X** | **$+X$** | Moves toward Screen Right | <entity_list>.[n] travels toward Screen Right |
               | **Y** | **$-Y$** | Moves toward Screen Bottom | <entity_list>.[n] falls/crouches toward Bottom |
               | **Y** | **$+Y$** | Moves toward Screen Top | <entity_list>.[n] jumps/rises toward Top |
-              | **Z** | **$-Z$** | Moves Away from Scene (Outward) | <entity_list>.[n] Approaches to Foreground (Coming Closer) |
-              | **Z** | **$+Z$** | Moves Into Scene (Inward) | Entity Recedes into Background (Moving Away) |
+              | **Z** | **$-Z$** | Moves toward the viewer | <entity_list>.[n] Approaches to Foreground (Coming Closer) |
+              | **Z** | **$+Z$** | Moves toward the vanishing point | Entity Recedes into Background (Moving Away) |
           </vector_behavior_matrix>
-          <parallax_interaction_logic>
-            - **Distance $D(t)$**: The relative gap between Camera and Subject.
-            - **Conflict Check**:
-              * **High Impact / Collision**: If $\\vec{S} = -Z$ (Approaching) AND $\\vec{C} = +Z$ (Dolly In) -> $D(t)$ decreases rapidly. (Use for Intensity).
-              * **Sync / Tracking**: If $\\vec{S} = -Z$ (Approaching) AND $\\vec{C} = -Z$ (Dolly Out) -> $D(t)$ remains constant. (Use for Stability).
-              * **Chase / Follow**: If $\\vec{S} = +Z$ (Receding) AND $\\vec{C} = +Z$ (Dolly In) -> $D(t)$ remains constant. (Use for Pursuit).
-          </parallax_interaction_logic>
         </spatial_coordinate_grounding>
         <definition_table>
           | Cinematic Technique | Category | Axis | Vector ($\vec{C}$) | Physical Logic & Movement Constraints |
@@ -2188,14 +2171,6 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
         - **Goal**: Finalize the **Camera Vector ($\vec{C}$)** by cross-referencing the **Subject Vector ($\vec{S}$)** and **Risk Status** from <step_7_1_subject_vector_inference> with the <step_7_0_professional_camera_mechanics_definitions>.<definition_table>.
         - **Axis Conflict Rule (Anti-Distortion Protocol)**:
           - **Universal Logic**: To prevent "Latent Space Collapse," do not combine techniques that force the model to calculate two different types of perspective shifts on the same or interdependent axes.
-          - **The Strict Forbidden Matrix**:
-            * **[Spatial Y] + [Optical Z / Angular Y]**: (e.g., Pedestal + Rack Focus/Pan) **STRICTLY FORBIDDEN**. Causes "Geometric Shearing." The model rotates the background ($Z$-roll) to resolve the conflict between vertical linear move ($Y$) and depth/rotational shifts, destroying spatial realism.
-            * **[Spatial Z] + [Optical Z] (Excluding Dolly Zoom)**: (e.g., Dolly + Rack Focus/Crash Zoom) Forbidden. Overlapping depth operations on the Optical Axis cause "Focal Breathing" or hyper-acceleration artifacts.
-            * **[Spatial X] + [Angular Y]**: (e.g., Truck + Pan) Forbidden. Creates a "Motion Vector Conflict" where physical parallax ($X$-translation) and rotational perspective ($Y$-yaw) fight for dominance, resulting in a smeared background.
-            * **[Spatial Y] + [Angular X]**: (e.g., Pedestal + Tilt) Forbidden. Causes "Perspective Warping" where the horizon line bends unnaturally due to the conflict between vertical translation and vertical rotation.
-            * **[Spatial ALL] + [Any Category]**: (e.g., FPV/Bumper + Zoom/Pan) Forbidden. High-energy multi-axis moves already saturate the latent bandwidth; adding any extra delta triggers immediate "Latent Space Collapse".
-          - **The Dolly Zoom Protocol (The Only Z-Axis Exception)**:
-            - **Requirement**: You may combine **Spatial Z** and **Optical Z** ONLY IF they use **Inverse Vector Logic** (e.g., Dolly-In $+Z$ paired with Zoom-Out $-Z$) to maintain subject scale while warping the background.
         - **Logic Flow**:
           1. **Data Retrieval & Vector Decomposition**:
              - Fetch $\\vec{S}$ from <step_7_1_subject_vector_inference> and decompose into axis components:
@@ -2214,52 +2189,49 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
                * **IF $S_y$ is Up ($+Y$)** -> Output List: [\`Pedestal Up\`, \`Tilt Up\`]
                * **IF $S_y$ is Down ($-Y$)** -> Output List: [\`Pedestal Down\`, \`Tilt Down\`]
              - **Z-Axis Candidates ($C_z$)**:
-               * **IF $S_z$ is Approaching ($-Z$)** -> Output List: [\`Dolly Out\`, \`Static Frame\`]
-               * **IF $S_z$ is Receding ($+Z$)** -> Output List: [\`Dolly In\`, \`Static Frame\`]
+               * **IF $S_z$ is Toward ($-Z$)** -> Output List: [\`Dolly-Out\`]
+               * **IF $S_z$ is Away ($+Z$)** -> Output List: [\`Dolly-In\`]
+               * **IF $S_z$ is None ($0Z$)** -> Output List: [\`Static Frame\`]
              - **Static Subject Case**:
-               * **IF $\\vec{S}$ is Static ($0,0,0$)** -> Output List: [\`Static Frame\`, \`Slow Pan\`]
-          3. **The Filtration Protocol (Conflict Resolution)**:
-             - Apply the **Axis Conflict Rule** to filter the $\vec{C}_{cand}$ list.
-             - **Constraint Check**: Remove any candidate that conflicts with the currently selected Optical settings (e.g., if Optical Z is active, remove Spatial Z candidates).
-             - **Fallback Rule (Crucial)**: IF filtering removes ALL candidates, revert to the safest universal option: **"Handheld Shaky"** or **"Static Frame"**. DO NOT return an empty result.
-          4. **Final Selection & Output (Vector Logic & Vibe Split)**:
-             - **Logic**: Determine the Camera Vector ($\\vec{C}$) by calculating the relationship between the **Subject Vector ($\\vec{S}$)** and the **Intent** (Defined by \`INTENSITY_TIER\`), then applying a **Vibe Modifier** (Based on **Narrative Vibe**).
-             - **Selection Matrix by \`INTENSITY_TIER\`**:
-               * **\`INTENSITY_TIER\` = \`VERY_LOW\` (Intent: Stasis)**:
-                 - **Vector Rule**: Force $\\vec{C} = 0$.
-                 - **Base Select**: \`Static Frame\`.
-                 - **Vibe Modifier**:
-                   * If **Narrative Vibe** is Tense/Anxious: Add \`Handheld Shaky\`.
-                   * If **Narrative Vibe** is Emotional/Focus: Change Base to \`Rack Focus\`.
-                   * If **Narrative Vibe** is Grand/Observant: Keep \`Static Frame\` (Pure).
-               * **\`INTENSITY_TIER\` = \`LOW\` (Intent: Gentle Observation)**:
-                 - **Vector Rule**: Sync with $\\vec{S}$ (Parallax Sync).
-                 - **Base Select**: \`Dolly-In\`, \`Dolly-Out\`, \`Truck Left/Right\` (Match $\\vec{S}$).
-                 - **Vibe Modifier**:
-                   * If **Narrative Vibe** is Uneasy/Creepy: Add \`Handheld Shaky\`.
-                   * If **Narrative Vibe** is Dreamy/Surreal: Add \`Arc Orbit\` (Slow rotation around subject).
-                   * If **Narrative Vibe** is Intimate/Focus: Enforce \`Dolly-In\` (Slow push to subject).
-                   * If **Narrative Vibe** is Sad/Detached: Enforce \`Dolly-Out\` (Pulling away).
-               * **\`INTENSITY_TIER\` = \`HIGH\` (Intent: Active Pursuit/Impact)**:
-                 - **Vector Rule**: Pursuit (Same Direction) or Impact (Opposite Direction).
-                 - **Base Select**: \`Dolly-In/Out\`, \`Truck Left/Right\`, \`Pan Left/Right\`.
-                 - **Vibe Modifier**:
-                   * If **Narrative Vibe** is Chaotic/Combat: Add \`Handheld Shaky\`.
-                   * If **Narrative Vibe** is Heroic/Dynamic: Add \`Pedestal Up\` (Rising view).
-                   * If **Narrative Vibe** is Oppressive/Dominant: Add \`Pedestal Down\` (Lowers camera to make subject look huge).
-                   * If **Narrative Vibe** is Vertigo/Shock: Change Base to \`Dolly Zoom\` (Z-warp).
-               * **\`INTENSITY_TIER\` = \`VERY_HIGH\` (Intent: Chaos/Disorientation)**:
-                 - **Vector Rule**: Maximum Velocity.
-                 - **Base Select**: \`Crash Zoom In/Out\`, \`Pan Left/Right\` (Max Speed).
-                 - **Vibe Modifier**:
-                   * If **Narrative Vibe** is Catastrophic*: ALWAYS Add \`Handheld Shaky\`.
-                   * If **Narrative Vibe** is Speed/Rush*: Enforce \`Pan Left/Right\` to emphasize lateral velocity.
-             - **Combination Rule (Merge Logic)**:
-               * IF **Vibe Modifier** is a **Movement Technique** (e.g., \`Arc Orbit\`, \`Dolly-In/Out\`, \`Dolly Zoom\`, \`Pedestal Up/Down\`): 
-                 **OVERRIDE** the Base Select. (Use ONLY the Modifier).
-               * IF **Vibe Modifier** is a **Vibration/Filter** (e.g., \`Handheld Shaky\`): 
-                 **APPEND** to the Base Select. (Result: "Base + Modifier").
-             - **Mandatory Output**: Combine the selected Base Technique and Modifier into a valid string.
+               * **IF $\\vec{S}$ is Static ($0,0,0$)** -> Output List: [\`Static Frame\`]
+          3. **Selection & Optimization Protocol**:
+             - **Input**: The Candidate Lists ($C_x, C_y, C_z$) generated in **Component Mapping Strategy**.
+             - **Phase A: Context-Aware Draft Selection**:
+               * **Goal**: Select exactly ONE base candidate for each active axis.
+               * **Step 1: Z-Axis (The Foundation)**:
+                 - Follow **Z-Axis Candidates** selected in **Component Mapping Strategy (Generate Candidates Pool)**.
+               * **Step 2: X/Y-Axis Selection**:
+                 - Check $C_x$ and $C_y$.
+                 - IF \`INTENSITY_TIER\` is **HIGH/VERY_HIGH** -> Prioritize **Spatial** Candidates (\`Truck\`, \`Pedestal\`).
+                 - IF \`INTENSITY_TIER\` is **LOW/VERY_LOW** -> Prioritize **Angular** Candidates (\`Pan\`, \`Tilt\`).
+               * **Output**: A tentative Draft Combination (e.g., "Truck Left + Tilt Up + Dolly-In").
+             - **Phase B: The Strict Forbidden Matrix Validation**:
+               * **Goal**: Sanitize the Draft Combination against **The Strict Forbidden Matrix**.
+               - **The Strict Forbidden Matrix**:
+                 * **[Spatial Y] + [Optical Z / Angular Y]**: (e.g., Pedestal + Rack Focus/Pan) **STRICTLY FORBIDDEN**. Causes "Geometric Shearing." The model rotates the background ($Z$-roll) to resolve the conflict between vertical linear move ($Y$) and depth/rotational shifts, destroying spatial realism.
+                 * **[Spatial Z] + [Optical Z] (Excluding Dolly Zoom)**: (e.g., Dolly + Rack Focus/Crash Zoom) Forbidden. Overlapping depth operations on the Optical Axis cause "Focal Breathing" or hyper-acceleration artifacts.
+                 * **[Spatial X] + [Angular Y]**: (e.g., Truck + Pan) Forbidden. Creates a "Motion Vector Conflict" where physical parallax ($X$-translation) and rotational perspective ($Y$-yaw) fight for dominance, resulting in a smeared background.
+                 * **[Spatial Y] + [Angular X]**: (e.g., Pedestal + Tilt) Forbidden. Causes "Perspective Warping" where the horizon line bends unnaturally due to the conflict between vertical translation and vertical rotation.
+               * **Validation Logic**:
+                 - Compare the Draft against the Forbidden Rules (e.g., [Spatial X] + [Angular Y] is Forbidden).
+                 - **IF Conflict Found**:
+                   1. **Identify**: Which component is the 'Aggressor' causing conflict? (Usually the Angular/Vertical move).
+                   2. **Search Alternative**: Check The Candidate Lists from **Component Mapping Strategy** for that axis again.
+                      - Is a valid alternative available? (e.g., Swap \`Pan\` to \`Truck\`? Swap \`Tilt\` to \`Pedestal\`?).
+                      - **YES**: Perform the **SWAP**.
+                      - **NO**: **DROP** the conflicting axis component entirely to preserve the shot.
+               * **Constraint**: Unless Y-axis is demanded the most, always prioritize preserving **Spatial Z (Depth)** and **Spatial X (Lateral)** components over Y-axis.
+             - **Phase C: The Upgrade Protocol (Vibe Injection)**:
+               * **Goal**: Apply Special FX based on \`Narrative Vibe\` to the Validated Combination.
+               * **Rule 1: The Swap (Override Base)**:
+                 * IF \`INTENSITY_TIER\` is \`VERY_HIGH\` AND Base contains \`Dolly-In\` / \`Dolly-Out\`:
+                   * IF \`Narrative Vibe\` implies **'Vertigo'** or **'Shock'** -> REPLACE \`Dolly-In\` / \`Dolly-Out\` with **\`Dolly Zoom\`**.
+                   * ELSE -> REPLACE \`Dolly-In\` / \`Dolly-Out\` with **\`Crash Zoom In\` / \`Crash Zoom Out\`**.
+                 * IF \`Narrative Vibe\` implies **'Dreamy'** or **'Surreal'** AND Base contains \`Pan Left\` / \`Pan Right\` -> REPLACE \`Pan Left\` / \`Pan Right\` with **\`Arc Orbit\`**.
+                 * IF \`Narrative Vibe\` implies **'Emotional'** or **'Focus'** AND Base is \`Static Frame\` -> REPLACE with **\`Rack Focus\`**.
+               * **Rule 2: The Add-on (Texture)**:
+                 - IF \`Narrative Vibe\` implies Instability (e.g., **'Chaos'**, **'Combat'**, **'Anxious'**, **'Catastrophic'**) -> APPEND **\`Handheld Shaky\`** to the end string.
+               * **Final Output**: Assemble the final string (e.g., "Truck Left and Dolly-In with Handheld Shaky").
       </step_7_2_vector_matching_protocol>
       <step_7_3_cinematic_camera_vector_assembly>
         - **Goal**: Synthesize the finalized cinematic camera prompt into a seamless, natural language **Directorial Prose** that dictates the MMDiT engine's optical and spatial behavior.
@@ -2277,13 +2249,17 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
             * \`HIGH\`: "aggressively"
             * \`VERY_HIGH\`: "violently"
         - **[Slot_Connector: Interaction Verb] (The Bridge)**:
-          - **Logic**: Select a participle verb that mechanically aligns with the [Cinematic Technique] chosen in [Slot_2].
-          - **Mapping Rule (Refer to <definition_table>)**:
-            * IF [Slot_2] is **Z-axis/Approaching** (Dolly-In, Zoom In) -> Use "pushing toward" or "closing in on"
-            * IF [Slot_2] is **Z-axis/Receding** (Dolly-Out, Zoom Out) -> Use "pulling back from" or "revealing"
-            * IF [Slot_2] is **Lateral/Tracking** (Truck, Pan, Arc) -> Use "tracking" or "following"
-            * IF [Slot_2] is **Static/Optical** (Static, Rack Focus) -> Use "observing" or "focusing on"
-            * IF [Slot_2] is **Aggressive/High Energy** (Crash Zoom, Shaky) -> Use "rushing at" or "impactfully framing"
+          - **Logic**: Select a single participle verb based on the highest priority technique present in [Slot_2] to represent the dominant motion vector.
+          - **Mapping Rule (Hierarchical Selection)**:
+            1. **Priority 1: Depth Dynamics (Z-Axis)**:
+               * IF [Slot_2] contains **Approaching** (Dolly-In, Crash Zoom In, Dolly Zoom) -> Use "pushing toward" or "closing in on"
+               * IF [Slot_2] contains **Receding** (Dolly-Out, Crash Zoom Out) -> Use "pulling back from" or "revealing"
+            2. **Priority 2: Lateral & Vertical Tracking (X, Y-Axis)**:
+               * IF [Slot_2] contains **Tracking/Angular** (Truck Left, Truck Right, Pedestal Up, Pedestal Down, Pan Left, Pan Right, Tilt Up, Tile Down, Arc Orbit) AND Priority 1 is empty -> Use "tracking" or "following"
+            3. **Priority 3: Static & Focal Observation**:
+               * IF [Slot_2] is **Static/Optical** (Static Frame, Rack Focus) AND Priorities 1-2 are empty -> Use "observing" or "focusing on"
+            4. **Priority 4: Kinetic Intensity Override**:
+               * IF \`INTENSITY_TIER\` is **VERY_HIGH** AND [Slot_2] does NOT contain Receding vectors -> Use "rushing at" or "impactfully framing"
         - **[Slot_4: Trajectory Focus & Anchor] (Spatial Target)**:
           - **Source**: The valid anchor from Step 2 (Either the \`Mapping Handle\` from <step_2_1_entity_driven_mapping> OR the \`Location Archetype\` from <step_2_2_environment_driven_anchor>).
           - **Logic**: Define the relationship between the camera and the target. IF <entity_list>.length == 0, focus on the "Environment Core" (e.g., "tracking the canyon's depth").
