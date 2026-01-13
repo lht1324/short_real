@@ -2197,15 +2197,27 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
           - **The Dolly Zoom Protocol (The Only Z-Axis Exception)**:
             - **Requirement**: You may combine **Spatial Z** and **Optical Z** ONLY IF they use **Inverse Vector Logic** (e.g., Dolly-In $+Z$ paired with Zoom-Out $-Z$) to maintain subject scale while warping the background.
         - **Logic Flow**:
-          1. **Data Retrieval**: Fetch the $\vec{S}$ category (**Toward**, **Away**, **Lateral**, **Vertical**, **Static**) and the [Risk Status] from <step_7_1_subject_vector_inference>.
-          2. **$D(t)$ Management Strategy (Depth Conservation)**:
-             - **IF $\\vec{S}$ is "Approaching ($-Z$)"**: 
-               - To Maintain $D(t)$ (Sync): Select $\\vec{C}$ with **$-Z$** (Move Outward).
-               - To Amplify Impact (Collision): Select $\\vec{C}$ with **$+Z$** (Move Inward).
-             - **IF $\\vec{S}$ is "Receding ($+Z$)"**:
-               - To Maintain $D(t)$ (Chase): Select $\\vec{C}$ with **$+Z$** (Move Inward).
-               - To Widen Context (Reveal): Select $\\vec{C}$ with **$-Z$** (Move Outward).
-             - **IF $\\vec{S}$ is "Lateral/Vertical"**: Select $\\vec{C}$ matching the Subject's Axis ($\\pm X$ or $\\pm Y$) to track.
+          1. **Data Retrieval & Vector Decomposition**:
+             - Fetch $\\vec{S}$ from <step_7_1_subject_vector_inference> and decompose into axis components:
+               * **$S_x$**: Horizontal movement (Left($-X$)/Right($+X$)/None($0X$))
+               * **$S_y$**: Vertical movement (Down($-Y$)/Up($+Y$)/None($0Y$))
+               * **$S_z$**: Depth movement (Toward($-Z$)/Away($+Z$)/None($0Z$))
+          2. **Component Mapping Strategy (Generate Candidates Pool)**:
+             - **Action**: For each non-zero component of $\\vec{S}$, you must **OUTPUT ALL** valid Camera Counter-Parts into a candidate list.
+             - **Constraint**: Do NOT select one yet. Pass the full list to the next step.
+             Iterate through X, Y, and Z axes:
+             - **Rule**: Generate candidates ONLY for axes where $\\vec{S}$ has a non-zero component.
+             - **X-Axis Candidates ($C_x$)**:
+               * **IF $S_x$ is Left ($-X$)** -> Output List: [\`Truck Left\`, \`Pan Left\`]
+               * **IF $S_x$ is Right ($+X$)** -> Output List: [\`Truck Right\`, \`Pan Right\`]
+             - **Y-Axis Candidates ($C_y$)**:
+               * **IF $S_y$ is Up ($+Y$)** -> Output List: [\`Pedestal Up\`, \`Tilt Up\`]
+               * **IF $S_y$ is Down ($-Y$)** -> Output List: [\`Pedestal Down\`, \`Tilt Down\`]
+             - **Z-Axis Candidates ($C_z$)**:
+               * **IF $S_z$ is Approaching ($-Z$)** -> Output List: [\`Dolly Out\`, \`Static Frame\`]
+               * **IF $S_z$ is Receding ($+Z$)** -> Output List: [\`Dolly In\`, \`Static Frame\`]
+             - **Static Subject Case**:
+               * **IF $\\vec{S}$ is Static ($0,0,0$)** -> Output List: [\`Static Frame\`, \`Slow Pan\`]
           3. **The Filtration Protocol (Conflict Resolution)**:
              - Apply the **Axis Conflict Rule** to filter the $\vec{C}_{cand}$ list.
              - **Constraint Check**: Remove any candidate that conflicts with the currently selected Optical settings (e.g., if Optical Z is active, remove Spatial Z candidates).
