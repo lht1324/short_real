@@ -229,40 +229,56 @@ const videoGenResponseFormat: OpenAI.ResponseFormatJSONSchema = {
                             properties: {
                                 // Subject & Camera Axis Ref: [X: Screen Left <-> Screen Right], [Y: Screen Bottom <-> Screen Top], [Z: Deep Background <-> Screen Surface]
                                 selected_camera_actions: {
-                                    type: "array",
-                                    items: {
-                                        type: "object",
-                                        properties: {
-                                            camera_action: { type: "string" },
-                                            camera_action_reason: { type: "string" },
+                                    type: "object",
+                                    properties: {
+                                        camera_action: { type: "string" },
+                                        vector_matching_protocol_logic_flow: {
+                                            type: "object",
+                                            properties: {
+                                                data_retrieval_and_vector_decomposition_reason: { type: "string" },
+                                                data_retrieval_and_vector_decomposition_result: { type: "string" },
+                                                component_mapping_strategy: {
+                                                    type: "object",
+                                                    properties: {
+                                                        sx_input: { type: "string" },
+                                                        sx_output: { type: "string" },
+                                                        sy_input: { type: "string" },
+                                                        sy_output: { type: "string" },
+                                                        sz_input: { type: "string" },
+                                                        sz_output: { type: "string" },
+                                                        candidates: { type: "string" },
+                                                    },
+                                                    required: ["sx_input", "sx_output", "sy_input", "sy_output", "sz_input", "sz_output", "candidates"],
+                                                    additionalProperties: false
+                                                },
+                                                selection_and_optimization_protocol: {
+                                                    type: "object",
+                                                    properties: {
+                                                        phase_a_result: { type: "string" },
+                                                        phase_a_reason: { type: "string" },
+                                                        phase_b_result: { type: "string" },
+                                                        phase_b_reason: { type: "string" },
+                                                        phase_c_result: { type: "string" },
+                                                        phase_c_reason: { type: "string" },
+                                                        phase_d_result: { type: "string" },
+                                                        phase_d_reason: { type: "string" },
+                                                        phase_e_result: { type: "string" },
+                                                        phase_e_reason: { type: "string" },
+                                                    },
+                                                    required: ["phase_a_result", "phase_a_reason", "phase_b_result", "phase_b_reason", "phase_c_result", "phase_c_reason", "phase_d_result", "phase_d_reason", "phase_e_result", "phase_e_reason"],
+                                                    additionalProperties: false
+                                                }
+                                            },
+                                            required: ["data_retrieval_and_vector_decomposition_reason", "data_retrieval_and_vector_decomposition_result", "component_mapping_strategy", "selection_and_optimization_protocol"],
+                                            additionalProperties: false
                                         },
-                                        required: ["camera_action", "camera_action_reason"],
-                                        additionalProperties: false,
                                     },
-                                },
-                                subject_delta: {
-                                    type: "object",
-                                    properties: {
-                                        x: { type: "string" },
-                                        y: { type: "string" },
-                                        z: { type: "string" },
-                                    },
-                                    required: ["x", "y", "z"],
-                                    additionalProperties: false,
-                                },
-                                camera_delta: {
-                                    type: "object",
-                                    properties: {
-                                        x: { type: "string" },
-                                        y: { type: "string" },
-                                        z: { type: "string" },
-                                    },
-                                    required: ["x", "y", "z"],
+                                    required: ["camera_action", "vector_matching_protocol_logic_flow"],
                                     additionalProperties: false,
                                 },
                                 vector_reasoning: { type: "string" },
                             },
-                            required: ["selected_camera_actions", "subject_delta", "camera_delta", "vector_reasoning"],
+                            required: ["selected_camera_actions", "vector_reasoning"],
                             additionalProperties: false,
                         },
                         style: {
@@ -1052,18 +1068,32 @@ Instruction: Generate the scene instruction JSON.
                         }[];
                         cinematic_camera_vectors: {
                             selected_camera_actions: {
+                                vector_matching_protocol_logic_flow: {
+                                    data_retrieval_and_vector_decomposition_reason: string;
+                                    data_retrieval_and_vector_decomposition_result: string;
+                                    component_mapping_strategy: {
+                                        sx_input: string;
+                                        sx_output: string;
+                                        sy_input: string;
+                                        sy_output: string;
+                                        sz_input: string;
+                                        sz_output: string;
+                                        candidates: string;
+                                    }
+                                    selection_and_optimization_protocol: {
+                                        phase_a_result: string;
+                                        phase_a_reason: string;
+                                        phase_b_result: string;
+                                        phase_b_reason: string;
+                                        phase_c_result: string;
+                                        phase_c_reason: string;
+                                        phase_d_result: string;
+                                        phase_d_reason: string;
+                                        phase_e_result: string;
+                                        phase_e_reason: string;
+                                    }
+                                };
                                 camera_action: string;
-                                camera_action_reason: string;
-                            }[];
-                            subject_delta: {
-                                x: string;
-                                y: string;
-                                z: string;
-                            };
-                            camera_delta: {
-                                x: string;
-                                y: string;
-                                z: string;
                             };
                             vector_reasoning: string,
                         };
@@ -1094,8 +1124,6 @@ Instruction: Generate the scene instruction JSON.
                     atmospheric_lighting_delta: atmosphericLightingDelta,
                     cinematic_camera_vectors: {
                         selected_camera_actions: selectedCameraActions,
-                        subject_delta: subjectDelta,
-                        camera_delta: cameraDelta,
                         vector_reasoning: vectorReasoning,
                     },
                     style: {
@@ -1105,6 +1133,35 @@ Instruction: Generate the scene instruction JSON.
                         slot_2_reason: slot2Reason,
                     }
                 } = parsedJson.logical_bridge;
+
+                const {
+                    camera_action: cameraAction,
+                    vector_matching_protocol_logic_flow: {
+                        data_retrieval_and_vector_decomposition_reason: dataRetrievalAndVectorDecompositionReason,
+                        data_retrieval_and_vector_decomposition_result: dataRetrievalAndVectorDecompositionResult,
+                        component_mapping_strategy: {
+                            sx_input: sxInput,
+                            sx_output: sxOutput,
+                            sy_input: syInput,
+                            sy_output: syOutput,
+                            sz_input: szInput,
+                            sz_output: szOutput,
+                            candidates,
+                        },
+                        selection_and_optimization_protocol: {
+                            phase_a_result: phaseAResult,
+                            phase_a_reason: phaseAReason,
+                            phase_b_result: phaseBResult,
+                            phase_b_reason: phaseBReason,
+                            phase_c_result: phaseCResult,
+                            phase_c_reason: phaseCReason,
+                            phase_d_result: phaseDResult,
+                            phase_d_reason: phaseDReason,
+                            phase_e_result: phaseEResult,
+                            phase_e_reason: phaseEReason,
+                        }
+                    }
+                } = selectedCameraActions;
 
 
                 console.log(`Scene #${sceneNumber} postVideoGenPrompt() Result`);
@@ -1154,19 +1211,22 @@ Instruction: Generate the scene instruction JSON.
                 }
 
                 console.log("- - - Cinematic Camera Vectors - - -");
-                if (selectedCameraActions.length !== 0) {
-                    selectedCameraActions.forEach((cameraActionData, index) => {
-                        const {
-                            camera_action: cameraAction,
-                            camera_action_reason: cameraActionReason,
-                        } = cameraActionData;
-
-                        console.log(`Camera Action ${index + 1}: ${cameraAction}`);
-                        console.log(`Camera Action ${index + 1} Reason: ${cameraActionReason}`);
-                    })
-                }
-                console.log(`Subject Delta: ${subjectDelta.x}, ${subjectDelta.y}, ${subjectDelta.z}`);
-                console.log(`Camera Delta: ${cameraDelta.x}, ${cameraDelta.y}, ${cameraDelta.z}`);
+                console.log(`Camera Action: ${cameraAction}`);
+                console.log(`Data Retrieval And Vector Result: ${dataRetrievalAndVectorDecompositionResult}`);
+                console.log(`Data Retrieval And Vector Reason: ${dataRetrievalAndVectorDecompositionReason}`);
+                console.log(`Component Mapping Strategy Input: [${sxInput}, ${syInput}, ${szInput}]`);
+                console.log(`Component Mapping Strategy Output: [${sxOutput}, ${syOutput}, ${szOutput}]`);
+                console.log(`Component Mapping Strategy Candidates: ${candidates}`);
+                console.log(`Phase A Result: ${phaseAResult}`)
+                console.log(`Phase A Reason: ${phaseAReason}`)
+                console.log(`Phase B Result: ${phaseBResult}`)
+                console.log(`Phase B Reason: ${phaseBReason}`)
+                console.log(`Phase C Result: ${phaseCResult}`)
+                console.log(`Phase C Reason: ${phaseCReason}`)
+                console.log(`Phase D Result: ${phaseDResult}`)
+                console.log(`Phase D Reason: ${phaseDReason}`)
+                console.log(`Phase E Result: ${phaseEResult}`)
+                console.log(`Phase E Reason: ${phaseEReason}`)
                 console.log(`Camera Vectors Reasoning: ${vectorReasoning}`);
 
                 console.log("- - - Style - - -");
