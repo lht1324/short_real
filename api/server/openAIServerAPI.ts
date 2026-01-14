@@ -246,9 +246,8 @@ const videoGenResponseFormat: OpenAI.ResponseFormatJSONSchema = {
                                                         sy_output: { type: "string" },
                                                         sz_input: { type: "string" },
                                                         sz_output: { type: "string" },
-                                                        candidates: { type: "string" },
                                                     },
-                                                    required: ["sx_input", "sx_output", "sy_input", "sy_output", "sz_input", "sz_output", "candidates"],
+                                                    required: ["sx_input", "sx_output", "sy_input", "sy_output", "sz_input", "sz_output"],
                                                     additionalProperties: false
                                                 },
                                                 selection_and_optimization_protocol: {
@@ -1078,7 +1077,6 @@ Instruction: Generate the scene instruction JSON.
                                         sy_output: string;
                                         sz_input: string;
                                         sz_output: string;
-                                        candidates: string;
                                     }
                                     selection_and_optimization_protocol: {
                                         phase_a_result: string;
@@ -1146,7 +1144,6 @@ Instruction: Generate the scene instruction JSON.
                             sy_output: syOutput,
                             sz_input: szInput,
                             sz_output: szOutput,
-                            candidates,
                         },
                         selection_and_optimization_protocol: {
                             phase_a_result: phaseAResult,
@@ -1216,7 +1213,6 @@ Instruction: Generate the scene instruction JSON.
                 console.log(`Data Retrieval And Vector Reason: ${dataRetrievalAndVectorDecompositionReason}`);
                 console.log(`Component Mapping Strategy Input: [${sxInput}, ${syInput}, ${szInput}]`);
                 console.log(`Component Mapping Strategy Output: [${sxOutput}, ${syOutput}, ${szOutput}]`);
-                console.log(`Component Mapping Strategy Candidates: ${candidates}`);
                 console.log(`Phase A Result: ${phaseAResult}`)
                 console.log(`Phase A Reason: ${phaseAReason}`)
                 console.log(`Phase B Result: ${phaseBResult}`)

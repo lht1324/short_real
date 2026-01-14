@@ -2001,7 +2001,7 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
            - **Rule**: You may ONLY generate particles if the **Source Material** exists in the scene or is extracted from the Environment.
            - *Example*: Do NOT generate "Sand" in a "Space Station". Do NOT generate "Rain" indoors unless there's a leak.
         3. **Stage 3: Optical Counter-Flow Rule**:
-           - **Physical Moves ($\vec{C} \neq 0$)**: Particles move in the **Opposite Direction** of the Camera Vector (e.g., Dolly-In +Z → Flow -Z).
+           - **Physical Moves ($\vec{C} \neq 0$)**: Particles move in the **Opposite Direction** of the Camera Vector.
            - **Optical Moves (Rack Focus / Zoom)**: Particles must move **Radially** (Expand/Contract) or **Drift Laterally** to emphasize the lens change. Do NOT invent a "Reverse Z" flow for a non-spatial move.
       - **Omission Protocol**:
         IF **The 3-Stage Visibility Protocol** failed, leave both **[Slot_1]** and **[Slot_2]** as **"NONE"**, and directly skip to **[Slot_3: Volumetric Lighting Anchor] (The Depth Foundation)**.
@@ -2010,7 +2010,7 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
         - **Logic**: Describe the medium's reaction using **present continuous (-ing)** verbs.
       - **[Slot_2: Camera-Atmosphere Flow]**:
         - **Counter-Flow Rule**: Describe particle flow relative to the lens strictly following the **Stage 3: Optical Counter-Flow Rule** (Radial/Lateral for Optical, Opposite for Physical).
-        - **Logic**: Describe particle flow relative to the lens based on the rule (e.g., Dolly-In $+Z → Flow $-Z$).
+        - **Logic**: Describe particle flow relative to the lens based on the rule.
       - **[Slot_3: Volumetric Lighting Anchor] (The Depth Foundation)**:
         - **Logic**: Select the lighting style that best amplifies the **Narrative Vibe** (from <step_0_kinetic_energy_profiling>.<step_0_1_scene_blueprint>) while respecting physical consistency.
         - **Source Mapping**:
@@ -2088,7 +2088,8 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
         <spatial_coordinate_grounding>
           <master_rule_vector_supremacy>
             - **Physical Law**: All Camera Vectors ($\vec{C}$) MUST be mathematically derived from Subject Vectors ($\vec{S}$) to maintain spatial logic.
-            - **Logic Over Flair**: You MUST strictly follow below rules to extract proper [Cinematic Technique]s. Do NOT follow impression. 
+            - **Logic Over Flair**: You MUST strictly follow below rules to extract proper [Cinematic Technique]s. Do NOT follow impression.
+            - **\`Dolly-In\` Warning**: \`Dolly-In\` is not a master key for every situation. You MUST follow below logics strictly. Unless the result of below logic includes \`Dolly-In\`, then use it.
           </master_rule_vector_supremacy>
           <fundamental_definitions>
             - **Origin (0,0,0)**: The exact center of the 2D Screen Frame at t=0.
@@ -2174,26 +2175,26 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
         - **Logic Flow**:
           1. **Data Retrieval & Vector Decomposition**:
              - Fetch $\vec{S}$ from <step_7_1_subject_vector_inference> and decompose into axis components:
-               * **$S_x$**: Horizontal movement (Left($-X$)/Right($+X$)/None($0X$))
-               * **$S_y$**: Vertical movement (Down($-Y$)/Up($+Y$)/None($0Y$))
-               * **$S_z$**: Depth movement (Toward($-Z$)/Away($+Z$)/None($0Z$))
+               * **$S_x$**: Horizontal movement ($-X$/$0X$/$+X$)
+               * **$S_y$**: Vertical movement ($-Y$/$0Y$/$+Y$)
+               * **$S_z$**: Depth movement ($-Z$/$0Z$/$+Z$)
           2. **Component Mapping Strategy (Generate Candidates Pool)**:
              - **Action**: For each non-zero component of $\vec{S}$, you must **OUTPUT ALL** valid Camera Counter-Parts into a candidate set.
              - **Constraint**: Do NOT select one yet. Pass the full list to the next step.
              - **Iteration through X, Y, and Z axes**:
                - **Rule**: Generate candidates ONLY for axes where $\vec{S}$ has a non-zero component.
                * **X-Axis Candidates ($C_x$)**:
-                 * **IF $S_x$ is Left ($-X$)** -> Output List: [\`Truck Left\`, \`Pan Left\`]
-                 * **IF $S_x$ is None ($0X$)** -> Output List: [\`None\`]
-                 * **IF $S_x$ is Right ($+X$)** -> Output List: [\`Truck Right\`, \`Pan Right\`]
+                 * **IF $S_x$ is $-X$** -> Output List: [\`Truck Left\`, \`Pan Left\`]
+                 * **IF $S_x$ is $0X$** -> Output List: [\`None\`]
+                 * **IF $S_x$ is $+X$** -> Output List: [\`Truck Right\`, \`Pan Right\`]
                * **Y-Axis Candidates ($C_y$)**:
-                 * **IF $S_y$ is Down ($-Y$)** -> Output List: [\`Pedestal Down\`, \`Tilt Down\`]
-                 * **IF $S_y$ is None ($0Y$)** -> Output List: [\`None\`]
-                 * **IF $S_y$ is Up ($+Y$)** -> Output List: [\`Pedestal Up\`, \`Tilt Up\`]
+                 * **IF $S_y$ is $-Y$** -> Output List: [\`Pedestal Down\`, \`Tilt Down\`]
+                 * **IF $S_y$ is $0Y$** -> Output List: [\`None\`]
+                 * **IF $S_y$ is $+Y$** -> Output List: [\`Pedestal Up\`, \`Tilt Up\`]
                * **Z-Axis Candidates ($C_z$)**:
-                 * **IF $S_z$ is Toward ($-Z$)** -> Output List: [\`Dolly-Out\`]
-                 * **IF $S_z$ is None ($0Z$)** -> Output List: [\`None\`]
-                 * **IF $S_z$ is Away ($+Z$)** -> Output List: [\`Dolly-In\`]
+                 * **IF $S_z$ is $-Z$** -> Output List: [\`Dolly-Out\`]
+                 * **IF $S_z$ is $0Z$** -> Output List: [\`None\`]
+                 * **IF $S_z$ is $+Z$** -> Output List: [\`Dolly-In\`]
                - **Selection Examples by ($S_x$, $S_y$, $S_z$)**:
                  * ($-X$, $-Y$, $-Z$) -> [[\`Truck Left\`, \`Pan Left\`], [\`Pedestal Down\`, \`Tilt Down\`], [\`Dolly-Out\`]]
                  * ($-X$, $-Y$, $0Z$) -> [[\`Truck Left\`, \`Pan Left\`], [\`Pedestal Down\`, \`Tilt Down\`], [\`None\`]]
@@ -2341,11 +2342,6 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
         - **The Cinematic Camera Formula ([Cinematic Camera Vector] of **Component Definition** in <step_1_core_synthesis_principles>)**:
           - **Assembly**: "[Slot_1], [Slot_2] [Slot_3] [Slot_Connector] [Slot_4]"
           - **Constraint**: The final output MUST be a single, organic sentence. Do not use technical markers, brackets(\`[]\`) or symbol(e.g, \`+\`). Ensure a natural flow.
-        - **Final Assembly Examples by \`INTENSITY_TIER\`**:
-          * **\`VERY_LOW\`**: "Macro lens with tight 4:5 framing, Static Frame and subtle Rack Focus steadily observing the blooming petal"
-          * **\`LOW\`**: "Wide angle lens with 16:9 cinematic framing, Truck Right smoothly tracking the walking pedestrian"
-          * **\`HIGH\`**: "Anamorphic lens with 9:16 portrait cinema, Dolly-In and Handheld Shaky aggressively pushing toward the wingsuit jumper"
-          * **\`VERY_HIGH\`**: "FPV Drone lens with 16:9 immersive framing, FPV Drone Shot and Handheld Shaky violently chasing the speeding sports car"
       </step_7_3_cinematic_camera_vector_assembly>
       <constraint>
         - **Logic Flow Supremacy**:
@@ -2442,13 +2438,24 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
               "data_retrieval_and_vector_decomposition_reason": "string (Identify Subject orientation and translation: e.g., 'Entity[1] moving towards Screen Surface = Sz is (+)')",
               "data_retrieval_and_vector_decomposition_result": "string (Current S-Vector: [$S_x ($-X$, $0X$, $+X$), S_y ($-Y$, $0Y$, $+Y$), S_z$ ($-Z$, $0Z$, $+Z$)])",
               "component_mapping_strategy": {
+                // * **X-Axis Candidates ($C_x$)**:
+                //   * **IF $S_x$ is $-X$** -> Output List: [\`Truck Left\`, \`Pan Left\`]
+                //   * **IF $S_x$ is $0X$** -> Output List: [\`None\`]
+                //   * **IF $S_x$ is $+X$** -> Output List: [\`Truck Right\`, \`Pan Right\`]
+                // * **Y-Axis Candidates ($C_y$)**:
+                //   * **IF $S_y$ is $-Y$** -> Output List: [\`Pedestal Down\`, \`Tilt Down\`]
+                //   * **IF $S_y$ is $0Y$** -> Output List: [\`None\`]
+                //   * **IF $S_y$ is $+Y$** -> Output List: [\`Pedestal Up\`, \`Tilt Up\`]
+                // * **Z-Axis Candidates ($C_z$)**:
+                //   * **IF $S_z$ is $-Z$** -> Output List: [\`Dolly-Out\`]
+                //   * **IF $S_z$ is $0Z$** -> Output List: [\`None\`]
+                //   * **IF $S_z$ is $+Z$** -> Output List: [\`Dolly-In\`]
                 "sx_input": "enum (["$-X$", "$0X$", "$+X$"])",
-                "sx_output": "enum (["[\`Truck Left\`, \`Pan Left\`]", "[\`None\`]", "[\`Truck Right\`, \`Pan Right\`]"])",
+                "sx_output": "enum (["[\`Truck Left\`, \`Pan Left\`]", "[\`None\`]", "[\`Truck Right\`, \`Pan Right\`]"])", // Check again that you chose right action by \`sx_input\` and **X-Axis Candidates ($C_x$)**.
                 "sy_input": "enum (["$-Y$", "$0Y$", "$+Y$"])",
-                "sy_output": "enum (["[\`Pedestal Down\`, \`Tilt Down\`]", "[\`None\`]", "[\`Pedestal Up\`, \`Tilt Up\`]"])",
+                "sy_output": "enum (["[\`Pedestal Down\`, \`Tilt Down\`]", "[\`None\`]", "[\`Pedestal Up\`, \`Tilt Up\`]"])", // Check again that you chose right action by \`sy_input\` and **Y-Axis Candidates ($C_y$)**.
                 "sz_input": "enum (["$-Z$", "$0Z$", "$+Z$"])",
-                "sz_output": "enum (["[\`Dolly-Out\`]", "[\`None\`]", "[\`Dolly-In\`]"])",
-                "candidates": "string (Formatted [\`sx_output\`, \`sy_output\`, \`sz_output\`])"
+                "sz_output": "enum (["[\`Dolly-Out\`]", "[\`None\`]", "[\`Dolly-In\`]"])", // Check again that you chose right action by \`sz_input\` and **Z-Axis Candidates ($C_z$)**.
               }
               "selection_and_optimization_protocol": {
                 "phase_a_reason": "string (Explain the mapping choice: Why Spatial vs. Angular was selected for the identified Intensity)",
