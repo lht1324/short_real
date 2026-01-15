@@ -231,48 +231,248 @@ const videoGenResponseFormat: OpenAI.ResponseFormatJSONSchema = {
                                 selected_camera_actions: {
                                     type: "object",
                                     properties: {
-                                        camera_action: { type: "string" },
-                                        vector_matching_protocol_logic_flow: {
-                                            type: "object",
-                                            properties: {
-                                                data_retrieval_and_vector_decomposition_reason: { type: "string" },
-                                                data_retrieval_and_vector_decomposition_result: { type: "string" },
-                                                component_mapping_strategy: {
-                                                    type: "object",
-                                                    properties: {
-                                                        sx_input: { type: "string" },
-                                                        sx_output: { type: "string" },
-                                                        sy_input: { type: "string" },
-                                                        sy_output: { type: "string" },
-                                                        sz_input: { type: "string" },
-                                                        sz_output: { type: "string" },
-                                                    },
-                                                    required: ["sx_input", "sx_output", "sy_input", "sy_output", "sz_input", "sz_output"],
-                                                    additionalProperties: false
-                                                },
-                                                selection_and_optimization_protocol: {
-                                                    type: "object",
-                                                    properties: {
-                                                        phase_a_result: { type: "string" },
-                                                        phase_a_reason: { type: "string" },
-                                                        phase_b_result: { type: "string" },
-                                                        phase_b_reason: { type: "string" },
-                                                        phase_c_result: { type: "string" },
-                                                        phase_c_reason: { type: "string" },
-                                                        phase_d_result: { type: "string" },
-                                                        phase_d_reason: { type: "string" },
-                                                        phase_e_result: { type: "string" },
-                                                        phase_e_reason: { type: "string" },
-                                                    },
-                                                    required: ["phase_a_result", "phase_a_reason", "phase_b_result", "phase_b_reason", "phase_c_result", "phase_c_reason", "phase_d_result", "phase_d_reason", "phase_e_result", "phase_e_reason"],
-                                                    additionalProperties: false
-                                                }
-                                            },
-                                            required: ["data_retrieval_and_vector_decomposition_reason", "data_retrieval_and_vector_decomposition_result", "component_mapping_strategy", "selection_and_optimization_protocol"],
-                                            additionalProperties: false
+                                        camera_action: {
+                                            type: "string",
+                                            enum: [
+                                                "Dolly-Out", "Dolly-Out with Handheld Shaky",
+                                                "Dolly-Out and Pan Left", "Dolly-Out and Pan Left with Handheld Shaky",
+                                                "Dolly-Out and Pan Right", "Dolly-Out and Pan Right with Handheld Shaky",
+                                                "Dolly-Out and Pedestal Down", "Dolly-Out and Pedestal Down with Handheld Shaky",
+                                                "Dolly-Out and Pedestal Up", "Dolly-Out and Pedestal Up with Handheld Shaky",
+                                                "Dolly-Out and Tilt Down", "Dolly-Out and Tilt Down with Handheld Shaky",
+                                                "Dolly-Out and Tilt Up", "Dolly-Out and Tilt Up with Handheld Shaky",
+                                                "Dolly-Out and Truck Left", "Dolly-Out and Truck Left with Handheld Shaky",
+                                                "Dolly-Out and Truck Right", "Dolly-Out and Truck Right with Handheld Shaky",
+                                                "Dolly-In", "Dolly-In with Handheld Shaky",
+                                                "Dolly-In and Pan Left", "Dolly-In and Pan Left with Handheld Shaky",
+                                                "Dolly-In and Pan Right", "Dolly-In and Pan Right with Handheld Shaky",
+                                                "Dolly-In and Pedestal Down", "Dolly-In and Pedestal Down with Handheld Shaky",
+                                                "Dolly-In and Pedestal Up", "Dolly-In and Pedestal Up with Handheld Shaky",
+                                                "Dolly-In and Tilt Down", "Dolly-In and Tilt Down with Handheld Shaky",
+                                                "Dolly-In and Tilt Up", "Dolly-In and Tilt Up with Handheld Shaky",
+                                                "Dolly-In and Truck Left", "Dolly-In and Truck Left with Handheld Shaky",
+                                                "Dolly-In and Truck Right", "Dolly-In and Truck Right with Handheld Shaky",
+                                                "Static Frame", "Static Frame with Handheld Shaky",
+                                                "Dolly Zoom", "Dolly Zoom with Handheld Shaky",
+                                                "Dolly Zoom and Pan Left", "Dolly Zoom and Pan Left with Handheld Shaky",
+                                                "Dolly Zoom and Pan Right", "Dolly Zoom and Pan Right with Handheld Shaky",
+                                                "Dolly Zoom and Pedestal Down", "Dolly Zoom and Pedestal Down with Handheld Shaky",
+                                                "Dolly Zoom and Pedestal Up", "Dolly Zoom and Pedestal Up with Handheld Shaky",
+                                                "Dolly Zoom and Tilt Down", "Dolly Zoom and Tilt Down with Handheld Shaky",
+                                                "Dolly Zoom and Tilt Up", "Dolly Zoom and Tilt Up with Handheld Shaky",
+                                                "Dolly Zoom and Truck Left", "Dolly Zoom and Truck Left with Handheld Shaky",
+                                                "Dolly Zoom and Truck Right", "Dolly Zoom and Truck Right with Handheld Shaky",
+                                                "Crash Zoom Out", "Crash Zoom Out with Handheld Shaky",
+                                                "Crash Zoom Out and Pan Left", "Crash Zoom Out and Pan Left with Handheld Shaky",
+                                                "Crash Zoom Out and Pan Right", "Crash Zoom Out and Pan Right with Handheld Shaky",
+                                                "Crash Zoom Out and Truck Left", "Crash Zoom Out and Truck Left with Handheld Shaky",
+                                                "Crash Zoom Out and Truck Right", "Crash Zoom Out and Truck Right with Handheld Shaky",
+                                                "Crash Zoom In", "Crash Zoom In with Handheld Shaky",
+                                                "Crash Zoom In and Pan Left", "Crash Zoom In and Pan Left with Handheld Shaky",
+                                                "Crash Zoom In and Pan Right", "Crash Zoom In and Pan Right with Handheld Shaky",
+                                                "Crash Zoom In and Truck Left", "Crash Zoom In and Truck Left with Handheld Shaky",
+                                                "Crash Zoom In and Truck Right", "Crash Zoom In and Truck Right with Handheld Shaky",
+                                                "Arc Orbit", "Arc Orbit with Handheld Shaky",
+                                                "Arc Orbit and Tilt Down", "Arc Orbit and Tilt Down with Handheld Shaky",
+                                                "Arc Orbit and Tilt Up", "Arc Orbit and Tilt Up with Handheld Shaky",
+                                                "Pan Left", "Pan Left with Handheld Shaky",
+                                                "Pan Right", "Pan Right with Handheld Shaky",
+                                                "Truck Left", "Truck Left with Handheld Shaky",
+                                                "Truck Left and Pedestal Down", "Truck Left and Pedestal Down with Handheld Shaky",
+                                                "Truck Left and Pedestal Up", "Truck Left and Pedestal Up with Handheld Shaky",
+                                                "Truck Left and Tilt Down", "Truck Left and Tilt Down with Handheld Shaky",
+                                                "Truck Left and Tilt Up", "Truck Left and Tilt Up with Handheld Shaky",
+                                                "Truck Right", "Truck Right with Handheld Shaky",
+                                                "Truck Right and Pedestal Down", "Truck Right and Pedestal Down with Handheld Shaky",
+                                                "Truck Right and Pedestal Up", "Truck Right and Pedestal Up with Handheld Shaky",
+                                                "Truck Right and Tilt Down", "Truck Right and Tilt Down with Handheld Shaky",
+                                                "Truck Right and Tilt Up", "Truck Right and Tilt Up with Handheld Shaky",
+                                                "Pedestal Down", "Pedestal Down with Handheld Shaky",
+                                                "Pedestal Up", "Pedestal Up with Handheld Shaky",
+                                                "Tilt Down", "Tilt Down with Handheld Shaky",
+                                                "Tilt Up", "Tilt Up with Handheld Shaky",
+                                                "Rack Focus", "Rack Focus with Handheld Shaky",
+                                                "Rack Focus and Pan Left", "Rack Focus and Pan Left with Handheld Shaky",
+                                                "Rack Focus and Pan Right", "Rack Focus and Pan Right with Handheld Shaky",
+                                                "Rack Focus and Truck Left", "Rack Focus and Truck Left with Handheld Shaky",
+                                                "Rack Focus and Truck Right", "Rack Focus and Truck Right with Handheld Shaky"
+                                            ]
                                         },
+                                        camera_action_reason: { type: "string" },
+                                        // vector_matching_protocol_logic_flow: {
+                                        //     type: "object",
+                                        //     properties: {
+                                        //         data_retrieval_and_vector_decomposition_reason: { type: "string" },
+                                        //         data_retrieval_and_vector_decomposition_result: { type: "string" },
+                                        //         component_mapping_strategy: {
+                                        //             type: "object",
+                                        //             properties: {
+                                        //                 sx_input: { type: "string", enum: ["$-X$", "$0X$", "$+X$"] },
+                                        //                 sx_output: { type: "string", enum: ["[Truck Left, Pan Left]", "[None]", "[Truck Right, Pan Right]"] },
+                                        //                 sy_input: { type: "string", enum: ["$-Y$", "$0Y$", "$+Y$"] },
+                                        //                 sy_output: { type: "string", enum: ["[Pedestal Down, Tilt Down]", "[None]", "[Pedestal Up, Tilt Up]"] },
+                                        //                 sz_input: { type: "string", enum: ["$-Z$", "$0Z$", "$+Z$"] },
+                                        //                 sz_output: { type: "string", enum: ["[Dolly-Out]", "[None]", "[Dolly-In]"] },
+                                        //             },
+                                        //             required: ["sx_input", "sx_output", "sy_input", "sy_output", "sz_input", "sz_output"],
+                                        //             additionalProperties: false
+                                        //         },
+                                        //         selection_and_optimization_protocol: {
+                                        //             type: "object",
+                                        //             properties: {
+                                        //                 phase_a: {
+                                        //                     type: "object",
+                                        //                     properties: {
+                                        //                         cx_input: { type: "string", enum: ["[Truck Left, Pan Left]", "[None]", "[Truck Right, Pan Right]"] },
+                                        //                         cx_output: { type: "string", enum: ["[None]", "[Pan Left]", "[Truck Left]", "[Pan Right]", "[Truck Right]"] },
+                                        //                         cy_input: { type: "string", enum: ["[Pedestal Down, Tilt Down]", "[None]", "[Pedestal Up, Tilt Up]"] },
+                                        //                         cy_output: { type: "string", enum: ["[None]", "[Tilt Down]", "[Pedestal Down]", "[Tilt Up]", "[Pedestal Up]"] },
+                                        //                         cz_input: { type: "string", enum: ["[Dolly-Out]", "[None]", "[Dolly-In]"] },
+                                        //                         cz_output: { type: "string", enum: ["[Dolly-Out]", "[None]", "[Dolly-In]"] },
+                                        //                     },
+                                        //                     required: ["cx_input", "cx_output", "cy_input", "cy_output", "cz_input", "cz_output"],
+                                        //                     additionalProperties: false
+                                        //                 },
+                                        //                 phase_b: {
+                                        //                     type: "object",
+                                        //                     properties: {
+                                        //                         cx_input: { type: "string", enum: ["[Pan Left]", "[Truck Left]", "[None]", "[Pan Right]", "[Truck Right]"] },
+                                        //                         cy_input: { type: "string", enum: ["[Tilt Down]", "[Pedestal Down]", "[None]", "[Tilt Up]", "[Pedestal Up]"] },
+                                        //                         cz_input: { type: "string", enum: ["[Dolly-Out]", "[None]", "[Dolly-In]"] },
+                                        //                         phase_b_result: { type: "string", enum: ["[Static Frame]", "non-[None]"] },
+                                        //                     },
+                                        //                     required: ["cx_input", "cy_input", "cz_input", "phase_b_result"],
+                                        //                     additionalProperties: false,
+                                        //                 },
+                                        //                 phase_c: {
+                                        //                     type: "object",
+                                        //                     properties: {
+                                        //                         cx_input: { type: "string", enum: ["[Pan Left]", "[Truck Left]", "[None]", "[Pan Right]", "[Truck Right]"] },
+                                        //                         cx_output: { type: "string", enum: ["[Pan Left]", "[Truck Left]", "INACTIVE", "[Pan Right]", "[Truck Right]"] },
+                                        //                         cy_input: { type: "string", enum: ["[Tilt Down]", "[Pedestal Down]", "[None]", "[Tilt Up]", "[Pedestal Up]"] },
+                                        //                         cy_output: { type: "string", enum: ["[Tilt Down]", "[Pedestal Down]", "INACTIVE", "DROPPED", "[Tilt Up]", "[Pedestal Up]"] },
+                                        //                         cz_input: { type: "string", enum: ["[Dolly-Out]", "[None]", "[Dolly-In]"] },
+                                        //                         cz_output: { type: "string", enum: ["[Dolly-Out]", "INACTIVE", "[Dolly-In]"] },
+                                        //                     },
+                                        //                     required: ["cx_input", "cx_output", "cy_input", "cy_output", "cz_input", "cz_output"],
+                                        //                     additionalProperties: false
+                                        //                 },
+                                        //                 phase_d: {
+                                        //                     type: "object",
+                                        //                     properties: {
+                                        //                         cx_input: { type: "string", enum: ["[Pan Left]", "[Truck Left]", "INACTIVE", "[Pan Right]", "[Truck Right]"] },
+                                        //                         cx_output: { type: "string", enum: ["[Tilt Down]", "[Pedestal Down]", "INACTIVE", "DROPPED", "[Tilt Up]", "[Pedestal Up]"] },
+                                        //                         cy_input: { type: "string", enum: ["[Dolly-Out]", "INACTIVE", "[Dolly-In]"] },
+                                        //                         cy_output: { type: "string", enum: ["[Pan Left]", "[Truck Left]", "INACTIVE", "DROPPED", "[Pan Right]", "[Truck Right]"] },
+                                        //                         cz_input: { type: "string", enum: ["[Tilt Down]", "[Pedestal Down]", "INACTIVE", "DROPPED", "[Tilt Up]", "[Pedestal Up]"] },
+                                        //                         cz_output: { type: "string", enum: ["[Dolly-Out]", "INACTIVE", "[Dolly-In]"] },
+                                        //                     },
+                                        //                     required: ["cx_input", "cx_output", "cy_input", "cy_output", "cz_input", "cz_output"],
+                                        //                     additionalProperties: false
+                                        //                 },
+                                        //                 phase_e: {
+                                        //                     type: "object",
+                                        //                     properties: {
+                                        //                         cx_input: { type: "string", enum: ["[Pan Left]", "[Truck Left]", "INACTIVE", "[Pan Right]", "[Truck Right]"] },
+                                        //                         cy_input: { type: "string", enum: ["[Tilt Down]", "[Pedestal Down]", "INACTIVE", "DROPPED", "[Tilt Up]", "[Pedestal Up]"] },
+                                        //                         cz_input: { type: "string", enum: ["[Dolly-Out]", "INACTIVE", "[Dolly-In]"] },
+                                        //                         static_input: { type: "string", enum: ["[Static Frame]", "Non-Static"] },
+                                        //                         static_output: { type: "string", enum: ["[Static Frame]", "[Rack Focus]", "Non-Static"] },
+                                        //                         cx_output: { type: "string", enum: ["[Pan Left]", "[Truck Left]", "INACTIVE", "DROPPED", "MERGED", "[Pan Right]", "[Truck Right]"] },
+                                        //                         cy_output: { type: "string", enum: ["[Tilt Down]", "[Pedestal Down]", "INACTIVE", "DROPPED", "[Tilt Up]", "[Pedestal Up]"] },
+                                        //                         cz_output: { type: "string", enum: ["[Dolly-Out]", "[Crash Zoom Out]", "INACTIVE", "MERGED", "[Dolly-In]", "[Crash Zoom In]", "[Dolly Zoom]", "[Arc Orbit]"] },
+                                        //                         final_output: {
+                                        //                             type: "object",
+                                        //                             properties: {
+                                        //                                 action_1: { type: "string", enum: ["Dolly-Out", "Dolly-In", "Static Frame", "Dolly Zoom", "Crash Zoom Out", "Crash Zoom In", "Arc Orbit", "Pan Left", "Pan Right", "Truck Left", "Truck Right", "Pedestal Down", "Pedestal Up", "Tilt Down", "Tilt Up", "Rack Focus"] },
+                                        //                                 action_2: { type: "string", enum: ["Pan Left", "Pan Right", "Truck Left", "Truck Right", "Pedestal Down", "Pedestal Up", "Tilt Down", "Tilt Up", "None"] },
+                                        //                                 handheld_shaky: { type: "string", enum: ["[Handheld Shaky]", "None"] },
+                                        //                                 output_string: {
+                                        //                                     type: "string",
+                                        //                                     enum: [
+                                        //                                         "Dolly-Out", "Dolly-Out with Handheld Shaky",
+                                        //                                         "Dolly-Out and Pan Left", "Dolly-Out and Pan Left with Handheld Shaky",
+                                        //                                         "Dolly-Out and Pan Right", "Dolly-Out and Pan Right with Handheld Shaky",
+                                        //                                         "Dolly-Out and Pedestal Down", "Dolly-Out and Pedestal Down with Handheld Shaky",
+                                        //                                         "Dolly-Out and Pedestal Up", "Dolly-Out and Pedestal Up with Handheld Shaky",
+                                        //                                         "Dolly-Out and Tilt Down", "Dolly-Out and Tilt Down with Handheld Shaky",
+                                        //                                         "Dolly-Out and Tilt Up", "Dolly-Out and Tilt Up with Handheld Shaky",
+                                        //                                         "Dolly-Out and Truck Left", "Dolly-Out and Truck Left with Handheld Shaky",
+                                        //                                         "Dolly-Out and Truck Right", "Dolly-Out and Truck Right with Handheld Shaky",
+                                        //                                         "Dolly-In", "Dolly-In with Handheld Shaky",
+                                        //                                         "Dolly-In and Pan Left", "Dolly-In and Pan Left with Handheld Shaky",
+                                        //                                         "Dolly-In and Pan Right", "Dolly-In and Pan Right with Handheld Shaky",
+                                        //                                         "Dolly-In and Pedestal Down", "Dolly-In and Pedestal Down with Handheld Shaky",
+                                        //                                         "Dolly-In and Pedestal Up", "Dolly-In and Pedestal Up with Handheld Shaky",
+                                        //                                         "Dolly-In and Tilt Down", "Dolly-In and Tilt Down with Handheld Shaky",
+                                        //                                         "Dolly-In and Tilt Up", "Dolly-In and Tilt Up with Handheld Shaky",
+                                        //                                         "Dolly-In and Truck Left", "Dolly-In and Truck Left with Handheld Shaky",
+                                        //                                         "Dolly-In and Truck Right", "Dolly-In and Truck Right with Handheld Shaky",
+                                        //                                         "Static Frame", "Static Frame with Handheld Shaky",
+                                        //                                         "Dolly Zoom", "Dolly Zoom with Handheld Shaky",
+                                        //                                         "Dolly Zoom and Pan Left", "Dolly Zoom and Pan Left with Handheld Shaky",
+                                        //                                         "Dolly Zoom and Pan Right", "Dolly Zoom and Pan Right with Handheld Shaky",
+                                        //                                         "Dolly Zoom and Pedestal Down", "Dolly Zoom and Pedestal Down with Handheld Shaky",
+                                        //                                         "Dolly Zoom and Pedestal Up", "Dolly Zoom and Pedestal Up with Handheld Shaky",
+                                        //                                         "Dolly Zoom and Tilt Down", "Dolly Zoom and Tilt Down with Handheld Shaky",
+                                        //                                         "Dolly Zoom and Tilt Up", "Dolly Zoom and Tilt Up with Handheld Shaky",
+                                        //                                         "Dolly Zoom and Truck Left", "Dolly Zoom and Truck Left with Handheld Shaky",
+                                        //                                         "Dolly Zoom and Truck Right", "Dolly Zoom and Truck Right with Handheld Shaky",
+                                        //                                         "Crash Zoom Out", "Crash Zoom Out with Handheld Shaky",
+                                        //                                         "Crash Zoom Out and Pan Left", "Crash Zoom Out and Pan Left with Handheld Shaky",
+                                        //                                         "Crash Zoom Out and Pan Right", "Crash Zoom Out and Pan Right with Handheld Shaky",
+                                        //                                         "Crash Zoom Out and Truck Left", "Crash Zoom Out and Truck Left with Handheld Shaky",
+                                        //                                         "Crash Zoom Out and Truck Right", "Crash Zoom Out and Truck Right with Handheld Shaky",
+                                        //                                         "Crash Zoom In", "Crash Zoom In with Handheld Shaky",
+                                        //                                         "Crash Zoom In and Pan Left", "Crash Zoom In and Pan Left with Handheld Shaky",
+                                        //                                         "Crash Zoom In and Pan Right", "Crash Zoom In and Pan Right with Handheld Shaky",
+                                        //                                         "Crash Zoom In and Truck Left", "Crash Zoom In and Truck Left with Handheld Shaky",
+                                        //                                         "Crash Zoom In and Truck Right", "Crash Zoom In and Truck Right with Handheld Shaky",
+                                        //                                         "Arc Orbit", "Arc Orbit with Handheld Shaky",
+                                        //                                         "Arc Orbit and Tilt Down", "Arc Orbit and Tilt Down with Handheld Shaky",
+                                        //                                         "Arc Orbit and Tilt Up", "Arc Orbit and Tilt Up with Handheld Shaky",
+                                        //                                         "Pan Left", "Pan Left with Handheld Shaky",
+                                        //                                         "Pan Right", "Pan Right with Handheld Shaky",
+                                        //                                         "Truck Left", "Truck Left with Handheld Shaky",
+                                        //                                         "Truck Left and Pedestal Down", "Truck Left and Pedestal Down with Handheld Shaky",
+                                        //                                         "Truck Left and Pedestal Up", "Truck Left and Pedestal Up with Handheld Shaky",
+                                        //                                         "Truck Left and Tilt Down", "Truck Left and Tilt Down with Handheld Shaky",
+                                        //                                         "Truck Left and Tilt Up", "Truck Left and Tilt Up with Handheld Shaky",
+                                        //                                         "Truck Right", "Truck Right with Handheld Shaky",
+                                        //                                         "Truck Right and Pedestal Down", "Truck Right and Pedestal Down with Handheld Shaky",
+                                        //                                         "Truck Right and Pedestal Up", "Truck Right and Pedestal Up with Handheld Shaky",
+                                        //                                         "Truck Right and Tilt Down", "Truck Right and Tilt Down with Handheld Shaky",
+                                        //                                         "Truck Right and Tilt Up", "Truck Right and Tilt Up with Handheld Shaky",
+                                        //                                         "Pedestal Down", "Pedestal Down with Handheld Shaky",
+                                        //                                         "Pedestal Up", "Pedestal Up with Handheld Shaky",
+                                        //                                         "Tilt Down", "Tilt Down with Handheld Shaky",
+                                        //                                         "Tilt Up", "Tilt Up with Handheld Shaky",
+                                        //                                         "Rack Focus", "Rack Focus with Handheld Shaky",
+                                        //                                         "Rack Focus and Pan Left", "Rack Focus and Pan Left with Handheld Shaky",
+                                        //                                         "Rack Focus and Pan Right", "Rack Focus and Pan Right with Handheld Shaky",
+                                        //                                         "Rack Focus and Truck Left", "Rack Focus and Truck Left with Handheld Shaky",
+                                        //                                         "Rack Focus and Truck Right", "Rack Focus and Truck Right with Handheld Shaky"
+                                        //                                     ]
+                                        //                                 },
+                                        //                             },
+                                        //                             required: ["action_1", "action_2", "handheld_shaky", "output_string"],
+                                        //                             additionalProperties: false,
+                                        //                         }
+                                        //                     },
+                                        //                     required: ["cx_input", "cy_input", "cz_input", "static_input", "static_output", "cx_output", "cy_output", "cz_output", "final_output"],
+                                        //                     additionalProperties: false,
+                                        //                 }
+                                        //             },
+                                        //             required: ["phase_a", "phase_b", "phase_c", "phase_d", "phase_e"],
+                                        //             additionalProperties: false
+                                        //         },
+                                        //         violation_reason: { type: "string" },
+                                        //     },
+                                        //     required: ["data_retrieval_and_vector_decomposition_reason", "data_retrieval_and_vector_decomposition_result", "component_mapping_strategy", "selection_and_optimization_protocol", "violation_reason"],
+                                        //     additionalProperties: false
+                                        // },
                                     },
-                                    required: ["camera_action", "vector_matching_protocol_logic_flow"],
+                                    required: ["camera_action", "camera_action_reason"],
                                     additionalProperties: false,
                                 },
                                 vector_reasoning: { type: "string" },
@@ -1067,31 +1267,8 @@ Instruction: Generate the scene instruction JSON.
                         }[];
                         cinematic_camera_vectors: {
                             selected_camera_actions: {
-                                vector_matching_protocol_logic_flow: {
-                                    data_retrieval_and_vector_decomposition_reason: string;
-                                    data_retrieval_and_vector_decomposition_result: string;
-                                    component_mapping_strategy: {
-                                        sx_input: string;
-                                        sx_output: string;
-                                        sy_input: string;
-                                        sy_output: string;
-                                        sz_input: string;
-                                        sz_output: string;
-                                    }
-                                    selection_and_optimization_protocol: {
-                                        phase_a_result: string;
-                                        phase_a_reason: string;
-                                        phase_b_result: string;
-                                        phase_b_reason: string;
-                                        phase_c_result: string;
-                                        phase_c_reason: string;
-                                        phase_d_result: string;
-                                        phase_d_reason: string;
-                                        phase_e_result: string;
-                                        phase_e_reason: string;
-                                    }
-                                };
                                 camera_action: string;
+                                camera_action_reason: string;
                             };
                             vector_reasoning: string,
                         };
@@ -1134,30 +1311,7 @@ Instruction: Generate the scene instruction JSON.
 
                 const {
                     camera_action: cameraAction,
-                    vector_matching_protocol_logic_flow: {
-                        data_retrieval_and_vector_decomposition_reason: dataRetrievalAndVectorDecompositionReason,
-                        data_retrieval_and_vector_decomposition_result: dataRetrievalAndVectorDecompositionResult,
-                        component_mapping_strategy: {
-                            sx_input: sxInput,
-                            sx_output: sxOutput,
-                            sy_input: syInput,
-                            sy_output: syOutput,
-                            sz_input: szInput,
-                            sz_output: szOutput,
-                        },
-                        selection_and_optimization_protocol: {
-                            phase_a_result: phaseAResult,
-                            phase_a_reason: phaseAReason,
-                            phase_b_result: phaseBResult,
-                            phase_b_reason: phaseBReason,
-                            phase_c_result: phaseCResult,
-                            phase_c_reason: phaseCReason,
-                            phase_d_result: phaseDResult,
-                            phase_d_reason: phaseDReason,
-                            phase_e_result: phaseEResult,
-                            phase_e_reason: phaseEReason,
-                        }
-                    }
+                    camera_action_reason: cameraActionReason,
                 } = selectedCameraActions;
 
 
@@ -1209,21 +1363,8 @@ Instruction: Generate the scene instruction JSON.
 
                 console.log("- - - Cinematic Camera Vectors - - -");
                 console.log(`Camera Action: ${cameraAction}`);
-                console.log(`Data Retrieval And Vector Result: ${dataRetrievalAndVectorDecompositionResult}`);
-                console.log(`Data Retrieval And Vector Reason: ${dataRetrievalAndVectorDecompositionReason}`);
-                console.log(`Component Mapping Strategy Input: [${sxInput}, ${syInput}, ${szInput}]`);
-                console.log(`Component Mapping Strategy Output: [${sxOutput}, ${syOutput}, ${szOutput}]`);
-                console.log(`Phase A Result: ${phaseAResult}`)
-                console.log(`Phase A Reason: ${phaseAReason}`)
-                console.log(`Phase B Result: ${phaseBResult}`)
-                console.log(`Phase B Reason: ${phaseBReason}`)
-                console.log(`Phase C Result: ${phaseCResult}`)
-                console.log(`Phase C Reason: ${phaseCReason}`)
-                console.log(`Phase D Result: ${phaseDResult}`)
-                console.log(`Phase D Reason: ${phaseDReason}`)
-                console.log(`Phase E Result: ${phaseEResult}`)
-                console.log(`Phase E Reason: ${phaseEReason}`)
-                console.log(`Camera Vectors Reasoning: ${vectorReasoning}`);
+                console.log(`Camera Action Reason: ${cameraActionReason}`);
+                console.log(`Subject Vectors Reasoning: ${vectorReasoning}`);
 
                 console.log("- - - Style - - -");
                 console.log(`Style Slot 1: ${slot1}`);

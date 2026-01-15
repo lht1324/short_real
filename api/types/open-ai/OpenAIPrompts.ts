@@ -1670,7 +1670,7 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
     Key Technical Characteristics:
     - **Spatio-temporal Attention**: The model processes global context and temporal flow simultaneously, requiring prompts that define a "Vector of Change" rather than restating static details from the input image.
     - **Video Vividness Priority**: Optimized for high-impact **visual** motion expressiveness across four dimensions: Action, Camera, Atmosphere, and Emotion. Slow-motion artifacts are minimized.
-    - **Cinematic Reward Optimization**: Trained via RLHF with professional directors' feedback, the model is highly sensitive to professional cinematography jargon (e.g., Dolly Zoom, Rack Focus, Volumetric Lighting).
+    - **Cinematic Reward Optimization**: Trained via RLHF with professional directors' feedback, the model is highly sensitive to professional cinematography jargon.
     - **Autonomous Camera Scheduling**: Capable of executing complex, multi-axis camera movements while maintaining subject identity and narrative coherence from the input image.
     - **Physical Inertia Awareness**: Understands nuanced micro-expressions, material physics, and the weight/momentum of physical objects (e.g., suspension compression, muscle torque, fabric flutter).
   </target_model_profile>
@@ -2088,8 +2088,7 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
         <spatial_coordinate_grounding>
           <master_rule_vector_supremacy>
             - **Physical Law**: All Camera Vectors ($\vec{C}$) MUST be mathematically derived from Subject Vectors ($\vec{S}$) to maintain spatial logic.
-            - **Logic Over Flair**: You MUST strictly follow below rules to extract proper [Cinematic Technique]s. Do NOT follow impression.
-            - **\`Dolly-In\` Warning**: \`Dolly-In\` is not a master key for every situation. You MUST follow below logics strictly. Unless the result of below logic includes \`Dolly-In\`, then use it.
+            - **Logic Over Flair**: You MUST strictly follow below rules to extract proper [Cinematic Technique]s. Do NOT follow impression or video beauty.
           </master_rule_vector_supremacy>
           <fundamental_definitions>
             - **Origin (0,0,0)**: The exact center of the 2D Screen Frame at t=0.
@@ -2103,34 +2102,34 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
             - **Axis Direction Table**:
               | Axis | Vector | Camera Move Direction (Lens Physics) | Subject Move Direction (Entity Physics) |
               | :--- | :--- | :--- | :--- |
-              | **X** | **$-X$** | Moves toward Screen Left | <entity_list>.[n] travels toward Screen Left |
-              | **X** | **$+X$** | Moves toward Screen Right | <entity_list>.[n] travels toward Screen Right |
-              | **Y** | **$-Y$** | Moves toward Screen Bottom | <entity_list>.[n] falls/crouches toward Bottom |
-              | **Y** | **$+Y$** | Moves toward Screen Top | <entity_list>.[n] jumps/rises toward Top |
-              | **Z** | **$-Z$** | Moves toward the viewer / Moves away the vanishing point | <entity_list>.[n] Approaches to Foreground (Coming Closer) |
-              | **Z** | **$+Z$** | Moves away the viewer / Moves toward the vanishing point | Entity Recedes into Background (Moving Away) |
+              | **X** | **$-X$** | Moves to Screen Left | <entity_list>.[n] moves to Screen Left |
+              | **X** | **$+X$** | Moves to Screen Right | <entity_list>.[n] moves to Screen Right |
+              | **Y** | **$-Y$** | Moves to Screen Bottom | <entity_list>.[n] falls/crouches to Bottom |
+              | **Y** | **$+Y$** | Moves to Screen Top | <entity_list>.[n] jumps/rises to Top |
+              | **Z** | **$-Z$** | Moves away from Subject | <entity_list>.[n] moves to Foreground |
+              | **Z** | **$+Z$** | Moves to Subject | <entity_list>.[n] moves to Background |
           </vector_behavior_matrix>
         </spatial_coordinate_grounding>
         <definition_table>
-          | Cinematic Technique | Category | Visual Axis | Vector ($\vec{C}$) | Physical Logic & Movement Constraints |
-          | :--- | :--- | :--- | :--- | :--- |
-          | **Static Frame** | Spatial | None | $\vec{V}_C = 0$ | No spatial/angular shift; temporal delta ($\Delta$) must come only from micro-expressions. |
-          | **Truck Left** | Spatial | **X** | $-X$ | Lateral translation to the Left; background parallax must flow in the $+\Delta X$ direction. |
-          | **Truck Right** | Spatial | **X** | $+X$ | Lateral translation to the Right; background parallax must flow in the $-\Delta X$ direction. |
-          | **Pedestal Down** | Spatial | **Y** | $-Y$ | Vertical translation Downward; creates a descending perspective while maintaining the Z-axis. |
-          | **Pedestal Up** | Spatial | **Y** | $+Y$ | Vertical translation Upward; creates a rising perspective while maintaining the Z-axis. |
-          | **Dolly-Out** | Spatial | **Z** | $-Z$ | Linear recession; increases $D(t)$ to reveal more environmental context and landmarks. |
-          | **Dolly-In** | Spatial | **Z** | $+Z$ | Linear approach; decreases $D(t)$ to increase subject scale and background parallax. |
-          | **Pan Left** | Angular | **X** (Yaw Y) | $-\Delta \theta_{Y}$ | Horizontal rotation on the Y-axis center; camera origin $C(0)$ remains fixed. |
-          | **Pan Right** | Angular | **X** (Yaw Y) | $+\Delta \theta_{Y}$ | Horizontal rotation on the Y-axis center; camera origin $C(0)$ remains fixed. |
-          | **Tilt Down** | Angular | **Y** (Pitch X) | $-\Delta \theta_{X}$ | Vertical rotation on the X-axis center; camera origin $C(0)$ remains fixed. |
-          | **Tilt Up** | Angular | **Y** (Pitch X) | $+\Delta \theta_{X}$ | Vertical rotation on the X-axis center; camera origin $C(0)$ remains fixed. |
-          | **Arc Orbit** | Spatial | **X**, **Z** | Circular | Curvilinear path on the X-Z plane; maintains constant $D(t)$ relative to the subject. |
-          | **Rack Focus** | Optical | **Z** (Focal) | $\Delta Z_{focal}$ | Non-spatial shift of focus; transfers sharpness between depth layers with zero physical move. |
-          | **Dolly Zoom** | **Hybrid** | **Z** | $\vec{C}(\pm Z) + \vec{f}(\mp Z)$ | **Inverse Vector Balance**: Compensate spatial move with opposite focal scaling to lock subject size. |
-          | **Crash Zoom Out**| Optical | **Z** (Focal) | $-\Delta \text{Scale}$ | Optical expansion; rapid Field-of-View widening with zero physical camera displacement. |
-          | **Crash Zoom In** | Optical | **Z** (Focal) | $+\Delta \text{Scale}$ | Optical contraction; rapid magnification with zero physical camera displacement. |
-          | **Handheld Shaky** | Vibration | All | $C(t) + \delta_{\text{noise}}$ | Applies high-frequency stochastic vibration ($\delta$) to the primary vector to simulate human grip. |
+          | Cinematic Technique | Category | Visual Axis | Vector ($\vec{C}$) |
+          | :--- | :--- | :--- | :--- |
+          | **Static Frame** | Spatial | None | $0X$, $0Y$, $0Z$ |
+          | **Truck Left** | Spatial | **X** | $-X$ |
+          | **Truck Right** | Spatial | **X** | $+X$ |
+          | **Pedestal Down** | Spatial | **Y** | $-Y$ |
+          | **Pedestal Up** | Spatial | **Y** | $+Y$ |
+          | **Dolly-Out** | Spatial | **Z** | $-Z$ |
+          | **Dolly-In** | Spatial | **Z** | $+Z$ |
+          | **Pan Left** | Angular | **X** (Yaw Y) | $-\Delta \theta_{Y}$ |
+          | **Pan Right** | Angular | **X** (Yaw Y) | $+\Delta \theta_{Y}$ |
+          | **Tilt Down** | Angular | **Y** (Pitch X) | $-\Delta \theta_{X}$ |
+          | **Tilt Up** | Angular | **Y** (Pitch X) | $+\Delta \theta_{X}$ |
+          | **Arc Orbit** | Spatial | **X**, **Z** | Circular |
+          | **Rack Focus** | Optical | **Z** (Focal) | $\Delta Z_{focal}$ |
+          | **Dolly Zoom** | **Hybrid** | **Z** | $\vec{C}(\pm Z) + \vec{f}(\mp Z)$ |
+          | **Crash Zoom Out**| Optical | **Z** (Focal) | $-\Delta \text{Scale}$ |
+          | **Crash Zoom In** | Optical | **Z** (Focal) | $+\Delta \text{Scale}$ |
+          | **Handheld Shaky** | Vibration | All | $C(t) + \delta_{\text{noise}}$ |
         </definition_table>
       </step_7_0_professional_camera_mechanics_definitions>
       <step_7_1_subject_vector_inference>
@@ -2152,13 +2151,23 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
                - Prefer **multi-cue triangulation** (attention + affordance + group flow) over any single cue.
                - If cues conflict or are weak, mark the vector as **Static or Low-Confidence** rather than forcing a directional claim.
           3. **Lens 3: Geometric Perspective (Vanishing Points)**:
-             - *Look for*: The scene's depth lines and the subject's orientation.
-             - *Mapping Rule*: Strictly follow <spatial_coordinate_grounding>.
-               - **Receding ($+Z$)**: Subject shows **back/dorsal side**, or gets smaller into the distance (Faces Vanishing Point).
-               - **Approaching ($-Z$)**: Subject shows **face/frontal side**, or looms larger toward the bottom edge (Faces Viewer).
-               - **Lateral ($\pm X$)**: Subject shows **profile/side view** (Perpendicular to depth).
+             - **Goal: Extract the subject's X, Y and Z directions. ([$S_x$, $S_y$, $S_z$])
+             - **Look for**: The scene's depth lines, the subject's orientation and the subject's vertical position.
+             - **Mapping Rule**: Strictly follow <spatial_coordinate_grounding>.
+               * $S_x$:
+                 * IF Subject faces or leans to **Screen Left** (independent of profile): $-X$
+                 * IF Subject is centered or moving straight in/out of the depth: $0X$
+                 * IF Subject faces or leans to **Screen Right** (independent of profile): $+X$
+               * $S_y$:
+                 * IF Subject is sitting, kneeling, or crouching: $-Y$
+                 * IF Subject is standing on the ground: $0Y$
+                 * IF Subject is jumping, leaping, or subject's feet are off the ground: $+Y$ 
+               * $S_z$:
+                 * IF Subject shows **frontal side** or is positioned at the lower frame edge: $-Z$
+                 * IF Subject is neutral or moving perfectly parallel to the lens: $0Z$
+                 * IF Subject shows **dorsal side** or is aligned with the vanishing point: $+Z$
         - **The Visual Supremacy Rule (Conflict Resolution)**:
-          - **IF** <scene_narration> implies motion (e.g., "racing", "speeding") **BUT** Visual Evidence (Lens 1-3) indicates stillness (e.g., Red light, Idling, Static posture):
+          - **IF** <scene_narration> implies motion (e.g., "racing", "speeding") **BUT** Visual Evidence (Lens 1, Lens 2, Lens 3) indicates stillness (e.g., Red light, Idling, Static posture):
           - **THEN**: You MUST prioritize **Visual Evidence**. Classify as **Static** or **Micro-Movement**.
           - *Principle*: "Text provides the Mood/Intensity, but Image provides the Physics."
         - **Environmental Obstacle Check**:
@@ -2184,17 +2193,17 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
              - **Iteration through X, Y, and Z axes**:
                - **Rule**: Generate candidates ONLY for axes where $\vec{S}$ has a non-zero component.
                * **X-Axis Candidates ($C_x$)**:
-                 * **IF $S_x$ is $-X$** -> Output List: [\`Truck Left\`, \`Pan Left\`]
-                 * **IF $S_x$ is $0X$** -> Output List: [\`None\`]
-                 * **IF $S_x$ is $+X$** -> Output List: [\`Truck Right\`, \`Pan Right\`]
+                 * **IF $S_x$($\vec{S}$ X direction) is $-X$** -> Output List: [\`Truck Left\`, \`Pan Left\`]
+                 * **IF $S_x$($\vec{S}$ X direction) is $0X$** -> Output List: [\`None\`]
+                 * **IF $S_x$($\vec{S}$ X direction) is $+X$** -> Output List: [\`Truck Right\`, \`Pan Right\`]
                * **Y-Axis Candidates ($C_y$)**:
-                 * **IF $S_y$ is $-Y$** -> Output List: [\`Pedestal Down\`, \`Tilt Down\`]
-                 * **IF $S_y$ is $0Y$** -> Output List: [\`None\`]
-                 * **IF $S_y$ is $+Y$** -> Output List: [\`Pedestal Up\`, \`Tilt Up\`]
+                 * **IF $S_y$($\vec{S}$ Y direction) is $-Y$** -> Output List: [\`Pedestal Down\`, \`Tilt Down\`]
+                 * **IF $S_y$($\vec{S}$ Y direction) is $0Y$** -> Output List: [\`None\`]
+                 * **IF $S_y$($\vec{S}$ Y direction) is $+Y$** -> Output List: [\`Pedestal Up\`, \`Tilt Up\`]
                * **Z-Axis Candidates ($C_z$)**:
-                 * **IF $S_z$ is $-Z$** -> Output List: [\`Dolly-Out\`]
-                 * **IF $S_z$ is $0Z$** -> Output List: [\`None\`]
-                 * **IF $S_z$ is $+Z$** -> Output List: [\`Dolly-In\`]
+                 * **IF $S_z$($\vec{S}$ Y direction) is $-Z$** -> Output List: [\`Dolly-Out\`]
+                 * **IF $S_z$($\vec{S}$ Y direction) is $0Z$** -> Output List: [\`None\`]
+                 * **IF $S_z$($\vec{S}$ Y direction) is $+Z$** -> Output List: [\`Dolly-In\`]
                - **Selection Examples by ($S_x$, $S_y$, $S_z$)**:
                  * ($-X$, $-Y$, $-Z$) -> [[\`Truck Left\`, \`Pan Left\`], [\`Pedestal Down\`, \`Tilt Down\`], [\`Dolly-Out\`]]
                  * ($-X$, $-Y$, $0Z$) -> [[\`Truck Left\`, \`Pan Left\`], [\`Pedestal Down\`, \`Tilt Down\`], [\`None\`]]
@@ -2253,7 +2262,7 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
                * IF ($C_x, C_y, C_z$) is ([\`None\`], [\`None\`], [\`None\`]):
                  - **Action**: Assign [Cinematic Technique] = \`Static Frame\`.
                  - **Constraint**: Immediately TERMINATE the camera vector design process. Do NOT proceed to Phase B or C.
-                 - **Output**: Proceed directly to <step_7_3_cinematic_camera_vector_assembly> using \`Static Frame\`.
+                 - **Output**: Proceed directly to **Phase E** using \`Static Frame\`.
                * IF one of ($C_x, C_y, C_z$) is NOT [\`None\`]:
                  - **Action**: Assign [Cinematic Technique] = The combined list of all non-[\`None\`] candidates from ($C_x, C_y, C_z$).
                  - **Transition**: Proceed to **Phase C: Selection Budget & Priority Filtering**.
@@ -2277,7 +2286,7 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
                    - Format: [\`Category\`-\`Visual Axis\`]
                    * **[\`Spatial\`-\`Y\`] + [\`Optical\`-\`Z\`]**: (e.g., (\`Pedestal Up\` / \`Pedestal Down\`) + \`Rack Focus\`)
                    * **[\`Angular\`-\`X\`] + [\`Spatial\`-\`Y\`]**: (e.g., (\`Pan Left\` / \`Pan Right\`) + (\`Pedestal Up\` / \`Pedestal Down\`))
-                   * **[\`Spatial\`-\`Z\`] + [\`Optical\`-\`Z\`] (Excluding Dolly Zoom)**: (e.g., (\`Dolly-In\` / \`Dolly-Out\`) + (\`Rack Focus\` / (\`Crash Zoom In\` / \`Crash Zoom Out\`))
+                   * **[\`Spatial\`-\`Z\`] + [\`Optical\`-\`Z\`] (Excluding \`Dolly Zoom\`)**: (e.g., (\`Dolly-In\` / \`Dolly-Out\`) + (\`Rack Focus\` / (\`Crash Zoom In\` / \`Crash Zoom Out\`))
                * **Task**: Perform final validation against **The Strict Forbidden Matrix** and ensure a stable output.
                * **Output Statement by candidates count**:
                  * **IF candidates count is 1**:
@@ -2307,7 +2316,7 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
                  * IF \`Narrative Vibe\` implies **'Emotional'** or **'Focus'** AND **Final Output** of **Phase D** is \`Static Frame\` -> REPLACE with **\`Rack Focus\`**.
                * **Rule 2: The Add-on (Texture)**:
                  - IF \`Narrative Vibe\` implies Instability (e.g., **'Chaos'**, **'Combat'**, **'Anxious'**, **'Catastrophic'**) -> APPEND "with Handheld Shaky" to the end string.
-               * **Final Output**: Assemble the final string: "[Action_1] (and [Action_2] (If [Action_2] exists) (with Handheld Shaky (If Handheld Shaky exists))"
+               * **Final Output**: Assemble the final string: "[Action_1] (and [Action_2] (If [Action_2] exists) (with Handheld Shaky (If \`Handheld Shaky\` exists))"
                * **Transition**: Finalize **[Slot_2: Purified Camera Tech]** of <step_7_3_cinematic_camera_vector_assembly> and proceed to <step_7_3_cinematic_camera_vector_assembly>.
       </step_7_2_vector_matching_protocol>
       <step_7_3_cinematic_camera_vector_assembly>
@@ -2325,17 +2334,13 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
             * \`HIGH\`: "aggressively"
             * \`VERY_HIGH\`: "violently"
         - **[Slot_Connector: Interaction Verb] (The Bridge)**:
-          - **Logic**: Select a single participle verb based on the highest priority technique present in [Slot_2] to represent the dominant motion vector.
-          - **Mapping Rule (Hierarchical Selection)**:
-            1. **Priority 1: Depth Dynamics (Z-Axis)**:
-               * IF [Slot_2] contains **Approaching** (\`Dolly-In\`, \`Crash Zoom In\`, \`Dolly Zoom\`) -> Use "pushing toward" or "closing in on"
-               * IF [Slot_2] contains **Receding** (\`Dolly-Out\`, \`Crash Zoom Out\`) -> Use "pulling back from" or "revealing"
-            2. **Priority 2: Lateral & Vertical Tracking (X, Y-Axis)**:
-               * IF [Slot_2] contains **Tracking/Angular** (\`Truck Left\`, \`Truck Right\`, \`Pedestal Up\`, \`Pedestal Down\`, \`Pan Left\`, \`Pan Right\`, \`Tilt Up\`, \`Tilt Down\`, \`Arc Orbit\`) AND Priority 1 is empty -> Use "tracking" or "following"
-            3. **Priority 3: Static & Focal Observation**:
-               * IF [Slot_2] is **Static/Optical** (\`Static Frame\`, \`Rack Focus\`) AND Priorities 1-2 are empty -> Use "observing" or "focusing on"
-            4. **Priority 4: Kinetic Intensity Override**:
-               * IF \`INTENSITY_TIER\` is **VERY_HIGH** AND [Slot_2] does NOT contain Receding vectors -> Use "rushing at" or "impactfully framing"
+          - **Logic**: Select a single participle verb based on the techniques present in [Slot_2] to represent the dominant motion vector.
+          - **Mapping Rule**:
+            * IF [Slot_2] contains (\`Truck Left\` OR \`Truck Right\` OR \`Pedestal Up\` OR \`Pedestal Down\` OR \`Pan Left\` OR \`Pan Right\` OR \`Tilt Up\` OR \`Tilt Down\` OR \`Arc Orbit\`) AND Priority 1 is empty -> Use "tracking" or "following"
+            * IF [Slot_2] is (\`Static Frame\`, \`Rack Focus\`) AND Priorities 1-2 are empty -> Use "observing" or "focusing on"
+            * IF \`INTENSITY_TIER\` is \`VERY_HIGH\` AND [Slot_2] does NOT contain (\`Dolly-Out\`, \`Crash Zoom Out\`) -> Use "rushing at" or "impactfully framing"
+            * IF [Slot_2] contains (\`Dolly-In\` OR \`Crash Zoom In\` OR \`Dolly Zoom\`) -> Use "pushing toward" or "closing in on"
+            * IF [Slot_2] contains (\`Dolly-Out\` OR \`Crash Zoom Out\`) -> Use "pulling back from" or "revealing"
         - **[Slot_4: Trajectory Focus & Anchor] (Spatial Target)**:
           - **Source**: The valid anchor from Step 2 (Either the \`Mapping Handle\` from <step_2_1_entity_driven_mapping> OR the \`Location Archetype\` from <step_2_2_environment_driven_anchor>).
           - **Logic**: Define the relationship between the camera and the target. IF <entity_list>.length == 0, focus on the "Environment Core" (e.g., "tracking the canyon's depth").
@@ -2433,46 +2438,10 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
         }[],
         "cinematic_camera_vectors": {
           "selected_camera_actions": {
-            // Explain **Logic Flow** in <step_7_2_vector_matching_protocol>
-            "vector_matching_protocol_logic_flow": {
-              "data_retrieval_and_vector_decomposition_reason": "string (Identify Subject orientation and translation: e.g., 'Entity[1] moving towards Screen Surface = Sz is (+)')",
-              "data_retrieval_and_vector_decomposition_result": "string (Current S-Vector: [$S_x ($-X$, $0X$, $+X$), S_y ($-Y$, $0Y$, $+Y$), S_z$ ($-Z$, $0Z$, $+Z$)])",
-              "component_mapping_strategy": {
-                // * **X-Axis Candidates ($C_x$)**:
-                //   * **IF $S_x$ is $-X$** -> Output List: [\`Truck Left\`, \`Pan Left\`]
-                //   * **IF $S_x$ is $0X$** -> Output List: [\`None\`]
-                //   * **IF $S_x$ is $+X$** -> Output List: [\`Truck Right\`, \`Pan Right\`]
-                // * **Y-Axis Candidates ($C_y$)**:
-                //   * **IF $S_y$ is $-Y$** -> Output List: [\`Pedestal Down\`, \`Tilt Down\`]
-                //   * **IF $S_y$ is $0Y$** -> Output List: [\`None\`]
-                //   * **IF $S_y$ is $+Y$** -> Output List: [\`Pedestal Up\`, \`Tilt Up\`]
-                // * **Z-Axis Candidates ($C_z$)**:
-                //   * **IF $S_z$ is $-Z$** -> Output List: [\`Dolly-Out\`]
-                //   * **IF $S_z$ is $0Z$** -> Output List: [\`None\`]
-                //   * **IF $S_z$ is $+Z$** -> Output List: [\`Dolly-In\`]
-                "sx_input": "enum (["$-X$", "$0X$", "$+X$"])",
-                "sx_output": "enum (["[\`Truck Left\`, \`Pan Left\`]", "[\`None\`]", "[\`Truck Right\`, \`Pan Right\`]"])", // Check again that you chose right action by \`sx_input\` and **X-Axis Candidates ($C_x$)**.
-                "sy_input": "enum (["$-Y$", "$0Y$", "$+Y$"])",
-                "sy_output": "enum (["[\`Pedestal Down\`, \`Tilt Down\`]", "[\`None\`]", "[\`Pedestal Up\`, \`Tilt Up\`]"])", // Check again that you chose right action by \`sy_input\` and **Y-Axis Candidates ($C_y$)**.
-                "sz_input": "enum (["$-Z$", "$0Z$", "$+Z$"])",
-                "sz_output": "enum (["[\`Dolly-Out\`]", "[\`None\`]", "[\`Dolly-In\`]"])", // Check again that you chose right action by \`sz_input\` and **Z-Axis Candidates ($C_z$)**.
-              }
-              "selection_and_optimization_protocol": {
-                "phase_a_reason": "string (Explain the mapping choice: Why Spatial vs. Angular was selected for the identified Intensity)",
-                "phase_a_result": "string (The raw mapped candidates for each axis: [Cx, Cy, Cz] based on \`INTENSITY_TIER\`)",
-                "phase_b_reason": "string (State whether any movement was detected from Subject Vectors to proceed or terminate)",
-                "phase_b_result": "string (The combined list of non-None candidates or 'Static Frame')",
-                "phase_c_reason": "string (Logic for axis reduction: If axes > 2, explain the mandatory drop of Cy following Cz > Cx > Cy hierarchy)",
-                "phase_c_result": "string (Filtered candidates list - Max 2 techniques)",
-                "phase_d_reason": "string (Sanitization report: State if Matrix was Bypassed, Passed, or if a conflict was resolved by dropping the lower priority axis)",
-                "phase_d_result": "string (The Purified/Validated Combination after Matrix check)",
-                "phase_e_reason": "string (Narrative Upgrade report: Detail any Swap, Merge, or Texture add-on triggered by Narrative Vibe)",
-                "phase_e_result": "string (The finalized natural language string: '[Action_1] (and [Action_2]) (with Handheld Shaky)')"
-              },
-            }
-            "camera_action": "string (string (The EXACT natural language string from **Phase E** of <step_7_2_vector_matching_protocol>. DO NOT modify or add narrative descriptions.)"
+            "camera_action": "string (The EXACT natural language string from **Phase E** of <step_7_2_vector_matching_protocol>. DO NOT modify or add narrative descriptions.)"
+            "camera_action_reason": "string (Explain why you chose \`camera_action\` strictly based on $S_x$, $S_y$, $S_z$ and **Logic Flow** of <step_7_2_vector_matching_protocol>.)
           },
-          "vector_reasoning": "string (Briefly explain logically why these values were derived from the image context.)"
+          "vector_reasoning": "string (Briefly explain logically why these $\vec{S}$ were derived from the image context.)"
         },
         "style": {
           "slot_1": "string (Selected **[Slot_1] from <step_8_style_and_stability_modifiers>.)",
