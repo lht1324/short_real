@@ -2085,10 +2085,8 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
     </step_6_primary_narrative_block_construction>
     <step_7_cinematic_camera_vector_design>
       <step_7_0_professional_camera_mechanics_definitions>
-        <spatial_coordinate_grounding>
           <master_rule_vector_supremacy>
             - **Physical Law**: All Camera Vectors ($\vec{C}$) MUST be mathematically derived from Subject Vectors ($\vec{S}$) to maintain spatial logic.
-            - **Logic Over Flair**: You MUST strictly follow below rules to extract proper [Cinematic Technique]s. Do NOT follow impression or video beauty.
           </master_rule_vector_supremacy>
           <fundamental_definitions>
             - **Origin (0,0,0)**: The exact center of the 2D Screen Frame at t=0.
@@ -2109,28 +2107,6 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
               | **Z** | **$-Z$** | Moves away from Subject | <entity_list>.[n] moves to Foreground |
               | **Z** | **$+Z$** | Moves to Subject | <entity_list>.[n] moves to Background |
           </vector_behavior_matrix>
-        </spatial_coordinate_grounding>
-        <definition_table>
-          | Cinematic Technique | Category | Visual Axis | Vector ($\vec{C}$) |
-          | :--- | :--- | :--- | :--- |
-          | **Static Frame** | Spatial | None | $0X$, $0Y$, $0Z$ |
-          | **Truck Left** | Spatial | **X** | $-X$ |
-          | **Truck Right** | Spatial | **X** | $+X$ |
-          | **Pedestal Down** | Spatial | **Y** | $-Y$ |
-          | **Pedestal Up** | Spatial | **Y** | $+Y$ |
-          | **Dolly-Out** | Spatial | **Z** | $-Z$ |
-          | **Dolly-In** | Spatial | **Z** | $+Z$ |
-          | **Pan Left** | Angular | **X** (Yaw Y) | $-\Delta \theta_{Y}$ |
-          | **Pan Right** | Angular | **X** (Yaw Y) | $+\Delta \theta_{Y}$ |
-          | **Tilt Down** | Angular | **Y** (Pitch X) | $-\Delta \theta_{X}$ |
-          | **Tilt Up** | Angular | **Y** (Pitch X) | $+\Delta \theta_{X}$ |
-          | **Arc Orbit** | Spatial | **X**, **Z** | Circular |
-          | **Rack Focus** | Optical | **Z** (Focal) | $\Delta Z_{focal}$ |
-          | **Dolly Zoom** | **Hybrid** | **Z** | $\vec{C}(\pm Z) + \vec{f}(\mp Z)$ |
-          | **Crash Zoom Out**| Optical | **Z** (Focal) | $-\Delta \text{Scale}$ |
-          | **Crash Zoom In** | Optical | **Z** (Focal) | $+\Delta \text{Scale}$ |
-          | **Handheld Shaky** | Vibration | All | $C(t) + \delta_{\text{noise}}$ |
-        </definition_table>
       </step_7_0_professional_camera_mechanics_definitions>
       <step_7_1_subject_vector_inference>
         - **Task**: Determine the Primary **Subject Vector ($\vec{S}$)** by acting as a **Visual Forensic Investigator**. You must deduce the subject's true trajectory not just from 2D pixels, but by decoding the **Socio-Physical Context** and **Geometric Intent** of the scene.
@@ -2153,7 +2129,7 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
           3. **Lens 3: Geometric Perspective (Vanishing Points)**:
              - **Goal: Extract the subject's X, Y and Z directions. ([$S_x$, $S_y$, $S_z$])
              - **Look for**: The scene's depth lines, the subject's orientation and the subject's vertical position.
-             - **Mapping Rule**: Strictly follow <spatial_coordinate_grounding>.
+             - **Mapping Rule**: Strictly follow <step_7_0_professional_camera_mechanics_definitions>.<master_rule_vector_supremacy>, <step_7_0_professional_camera_mechanics_definitions>.<fundamental_definitions> and <step_7_0_professional_camera_mechanics_definitions>.<vector_behavior_matrix>.
                * $S_x$:
                  * IF Subject faces or leans to **Screen Left** (independent of profile): $-X$
                  * IF Subject is centered or moving straight in/out of the depth: $0X$
@@ -2177,184 +2153,32 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
           - **Visual Reasoning Log**: Briefly state the decisive clues (e.g., "Tail lights visible + Vanishing point alignment = Away").
           - **Risk Status**: [Safe] or [High-Risk: (Target Landmark)].
       </step_7_1_subject_vector_inference>
-      <step_7_2_vector_matching_protocol>
-        - **Goal**: Finalize the **Camera Vector ($\vec{C}$)** by cross-referencing the **Subject Vector ($\vec{S}$)** and **Risk Status** from <step_7_1_subject_vector_inference> with the <step_7_0_professional_camera_mechanics_definitions>.<definition_table>.
-        - **Axis Conflict Rule (Anti-Distortion Protocol)**:
-          - **Universal Logic**: To prevent "Latent Space Collapse," do not combine techniques that force the model to calculate two different types of perspective shifts on the same or interdependent axes.
-        - **Logic Flow**:
-          1. **Data Retrieval & Vector Decomposition**:
-             - Fetch $\vec{S}$ from <step_7_1_subject_vector_inference> and decompose into axis components:
-               * **$S_x$**: Horizontal movement ($-X$/$0X$/$+X$)
-               * **$S_y$**: Vertical movement ($-Y$/$0Y$/$+Y$)
-               * **$S_z$**: Depth movement ($-Z$/$0Z$/$+Z$)
-          2. **Component Mapping Strategy (Generate Candidates Pool)**:
-             - **Action**: For each non-zero component of $\vec{S}$, you must **OUTPUT ALL** valid Camera Counter-Parts into a candidate set.
-             - **Constraint**: Do NOT select one yet. Pass the full list to the next step.
-             - **Iteration through X, Y, and Z axes**:
-               - **Rule**: Generate candidates ONLY for axes where $\vec{S}$ has a non-zero component.
-               * **X-Axis Candidates ($C_x$)**:
-                 * **IF $S_x$($\vec{S}$ X direction) is $-X$** -> Output List: [\`Truck Left\`, \`Pan Left\`]
-                 * **IF $S_x$($\vec{S}$ X direction) is $0X$** -> Output List: [\`None\`]
-                 * **IF $S_x$($\vec{S}$ X direction) is $+X$** -> Output List: [\`Truck Right\`, \`Pan Right\`]
-               * **Y-Axis Candidates ($C_y$)**:
-                 * **IF $S_y$($\vec{S}$ Y direction) is $-Y$** -> Output List: [\`Pedestal Down\`, \`Tilt Down\`]
-                 * **IF $S_y$($\vec{S}$ Y direction) is $0Y$** -> Output List: [\`None\`]
-                 * **IF $S_y$($\vec{S}$ Y direction) is $+Y$** -> Output List: [\`Pedestal Up\`, \`Tilt Up\`]
-               * **Z-Axis Candidates ($C_z$)**:
-                 * **IF $S_z$($\vec{S}$ Y direction) is $-Z$** -> Output List: [\`Dolly-Out\`]
-                 * **IF $S_z$($\vec{S}$ Y direction) is $0Z$** -> Output List: [\`None\`]
-                 * **IF $S_z$($\vec{S}$ Y direction) is $+Z$** -> Output List: [\`Dolly-In\`]
-               - **Selection Examples by ($S_x$, $S_y$, $S_z$)**:
-                 * ($-X$, $-Y$, $-Z$) -> [[\`Truck Left\`, \`Pan Left\`], [\`Pedestal Down\`, \`Tilt Down\`], [\`Dolly-Out\`]]
-                 * ($-X$, $-Y$, $0Z$) -> [[\`Truck Left\`, \`Pan Left\`], [\`Pedestal Down\`, \`Tilt Down\`], [\`None\`]]
-                 * ($-X$, $-Y$, $+Z$) -> [[\`Truck Left\`, \`Pan Left\`], [\`Pedestal Down\`, \`Tilt Down\`], [\`Dolly-In\`]] 
-                 * ($-X$, $0Y$, $-Z$) -> [[\`Truck Left\`, \`Pan Left\`], [\`None\`], [\`Dolly-Out\`]]
-                 * ($-X$, $0Y$, $0Z$) -> [[\`Truck Left\`, \`Pan Left\`], [\`None\`], [\`None\`]]
-                 * ($-X$, $0Y$, $+Z$) -> [[\`Truck Left\`, \`Pan Left\`], [\`None\`], [\`Dolly-In\`]]
-                 * ($-X$, $+Y$, $-Z$) -> [[\`Truck Left\`, \`Pan Left\`], [\`Pedestal Up\`, \`Tilt Up\`], [\`Dolly-Out\`]]
-                 * ($-X$, $+Y$, $0Z$) -> [[\`Truck Left\`, \`Pan Left\`], [\`Pedestal Up\`, \`Tilt Up\`], [\`None\`]]
-                 * ($-X$, $+Y$, $+Z$) -> [[\`Truck Left\`, \`Pan Left\`], [\`Pedestal Up\`, \`Tilt Up\`], [\`Dolly-In\`]]
-                 * ($0X$, $-Y$, $-Z$) -> [[\`None\`], [\`Pedestal Down\`, \`Tilt Down\`], [\`Dolly-Out\`]]
-                 * ($0X$, $-Y$, $0Z$) -> [[\`None\`], [\`Pedestal Down\`, \`Tilt Down\`], [\`None\`]]
-                 * ($0X$, $-Y$, $+Z$) -> [[\`None\`], [\`Pedestal Down\`, \`Tilt Down\`], [\`Dolly-In\`]] 
-                 * ($0X$, $0Y$, $-Z$) -> [[\`None\`], [\`None\`], [\`Dolly-Out\`]]
-                 * ($0X$, $0Y$, $0Z$) -> [[\`None\`], [\`None\`], [\`None\`]]
-                 * ($0X$, $0Y$, $+Z$) -> [[\`None\`], [\`None\`], [\`Dolly-In\`]]
-                 * ($0X$, $+Y$, $-Z$) -> [[\`None\`], [\`Pedestal Up\`, \`Tilt Up\`], [\`Dolly-Out\`]]
-                 * ($0X$, $+Y$, $0Z$) -> [[\`None\`], [\`Pedestal Up\`, \`Tilt Up\`], [\`None\`]]
-                 * ($0X$, $+Y$, $+Z$) -> [[\`None\`], [\`Pedestal Up\`, \`Tilt Up\`], [\`Dolly-In\`]]
-                 * ($+X$, $-Y$, $-Z$) -> [[\`Truck Right\`, \`Pan Right\`], [\`Pedestal Down\`, \`Tilt Down\`], [\`Dolly-Out\`]]
-                 * ($+X$, $-Y$, $0Z$) -> [[\`Truck Right\`, \`Pan Right\`], [\`Pedestal Down\`, \`Tilt Down\`], [\`None\`]]
-                 * ($+X$, $-Y$, $+Z$) -> [[\`Truck Right\`, \`Pan Right\`], [\`Pedestal Down\`, \`Tilt Down\`], [\`Dolly-In\`]] 
-                 * ($+X$, $0Y$, $-Z$) -> [[\`Truck Right\`, \`Pan Right\`], [\`None\`], [\`Dolly-Out\`]]
-                 * ($+X$, $0Y$, $0Z$) -> [[\`Truck Right\`, \`Pan Right\`], [\`None\`], [\`None\`]]
-                 * ($+X$, $0Y$, $+Z$) -> [[\`Truck Right\`, \`Pan Right\`], [\`None\`], [\`Dolly-In\`]]
-                 * ($+X$, $+Y$, $-Z$) -> [[\`Truck Right\`, \`Pan Right\`], [\`Pedestal Up\`, \`Tilt Up\`], [\`Dolly-Out\`]]
-                 * ($+X$, $+Y$, $0Z$) -> [[\`Truck Right\`, \`Pan Right\`], [\`Pedestal Up\`, \`Tilt Up\`], [\`None\`]]
-                 * ($+X$, $+Y$, $+Z$) -> [[\`Truck Right\`, \`Pan Right\`], [\`Pedestal Up\`, \`Tilt Up\`], [\`Dolly-In\`]]
-          3. **Selection & Optimization Protocol**:
-             - **Input**: The Candidate Lists ($C_x, C_y, C_z$) generated in **Component Mapping Strategy**.
-             - **Phase A: Raw Cinematic Technique Set Mapping Guide**:
-               - **Mapping Guide by each axis of the candidate lists($C_x, C_y, C_z$)**:
-                 * $C_x$:
-                   * IF $C_x$ is [\`None\`]: [\`None\`]
-                   * IF $C_x$ is [\`Truck Left\`, \`Pan Left\`]:
-                     * IF \`INTENSITY_TIER\` is \`VERY_LOW\` OR \`LOW\` -> [\`Pan Left\`]
-                     * IF \`INTENSITY_TIER\` is \`HIGH\` OR \`VERY_HIGH\` -> [\`Truck Left\`]
-                   * IF $C_x$ is [\`Truck Right\`, \`Pan Right\`]:
-                     * IF \`INTENSITY_TIER\` is \`VERY_LOW\` OR \`LOW\` -> [\`Pan Right\`]
-                     * IF \`INTENSITY_TIER\` is \`HIGH\` OR \`VERY_HIGH\` -> [\`Truck Right\`]
-                 * $C_y$:
-                   * IF $C_y$ is [\`None\`]: [\`None\`]
-                   * IF $C_y$ is [\`Pedestal Down\`, \`Tilt Down\`]:
-                     * IF \`INTENSITY_TIER\` is \`VERY_LOW\` OR \`LOW\` -> [\`Tilt Down\`]
-                     * IF \`INTENSITY_TIER\` is \`HIGH\` OR \`VERY_HIGH\` -> [\`Pedestal Down\`]
-                   * IF $C_y$ is [\`Pedestal Up\`, \`Tilt Up\`]:
-                     * IF \`INTENSITY_TIER\` is \`VERY_LOW\` OR \`LOW\` -> [\`Tilt Up\`]
-                     * IF \`INTENSITY_TIER\` is \`HIGH\` OR \`VERY_HIGH\` -> [\`Pedestal Up\`]
-                 * $C_z$:
-                   * IF $C_z$ is [\`None\`]: [\`None\`]
-                   * IF $C_z$ is [\`Dolly-Out\`]: [\`Dolly-Out\`]
-                   * IF $C_z$ is [\`Dolly-In\`]: [\`Dolly-In\`]
-               * **Output**: Mapped candidate lists($C_x, C_y, C_z$) by following **Mapping Guide by each axis of the candidate lists**
-             - **Phase B: \`Static Frame\` Discrimination**:
-               - **Input**: Mapped candidate lists($C_x, C_y, C_z$) from **Phase A**.
-               * IF ($C_x, C_y, C_z$) is ([\`None\`], [\`None\`], [\`None\`]):
-                 - **Action**: Assign [Cinematic Technique] = \`Static Frame\`.
-                 - **Constraint**: Immediately TERMINATE the camera vector design process. Do NOT proceed to Phase B or C.
-                 - **Output**: Proceed directly to **Phase E** using \`Static Frame\`.
-               * IF one of ($C_x, C_y, C_z$) is NOT [\`None\`]:
-                 - **Action**: Assign [Cinematic Technique] = The combined list of all non-[\`None\`] candidates from ($C_x, C_y, C_z$).
-                 - **Transition**: Proceed to **Phase C: Selection Budget & Priority Filtering**.
-             - **Phase C: Selection Budget & Priority Filtering**
-               - **Input**: Mapped candidates list (Max 3) from **Phase B**.
-               - **Task**: Ensure the total number of active camera techniques does not exceed 2.
-               - **Priority Order**: $C_z$ (Depth) > $C_x$ (Horizontal) > $C_y$ (Vertical).
-               - **Logic**:
-                 - **Check**: Count the number of active axes (where candidate is NOT [\`None\`]).
-                 - **Conditions**:
-                   * IF Active Axes Count == 3:
-                     1. MANDATORY DROP the $C_y$ candidate (\`Pedestal Up\` / \`Pedestal Down\` or \`Tilt Up\` / \`Tilt Down\`).
-                     2. Proceed to **Phase D** with Selected candidates list.
-                   * IF Active Axes Count <= 2:
-                     1. Proceed directly to **Phase D** with Mapped candidates list from **Phase B**.
-             - **Phase D: Conflict Sanitization**
-               - **Input**: Candidates list (Max 2) from **Phase C**.
-               - **The Strict Forbidden Matrix**:
-                 - **Logic**: Extract \`Category\` and \`Visual Axis\` columns of <step_7_0_professional_camera_mechanics_definitions>.<definition_table> with candidates from **Component Mapping Strategy**.
-                 - **Forbidden Combination**:
-                   - Format: [\`Category\`-\`Visual Axis\`]
-                   * **[\`Spatial\`-\`Y\`] + [\`Optical\`-\`Z\`]**: (e.g., (\`Pedestal Up\` / \`Pedestal Down\`) + \`Rack Focus\`)
-                   * **[\`Angular\`-\`X\`] + [\`Spatial\`-\`Y\`]**: (e.g., (\`Pan Left\` / \`Pan Right\`) + (\`Pedestal Up\` / \`Pedestal Down\`))
-                   * **[\`Spatial\`-\`Z\`] + [\`Optical\`-\`Z\`] (Excluding \`Dolly Zoom\`)**: (e.g., (\`Dolly-In\` / \`Dolly-Out\`) + (\`Rack Focus\` / (\`Crash Zoom In\` / \`Crash Zoom Out\`))
-               * **Task**: Perform final validation against **The Strict Forbidden Matrix** and ensure a stable output.
-               * **Output Statement by candidates count**:
-                 * **IF candidates count is 1**:
-                   - **Action**: Bypass **The Strict Forbidden Matrix** check.
-                   - **Transition**: Proceed directly to **Final Output**.
-                 * **IF candidates count is 2**:
-                   - **Check**: Compare the [\`Category\`-\`Visual Axis\`] of the two candidates against **The Strict Forbidden Matrix**.
-                   * IF two candidates NOT against **The Strict Forbidden Matrix**:
-                     - **Action**: Proceed directly to **Final Output**.
-                   * IF two candidates against **The Strict Forbidden Matrix**:
-                     - **Action**:
-                       1. Identify the lower priority axis based on the hierarchy ($C_z > C_x > C_y$).
-                       2. **MANDATORY DROP** the lower priority candidate.
-                       3. Re-verify the remaining single candidate (should now satisfy the exit condition).
-               * **Final Output**: Assign the purified technique(s) to [Validated Combination].
-               * **Transition**: Proceed to **Phase E: The Upgrade Protocol (Vibe Injection)**.
-             - **Phase E: The Upgrade Protocol (Vibe Injection)**:
-               * **Goal**: Apply Special FX based on \`Narrative Vibe\` to the [Validated Combination].
-               * **Rule 1: The Swap (Override Base)**:
-                 * IF \`INTENSITY_TIER\` is \`VERY_HIGH\` AND Base contains (\`Dolly-In\` OR \`Dolly-Out\`):
-                   * IF \`Narrative Vibe\` implies **'Vertigo'** or **'Shock'** -> REPLACE \`Dolly-In\` OR \`Dolly-Out\` with **\`Dolly Zoom\`**.
-                   * IF $C_x$ is NOT (\`Pedestal Up\` OR \`Pedestal Down\` OR \`Pan Left\` OR \`Pan Right\`):
-                      * IF $C_z$ is \`Dolly-In\` -> REPLACE \`Dolly-In\` with \`Crash Zoom In\`.
-                      * IF $C_z$ is \`Dolly-Out\` -> REPLACE \`Dolly-Out\` with \`Crash Zoom Out\`.
-                 * IF \`Narrative Vibe\` implies **'Dreamy'** or **'Surreal'**:
-                   * IF $C_x$ is ((\`Pan Left\` OR \`Pan Right\` OR \`Truck Left\` OR \`Truck Right\`) AND $C_z$ is (\`Dolly-In\` OR \`Dolly-Out\`) -> MERGE into **\`Arc Orbit\`** and put it into $C_z$ and remove previous $C_x$. 
-                 * IF \`Narrative Vibe\` implies **'Emotional'** or **'Focus'** AND **Final Output** of **Phase D** is \`Static Frame\` -> REPLACE with **\`Rack Focus\`**.
-               * **Rule 2: The Add-on (Texture)**:
-                 - IF \`Narrative Vibe\` implies Instability (e.g., **'Chaos'**, **'Combat'**, **'Anxious'**, **'Catastrophic'**) -> APPEND "with Handheld Shaky" to the end string.
-               * **Final Output**: Assemble the final string: "[Action_1] (and [Action_2] (If [Action_2] exists) (with Handheld Shaky (If \`Handheld Shaky\` exists))"
-               * **Transition**: Finalize **[Slot_2: Purified Camera Tech]** of <step_7_3_cinematic_camera_vector_assembly> and proceed to <step_7_3_cinematic_camera_vector_assembly>.
-      </step_7_2_vector_matching_protocol>
-      <step_7_3_cinematic_camera_vector_assembly>
-        - **Goal**: Synthesize the finalized cinematic camera prompt into a seamless, natural language **Directorial Prose** that dictates the MMDiT engine's optical and spatial behavior.
+      <step_7_2_cinematic_camera_vector_assembly>
+        - **Goal**: Establish the optical foundation and place the programmatic handle followed immediately by the "Subject Anchor" to allow the code engine to complete the kinetic sentence.
         - **[Slot_1: Optics & Framing Setup] (Static Foundation)**:
           - **Source**: <master_style_guide>.\`optics.lensType\`, <master_style_guide>.\`composition.preferredAspectRatio\`, and <master_style_guide>.\`composition.framingStyle\`.
           - **Format**: Purified descriptive tags (e.g., "Anamorphic lens, 9:16 Portrait Cinema with vertical layering").
-        - **[Slot_2: Purified Camera Tech] (The Kinetic Vector)**:
-          - **Source**: The result of **Phase E** in <step_7_2_vector_matching_protocol>.
-        - **[Slot_3: Movement Intensity Adverb] (Kinetic Calibration)**:
-          - **Source**: Select a descriptor that matches the locked \`INTENSITY_TIER\`.
-          - **Mapping**: 
-            * \`VERY_LOW\`: "steadily" or "subtly"
-            * \`LOW\`: "smoothly"
-            * \`HIGH\`: "aggressively"
-            * \`VERY_HIGH\`: "violently"
-        - **[Slot_Connector: Interaction Verb] (The Bridge)**:
-          - **Logic**: Select a single participle verb based on the techniques present in [Slot_2] to represent the dominant motion vector.
-          - **Mapping Rule**:
-            * IF [Slot_2] contains (\`Truck Left\` OR \`Truck Right\` OR \`Pedestal Up\` OR \`Pedestal Down\` OR \`Pan Left\` OR \`Pan Right\` OR \`Tilt Up\` OR \`Tilt Down\` OR \`Arc Orbit\`) AND Priority 1 is empty -> Use "tracking" or "following"
-            * IF [Slot_2] is (\`Static Frame\`, \`Rack Focus\`) AND Priorities 1-2 are empty -> Use "observing" or "focusing on"
-            * IF \`INTENSITY_TIER\` is \`VERY_HIGH\` AND [Slot_2] does NOT contain (\`Dolly-Out\`, \`Crash Zoom Out\`) -> Use "rushing at" or "impactfully framing"
-            * IF [Slot_2] contains (\`Dolly-In\` OR \`Crash Zoom In\` OR \`Dolly Zoom\`) -> Use "pushing toward" or "closing in on"
-            * IF [Slot_2] contains (\`Dolly-Out\` OR \`Crash Zoom Out\`) -> Use "pulling back from" or "revealing"
-        - **[Slot_4: Trajectory Focus & Anchor] (Spatial Target)**:
+        - **[Slot_2: Trajectory Focus & Anchor] (Spatial Target)**:
           - **Source**: The valid anchor from Step 2 (Either the \`Mapping Handle\` from <step_2_1_entity_driven_mapping> OR the \`Location Archetype\` from <step_2_2_environment_driven_anchor>).
           - **Logic**: Define the relationship between the camera and the target. IF <entity_list>.length == 0, focus on the "Environment Core" (e.g., "tracking the canyon's depth").
-        - **The Cinematic Camera Formula ([Cinematic Camera Vector] of **Component Definition** in <step_1_core_synthesis_principles>)**:
-          - **Assembly**: "[Slot_1], [Slot_2] [Slot_3] [Slot_Connector] [Slot_4]"
-          - **Constraint**: The final output MUST be a single, organic sentence. Do not use technical markers, brackets(\`[]\`) or symbol(e.g, \`+\`). Ensure a natural flow.
-      </step_7_3_cinematic_camera_vector_assembly>
-      <constraint>
-        - **Logic Flow Supremacy**:
-          * You MUST strictly follow **Logic Flow** of <step_7_2_vector_matching_protocol>.
-          * Use ONLY the final string yielded from [Slot_2: Purified Camera Tech] of <step_7_2_vector_matching_protocol>. 
-        - **No Hallucination**: NEVER replace components of [Slot_2: Purified Camera Tech] (from **Phase E** of <step_7_2_vector_matching_protocol>) based on \`Narrative Vibe\` (e.g., "for immersion").
-        - **Format Integrity**: Strictly follow the natural language template: "[Action_1] (and [Action_2]) (with Handheld Shaky)". Do not add any extra adjectives or descriptive words that were not in [Slot_2: Purified Camera Tech].
-      </constraint>
+        - **[The Cinematic Camera Formula]**: 
+          - **Assembly Rule**: Synthesize the camera section into a single, seamless phrase following the exact structure below.
+          - **Formula**: "[Slot_1], captured CINEMATIC_CAMERA_VECTORS [Slot_2]"
+          - **Mandatory Constraints**: 
+            1. **STRICT STRUCTURE**: You MUST only output "[Slot_1], captured CINEMATIC_CAMERA_VECTORS [Slot_2]".
+            2. **HANDLE INTEGRITY**: Do not modify the string "CINEMATIC_CAMERA_VECTORS". It must remain exactly as is.
+        - **Examples for Assembly (Handle + Anchor)**:- **Examples for Assembly (Diverse Themes & Specific Ratios)**:
+          1. **Cyberpunk City**: "Neon-lit streets, Anamorphic lens, 9:16 Portrait, captured CINEMATIC_CAMERA_VECTORS the hovering delivery drone"
+          2. **Gourmet Cooking**: "Macro lens, 4K Sharp texture, 1:1 Square format, captured CINEMATIC_CAMERA_VECTORS the sizzling steak on the pan"
+          3. **Nature Wildlife**: "Telephoto lens, Shallow depth of field, 16:9 Cinema, captured CINEMATIC_CAMERA_VECTORS the hunting lioness in the tall grass"
+          4. **Fashion Runway**: "85mm prime lens, Professional lighting, 3:4 Aspect ratio, captured CINEMATIC_CAMERA_VECTORS the model walking with flowing silk"
+          5. **Sci-Fi Space**: "Wide-angle lens, Deep space background, 21:9 Ultra-wide, captured CINEMATIC_CAMERA_VECTORS the massive starship jumping to warp"
+          6. **Indie Film/Daily Life**: "35mm vintage lens, Warm natural light, 4:3 Classic ratio, captured CINEMATIC_CAMERA_VECTORS the steam rising from the coffee cup"
+          7. **Automotive Action**: "Low-angle tracking, Motion blur, 21:9 Wide-screen, captured CINEMATIC_CAMERA_VECTORS the speeding sports car drifting on the corner"
+          8. **Live Sports**: "High-speed shutter, Arena lighting, 16:9 Cinema, captured CINEMATIC_CAMERA_VECTORS the spinning ball entering the goal"
+          9. **Music Concert**: "Fisheye lens, Dynamic strobe lights, 9:16 Portrait, captured CINEMATIC_CAMERA_VECTORS the lead singer reaching toward the crowd"
+          10. **Luxury Jewelry**: "Probe lens, Extreme close-up, 1:1 Ratio, captured CINEMATIC_CAMERA_VECTORS the sparkling diamond ring on the velvet cushion"
+      </step_7_2_cinematic_camera_vector_assembly>
     </step_7_cinematic_camera_vector_design>
     <step_8_style_and_stability_modifiers>
       - **Goal**: Finalize the visual fidelity and ensure the structural continuity of the initial anchor for high-quality short-form video production.
@@ -2418,10 +2242,10 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
           "primary_movement_reason": "string (Explain why you decided that **Primary Movement** based on what.)",
           "narrative_vibe": "string (Created **Narrative Vibe** from <step_0_1_scene_blueprint>)",
           "narrative_vibe_reason": "string (Explain why you decided that **Narrative Vibe** based on what.)",
-          "intensity_tier": "string (Selected ONE \`INTENSITY_TIER\` from <step_0_kinetic_energy_profiling>)",
+          "intensity_tier": "enum ([\`VERY_LOW\`, \`LOW\`, \`HIGH\`, \`VERY_HIGH\`]) (Selected ONE \`INTENSITY_TIER\` from <step_0_kinetic_energy_profiling>)",
           "intensity_tier_selected_reason": "string (Explain why you chose that \INTENSITY_TIER\` based on what.)",
         },
-        "narrative_vibe": "string (Selected
+        "narrative_vibe": "enum: (["NORMAL", "CHAOTIC", "COMBAT", "ANXIOUS", "CATASTROPHIC", "VERTIGO", "SHOCK", "DREAMY", "SURREAL", "EMOTIONAL", "FOCUS"])"
         "identity_logic": "string (Define how the subject's era, role, and physical essence from the <entity_list> and metadata are preserved during motion.)",
         "action_focus": "string (Explain the conceptual shift from the raw narration to the high-impact kinetic verb used in the prompt.)",
         "primary_narrative_block": {
@@ -2437,11 +2261,13 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
           "selected_reason": "string (Explain why you chose \`selected_atmospheric_or_lighting_layer\` from <step_5_atmospheric_delta_refinement> based on what.)"
         }[],
         "cinematic_camera_vectors": {
-          "selected_camera_actions": {
-            "camera_action": "string (The EXACT natural language string from **Phase E** of <step_7_2_vector_matching_protocol>. DO NOT modify or add narrative descriptions.)"
-            "camera_action_reason": "string (Explain why you chose \`camera_action\` strictly based on $S_x$, $S_y$, $S_z$ and **Logic Flow** of <step_7_2_vector_matching_protocol>.)
+          "subject_vectors": {
+            // $S_x$, $S_y$, $S_z$ from <step_7_1_subject_vector_inference>
+            "sx": "enum (["$-X$", "$0X$", "$+X$"])",
+            "sy": "enum (["$-Y$", "$0Y$", "$+Y$"])",
+            "sz": "enum (["$-Z$", "$0Z$", "$+Z$"])",
           },
-          "vector_reasoning": "string (Briefly explain logically why these $\vec{S}$ were derived from the image context.)"
+          "subject_vectors_reasoning": "string (Briefly explain logically why these $\vec{S}$ were derived from the image context.)"
         },
         "style": {
           "slot_1": "string (Selected **[Slot_1] from <step_8_style_and_stability_modifiers>.)",
@@ -2451,6 +2277,12 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
         }
       },
       "reasoning": "string (Provide a detailed justification for: 1) The specific tags selected from the vocabulary_depot, 2) The choice of camera tech based on MasterStyleInfo, and 3) The atmospheric strategy to prevent freezing.)",
+      "final_output_structure": {
+        "primary_narrative_block": "string (**[Primary Narrative Block]** of <step_9_final_assembly_protocol>)",
+        "atmospheric_lighting_delta": "string (**[Atmospheric/Lighting Delta]** of <step_9_final_assembly_protocol>)",
+        "cinematic_camera_vector": "string (**[Cinematic Camera Vector]** of <step_9_final_assembly_protocol>)",
+        "style": "string (**[Style]** of <step_9_final_assembly_protocol>)",
+      }
       "video_gen_prompt": "string (The final technical prompt assembled using the 5-stage Kinetic Anchor Protocol: [Anchor] + [Primary Action Vector] + [Atmospheric Delta] + [Cinematic Camera Vector] + [Style Modifiers].)",
     }
   </output_schema>
