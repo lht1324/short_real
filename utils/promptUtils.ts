@@ -169,3 +169,76 @@ function getCandidatesBySubjectVectors(
 
     return [xCandidate, yCandidate, zCandidate];
 }
+
+/**
+ * AI가 생성한 블록들을 결합하여 최종 비디오 프롬프트를 조립합니다.
+ * 1. "None" 입력값은 빈 문자열로 처리하여 제외합니다.
+ * 2. 문법적 접속사를 보충하고 첫 글자 소문자화를 처리합니다.
+ * 3. 마지막에 연쇄적인 .replace()를 통해 오염된 구두점과 공백을 세척합니다.
+ */
+export function assembleFullVideoGenPromptSentence(
+    primaryNarrativeBlock: string,
+    atmosphericLightingDelta: string,
+    cinematicCameraVector: string,
+    cameraActionString: string,
+    style: string,
+): string {
+    // 1번 요청사항: "None" 필터링 및 기초 구두점 제거
+    const sanitizeBlock = (text: string): string => {
+        const trimmed = text.trim();
+        if (trimmed.toLowerCase() === "none" || !trimmed) return "";
+        return trimmed.replace(/[.,\s]+$/, ""); // 끝에 붙은 마침표, 쉼표, 공백 제거
+    };
+
+    const lowerFirstLetter = (text: string): string => {
+        if (!text) return "";
+        return text.charAt(0).toLowerCase() + text.slice(1);
+    };
+
+    // 각 블록 변수 선언 (카멜 표기법)
+    const narrativePart = sanitizeBlock(primaryNarrativeBlock);
+    const atmosphereRaw = lowerFirstLetter(sanitizeBlock(atmosphericLightingDelta));
+    const cameraRaw = lowerFirstLetter(sanitizeBlock(cinematicCameraVector));
+    const styleRaw = lowerFirstLetter(sanitizeBlock(style));
+
+    // 카메라 핸들 치환
+    const replacedCameraVector = cameraRaw.replace(
+        "CINEMATIC_CAMERA_VECTORS",
+        cameraActionString.trim()
+    );
+
+    // 접속사(Bridge) 처리
+    let atmosphericPart = "";
+    if (atmosphereRaw) {
+        const atmosphereConnectors = ["amidst", "while", "with", "surrounded", "enhanced"];
+        const hasConnector = atmosphereConnectors.some(c => atmosphereRaw.startsWith(c));
+        atmosphericPart = hasConnector ? atmosphereRaw : `amidst ${atmosphereRaw}`;
+    }
+
+    let cameraPart = "";
+    if (replacedCameraVector) {
+        const hasCameraConnector = replacedCameraVector.includes("captured") || replacedCameraVector.includes("filmed");
+        cameraPart = hasCameraConnector ? replacedCameraVector : `captured with ${replacedCameraVector}`;
+    }
+
+    let stylePart = "";
+    if (styleRaw) {
+        stylePart = styleRaw.startsWith("rendered") ? styleRaw : `rendered in ${styleRaw}`;
+    }
+
+    // 2번 요청사항: 최종 조립 및 연쇄적인 replace 처리
+    const finalSentence = [
+        narrativePart,
+        atmosphericPart,
+        cameraPart,
+        stylePart
+    ]
+        .filter(Boolean) // 빈 문자열(None이었던 것들) 제거
+        .join(", ");
+
+    return finalSentence
+        .replace(/,\s*,/g, ",")       // 중복 쉼표 세척 (,, 또는 , ,)
+        .replace(/,\s*\./g, ".")      // 문장 끝 쉼표+마침표 방지
+        .replace(/\s\s+/g, " ")       // 이중 공백 세척
+        .trim() + ".";                // 최종 마침표 추가
+}
