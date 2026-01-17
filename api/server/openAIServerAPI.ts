@@ -21,7 +21,7 @@ import {Entity, InitialEntityManifestItem} from "@/api/types/open-ai/Entity";
 import {PHYSICS_LIBRARY} from "@/api/types/open-ai/PhysicsPromptLibrary";
 import {FluxPrompt, FluxPromptSubject} from "@/api/types/open-ai/FluxPrompt";
 import {
-    assembleFullVideoGenPromptSentence, subjectVectorsToCameraVectorString,
+    assembleFullVideoGenPromptSentence, generateTechnicalLensString, subjectVectorsToCameraVectorString,
     surgicallyReplaceVideoGenPromptByCameraKey
 } from "@/utils/promptUtils";
 
@@ -29,6 +29,23 @@ enum OpenAIModel {
     GPT_4O_MINI = "gpt-4o-mini-2024-07-18",
     GPT_O4_MINI = "o4-mini-2025-04-16",
 }
+
+const masterStyleInfoResponseFormat: OpenAI.ResponseFormatJSONSchema = {
+    type: "json_schema",
+    json_schema: {
+        name: "master_style_info_response",
+        strict: true,
+        schema: {
+            type: "object",
+            properties: {
+
+            },
+            // 최상위 required
+            required: ["master_style_info", "entity_manifest_list", "entity_reasoning_list", "scene_casting_list"],
+            additionalProperties: false
+        }
+    }
+};
 
 const imageGenResponseFormat: OpenAI.ResponseFormatJSONSchema = {
     type: "json_schema",
@@ -1105,17 +1122,20 @@ Instruction: Generate the scene instruction JSON.
                 const basePrompt = parsedJson.video_gen_prompt;
                 const cameraVectorString = subjectVectorsToCameraVectorString(subjectVectors.sx, subjectVectors.sy, subjectVectors.sz, intensityTier, narrativeVibe);
 
-                // 1. AI가 필드에 미리 발라놓은 'captured with' 등을 먼저 싹 닦아냅니다.
+                // 1. AI가 필드에 미리 발라놓은 'captured with' `등을 먼저 싹 닦아냅니다.
                 const bridgePhrasesRegex = /\b(captured with|filmed with|captured with a|filmed using)\s+CINEMATIC_CAMERA_VECTORS/gi;
                 // 필드 자체를 미리 세척 (이게 핵심입니다)
                 const cleanedCameraField = outputCinematicCameraVector.replace(bridgePhrasesRegex, "CINEMATIC_CAMERA_VECTORS");
+                const technicalLensString = generateTechnicalLensString(masterStyleInfo);
+                const finalCinematicCameraVectorsBlock = `${technicalLensString}, ${cleanedCameraField}`;
+
                 // 조립 함수 및 메인 로직 내 적용 예시
                 const finalResultPrompt = outputCinematicCameraVector.includes("CINEMATIC_CAMERA_VECTORS")
                     ? isEntityListNotEmpty
                         ? assembleFullVideoGenPromptSentence(
                             outputPrimaryNarrativeBlock,
                             outputAtmosphericLightingDelta,
-                            cleanedCameraField,
+                            finalCinematicCameraVectorsBlock,
                             cameraVectorString,
                             outputStyle
                         )

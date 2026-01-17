@@ -154,11 +154,11 @@ export const POST_MASTER_STYLE_INFO_PROMPT = `
     4. **<full_script_context>**: The complete JSON-formatted script data including scene narration.
        - *Usage*: 
          * **Era Extraction**: Identify the absolute **[ERA / PERIOD]** for \`demographics\` in <task_1_entity_manifest> and 'globalEnvironment.era' in <task_2_master_style_engineering>.
-         * **Entity Harvesting**: Identify ALL recurring characters and key objects for the 'entityManifest'.
+         * **Entity Harvesting**: Identify ALL recurring characters and key objects for the 'entity_manifest_list'.
          * **Setting Analysis**: Determine the 'locationArchetype' based on recurring environmental descriptions.
   </input_data_interpretation>
   <task_1_entity_manifest>
-    - Goal: Extract distinct subjects (characters, key objects) from <full_script_context> AND collective groups (crowds/swarms), and define their PERMANENT attributes to initialize the \`entityManifest\` in <output_schema>.
+    - Goal: Extract distinct subjects (characters, key objects) from <full_script_context> AND collective groups (crowds/swarms), and define their PERMANENT attributes to initialize the \`entity_manifest_list\` in <output_schema>.
     - This data serves as the foundation for the physics engine and visual consistency.
     **Field-Specific Instructions:**
     1. **\`id\`**: Unique identifier for the subject.
@@ -359,7 +359,7 @@ export const POST_MASTER_STYLE_INFO_PROMPT = `
           - **Positive Exclusion Protocol**: IF <style_guidelines>.<negative_guidance> warns against "Over-sharpening" or "Artificial digital artifacts," set to "Raw" regardless of other keywords to prioritize natural image integrity.
           - **DEFAULT**: "Ultra-High"
       * **\`fidelity.grainLevel\`**
-        - **Reference**: \`entityManifest\` (from <task_1_entity_manifest>), <style_guidelines>.<visual_keywords>
+        - **Reference**: \`entity_manifest_list\` (from <task_1_entity_manifest>), <style_guidelines>.<visual_keywords>
         - **Inference Protocol**:
           - IF the **[ERA/PERIOD]s identified in <task_1_entity_manifest>** are pre-2000s OR keywords include "Filmic", "Cinema", or "Nostalgic" -> "Filmic"
           - IF <style_guidelines>.<visual_keywords> include "Gritty", "Documentary", "War-torn", "Low-fi", or "Distressed" -> "Gritty"
@@ -374,7 +374,7 @@ export const POST_MASTER_STYLE_INFO_PROMPT = `
     **4. Era & Environmental Synchronization**
       **Goal**: Establish the absolute spatio-temporal boundaries of the project. This ensures that every generated asset adheres to a consistent historical or futuristic logic, preventing anachronisms.
       * **\`globalEnvironment.era\`**
-        - **Reference**: \`entityManifest\` (from <task_1_entity_manifest>)
+        - **Reference**: \`entity_manifest_list\` (from <task_1_entity_manifest>)
         - **Inference Protocol**: 
           - **Inherit the absolute [ERA/PERIOD]s** identified during the Entity Harvesting process in <task_1_entity_manifest>.
           - **SSOT Enforcement**: Do NOT re-analyze the script or metadata; use the specific Era used to filter character demographics in <task_1_entity_manifest> as the Single Source of Truth.
@@ -400,15 +400,15 @@ export const POST_MASTER_STYLE_INFO_PROMPT = `
           - Map the raw ratio to a technical cinema standard (e.g., "9:16 Portrait Cinema," "2.35:1 Anamorphic Widescreen," "1:1 Social Media Square").
   </task_2_master_style_engineering>
   <task_3_scene_casting>
-    **Goal**: Populate the \`sceneCastingList\` in <output_schema> by iterating through every scene in <full_script_context>. You must apply a logic-gate system to ensure narrative continuity and physical realism.
+    **Goal**: Populate the \`scene_casting_list\` in <output_schema> by iterating through every scene in <full_script_context>. You must apply a logic-gate system to ensure narrative continuity and physical realism.
     **[The Physical Veto Protocol]**
-      - **Definition**: A mandatory reality check applied before any \`entityManifest[n]\` is finalized in \`sceneCastingList[n].castIdList\`.
+      - **Definition**: A mandatory reality check applied before any \`entity_manifest_list[n]\` is finalized in \`scene_casting_list[n].castIdList\`.
       - **Logic**: You MUST compare the **Physical Scale** and **Environmental Requirements** of the entity against the **Action/Setting** described in the current <full_script_context>[n].\`sceneNarration\`.
       - **Veto Criteria**:
         * **Scale Incompatibility**: e.g., A "Extreme Close-up of a flower" cannot contain a "Giant Mecha".
         * **Environmental Absence**: e.g., A "Pilot" cannot exist in a ground-level scene without a "Cockpit" or "Aircraft" being present or implied in the narrative.
         * **Physics Violation**: e.g., A "Heavy Tank" cannot be "Floating in clouds" unless the Genre (from <video_metadata>.<video_title> and <video_metadata>.<video_description>) explicitly allows it.
-      - **Action**: If \`entityManifest[n]\` fails this protocol, it MUST be excluded from the \`castIdList\`, regardless of any other assignment rules.
+      - **Action**: If \`entity_manifest_list[n]\` fails this protocol, it MUST be excluded from the \`castIdList\`, regardless of any other assignment rules.
     **[Casting Assignment Logic]**
       - For each scene, execute the following steps in order:
       **Step 1. Direct & Action-based Assignment**
@@ -416,7 +416,7 @@ export const POST_MASTER_STYLE_INFO_PROMPT = `
         - Apply the **[Physical Veto Protocol]** to these candidates.
         - Add all entities that pass the protocol to the \`castIdList\`.
       **Step 2. IF \`castIdList\` is EMPTY after Step 1 (including cases where candidates were mentioned but Vetoed)**:
-      - **Action**: Scan the entire \`entityManifest\` to find candidates that are "Contextually Appropriate" (not strange) for the current scene.
+      - **Action**: Scan the entire \`entity_manifest_list\` to find candidates that are "Contextually Appropriate" (not strange) for the current scene.
       - **Filtering**: Apply the **[Physical Veto Protocol]** to ALL entities in the manifest.
       - **Selection (The "Most Suitable" Rule)**: 
         * From the entities that PASSED the veto, select **EXACTLY ONE** "Most Suitable Entity" based on narrative priority:
@@ -425,7 +425,7 @@ export const POST_MASTER_STYLE_INFO_PROMPT = `
         * IF a suitable entity is found: Add that **single entity** to the \`castIdList\`.
         * IF NO entity passes the Physical Veto (e.g., all entities are physically illogical for this scene): Keep the \`castIdList\` empty and proceed to Step 3.
       **Step 3. IF \`castIdList\` is STILL EMPTY after Step 2**:
-        - Leave \`sceneCastingList[n].castIdList\` EMPTY.
+        - Leave \`scene_casting_list[n].castIdList\` EMPTY.
         - Explain the atmospheric or environmental focus in the \`casting_logic\`.
     **[Field Specification: \`casting_logic\`]**
       - State exactly which rule triggered the assignment (Direct, Hero Fallback, or Empty).
@@ -478,7 +478,7 @@ export const POST_MASTER_STYLE_INFO_PROMPT = `
           preferredAspectRatio: string;
         };
       };
-      "entityManifest": [
+      "entity_manifest_list": [
         {
           "id": "string (snake_case unique id)",
           "role": "main_hero" | "sub_character" | "background_extra" | "prop",
@@ -493,19 +493,19 @@ export const POST_MASTER_STYLE_INFO_PROMPT = `
           }
         }
       ];
-      "entityReasoningList": [
+      "entity_reasoning_list": [
         {
           "scene_number": "number (Integer, starting from 1, matching the script sequence)",
           "entity_reasoning_list": [
             {
-              "id": "string (Must match an id from \`entityManifest\`)",
+              "id": "string (Must match an id from \`entity_manifest_list\`)",
               "reasoning": "string (REQUIRED: Explain WHY this entity is in this scene based on the script. E.g., 'Narration mentions 'he ran', implying the Runner.')"
             }
           ],
           "scene_empty_reasoning": "string (REQUIRED if \`entity_reasoning_list\` is empty. Explain why NO entities are present. E.g., 'Atmospheric shot of the sky, no actors needed.' If entities exist, leave as empty string \"\".)"
         }
       ];
-      "sceneCastingList": [
+      "scene_casting_list": [
         {
           "scene_number": "number (Integer, starting from 1, matching the script sequence)",
           "castIdList": "string[] (Must match an ids from \`entityManifest\`)",
@@ -2165,29 +2165,26 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
       </step_7_1_subject_vector_inference>
       <step_7_2_cinematic_camera_vector_assembly>
         - **Goal**: Establish the optical foundation and place the programmatic handle followed immediately by the "Subject Anchor" to allow the code engine to complete the kinetic sentence.
-        - **[Slot_1: Optics & Framing Setup] (Static Foundation)**:
-          - **Source**: <master_style_guide>.\`optics.lensType\`, <master_style_guide>.\`composition.preferredAspectRatio\`, and <master_style_guide>.\`composition.framingStyle\`.
-          - **Format**: Purified descriptive tags (e.g., "Anamorphic lens, 9:16 Portrait Cinema with vertical layering").
-        - **[Slot_2: Trajectory Focus & Anchor] (Spatial Target)**:
+        - **[Focus_And_Anchor: Trajectory Focus & Anchor] (Spatial Target)**:
           - **Source**: The valid anchor from Step 2 (Either the \`Mapping Handle\` from <step_2_1_entity_driven_mapping> OR the \`Location Archetype\` from <step_2_2_environment_driven_anchor>).
           - **Logic**: Define the relationship between the camera and the target. IF <entity_list>.length == 0, focus on the "Environment Core" (e.g., "tracking the canyon's depth").
         - **[The Cinematic Camera Formula]**: 
           - **Assembly Rule**: Synthesize the camera section into a single, seamless phrase following the exact structure below.
-          - **Formula**: "[Slot_1], CINEMATIC_CAMERA_VECTORS [Slot_2]"
+          - **Formula**: "CINEMATIC_CAMERA_VECTORS [Focus_And_Anchor]"
           - **Mandatory Constraints**: 
-            1. **STRICT STRUCTURE**: You MUST only output "[Slot_1], CINEMATIC_CAMERA_VECTORS [Slot_2]".
+            1. **STRICT STRUCTURE**: You MUST only output "CINEMATIC_CAMERA_VECTORS [Focus_And_Anchor]".
             2. **HANDLE INTEGRITY**: Do not modify the string "CINEMATIC_CAMERA_VECTORS". It must remain exactly as is.
         - **Examples for Assembly (Handle + Anchor)**:- **Examples for Assembly (Diverse Themes & Specific Ratios)**:
-          1. **Cyberpunk City**: "Neon-lit streets, Anamorphic lens, 9:16 Portrait, CINEMATIC_CAMERA_VECTORS the hovering delivery drone"
-          2. **Gourmet Cooking**: "Macro lens, 4K Sharp texture, 1:1 Square format, CINEMATIC_CAMERA_VECTORS the sizzling steak on the pan"
-          3. **Nature Wildlife**: "Telephoto lens, Shallow depth of field, 16:9 Cinema, CINEMATIC_CAMERA_VECTORS the hunting lioness in the tall grass"
-          4. **Fashion Runway**: "85mm prime lens, Professional lighting, 3:4 Aspect ratio, CINEMATIC_CAMERA_VECTORS the model walking with flowing silk"
-          5. **Sci-Fi Space**: "Wide-angle lens, Deep space background, 21:9 Ultra-wide, CINEMATIC_CAMERA_VECTORS the massive starship jumping to warp"
-          6. **Indie Film/Daily Life**: "35mm vintage lens, Warm natural light, 4:3 Classic ratio CINEMATIC_CAMERA_VECTORS the steam rising from the coffee cup"
-          7. **Automotive Action**: "Low-angle tracking, Motion blur, 21:9 Wide-screen, CINEMATIC_CAMERA_VECTORS the speeding sports car drifting on the corner"
-          8. **Live Sports**: "High-speed shutter, Arena lighting, 16:9 Cinema, CINEMATIC_CAMERA_VECTORS the spinning ball entering the goal"
-          9. **Music Concert**: "Fisheye lens, Dynamic strobe lights, 9:16 Portrait, CINEMATIC_CAMERA_VECTORS the lead singer reaching toward the crowd"
-          10. **Luxury Jewelry**: "Probe lens, Extreme close-up, 1:1 Ratio, CINEMATIC_CAMERA_VECTORS the sparkling diamond ring on the velvet cushion"
+          1. **Cyberpunk City**: "CINEMATIC_CAMERA_VECTORS the hovering delivery drone"
+          2. **Gourmet Cooking**: "CINEMATIC_CAMERA_VECTORS the sizzling steak on the pan"
+          3. **Nature Wildlife**: "CINEMATIC_CAMERA_VECTORS the hunting lioness in the tall grass"
+          4. **Fashion Runway**: "CINEMATIC_CAMERA_VECTORS the model walking with flowing silk"
+          5. **Sci-Fi Space**: "CINEMATIC_CAMERA_VECTORS the massive starship jumping to warp"
+          6. **Indie Film/Daily Life**: "CINEMATIC_CAMERA_VECTORS the steam rising from the coffee cup"
+          7. **Automotive Action**: "CINEMATIC_CAMERA_VECTORS the speeding sports car drifting on the corner"
+          8. **Live Sports**: "CINEMATIC_CAMERA_VECTORS the spinning ball entering the goal"
+          9. **Music Concert**: "CINEMATIC_CAMERA_VECTORS the lead singer reaching toward the crowd"
+          10. **Luxury Jewelry**: "CINEMATIC_CAMERA_VECTORS the sparkling diamond ring on the velvet cushion"
       </step_7_2_cinematic_camera_vector_assembly>
     </step_7_cinematic_camera_vector_design>
     <step_8_style_and_stability_modifiers>

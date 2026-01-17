@@ -20,6 +20,8 @@
  * | **Handheld Shaky** | Vibration | All | $C(t) + \delta_{\text{noise}}$ |
  */
 
+import {MasterStyleInfo} from "@/api/types/supabase/MasterStyleInfo";
+
 /**
  * @param cx 피사체의 X 방향
  * @param cy 피사체의 Y 방향
@@ -168,6 +170,24 @@ function getCandidatesBySubjectVectors(
     const zCandidate = getZCandidate();
 
     return [xCandidate, yCandidate, zCandidate];
+}
+
+export function generateTechnicalLensString(masterStyleInfo: MasterStyleInfo): string {
+    const { optics, composition } = masterStyleInfo;
+
+    // 1. 개별 부품 추출 (불필요한 공백 제거)
+    const lens = `${optics.lensType.trim()} lens`;
+
+    // 명세에는 없으나 인터페이스에 있는 focusDepth를 포함할지 결정 가능
+    // 여기서는 인터페이스를 존중하여 포함하는 것으로 구성했습니다.
+    const focus = `${optics.focusDepth.trim()} focus`;
+
+    const ratio = composition.preferredAspectRatio.trim();
+    const framing = composition.framingStyle.trim();
+
+    // 2. 기계적 조립 (쉼표로 구분, 마지막은 항상 쉼표와 공백으로 마감)
+    // 조립 순서: [Lens], [Focus], [Ratio], [Framing],
+    return `${lens} Lens, ${focus}, ${ratio}, ${framing}`;
 }
 
 /**
