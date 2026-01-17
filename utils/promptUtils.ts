@@ -67,7 +67,7 @@ export function subjectVectorsToCameraVectorString(
     }
 
     // Upgrade
-    if (intensityTier === "VERY_HIGH" && (yCandidate !== "Pedestal Down" && yCandidate !== "Pedestal Up") && (zCandidate === "Zoom In" || zCandidate === "Zoom Out")) {
+    if (intensityTier === "VERY_HIGH" && (yCandidate !== "Pedestal Down" && yCandidate !== "Pedestal Up") && (zCandidate === "Dolly-In" || zCandidate === "Zoom Out")) {
         if (narrativeVibe === "VERTIGO" || narrativeVibe === "SHOCK") {
             candidateString = isXCandidateSelected
                 ? `Dolly Zoom and ${xCandidate}`
@@ -75,7 +75,7 @@ export function subjectVectorsToCameraVectorString(
                     ? `Dolly Zoom and ${yCandidate}`
                     : "Dolly Zoom";
         } else {
-            const upgradeValue = zCandidate === "Zoom In" ? "Crash Zoom In" : "Crash Zoom Out";
+            const upgradeValue = zCandidate === "Dolly-In" ? "Crash Zoom In" : "Crash Zoom Out";
 
             candidateString = isXCandidateSelected
                 ? `${upgradeValue} and ${xCandidate}`
@@ -131,7 +131,7 @@ function getCandidatesBySubjectVectors(
 ): [
     ("Pan Left" | "Truck Left" | "None" | "Pan Right" | "Truck Right"),
     ("Tilt Down" | "Pedestal Down" | "None" | "Tilt Up" | "Pedestal Up"),
-    ("Zoom Out" | "None" | "Zoom In")
+    ("Zoom Out" | "None" | "Dolly-In")
 ] {
     const getXCandidate = () => {
         switch (cx) {
@@ -159,7 +159,7 @@ function getCandidatesBySubjectVectors(
         switch (cz) {
             case "$-Z$": return "Zoom Out"
             case "$0Z$": return "None"
-            case "$+Z$": return "Zoom In"
+            case "$+Z$": return "Dolly-In"
         }
     }
 
@@ -241,4 +241,49 @@ export function assembleFullVideoGenPromptSentence(
         .replace(/,\s*\./g, ".")      // 문장 끝 쉼표+마침표 방지
         .replace(/\s\s+/g, " ")       // 이중 공백 세척
         .trim() + ".";                // 최종 마침표 추가
+}
+
+export function surgicallyReplaceVideoGenPromptByCameraKey(
+    videoGenPrompt: string,
+    structuredCameraField: string,
+    processedCameraAction: string,
+    styleBlock: string
+): string {
+    // 1. Cinematic Camera Vector 필드를 쉼표로 분리
+    const cameraParts = structuredCameraField.split(",");
+    if (cameraParts.length === 0) return videoGenPrompt;
+
+    // 2. 검색 키 생성 (예: "Macro lens")
+    const searchKey = cameraParts[0].trim();
+    const lowerPrompt = videoGenPrompt.toLowerCase();
+    const lowerKey = searchKey.toLowerCase();
+
+    // 3. videoGenPrompt에서 해당 키의 위치 탐색
+    const keyIndex = lowerPrompt.indexOf(lowerKey);
+
+    if (keyIndex === -1) {
+        // 키를 못 찾으면 원본 반환 (안전장치)
+        return videoGenPrompt;
+    }
+
+    // 4. 수술 집도
+    // 키 위치 이전까지가 [주어 + 대기/광원] 섹션입니다.
+    const narrativeAndAtmosphere = videoGenPrompt.substring(0, keyIndex).trim();
+
+    // 5. 우리가 만든 [카메라 섹션] 조립 (핸들 치환)
+    const correctedCamera = structuredCameraField
+        // 접속사 제거
+        .replace(/\b(captured with|filmed with|captured with a|filmed using)\s+CINEMATIC_CAMERA_VECTORS/gi, "CINEMATIC_CAMERA_VECTORS")
+        .trim()
+        .replace(/\.+$/, "") // 문장 끝 마침표 제거
+        .replace("CINEMATIC_CAMERA_VECTORS", processedCameraAction); // 핸들을 실제 액션으로 치환
+
+    // 6. 최종 합체 및 화학적 세척
+    return `${narrativeAndAtmosphere.replace(/,$/, "")}, ${correctedCamera}, rendered in ${styleBlock.replace(/\.+$/, "")}.`
+        .replace(/,\s*,/g, ",") // 중복 쉼표 세척
+        .replace(/\b(with|a|an|the|captured|filmed|shot)\s*,/gi, "$1") // 관사/전치사 뒤의 어색한 쉼표 제거
+        .replace(/\.,/g, ",") // 마침표와 쉼표가 겹치는 현상(.,) 제거
+        .replace(/\b(a|an)\s+\1\b/gi, "$1") // 관사 중복(a a, an an) 제거
+        .replace(/\s\s+/g, " ") // 이중 공백 제거
+        .trim();
 }

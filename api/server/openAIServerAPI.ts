@@ -20,7 +20,10 @@ import {MusicGenerationData} from "@/api/types/suno-api/MusicGenerationData";
 import {Entity, InitialEntityManifestItem} from "@/api/types/open-ai/Entity";
 import {PHYSICS_LIBRARY} from "@/api/types/open-ai/PhysicsPromptLibrary";
 import {FluxPrompt, FluxPromptSubject} from "@/api/types/open-ai/FluxPrompt";
-import {assembleFullVideoGenPromptSentence, subjectVectorsToCameraVectorString} from "@/utils/promptUtils";
+import {
+    assembleFullVideoGenPromptSentence, subjectVectorsToCameraVectorString,
+    surgicallyReplaceVideoGenPromptByCameraKey
+} from "@/utils/promptUtils";
 
 enum OpenAIModel {
     GPT_4O_MINI = "gpt-4o-mini-2024-07-18",
@@ -1099,6 +1102,33 @@ Instruction: Generate the scene instruction JSON.
                     style: outputStyle,
                 } = parsedJson.final_output_structure;
 
+                const basePrompt = parsedJson.video_gen_prompt;
+                const cameraVectorString = subjectVectorsToCameraVectorString(subjectVectors.sx, subjectVectors.sy, subjectVectors.sz, intensityTier, narrativeVibe);
+
+                // 1. AI가 필드에 미리 발라놓은 'captured with' 등을 먼저 싹 닦아냅니다.
+                const bridgePhrasesRegex = /\b(captured with|filmed with|captured with a|filmed using)\s+CINEMATIC_CAMERA_VECTORS/gi;
+                // 필드 자체를 미리 세척 (이게 핵심입니다)
+                const cleanedCameraField = outputCinematicCameraVector.replace(bridgePhrasesRegex, "CINEMATIC_CAMERA_VECTORS");
+                // 조립 함수 및 메인 로직 내 적용 예시
+                const finalResultPrompt = outputCinematicCameraVector.includes("CINEMATIC_CAMERA_VECTORS")
+                    ? isEntityListNotEmpty
+                        ? assembleFullVideoGenPromptSentence(
+                            outputPrimaryNarrativeBlock,
+                            outputAtmosphericLightingDelta,
+                            cleanedCameraField,
+                            cameraVectorString,
+                            outputStyle
+                        )
+                        : surgicallyReplaceVideoGenPromptByCameraKey(
+                            basePrompt,
+                            outputCinematicCameraVector,
+                            cameraVectorString,
+                            outputStyle,
+                        )
+                    : basePrompt.includes("CINEMATIC_CAMERA_VECTORS")
+                        ? basePrompt.replace("CINEMATIC_CAMERA_VECTORS", `${cameraVectorString} ${outputCinematicCameraVector}`)
+                        : basePrompt;
+
 
                 console.log(`Scene #${sceneNumber} postVideoGenPrompt() Result`);
                 console.log(`Scene Summary: ${sceneSummary}`);
@@ -1147,67 +1177,7 @@ Instruction: Generate the scene instruction JSON.
                 }
 
                 console.log("- - - Cinematic Camera Vectors - - -");
-                const cameraVectorString = subjectVectorsToCameraVectorString(subjectVectors.sx, subjectVectors.sy, subjectVectors.sz, intensityTier, narrativeVibe);
-                const assembledVideoGenPrompt = assembleFullVideoGenPromptSentence(
-                    outputPrimaryNarrativeBlock,
-                    outputAtmosphericLightingDelta,
-                    outputCinematicCameraVector,
-                    cameraVectorString,
-                    outputStyle,
-                )
-                // 조립 함수 및 메인 로직 내 적용 예시
-                let finalResultPrompt = "";
 
-                if (isEntityListNotEmpty) {
-                    // 1. 엔티티가 있을 때는 우리가 만든 조립 엔진 사용 (신뢰도 높음)
-                    finalResultPrompt = assembleFullVideoGenPromptSentence(
-                        outputPrimaryNarrativeBlock,
-                        outputAtmosphericLightingDelta,
-                        outputCinematicCameraVector,
-                        cameraVectorString,
-                        outputStyle
-                    );
-                } else {
-                    // 2. 환경만 있는 경우: AI의 video_gen_prompt를 베이스로 카메라 부분만 '수술'
-                    const basePrompt = parsedJson.video_gen_prompt;
-
-                    // 핸들을 우리 액션(cameraVectorString)으로 치환한 '정답' 카메라 문구
-                    const correctedCameraPart = outputCinematicCameraVector.replace(
-                        "CINEMATIC_CAMERA_VECTORS",
-                        cameraVectorString.trim()
-                    );
-
-                    // AI가 쓴 카메라 부분의 시작점(주로 'captured'나 'filmed')과
-                    // 끝점(우리가 정한 Anchor/피사체 명사구)을 찾아야 합니다.
-                    const anchorText = outputCinematicCameraVector.split("CINEMATIC_CAMERA_VECTORS")[1]?.trim();
-
-                    if (anchorText && basePrompt.includes(anchorText)) {
-                        // [수술 로직]
-                        // AI 문장에서 'captured' 혹은 'filmed'부터 'anchorText'가 끝나는 지점까지를 찾습니다.
-                        const regex = new RegExp(`(captured|filmed|shot|with).*?${escapeRegExp(anchorText)}`, "i");
-
-                        if (regex.test(basePrompt)) {
-                            // 해당 부분을 우리가 만든 correctedCameraPart로 치환
-                            finalResultPrompt = basePrompt.replace(regex, correctedCameraPart);
-                        } else {
-                            // 정규식 매칭 실패 시 안전하게 앵커 텍스트 기준으로 교체
-                            finalResultPrompt = basePrompt.replace(anchorText, correctedCameraPart);
-                        }
-                    } else {
-                        // 앵커를 못 찾으면 안전하게 전체 조립 엔진으로 폴백
-                        finalResultPrompt = assembleFullVideoGenPromptSentence(
-                            outputPrimaryNarrativeBlock,
-                            outputAtmosphericLightingDelta,
-                            outputCinematicCameraVector,
-                            cameraVectorString,
-                            outputStyle
-                        );
-                    }
-                }
-
-                function escapeRegExp(string: string) {
-                    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-                }
                 console.log(`Camera Action: ${cameraVectorString}`);
                 console.log(`Subject Vectors: [${subjectVectors.sx}, ${subjectVectors.sy}, ${subjectVectors.sz}]`);
                 console.log(`Subject Vectors Reasoning: ${subjectVectorsReasoning}`);
@@ -1229,7 +1199,7 @@ Instruction: Generate the scene instruction JSON.
 
                 return {
                     success: true,
-                    videoGenPrompt: parsedJson.video_gen_prompt,
+                    videoGenPrompt: finalResultPrompt,
                 }
             } catch (parseError) {
                 console.error('JSON Parse Failed:', parseError);

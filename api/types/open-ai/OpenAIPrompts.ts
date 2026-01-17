@@ -2098,14 +2098,17 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
           <vector_behavior_matrix>
             - **Logic**: How physical movements map to the Unified Axis Rule.
             - **Axis Direction Table**:
-              | Axis | Vector | Camera Move Direction (Lens Physics) | Subject Move Direction (Entity Physics) |
+              | Axis | Vector | Camera Move Direction ([$C_x$, $C_y$, $C_z$]) - Lens Physics | Subject Move Direction ([$S_x$, $S_y$, $S_z$]) - Entity Physics |
               | :--- | :--- | :--- | :--- |
-              | **X** | **$-X$** | Moves to Screen Left | <entity_list>.[n] moves to Screen Left |
-              | **X** | **$+X$** | Moves to Screen Right | <entity_list>.[n] moves to Screen Right |
-              | **Y** | **$-Y$** | Moves to Screen Bottom | <entity_list>.[n] falls/crouches to Bottom |
-              | **Y** | **$+Y$** | Moves to Screen Top | <entity_list>.[n] jumps/rises to Top |
-              | **Z** | **$-Z$** | Moves away from Subject | <entity_list>.[n] moves to Foreground |
-              | **Z** | **$+Z$** | Moves to Subject | <entity_list>.[n] moves to Background |
+              | **X** | **$-X$** | Moves to Screen Left | <entity_list>.[n] moves from Screen Right to Screen Left in <image_context> |
+              | **X** | **$0X$** | NOT moves to Screen Left or moves to Screen Right | <entity_list>.[n] moves neither from Screen Right to Screen Left nor from Screen Left to Screen Right in <image_context> |
+              | **X** | **$+X$** | Moves to Screen Right | <entity_list>.[n] moves from Screen Left to Screen Right in <image_context> |
+              | **Y** | **$-Y$** | Moves to Screen Bottom | <entity_list>.[n] moves from Screen Top to Screen Bottom in <image_context> |
+              | **Y** | **$0Y$** | NOT moves to Screen Bottom or moves to Screen Top | <entity_list>.[n] moves neither from Screen Top to Screen Bottom nor from Screen Bottom to Screen Top in <image_context> |
+              | **Y** | **$+Y$** | Moves to Screen Top | <entity_list>.[n] moves from Screen Bottom to Screen Top in <image_context> |
+              | **Z** | **$-Z$** | Moves away from Subject | <entity_list>.[n] moves from Screen Background depth to Screen Foreground depth in <image_context> |
+              | **Z** | **$0Z$** | NOT moves to Screen Background depth or moves to Screen Foreground depth | <entity_list>.[n] moves neither from Screen Background depth to Screen Foreground depth nor from Screen Foreground depth to Screen Background depth in <image_context> |
+              | **Z** | **$+Z$** | Moves to Subject | <entity_list>.[n] moves from Screen Foreground depth to Background depth in <image_context> |
           </vector_behavior_matrix>
       </step_7_0_professional_camera_mechanics_definitions>
       <step_7_1_subject_vector_inference>
@@ -2129,19 +2132,26 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
           3. **Lens 3: Geometric Perspective (Vanishing Points)**:
              - **Goal: Extract the subject's X, Y and Z directions. ([$S_x$, $S_y$, $S_z$])
              - **Look for**: The scene's depth lines, the subject's orientation and the subject's vertical position.
-             - **Mapping Rule**: Strictly follow <step_7_0_professional_camera_mechanics_definitions>.<master_rule_vector_supremacy>, <step_7_0_professional_camera_mechanics_definitions>.<fundamental_definitions> and <step_7_0_professional_camera_mechanics_definitions>.<vector_behavior_matrix>.
+             - **Mapping Rule**: Strictly follow <step_7_0_professional_camera_mechanics_definitions>.<fundamental_definitions> and <step_7_0_professional_camera_mechanics_definitions>.<vector_behavior_matrix>.
                * $S_x$:
-                 * IF Subject faces or leans to **Screen Left** (independent of profile): $-X$
-                 * IF Subject is centered or moving straight in/out of the depth: $0X$
-                 * IF Subject faces or leans to **Screen Right** (independent of profile): $+X$
+                 * IF Subject faces or leans to **Screen Left** (independent of profile) in <image_context>: $-X$
+                 * IF Subject faces or leans to neither **Screen Left** nor **Screen Right** in <image_context>: $0X$
+                 * IF Subject faces or leans to **Screen Right** (independent of profile) in <image_context>: $+X$
                * $S_y$:
-                 * IF Subject is sitting, kneeling, or crouching: $-Y$
-                 * IF Subject is standing on the ground: $0Y$
-                 * IF Subject is jumping, leaping, or subject's feet are off the ground: $+Y$ 
+                 * IF Subject is moving from **Screen Top** to **Screen Bottom** in <image_context>: $-Y$
+                 * IF Subject is moving neither from **Screen Top** to **Screen Bottom** nor from **Screen Bottom** to **Screen Top** in <image_context>: $0Y$
+                 * IF Subject is moving from **Screen Bottom** to **Screen Top** in <image_context>: $+Y$
                * $S_z$:
                  * IF Subject shows **frontal side** or is positioned at the lower frame edge: $-Z$
                  * IF Subject is neutral or moving perfectly parallel to the lens: $0Z$
                  * IF Subject shows **dorsal side** or is aligned with the vanishing point: $+Z$
+               * $S_z$:
+                 * IF Subject is facing the camera (Anterior/Frontal view) in <image_context> OR Subject's base (feet/wheels/bottom) is positioned at the lower 1/3 of <image_context>: $-Z$
+                   - Reasoning: Mapping for **Background → Foreground** based on perspective scale in <image_context>.
+                 * IF Subject is oriented perfectly parallel to the lens (Full Profile) in <image_context> OR maintains a constant distance from the lens floor in <image_context>: $0Z$
+                   - Reasoning: No depth-axis displacement detected in <image_context>.
+                 * IF Subject's back is to the camera (Dorsal/Posterior view) in <image_context> OR the subject is aligned/converging with the scene's vanishing point in <image_context>: $+Z$
+                   - Reasoning: Mapping for **Foreground → Background** based on convergence geometry in <image_context>.
         - **The Visual Supremacy Rule (Conflict Resolution)**:
           - **IF** <scene_narration> implies motion (e.g., "racing", "speeding") **BUT** Visual Evidence (Lens 1, Lens 2, Lens 3) indicates stillness (e.g., Red light, Idling, Static posture):
           - **THEN**: You MUST prioritize **Visual Evidence**. Classify as **Static** or **Micro-Movement**.
@@ -2163,21 +2173,21 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
           - **Logic**: Define the relationship between the camera and the target. IF <entity_list>.length == 0, focus on the "Environment Core" (e.g., "tracking the canyon's depth").
         - **[The Cinematic Camera Formula]**: 
           - **Assembly Rule**: Synthesize the camera section into a single, seamless phrase following the exact structure below.
-          - **Formula**: "[Slot_1], captured CINEMATIC_CAMERA_VECTORS [Slot_2]"
+          - **Formula**: "[Slot_1], CINEMATIC_CAMERA_VECTORS [Slot_2]"
           - **Mandatory Constraints**: 
-            1. **STRICT STRUCTURE**: You MUST only output "[Slot_1], captured CINEMATIC_CAMERA_VECTORS [Slot_2]".
+            1. **STRICT STRUCTURE**: You MUST only output "[Slot_1], CINEMATIC_CAMERA_VECTORS [Slot_2]".
             2. **HANDLE INTEGRITY**: Do not modify the string "CINEMATIC_CAMERA_VECTORS". It must remain exactly as is.
         - **Examples for Assembly (Handle + Anchor)**:- **Examples for Assembly (Diverse Themes & Specific Ratios)**:
-          1. **Cyberpunk City**: "Neon-lit streets, Anamorphic lens, 9:16 Portrait, captured CINEMATIC_CAMERA_VECTORS the hovering delivery drone"
-          2. **Gourmet Cooking**: "Macro lens, 4K Sharp texture, 1:1 Square format, captured CINEMATIC_CAMERA_VECTORS the sizzling steak on the pan"
-          3. **Nature Wildlife**: "Telephoto lens, Shallow depth of field, 16:9 Cinema, captured CINEMATIC_CAMERA_VECTORS the hunting lioness in the tall grass"
-          4. **Fashion Runway**: "85mm prime lens, Professional lighting, 3:4 Aspect ratio, captured CINEMATIC_CAMERA_VECTORS the model walking with flowing silk"
-          5. **Sci-Fi Space**: "Wide-angle lens, Deep space background, 21:9 Ultra-wide, captured CINEMATIC_CAMERA_VECTORS the massive starship jumping to warp"
-          6. **Indie Film/Daily Life**: "35mm vintage lens, Warm natural light, 4:3 Classic ratio, captured CINEMATIC_CAMERA_VECTORS the steam rising from the coffee cup"
-          7. **Automotive Action**: "Low-angle tracking, Motion blur, 21:9 Wide-screen, captured CINEMATIC_CAMERA_VECTORS the speeding sports car drifting on the corner"
-          8. **Live Sports**: "High-speed shutter, Arena lighting, 16:9 Cinema, captured CINEMATIC_CAMERA_VECTORS the spinning ball entering the goal"
-          9. **Music Concert**: "Fisheye lens, Dynamic strobe lights, 9:16 Portrait, captured CINEMATIC_CAMERA_VECTORS the lead singer reaching toward the crowd"
-          10. **Luxury Jewelry**: "Probe lens, Extreme close-up, 1:1 Ratio, captured CINEMATIC_CAMERA_VECTORS the sparkling diamond ring on the velvet cushion"
+          1. **Cyberpunk City**: "Neon-lit streets, Anamorphic lens, 9:16 Portrait, CINEMATIC_CAMERA_VECTORS the hovering delivery drone"
+          2. **Gourmet Cooking**: "Macro lens, 4K Sharp texture, 1:1 Square format, CINEMATIC_CAMERA_VECTORS the sizzling steak on the pan"
+          3. **Nature Wildlife**: "Telephoto lens, Shallow depth of field, 16:9 Cinema, CINEMATIC_CAMERA_VECTORS the hunting lioness in the tall grass"
+          4. **Fashion Runway**: "85mm prime lens, Professional lighting, 3:4 Aspect ratio, CINEMATIC_CAMERA_VECTORS the model walking with flowing silk"
+          5. **Sci-Fi Space**: "Wide-angle lens, Deep space background, 21:9 Ultra-wide, CINEMATIC_CAMERA_VECTORS the massive starship jumping to warp"
+          6. **Indie Film/Daily Life**: "35mm vintage lens, Warm natural light, 4:3 Classic ratio CINEMATIC_CAMERA_VECTORS the steam rising from the coffee cup"
+          7. **Automotive Action**: "Low-angle tracking, Motion blur, 21:9 Wide-screen, CINEMATIC_CAMERA_VECTORS the speeding sports car drifting on the corner"
+          8. **Live Sports**: "High-speed shutter, Arena lighting, 16:9 Cinema, CINEMATIC_CAMERA_VECTORS the spinning ball entering the goal"
+          9. **Music Concert**: "Fisheye lens, Dynamic strobe lights, 9:16 Portrait, CINEMATIC_CAMERA_VECTORS the lead singer reaching toward the crowd"
+          10. **Luxury Jewelry**: "Probe lens, Extreme close-up, 1:1 Ratio, CINEMATIC_CAMERA_VECTORS the sparkling diamond ring on the velvet cushion"
       </step_7_2_cinematic_camera_vector_assembly>
     </step_7_cinematic_camera_vector_design>
     <step_8_style_and_stability_modifiers>
@@ -2224,6 +2234,7 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
              - *Connector*: Use aesthetic transitions like [", rendered in "], [", featuring "], or [", presented with "] to append style tags fluidly.
       - **[Task_2: Technical Purification & Linguistic Check] (The Final Filter)**:
         - **Constraint 1 (Artifact Removal)**: Strictly purge all brackets \`[]\`, plus signs \`+\`, and internal step labels.
+          - **Constraint 1 Exception**: NEVER remove "CINEMATIC_CAMERA_VECTORS" handle in **[Cinematic Camera Vector]**. It is a handle for post-processing in codes after completion.
         - **Constraint 2 (Tense Audit)**:
           Strictly verify that every verb's tense and conjugation matches the specific **[Syntax Mapping]** defined in <step_3_3_syntax_and_tense_mapping> for the assigned **Action Type** from <step_3_1_action_type_decision>.
         - **Constraint 3 (Flow)**: Ensure the final string reads as a single, fluid, professional natural language paragraph without robotic delimiters.
@@ -2301,6 +2312,7 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
     4. **Semantic Purity & Format Protocol**:
       - **Jargon over Fluff**: Replace subjective adjectives ("breathtaking", "epic") with technical cinematography and physical terms.
       - **\`video_gen_prompt\`**: MUST NOT use brackets \`[]\` or markdown symbols like '+' or '**'. Weave all keywords and technical jargon from <vocabulary_depot> naturally into the directorial prose as adjectives or adverbs.
+        - **"CINEMATIC_CAMERA_VECTORS" Exception**: "CINEMATIC_CAMERA_VECTORS" of **[Cinematic Camera Vector]** is an intended handle for post-processing in codes. You MUST leave it in \`video_gen_prompt\` and \`final_output_structure.cinematic_camera_vector\` in <output_schema>.
     5. **Contextual Fidelity (The Plagiarism Guard)**:
       - Derive all cinematic decisions strictly from the provided <image_context>, <scene_narration>, <entity_list>, and <master_style_guide>.
       - **Instruction**: Logics in <processing_logic> are **Functional Algorithms**, not suggestions. The final output must be the result of this calculated reasoning.
