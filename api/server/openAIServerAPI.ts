@@ -21,6 +21,7 @@ import {Entity, InitialEntityManifestItem} from "@/api/types/open-ai/Entity";
 import {PHYSICS_LIBRARY} from "@/api/types/open-ai/PhysicsPromptLibrary";
 import {FluxPrompt, FluxPromptSubject} from "@/api/types/open-ai/FluxPrompt";
 import {
+    assembleFullImageGenPromptSentence,
     assembleFullVideoGenPromptSentence, generateTechnicalLensString, subjectVectorsToCameraVectorString,
     surgicallyReplaceVideoGenPromptByCameraKey
 } from "@/utils/promptUtils";
@@ -123,7 +124,7 @@ const masterStyleInfoResponseFormat: OpenAI.ResponseFormatJSONSchema = {
                                     clothing_or_material: { type: "string" },
                                     position_descriptor: { type: "string" },
                                     hair: { type: ["string", "null"] },
-                                    accessories: { type: "string" },
+                                    accessories: { type: "array", items: { type: "string" } },
                                     body_features: { type: "string" },
                                 },
                                 required: ["clothing_or_material", "position_descriptor", "hair", "accessories", "body_features"],
@@ -249,7 +250,7 @@ const imageGenResponseFormat: OpenAI.ResponseFormatJSONSchema = {
 
                 // 3. updated_entity_manifest (Entity 인터페이스 매핑)
                 // Omit<Entity, 'role' | 'type' | 'appearance_scenes' | 'demographics'>[]
-                updated_entity_manifest: {
+                updated_entity_manifest_list: {
                     type: ["array", "null"], // Optional이므로 null 허용
                     items: {
                         type: "object",
@@ -282,14 +283,9 @@ const imageGenResponseFormat: OpenAI.ResponseFormatJSONSchema = {
                                 type: "object",
                                 properties: {
                                     clothing_or_material: { type: "string" },
-                                    // Entity.ts에서 hair, accessories, bodyfeatures는 optional임 -> null 허용
+                                    // Entity.ts에서 hair, accessories, body_features는 optional임 -> null 허용
                                     hair: { type: ["string", "null"] },
-                                    accessories: {
-                                        type: ["array", "null"],
-                                        items: {
-                                            type: "string",
-                                        }
-                                    },
+                                    accessories: { type: ["array", "null"], items: { type: "string" } },
                                     body_features: { type: ["string", "null"] },
                                     position_descriptor: { type: ["string", "null"] }
                                 },
@@ -772,12 +768,13 @@ Instruction: Analyze the input <target_aspect_ratio>, <style_guidelines>, <full_
         videoTitle: string,
         videoDescription: string,
         sceneEntityManifestList: InitialEntityManifestItem[],
+        sceneCastingIdList: string[],
         aspectRatio: VideoAspectRatio = VIDEO_ASPECT_RATIOS.PORTRAIT_9_16
     ): Promise<{
         success: boolean;
         imageGenPrompt?: FluxPrompt;
         imageGenPromptSentence?: string;
-        entityManifestList?: Entity[],
+        sceneEntityManifestList?: Entity[],
         error?: {
             message: string;
             code: string
@@ -871,19 +868,52 @@ Instruction: Generate the scene instruction JSON.
                 const instructionJSON: {
                     image_gen_prompt: FluxPrompt;
                     image_gen_prompt_sentence: string;
-                    updated_entity_manifest?: Omit<Entity, 'role' | 'type' | 'demographics'>[] | null
+                    updated_entity_manifest_list?: Omit<Entity, 'role' | 'type' | 'demographics'>[] | null
                 } = JSON.parse(generatedContent);
 
-                const imageGenPrompt = instructionJSON.image_gen_prompt;
-                const imageGenPromptSentence = instructionJSON.image_gen_prompt_sentence;
-                const updatedEntityManifestList = instructionJSON.updated_entity_manifest;
+                const {
+                    image_gen_prompt: imageGenPrompt,
+                    image_gen_prompt_sentence: imageGenPromptSentence,
+                    updated_entity_manifest_list: updatedEntityManifestList,
+                } = instructionJSON;
+
+                const newEntityManifestList = updatedEntityManifestList ? updatedEntityManifestList.map(instruction => {
+                    const originalEntity = sceneEntityManifestList.find((entityManifest) => {
+                        return entityManifest.id === instruction.id;
+                    });
+
+                    if (!originalEntity) {
+                        console.warn(`Warning: LLM generated unknown ID '${instruction.id}'`);
+                        throw Error("LLM generated unknown ID '${instruction.id}'.")
+                    }
+
+                    return {
+                        // LLM이 생성한 핵심 물리/시각 데이터로 덮어쓰기
+                        id: instruction.id,
+                        physics_profile: instruction.physics_profile,
+                        type: originalEntity.type,
+                        demographics: originalEntity.demographics,
+                        appearance: {
+                            ...originalEntity.appearance,
+                            ...instruction.appearance,
+                        },
+                        role: originalEntity.role,
+                    };
+                }) : []
+
+                const testSentence = assembleFullImageGenPromptSentence(
+                    imageGenPrompt,
+                    newEntityManifestList,
+                )
+
+                console.log(`Scene #${sceneNumber} Test sentence: ${testSentence}`);
 
                 return {
                     success: true,
                     // imageGenPrompt: imageGenPrompt,
                     imageGenPrompt: imageGenPrompt,
                     imageGenPromptSentence: imageGenPromptSentence,
-                    entityManifestList: updatedEntityManifestList ? updatedEntityManifestList.map(instruction => {
+                    sceneEntityManifestList: updatedEntityManifestList ? updatedEntityManifestList.map(instruction => {
                         const originalEntity = sceneEntityManifestList.find((entityManifest) => {
                             return entityManifest.id === instruction.id;
                         });

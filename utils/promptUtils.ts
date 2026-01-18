@@ -21,6 +21,9 @@
  */
 
 import {MasterStyleInfo} from "@/api/types/supabase/MasterStyleInfo";
+import {addArticleToWord} from "@/utils/stringUtils";
+import {FluxPrompt} from "@/api/types/open-ai/FluxPrompt";
+import {Entity} from "@/api/types/open-ai/Entity";
 
 /**
  * @param cx 피사체의 X 방향
@@ -306,4 +309,80 @@ export function surgicallyReplaceVideoGenPromptByCameraKey(
         .replace(/\b(a|an)\s+\1\b/gi, "$1") // 관사 중복(a a, an an) 제거
         .replace(/\s\s+/g, " ") // 이중 공백 제거
         .trim();
+}
+
+/**
+ * 고증 파괴 및 환각 방지를 위한 확정적 프롬프트 조립 함수
+ * @param imageGenPrompt LLM이 생성한 시각 레이아웃 객체 (FluxPrompt)
+ * @param sceneEntityManifestList 고증 데이터가 담긴 엔티티 리스트 (Entity[])
+ * @param canvasType 'Vertical' | 'Horizontal' | 'Square' (레터박스 방역용)
+ */
+export function assembleFullImageGenPromptSentence(
+    imageGenPrompt: FluxPrompt,
+    sceneEntityManifestList: Entity[],
+    canvasType: 'Vertical' | 'Horizontal' | 'Square' = 'Vertical'
+): string {
+    const { camera, subjects, scene, background, composition, mood, lighting, color_palette, style, effects } = imageGenPrompt;
+
+    // --- 헬퍼: 목록을 "A, B, and C" 형태로 변환 ---
+    const formatList = (list: string[]) => {
+        if (!list || list.length === 0) return "";
+        if (list.length === 1) return list[0];
+        return `${list.slice(0, -1).join(", ")}, and ${list.slice(-1)}`;
+    };
+
+    // --- UNIT 4 - Sentence 1: Subject & Framing ---
+    let sentence1 = "";
+    if (subjects && subjects.length > 0) {
+        const subjectClauses = subjects.map((sub, index) => {
+            // Manifest에서 고증 데이터(Ground Truth) 추출
+            const entity = sceneEntityManifestList.find(e => e.id === sub.id);
+            if (!entity) return sub.description;
+
+            // 1. Demographic Anchor (Era + Role)
+            const demoParts = entity.demographics.split(', ');
+            const demographicAnchor = `${demoParts[0]} ${demoParts[1]}`; // 예: "1944 WWII infantry soldier"
+
+            // 2. Detail Clause (Features + Clothing + Accessories)
+            const hasHelmet = entity.appearance.accessories?.some(a => a.toLowerCase().includes('helmet'));
+            const hairPart = (!hasHelmet && entity.appearance.hair) ? `, with ${entity.appearance.hair}` : "";
+            const bodyPart = entity.appearance.body_features ? `, ${entity.appearance.body_features}` : "";
+
+            const detailClause = `${hairPart}${bodyPart}, clad in ${entity.appearance.clothing_or_material}, equipped with ${formatList(entity.appearance.accessories || [])}`;
+
+            if (index === 0) {
+                // Primary Subject 구문 조립
+                const framing = addArticleToWord(`${camera.angle} ${camera.distance}`, true);
+                const connector = entity.role === 'prop' ? "which is" : "who is";
+                return `${framing} captures ${demographicAnchor} ${detailClause} ${connector} ${sub.pose} in the ${sub.position}`;
+            } else {
+                // Secondary Subjects 연결 (Bridge Logic)
+                const start = `while in the ${sub.position} ${addArticleToWord(demographicAnchor)}`;
+                const connector = entity.role === 'prop' ? "" : "is";
+                return `, ${start} ${detailClause} ${connector} ${sub.pose}`;
+            }
+        });
+        sentence1 = `${subjectClauses.join("")}, `;
+    } else {
+        // [장면 8 환각 방지] Subject가 없으면 Scene 텍스트를 주어로 사용
+        const framing = addArticleToWord(`${camera.angle} ${camera.distance}`, true);
+        sentence1 = `${framing} captures the ${scene} elements, `;
+    }
+
+    // --- UNIT 4 - Sentence 2: Environment & Atmosphere ---
+    const hexPalette = `(#${color_palette.join(', #')})`;
+    const s2Connector = subjects.length > 0 ? `depicting ${scene} with a` : `arranged in a`;
+    const sentence2 = `the scene is set in ${background}, ${s2Connector} ${composition} composition, where the atmosphere is ${mood}, illuminated by ${lighting} and a color palette of ${hexPalette},`;
+
+    // --- UNIT 4 - Sentence 3: Technical Specifications (레터박스 방역 포함) ---
+    // [Unit 3] 세로형일 때 Cinematic 단어를 강제 치환하여 검은 선 방지
+    let safeStyle = style;
+    if (canvasType === 'Vertical' && style.toLowerCase().includes("cinematic")) {
+        safeStyle = style.replace(/cinematic/gi, "high-fidelity RAW portrait photography");
+    }
+
+    const sentence3 = `rendered in ${safeStyle}, this image is captured with a ${camera.lens} lens at ${camera.fNumber} for ${camera.focus} and ISO ${camera.ISO}, featuring ${formatList(effects)}.`;
+
+    // 최종 Paragraph 반환 (문장 사이 공백 추가)
+    return `${sentence1} ${sentence2} ${sentence3}`;
 }

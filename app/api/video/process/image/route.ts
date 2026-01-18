@@ -76,6 +76,7 @@ export async function POST(request: NextRequest) {
                 entityManifestList.filter((entity) => {
                     return sceneData.sceneCastingEntityIdList?.includes(entity.id) === true;
                 }),
+                sceneData.sceneCastingEntityIdList ?? [],
             );
 
             if (!postImageGenPromptResult.success || !postImageGenPromptResult.imageGenPrompt || !postImageGenPromptResult.imageGenPromptSentence) {
@@ -86,7 +87,7 @@ export async function POST(request: NextRequest) {
                 ...sceneData,
                 imageGenPrompt: postImageGenPromptResult.imageGenPrompt,
                 imageGenPromptSentence: postImageGenPromptResult.imageGenPromptSentence,
-                sceneEntityManifestList: postImageGenPromptResult.entityManifestList,
+                sceneEntityManifestList: postImageGenPromptResult.sceneEntityManifestList,
             };
         });
         const sceneDataWithImageGenPromptList = await Promise.all(sceneDataWithImageGenPromptPromiseList);

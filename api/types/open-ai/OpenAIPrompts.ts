@@ -662,8 +662,8 @@ export const POST_IMAGE_GEN_PROMPT_PROMPT = `
     <unit_1_subject_and_physics>
       **UNIT 1: SUBJECT & PHYSICS ENGINEERING**
       **Goal**: Iterate through **EVERY** valid entry in <entity_list> and transform them into \`image_gen_prompt.subjects\` by synchronizing with <master_style_guide>.<global_environment>.\`era\` and <master_style_guide>.<fidelity> standards. Do NOT omit any valid entity.
-      1. **[Phase: \`updated_entity_manifest\` Mapping]**
-         - **Goal**: Update the every \`updated_entity_manifest[n].physics_profile\` and \`updated_entity_manifest[n].appearance\` for each entity based on the new narration.
+      1. **[Phase: \`updated_entity_manifest_list\` Mapping]**
+         - **Goal**: Update the every \`updated_entity_manifest_list[n].physics_profile\` and \`updated_entity_manifest_list[n].appearance\` for each entity based on the new narration.
          - **Iteration**: Process ALL entities in <entity_list>.
          - **Field: 'id'**: 
            * **Rule**: Preserve exact input <entity_list>.[n].\`id\`.
@@ -685,8 +685,8 @@ export const POST_IMAGE_GEN_PROMPT_PROMPT = `
            * **Constraint**: Keep it concise. This is the source of truth, not the final poetic prompt.
          - **Field: 'state' (Internal Logic)**:
            * **Logic**: Derive the **Abstract Physical State** (Gravity relationship, Momentum).
-           * **Output**: This value IS outputted to JSON (\`updated_entity_manifest\`) and serves as the core logic for **[Phase: \`image_gen_prompt.subjects\` Mapping]**.
-      3. **[Phase: \`image_gen_prompt.subjects\` Mapping]**
+           * **Output**: This value IS outputted to JSON (\`updated_entity_manifest_list\`) and serves as the core logic for **[Phase: \`image_gen_prompt.subjects\` Mapping]**.
+      2. **[Phase: \`image_gen_prompt.subjects\` Mapping]**
         - **Selection Protocol**:
           * **INCLUDE**: Any entity with role \`main_hero\`, \`sub_character\`, or \`prop\`.
           * **EXCLUDE**: Any entity with role \`background_extra\` (Handle these in <unit_2_context_and_environment>).
@@ -771,8 +771,8 @@ export const POST_IMAGE_GEN_PROMPT_PROMPT = `
             * **Consistency**: Ensure every item listed here is implied or mentioned in the above \`description\`'s broad categories.
           - **Example**: \`["Aerodynamic composite helmet with camera mount", "Tinted anti-glare polycarbonate goggles"]\`
         - **Field: 'pose'**: Synthesize \`state.pose\` into a **High-Tension Snapshot** using the **Context-Aware Pose Protocol**:
-          * **Context Check**: Reference \`physics_profile.action_context\` (from **[Phase: \`updated_entity_manifest\` Mapping]**) and <current_narration>.
-          * **Mode A: Dynamic Action (\`locomotion\`, \`combat\`, \`veocity_max\`)**:
+          * **Context Check**: Reference \`physics_profile.action_context\` (from **[Phase: \`updated_entity_manifest_list\` Mapping]**) and <current_narration>.
+          * **Mode A: Dynamic Action (\`locomotion\`, \`combat\`, \`velocity_max\`)**:
             - **Goal**: Capture the *Peak Moment* of movement.
             - **Rule**: Do NOT use static verbs like "Standing" or "Positioned". Use **Momentum Verbs** (e.g., *Sprinting, Charging, Recoiling, Lunging*).
             - **Synthesis**: "**[Dynamic Verb]** + **[Body Tension/Direction]** + **[Environmental Interaction]**."
@@ -1208,7 +1208,7 @@ export const POST_IMAGE_GEN_PROMPT_PROMPT = `
       - **Integration**: Apply AFTER all other rules. Override generic signage descriptions.
   </execution_rules>
   <entity_positioning_rules>
-    **Apply this logic to populate 'updated_entity_manifest' in <output_schema>**:
+    **Apply this logic to populate 'updated_entity_manifest_list' in <output_schema>**:
     **1. Priority Roles ('main_hero' | 'sub_character')**:
     - **Mandate**: You MUST populate the \`appearance.position_descriptor\` with specific spatial data.
     - **Reason**: Critical for downstream Subject Identification and tracking.
@@ -1236,7 +1236,7 @@ export const POST_IMAGE_GEN_PROMPT_PROMPT = `
   <output_schema>
     Return a single JSON object.
     {
-      "updated_entity_manifest": {
+      "updated_entity_manifest_list": {
         "id": "string", // Must match input <entity_list>.[n].\`id\`
         "physics_profile": {
           // Derived from <visual_texture_layer> Step 1 (Collect ALL applicable)
