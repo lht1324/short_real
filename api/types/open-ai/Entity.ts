@@ -35,7 +35,7 @@ export interface Entity {
          * 예: "Glossy chrome plating" (Rigid 암시), "Sweat-drenched pores" (Viscoelastic 암시)
          */
         clothing_or_material: string;
-        hair?: string;
+        hair?: string | null;
         accessories?: string[];
         body_features?: string;
         position_descriptor?: string;

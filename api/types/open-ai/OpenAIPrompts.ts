@@ -299,7 +299,7 @@ export const POST_MASTER_STYLE_INFO_PROMPT = `
       **Goal**: This process ensures that every empty scene is a deliberate artistic choice for narrative flow, rather than an accidental omission or error.
   </task_1_entity_manifest>
   <task_2_master_style_engineering>
-    **Goal**: Synthesize <video_metadata>, <target_aspect_ratio>, <style_guidelines>, and <full_script_context> into a rigid technical configuration (\`masterStyleInfo\` of <output_schema>). You must stop describing subjective feelings and start defining the physical laws of optics and light. Each field must be derived through an independent inference protocol.
+    **Goal**: Synthesize <video_metadata>, <target_aspect_ratio>, <style_guidelines>, and <full_script_context> into a rigid technical configuration (\`master_style_info\` of <output_schema>). You must stop describing subjective feelings and start defining the physical laws of optics and light. Each field must be derived through an independent inference protocol.
     **1. Optics & Camera Engineering**
       **Core Principle**: Define the physical properties of the lens and the light sensitivity of the sensor. Avoid emotional adjectives; use technical specifications.
       * **\`optics.lensType\`**
@@ -402,30 +402,30 @@ export const POST_MASTER_STYLE_INFO_PROMPT = `
   <task_3_scene_casting>
     **Goal**: Populate the \`scene_casting_list\` in <output_schema> by iterating through every scene in <full_script_context>. You must apply a logic-gate system to ensure narrative continuity and physical realism.
     **[The Physical Veto Protocol]**
-      - **Definition**: A mandatory reality check applied before any \`entity_manifest_list[n]\` is finalized in \`scene_casting_list[n].castIdList\`.
+      - **Definition**: A mandatory reality check applied before any \`entity_manifest_list[n]\` is finalized in \`scene_casting_list[n].cast_id_list\`.
       - **Logic**: You MUST compare the **Physical Scale** and **Environmental Requirements** of the entity against the **Action/Setting** described in the current <full_script_context>[n].\`sceneNarration\`.
       - **Veto Criteria**:
         * **Scale Incompatibility**: e.g., A "Extreme Close-up of a flower" cannot contain a "Giant Mecha".
         * **Environmental Absence**: e.g., A "Pilot" cannot exist in a ground-level scene without a "Cockpit" or "Aircraft" being present or implied in the narrative.
         * **Physics Violation**: e.g., A "Heavy Tank" cannot be "Floating in clouds" unless the Genre (from <video_metadata>.<video_title> and <video_metadata>.<video_description>) explicitly allows it.
-      - **Action**: If \`entity_manifest_list[n]\` fails this protocol, it MUST be excluded from the \`castIdList\`, regardless of any other assignment rules.
+      - **Action**: If \`entity_manifest_list[n]\` fails this protocol, it MUST be excluded from the \`cast_id_list\`, regardless of any other assignment rules.
     **[Casting Assignment Logic]**
       - For each scene, execute the following steps in order:
       **Step 1. Direct & Action-based Assignment**
         - Identify entities whose \`id\`, \`role\`, or specific action-verbs (e.g., "The soldier runs" -> ID:soldier) are explicitly mentioned in the \`sceneNarration\`.
         - Apply the **[Physical Veto Protocol]** to these candidates.
-        - Add all entities that pass the protocol to the \`castIdList\`.
-      **Step 2. IF \`castIdList\` is EMPTY after Step 1 (including cases where candidates were mentioned but Vetoed)**:
+        - Add all entities that pass the protocol to the \`cast_id_list\`.
+      **Step 2. IF \`cast_id_list\` is EMPTY after Step 1 (including cases where candidates were mentioned but Vetoed)**:
       - **Action**: Scan the entire \`entity_manifest_list\` to find candidates that are "Contextually Appropriate" (not strange) for the current scene.
       - **Filtering**: Apply the **[Physical Veto Protocol]** to ALL entities in the manifest.
       - **Selection (The "Most Suitable" Rule)**: 
         * From the entities that PASSED the veto, select **EXACTLY ONE** "Most Suitable Entity" based on narrative priority:
         * **Priority Order**: \`main_hero\` > \`sub_character\` > \`background_extra\` > \`prop\`.
       - **Outcome**: 
-        * IF a suitable entity is found: Add that **single entity** to the \`castIdList\`.
-        * IF NO entity passes the Physical Veto (e.g., all entities are physically illogical for this scene): Keep the \`castIdList\` empty and proceed to Step 3.
-      **Step 3. IF \`castIdList\` is STILL EMPTY after Step 2**:
-        - Leave \`scene_casting_list[n].castIdList\` EMPTY.
+        * IF a suitable entity is found: Add that **single entity** to the \`cast_id_list\`.
+        * IF NO entity passes the Physical Veto (e.g., all entities are physically illogical for this scene): Keep the \`cast_id_list\` empty and proceed to Step 3.
+      **Step 3. IF \`cast_id_list\` is STILL EMPTY after Step 2**:
+        - Leave \`scene_casting_list[n].cast_id_list\` EMPTY.
         - Explain the atmospheric or environmental focus in the \`casting_logic\`.
     **[Field Specification: \`casting_logic\`]**
       - State exactly which rule triggered the assignment (Direct, Hero Fallback, or Empty).
@@ -443,11 +443,11 @@ export const POST_MASTER_STYLE_INFO_PROMPT = `
   <output_schema>
     Return a SINGLE valid JSON object.
     {
-      "masterStyleInfo": {
+      "master_style_info": {
         optics: {
-          lensType: "Anamorphic" | "Spherical" | "Macro" | "Wide-Angle";
-          focusDepth: "Shallow" | "Deep" | "Selective";
-          exposureVibe: "High-Key" | "Low-Key" | "Natural";
+          lensType: "enum (["Anamorphic" | "Spherical" | "Macro" | "Wide-Angle"])";
+          focusDepth: "enum (["Shallow" | "Deep" | "Selective"])";
+          exposureVibe: "enum (["High-Key" | "Low-Key" | "Natural"])";
           defaultISO: number;
         };
         colorAndLight: {
@@ -481,8 +481,8 @@ export const POST_MASTER_STYLE_INFO_PROMPT = `
       "entity_manifest_list": [
         {
           "id": "string (snake_case unique id)",
-          "role": "main_hero" | "sub_character" | "background_extra" | "prop",
-          "type": "human" | "creature" | "object" | "machine" | "animal" | "hybrid",
+          "role": "enum ("main_hero" | "sub_character" | "background_extra" | "prop")",
+          "type": "enum ("human" | "creature" | "object" | "machine" | "animal" | "hybrid")",
           "demographics": "string (REQUIRED: Comma-separated string formatted strictly according to the Type Classification Schema in <task_1_entity_manifest> section. Examples: Human='Era, Role, Gender...', Object='Era, Item, Detail'. DO NOT use 'N/A' fillers.)",
           "appearance": {
             "clothing_or_material": "string (REQUIRED: Context-Aware & Neutral visual description. Must imply texture/physics.)";
@@ -496,79 +496,25 @@ export const POST_MASTER_STYLE_INFO_PROMPT = `
       "entity_reasoning_list": [
         {
           "scene_number": "number (Integer, starting from 1, matching the script sequence)",
-          "entity_reasoning_list": [
+          "reasoning_list": [
             {
               "id": "string (Must match an id from \`entity_manifest_list\`)",
               "reasoning": "string (REQUIRED: Explain WHY this entity is in this scene based on the script. E.g., 'Narration mentions 'he ran', implying the Runner.')"
             }
           ],
-          "scene_empty_reasoning": "string (REQUIRED if \`entity_reasoning_list\` is empty. Explain why NO entities are present. E.g., 'Atmospheric shot of the sky, no actors needed.' If entities exist, leave as empty string \"\".)"
+          "scene_empty_reasoning": "string (REQUIRED if \`reasoning_list\` is empty. Explain why NO entities are present. E.g., 'Atmospheric shot of the sky, no actors needed.' If entities exist, leave as empty string \"\".)"
         }
       ];
       "scene_casting_list": [
         {
           "scene_number": "number (Integer, starting from 1, matching the script sequence)",
-          "castIdList": "string[] (Must match an ids from \`entityManifest\`)",
+          "cast_id_list": "string[] (Must match an ids from \`entity_manifest_list\`)",
           "casting_logic": "string (REQUIRED: Explain why these entities were selected and how physical consistency was verified.)"
         }
       ]
     }
   </output_schema>
 </developer_instruction>
-`
-
-const SUBJECT_EXTRACTION_GUIDE = `
-      * *Selection Hierarchy (CRITICAL)*:
-        1. **Primary Rule (Action Initiator)**: If an entity implies imminent force, impact, or movement (the "Doer"), they are the [Subject].
-        2. **Fallback Rule (Visual Dominance)**: In static/passive scenes with no clear action, the entity commanding the **Visual Focus** is the [Subject].
-      * *Rule*: Construct a **"Minimum Distinguishable Handle"** based on <entity_list>.
-        - **Demographics Schema & Priority Definition**:
-          You must parse the entity's \`demographics\` string according to the entity's **\`type\`** structure and prioritize attributes based on the *Priority Rank* to select the discriminator:
-          * **\`human\`**: \`[ERA / PERIOD], [ROLE], [GENDER], [ORIGIN / ETHNICITY], [AGE]\`
-            - *Priority*: \`[ROLE]\` > \`[GENDER]\` > \`[AGE]\` > \`[ORIGIN]\` > \`[ERA]\`
-          * **\`machine\`**: \`[ERA / PERIOD], [MODEL NAME / TYPE], [PRODUCTION YEAR / SPEC]\`
-            - *Priority*: \`[MODEL NAME]\` > \`[SPEC]\` > \`[ERA]\`
-          * **\`creature\`**: \`[ERA / PERIOD], [SPECIES / ARCHETYPE], [GENDER], [AGE / MATURITY]\`
-            - *Priority*: \`[SPECIES]\` > \`[AGE]\` > \`[GENDER]\` > \`[ERA]\`
-          * **\`animal\`**: \`[ERA / PERIOD], [SPECIES], [AGE / MATURITY]\`
-            - *Priority*: \`[SPECIES]\` > \`[AGE]\` > \`[ERA]\`
-          * **\`object\`**: \`[ERA / PERIOD], [ITEM NAME], [CRAFTSMANSHIP / DETAIL]\`
-            - *Priority*: \`[ITEM NAME]\` > \`[DETAIL]\` > \`[ERA]\`
-          * **\`hybrid\`**: \`[ERA / PERIOD], [HYBRID TYPE], [GENDER], [ORIGIN / ETHNICITY], [AGE]\`
-            - *Priority*: \`[HYBRID TYPE]\` > \`[GENDER]\` > \`[AGE]\` > \`[ORIGIN]\` > \`[ERA]\`
-        - **Handle Construction Logic**:
-          Apply the following logic to generate the final Subject Handle.
-          **1. Base Handle Extraction (Demographics)**:
-            - Identify the entity's [Type].
-            - Extract the **Rank 1 Attribute** (Highest Priority) from its demographics string based on the Schema above.
-            - **Fallback Protocol**: If the targeted attribute is 'N/A', 'Unknown', or missing, automatically iterate down the *Priority Rank* list until a valid, non-empty value is found.
-            - **Constraint (Common Nouns Only)**: To ensure grammatical consistency with the "The" prefix, the Rank 1 Attribute **MUST be a Common Noun** (e.g., "Detective", "Droid", "Tyrant").
-              - *Action*: If the extracted value is a Proper Noun (e.g., "Sherlock", "R2-D2"), convert it to its **Archetype** (e.g., "Sherlock" -> "Detective", "R2-D2" -> "Droid").
-            - *Example*: Human -> Role ("Soldier").
-          **2. Collision Check & Prefix Assignment**:
-            - **Input**: Check \`<entity_list>\` length and spatial attributes.
-            - **Case A: Single Entity** (Length = 1)
-              - **Prefix**: Always use **"The"**.
-              - **Format**: \`"The " + [Rank 1 Attribute]\`
-              - *Example*: "The Soldier"
-            - **Case B: Multiple Entities** (Length >= 2)
-              - **Step 1**: Check for ID Collision (Same Rank 1 Attribute? e.g., two "Soldiers", three "Boxers", five "Racers").
-                - **No Collision**: Use **"The"** prefix. (e.g., "The Soldiers", "The Tanks", "The Pilots", "The Racers", "The Knights").
-                - **Collision**: Go to Step 2.
-              - **Step 2 (Discriminator Selection)**:
-                - **Priority A (Positional)**: If Visual fails OR user prefers spatial clarity.
-                  - *Prefix*: Use **Position** instead of "The".
-                  - *Allowed Position Vocabulary*:
-                    * Horizontal: "Left", "Center", "Right"
-                    * Depth: "Foreground", "Midground", "Background"
-                    * Constraint: Do NOT use complex compound directions (e.g., "Upper-Left"). Use the single most defining axis.
-                  - *Format*: \`[Position] + " " + [Attribute]\`
-                  - *Example*: "Foreground Soldier", "Left Boxer".
-                - **Priority B (Visual)**: If entities have distinct colors/features, use \`[Attribute] + [Preposition]\`.
-                  - *Format*: \`"The " + [Attribute] + [Preposition] + [Feature]\` (e.g., "The Soldier in Red").
-      * *Rule*:
-        - **Single Action Scene**: If only one entity moves, select that entity as the [Subject].
-        - **Multi-Action Scene**: If multiple entities have distinct actions, select ALL active entities as separate [Subjects].
 `
 
 export const POST_IMAGE_GEN_PROMPT_PROMPT = `
@@ -748,13 +694,63 @@ export const POST_IMAGE_GEN_PROMPT_PROMPT = `
         - **Field: 'id'**: Carry over the exact \`id\` from <entity_list> (e.g., 'wingsuit_01'). **Strict Requirement for Subject-to-Physics tracking.**
         - **Field: 'type'**: Execute **Subject Extraction Guide** below.
           **Subject Extraction Guide (Common noun conversion)**:
-          ${SUBJECT_EXTRACTION_GUIDE}
+            * *Selection Hierarchy (CRITICAL)*:
+              1. **Primary Rule (Action Initiator)**: If an entity implies imminent force, impact, or movement (the "Doer"), they are the [Subject].
+              2. **Fallback Rule (Visual Dominance)**: In static/passive scenes with no clear action, the entity commanding the **Visual Focus** is the [Subject].
+            * *Rule*: Construct a **"Minimum Distinguishable Handle"** based on <entity_list>.
+              - **Demographics Schema & Priority Definition**:
+                You must parse the entity's \`demographics\` string according to the entity's **\`type\`** structure and prioritize attributes based on the *Priority Rank* to select the discriminator:
+                * **\`human\`**: \`[ERA / PERIOD], [ROLE], [GENDER], [ORIGIN / ETHNICITY], [AGE]\`
+                  - *Priority*: \`[ROLE]\` > \`[GENDER]\` > \`[AGE]\` > \`[ORIGIN]\` > \`[ERA]\`
+                * **\`machine\`**: \`[ERA / PERIOD], [MODEL NAME / TYPE], [PRODUCTION YEAR / SPEC]\`
+                  - *Priority*: \`[MODEL NAME]\` > \`[SPEC]\` > \`[ERA]\`
+                * **\`creature\`**: \`[ERA / PERIOD], [SPECIES / ARCHETYPE], [GENDER], [AGE / MATURITY]\`
+                  - *Priority*: \`[SPECIES]\` > \`[AGE]\` > \`[GENDER]\` > \`[ERA]\`
+                * **\`animal\`**: \`[ERA / PERIOD], [SPECIES], [AGE / MATURITY]\`
+                  - *Priority*: \`[SPECIES]\` > \`[AGE]\` > \`[ERA]\`
+                * **\`object\`**: \`[ERA / PERIOD], [ITEM NAME], [CRAFTSMANSHIP / DETAIL]\`
+                  - *Priority*: \`[ITEM NAME]\` > \`[DETAIL]\` > \`[ERA]\`
+                * **\`hybrid\`**: \`[ERA / PERIOD], [HYBRID TYPE], [GENDER], [ORIGIN / ETHNICITY], [AGE]\`
+                  - *Priority*: \`[HYBRID TYPE]\` > \`[GENDER]\` > \`[AGE]\` > \`[ORIGIN]\` > \`[ERA]\`
+              - **Handle Construction Logic**:
+                Apply the following logic to generate the final Subject Handle.
+                **1. Base Handle Extraction (Demographics)**:
+                  - Identify the entity's [Type].
+                  - Extract the **Rank 1 Attribute** (Highest Priority) from its demographics string based on the Schema above.
+                  - **Fallback Protocol**: If the targeted attribute is 'N/A', 'Unknown', or missing, automatically iterate down the *Priority Rank* list until a valid, non-empty value is found.
+                  - **Constraint (Common Nouns Only)**: To ensure grammatical consistency with the "The" prefix, the Rank 1 Attribute **MUST be a Common Noun** (e.g., "Detective", "Droid", "Tyrant").
+                    - *Action*: If the extracted value is a Proper Noun (e.g., "Sherlock", "R2-D2"), convert it to its **Archetype** (e.g., "Sherlock" -> "Detective", "R2-D2" -> "Droid").
+                  - *Example*: Human -> Role ("Soldier").
+                **2. Collision Check & Prefix Assignment**:
+                  - **Input**: Check \`<entity_list>\` length and spatial attributes.
+                  - **Case A: Single Entity** (Length = 1)
+                    - **Prefix**: Always use **"The"**.
+                    - **Format**: \`"The " + [Rank 1 Attribute]\`
+                    - *Example*: "The Soldier"
+                  - **Case B: Multiple Entities** (Length >= 2)
+                    - **Step 1**: Check for ID Collision (Same Rank 1 Attribute? e.g., two "Soldiers", three "Boxers", five "Racers").
+                      - **No Collision**: Use **"The"** prefix. (e.g., "The Soldiers", "The Tanks", "The Pilots", "The Racers", "The Knights").
+                      - **Collision**: Go to Step 2.
+                    - **Step 2 (Discriminator Selection)**:
+                      - **Priority A (Positional)**: If Visual fails OR user prefers spatial clarity.
+                        - *Prefix*: Use **Position** instead of "The".
+                        - *Allowed Position Vocabulary*:
+                          * Horizontal: "Left", "Center", "Right"
+                          * Depth: "Foreground", "Midground", "Background"
+                          * Constraint: Do NOT use complex compound directions (e.g., "Upper-Left"). Use the single most defining axis.
+                        - *Format*: \`[Position] + " " + [Attribute]\`
+                        - *Example*: "Foreground Soldier", "Left Boxer".
+                      - **Priority B (Visual)**: If entities have distinct colors/features, use \`[Attribute] + [Preposition]\`.
+                        - *Format*: \`"The " + [Attribute] + [Preposition] + [Feature]\` (e.g., "The Soldier in Red").
+            * *Rule*:
+              - **Single Action Scene**: If only one entity moves, select that entity as the [Subject].
+              - **Multi-Action Scene**: If multiple entities have distinct actions, select ALL active entities as separate [Subjects].
         - **Field: 'description'**: The visual anchor sentence summarizing the entity.
           - **Source**: Synthesize from input <entity_list>.[n].\`demographics\`, <entity_list>.[n].\`appearance.body_features\`, and core items from \`appearance\`.
           - **Role**: Serve as the structural "handle" for the image. It MUST mention the core clothing type and key accessories to ensure linkage with the detail fields below.
           - **Constraint**: 
             * **Simplify & Mention**: Do not exhaustively describe textures and details here. Instead, use broad classifiers.
-              **Slimplfied Examples**:
+              **Simplifying Examples**:
                 * use "wearing a wristwatch" instead of "wearing a high-end Swiss-made mechanical wristwatch..."
                 * use "wearing a suit" instead of "wearing a luxurious three-piece British cashmere suit..."
                 * use "wearing a wingsuit" instead of "wearing a ripstop nylon wingsuit..."

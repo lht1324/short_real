@@ -38,7 +38,139 @@ const masterStyleInfoResponseFormat: OpenAI.ResponseFormatJSONSchema = {
         schema: {
             type: "object",
             properties: {
-
+                master_style_info: {
+                    type: "object",
+                    properties: {
+                        optics: {
+                            type: "object",
+                            properties: {
+                                lensType: { type: "string", enum: ["Anamorphic", "Spherical", "Macro", "Wide-Angle"] },
+                                focusDepth: { type: "string", enum: ["Shallow", "Deep", "Selective"] },
+                                exposureVibe: { type: "string", enum: ["High-Key", "Low-Key", "Natural"] },
+                                defaultISO: { type: "number" },
+                            },
+                            required: ["lensType", "focusDepth", "exposureVibe", "defaultISO"],
+                            additionalProperties: false,
+                        },
+                        colorAndLight: {
+                            type: "object",
+                            properties: {
+                                tonality: { type: "string" },
+                                lightingSetup: { type: "string" },
+                                globalHexPalette: { // 8 Hex RGB codes (#[00~FF][00~FF][00~FF])
+                                    type: "object",
+                                    properties: {
+                                        materialAnchor: { type: "string" },
+                                        keyLightSpectrumMin: { type: "string" },
+                                        keyLightSpectrumMax: { type: "string" },
+                                        fillLightSpectrumMin: { type: "string" },
+                                        fillLightSpectrumMax: { type: "string" },
+                                        shadowAnchor: { type: "string" },
+                                        ambientSpectrumMin: { type: "string" },
+                                        ambientSpectrumMax: { type: "string" },
+                                    },
+                                    required: ["materialAnchor", "keyLightSpectrumMin", "keyLightSpectrumMax", "fillLightSpectrumMin", "fillLightSpectrumMax", "shadowAnchor", "ambientSpectrumMin", "ambientSpectrumMax"],
+                                    additionalProperties: false,
+                                },
+                            },
+                            required: ["tonality", "lightingSetup", "globalHexPalette"],
+                            additionalProperties: false,
+                        },
+                        fidelity: {
+                            type: "object",
+                            properties: {
+                                textureDetail: { type: "string", enum: ["Ultra-High", "Raw", "Stylized"] },
+                                grainLevel: { type: "string", enum: ["Clean", "Filmic", "Gritty"] },
+                                resolutionTarget: { type: "string", enum: ["8K", "4K", "Filmic Scan"] },
+                            },
+                            required: ["textureDetail", "grainLevel", "resolutionTarget"],
+                            additionalProperties: false,
+                        },
+                        globalEnvironment: {
+                            type: "object",
+                            properties: {
+                                era: { type: "string" },
+                                locationArchetype: { type: "string" },
+                            },
+                            required: ["era", "locationArchetype"],
+                            additionalProperties: false,
+                        },
+                        composition: {
+                            type: "object",
+                            properties: {
+                                framingStyle: { type: "string" },
+                                preferredAspectRatio: { type: "string" },
+                            },
+                            required: ["framingStyle", "preferredAspectRatio"],
+                            additionalProperties: false,
+                        },
+                    },
+                    required: ["optics", "colorAndLight", "fidelity", "globalEnvironment", "composition"],
+                    additionalProperties: false,
+                },
+                entity_manifest_list: {
+                    type: "array",
+                    items: {
+                        type: "object",
+                        properties: {
+                            id: { type: "string" },
+                            role: { type: "string", enum: ["main_hero", "sub_character", "background_extra", "prop"]},
+                            type: { type: "string", enum: ["human", "creature", "object", "machine", "animal", "hybrid"]},
+                            demographics: { type: "string" },
+                            appearance: {
+                                type: "object",
+                                properties: {
+                                    clothing_or_material: { type: "string" },
+                                    position_descriptor: { type: "string" },
+                                    hair: { type: ["string", "null"] },
+                                    accessories: { type: "string" },
+                                    body_features: { type: "string" },
+                                },
+                                required: ["clothing_or_material", "position_descriptor", "hair", "accessories", "body_features"],
+                                additionalProperties: false,
+                            }
+                        },
+                        required: ["id", "role", "type", "demographics", "appearance"],
+                        additionalProperties: false,
+                    }
+                },
+                entity_reasoning_list: {
+                    type: "array",
+                    items: {
+                        type: "object",
+                        properties: {
+                            scene_number: { type: "number" },
+                            reasoning_list: {
+                                type: "array",
+                                items: {
+                                    type: "object",
+                                    properties: {
+                                        id: { type: "string" },
+                                        reasoning: { type: "string" },
+                                    },
+                                    required: ["id", "reasoning"],
+                                    additionalProperties: false,
+                                }
+                            },
+                            scene_empty_reasoning: { type: "string" },
+                        },
+                        required: ["scene_number", "reasoning_list", "scene_empty_reasoning"],
+                        additionalProperties: false,
+                    }
+                },
+                scene_casting_list: {
+                    type: "array",
+                    items: {
+                        type: "object",
+                        properties: {
+                            scene_number: { type: "number" },
+                            cast_id_list: { type: "array", items: { type: "string" } },
+                            casting_logic: { type: "string" },
+                        },
+                        required: ["scene_number", "cast_id_list", "casting_logic"],
+                        additionalProperties: false,
+                    }
+                }
             },
             // 최상위 required
             required: ["master_style_info", "entity_manifest_list", "entity_reasoning_list", "scene_casting_list"],
@@ -529,7 +661,7 @@ Instruction: Analyze the input <target_aspect_ratio>, <style_guidelines>, <full_
                     { role: 'developer', content: developerMessage },
                     { role: 'user', content: userMessage }
                 ],
-                response_format: { type: "json_object" },
+                response_format: masterStyleInfoResponseFormat,
                 reasoning_effort: 'medium',
                 max_completion_tokens: 12288, // [팁] Entity Manifest가 길어질 수 있으므로 토큰 한도를 넉넉히 늘렸습니다.
             });
@@ -552,27 +684,27 @@ Instruction: Analyze the input <target_aspect_ratio>, <style_guidelines>, <full_
                 // [수정 4] 변경된 JSON 구조에 맞춰 파싱 (masterStyle + entityManifest)
                 // 프롬프트의 output_schema와 일치해야 함
                 const parsedData: {
-                    masterStyleInfo: MasterStyleInfo;
-                    entityManifest: InitialEntityManifestItem[];
-                    entityReasoningList: {
+                    master_style_info: MasterStyleInfo;
+                    entity_manifest_list: InitialEntityManifestItem[];
+                    entity_reasoning_list: {
                         scene_number: number,
-                        entity_reasoning_list: {
+                        reasoning_list: {
                             id: string;
                             reasoning: string;
                         }[],
                         scene_empty_reasoning: string
                     }[];
-                    sceneCastingList: {
+                    scene_casting_list: {
                         scene_number: number;
-                        castIdList: string[];
+                        cast_id_list: string[];
                         casting_logic: string;
                     }[],
                 } = JSON.parse(generatedResult);
 
-                for (const entityReasoningData of parsedData.entityReasoningList) {
+                for (const entityReasoningData of parsedData.entity_reasoning_list) {
                     const {
                         scene_number: sceneNumber,
-                        entity_reasoning_list: sceneEntityReasoningList,
+                        reasoning_list: sceneEntityReasoningList,
                         scene_empty_reasoning: sceneEmptyReasoning,
                     } = entityReasoningData;
 
@@ -587,10 +719,10 @@ Instruction: Analyze the input <target_aspect_ratio>, <style_guidelines>, <full_
                     }
                 }
 
-                for (const sceneCastingData of parsedData.sceneCastingList.sort((a, b) => a.scene_number - b.scene_number)) {
+                for (const sceneCastingData of parsedData.scene_casting_list.sort((a, b) => a.scene_number - b.scene_number)) {
                     const {
                         scene_number: sceneNumber,
-                        castIdList,
+                        cast_id_list: castIdList,
                         casting_logic: castingLogic,
                     } = sceneCastingData;
 
@@ -601,12 +733,12 @@ Instruction: Analyze the input <target_aspect_ratio>, <style_guidelines>, <full_
                 return {
                     success: true,
                     // 구조 분해 할당
-                    masterStyleInfo: parsedData.masterStyleInfo,
-                    entityManifestList: parsedData.entityManifest, // 추출된 캐릭터 시트 반환
-                    sceneCastingDataList: parsedData.sceneCastingList.map((sceneCasting) => {
+                    masterStyleInfo: parsedData.master_style_info,
+                    entityManifestList: parsedData.entity_manifest_list, // 추출된 캐릭터 시트 반환
+                    sceneCastingDataList: parsedData.scene_casting_list.map((sceneCasting) => {
                         return {
                             sceneNumber: sceneCasting.scene_number,
-                            castIdList: sceneCasting.castIdList,
+                            castIdList: sceneCasting.cast_id_list,
                         }
                     })
                 };
