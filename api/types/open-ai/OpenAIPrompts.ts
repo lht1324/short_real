@@ -1040,12 +1040,6 @@ export const POST_IMAGE_GEN_PROMPT_PROMPT = `
             - **IF [Canvas_Type] is "Square"**:
               * **Mapping**: "Balanced RAW texture style with [\`textureDetail\`] and [\`grainLevel\`] definition."
           - **Constraint**: Output ONLY the **Final Style String** into \`image_gen_prompt.style\` and \`image_gen_prompt_sentence\`.
-        - **Field: 'style' [Format: string]**:
-          * **Source**: <master_style_guide>.<fidelity>.\`textureDetail\`, <master_style_guide>.<fidelity>.\`grainLevel\`, and <video_context>.<video_description>.
-          * **Mapping Guide**: 
-            - Combine the medium (from description) with texture specs.
-            - *Example*: "Cinematic 35mm film style with \`textureDetail\` detail and \`grainLevel\` grain."
-          * **Constraint**: Must reflect the <global_environment>.\`era\` (e.g., "1940s film noir aesthetic").
         - **Field: 'lighting' [Format: string]**:
           * **Source**: <master_style_guide>.<color_and_light>.\`lightingSetup\` and <master_style_guide>.<optics>.\`exposureVibe\`.
           * **Mapping Guide**: 

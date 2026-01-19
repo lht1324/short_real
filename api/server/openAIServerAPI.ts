@@ -311,7 +311,7 @@ const imageGenResponseFormat: OpenAI.ResponseFormatJSONSchema = {
                 }
             },
             // 최상위 required
-            required: ["image_gen_prompt", "image_gen_prompt_sentence", "updated_entity_manifest"],
+            required: ["image_gen_prompt", "image_gen_prompt_sentence", "updated_entity_manifest_list"],
             additionalProperties: false
         }
     }
@@ -1381,7 +1381,7 @@ Instruction: Generate the scene instruction JSON.
 
                 return {
                     success: true,
-                    videoGenPrompt: finalResultPrompt,
+                    videoGenPrompt: finalResultPrompt.replaceAll("**", ""),
                 }
             } catch (parseError) {
                 console.error('JSON Parse Failed:', parseError);
