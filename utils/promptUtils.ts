@@ -1,3 +1,7 @@
+export interface TechnicalIntent {
+    angleIntent: "Default/Neutral" | "Heroic/Scale" | "Extreme Power/Ground-level" | "Dialogue/Interaction" | "Surveillance/Map-view" | "Stylized/Technical";
+}
+
 /**
  * | Cinematic Technique | Category | Visual Axis | Vector ($\vec{C}$) |
  * | :--- | :--- | :--- | :--- |
@@ -384,4 +388,279 @@ export function assembleFullImageGenPromptSentence(
 
     // 최종 결과: 3개의 문장을 공백 한 칸씩 띄워서 합침
     return `${sentence1}, ${sentence2}, ${sentence3}.`.replaceAll(".,", ",");
+}
+
+export function composeOpticalAndTechnicalOption(
+    technicalIntent: TechnicalIntent,
+    masterStyleInfo: MasterStyleInfo,
+    entityManifestList: Entity[],
+    aspectRatio: { width: number; height: number; } = { width: 9, height: 16 }
+) {
+    const { width, height } = aspectRatio;
+    const canvasType: "Horizontal" | "Vertical" | "Square" = width > height
+        ? "Horizontal"
+        : width < height
+            ? "Vertical"
+            : "Square";
+    const framingStyle = masterStyleInfo.composition.framingStyle;
+    const focusDepth = masterStyleInfo.optics.focusDepth;
+
+    const {
+        angleIntent
+    } = technicalIntent;
+
+    const getAngle = () => {
+        // bird's eye
+        const isEveryEntityAeroDynamics = entityManifestList.every((entity) => {
+            return entity.physics_profile?.action_context.includes('aerodynamics') === true;
+        });
+
+        switch (canvasType) {
+            case "Horizontal": {
+                switch (angleIntent) {
+                    case "Default/Neutral": return "eye level"
+                    case "Heroic/Scale": return "low angle"
+                    case "Extreme Power/Ground-level": return "worm's-eye"
+                    case "Dialogue/Interaction": return "over-the-shoulder"
+                    case "Surveillance/Map-view": return isEveryEntityAeroDynamics
+                        ? "bird's-eye"
+                        : "high angle shot looking down"
+                    case "Stylized/Technical": return "isometric"
+                }
+            }
+            case "Vertical": {
+                switch (angleIntent) {
+                    case "Default/Neutral": return "eye level"
+                    case "Heroic/Scale":
+                    case "Extreme Power/Ground-level": return "low angle"
+                    case "Dialogue/Interaction": return "over-the-shoulder"
+                    case "Surveillance/Map-view": return "high angle shot looking down"
+                    case "Stylized/Technical": return "slightly low"
+                }
+            }
+            case "Square": {
+                switch (angleIntent) {
+                    case "Default/Neutral":
+                    case "Dialogue/Interaction":
+                    case "Stylized/Technical": return "eye level"
+                    case "Heroic/Scale": return "slightly low"
+                    case "Extreme Power/Ground-level": return "low angle"
+                    case "Surveillance/Map-view": return "high angle"
+                }
+            }
+        }
+    }
+
+    const getDistance = () => {
+        // framingStyle enum으로 교체 후 default 제거
+        switch (canvasType) {
+            case "Horizontal": {
+                switch (framingStyle) {
+                    case "Extreme Long/Wide": return "extreme wide shot"
+                    case "Long/Wide": return "wide shot"
+                    case "Full/Medium Wide": return "medium wide shot"
+                    case "Medium/Waist": return "medium shot"
+                    case "Bust/Chest": return "medium close-up"
+                    case "Face/Detail": return "close-up"
+                    default: return ""
+                }
+            }
+            case "Vertical": {
+                switch (framingStyle) {
+                    case "Extreme Long/Wide": return "vertical panoramic environmental shot"
+                    case "Long/Wide": return "full-length vertical capture"
+                    case "Full/Medium Wide": return "full-body shot"
+                    case "Medium/Waist": return "medium full shot"
+                    case "Bust/Chest": return "medium close-up"
+                    case "Face/Detail": return "close-up"
+                    default: return ""
+                }
+            }
+            case "Square": {
+                switch (framingStyle) {
+                    case "Extreme Long/Wide": return "wide-angle square shot"
+                    case "Long/Wide": return "full-frame environmental shot"
+                    case "Full/Medium Wide": return "medium-wide centered shot"
+                    case "Medium/Waist": return "medium shot"
+                    case "Bust/Chest": return "medium close-up"
+                    case "Face/Detail": return "close-up"
+                    default: return ""
+                }
+            }
+        }
+    }
+    const distance = getDistance();
+
+    const getFocus = () => {
+        switch (canvasType) {
+            case "Horizontal": {
+                switch (focusDepth) {
+                    case "Deep": return "deep focus"
+                    case "Shallow": {
+                        if (distance === "close-up") {
+                            return "macro focus";
+                        } else if (distance.includes("medium")) {
+                            return "cinematic background blur";
+                        } else if (distance.includes("wide")) {
+                            return "selective focus";
+                        } else {
+                            return "selective focus";
+                        }
+                    }
+                    case "Selective": return "selective focus"
+                }
+            }
+            case "Vertical": {
+                switch (focusDepth) {
+                    case "Deep": return "sharp focus throughout the vertical frame"
+                    case "Shallow": {
+                        if (distance === "close-up") {
+                            return "macro detail focus";
+                        } else if (distance.includes("medium")) {
+                            return "soft blurred background";
+                        } else if (distance.includes("wide")) {
+                            return "subtle subject isolation";
+                        } else {
+                            return "selective focus";
+                        }
+                    }
+                    case "Selective": return "selective focus"
+                }
+            }
+            case "Square": {
+                switch (focusDepth) {
+                    case "Deep": return "deep focus"
+                    case "Shallow": return "bokeh-rich background"
+                    case "Selective": return "selective focus"
+                }
+            }
+        }
+    }
+    // angle
+    // "Default/Neutral" | "Heroic/Scale" | "Extreme Power/Ground-level" | "Dialogue/Interaction" | "Surveillance/Map-view" | "Stylized/Technical"
+    // distance
+    // "Extreme Long/Wide" | "Long/Wide" | "Full/Medium Wide" | "Medium/Waist" | "Bust/Chest" | "Face/Detail"
+
+    /**
+     *     <unit_3_optical_and_technical>
+     *       **UNIT 3: OPTICAL & TECHNICAL REASONING**
+     *       2. **[Field: 'camera', 'composition'] - Technical Mapping Logic**
+     *         - **Action**: Map <master_style_guide> specs to the JSON structure.
+     *         - **Rule 1 (Strict Selection)**: For fields with a provided **[List]**, you MUST select exactly ONE value from that list.
+     *         - **Rule 2 (Formatted Output)**: Follow the specified string/number format strictly.
+     *         - **Field: 'camera'**:
+     *           - **'lens' [Context-Aware Mapping]**:
+     *             - **Action**: Map `<master_style_guide>.<optics>.lensType` to a specific focal length (mm) optimized for the **[Canvas_Type]** to prevent subject distortion and aspect-ratio artifacts.
+     *             * **[Aspect-Ratio Translation Table]**:
+     *               - **IF [Canvas_Type] is "Horizontal"**:
+     *                   * "Wide-Angle" -> **"14mm"** or **"24mm"**
+     *                   * "Spherical" -> **"35mm"** or **"50mm"**
+     *                   * "Anamorphic" -> **"70mm"** or **"85mm"**
+     *                   * "Macro" -> **"85mm macro"**
+     *               - **IF [Canvas_Type] is "Vertical"**:
+     *                   * **CRITICAL**: Avoid ultra-wide and anamorphic labels to prevent letterboxing and limb stretching.
+     *                   * "Wide-Angle" -> **"35mm"** (Moderate wide-angle that preserves human proportions)
+     *                   * "Spherical" -> **"50mm"**
+     *                   * "Anamorphic" -> **"50mm"** or **"85mm"** (Note: Strictly use spherical focal lengths to block 'Cinemascope' artifacts)
+     *                   * "Macro" -> **"85mm"**
+     *               - **IF [Canvas_Type] is "Square"**:
+     *                   * "Wide-Angle" -> **"24mm"**
+     *                   * "Spherical" -> **"50mm"**
+     *                   * "Anamorphic" -> **"50mm"**
+     *                   * "Macro" -> **"85mm"**
+     *             - **Constraint**: Do not output the source intent labels (e.g., "Anamorphic"). Output ONLY the **Final mm Value** (e.g., "50mm") into `image_gen_prompt.camera.lens` and `image_gen_prompt_sentence`.
+     *           - **'fNumber' [Format: string]**:
+     *             * **Action**: Define the aperture value as a string (Pattern: "f/X.X").
+     *             * *Mapping Guide (Based on <master_style_guide>.<optics>.`focusDepth`)*:
+     *               * If "Shallow" -> Select a wide aperture (**"f/1.2"**, **"f/1.8"**, or **"f/2.8"**).
+     *               * If "Deep" -> Select a narrow aperture (**"f/8.0"** or **"f/11.0"**).
+     *               * If "Selective" -> Select **"f/4.0"**.
+     *           - **'ISO' [Format: number]**:
+     *             * **Action**: Use <master_style_guide>.<optics>.`defaultISO` as the baseline.
+     *             * **Adjustment (Based on <master_style_guide>.<optics>.`exposureVibe`)**:
+     *               - If "Low-Key", you may increase it by up to 1 stop from default (max 1600).
+     *               - If "High-Key", you may decrease it by up to 1 stop from default (min 100).
+     *               - If "Natural", Strictly adhere to <master_style_guide>.<optics>.`defaultISO` to maintain a balanced, unmanipulated sensor response that reflects standard lighting conditions.
+     *             * **Constraint**: Output exactly one integer.
+     *         - **Field: 'composition' [Context-Aware Mapping]**:
+     *           - **Action**: Map <master_style_guide>.<composition> and Narrative Tone into a cinematic composition technique optimized for the **[Canvas_Type]** to ensure balanced spatial distribution and narrative flow.
+     *           * **[Aspect-Ratio Translation Table]**:
+     *             - **IF [Canvas_Type] is "Horizontal"**:
+     *                 * "Symmetry/Perspective" -> **"vanishing point center"** (Maximizes depth in wide frames)
+     *                 * "Natural Balance" -> **"rule of thirds"**
+     *                 * "Strength/Architecture" -> **"strong horizontal lines"**
+     *                 * "Action/High Energy" -> **"diagonal energy"** or **"dynamic off-center"**
+     *                 * "Complex Motion" -> **"S-curve through the horizon"**
+     *                 * "Depth/Immersion" -> **"leading lines toward the horizon"**
+     *                 * "Solitude/Focus" -> **"minimalist negative space"**
+     *             - **IF [Canvas_Type] is "Vertical"**:
+     *                 * "Symmetry/Perspective" -> **"centered vertical symmetry"**
+     *                 * "Natural Balance" -> **"vertical rule of thirds"**
+     *                 * "Strength/Architecture" -> **"strong verticals"** (Emphasizes height and scale)
+     *                 * "Action/High Energy" -> **"steep diagonal tension"**
+     *                 * "Complex Motion" -> **"vertical S-curve"** or **"triangular arrangement"**
+     *                 * "Depth/Immersion" -> **"low-to-high leading lines"**
+     *                 * "Aesthetic Perfection" -> **"vertical golden spiral"**
+     *                 * "Solitude/Focus" -> **"vertical minimalist negative space"**
+     *             - **IF [Canvas_Type] is "Square"**:
+     *                 * "Symmetry/Perspective" -> **"central symmetry"**
+     *                 * "Natural Balance" -> **"rule of thirds"**
+     *                 * "Focus & Flow" -> **"circular arrangement"** or **"centered framing"**
+     *                 * "Isolation" -> **"minimalist negative space"**
+     *           - **Constraint**: Do not output the source intent labels. Output ONLY the **Final Cinematic Term** into `image_gen_prompt.composition` and `image_gen_prompt_sentence`.
+     *         **[Execution Rule]**:
+     *         - Accuracy and adherence to the predefined pick-lists are mandatory to pass system validation.
+     *       3. **[Field: 'style', 'lighting', 'mood'] - Atmospheric Anchoring**
+     *         - **Action**: Synthesize raw technical data into descriptive strings while maintaining cross-reference stability with the 'camera' object.
+     *         - **Field: 'style' [Context-Aware Mapping]**:
+     *           - **Action**: Synthesize a technical rendering style by combining <master_style_guide>.<fidelity>.`textureDetail` and <master_style_guide>.<fidelity>.`grainLevel`, filtered through **[Canvas_Type]**.
+     *           - **Constraint**: Strictly exclude `resolutionTarget` (e.g., 4K, 8K) and `era` from this field to prevent technical artifacts and color bias.
+     *           * **[Aspect-Ratio Translation Table]**:
+     *             - **IF [Canvas_Type] is "Horizontal"**:
+     *               * **Mapping**: "Professional cinematic RAW aesthetic with [`textureDetail`] detail and [`grainLevel`] grain."
+     *               * **Note**: Maintains high-end cinematic texture for 16:9 frames.
+     *             - **IF [Canvas_Type] is "Vertical"**:
+     *               * **Mapping**: "High-fidelity RAW portrait photography with [`textureDetail`] surface detail and [`grainLevel`] organic texture."
+     *               * **CRITICAL**: Use "Portrait photography" to align with vertical datasets. Strictly avoid "Cinematic" or "4K" to prevent letterboxing.
+     *             - **IF [Canvas_Type] is "Square"**:
+     *               * **Mapping**: "Balanced RAW texture style with [`textureDetail`] and [`grainLevel`] definition."
+     *           - **Constraint**: Output ONLY the **Final Style String** into `image_gen_prompt.style` and `image_gen_prompt_sentence`.
+     *         - **Field: 'lighting' [Format: string]**:
+     *           * **Source**: <master_style_guide>.<color_and_light>.`lightingSetup` and <master_style_guide>.<optics>.`exposureVibe`.
+     *           * **Mapping Guide**:
+     *             - Use `lightingSetup` as the primary technique (e.g., "Chiaroscuro") and `exposureVibe` as the intensity/brightness level.
+     *           * **Constraint**: If `exposureVibe` is "Low-Key", description must emphasize deep shadows and high contrast.
+     *         - **Field: 'mood' [Format: string]**:
+     *           * **Source**: <video_context>.<video_title> (High-level theme) and <master_style_guide>.<color_and_light>.`tonality`.
+     *           * **Mapping Guide**:
+     *             - **Infer** the emotional atmosphere by combining the narrative theme (from title) with the color theory of `tonality`.
+     *             - *Example*: If Title is "Last Stand" and Tonality is "Warm earth tones" -> "Exhilarating yet somber atmosphere with a sense of grounded grit."
+     *           * **Constraint**: Do NOT include camera technicals (ISO, lens, etc.) to prevent data conflict.
+     *       - **[Field: 'effects'] - Context-Aware Artifact Management**
+     *         - **Action**: Generate a flat array of technical keywords based on **[Canvas_Type]**, ensuring zero conflict with aspect ratio.
+     *         - **Source 1: <master_style_guide>.<fidelity>.`grainLevel`** (Grain consistency)
+     *           - [No Change]: "Gritty" -> ["heavy film grain"], "Filmic" -> ["subtle film grain"], "Clean" -> ["clean digital sensor finish"].
+     *         - **Source 2: <master_style_guide>.<fidelity>.`resolutionTarget`** (Ratio-Safe Fidelity)
+     *           * **IF [Canvas_Type] is "Horizontal"**:
+     *             - Use numeric targets: ["4K UHD", "8K resolution", "ultra-sharp details"].
+     *           * **IF [Canvas_Type] is "Vertical" or "Square"**:
+     *             - **CRITICAL**: Use descriptive targets ONLY: ["highly defined textures", "hyper-detailed rendering", "extreme visual fidelity"]. (Prevents letterboxing by avoiding '4K/8K' tokens).
+     *         - **Source 3: <master_style_guide>.<optics>.`lensType`** (Optical Alignment)
+     *           * **IF [Canvas_Type] is "Horizontal"**:
+     *             - If "Anamorphic" -> ["oval bokeh", "anamorphic lens flares", "horizontal light streaks"].
+     *             - If "Wide-Angle" -> ["slight barrel distortion", "expansive field of view"].
+     *           * **IF [Canvas_Type] is "Vertical"**:
+     *             - If "Anamorphic" -> ["oval bokeh", "vertical light leaks", "soft edge bloom"]. (Note: Strips horizontal-specific flares).
+     *             - If "Wide-Angle" -> ["sharp focus edges", "unfiltered clarity"]. (Note: Removes barrel distortion to prevent limb stretching).
+     *         - **[Final Integration Rule]**:
+     *           - **MUST**: Collect all triggered strings from Source 1, 2, and 3.
+     *           - **MUST**: Merge them into one single, flat array: `["source1-effect-1", "source1-effect2", "source1-effect-3", ... , source3-effect-n]`.
+     *           - **Constraint**: If `camera.focus` is "deep focus", discard any "bokeh" or "blur" related keywords from the final array.
+     *         **[Execution Rule]**:
+     *           - Combine all triggered keywords into a single flat array.
+     *           - If focus is "deep focus", remove any "bokeh" or "blur" keywords from this array.
+     *       **[Execution Rule]**:
+     *       - All camera values must be physically plausible and consistent with the MasterStyle standard.
+     *     </unit_3_optical_and_technical>
+     */
 }
