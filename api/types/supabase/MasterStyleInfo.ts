@@ -38,7 +38,7 @@ export interface MasterStyleInfo {
 
     // 5. 구도 표준 (image_gen_prompt.composition 생성 근거)
     composition: {
-        framingStyle: string;
+        framingStyle: "Extreme Long/Wide" | "Long/Wide" | "Full/Medium Wide" | "Medium/Waist" | "Bust/Chest" | "Face/Detail";
         preferredAspectRatio: string;
     };
 }

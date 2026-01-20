@@ -491,7 +491,7 @@ export function composeOpticalAndTechnicalOption(
         }
 
         // 이후 '무조건' 교체
-        return distanceMap[canvasType][framingStyle as ("Extreme Long/Wide" | "Long/Wide" | "Full/Medium Wide" | "Medium/Waist" | "Bust/Chest" | "Face/Detail")];
+        return distanceMap[canvasType][framingStyle];
     }
     const distance = getDistance();
 

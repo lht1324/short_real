@@ -100,7 +100,7 @@ const masterStyleInfoResponseFormat: OpenAI.ResponseFormatJSONSchema = {
                         composition: {
                             type: "object",
                             properties: {
-                                framingStyle: { type: "string" },
+                                framingStyle: { type: "string", enum: ["Extreme Long/Wide", "Long/Wide", "Full/Medium Wide", "Medium/Waist", "Bust/Chest", "Face/Detail"] },
                                 preferredAspectRatio: { type: "string" },
                             },
                             required: ["framingStyle", "preferredAspectRatio"],

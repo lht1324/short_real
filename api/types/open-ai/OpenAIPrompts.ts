@@ -390,9 +390,27 @@ export const POST_MASTER_STYLE_INFO_PROMPT = `
       * **\`composition.framingStyle\`**
         - **Reference**: <target_aspect_ratio>, <style_guidelines>.<preferred_framing_logic>
         - **Inference Protocol**:
-          - **IF <target_aspect_ratio> is Vertical (Width < Height)** -> "Vertical Layering" (Prioritize headroom, vertical leading lines, and foreground stacking to fill the narrow frame).
-          - **IF <target_aspect_ratio> is Horizontal (Width > Height)** -> "Lateral Expansion" (Utilize the Rule of Thirds, negative space for environmental depth, and horizontal lead lines).
-          - **IF <target_aspect_ratio> is Square (Width = Height)** -> "Radial/Central Symmetry" (Prioritize dead-center subject placement or balanced radial compositions).
+          * **IF <target_aspect_ratio> is Vertical (Width < Height)**:
+            * **\`Extreme Long/Wide\`**: Select for **vertical panoramic** storytelling (e.g., a towering skyscraper or deep abyss) where the subject is a minute speck.
+            * **\`Long/Wide\`**: Select for **full-length environmental** shots, establishing the subject within a tall structure or vast vertical landscape.
+            * **\`Full/Medium Wide\`**: Select for **head-to-toe visibility**. Ideal for fashion or action where the entire silhouette must be captured with safe headroom.
+            * **\`Medium/Waist\`**: The **social-media engagement standard**. Focuses on gestures and upper-body presence while maintaining vertical context.
+            * **\`Bust/Chest\`**: Select for **intimate portraiture**. Prioritizes facial emotion and upper-torso presence within the narrow frame.
+            * **\`Face/Detail\`**: Select for **macro-vertical focus**. Intense focus on specific vertical details (e.g., a necktie, a dripping icicle, or facial features).
+          * **IF <target_aspect_ratio> is Horizontal (Width > Height)**:
+            - **\`Extreme Long/Wide\`**: Select for **epic establishing shots**. Maximize the lateral axis to show vast horizons or wide-scale world-building.
+            - **\`Long/Wide\`**: Select for **cinematic environment** focus. Uses the Rule of Thirds to place subjects within a wide, breathable landscape.
+            - **\`Full/Medium Wide\`**: Select for **lateral interaction**. Ideal for subjects moving across the frame or balancing a subject against a wide background.
+            - **\`Medium/Waist\`**: The **narrative storytelling standard**. Focuses on character action while utilizing negative space for environmental depth.
+            - **\`Bust/Chest\`**: Select for **cinematic portraits**. Focuses on the subject with a wide, bokeh-rich background blur.
+            - **\`Face/Detail\`**: Select for **extreme textural detail**. Focuses on specific grains (e.g., metal scratches, skin pores) across the wide frame.
+          * **IF <target_aspect_ratio> is Square (Width = Height)**:
+            * **\`Extreme Long/Wide\`**: Select for **epic establishing shots**. Maximize the lateral axis to show vast horizons or wide-scale world-building.
+            * **\`Long/Wide\`**: Select for **cinematic environment** focus. Uses the Rule of Thirds to place subjects within a wide, breathable landscape.
+            * **\`Full/Medium Wide\`**: Select for **lateral interaction**. Ideal for subjects moving across the frame or balancing a subject against a wide background.
+            * **\`Medium/Waist\`**: The **narrative storytelling standard**. Focuses on character action while utilizing negative space for environmental depth.
+            * **\`Bust/Chest\`**: Select for **cinematic portraits**. Focuses on the subject with a wide, bokeh-rich background blur.
+            * **\`Face/Detail\`**: Select for **extreme textural detail**. Focuses on specific grains (e.g., metal scratches, skin pores) across the wide frame.
           - Sync this with <style_guidelines>.<preferred_framing_logic> to determine if the camera favors wide establishing shots or intimate character framing.
       * **\`composition.preferredAspectRatio\`**
         - **Reference**: <target_aspect_ratio>
@@ -474,7 +492,7 @@ export const POST_MASTER_STYLE_INFO_PROMPT = `
           locationArchetype: string;
         };
         composition: {
-          framingStyle: string;
+          framingStyle: "enum ("Extreme Long/Wide" | "Long/Wide" | "Full/Medium Wide" | "Medium/Waist" | "Bust/Chest" | "Face/Detail")";
           preferredAspectRatio: string;
         };
       };
@@ -793,25 +811,21 @@ export const POST_IMAGE_GEN_PROMPT_PROMPT = `
     <unit_2_context_and_environment>
       **UNIT 2: CONTEXT & ENVIRONMENT (Background Mapping)**
       **Goal**: Synthesize the setting and environment by mapping <scene_content> and <current_narration> into \`image_gen_prompt.scene\` and \`image_gen_prompt.background\` fields, ensuring strict era-synchronization with <master_style_guide>.
-      1. **[Field: 'scene'] - Visual Shot Definition**
-        - **Goal**: Create a short, descriptive noun phrase acting as the "Title of this Shot".
-        - **Input Check**: Check <entity_list>. Is it empty or does it contain only ('prop' | 'background_extra') \`type\`?
-        - **Components to Extract**:
-          1. **[Genre/Setting]**: Derived from <master_style_guide> (e.g., "Post-apocalyptic", "Cyberpunk").
-          2. **[Core Focus]**: 
-             - *If Entity exists*: Use the main character's role (e.g., "survivor", "boxer").
-             - *If Entity is empty/prop only*: Use the environment/object from <scene_content> (e.g., "ruins", "canyon texture").
-          3. **[Shot Context]**: 
-             - **Source**: Extract the specific camera technique or visual vibe from <scene_content>.
-             - *Examples*: "POV shot", "motion blur sequence", "over-the-shoulder view", "macro detail".
-             - *Fallback*: If <scene_content> is generic, use standard terms (e.g., "portrait", "landscape").
-        - **Assembly Logic**: "[Genre/Setting] [Core Focus] [Shot Context]".
-        - **Constraint**: 
-          - Do NOT use <video_title> verbatim.
-          - Do NOT imply a human subject if <entity_list> is empty.
-        - **Output Examples**: 
-          - (With Entity): "Gritty noir detective over-the-shoulder shot"
-          - (No Entity): "High-velocity canyon texture motion blur sequence"
+      1. **[Field: 'scene'] - Visual Content Definition**
+         - **Goal**: Create a concise noun phrase defining the "Subject's State and Atmosphere," strictly excluding camera technicals.
+         - **Components to Extract**:
+           1. **[Genre/Setting]**: Derived from <master_style_guide> (e.g., "Cyberpunk", "Medieval").
+           2. **[Subject Role]**: Use the primary entity's role (e.g., "ronin", "pilot", "assassin").
+           3. **[Visual State]**: The physical or atmospheric condition affecting the subject.
+              - **Source**: <current_narration> and <scene_content>.
+              - **Vocabulary**: "drenched in rain", "cloaked in shadow", "illuminated by embers", "stretching in tension", "shrouded in neon haze".
+         - **Assembly Logic**: "[Genre/Setting] [Subject Role] [Visual State]".
+         - **Constraint**: 
+           - Strictly PROHIBIT all camera-related terms (e.g., "shot", "angle", "view", "POV", "close-up", "wide").
+           - Focus exclusively on the **Entity's Physical Presence** and the environmental impact on them.
+         - **Output Examples**: 
+           - "Cyberpunk hacker shrouded in flickering holographic glitch"
+           - "Gritty WWII paratrooper suspended in mid-descent through thick smoke"
       2. **[Field: 'background'] - Era-Synced Environment**
         - **Phase A (Era Asset Translation)**: 
           * **The Filter**: Retrieve \`era\` and \`locationArchetype\` from <master_style_guide>.<global_environment>.
@@ -1122,20 +1136,21 @@ export const POST_IMAGE_GEN_PROMPT_NO_ENTITIES_PROMPT = `
     <unit_2_context_and_environment>
       **UNIT 2: CONTEXT & ENVIRONMENT (Background Mapping)**
       **Goal**: Synthesize the setting and environment by mapping <scene_content> and <current_narration> into \`image_gen_prompt.scene\` and \`image_gen_prompt.background\` fields, ensuring strict era-synchronization with <master_style_guide>.
-      1. **[Field: 'scene'] - Visual Shot Definition**
-        - **Goal**: Create a short, descriptive noun phrase acting as the "Title of this Shot".
-        - **Components to Extract**:
-          1. **[Genre/Setting]**: Derived from <master_style_guide> (e.g., "Post-apocalyptic", "Cyberpunk").
-          2. **[Core Focus]**: Use the environment/object from <scene_content> (e.g., "ruins", "canyon texture").
-          3. **[Shot Context]**: 
-             - **Source**: Extract the specific camera technique or visual vibe from <scene_content>.
-             - *Examples*: "POV shot", "motion blur sequence", "over-the-shoulder view", "macro detail".
-             - *Fallback*: If <scene_content> is generic, use standard terms (e.g., "portrait", "landscape").
-        - **Assembly Logic**: "[Genre/Setting] [Core Focus] [Shot Context]".
-        - **Constraint**: 
-          - Do NOT use <video_title> verbatim.
-          - Do NOT imply a human subject.
-        - **Output Examples**: "High-velocity canyon texture motion blur sequence"
+      1. **[Field: 'scene'] - Visual Content Definition**
+         - **Goal**: Create a concise noun phrase defining the "Environmental State and Atmosphere," strictly excluding camera technicals.
+         - **Components to Extract**:
+           1. **[Genre/Setting]**: Derived from <master_style_guide> (e.g., "Post-apocalyptic", "Sci-fi").
+           2. **[Environmental Anchor]**: The dominant structure or landmark from <scene_content> (e.g., "monolith", "temple ruins", "canyon ridge").
+           3. **[Atmospheric Condition]**: The weather, lighting motif, or physical decay of the space.
+              - **Source**: <current_narration> and <scene_content>.
+              - **Vocabulary**: "shrouded in mist", "scorched by midday sun", "frozen in crystalline frost", "overgrown with bioluminescent flora".
+         - **Assembly Logic**: "[Genre/Setting] [Environmental Anchor] [Atmospheric Condition]".
+         - **Constraint**: 
+           - Strictly PROHIBIT all camera-related terms (e.g., "shot", "angle", "view", "POV", "landscape", "portrait").
+           - Focus entirely on the **Structural Presence** and the environmental envelope.
+         - **Output Examples**: 
+           - "Post-apocalyptic skyscraper overgrown with thick vines and rust"
+           - "Ethereal desert dunes rippling under a blood-red solar eclipse"
       2. **[Field: 'background'] - Era-Synced Environment**
         - **Phase A (Era Asset Translation)**: 
           * **The Filter**: Retrieve \`era\` and \`locationArchetype\` from <master_style_guide>.<global_environment>.
