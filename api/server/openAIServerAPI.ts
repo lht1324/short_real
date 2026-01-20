@@ -22,8 +22,9 @@ import {PHYSICS_LIBRARY} from "@/api/types/open-ai/PhysicsPromptLibrary";
 import {FluxPrompt, FluxPromptSubject} from "@/api/types/open-ai/FluxPrompt";
 import {
     assembleFullImageGenPromptSentence,
-    assembleFullVideoGenPromptSentence, generateTechnicalLensString, subjectVectorsToCameraVectorString,
-    surgicallyReplaceVideoGenPromptByCameraKey
+    assembleFullVideoGenPromptSentence,
+    composeOpticalAndTechnicalOption, generateTechnicalLensString, subjectVectorsToCameraVectorString,
+    surgicallyReplaceVideoGenPromptByCameraKey, TechnicalIntent
 } from "@/utils/promptUtils";
 
 enum OpenAIModel {
@@ -216,37 +217,27 @@ const imageGenResponseFormat: OpenAI.ResponseFormatJSONSchema = {
                                 additionalProperties: false
                             }
                         },
-                        style: { type: "string" },
                         color_palette: { type: "array", items: { type: "string" } },
                         lighting: { type: "string" },
                         mood: { type: "string" },
                         background: { type: "string" },
-                        composition: { type: "string" },
-                        camera: {
-                            type: "object",
-                            properties: {
-                                angle: { type: "string" },
-                                distance: { type: "string" },
-                                focus: { type: "string" },
-                                lens: { type: "string" },
-                                fNumber: { type: "string" },
-                                ISO: { type: "number" }
-                            },
-                            required: ["angle", "distance", "focus", "lens", "fNumber", "ISO"],
-                            additionalProperties: false
-                        },
-                        effects: { type: "array", items: { type: "string" } }
                     },
                     // FluxPrompt의 모든 필드를 필수(required)로 지정
-                    required: [
-                        "scene", "subjects", "style", "color_palette", "lighting", "mood",
-                        "background", "composition", "camera", "effects"
-                    ],
+                    required: ["scene", "subjects", "color_palette", "lighting", "mood", "background"],
                     additionalProperties: false
                 },
 
-                // 2. image_gen_prompt_sentence
-                image_gen_prompt_sentence: { type: "string" },
+                // 2. technical_intent
+                technical_intent: {
+                    type: "object",
+                    properties: {
+                        angleIntent: { type: "string", enum: ["Default/Neutral", "Heroic/Scale", "Extreme Power/Ground-level", "Dialogue/Interaction", "Surveillance/Map-view", "Stylized/Technical"] },
+                        compositionIntent: { type: "string", enum: ["Symmetry", "Balance", "Strength", "Action", "Motion", "Depth", "Minimalism"] },
+                        exposureIntent: { type: "string", enum: ["Vibrant/High-Key", "Ethereal/Dreamy", "Balanced/Natural", "Cinematic/Moody", "Gritty/Noisy", "Silhouetted/Backlit", "Nocturnal/Deep-Night", "Harsh/High-Energy"] },
+                    },
+                    required: ["angleIntent", "compositionIntent", "exposureIntent"],
+                    additionalProperties: false,
+                },
 
                 // 3. updated_entity_manifest (Entity 인터페이스 매핑)
                 // Omit<Entity, 'role' | 'type' | 'appearance_scenes' | 'demographics'>[]
@@ -866,14 +857,14 @@ Instruction: Generate the scene instruction JSON.
             try {
                 console.log(`Scene #${sceneNumber} raw generated content: ${generatedContent}`)
                 const instructionJSON: {
-                    image_gen_prompt: FluxPrompt;
-                    image_gen_prompt_sentence: string;
+                    image_gen_prompt: Omit<FluxPrompt, 'style' | 'camera' | 'composition' | 'effects'>;
+                    technical_intent: TechnicalIntent;
                     updated_entity_manifest_list?: Omit<Entity, 'role' | 'type' | 'demographics'>[] | null
                 } = JSON.parse(generatedContent);
 
                 const {
                     image_gen_prompt: imageGenPrompt,
-                    image_gen_prompt_sentence: imageGenPromptSentence,
+                    technical_intent: technicalIntent,
                     updated_entity_manifest_list: updatedEntityManifestList,
                 } = instructionJSON;
 
@@ -901,8 +892,19 @@ Instruction: Generate the scene instruction JSON.
                     };
                 }) : []
 
+                const opticalAndTechnicalOption = composeOpticalAndTechnicalOption(
+                    technicalIntent,
+                    masterStylePromptInfo,
+                    newEntityManifestList,
+                );
+
+                const fullImageGenPrompt: FluxPrompt = {
+                    ...imageGenPrompt,
+                    ...opticalAndTechnicalOption,
+                }
+
                 const testSentence = assembleFullImageGenPromptSentence(
-                    imageGenPrompt,
+                    fullImageGenPrompt,
                     newEntityManifestList,
                 )
 
@@ -911,8 +913,8 @@ Instruction: Generate the scene instruction JSON.
                 return {
                     success: true,
                     // imageGenPrompt: imageGenPrompt,
-                    imageGenPrompt: imageGenPrompt,
-                    imageGenPromptSentence: imageGenPromptSentence,
+                    imageGenPrompt: fullImageGenPrompt,
+                    imageGenPromptSentence: testSentence,
                     sceneEntityManifestList: updatedEntityManifestList ? updatedEntityManifestList.map(instruction => {
                         const originalEntity = sceneEntityManifestList.find((entityManifest) => {
                             return entityManifest.id === instruction.id;

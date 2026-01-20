@@ -842,27 +842,20 @@ export const POST_IMAGE_GEN_PROMPT_PROMPT = `
         - **Exception**: Collective groups (\`background_extra\`) ARE allowed and must be treated as environmental texture.
         - Every asset must match the material and technological limits of the \`era\`.
     </unit_2_context_and_environment>
-    <unit_3_optical_and_technical>
-      **UNIT 3: OPTICAL & TECHNICAL REASONING**
-      **Goal**: Translate <master_style_guide> technical specs into precise digital camera metadata (\`camera\` object), technical \`effects\`, and \`color_palette\`.
-      0. **[Internal Reasoning: Canvas Type Determination]**
-        - **Action**: Before determining any technical values, analyze the numerical values in <video_context>.<aspect_ratio>.
-        - **Logic**:
-          - **IF width < height** (e.g., "9:16", "2:3", "4:5"): Set **[Canvas_Type]** to **"Vertical"**.
-          - **IF width > height** (e.g., "16:9", "21:9", "3:2"): Set **[Canvas_Type]** to **"Horizontal"**.
-          - **IF width == height** (e.g., "1:1"): Set **[Canvas_Type]** to **"Square"**.
-        - **Constraint**: This **[Canvas_Type]** is a mandatory global filter. Every subsequent selection in <unit_3_optical_and_technical> and <unit_4_natural_language_sentence_generation> must be cross-referenced with this type to ensure visual-spatial alignment.
+    <unit_3_cinematographic_intent_architecture>
+      **UNIT 3: CINEMATIC INTENT ARCHITECTURE**
+      **Goal**: Establish the chromatic foundation, lighting architecture, and emotional tonality of the scene by synthesizing <master_style_guide> specifications with narrative intent.
       1. **[Field: 'color_palette'] - Chromatic Fidelity & Intensity Mapping**
-        - **Action**: Analyze the 8 Hex fields in <master_style_guide>.<color_and_light>.\`globalHexPalette\`.
-          **Definition of each field in <master_style_guide>.<color_and_light>.\`globalHexPalette\`**:
-            \`materialAnchor\`: Primary subject base color
-            \`keyLightSpectrumMin\`: Range Start - Primary light
-            \`keyLightSpectrumMax\`: Range End - Primary light
-            \`fillLightSpectrumMin\`: Range Start - Secondary light
-            \`fillLightSpectrumMax\`: Range End - Secondary light
-            \`shadowAnchor\`: Environment black level
-            \`ambientSpectrumMin\`: Range Start - Atmospheric/Haze
-            \`ambientSpectrumMax\`: Range End - Atmospheric/Haze
+         - **Action**: Analyze the 8 Hex fields in <master_style_guide>.<color_and_light>.\`globalHexPalette\`.
+           **Definition of each field in <master_style_guide>.<color_and_light>.\`globalHexPalette\`**:
+             \`materialAnchor\`: Primary subject base color
+             \`keyLightSpectrumMin\`: Range Start - Primary light
+             \`keyLightSpectrumMax\`: Range End - Primary light
+             \`fillLightSpectrumMin\`: Range Start - Secondary light
+             \`fillLightSpectrumMax\`: Range End - Secondary light
+             \`shadowAnchor\`: Environment black level
+             \`ambientSpectrumMin\`: Range Start - Atmospheric/Haze
+             \`ambientSpectrumMax\`: Range End - Atmospheric/Haze
         - **The "Selection Protocol"**: Select exactly **3 specific Hex codes** based on the following physical and narrative logic:
           - **Slot 1: Material Integrity (Fixed)**
             - **Selection**: Always use <master_style_guide>.<color_and_light>.<globalHexPalette>.\`materialAnchor\`.
@@ -880,305 +873,60 @@ export const POST_IMAGE_GEN_PROMPT_PROMPT = `
               - **For Environment Focus (Wide/Extreme-Wide)**: Prioritize \`ambientSpectrum(Min/Max)\` to define atmospheric haze and spatial volume.
               - **Shadow Balancing**: Use \`shadowAnchor\` as a "Calibration Point." The chosen color must complement the depth of the shadows without merging into them, ensuring clear visual separation in dark areas.
         - **Constraint**: The final output MUST be an array of exactly **3 specific Hex codes** (e.g., ["#1A1A1A", "#FF00CC", "#00FFD6"]). Do NOT output ranges or field names.
-      2. **[Field: 'camera', 'composition'] - Technical Mapping Logic**
-        - **Action**: Map <master_style_guide> specs to the JSON structure. 
-        - **Rule 1 (Strict Selection)**: For fields with a provided **[List]**, you MUST select exactly ONE value from that list. 
-        - **Rule 2 (Formatted Output)**: Follow the specified string/number format strictly.
-        - **Field: 'camera'**:
-          - **'angle' [Context-Aware Mapping]**: 
-            - **Action**: Map <current_narration>, <scene_content> and <master_style_guide>.<composition>.\`framingStyle\` to a specific technical angle based on **[Canvas_Type]** to ensure physical grounding and visual stability.
-            * **[Aspect-Ratio Translation Table]**:
-              - **IF [Canvas_Type] is "Horizontal"**:
-                  * "Default/Neutral" -> **"eye level"**
-                  * "Heroic/Scale" -> **"low angle"**
-                  * "Extreme Power/Ground-level" -> **"worm's-eye"**
-                  * "Dialogue/Interaction" -> **"over-the-shoulder"**
-                  * "Surveillance/Map-view" -> **"bird's-eye"**
-                  - **[BIRD'S-EYE EXECUTION RULE]**:
-                    - Before finalizing "bird's-eye" as the output, you MUST verify the \`physics_profile.action_context\` of every <entity_list>.[n] identified in <unit_1_subject_and_physics>.
-                    - **Condition**: You are ONLY permitted to output "bird's-eye" if the \`physics_profile.action_context\` of every <entity_list>.[n] in the manifest includes the \`aerodynamics\` tag.
-                    - **Fallback Logic**: If any entity lacks the \`aerodynamics\` tag (indicating any of them is grounded, such as a racing car with 'velocity_max' but no flight capability), you MUST override the selection and output "high angle shot looking down" (or "elevated view") instead. This is critical to prevent the image generation model from erroneously detaching ground-based subjects from the surface.
-                * "Stylized/Technical" -> **"isometric"**
-              - **IF [Canvas_Type] is "Vertical"**:
-                  * "Default/Neutral" -> **"eye level"**
-                  * "Heroic/Scale" -> **"low angle"**
-                  * "Extreme Power/Ground-level" -> **"low angle"**
-                  * "Dialogue/Interaction" -> **"over-the-shoulder"**
-                  * "Surveillance/Map-view" -> **"high angle shot looking down"**
-                  * "Stylized/Technical" -> **"slightly low"**
-              - **IF [Canvas_Type] is "Square"**:
-                  * "Default/Neutral" -> **"eye level"**
-                  * "Heroic/Scale" -> **"slightly low"**
-                  * "Extreme Power/Ground-level" -> **"low angle"**
-                  * "Dialogue/Interaction" -> **"eye level"**
-                  * "Surveillance/Map-view" -> **"high angle"**
-                  * "Stylized/Technical" -> **"eye level"**
-            - **Constraint**: Do not output the source intent labels. Output ONLY the **Final Optimized Keyword** into \`image_gen_prompt.camera.angle\` and \`image_gen_prompt_sentence\`.
-          - **'distance' [Context-Aware Mapping]**: 
-            - **Action**: Map <master_style_guide>.<composition>.\`framingStyle\` to a specific keyword based on the **[Canvas_Type]** to fulfill the narrative intent while preventing technical artifacts.
-            * **[Aspect-Ratio Translation Table]**:
-              - **IF [Canvas_Type] is "Horizontal"**:
-                  * "Extreme Long/Wide" -> **"extreme wide shot"**
-                  * "Long/Wide" -> **"wide shot"**
-                  * "Full/Medium Wide" -> **"medium wide shot"**
-                  * "Medium/Waist" -> **"medium shot"**
-                  * "Bust/Chest" -> **"medium close-up"**
-                  * "Face/Detail" -> **"close-up"**
-              - **IF [Canvas_Type] is "Vertical"**:
-                  * "Extreme Long/Wide" -> **"vertical panoramic environmental shot"**
-                  * "Long/Wide" -> **"full-length vertical capture"**
-                  * "Full/Medium Wide" -> **"full-body shot"**
-                  * "Medium/Waist" -> **"medium full shot"**
-                  * "Bust/Chest" -> **"medium close-up"**
-                  * "Face/Detail" -> **"close-up"**
-              - **IF [Canvas_Type] is "Square"**:
-                  * "Extreme Long/Wide" -> **"wide-angle square shot"**
-                  * "Long/Wide" -> **"full-frame environmental shot"**
-                  * "Full/Medium Wide" -> **"medium-wide centered shot"**
-                  * "Medium/Waist" -> **"medium shot"**
-                  * "Bust/Chest" -> **"medium close-up"**
-                  * "Face/Detail" -> **"close-up"**
-            - **Constraint**: Do not output the source intent (e.g., "Long/Wide"). Output ONLY the **Final Optimized Keyword** into \`image_gen_prompt.camera.distance\` and \`image_gen_prompt_sentence\`.
-          - **'focus' [Context-Aware Mapping]**: 
-            - **Action**: Map <master_style_guide>.<optics>.\`focusDepth\` to a technical focus term optimized for the **[Canvas_Type]** and the chosen **'distance'**.
-            * **[Aspect-Ratio Translation Table]**:
-              - **IF [Canvas_Type] is "Horizontal"**:
-                  * "Deep" -> **"deep focus"**
-                  * "Shallow":
-                    * IF 'distance' is "close-up" -> **"macro focus"**
-                    * IF 'distance' is "medium..." -> **"cinematic background blur"**
-                    * IF 'distance' is "wide..." -> **"selective focus"**
-                  * "Selective" -> **"selective focus"**
-                  * Default -> **"sharp on subject"**
-              - **IF [Canvas_Type] is "Vertical"**:
-                  * "Deep" -> **"sharp focus throughout the vertical frame"**
-                  * "Shallow":
-                    - IF 'distance' is "close-up" -> **"macro detail focus"**
-                    - IF 'distance' is "medium..." -> **"soft blurred background"**
-                    - IF 'distance' is "wide..." -> **"subtle subject isolation"**
-                  * "Selective" -> **"selective focus"**
-                  * Default -> **"sharp on subject"**
-              - **IF [Canvas_Type] is "Square"**:
-                  * "Deep" -> **"deep focus"**
-                  * "Shallow" -> **"bokeh-rich background"**
-                  * "Selective" -> **"selective focus"**
-                  * Default -> **"sharp on subject"**
-            - **Constraint**: Do not output the source intent labels (e.g., "Deep", "Shallow"). Output ONLY the **Final Optimized Keyword** into \`image_gen_prompt.camera.focus\` and \`image_gen_prompt_sentence\`.
-          - **'lens' [Context-Aware Mapping]**: 
-            - **Action**: Map \`<master_style_guide>.<optics>.lensType\` to a specific focal length (mm) optimized for the **[Canvas_Type]** to prevent subject distortion and aspect-ratio artifacts.
-            * **[Aspect-Ratio Translation Table]**:
-              - **IF [Canvas_Type] is "Horizontal"**:
-                  * "Wide-Angle" -> **"14mm"** or **"24mm"**
-                  * "Spherical" -> **"35mm"** or **"50mm"**
-                  * "Anamorphic" -> **"70mm"** or **"85mm"**
-                  * "Macro" -> **"85mm macro"**
-              - **IF [Canvas_Type] is "Vertical"**:
-                  * **CRITICAL**: Avoid ultra-wide and anamorphic labels to prevent letterboxing and limb stretching.
-                  * "Wide-Angle" -> **"35mm"** (Moderate wide-angle that preserves human proportions)
-                  * "Spherical" -> **"50mm"**
-                  * "Anamorphic" -> **"50mm"** or **"85mm"** (Note: Strictly use spherical focal lengths to block 'Cinemascope' artifacts)
-                  * "Macro" -> **"85mm"**
-              - **IF [Canvas_Type] is "Square"**:
-                  * "Wide-Angle" -> **"24mm"**
-                  * "Spherical" -> **"50mm"**
-                  * "Anamorphic" -> **"50mm"**
-                  * "Macro" -> **"85mm"**
-            - **Constraint**: Do not output the source intent labels (e.g., "Anamorphic"). Output ONLY the **Final mm Value** (e.g., "50mm") into \`image_gen_prompt.camera.lens\` and \`image_gen_prompt_sentence\`.
-          - **'fNumber' [Format: string]**: 
-            * **Action**: Define the aperture value as a string (Pattern: "f/X.X").
-            * *Mapping Guide (Based on <master_style_guide>.<optics>.\`focusDepth\`)*:
-              * If "Shallow" -> Select a wide aperture (**"f/1.2"**, **"f/1.8"**, or **"f/2.8"**).
-              * If "Deep" -> Select a narrow aperture (**"f/8.0"** or **"f/11.0"**).
-              * If "Selective" -> Select **"f/4.0"**.
-          - **'ISO' [Format: number]**: 
-            * **Action**: Use <master_style_guide>.<optics>.\`defaultISO\` as the baseline. 
-            * **Adjustment (Based on <master_style_guide>.<optics>.\`exposureVibe\`)**: 
-              - If "Low-Key", you may increase it by up to 1 stop from default (max 1600).
-              - If "High-Key", you may decrease it by up to 1 stop from default (min 100).
-              - If "Natural", Strictly adhere to <master_style_guide>.<optics>.\`defaultISO\` to maintain a balanced, unmanipulated sensor response that reflects standard lighting conditions.
-            * **Constraint**: Output exactly one integer.
-        - **Field: 'composition' [Context-Aware Mapping]**: 
-          - **Action**: Map <master_style_guide>.<composition> and Narrative Tone into a cinematic composition technique optimized for the **[Canvas_Type]** to ensure balanced spatial distribution and narrative flow.
-          * **[Aspect-Ratio Translation Table]**:
-            - **IF [Canvas_Type] is "Horizontal"**:
-                * "Symmetry/Perspective" -> **"vanishing point center"** (Maximizes depth in wide frames)
-                * "Natural Balance" -> **"rule of thirds"**
-                * "Strength/Architecture" -> **"strong horizontal lines"**
-                * "Action/High Energy" -> **"diagonal energy"** or **"dynamic off-center"**
-                * "Complex Motion" -> **"S-curve through the horizon"**
-                * "Depth/Immersion" -> **"leading lines toward the horizon"**
-                * "Solitude/Focus" -> **"minimalist negative space"**
-            - **IF [Canvas_Type] is "Vertical"**:
-                * "Symmetry/Perspective" -> **"centered vertical symmetry"**
-                * "Natural Balance" -> **"vertical rule of thirds"**
-                * "Strength/Architecture" -> **"strong verticals"** (Emphasizes height and scale)
-                * "Action/High Energy" -> **"steep diagonal tension"**
-                * "Complex Motion" -> **"vertical S-curve"** or **"triangular arrangement"**
-                * "Depth/Immersion" -> **"low-to-high leading lines"**
-                * "Aesthetic Perfection" -> **"vertical golden spiral"**
-                * "Solitude/Focus" -> **"vertical minimalist negative space"**
-            - **IF [Canvas_Type] is "Square"**:
-                * "Symmetry/Perspective" -> **"central symmetry"**
-                * "Natural Balance" -> **"rule of thirds"**
-                * "Focus & Flow" -> **"circular arrangement"** or **"centered framing"**
-                * "Isolation" -> **"minimalist negative space"**
-          - **Constraint**: Do not output the source intent labels. Output ONLY the **Final Cinematic Term** into \`image_gen_prompt.composition\` and \`image_gen_prompt_sentence\`.
-        **[Execution Rule]**:
-        - Accuracy and adherence to the predefined pick-lists are mandatory to pass system validation.
-      3. **[Field: 'style', 'lighting', 'mood'] - Atmospheric Anchoring**
-        - **Action**: Synthesize raw technical data into descriptive strings while maintaining cross-reference stability with the 'camera' object.
-        - **Field: 'style' [Context-Aware Mapping]**:
-          - **Action**: Synthesize a technical rendering style by combining <master_style_guide>.<fidelity>.\`textureDetail\` and <master_style_guide>.<fidelity>.\`grainLevel\`, filtered through **[Canvas_Type]**. 
-          - **Constraint**: Strictly exclude \`resolutionTarget\` (e.g., 4K, 8K) and \`era\` from this field to prevent technical artifacts and color bias.
-          * **[Aspect-Ratio Translation Table]**:
-            - **IF [Canvas_Type] is "Horizontal"**:
-              * **Mapping**: "Professional cinematic RAW aesthetic with [\`textureDetail\`] detail and [\`grainLevel\`] grain."
-              * **Note**: Maintains high-end cinematic texture for 16:9 frames.
-            - **IF [Canvas_Type] is "Vertical"**:
-              * **Mapping**: "High-fidelity RAW portrait photography with [\`textureDetail\`] surface detail and [\`grainLevel\`] organic texture."
-              * **CRITICAL**: Use "Portrait photography" to align with vertical datasets. Strictly avoid "Cinematic" or "4K" to prevent letterboxing.
-            - **IF [Canvas_Type] is "Square"**:
-              * **Mapping**: "Balanced RAW texture style with [\`textureDetail\`] and [\`grainLevel\`] definition."
-          - **Constraint**: Output ONLY the **Final Style String** into \`image_gen_prompt.style\` and \`image_gen_prompt_sentence\`.
-        - **Field: 'lighting' [Format: string]**:
-          * **Source**: <master_style_guide>.<color_and_light>.\`lightingSetup\` and <master_style_guide>.<optics>.\`exposureVibe\`.
-          * **Mapping Guide**: 
-            - Use \`lightingSetup\` as the primary technique (e.g., "Chiaroscuro") and \`exposureVibe\` as the intensity/brightness level.
-          * **Constraint**: If \`exposureVibe\` is "Low-Key", description must emphasize deep shadows and high contrast.
-        - **Field: 'mood' [Format: string]**:
-          * **Source**: <video_context>.<video_title> (High-level theme) and <master_style_guide>.<color_and_light>.\`tonality\`.
-          * **Mapping Guide**: 
-            - **Infer** the emotional atmosphere by combining the narrative theme (from title) with the color theory of \`tonality\`.
-            - *Example*: If Title is "Last Stand" and Tonality is "Warm earth tones" -> "Exhilarating yet somber atmosphere with a sense of grounded grit."
-          * **Constraint**: Do NOT include camera technicals (ISO, lens, etc.) to prevent data conflict.
-      - **[Field: 'effects'] - Context-Aware Artifact Management**
-        - **Action**: Generate a flat array of technical keywords based on **[Canvas_Type]**, ensuring zero conflict with aspect ratio.
-        - **Source 1: <master_style_guide>.<fidelity>.\`grainLevel\`** (Grain consistency)
-          - [No Change]: "Gritty" -> ["heavy film grain"], "Filmic" -> ["subtle film grain"], "Clean" -> ["clean digital sensor finish"].
-        - **Source 2: <master_style_guide>.<fidelity>.\`resolutionTarget\`** (Ratio-Safe Fidelity)
-          * **IF [Canvas_Type] is "Horizontal"**:
-            - Use numeric targets: ["4K UHD", "8K resolution", "ultra-sharp details"].
-          * **IF [Canvas_Type] is "Vertical" or "Square"**:
-            - **CRITICAL**: Use descriptive targets ONLY: ["highly defined textures", "hyper-detailed rendering", "extreme visual fidelity"]. (Prevents letterboxing by avoiding '4K/8K' tokens).
-        - **Source 3: <master_style_guide>.<optics>.\`lensType\`** (Optical Alignment)
-          * **IF [Canvas_Type] is "Horizontal"**:
-            - If "Anamorphic" -> ["oval bokeh", "anamorphic lens flares", "horizontal light streaks"].
-            - If "Wide-Angle" -> ["slight barrel distortion", "expansive field of view"].
-          * **IF [Canvas_Type] is "Vertical"**:
-            - If "Anamorphic" -> ["oval bokeh", "vertical light leaks", "soft edge bloom"]. (Note: Strips horizontal-specific flares).
-            - If "Wide-Angle" -> ["sharp focus edges", "unfiltered clarity"]. (Note: Removes barrel distortion to prevent limb stretching).
-        - **[Final Integration Rule]**:
-          - **MUST**: Collect all triggered strings from Source 1, 2, and 3.
-          - **MUST**: Merge them into one single, flat array: \`["source1-effect-1", "source1-effect2", "source1-effect-3", ... , source3-effect-n]\`.
-          - **Constraint**: If \`camera.focus\` is "deep focus", discard any "bokeh" or "blur" related keywords from the final array.
-        **[Execution Rule]**:
-          - Combine all triggered keywords into a single flat array.
-          - If focus is "deep focus", remove any "bokeh" or "blur" keywords from this array.
+      2. **[Field: 'lighting'] - Atmospheric Anchoring**
+         * **Source**: <master_style_guide>.<color_and_light>.\`lightingSetup\` and <master_style_guide>.<optics>.\`exposureVibe\`.
+         * **Mapping Guide**: 
+           - Use \`lightingSetup\` as the primary technique (e.g., "Chiaroscuro") and \`exposureVibe\` as the intensity/brightness level.
+         * **Constraint**: If \`exposureVibe\` is "Low-Key", description must emphasize deep shadows and high contrast.
+      3. **[Field: 'mood'] - Atmospheric Anchoring**
+         * **Source**: <video_context>.<video_title> (High-level theme) and <master_style_guide>.<color_and_light>.\`tonality\`.
+         * **Mapping Guide**: 
+           - **Infer** the emotional atmosphere by combining the narrative theme (from title) with the color theory of \`tonality\`.
+           - *Example*: If Title is "Last Stand" and Tonality is "Warm earth tones" -> "Exhilarating yet somber atmosphere with a sense of grounded grit."
+         * **Constraint**: Do NOT include camera technicals (ISO, lens, etc.) to prevent data conflict.
+    </unit_3_cinematographic_intent_architecture>
+    <unit_4_technical_intent_derivation>
+      **UNIT 4: TECHNICAL INTENT DERIVATION**
+      **Goal**: Analyze the narrative context to extract the strategic 'Intent' for camera work and exposure, serving as the input for the optical mapping engine.
+      1. **[Field: 'technical_intent.angleIntent'] - Cinematic Perspective Strategy**
+        - **Action**: Analyze <current_narration> and <entity_list> to determine the narrative power dynamic.
+        - **Selection Guide**:
+          - **"Default/Neutral"**: Standard storytelling, eye-level observation.
+          - **"Heroic/Scale"**: Highlighting importance, making subjects look powerful or vast.
+          - **"Extreme Power/Ground-level"**: Extreme low-angle, emphasizing overwhelming scale or ground-level intensity.
+          - **"Dialogue/Interaction"**: Focus on communication or relationship between entities.
+          - **"Surveillance/Map-view"**: High-angle overview.
+          - **"Stylized/Technical"**: Unique perspective (e.g., Isometric) for specialized visual delivery.
+      2. **[Field: 'technical_intent.compositionIntent'] - Spatial Arrangement Strategy**
+        - **Action**: Determine the focal flow and balance of the frame based on <scene_content>.
+        - **Selection Guide**:
+          - **"Symmetry"**: Balanced, formal, or centered focus (Vanishing points).
+          - **"Balance"**: Standard Rule of Thirds for natural, stable compositions.
+          - **"Strength"**: Emphasizing structural stability or powerful lines (Horizontal/Vertical focus).
+          - **"Action"**: High energy, off-center, or dynamic tension (Diagonal energy).
+          - **"Motion"**: Guiding the eye through movement (S-curves, flow).
+          - **"Depth"**: Maximizing the Z-axis (Leading lines toward the horizon).
+          - **"Minimalism"**: Isolation and focus through negative space.
+      3. **[Field: 'technical_intent.exposureIntent'] - Light & Texture Strategy**
+        - **Action**: Define the "Light Quality" that matches the emotional tone of <video_title> and <master_style_guide>.
+        - **Selection Guide**:
+          - **"Vibrant/High-Key"**: Clean, bright, commercial, or upbeat scenes.
+          - **"Ethereal/Dreamy"**: Soft, glowing, surreal, or fantasy-like atmospheres.
+          - **"Balanced/Natural"**: Standard, unmanipulated daylight or indoor lighting.
+          - **"Cinematic/Moody"**: High contrast, dramatic shadows, narrative weight.
+          - **"Gritty/Noisy"**: Rough, raw, documentary-style with intentional texture/noise.
+          - **"Silhouetted/Backlit"**: Mysterious, high-contrast outline focus.
+          - **"Nocturnal/Deep-Night"**: Very low light, relying on moon or artificial sparks.
+          - **"Harsh/High-Energy"**: Aggressive, glaring, or intense light sources (Blaring sun, strobes).
       **[Execution Rule]**:
-      - All camera values must be physically plausible and consistent with the MasterStyle standard.
-    </unit_3_optical_and_technical>
-    <unit_4_natural_language_sentence_generation>
-      **UNIT 4: NATURAL LANGUAGE SENTENCE GENERATION**
-      **Goal**: Transform the structured \`image_gen_prompt\` object in <output_schema> into a single, cohesive, natural language paragraph and put into \`image_gen_prompt_sentence\` in <output_schema>.
-      **Critical Constraint**: You MUST use EVERY single variable from the \`image_gen_prompt\` object. Do not skip any field.
-      **Formatting Rule (Single Block)**:
-        - Do NOT use line breaks between each [Sentence] of **Syntax Template**.
-        - Output exactly one continuous paragraph consisting of 3 sentences joined by single spaces.
-      **Adaptation Rule (Contextual Smoothing)**:
-        - Do not blindly copy-paste if the grammar sounds robotic.
-        - **Translate technical terms** into flowery prose where necessary (e.g., if \`style\` is "raw", write "Rendered in a raw...").
-        - **Add Articles/Prepositions**: Ensure "A", "An", "The", "with", "in" are added to make the sentence grammatically complete.
-      **Syntax Template (Strict Adherence)**:
-        **[Sentence 1: The Subject & Framing]**
-          - **Instruction (Primary Subject Selection)**:
-            * Scan \`subjects\` array. Identify the **Primary Subject** based on \`role\` priority: \`main_hero\` > \`sub_character\` > \`prop\`.
-            * Use this Primary Subject for the main clause of the sentence.
-          - **Logic (Condition A: If \`subjects\` is NOT EMPTY)**:
-            - For each subject in the subjects array, locate the corresponding \`Entity\` within the <entity_list> whose id matches \`subjects[n].id\` to retrieve its fixed identity and appearance data.
-            - **Variables**: \`image_gen_prompt.camera.angle\`, \`image_gen_prompt.camera.distance\`, \`image_gen_prompt.scene\`, \`image_gen_prompt.subjects[n].pose\`, \`image_gen_prompt.subjects[n].position\`, \`image_gen_prompt.subjects[n].accessories\`, \`Entity.role\`, \`Entity.type\`, \`Entity.demographics\`, \`Entity.appearance.body_features\`, \`Entity.appearance.hair\`, \`Entity.appearance.clothing_or_material\`
-            - **\`Entity.demographics\` Structure:
-              - Index 0: **[ERA/PERIOD]** (Strictly use as the primary temporal anchor)
-              - Index 1: **[ROLE | (MODEL NAME/TYPE) | (SPECIES/ARCHETYPE) | SPECIES | ITEM NAME | HYBRID TYPE]** (The core noun for the subject)
-              **Structures by \`Entity.type\`**:
-                * **\`human\`**: \`[ERA/PERIOD], [ROLE], [GENDER], [ORIGIN/ETHNICITY], [AGE]\`
-                * **\`machine\`**: \`[ERA/PERIOD], [MODEL NAME/TYPE], [PRODUCTION YEAR/SPEC]\`
-                * **\`creature\`**: \`[ERA/PERIOD], [SPECIES/ARCHETYPE], [GENDER/\`N/A\`], [AGE/MATURITY]\`
-                * **\`animal\`**: \`[ERA/PERIOD], [SPECIES], [AGE/MATURITY]\`
-                * **\`object\`**: \`[ERA/PERIOD], [ITEM NAME], [CRAFTSMANSHIP/DETAIL]\`
-                * **\`hybrid\`**: \`[ERA/PERIOD], [HYBRID TYPE], [GENDER], [ORIGIN/ETHNICITY], [AGE]\`
-            - **Instruction (Demographic Anchoring)**:
-              * Construct the **[Demographic_Anchor]** string using \`Entity.demographics\`.
-              * **Rule**: Combine \`[ERA/PERIOD]\` + \`[ROLE | (MODEL NAME/TYPE) | (SPECIES/ARCHETYPE) | SPECIES | ITEM NAME | HYBRID TYPE]\` into a single noun phrase.
-              * **Examples**: "a 1944 WWII infantry soldier", "a Cyberpunk 2077 hacker", "a Jurassic Period T-Rex".
-            - **Instruction ([Detail_Clause] Enhancement)**:
-              * You MUST construct \`[Detail_Clause]\` by assembling fixed Entity data and dynamic subject data in a specific order.
-              * **Source Data Mapping**:
-                - **[Features]**: \`Entity.appearance.hair\` (conditional) + \`Entity.appearance.body_features\`
-                - **[Material/Clothing]**: \`Entity.appearance.clothing_or_material\`
-                - **[Accessories]**: flattened \`Entity.appearance.accessories\`
-              * **Pre-check (Headwear Logic)**:
-                - Before adding \`Entity.appearance.hair\`, scan the \`Entity.appearance.accessories\` array.
-                - If array contains headwear keywords (e.g., "helmet", "hat", "cap", "hood", "beret", "headwrap"), DO NOT include the hair description in \`[Detail_Clause]\`.
-              * **Smart Assembly Sequence (Human/Creature)**:
-                1. **Start with Features**: If \`hair\` (and passes pre-check) or \`body_features\` exist, start with ", with [hair] and [body_features]" (adjust conjunctions if only one exists).
-                2. **Add Clothing Anchor**: Append ", clad in [clothing_or_material]".
-                3. **Add Accessories**: Append ", equipped with [flattened_accessories]".
-                * *Flow Check*: Ensure smooth transitions. If a preceding section is missing, ensure the leading comma/conjunction of the next section is adjusted accordingly to avoid grammar errors (e.g., ", clad in...").
-              * **Smart Assembly Sequence (Machine/Object/Prop)**:
-                - Skip [Features] step.
-                - Instead of "clad in/equipped with", use tech-appropriate connectors for materials and parts.
-                - **Preferred Connectors**: ", finished in [clothing_or_material]", ", constructed from [clothing_or_material]", or ", featuring a [clothing_or_material] exterior surface and [flattened_accessories]".
-              * **Final Flow Check**: Ensure NO dangling prepositions at the end of the clause and ensure it transitions smoothly into "who is/which is [\`pose\`]".
-            - **Instruction (Multi-Subject Handling)**:
-              * If multiple subjects exist in the \`subjects\` array, append them to the sentence using **Contextual Bridges**.
-              * **Crucial Rule**: For EVERY secondary subject (n > 0), you MUST perform the same **ID-mapping** and **[Subject_Identity] + [Detail_Clause] assembly** used for the Primary Subject.
-              * **Bridge Logic(By \`Entity.role\`)**:
-                - **For \`main_hero\` or \`sub_character\`**:
-                  - Use Connector: ", while [\`image_gen_prompt.subjects[n].position\`] [Subject_Identity][Detail_Clause] **is** [\`image_gen_prompt.subjects[n].pose\`]"
-                - **For \`prop\`**:
-                  - Use Connector: ", with [Subject_Identity][Detail_Clause] **[participle form of \`image_gen_prompt.subjects[n].pose\`]** [\`image_gen_prompt.subjects[n].position\`]"
-                  - *Note*: Convert the \`image_gen_prompt.subjects[n].pose\` into a participle (e.g., "crushing" instead of "crushed", "glowing" instead of "glows").
-              * **Example Construction**:
-                - "...captures the **1944 WWII infantry soldier(Primary)**..., **while in the background(Position) a 1944 WWII heavy tank(Secondary Identity), finished in matte olive drab(Detail_Clause), is crushing debris(Pose).**"
-            **Format**: "[A/An] [\`camera.angle\`] [\`camera.distance\`] captures [Demographic_Anchor] [Detail_Clause] [who is/which is] [\`subjects[n].pose\`] [\`subjects[n].position\`]."
-            * **Connector Logic**: 
-              - If \`subjects[n].role\` is \`main_hero\` or \`sub_character\`: use "**who is**".
-              - If \`subjects[n].role\` is \`prop\`: use "**which is**" or skip connector directly.
-          - **Logic (Condition B: If \`subjects\` is EMPTY)**:
-            **Format**: "[Article] [\`camera.angle\`] [\`camera.distance\`] focuses entirely on the [\`scene\`] elements."
-        **[Sentence 2: The Environment & Atmosphere]**
-          - **Logic (Condition A: If \`subjects\` is NOT EMPTY)**: "The scene is set in [\`background\`], depicting [\`scene\`] with a [\`composition\`] composition, where the atmosphere is [\`mood\`], illuminated by [\`lighting\`] and a color palette of [\`color_palette\`]."
-          - **Logic (Condition B: If \`subjects\` is EMPTY)**: "The setting features [\`background\`] arranged in a [\`composition\`] composition, where the atmosphere is [\`mood\`], illuminated by [\`lighting\`] and a color palette of [\`color_palette\`]."
-          - **Variables**: \`background\`, \`composition\`, \`mood\`, \`lighting\`, \`color_palette\`, (\`scene\` only in Condition A).
-          - *Instruction*: List the Hex codes in brackets exactly as provided (e.g., "(#RRGGBB, #RRGGBB, #RRGGBB)").
-        **[Sentence 3: Technical Specifications]**
-          - **Logic**: "Rendered in [\`style\`], this image is captured with a [\`camera.lens\`] lens at [\`camera.fNumber\`] for [\`camera.focus\`] and ISO [\`camera.ISO\`], featuring [\`effects\`]."
-          - **Variables**: \`style\`, \`camera.lens\`, \`camera.fNumber\`, \`camera.focus\`, \`camera.ISO\`, \`effects\`.
-          - *Instruction*: Join the \`effects\` array with commas and "and" to form a fluent descriptive clause.
-      **Final Quality Check**:
-        - Verify NO variable is missing.
-        - Verify the output is a **single line** (no \`\n\`).
-        - Verify standard English punctuation is used throughout.
-    </unit_4_natural_language_sentence_generation>
+        - You MUST select exactly ONE intent for each category from the provided pick-lists.
+    </unit_4_technical_intent_derivation>
   </prompt_authoring_protocol>
   <execution_rules>
     1. **Positive Exclusion Protocol (CRITICAL)**:
       - **Concept**: Do not describe what is *absent*. Describe the *ideal quality* of what is *present*.
       - **Instruction**: Instead of saying "no [defect]", describe the "[perfect state]" of that feature.
-    2. **Shot Size Decision Protocol (Contextual Inference)**:
-      - **Constraint**: Never output a range. Pick exactly ONE specific shot size.
-      - **Reasoning Core**: Analyze <current_narration>, <aspect_ratio>, and <scene_content> to decide the optimal framing.
-      - **Guideline 1 (Aspect Ratio Adaptation)**:
-        * **Vertical Canvas (Height > Width)**: The frame is narrow. Be cautious with "Extreme Close-ups" as they choke the subject. Prioritize **Vertical Breathing Room** (Headroom/Torso visibility).
-        * **Horizontal Canvas (Width > Height)**: Ideal for environment and lateral movement.
-        * **Square Canvas (Height ≈ Width)**: The frame is perfectly balanced. Focus on **Symmetry** and **Central Composition**. Avoid placing the subject too far off-center; "Portraits" work best when centered with equal margins.
-      - **Guideline 2 (Narrative Focus)**:
-        * Ask: "Is the key information facial emotion or physical action?"
-        * *If Emotion*: Focus on the face, but consider the canvas width. (e.g., In Vertical, use "Medium Close-up" instead of "Extreme" to keep context).
-        * *If Action*: Ensure limbs are visible. Use "Medium Shot" or "Wide Shot".
-        * *If Atmosphere*: Pull back to "Long Shot".
-      - **Safety Override**: IF formatting a Full Body shot in Vertical, ALWAYS append **"with headroom"**.
-    3. **Visual Snapshot Translation (De-metaphorization)**:
+    2. **Visual Snapshot Translation (De-metaphorization)**:
       - **The Logic**: Generative models cannot render "time passing". You must freeze time into a single frame.
       - **The Instruction**: Replace abstract verbs ("attacks", "travels", "explodes") with **Visible Physical States**.
       - **Integration Strategy**: Use the **Action Vocabulary** selected in <visual_texture_layer> as the core description.
@@ -1186,11 +934,11 @@ export const POST_IMAGE_GEN_PROMPT_PROMPT = `
         * *Input (Abstract)*: "Subject punches the enemy."
         * *Output (Frozen)*: "Fist **extended** in impact (Action), glove **compressing** against the target (Physics)."
       - **Constraint**: Strictly PROHIBIT words implying duration ("starting to", "trying to", "in the middle of"). Use words implying a **static snapshot** ("suspended", "contacting", "positioned").
-    4. **Visibility Priority (Subject Hierarchy)**:
+    3. **Visibility Priority (Subject Hierarchy)**:
       - **Rule**: Before describing micro-details (pores, sweat), you MUST describe the **Macro-Subject** first.
       - **Order**: 1. Body/Pose -> 2. Clothing/Gear (Gloves, Helmets) -> 3. Texture/Sweat.
       - *Constraint*: Do not let sweat drops obscure the fact that he is wearing boxing gloves.
-    5. **Typography Protocol (i2v Defensive Strategy)**:
+    4. **Typography Protocol (i2v Defensive Strategy)**:
       - **DEADLY RISK**: Text morphing artifacts destroy i2v temporal stability.
       - **Passive Mode (Default)**: 
         - *When*: No explicit text in <current_narration> OR <scene_content>.
@@ -1259,23 +1007,16 @@ export const POST_IMAGE_GEN_PROMPT_PROMPT = `
           "pose": string;
           "position": 'foreground' | 'midground' | 'background';
         }[];
-        "style": string;
         "color_palette": string[]; // RGB Hex (#[00~FF][00~FF][00~FF])
         "lighting": string;
         "mood": string;
         "background": string;
-        "composition": string;
-        "camera": {
-          "angle": string;
-          "distance": string;
-          "focus": string;
-          "lens": string;
-          "fNumber": string;
-          "ISO": number;
-        };
-        "effects": string[];
       },
-      "image_gen_prompt_sentence": string; // A single sentence from <prompt_authoring_protocol>.<unit_4_natural_language_sentence_generation>
+      "technical_intent": {  
+        "angleIntent": enum (["Default/Neutral" | "Heroic/Scale" | "Extreme Power/Ground-level" | "Dialogue/Interaction" | "Surveillance/Map-view" | "Stylized/Technical"]);
+        "compositionIntent": enum (["Symmetry" | "Balance" | "Strength" | "Action" | "Motion" | "Depth" | "Minimalism"]);
+        "exposureIntent": enum (["Vibrant/High-Key" | "Ethereal/Dreamy" | "Balanced/Natural" | "Cinematic/Moody" | "Gritty/Noisy" | "Silhouetted/Backlit" | "Nocturnal/Deep-Night" | "Harsh/High-Energy"]);
+      },
     }
   </output_schema>
 </developer_instruction>
@@ -1415,24 +1156,24 @@ export const POST_IMAGE_GEN_PROMPT_NO_ENTITIES_PROMPT = `
       - NO biological subjects or characters are allowed. 
       - Every asset must match the material and technological limits of the \`era\`.
     </unit_2_context_and_environment>
-    <unit_3_optical_and_technical>
-      **UNIT 3: OPTICAL & TECHNICAL REASONING**
-      **Goal**: Translate <master_style_guide> technical specs into precise digital camera metadata (\`camera\` object), technical \`effects\`, and \`color_palette\`.
+    <unit_3_cinematographic_intent_architecture>
+      **UNIT 3: CINEMATIC INTENT ARCHITECTURE**
+      **Goal**: Establish the chromatic foundation, lighting architecture, and emotional tonality of the scene by synthesizing <master_style_guide> specifications with narrative intent.
       1. **[Field: 'color_palette'] - Chromatic Fidelity & Intensity Mapping**
-        - **Action**: Analyze the 8 Hex fields in <master_style_guide>.<color_and_light>.<globalHexPalette>.
-          **Definition of each field in <master_style_guide>.<color_and_light>.<globalHexPalette>**:
-            \`materialAnchor\`: Primary subject base color
-            \`keyLightSpectrumMin\`: Range Start - Primary light
-            \`keyLightSpectrumMax\`: Range End - Primary light
-            \`fillLightSpectrumMin\`: Range Start - Secondary light
-            \`fillLightSpectrumMax\`: Range End - Secondary light
-            \`shadowAnchor\`: Environment black level
-            \`ambientSpectrumMin\`: Range Start - Atmospheric/Haze
-            \`ambientSpectrumMax\`: Range End - Atmospheric/Haze
+         - **Action**: Analyze the 8 Hex fields in <master_style_guide>.<color_and_light>.\`globalHexPalette\`.
+           **Definition of each field in <master_style_guide>.<color_and_light>.\`globalHexPalette\`**:
+             \`materialAnchor\`: Primary subject base color
+             \`keyLightSpectrumMin\`: Range Start - Primary light
+             \`keyLightSpectrumMax\`: Range End - Primary light
+             \`fillLightSpectrumMin\`: Range Start - Secondary light
+             \`fillLightSpectrumMax\`: Range End - Secondary light
+             \`shadowAnchor\`: Environment black level
+             \`ambientSpectrumMin\`: Range Start - Atmospheric/Haze
+             \`ambientSpectrumMax\`: Range End - Atmospheric/Haze
         - **The "Selection Protocol"**: Select exactly **3 specific Hex codes** based on the following physical and narrative logic:
           - **Slot 1: Material Integrity (Fixed)**
-            - **Selection**: Always use <master_style_guide>.<color_and_light>.<globalHexPalette>.\`materialAnchor\`.
-            - **Logic**: This provides the "physical grounding" for the subject (e.g., fabric, skin base) and prevents lighting from washing out the subject's true color.
+            - **Selection**: Always use <master_style_guide>.<color_and_light>.\`globalHexPalette.materialAnchor\`.
+            - **Logic**: This provides the "physical grounding" for the **Environmental Anchor** (e.g., stone, metal, ruin base) and prevents lighting from washing out the anchor's true color.
           - **Slot 2: Primary Lighting (Spectrum Variance)**
             - **Selection**: Pick one specific Hex between \`keyLightSpectrumMin\` and \`keyLightSpectrumMax\`.
             - **Mapping Logic**: 
@@ -1440,171 +1181,78 @@ export const POST_IMAGE_GEN_PROMPT_NO_ENTITIES_PROMPT = `
               - IF the scene is "Subtle," "Muted," or "Distanced" -> Bias toward \`Min\` (typically lower saturation/darker tint).
               - **Shadow Reference**: Ensure the chosen color maintains high luminance contrast against \`shadowAnchor\` to avoid a "flat" or "muddy" look.
           - **Slot 3: Depth & Contrast (Support Spectrum)**
-            Pick one specific Hex RGB code from either in range between \`fillLightSpectrumMin\` and \`fillLightSpectrumMax\` or between \`ambientSpectrumMin\` and \`ambientSpectrumMax\`. (Apply the same 'Mapping Logic' as Slot 2 for value selection.)
+            - **Selection**: Pick one specific Hex RGB code from either in range between <master_style_guide>.<color_and_light>.\`globalHexPalette.fillLightSpectrumMin\` and <master_style_guide>.<color_and_light>.\`globalHexPalette.fillLightSpectrumMax\` or between <master_style_guide>.<color_and_light>.\`globalHexPalette.ambientSpectrumMin\` and <master_style_guide>.<color_and_light>.\`globalHexPalette.ambientSpectrumMax\`.
             - **Mapping Logic**:
-              - **For Subject Focus (Medium/Close-up)**: Prioritize \`fillLightSpectrum(Min/Max)\` to provide chromatic contrast against the Key light.
-              - **For Environment Focus (Wide/Extreme-Wide)**: Prioritize \`ambientSpectrum(Min/Max)\` to define atmospheric haze and spatial volume.
-              - **Shadow Balancing**: Use \`shadowAnchor\` as a "Calibration Point." The chosen color must complement the depth of the shadows without merging into them, ensuring clear visual separation in dark areas.
-        - **Constraint**: The final output MUST be an array of exactly **3 specific Hex codes** (e.g., ["#1A1A1A", "#FF00CC", "#00FFD6"]). Do NOT output ranges or field names.
-      2. **[Field: 'camera', 'composition'] - Technical Mapping Logic**
-        - **Action**: Map <master_style_guide> specs to the JSON structure. 
-        - **Rule 1 (Strict Selection)**: For fields with a provided **[List]**, you MUST select exactly ONE value from that list. 
-        - **Rule 2 (Formatted Output)**: Follow the specified string/number format strictly.
-        - **Field: 'camera'**:
-          - **'angle' [Strict Selection]**: ["eye level", "low angle", "slightly low", "bird's-eye", "worm's-eye", "isometric"].
-          * *Mapping Guide (Based on <current_narration>, <scene_content>, <master_style_guide>.<composition>.\`framingStyle\`)*:
-            - **Monumental/Towering Structure** -> "low angle". 
-            - **Ground-level Detail/Immersive Surface** -> "worm's-eye".
-            - **Vast Landscape/Aerial Vista** -> "bird's-eye".
-            - **Architectural Layout/Technical View** -> "isometric".
-            - **Natural/Standard Perspective** -> "eye level".
-        - **'distance' [Strict Selection]**: ["close-up", "medium close-up", "medium shot", "medium wide", "wide shot", "extreme wide"].
-          * *Mapping Guide (Based on <master_style_guide>.<composition>.\`framingStyle\`)*:
-            - **Vast Horizon / Epic Wilderness** -> "extreme wide".
-            - **Full Environment / Grand Vista** -> "wide shot".
-            - **Structural Context / Landmark in Setting** -> "medium wide".
-            - **Main Anchor Focus / Full Structure View** -> "medium shot".
-            - **Partial Structure / Large Architectural Feature** -> "medium close-up".
-            - **Surface Texture / Micro-Detail / Cracks** -> "close-up".
-          - **'focus' [Strict Selection]**: ["deep focus", "macro focus", "soft background", "selective focus", "sharp on subject"].
-            * **Mapping Guide (Based on <master_style_guide>.<optics>.\`focusDepth\`)**:
-              - If "Deep" -> ALWAYS "deep focus".
-              - If "Shallow":
-                - If \`distance\` is "close-up" -> "macro focus"
-                - If \`distance\` is "medium close-up" or "medium shot" -> "soft background"
-                - If \`distance\` is "medium wide", "wide shot", or "extreme wide" -> "selective focus"
-              - If "Selective" -> "selective focus".
-              - If none of the above -> "sharp on subject".
-          - **'lens' [Strict Selection]**: ["14mm", "24mm", "35mm", "50mm", "70mm", "85mm"].
-            * *Mapping Guide (Based on <master_style_guide>.<optics>.\`lensType\`)*: 
-              - "Wide-Angle" -> "14mm" or "24mm".
-              - "Spherical" -> "35mm" or "50mm".
-              - "Anamorphic/Macro" -> "70mm" or "85mm".
-          - **'fNumber' [Format: string]**: 
-            * **Action**: Define the aperture value as a string (Pattern: "f/X.X").
-            * *Mapping Guide (Based on <master_style_guide>.<optics>.\`focusDepth\`)*:
-              * If "Shallow" -> Select a wide aperture (**"f/1.2"**, **"f/1.8"**, or **"f/2.8"**).
-              * If "Deep" -> Select a narrow aperture (**"f/8.0"** or **"f/11.0"**).
-              * If "Selective" -> Select **"f/4.0"**.
-          - **'ISO' [Format: number]**: 
-            * **Action**: Use <master_style_guide>.<optics>.\`defaultISO\` as the baseline. 
-            * **Adjustment (Based on <master_style_guide>.<optics>.\`exposureVibe\`)**: 
-              - If "Low-Key", you may increase it by up to 1 stop from default (max 1600).
-              - If "High-Key", you may decrease it by up to 1 stop from default (min 100).
-              - If "Natural", Strictly adhere to <master_style_guide>.<optics>.\`defaultISO\` to maintain a balanced, unmanipulated sensor response that reflects standard lighting conditions.
-            * **Constraint**: Output exactly one integer.
-        - **Field: 'composition' [Strict Selection]**: 
-          - **[List]**: ["rule of thirds", "circular arrangement", "minimalist negative space", "S-curve", "vanishing point center", "dynamic off-center", "leading leads", "golden spiral", "diagonal energy", "strong verticals", "triangular arrangement"].
-          - **Mapping Guide (Based on <master_style_guide>.<composition> and Narrative Tone)**:
-            * **Stability & Balance**: 
-              - "Symmetry/Perspective" -> "vanishing point center".
-              - "Natural Balance" -> "rule of thirds".
-              - "Strength/Architecture" -> "strong verticals".
-            * **Dynamic & Tension**:
-              - "Action/High Energy" -> "diagonal energy" or "dynamic off-center".
-              - "Complex Motion" -> "triangular arrangement" or "S-curve".
-            * **Focus & Flow**:
-              - "Depth/Immersion" -> "leading leads" or "vanishing point center".
-              - "Aesthetic Perfection" -> "golden spiral" or "circular arrangement".
-            * **Isolation & Minimalist**:
-              - "Solitude/Focus" -> "minimalist negative space".
-        **[Execution Rule]**:
-        - Accuracy and adherence to the predefined pick-lists are mandatory to pass system validation.
-      3. **[Field: 'style', 'lighting', 'mood'] - Atmospheric Anchoring**
-        - **Action**: Synthesize raw technical data into descriptive strings while maintaining cross-reference stability with the 'camera' object.
-        - **Field: 'style' [Format: string]**:
-          * **Source**: <master_style_guide>.<fidelity>.\`textureDetail\`, <master_style_guide>.<fidelity>.\`grainLevel\`, and <video_context>.<video_description>.
-          * **Mapping Guide**: 
-            - Combine the medium (from description) with texture specs.
-            - *Example*: "Cinematic 35mm film style with \`textureDetail\` detail and \`grainLevel\` grain."
-          * **Constraint**: Must reflect the <global_environment>.\`era\` (e.g., "1940s film noir aesthetic").
-        - **Field: 'lighting' [Format: string]**:
-          * **Source**: <master_style_guide>.<color_and_light>.\`lightingSetup\` and <master_style_guide>.<optics>.\`exposureVibe\`.
-          * **Mapping Guide**: 
-            - Use \`lightingSetup\` as the primary technique (e.g., "Chiaroscuro") and \`exposureVibe\` as the intensity/brightness level.
-          * **Constraint**: If <master_style_guide>.<optics>.\`exposureVibe\` is "Low-Key", description must emphasize deep shadows and high contrast.
-        - **Field: 'mood' [Format: string]**:
-          * **Source**: <video_context>.<video_title> (High-level theme) and <master_style_guide>.<color_and_light>.\`tonality\`.
-          * **Mapping Guide**: 
-            - **Infer** the emotional atmosphere by combining the narrative theme (from title) with the color theory of \`tonality\`.
-            - *Example*: If Title is "Silent Echo" and Tonality is "Cool blue tones" -> "A hauntingly serene and profound atmosphere of untouched solitude with a sense of frozen time."
-          * **Constraint**: Do NOT include camera technicals (ISO, lens, etc.) to prevent data conflict.
-      4. **[Field: 'effects'] - Technical Fidelity Boosters**
-        - **Action**: Generate an array of technical keywords based on the fidelity and optical hardware specs.
-        - **Rule**: Every effect must support the resolution and texture standards defined in the MasterStyle.
-        - **Source 1: <master_style_guide>.<fidelity>.\`grainLevel\`**
-          * Mapping:
-            - "Gritty" -> ["heavy film grain", "analog noise", "visible texture"].
-            - "Filmic" -> ["subtle film grain", "cinematic film texture"].
-            - "Clean" -> ["low noise", "clean digital sensor finish"].
-        - **Source 2: <master_style_guide>.<fidelity>.\`resolutionTarget\`**
-          * Mapping:
-            - Always include the specific target: ["8K resolution", "hyper-detailed"] or ["4K UHD", "sharp textures"] or ["35mm film scan", "analog softness"].
-        - **Source 3: <master_style_guide>.<optics>.\`lensType\` (Artifact Injection)**
-          * Mapping:
-            - If "Anamorphic" -> Add ["oval bokeh", "anamorphic lens flares", "horizontal light streaks"].
-            - If "Macro" -> Add ["intricate surface detail", "microscopic texture"].
-            - If "Wide-Angle" -> Add ["slight barrel distortion", "expansive field of view"].
-        **[Execution Rule]**:
-        - Combine all triggered keywords into a single flat array.
-        - Ensure effects do not contradict the 'camera.focus' setting (e.g., no "background blur" effects if focus is "deep focus").
+              - **For Structural Detail (Micro-scale focus)**: If the scene emphasizes specific textures, erosion, or fine architectural details of the Environmental Anchor, prioritize \`fillLightSpectrumMin\` / \`fillLightSpectrumMax\` to provide chromatic contrast and enhance the 3D volume of the structure.
+              - **For Atmospheric Volume (Macro-scale expanse)**: If the scene emphasizes the vastness of the landscape, long horizons, or spatial depth, prioritize \`ambientSpectrumMin\` / \`ambientSpectrumMax\` to define atmospheric haze, air perspective, and the overall environmental envelope.
+      2. **[Field: 'lighting'] - Atmospheric Anchoring**
+         * **Source**: <master_style_guide>.<color_and_light>.\`lightingSetup\` and <master_style_guide>.<optics>.\`exposureVibe\`.
+         * **Mapping Guide**: 
+           - Use \`lightingSetup\` as the primary technique (e.g., "Chiaroscuro") and \`exposureVibe\` as the intensity/brightness level.
+         * **Constraint**: If \`exposureVibe\` is "Low-Key", description must emphasize deep shadows and high contrast.
+      3. **[Field: 'mood'] - Atmospheric Anchoring**
+         * **Source**: <video_context>.<video_title> (High-level theme) and <master_style_guide>.<color_and_light>.\`tonality\`.
+         * **Mapping Guide**: 
+           - **Infer** the emotional atmosphere by combining the narrative theme (from title) with the color theory of \`tonality\`.
+           - *Example*: If Title is "Last Stand" and Tonality is "Warm earth tones" -> "Exhilarating yet somber atmosphere with a sense of grounded grit."
+         * **Constraint**: Do NOT include camera technicals (ISO, lens, etc.) to prevent data conflict.
+    </unit_3_cinematographic_intent_architecture>
+    <unit_4_technical_intent_derivation>
+      **UNIT 4: TECHNICAL INTENT DERIVATION**
+      **Goal**: Analyze the narrative context to extract the strategic 'Intent' for camera work and exposure, serving as the input for the optical mapping engine.
+      1. **[Field: 'technical_intent.angleIntent'] - Environmental Perspective Strategy**
+         - **Action**: Analyze the <current_narration> and <scene_content> to determine the narrative power and scale of the Environmental Anchor.
+         - **Selection Guide**:
+           - **\`Default/Neutral\`**: Standard eye-level observation of the environment; suitable for documentary-style landscape recording.
+           - **\`Heroic/Scale\`**: Emphasizing the imposing magnitude of structures or natural formations (e.g., mountains, skyscrapers) by looking upward from a lower vantage point.
+           - **\`Extreme Power/Ground-level\`**: Focusing on the immediate terrain, soil textures, or base-level debris to create a sense of grounded immersion.
+           - **\`Surveillance/Map-view\`**: Providing a high-angle or bird’s-eye overview to capture the spatial layout and vastness of the location archetype.
+           - **\`Stylized/Technical\`**: Utilizing specialized perspectives (e.g., Isometric) to deliver a structured, architectural, or non-traditional visual delivery of the space.
+      2. **[Field: 'technical_intent.compositionIntent'] - Spatial Arrangement Strategy**
+         - **Action**: Determine the focal flow and structural balance of the environment to guide the viewer's eye through the space.
+         - **Selection Guide**:
+           - **\`Symmetry\`**: Emphasizing formal balance and central focus, ideal for monumental architecture or symmetrical natural landmarks (e.g., a monolith or a centered vanishing point).
+           - **\`Balance\`**: Utilizing the standard Rule of Thirds for natural and stable environmental captures, ensuring a harmonious distribution of landscape elements.
+           - **\`Strength\`**: Highlighting structural stability through powerful horizontal or vertical lines (e.g., vast horizons, towering cliffs, or standing pillars).
+           - **\`Action\`**: Creating dynamic tension and energy through diagonal lines or off-center weight (e.g., a tilted ruin, a jagged ridge, or storm-driven environmental debris).
+           - **\`Motion\`**: Guiding the eye through fluid visual paths (e.g., winding rivers, S-curved pathways, or the drifting flow of clouds/sand).
+           - **\`Depth\`**: Maximizing the Z-axis by using leading lines and layered environmental planes that pull the viewer toward the distant horizon.
+           - **\`Minimalism\`**: Isolating a single environmental element against vast negative space to create a sense of profound solitude or focal purity.
+      3. **[Field: 'technical_intent.exposureIntent'] - Light & Texture Strategy**
+        - **Action**: Define the "Light Quality" that matches the emotional tone of <video_title> and <master_style_guide>.
+        - **Selection Guide**:
+          - **"Vibrant/High-Key"**: Clean, bright, commercial, or upbeat scenes.
+          - **"Ethereal/Dreamy"**: Soft, glowing, surreal, or fantasy-like atmospheres.
+          - **"Balanced/Natural"**: Standard, unmanipulated daylight or indoor lighting.
+          - **"Cinematic/Moody"**: High contrast, dramatic shadows, narrative weight.
+          - **"Gritty/Noisy"**: Rough, raw, documentary-style with intentional texture/noise.
+          - **"Silhouetted/Backlit"**: Mysterious, high-contrast outline focus.
+          - **"Nocturnal/Deep-Night"**: Very low light, relying on moon or artificial sparks.
+          - **"Harsh/High-Energy"**: Aggressive, glaring, or intense light sources (Blaring sun, strobes).
+      3. **[Field: 'technical_intent.exposureIntent'] - Light & Environment Strategy**
+         - **Action**: Define the "Light Quality" that enhances the material textures and atmospheric depth of the environment from <video_title>, <video_description>, <master_style_guide> and <current_narration>.
+         - **Selection Guide**:
+           - **"Vibrant/High-Key"**: Bright, sun-drenched, or snowy landscapes with clean, well-lit surfaces and minimal shadows.
+           - **"Ethereal/Dreamy"**: Soft, glowing atmospheres with light scattering (e.g., fog, mist, or morning haze) creating a surreal or sacred environmental vibe.
+           - **"Balanced/Natural"**: Standard, unmanipulated exposure of outdoor or indoor spaces, mimicking realistic daylight or ambient light.
+           - **"Cinematic/Moody"**: High-contrast lighting with deep, dramatic shadows, emphasizing the mystery of ruins, narrow alleys, or dense forests.
+           - **"Gritty/Noisy"**: Rough and raw exposure that highlights tactile surfaces (e.g., rusted metal, cracked stone) with intentional environmental grain.
+           - **"Silhouetted/Backlit"**: Emphasizing the powerful outline of the Environmental Anchor against a bright light source (e.g., a lighthouse or mountain peak against a setting sun).
+           - **"Nocturnal/Deep-Night"**: Very low light levels relying on the moon, stars, or faint bioluminescence to define the dark stillness of the space.
+           - **"Harsh/High-Energy"**: Aggressive, glaring light sources (e.g., a desert sun or volcanic glow) that create intense heat distortion and sharp, unforgiving shadows.
       **[Execution Rule]**:
-      - All camera values must be physically plausible and consistent with the <master_style_guide> standard.
-    </unit_3_optical_and_technical>
-    <unit_4_natural_language_sentence_generation>
-      **UNIT 4: NATURAL LANGUAGE SENTENCE GENERATION**
-      **Goal**: Transform the structured \`image_gen_prompt\` object in <output_schema> into a single, cohesive, natural language paragraph and put into \`image_gen_prompt_sentence\` in <output_schema>.
-      **Critical Constraint**: You MUST use EVERY single variable from the \`image_gen_prompt\` object. Do not skip any field.
-      **Formatting Rule (Single Block)**:
-        - Do NOT use line breaks between each [Sentence] of **Syntax Template**.
-        - Output exactly one continuous paragraph consisting of 3 sentences joined by single spaces.
-      **Adaptation Rule (Contextual Smoothing)**:
-        - Do not blindly copy-paste if the grammar sounds robotic.
-        - **Translate technical terms** into flowery prose where necessary (e.g., if \`style\` is "raw", write "Rendered in a raw...").
-        - **Add Articles/Prepositions**: Ensure "A", "An", "The", "with", "in" are added to make the sentence grammatically complete.
-      **Syntax Template (Strict Adherence)**:
-        **[Sentence 1: The Subject & Framing]**
-          - **Logic (Condition A: If \`subjects\` is NOT EMPTY)**: "[Article] [\`camera.angle\`] [\`camera.distance\`] captures [\`subjects[n].description\`] [who is/which is] [\`subjects[n].pose\`] [\`subjects[n].position\`]."
-          - **Logic (Condition B: If \`subjects\` is EMPTY)**: "[Article] [\`camera.angle\`] [\`camera.distance\`] focuses entirely on the [\`scene\`] elements."
-          - **Variables**: \`camera.angle\`, \`camera.distance\`, \`subjects\` OR \`scene\`.
-          - *Instruction*: Check if \`subjects\` array is empty. If yes, use Condition B to avoid a dangling verb. If multiple subjects exist, connect them using spatial prepositions.
-        **[Sentence 2: The Environment & Atmosphere]**
-          - **Logic (Condition A: If \`subjects\` is NOT EMPTY)**: "The scene is set in [\`background\`], depicting [\`scene\`] with a [\`composition\`] composition, where the atmosphere is [\`mood\`], illuminated by [\`lighting\`] and a color palette of [\`color_palette\`]."
-          - **Logic (Condition B: If \`subjects\` is EMPTY)**: "The setting features [\`background\`] arranged in a [\`composition\`] composition, where the atmosphere is [\`mood\`], illuminated by [\`lighting\`] and a color palette of [\`color_palette\`]."
-          - **Variables**: \`background\`, \`composition\`, \`mood\`, \`lighting\`, \`color_palette\`, (\`scene\` only in Condition A).
-          - *Instruction*: List the Hex codes in brackets exactly as provided (e.g., "(#RRGGBB, #RRGGBB, #RRGGBB)").
-        **[Sentence 3: Technical Specifications]**
-          - **Logic**: "Rendered in a [\`style\`], this image is captured with a [\`camera.lens\`] lens at [\`camera.fNumber\`] for [\`camera.focus\`] and ISO [\`camera.ISO\`], featuring [\`effects\`]."
-          - **Variables**: \`style\`, \`camera.lens\`, \`camera.fNumber\`, \`camera.focus\`, \`camera.ISO\`, \`effects\`.
-          - *Instruction*: Join the \`effects\` array with commas and "and" to form a fluent descriptive clause.
-      **Final Quality Check**:
-        - Verify NO variable is missing.
-        - Verify the output is a **single line** (no \`\n\`).
-        - Verify standard English punctuation is used throughout.
-    </unit_4_natural_language_sentence_generation>
+        - You MUST select exactly ONE intent for each category from the provided pick-lists.
+    </unit_4_technical_intent_derivation>
   </prompt_authoring_protocol>
   <execution_rules>
     1. **Positive Exclusion Protocol (CRITICAL)**:
       - **Concept**: Do not describe what is *absent*. Describe the *ideal quality* of what is *present*.
       - **Instruction**: Instead of saying "no [defect]", describe the "[perfect state]" of that feature.
-    2. **Shot Size Decision Protocol (Contextual Inference)**:
-      - **Constraint**: Never output a range. Pick exactly ONE specific shot size.
-      - **Reasoning Core**: Analyze <current_narration>, <aspect_ratio>, and <scene_content> to decide the optimal framing.
-      - **Guideline 1 (Aspect Ratio Adaptation)**:
-        * **Vertical Canvas (Height > Width)**: Prioritize **Vertical Scale**. Be cautious with "Extreme Close-ups" that choke the structure. Ensure the top-to-bottom scale is captured with breathing room.
-        * **Horizontal Canvas (Width > Height)**: Ideal for panoramic expanses and lateral environmental depth.
-        * **Square Canvas (Height ≈ Width)**: Focus on **Symmetry & Central Anchor**. Best for solitary landmarks centered with equal margins.
-      - **Guideline 2 (Narrative Focus)**:
-        * Ask: "Is the key information material texture or the grand scale of the environment?"
-        * *If Detail/Texture*: Focus on surface micro-details (e.g., rust, moss). Use "Close-up" or "Medium Close-up".
-        * *If Structural Form*: Ensure the entire silhouette of the anchor is visible. Use "Medium Shot" or "Medium Wide".
-        * *If Atmosphere/Epic Scale*: Pull back to "Wide Shot" or "Extreme Wide".
-      - **Safety Override**: IF formatting a Full Structure height in Vertical, ALWAYS append **"with headroom"**.
-    3. **Visibility Priority (Environmental Hierarchy)**:
+    2. **Visibility Priority (Environmental Hierarchy)**:
       - **Rule**: Before describing micro-details (moss, rust, dust), you MUST describe the **Macro-Anchor** first.
       - **Order**: 1. Overall Form/Silhouette -> 2. Major Structural Components (Windows, Cliffs) -> 3. Surface Textures/Weathering (Erosion, Debris).
       - *Constraint*: Do not let volumetric dust particles obscure the primary material identity of the anchor.
-    4. **Typography Protocol (i2v Defensive Strategy)**:
+    3. **Typography Protocol (i2v Defensive Strategy)**:
       - **DEADLY RISK**: Text morphing artifacts destroy i2v temporal stability.
       - **Passive Mode (Default)**: 
         - *When*: No explicit text in <current_narration> OR <scene_content>.
@@ -1626,22 +1274,15 @@ export const POST_IMAGE_GEN_PROMPT_NO_ENTITIES_PROMPT = `
           "pose": string;
           "position": string;
         }[];
-        "style": string;
         "color_palette": string[]; // RGB Hex (#[00~FF][00~FF][00~FF])
         "lighting": string;
         "mood": string;
-        "composition": string;
-        "camera": {
-          "angle": string;
-          "distance": string;
-          "focus": string;
-          "lens": string;
-          "fNumber": string;
-          "ISO": number;
-        };
-        "effects": string[];
       },
-      "image_gen_prompt_sentence": string; // A single sentence from <prompt_authoring_protocol>.<unit_4_natural_language_sentence_generation>
+      "technical_intent": {  
+        "angleIntent": enum (["Default/Neutral" | "Heroic/Scale" | "Extreme Power/Ground-level" | "Surveillance/Map-view" | "Stylized/Technical"]);
+        "compositionIntent": enum (["Symmetry" | "Balance" | "Strength" | "Action" | "Motion" | "Depth" | "Minimalism"]);
+        "exposureIntent": enum (["Vibrant/High-Key" | "Ethereal/Dreamy" | "Balanced/Natural" | "Cinematic/Moody" | "Gritty/Noisy" | "Silhouetted/Backlit" | "Nocturnal/Deep-Night" | "Harsh/High-Energy"]);
+      },
     }
   </output_schema>
 </developer_instruction>

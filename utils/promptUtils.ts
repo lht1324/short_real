@@ -1,6 +1,7 @@
 export interface TechnicalIntent {
     angleIntent: "Default/Neutral" | "Heroic/Scale" | "Extreme Power/Ground-level" | "Dialogue/Interaction" | "Surveillance/Map-view" | "Stylized/Technical";
     compositionIntent: "Symmetry" | "Balance" | "Strength" | "Action" | "Motion" | "Depth" | "Minimalism";
+    exposureIntent: "Vibrant/High-Key" | "Ethereal/Dreamy" | "Balanced/Natural" | "Cinematic/Moody" | "Gritty/Noisy" | "Silhouetted/Backlit" | "Nocturnal/Deep-Night" | "Harsh/High-Energy";
 }
 
 /**
