@@ -1,0 +1,438 @@
+Scene #1 raw generated content: {
+  "image_gen_prompt": {
+    "scene": "Modern Day professional boxer suspended in tension, sweat glistening on a bruised temple under harsh arena lights",
+    "subjects": [
+      {
+        "id": "boxer",
+        "type": "human",
+        "description": "A tall muscular boxer with a defined lean musculature, sporting a subtle scar above his right eyebrow, wearing sweat-soaked red satin boxing trunks and red satin boxing gloves, with short damp black hair and a mouthguard.",
+        "clothes": "Sweat-soaked red satin boxing trunks with a glossy elastic waistband and moisture-wicking mesh panels",
+        "accessories": [
+          "Mouthguard",
+          "Red satin boxing gloves"
+        ],
+        "pose": "Suspended in tension, body coiled with muscles defined, head slightly tilted as sweat beads travel down the bruised temple, reflecting the bright overhead lights",
+        "position": "foreground"
+      }
+    ],
+    "color_palette": [
+      "#C68642",
+      "#F7F7F7",
+      "#EED9C4"
+    ],
+    "lighting": "Single high-intensity overhead key spotlight at 45-degree angle with large soft fill from ring floor reflections",
+    "mood": "Intense atmosphere with high-energy tension, reminiscent of a critical moment in a boxing match",
+    "background": "Commercial sports arena filled with spectators, vibrant and energetic, illuminated by high-contrast lights"
+  },
+  "technical_intent": {
+    "angleIntent": "Heroic/Scale",
+    "compositionIntent": "Strength",
+    "exposureIntent": "Cinematic/Moody"
+  },
+  "updated_entity_manifest_list": [
+    {
+      "id": "boxer",
+      "physics_profile": {
+        "material": [
+          "viscoelastic",
+          "cloth"
+        ],
+        "action_context": [
+          "passive"
+        ]
+      },
+      "appearance": {
+        "clothing_or_material": "Sweat-soaked red satin boxing trunks with a glossy elastic waistband and moisture-wicking mesh panels",
+        "hair": "Short damp black hair",
+        "accessories": [
+          "Mouthguard",
+          "Red satin boxing gloves"
+        ],
+        "body_features": "Tall muscular frame with defined lean musculature and a subtle scar above the right eyebrow",
+        "position_descriptor": "Center-weighted with dynamic stance"
+      },
+      "state": {
+        "pose": "Suspended in tension",
+        "expression": null
+      }
+    }
+  ]
+}
+Scene #1 OpticalAndTechnicalOption: {"style":"High-fidelity RAW portrait photography with Raw surface detail and Clean organic texture.","camera":{"angle":"low angle","distance":"full-length vertical capture","focus":"sharp focus throughout the vertical frame","lens":"35mm","fNumber":"f/11.0","ISO":320},"composition":"strong verticals","effects":["clean digital sensor finish","highly defined textures","hyper-detailed rendering","extreme visual fidelity","photorealistic textures","physically based rendering"]}
+Scene #1 Test sentence: A low angle full-length vertical capture captures Modern Day Mixed Ethnicity Professional Boxer, with Short damp black hair, Tall muscular frame with defined lean musculature and a subtle scar above the right eyebrow, clad in Sweat-soaked red satin boxing trunks with a glossy elastic waistband and moisture-wicking mesh panels, equipped with Mouthguard, and Red satin boxing gloves who is Suspended in tension, body coiled with muscles defined, head slightly tilted as sweat beads travel down the bruised temple, reflecting the bright overhead lights in the foreground, the scene is set in Commercial sports arena filled with spectators, vibrant and energetic, illuminated by high-contrast lights, depicting Modern Day professional boxer suspended in tension, sweat glistening on a bruised temple under harsh arena lights with a strong verticals composition, where the atmosphere is Intense atmosphere with high-energy tension, reminiscent of a critical moment in a boxing match, illuminated by Single high-intensity overhead key spotlight at 45-degree angle with large soft fill from ring floor reflections and a color palette of (#C68642, #F7F7F7, #EED9C4), rendered in High-fidelity RAW portrait photography with Raw surface detail and Clean organic texture, captured with a 35mm lens at f/11.0 for sharp focus throughout the vertical frame and ISO 320, featuring clean digital sensor finish, highly defined textures, hyper-detailed rendering, extreme visual fidelity, photorealistic textures, and physically based rendering.
+
+Scene #2 raw generated content: {
+  "image_gen_prompt": {
+    "scene": "Modern Day professional boxer in a tense state of exhaustion and determination",
+    "subjects": [
+      {
+        "id": "boxer",
+        "type": "human",
+        "description": "A tall muscular boxer wearing sweat-soaked red satin trunks with a glossy elastic waistband, mouthguard clenched tightly, showcasing a subtle scar above his right eyebrow.",
+        "clothes": "Sweat-soaked red satin boxing trunks with a glossy elastic waistband and moisture-wicking mesh panels",
+        "accessories": [
+          "Mouthguard",
+          "Red satin boxing gloves"
+        ],
+        "pose": "Clenching jaw tightly, eyes wide with fierce determination, muscles tensed in a dynamic stance",
+        "position": "foreground"
+      }
+    ],
+    "color_palette": [
+      "#C68642",
+      "#FFFFFF",
+      "#EED9C4"
+    ],
+    "lighting": "Single high-intensity overhead key spotlight at 45-degree angle with large soft fill from ring floor reflections",
+    "mood": "Tense and determined atmosphere filled with exhaustion and anticipation.",
+    "background": "Dramatic shadows cast across the arena floor, emphasizing the intense focus on the boxer."
+  },
+  "technical_intent": {
+    "angleIntent": "Heroic/Scale",
+    "compositionIntent": "Action",
+    "exposureIntent": "Cinematic/Moody"
+  },
+  "updated_entity_manifest_list": [
+    {
+      "id": "boxer",
+      "physics_profile": {
+        "material": [
+          "cloth",
+          "viscoelastic"
+        ],
+        "action_context": [
+          "passive"
+        ]
+      },
+      "appearance": {
+        "clothing_or_material": "Sweat-soaked red satin boxing trunks with a glossy elastic waistband and moisture-wicking mesh panels",
+        "hair": "Short damp black hair",
+        "accessories": [
+          "Mouthguard",
+          "Red satin boxing gloves"
+        ],
+        "body_features": "Tall muscular frame with defined lean musculature and subtle scar above right eyebrow",
+        "position_descriptor": "Center-weighted with dynamic stance"
+      },
+      "state": {
+        "pose": "Clenching jaw tightly, eyes wide with fierce determination, muscles tensed in a dynamic stance.",
+        "expression": null
+      }
+    }
+  ]
+}
+Scene #2 OpticalAndTechnicalOption: {"style":"High-fidelity RAW portrait photography with Raw surface detail and Clean organic texture.","camera":{"angle":"low angle","distance":"full-length vertical capture","focus":"sharp focus throughout the vertical frame","lens":"35mm","fNumber":"f/11.0","ISO":320},"composition":"steep diagonal tension","effects":["clean digital sensor finish","highly defined textures","hyper-detailed rendering","extreme visual fidelity","photorealistic textures","physically based rendering"]}
+Scene #2 Test sentence: A low angle full-length vertical capture captures Modern Day Mixed Ethnicity Professional Boxer, with Short damp black hair, Tall muscular frame with defined lean musculature and subtle scar above right eyebrow, clad in Sweat-soaked red satin boxing trunks with a glossy elastic waistband and moisture-wicking mesh panels, equipped with Mouthguard, and Red satin boxing gloves who is Clenching jaw tightly, eyes wide with fierce determination, muscles tensed in a dynamic stance in the foreground, the scene is set in Dramatic shadows cast across the arena floor, emphasizing the intense focus on the boxer, depicting Modern Day professional boxer in a tense state of exhaustion and determination with a steep diagonal tension composition, where the atmosphere is Tense and determined atmosphere filled with exhaustion and anticipation, illuminated by Single high-intensity overhead key spotlight at 45-degree angle with large soft fill from ring floor reflections and a color palette of (#C68642, #FFFFFF, #EED9C4), rendered in High-fidelity RAW portrait photography with Raw surface detail and Clean organic texture, captured with a 35mm lens at f/11.0 for sharp focus throughout the vertical frame and ISO 320, featuring clean digital sensor finish, highly defined textures, hyper-detailed rendering, extreme visual fidelity, photorealistic textures, and physically based rendering.
+
+Scene #3 raw generated content: {
+  "image_gen_prompt": {
+    "scene": "Modern Day professional boxer stepping back from the ropes, raising his gloves defensively with intense focus.",
+    "subjects": [
+      {
+        "id": "boxer",
+        "type": "human",
+        "description": "A tall muscular professional boxer demonstrating a dynamic stance, sweat-soaked red satin boxing trunks glistening under the arena lights.",
+        "clothes": "Sweat-soaked red satin boxing trunks with a glossy elastic waistband and moisture-wicking mesh panels",
+        "accessories": [
+          "Mouthguard",
+          "Red satin boxing gloves"
+        ],
+        "pose": "Stepping back from the ropes, gloves raised in defensive position, muscles tense and ready for action.",
+        "position": "foreground"
+      },
+      {
+        "id": "referee",
+        "type": "human",
+        "description": "An athletic referee positioned off-center, attentively signaling the continuation of the fight.",
+        "clothes": "Black-and-white striped cotton referee shirt with crisp weave and moisture-wicking panels",
+        "accessories": [
+          "Whistle",
+          "Wrist stopwatch"
+        ],
+        "pose": "Arm extended with gloved hand dropping to signal the fight continues.",
+        "position": "midground"
+      },
+      {
+        "id": "boxing_ring",
+        "type": "object",
+        "description": "A robust boxing ring serving as the arena for the clash, characterized by its taut canvas surface.",
+        "clothes": "Canvas-covered platform with taut coarse linen surface and glossy painted apron",
+        "accessories": [],
+        "pose": "",
+        "position": "foreground"
+      }
+    ],
+    "color_palette": [
+      "#C68642",
+      "#F7F7F7",
+      "#EED9C4"
+    ],
+    "lighting": "Single high-intensity overhead key spotlight at 45-degree angle with large soft fill from ring floor reflections",
+    "mood": "Dramatic atmosphere charged with tension as the crowd anticipates the ongoing fight.",
+    "background": "A vibrant arena filled with cheering spectators, illuminated by bright overhead lights, capturing the essence of a high-stakes boxing match."
+  },
+  "technical_intent": {
+    "angleIntent": "Heroic/Scale",
+    "compositionIntent": "Action",
+    "exposureIntent": "Vibrant/High-Key"
+  },
+  "updated_entity_manifest_list": [
+    {
+      "id": "boxer",
+      "physics_profile": {
+        "material": [
+          "cloth",
+          "viscoelastic"
+        ],
+        "action_context": [
+          "locomotion",
+          "combat"
+        ]
+      },
+      "appearance": {
+        "clothing_or_material": "Sweat-soaked red satin boxing trunks with a glossy elastic waistband and moisture-wicking mesh panels",
+        "hair": "Short damp black hair",
+        "accessories": [
+          "Mouthguard",
+          "Red satin boxing gloves"
+        ],
+        "body_features": "Tall muscular frame with defined lean musculature and subtle scar above right eyebrow",
+        "position_descriptor": "Center-weighted with dynamic stance"
+      },
+      "state": {
+        "pose": "Stepping back from the ropes with gloves raised in defensive position",
+        "expression": null
+      }
+    },
+    {
+      "id": "referee",
+      "physics_profile": {
+        "material": [
+          "cloth"
+        ],
+        "action_context": [
+          "interaction"
+        ]
+      },
+      "appearance": {
+        "clothing_or_material": "Black-and-white striped cotton referee shirt with crisp weave and moisture-wicking panels",
+        "hair": "Short graying hair",
+        "accessories": [
+          "Whistle",
+          "Wrist stopwatch"
+        ],
+        "body_features": "Athletic average build",
+        "position_descriptor": "Off-center to maintain unobstructed ring view"
+      },
+      "state": {
+        "pose": "Arm extended with gloved hand dropping to signal the fight continues",
+        "expression": null
+      }
+    },
+    {
+      "id": "boxing_ring",
+      "physics_profile": {
+        "material": [
+          "rigid"
+        ],
+        "action_context": []
+      },
+      "appearance": {
+        "clothing_or_material": "Canvas-covered platform with taut coarse linen surface and glossy painted apron",
+        "hair": null,
+        "accessories": [],
+        "body_features": null,
+        "position_descriptor": "Foreground anchor"
+      },
+      "state": {
+        "pose": "",
+        "expression": null
+      }
+    }
+  ]
+}
+Scene #3 OpticalAndTechnicalOption: {"style":"High-fidelity RAW portrait photography with Raw surface detail and Clean organic texture.","camera":{"angle":"low angle","distance":"full-length vertical capture","focus":"sharp focus throughout the vertical frame","lens":"35mm","fNumber":"f/11.0","ISO":320},"composition":"steep diagonal tension","effects":["clean digital sensor finish","highly defined textures","hyper-detailed rendering","extreme visual fidelity","photorealistic textures","physically based rendering"]}
+Scene #3 Test sentence: A low angle full-length vertical capture captures Modern Day Mixed Ethnicity Professional Boxer, with Short damp black hair, Tall muscular frame with defined lean musculature and subtle scar above right eyebrow, clad in Sweat-soaked red satin boxing trunks with a glossy elastic waistband and moisture-wicking mesh panels, equipped with Mouthguard, and Red satin boxing gloves who is Stepping back from the ropes, gloves raised in defensive position, muscles tense and ready for action. in the foreground, while in the midground a Modern Day Mixed Ethnicity Referee, with Short graying hair, Athletic average build, clad in Black-and-white striped cotton referee shirt with crisp weave and moisture-wicking panels, equipped with Whistle, and Wrist stopwatch is Arm extended with gloved hand dropping to signal the fight continues, while in the foreground a Modern Day Commercial Sports Equipment Boxing Ring, clad in Canvas-covered platform with taut coarse linen surface and glossy painted apron, equipped with   , the scene is set in A vibrant arena filled with cheering spectators, illuminated by bright overhead lights, capturing the essence of a high-stakes boxing match, depicting Modern Day professional boxer stepping back from the ropes, raising his gloves defensively with intense focus. with a steep diagonal tension composition, where the atmosphere is Dramatic atmosphere charged with tension as the crowd anticipates the ongoing fight, illuminated by Single high-intensity overhead key spotlight at 45-degree angle with large soft fill from ring floor reflections and a color palette of (#C68642, #F7F7F7, #EED9C4), rendered in High-fidelity RAW portrait photography with Raw surface detail and Clean organic texture, captured with a 35mm lens at f/11.0 for sharp focus throughout the vertical frame and ISO 320, featuring clean digital sensor finish, highly defined textures, hyper-detailed rendering, extreme visual fidelity, photorealistic textures, and physically based rendering.
+
+Scene #4 raw generated content: {
+  "image_gen_prompt": {
+    "scene": "Modern Day professional boxer in a high-energy combat atmosphere, drenched in sweat and surrounded by an electrified crowd.",
+    "subjects": [
+      {
+        "id": "boxer",
+        "type": "human",
+        "description": "A tall muscular boxer with short damp black hair, wearing a sweat-soaked red satin boxing trunks with a glossy elastic waistband and moisture-wicking mesh panels, and red satin boxing gloves.",
+        "clothes": "Sweat-soaked red satin boxing trunks with a glossy elastic waistband and moisture-wicking mesh panels.",
+        "accessories": [
+          "Mouthguard",
+          "Red satin boxing gloves"
+        ],
+        "pose": "Positioned in a dynamic stance, muscles tense and ready to strike, with a fierce expression.",
+        "position": "foreground"
+      },
+      {
+        "id": "opponent",
+        "type": "human",
+        "description": "A stocky muscular opponent fighter with short matted brown hair, wearing dark blue satin boxing trunks with reflective metallic striping and lightweight nylon gussets, and dark blue boxing gloves.",
+        "clothes": "Dark blue satin boxing trunks with reflective metallic striping and lightweight nylon gussets.",
+        "accessories": [
+          "Dark blue boxing gloves"
+        ],
+        "pose": "Dynamic mid-frame, muscles coiled and ready to strike back, face set in determination.",
+        "position": "foreground"
+      }
+    ],
+    "color_palette": [
+      "#C68642",
+      "#F7F7F7",
+      "#EED9C4"
+    ],
+    "lighting": "Single high-intensity overhead key spotlight at 45-degree angle with large soft fill from ring floor reflections.",
+    "mood": "Intense and exhilarating atmosphere filled with anticipation and excitement.",
+    "background": "A vibrant crowd of spectators in various casual cotton and denim clothing, absorbing ambient light and creating an electrifying atmosphere."
+  },
+  "technical_intent": {
+    "angleIntent": "Heroic/Scale",
+    "compositionIntent": "Action",
+    "exposureIntent": "Vibrant/High-Key"
+  },
+  "updated_entity_manifest_list": [
+    {
+      "id": "boxer",
+      "physics_profile": {
+        "material": [
+          "cloth",
+          "viscoelastic"
+        ],
+        "action_context": [
+          "combat",
+          "locomotion"
+        ]
+      },
+      "appearance": {
+        "clothing_or_material": "Sweat-soaked red satin boxing trunks with a glossy elastic waistband and moisture-wicking mesh panels.",
+        "hair": "Short damp black hair",
+        "accessories": [
+          "Mouthguard",
+          "Red satin boxing gloves"
+        ],
+        "body_features": "Tall muscular frame with defined lean musculature and subtle scar above right eyebrow.",
+        "position_descriptor": "Center-weighted with dynamic stance"
+      },
+      "state": {
+        "pose": "Positioned in a dynamic stance, muscles tense and ready to strike.",
+        "expression": "Fierce determination."
+      }
+    },
+    {
+      "id": "opponent",
+      "physics_profile": {
+        "material": [
+          "cloth",
+          "viscoelastic"
+        ],
+        "action_context": [
+          "combat",
+          "locomotion"
+        ]
+      },
+      "appearance": {
+        "clothing_or_material": "Dark blue satin boxing trunks with reflective metallic striping and lightweight nylon gussets.",
+        "hair": "Short matted brown hair",
+        "accessories": [
+          "Dark blue boxing gloves"
+        ],
+        "body_features": "Stocky muscular build with fresh bruise on left jaw.",
+        "position_descriptor": "Dynamic mid-frame ready to strike"
+      },
+      "state": {
+        "pose": "Dynamic mid-frame, muscles coiled and ready to strike back.",
+        "expression": "Determined focus."
+      }
+    },
+    {
+      "id": "crowd",
+      "physics_profile": {
+        "material": [],
+        "action_context": []
+      },
+      "appearance": {
+        "clothing_or_material": "Various casual cotton and denim clothing absorbing ambient light.",
+        "hair": null,
+        "accessories": [],
+        "body_features": null,
+        "position_descriptor": "Looming background presence"
+      },
+      "state": {
+        "pose": "",
+        "expression": null
+      }
+    },
+    {
+      "id": "boxing_ring",
+      "physics_profile": {
+        "material": [
+          "rigid"
+        ],
+        "action_context": []
+      },
+      "appearance": {
+        "clothing_or_material": "Canvas-covered platform with taut coarse linen surface and glossy painted apron.",
+        "hair": null,
+        "accessories": [],
+        "body_features": null,
+        "position_descriptor": "Foreground anchor"
+      },
+      "state": {
+        "pose": "",
+        "expression": null
+      }
+    }
+  ]
+}
+Scene #4 OpticalAndTechnicalOption: {"style":"High-fidelity RAW portrait photography with Raw surface detail and Clean organic texture.","camera":{"angle":"low angle","distance":"full-length vertical capture","focus":"sharp focus throughout the vertical frame","lens":"35mm","fNumber":"f/11.0","ISO":320},"composition":"steep diagonal tension","effects":["clean digital sensor finish","highly defined textures","hyper-detailed rendering","extreme visual fidelity","photorealistic textures","physically based rendering"]}
+Scene #4 Test sentence: A low angle full-length vertical capture captures Modern Day Mixed Ethnicity Professional Boxer, with Short damp black hair, Tall muscular frame with defined lean musculature and subtle scar above right eyebrow, clad in Sweat-soaked red satin boxing trunks with a glossy elastic waistband and moisture-wicking mesh panels, equipped with Mouthguard, and Red satin boxing gloves who is Positioned in a dynamic stance, muscles tense and ready to strike, with a fierce expression. in the foreground, while in the foreground a Modern Day Mixed Ethnicity Opponent Fighter, with Short matted brown hair, Stocky muscular build with fresh bruise on left jaw, clad in Dark blue satin boxing trunks with reflective metallic striping and lightweight nylon gussets, equipped with Dark blue boxing gloves is Dynamic mid-frame, muscles coiled and ready to strike back, face set in determination, the scene is set in A vibrant crowd of spectators in various casual cotton and denim clothing, absorbing ambient light and creating an electrifying atmosphere, depicting Modern Day professional boxer in a high-energy combat atmosphere, drenched in sweat and surrounded by an electrified crowd. with a steep diagonal tension composition, where the atmosphere is Intense and exhilarating atmosphere filled with anticipation and excitement, illuminated by Single high-intensity overhead key spotlight at 45-degree angle with large soft fill from ring floor reflections. and a color palette of (#C68642, #F7F7F7, #EED9C4), rendered in High-fidelity RAW portrait photography with Raw surface detail and Clean organic texture, captured with a 35mm lens at f/11.0 for sharp focus throughout the vertical frame and ISO 320, featuring clean digital sensor finish, highly defined textures, hyper-detailed rendering, extreme visual fidelity, photorealistic textures, and physically based rendering.
+
+Scene #5 raw generated content: {
+  "image_gen_prompt": {
+    "scene": "Modern Day crowd of ecstatic spectators illuminated by vibrant floodlights, celebrating a knockout in a boxing match",
+    "subjects": [],
+    "color_palette": [
+      "#C68642",
+      "#FFFFFF",
+      "#EED9C4"
+    ],
+    "lighting": "Single high-intensity overhead key spotlight at 45-degree angle with large soft fill from ring floor reflections",
+    "mood": "Energizing atmosphere filled with excitement and celebration",
+    "background": "A massive sea of spectators in various casual cotton and denim clothing absorbing ambient light, looming in the background, unified in ecstatic celebration under neon and floodlights"
+  },
+  "technical_intent": {
+    "angleIntent": "Surveillance/Map-view",
+    "compositionIntent": "Balance",
+    "exposureIntent": "Vibrant/High-Key"
+  },
+  "updated_entity_manifest_list": [
+    {
+      "id": "crowd",
+      "physics_profile": {
+        "material": [
+          "cloth"
+        ],
+        "action_context": []
+      },
+      "appearance": {
+        "clothing_or_material": "Various casual cotton and denim clothing absorbing ambient light",
+        "hair": null,
+        "accessories": [],
+        "body_features": null,
+        "position_descriptor": "Looming background presence"
+      },
+      "state": {
+        "pose": "Unified in ecstatic celebration, arms raised in joyous excitement",
+        "expression": null
+      }
+    }
+  ]
+}
+Scene #5 OpticalAndTechnicalOption: {"style":"High-fidelity RAW portrait photography with Raw surface detail and Clean organic texture.","camera":{"angle":"high angle shot looking down","distance":"full-length vertical capture","focus":"sharp focus throughout the vertical frame","lens":"35mm","fNumber":"f/11.0","ISO":320},"composition":"vertical rule of thirds","effects":["clean digital sensor finish","highly defined textures","hyper-detailed rendering","extreme visual fidelity","photorealistic textures","physically based rendering"]}
+Scene #5 Test sentence: A high angle shot looking down full-length vertical capture captures the Modern Day crowd of ecstatic spectators illuminated by vibrant floodlights, celebrating a knockout in a boxing match elements, the scene is set in A massive sea of spectators in various casual cotton and denim clothing absorbing ambient light, looming in the background, unified in ecstatic celebration under neon and floodlights, arranged in a vertical rule of thirds composition, where the atmosphere is Energizing atmosphere filled with excitement and celebration, illuminated by Single high-intensity overhead key spotlight at 45-degree angle with large soft fill from ring floor reflections and a color palette of (#C68642, #FFFFFF, #EED9C4), rendered in High-fidelity RAW portrait photography with Raw surface detail and Clean organic texture, captured with a 35mm lens at f/11.0 for sharp focus throughout the vertical frame and ISO 320, featuring clean digital sensor finish, highly defined textures, hyper-detailed rendering, extreme visual fidelity, photorealistic textures, and physically based rendering.

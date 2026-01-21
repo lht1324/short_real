@@ -1,0 +1,496 @@
+Scene #1 raw generated content: {
+  "image_gen_prompt": {
+    "scene": "World War II infantry soldier engulfed in chaos and war, surrounded by smoke plumes and explosions.",
+    "subjects": [
+      {
+        "id": "soldier",
+        "type": "human",
+        "description": "An American infantry soldier in his late 20s, wearing an olive drab wool uniform, steel combat helmet, and canvas ammo pouch.",
+        "clothes": "Olive drab wool uniform exhibiting a coarse cotton weave, reinforced with rigid metal helmet straps.",
+        "accessories": [
+          "Canvas ammo pouch",
+          "Steel combat helmet",
+          "Leather combat boots"
+        ],
+        "pose": "Positioned in a dynamic stance, bracing against the surrounding chaos, with feet firmly planted and torso slightly leaning forward, ready for action.",
+        "position": "foreground"
+      }
+    ],
+    "color_palette": [
+      "#4B5320",
+      "#FFEFA1",
+      "#6A7CA3"
+    ],
+    "lighting": "Three-point lighting with key light simulating sun from top-left, casting dramatic shadows due to low-key exposure.",
+    "mood": "Intense and chaotic atmosphere reflecting the turmoil of war.",
+    "background": "A devastated European WWII coastal battlefield filled with smoke plumes, shattered buildings, and distant explosions."
+  },
+  "technical_intent": {
+    "angleIntent": "Heroic/Scale",
+    "compositionIntent": "Action",
+    "exposureIntent": "Cinematic/Moody"
+  },
+  "updated_entity_manifest_list": [
+    {
+      "id": "soldier",
+      "physics_profile": {
+        "material": [
+          "cloth",
+          "rigid"
+        ],
+        "action_context": [
+          "combat",
+          "passive"
+        ]
+      },
+      "appearance": {
+        "clothing_or_material": "Olive drab wool uniform with a coarse cotton weave and rigid metal helmet straps",
+        "hair": "Short cropped brown hair",
+        "accessories": [
+          "Canvas ammo pouch",
+          "Steel combat helmet",
+          "Leather combat boots"
+        ],
+        "body_features": "Scar across left eyebrow",
+        "position_descriptor": "center-weighted for close-ups"
+      },
+      "state": {
+        "pose": "Positioned in a dynamic stance, ready for action.",
+        "expression": null
+      }
+    }
+  ]
+}
+Scene #1 OpticalAndTechnicalOption: {"style":"Detailed anime character portrait featuring Stylized outlines and Filmic surface texture.","camera":{"angle":"low angle","distance":"medium full shot","focus":"soft blurred background","lens":"50mm","fNumber":"f/1.8","ISO":400},"composition":"steep diagonal tension","effects":["soft cinematic glow","modern digital shading","expressive character linework","detailed facial features","dynamic speed lines","stylized sun flare","Shinkai-esque clouds"]}
+Scene #1 Test sentence: A low angle medium full shot captures 1944 WWII American Infantry Soldier, Scar across left eyebrow, clad in Olive drab wool uniform with a coarse cotton weave and rigid metal helmet straps, equipped with Canvas ammo pouch, Steel combat helmet, and Leather combat boots who is Positioned in a dynamic stance, bracing against the surrounding chaos, with feet firmly planted and torso slightly leaning forward, ready for action. in the foreground, the scene is set in A devastated European WWII coastal battlefield filled with smoke plumes, shattered buildings, and distant explosions, depicting World War II infantry soldier engulfed in chaos and war, surrounded by smoke plumes and explosions. with a steep diagonal tension composition, where the atmosphere is Intense and chaotic atmosphere reflecting the turmoil of war, illuminated by Three-point lighting with key light simulating sun from top-left, casting dramatic shadows due to low-key exposure. and a color palette of (#4B5320, #FFEFA1, #6A7CA3), rendered in Detailed anime character portrait featuring Stylized outlines and Filmic surface texture, captured with a 50mm lens at f/1.8 for soft blurred background and ISO 400, featuring soft cinematic glow, modern digital shading, expressive character linework, detailed facial features, dynamic speed lines, stylized sun flare, and Shinkai-esque clouds.
+
+Scene #2 raw generated content: {
+  "image_gen_prompt": {
+    "scene": "1944 WWII M4 Sherman Tank rumbling across a scarred landscape shrouded in swirling dust clouds",
+    "subjects": [
+      {
+        "id": "tank",
+        "type": "machine",
+        "description": "A medium M4 Sherman Tank with cylindrical turret rivets along its hull, rumbling across a barren battlefield.",
+        "clothes": "Thick rolled steel armor plating with matte olive drab paint showing signs of wear and tear from combat.",
+        "accessories": [],
+        "pose": "Moving forward with heavy treads crushing debris, engines roaring with power.",
+        "position": "midground"
+      }
+    ],
+    "color_palette": [
+      "#4B5320",
+      "#FFEFA1",
+      "#6A7CA3"
+    ],
+    "lighting": "Three-point lighting with a key light simulating sun from top-left, creating dramatic contrasts and highlights on the tank's surfaces.",
+    "mood": "Intense and chaotic atmosphere highlighting the brutality of war.",
+    "background": "A barren wasteland littered with debris, dust clouds swirling around the heavy tank as it moves with purpose."
+  },
+  "technical_intent": {
+    "angleIntent": "Extreme Power/Ground-level",
+    "compositionIntent": "Action",
+    "exposureIntent": "Cinematic/Moody"
+  },
+  "updated_entity_manifest_list": [
+    {
+      "id": "tank",
+      "physics_profile": {
+        "material": [
+          "rigid"
+        ],
+        "action_context": [
+          "locomotion"
+        ]
+      },
+      "appearance": {
+        "clothing_or_material": "Thick rolled steel armor plating with matte olive drab paint",
+        "hair": null,
+        "accessories": [],
+        "body_features": "Cylindrical turret rivets along hull",
+        "position_descriptor": "looming background presence"
+      },
+      "state": {
+        "pose": "Engines roaring, crushing debris beneath its heavy treads.",
+        "expression": null
+      }
+    }
+  ]
+}
+Scene #2 OpticalAndTechnicalOption: {"style":"Detailed anime character portrait featuring Stylized outlines and Filmic surface texture.","camera":{"angle":"low angle","distance":"medium full shot","focus":"soft blurred background","lens":"50mm","fNumber":"f/1.8","ISO":400},"composition":"steep diagonal tension","effects":["soft cinematic glow","modern digital shading","expressive character linework","detailed facial features","dynamic speed lines","stylized sun flare","Shinkai-esque clouds"]}
+Scene #2 Test sentence: A low angle medium full shot captures 1944 WWII US Army M4 Sherman Tank, Cylindrical turret rivets along hull, clad in Thick rolled steel armor plating with matte olive drab paint, equipped with  which is Moving forward with heavy treads crushing debris, engines roaring with power. in the midground, the scene is set in A barren wasteland littered with debris, dust clouds swirling around the heavy tank as it moves with purpose, depicting 1944 WWII M4 Sherman Tank rumbling across a scarred landscape shrouded in swirling dust clouds with a steep diagonal tension composition, where the atmosphere is Intense and chaotic atmosphere highlighting the brutality of war, illuminated by Three-point lighting with a key light simulating sun from top-left, creating dramatic contrasts and highlights on the tank's surfaces. and a color palette of (#4B5320, #FFEFA1, #6A7CA3), rendered in Detailed anime character portrait featuring Stylized outlines and Filmic surface texture, captured with a 50mm lens at f/1.8 for soft blurred background and ISO 400, featuring soft cinematic glow, modern digital shading, expressive character linework, detailed facial features, dynamic speed lines, stylized sun flare, and Shinkai-esque clouds.
+
+Scene #3 raw generated content: {
+  "image_gen_prompt": {
+    "scene": "1944 WWII American infantry soldier charging into the fray with fierce determination, illuminated by flickering fires in the background",
+    "subjects": [
+      {
+        "id": "soldier",
+        "type": "human",
+        "description": "A determined American infantry soldier wearing an olive drab wool uniform, scar across left eyebrow, and equipped with a steel combat helmet and leather combat boots.",
+        "clothes": "Olive drab wool uniform with coarse cotton weave, sturdy leather accents, and rigid helmet straps.",
+        "accessories": [
+          "Canvas ammo pouch",
+          "Steel combat helmet",
+          "Leather combat boots"
+        ],
+        "pose": "Charging forward with intense focus, muscles tensed and feet kicking up mud, ready for engagement.",
+        "position": "foreground"
+      }
+    ],
+    "color_palette": [
+      "#4B5320",
+      "#FFEFA1",
+      "#6A7CA3"
+    ],
+    "lighting": "Three-point lighting with key light simulating sun from top-left, low-intensity fill for shadows, rim light for edge highlights",
+    "mood": "Tense and chaotic atmosphere, reflecting the urgency and danger of the battlefield.",
+    "background": "Scarred battlefield of Normandy, with splatters of mud, flickering fires illuminating the chaos, and barbed wire fencing in the distance."
+  },
+  "technical_intent": {
+    "angleIntent": "Heroic/Scale",
+    "compositionIntent": "Action",
+    "exposureIntent": "Cinematic/Moody"
+  },
+  "updated_entity_manifest_list": [
+    {
+      "id": "soldier",
+      "physics_profile": {
+        "material": [
+          "cloth",
+          "rigid",
+          "viscoelastic"
+        ],
+        "action_context": [
+          "locomotion",
+          "combat"
+        ]
+      },
+      "appearance": {
+        "clothing_or_material": "Olive drab wool uniform with coarse cotton weave and rigid metal helmet straps",
+        "hair": "Short cropped brown hair",
+        "accessories": [
+          "Canvas ammo pouch",
+          "Steel combat helmet",
+          "Leather combat boots"
+        ],
+        "body_features": "Scar across left eyebrow",
+        "position_descriptor": "center-weighted for close-ups"
+      },
+      "state": {
+        "pose": "Charging forward with intense focus, muscles tensed and feet kicking up mud, ready for engagement.",
+        "expression": "Determined and fierce"
+      }
+    }
+  ]
+}
+Scene #3 OpticalAndTechnicalOption: {"style":"Detailed anime character portrait featuring Stylized outlines and Filmic surface texture.","camera":{"angle":"low angle","distance":"medium full shot","focus":"soft blurred background","lens":"50mm","fNumber":"f/1.8","ISO":400},"composition":"steep diagonal tension","effects":["soft cinematic glow","modern digital shading","expressive character linework","detailed facial features","dynamic speed lines","stylized sun flare","Shinkai-esque clouds"]}
+Scene #3 Test sentence: A low angle medium full shot captures 1944 WWII American Infantry Soldier, Scar across left eyebrow, clad in Olive drab wool uniform with coarse cotton weave and rigid metal helmet straps, equipped with Canvas ammo pouch, Steel combat helmet, and Leather combat boots who is Charging forward with intense focus, muscles tensed and feet kicking up mud, ready for engagement. in the foreground, the scene is set in Scarred battlefield of Normandy, with splatters of mud, flickering fires illuminating the chaos, and barbed wire fencing in the distance, depicting 1944 WWII American infantry soldier charging into the fray with fierce determination, illuminated by flickering fires in the background with a steep diagonal tension composition, where the atmosphere is Tense and chaotic atmosphere, reflecting the urgency and danger of the battlefield, illuminated by Three-point lighting with key light simulating sun from top-left, low-intensity fill for shadows, rim light for edge highlights and a color palette of (#4B5320, #FFEFA1, #6A7CA3), rendered in Detailed anime character portrait featuring Stylized outlines and Filmic surface texture, captured with a 50mm lens at f/1.8 for soft blurred background and ISO 400, featuring soft cinematic glow, modern digital shading, expressive character linework, detailed facial features, dynamic speed lines, stylized sun flare, and Shinkai-esque clouds.
+
+Scene #4 raw generated content: {
+  "image_gen_prompt": {
+    "scene": "1944 WWII American Infantry Soldier wading ashore under heavy fire, enveloped in smoke and water sprays as the warm sunrise light breaks through the haze.",
+    "subjects": [
+      {
+        "id": "soldier",
+        "type": "human",
+        "description": "A brave American Infantry Soldier wearing an olive drab wool uniform, canvas ammo pouch, and steel combat helmet, marked by a scar across his left eyebrow.",
+        "clothes": "Coarse olive drab wool uniform with a heavy texture, reinforced with rigid helmet straps.",
+        "accessories": [
+          "Canvas ammo pouch",
+          "Steel combat helmet",
+          "Leather combat boots"
+        ],
+        "pose": "Wading through the surf with determination, muscles tensed against the tide, bracing for incoming fire.",
+        "position": "foreground"
+      }
+    ],
+    "color_palette": [
+      "#4B5320",
+      "#FFF5B2",
+      "#6A7CA3"
+    ],
+    "lighting": "Three-point lighting with the key light simulating the sun from the top-left, providing a warm glow against the shadows.",
+    "mood": "Intense and heroic atmosphere, capturing the essence of bravery amidst chaos.",
+    "background": "Smoke and water sprays rising from the sandy beach, illuminated by the warm sunrise filtering through the haze."
+  },
+  "technical_intent": {
+    "angleIntent": "Heroic/Scale",
+    "compositionIntent": "Action",
+    "exposureIntent": "Cinematic/Moody"
+  },
+  "updated_entity_manifest_list": [
+    {
+      "id": "soldier",
+      "physics_profile": {
+        "material": [
+          "cloth",
+          "rigid",
+          "viscoelastic"
+        ],
+        "action_context": [
+          "locomotion",
+          "combat"
+        ]
+      },
+      "appearance": {
+        "clothing_or_material": "Coarse olive drab wool uniform with a heavy texture, reinforced with rigid helmet straps",
+        "hair": "Short cropped brown hair",
+        "accessories": [
+          "Canvas ammo pouch",
+          "Steel combat helmet",
+          "Leather combat boots"
+        ],
+        "body_features": "Scar across left eyebrow",
+        "position_descriptor": "center-weighted for close-ups"
+      },
+      "state": {
+        "pose": "Wading through the surf with determination, muscles tensed against the tide, bracing for incoming fire.",
+        "expression": null
+      }
+    }
+  ]
+}
+Scene #4 OpticalAndTechnicalOption: {"style":"Detailed anime character portrait featuring Stylized outlines and Filmic surface texture.","camera":{"angle":"low angle","distance":"medium full shot","focus":"soft blurred background","lens":"50mm","fNumber":"f/1.8","ISO":400},"composition":"steep diagonal tension","effects":["soft cinematic glow","modern digital shading","expressive character linework","detailed facial features","dynamic speed lines","stylized sun flare","Shinkai-esque clouds"]}
+Scene #4 Test sentence: A low angle medium full shot captures 1944 WWII American Infantry Soldier, Scar across left eyebrow, clad in Coarse olive drab wool uniform with a heavy texture, reinforced with rigid helmet straps, equipped with Canvas ammo pouch, Steel combat helmet, and Leather combat boots who is Wading through the surf with determination, muscles tensed against the tide, bracing for incoming fire. in the foreground, the scene is set in Smoke and water sprays rising from the sandy beach, illuminated by the warm sunrise filtering through the haze, depicting 1944 WWII American Infantry Soldier wading ashore under heavy fire, enveloped in smoke and water sprays as the warm sunrise light breaks through the haze. with a steep diagonal tension composition, where the atmosphere is Intense and heroic atmosphere, capturing the essence of bravery amidst chaos, illuminated by Three-point lighting with the key light simulating the sun from the top-left, providing a warm glow against the shadows. and a color palette of (#4B5320, #FFF5B2, #6A7CA3), rendered in Detailed anime character portrait featuring Stylized outlines and Filmic surface texture, captured with a 50mm lens at f/1.8 for soft blurred background and ISO 400, featuring soft cinematic glow, modern digital shading, expressive character linework, detailed facial features, dynamic speed lines, stylized sun flare, and Shinkai-esque clouds.
+
+Scene #5 raw generated content: {
+  "image_gen_prompt": {
+    "scene": "1944 WWII fighter pilot suspended in high-speed aerial maneuvering above a coastal battlefield, weaving through clouds with tracer rounds streaking through the sky.",
+    "subjects": [
+      {
+        "id": "pilot",
+        "type": "human",
+        "description": "A determined American fighter pilot with a strong jawline, wearing a leather flight jacket, goggles strapped to his helmet, and gripping controls with focus.",
+        "clothes": "A rugged leather flight jacket featuring a sheepskin collar, paired with durable wool trousers designed for the cockpit environment.",
+        "accessories": [
+          "Goggles strapped to helmet",
+          "Pilot's map case"
+        ],
+        "pose": "Lunging forward with intense concentration, muscles tensed as he maneuvers the aircraft through turbulent skies.",
+        "position": "foreground"
+      }
+    ],
+    "color_palette": [
+      "#4B5320",
+      "#FFEFA1",
+      "#2E3A59"
+    ],
+    "lighting": "Three-point lighting with key light simulating sun from top-left, low-intensity fill for shadows, rim light for edge highlights.",
+    "mood": "Exhilarating yet tense atmosphere filled with the thrill of aerial combat.",
+    "background": "Dynamic clouds swirling with intermittent tracer rounds illuminating the sky, all set against the vast canvas of a European WWII coastal battlefield."
+  },
+  "technical_intent": {
+    "angleIntent": "Heroic/Scale",
+    "compositionIntent": "Action",
+    "exposureIntent": "Cinematic/Moody"
+  },
+  "updated_entity_manifest_list": [
+    {
+      "id": "pilot",
+      "physics_profile": {
+        "material": [
+          "viscoelastic",
+          "rigid"
+        ],
+        "action_context": [
+          "aerodynamics",
+          "velocity_max"
+        ]
+      },
+      "appearance": {
+        "clothing_or_material": "Leather flight jacket with sheepskin collar and wool trousers",
+        "hair": "Short slicked-back black hair",
+        "accessories": [
+          "Goggles strapped to helmet",
+          "Pilot's map case"
+        ],
+        "body_features": "Strong jawline",
+        "position_descriptor": "rule-of-thirds offset facing upward"
+      },
+      "state": {
+        "pose": "Lunging forward with intense concentration, gripping the controls firmly as he navigates through the clouds.",
+        "expression": "Focused and determined"
+      }
+    }
+  ]
+}
+Scene #5 OpticalAndTechnicalOption: {"style":"Detailed anime character portrait featuring Stylized outlines and Filmic surface texture.","camera":{"angle":"low angle","distance":"medium full shot","focus":"soft blurred background","lens":"50mm","fNumber":"f/1.8","ISO":400},"composition":"steep diagonal tension","effects":["soft cinematic glow","modern digital shading","expressive character linework","detailed facial features","dynamic speed lines","stylized sun flare","Shinkai-esque clouds"]}
+Scene #5 Test sentence: A low angle medium full shot captures 1944 WWII American Fighter Pilot, Strong jawline, clad in Leather flight jacket with sheepskin collar and wool trousers, equipped with Goggles strapped to helmet, and Pilot's map case who is Lunging forward with intense concentration, muscles tensed as he maneuvers the aircraft through turbulent skies. in the foreground, the scene is set in Dynamic clouds swirling with intermittent tracer rounds illuminating the sky, all set against the vast canvas of a European WWII coastal battlefield, depicting 1944 WWII fighter pilot suspended in high-speed aerial maneuvering above a coastal battlefield, weaving through clouds with tracer rounds streaking through the sky. with a steep diagonal tension composition, where the atmosphere is Exhilarating yet tense atmosphere filled with the thrill of aerial combat, illuminated by Three-point lighting with key light simulating sun from top-left, low-intensity fill for shadows, rim light for edge highlights. and a color palette of (#4B5320, #FFEFA1, #2E3A59), rendered in Detailed anime character portrait featuring Stylized outlines and Filmic surface texture, captured with a 50mm lens at f/1.8 for soft blurred background and ISO 400, featuring soft cinematic glow, modern digital shading, expressive character linework, detailed facial features, dynamic speed lines, stylized sun flare, and Shinkai-esque clouds.
+
+Scene #6 raw generated content: {
+  "image_gen_prompt": {
+    "scene": "European WWII prop bomb crashing down, shrouded in gray clouds with shockwaves erupting on impact.",
+    "subjects": [],
+    "color_palette": [
+      "#4B5320",
+      "#FFEFA1",
+      "#6A7CA3"
+    ],
+    "lighting": "Three-point lighting with key light simulating sun from top-left, low-intensity fill for shadows, rim light for edge highlights",
+    "mood": "Intense and chaotic atmosphere filled with impending destruction.",
+    "background": "Slow-moving gray clouds filled with debris from recent explosions, creating a somber battlefield atmosphere."
+  },
+  "technical_intent": {
+    "angleIntent": "Surveillance/Map-view",
+    "compositionIntent": "Strength",
+    "exposureIntent": "Cinematic/Moody"
+  },
+  "updated_entity_manifest_list": [
+    {
+      "id": "bomb",
+      "physics_profile": {
+        "material": [
+          "rigid"
+        ],
+        "action_context": [
+          "passive"
+        ]
+      },
+      "appearance": {
+        "clothing_or_material": "cast iron shell with weathered gray patina, exhibiting signs of battle damage",
+        "hair": null,
+        "accessories": [],
+        "body_features": "finned tail assembly, showing rust and scratches from previous deployments",
+        "position_descriptor": "foreground anchor"
+      },
+      "state": {
+        "pose": "suspended in mid-descent, poised for impact with the ground",
+        "expression": null
+      }
+    }
+  ]
+}
+Scene #6 OpticalAndTechnicalOption: {"style":"Detailed anime character portrait featuring Stylized outlines and Filmic surface texture.","camera":{"angle":"high angle shot looking down","distance":"medium full shot","focus":"soft blurred background","lens":"50mm","fNumber":"f/1.8","ISO":400},"composition":"strong verticals","effects":["soft cinematic glow","modern digital shading","expressive character linework","detailed facial features","dynamic speed lines","stylized sun flare","Shinkai-esque clouds"]}
+Scene #6 Test sentence: A high angle shot looking down medium full shot captures the European WWII prop bomb crashing down, shrouded in gray clouds with shockwaves erupting on impact. elements, the scene is set in Slow-moving gray clouds filled with debris from recent explosions, creating a somber battlefield atmosphere, arranged in a strong verticals composition, where the atmosphere is Intense and chaotic atmosphere filled with impending destruction, illuminated by Three-point lighting with key light simulating sun from top-left, low-intensity fill for shadows, rim light for edge highlights and a color palette of (#4B5320, #FFEFA1, #6A7CA3), rendered in Detailed anime character portrait featuring Stylized outlines and Filmic surface texture, captured with a 50mm lens at f/1.8 for soft blurred background and ISO 400, featuring soft cinematic glow, modern digital shading, expressive character linework, detailed facial features, dynamic speed lines, stylized sun flare, and Shinkai-esque clouds.
+
+Scene #7 raw generated content: {
+  "image_gen_prompt": {
+    "scene": "1944 WWII American Infantry Soldier surveying a ruined field, tears mixing with mud.",
+    "subjects": [
+      {
+        "id": "soldier",
+        "type": "human",
+        "description": "A weary American Infantry Soldier in an olive drab wool uniform, with a scar across his left eyebrow and a canvas ammo pouch.",
+        "clothes": "Olive drab wool uniform with coarse cotton weave and rigid metal helmet straps, slightly torn and stained with mud and blood.",
+        "accessories": [
+          "Canvas ammo pouch",
+          "Steel combat helmet",
+          "Leather combat boots"
+        ],
+        "pose": "Positioned in a slouched posture, surveying the surroundings with a heavy heart, tears streaking down his mud-stained face.",
+        "position": "foreground"
+      }
+    ],
+    "color_palette": [
+      "#4B5320",
+      "#FFEFA1",
+      "#6A7CA3"
+    ],
+    "lighting": "Three-point lighting with key light simulating sun from top-left, low-intensity fill for shadows, rim light for edge highlights.",
+    "mood": "Somber and reflective atmosphere, capturing the heavy toll of battle.",
+    "background": "Ruined battlefield with fallen comrades scattered around, mud mixed with blood and tears."
+  },
+  "technical_intent": {
+    "angleIntent": "Default/Neutral",
+    "compositionIntent": "Balance",
+    "exposureIntent": "Cinematic/Moody"
+  },
+  "updated_entity_manifest_list": [
+    {
+      "id": "soldier",
+      "physics_profile": {
+        "material": [
+          "cloth",
+          "viscoelastic",
+          "rigid"
+        ],
+        "action_context": [
+          "passive"
+        ]
+      },
+      "appearance": {
+        "clothing_or_material": "Olive drab wool uniform with coarse cotton weave and rigid metal helmet straps, slightly torn and stained with mud and blood.",
+        "hair": "Short cropped brown hair",
+        "accessories": [
+          "Canvas ammo pouch",
+          "Steel combat helmet",
+          "Leather combat boots"
+        ],
+        "body_features": "Scar across left eyebrow",
+        "position_descriptor": "center-weighted for close-ups"
+      },
+      "state": {
+        "pose": "Positioned in a slouched posture, surveying the surroundings with a heavy heart, tears streaking down his mud-stained face.",
+        "expression": "Somber and reflective, embodying the weight of loss."
+      }
+    }
+  ]
+}
+Scene #7 OpticalAndTechnicalOption: {"style":"Detailed anime character portrait featuring Stylized outlines and Filmic surface texture.","camera":{"angle":"eye level","distance":"medium full shot","focus":"soft blurred background","lens":"50mm","fNumber":"f/1.8","ISO":400},"composition":"vertical rule of thirds","effects":["soft cinematic glow","modern digital shading","expressive character linework","detailed facial features","dynamic speed lines","stylized sun flare","Shinkai-esque clouds"]}
+Scene #7 Test sentence: An eye level medium full shot captures 1944 WWII American Infantry Soldier, Scar across left eyebrow, clad in Olive drab wool uniform with coarse cotton weave and rigid metal helmet straps, slightly torn and stained with mud and blood, equipped with Canvas ammo pouch, Steel combat helmet, and Leather combat boots who is Positioned in a slouched posture, surveying the surroundings with a heavy heart, tears streaking down his mud-stained face. in the foreground, the scene is set in Ruined battlefield with fallen comrades scattered around, mud mixed with blood and tears, depicting 1944 WWII American Infantry Soldier surveying a ruined field, tears mixing with mud. with a vertical rule of thirds composition, where the atmosphere is Somber and reflective atmosphere, capturing the heavy toll of battle, illuminated by Three-point lighting with key light simulating sun from top-left, low-intensity fill for shadows, rim light for edge highlights. and a color palette of (#4B5320, #FFEFA1, #6A7CA3), rendered in Detailed anime character portrait featuring Stylized outlines and Filmic surface texture, captured with a 50mm lens at f/1.8 for soft blurred background and ISO 400, featuring soft cinematic glow, modern digital shading, expressive character linework, detailed facial features, dynamic speed lines, stylized sun flare, and Shinkai-esque clouds.
+
+Scene #8 raw generated content: {
+  "image_gen_prompt": {
+    "scene": "1944 WWII Infantry Soldier illuminated by glowing embers, symbolizing the birth of history.",
+    "subjects": [
+      {
+        "id": "soldier",
+        "type": "human",
+        "description": "An American infantry soldier wearing an olive drab wool uniform, steel combat helmet, and combat boots, with a scar across his left eyebrow.",
+        "clothes": "Olive drab wool uniform with coarse cotton weave, reinforced with rigid metal helmet straps.",
+        "accessories": [
+          "Canvas ammo pouch",
+          "Steel combat helmet",
+          "Leather combat boots"
+        ],
+        "pose": "Positioned in a tense stance, centered in the frame, ready for action with weight shifted forward.",
+        "position": "foreground"
+      }
+    ],
+    "color_palette": [
+      "#4B5320",
+      "#FFF5B2",
+      "#6A7CA3"
+    ],
+    "lighting": "Three-point lighting with key light simulating sun from top-left, low-intensity fill for shadows, rim light for edge highlights.",
+    "mood": "Dramatic and intense atmosphere evoking the chaos and significance of battle.",
+    "background": "A scorched earth battlefield with glowing embers scattered around, reflecting the aftermath of combat."
+  },
+  "technical_intent": {
+    "angleIntent": "Heroic/Scale",
+    "compositionIntent": "Action",
+    "exposureIntent": "Cinematic/Moody"
+  },
+  "updated_entity_manifest_list": [
+    {
+      "id": "soldier",
+      "physics_profile": {
+        "material": [
+          "cloth",
+          "rigid"
+        ],
+        "action_context": [
+          "passive"
+        ]
+      },
+      "appearance": {
+        "clothing_or_material": "Olive drab wool uniform with coarse cotton weave and rigid metal helmet straps",
+        "hair": "Short cropped brown hair",
+        "accessories": [
+          "Canvas ammo pouch",
+          "Steel combat helmet",
+          "Leather combat boots"
+        ],
+        "body_features": "Scar across left eyebrow",
+        "position_descriptor": "center-weighted for close-ups"
+      },
+      "state": {
+        "pose": "Tensed and ready for action, weight shifted forward with a focused gaze.",
+        "expression": "Determined"
+      }
+    }
+  ]
+}
+Scene #8 OpticalAndTechnicalOption: {"style":"Detailed anime character portrait featuring Stylized outlines and Filmic surface texture.","camera":{"angle":"low angle","distance":"medium full shot","focus":"soft blurred background","lens":"50mm","fNumber":"f/1.8","ISO":400},"composition":"steep diagonal tension","effects":["soft cinematic glow","modern digital shading","expressive character linework","detailed facial features","dynamic speed lines","stylized sun flare","Shinkai-esque clouds"]}
+Scene #8 Test sentence: A low angle medium full shot captures 1944 WWII American Infantry Soldier, Scar across left eyebrow, clad in Olive drab wool uniform with coarse cotton weave and rigid metal helmet straps, equipped with Canvas ammo pouch, Steel combat helmet, and Leather combat boots who is Positioned in a tense stance, centered in the frame, ready for action with weight shifted forward. in the foreground, the scene is set in A scorched earth battlefield with glowing embers scattered around, reflecting the aftermath of combat, depicting 1944 WWII Infantry Soldier illuminated by glowing embers, symbolizing the birth of history. with a steep diagonal tension composition, where the atmosphere is Dramatic and intense atmosphere evoking the chaos and significance of battle, illuminated by Three-point lighting with key light simulating sun from top-left, low-intensity fill for shadows, rim light for edge highlights. and a color palette of (#4B5320, #FFF5B2, #6A7CA3), rendered in Detailed anime character portrait featuring Stylized outlines and Filmic surface texture, captured with a 50mm lens at f/1.8 for soft blurred background and ISO 400, featuring soft cinematic glow, modern digital shading, expressive character linework, detailed facial features, dynamic speed lines, stylized sun flare, and Shinkai-esque clouds.

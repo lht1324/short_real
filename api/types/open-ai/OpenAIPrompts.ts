@@ -188,12 +188,53 @@ export const POST_MASTER_STYLE_INFO_PROMPT = `
        - **Protocol**: Start with the **[ERA / PERIOD]** (identified from the script) as the Single Source of Truth.
        - **Constraint**: Do NOT add extra fields or placeholders (e.g., 'N/A') unless explicitly required by the structure below.
        - **Structures by \`type\`**:
-         * **\`human\`**: \`[ERA/PERIOD], [ROLE], [GENDER], [ORIGIN/ETHNICITY], [AGE]\`
-         * **\`machine\`**: \`[ERA/PERIOD], [MODEL NAME/TYPE], [PRODUCTION YEAR/SPEC]\`
-         * **\`creature\`**: \`[ERA/PERIOD], [SPECIES/ARCHETYPE], [GENDER/\`N/A\`], [AGE/MATURITY]\`
-         * **\`animal\`**: \`[ERA/PERIOD], [SPECIES], [AGE/MATURITY]\`
-         * **\`object\`**: \`[ERA/PERIOD], [ITEM NAME], [CRAFTSMANSHIP/DETAIL]\`
-         * **\`hybrid\`**: \`[ERA/PERIOD], [HYBRID TYPE], [GENDER], [ORIGIN/ETHNICITY], [AGE]\`
+         * **\`human\`**:
+           - **Field Definition**:
+             * [ERA/PERIOD]: The temporal anchor (e.g., "2077 Cyberpunk", "Joseon Dynasty").
+             * [NATIONALITY/ETHNICITY]: The visual DNA anchor (e.g., "Japanese Local", "Nordic Caucasian"). Essential for maintaining ethnic features across different art styles.
+             * [ROLE]: Professional or social identity (e.g., "Street Samurai", "Royal Scholar").
+             * [GENDER]: Biological sex (e.g., "Male", "Female").
+             * [AGE]: Physical maturity level (e.g., "Early 20s", "Elderly").
+           - **Format**: \`[ERA/PERIOD], [NATIONALITY/ETHNICITY], [ROLE], [GENDER], [AGE]\`
+         * **\`machine\`**:
+           - **Field Definition**:
+             * [ERA/PERIOD]: The technological era (e.g., "Modern Day", "2140 Sci-Fi", "WWII").
+             * [NATION/MARKINGS]: Design origin or affiliation (e.g., "Mars Colony", "NASA", "US Air Force"). Determines the visual branding and paint scheme.
+             * [MODEL NAME]: Technical designation (e.g., "Heavy Mining Mech", "SpaceX Starship", "M4 Sherman Tank", "P-51 Mustang").
+             * [SUB-TYPE]: Functional variant (e.g., "Deep-core Excavator", "Orbital Lander", "Heavy Tank", "Fighter Aircraft").
+             * [PRODUCTION YEAR/SPEC]: Manufacturing timeframe (e.g., "Rev. 4 Prototype", "2025 Consumer Model").
+           - **Format**: \`[ERA/PERIOD], [NATION/MARKINGS], [MODEL NAME], [SUB-TYPE], [PRODUCTION YEAR/SPEC]\`
+         * **\`creature\`**:
+           - **Field Definition**:
+             * [ERA/PERIOD]: Mythic or setting anchor (e.g., "Greek Mythology", "High Fantasy").
+             * [CULTURAL ORIGIN]: Cultural roots (e.g., "Mount Olympus", "Nordic Mythos"). Dictates the artistic interpretation of the creature.
+             * [SPECIES/ARCHETYPE]: Core biological form (e.g., "Chimera", "Frost Giant").
+             * [GENDER/N/A]: Biological sex or "N/A".
+             * [AGE/MATURITY]: Life-stage (e.g., "Ancient", "Juvenile").
+           - **Format**: \`[ERA/PERIOD], [CULTURAL ORIGIN], [SPECIES/ARCHETYPE], [GENDER/N/A], [AGE/MATURITY]\`
+         * **\`animal\`**:
+           - **Field Definition**:
+             * [ERA/PERIOD]: Temporal setting (e.g., "Ice Age", "Modern Day").
+             * [GEOGRAPHIC REGION]: Regional habitat (e.g., "Amazon Rainforest", "Serengeti").
+             * [SPECIES]: Animal type (e.g., "Jaguar", "Woolly Mammoth").
+             * [GENDER/N/A]: Biological sex or "N/A".
+             * [AGE/MATURITY]: Maturity level (e.g., "Prime Adult", "Cub").
+           - **Format**: \`[ERA/PERIOD], [GEOGRAPHIC REGION], [SPECIES], [GENDER/N/A], [AGE/MATURITY]\`
+         * **\`object\`**:
+           - **Field Definition**:
+             * [ERA/PERIOD]: Era of creation (e.g., "Victorian London", "Near Future").
+             * [CULTURAL/NATIONAL STYLE]: Design language (e.g., "British Steampunk", "Scandinavian Minimalism").
+             * [ITEM NAME]: Specific object name (e.g., "Brass Pocket Watch", "Data Shard").
+             * [CRAFTSMANSHIP/DETAIL]: Physical state (e.g., "Intricate Clockwork", "Glowing Neon Finish").
+           - **Format**: \`[ERA/PERIOD], [CULTURAL/NATIONAL STYLE], [ITEM NAME], [CRAFTSMANSHIP/DETAIL]\`
+         * **\`hybrid\`**:
+           - **Field Definition**:
+             * [ERA/PERIOD]: Setting anchor (e.g., "Steam Era", "2150 Sci-Fi").
+             * [NATIONALITY/ETHNICITY]: Dominant visual DNA (e.g., "Victorian British", "Mixed-race Martian").
+             * [HYBRID TYPE]: Nature of the fusion (e.g., "Clockwork Android", "Genetic Chimera").
+             * [GENDER]: Biological/Apparent sex (e.g., "Female", "Androgynous").
+             * [AGE]: Perceived age (e.g., "Manufactured 20s", "30s").
+           - **Format**: \`[ERA/PERIOD], [NATIONALITY/ETHNICITY], [HYBRID TYPE], [GENDER], [AGE]\`
        - **Mandatory First Field**: **[ERA / PERIOD]** (e.g., "1944 WWII", "2077 Cyberpunk", "Modern Day", "15th Century").
        - **Subsequent Fields (Include ONLY if applicable)**:
          - **[GENDER]** (Human/Hybrid/Creature): "Male", "Female", "Androgynous".
@@ -207,42 +248,42 @@ export const POST_MASTER_STYLE_INFO_PROMPT = `
        - **Type-Specific Examples (Reference Only)**:
          * **Constraint (Anti-Plagiarism)**: 
            These examples are for format reference ONLY. Do NOT copy specific values (e.g., "M4 Sherman") unless they explicitly appear in the entire context from <full_script_context>. You MUST derive the actual data from the user's input script.
-         * **[Human]**:
-           1. "1944 WWII, Infantry Soldier, Male, Caucasian American, Late 20s" (Standard Soldier)
-           2. "15th Century Feudal Japan, Samurai Warrior, Male, Japanese, 40s" (Samurai)
-           3. "1980s Tokyo Bubble, Corporate Salaryman, Male, Japanese, Early 30s" (Salaryman)
-           4. "Victorian London, Street Urchin, Female, British, Teenager" (Low Class)
-           5. "2140 Post-Apocalypse, Wasteland Survivor, Female, Mixed Race, 20s" (Survivor)
-         * **[Machine]**:
-           1. "1944 WWII, M4 Sherman Tank, 1943 Production Model"
-           2. "1980s Retro-Future, Delorean Time Machine, Modified"
-           3. "2077 Cyberpunk, Arasaka Combat Mech, Prototype Unit"
-           4. "Modern Day, DJI Mavic Drone, Consumer Model"
-           5. "Steampunk Era, Steam-Powered Walker, Brass Prototype"
-         * **[Creature]**:
-           1. "High Fantasy, Orc Warlord, Male, Adult"
-           2. "Lovecraftian Horror, Deep One, N/A, Ancient"
-           3. "Greek Mythology, Medusa, Female, Adult"
-           4. "Sci-Fi Horror, Xenomorph, Queen, Mature"
-           5. "Folklore, Bigfoot, Male, Adult"
-         * **[Animal]**:
-           1. "Prehistoric, Sabertooth Tiger, Adult"
-           2. "Medieval Europe, War Horse, Prime Adult"
-           3. "Modern Urban, Stray Cat, Juvenile"
-           4. "19th Century American West, Bison, Adult"
-           5. "Antarctic Expedition, Husky Sled Dog, Adult"
-         * **[Object]**:
-           1. "Victorian Era, Antique Pocket Watch, 1890s Craftsmanship"
-           2. "1944 WWII, M1 Garand Rifle, Standard Issue"
-           3. "Cyberpunk, Data Shard, Glowing Red"
-           4. "Ancient Egypt, Canopic Jar, Alabaster"
-           5. "Modern Office, Coffee Mug, Ceramic"
-         * **[Hybrid]**:
-           1. "2150 Sci-Fi, Cyborg Mercenary, Female, Japanese, 30s"
-           2. "High Fantasy, Centaur, Male, Greek Wilderness, Adult"
-           3. "Bio-Horror, Mutated Subject, Male, Lab-Grown, Unknown Age"
-           4. "Steampunk, Clockwork Android, Female, Victorian London, Manufactured"
-           5. "Mythology, Minotaur, Male, Cretan Labyrinth, Adult"
+         * **\`human\`**
+           1. "1944 WWII, Caucasian American, Infantry Soldier, Male, Late 20s"
+           2. "15th Century Feudal Japan, Japanese, Samurai Warrior, Male, 40s"
+           3. "1980s Tokyo Bubble, Japanese, Corporate Salaryman, Male, Early 30s"
+           4. "Victorian London, British, Street Urchin, Female, Teenager"
+           5. "2140 Post-Apocalypse, Mixed Race, Wasteland Survivor, Female, 20s"
+         * **\`machine\`**
+           1. "1944 WWII, US Army, M4 Sherman Tank, Medium Tank, 1943 Production Model"
+           2. "1980s Retro-Future, American Automotive, Delorean Time Machine, Modified Sportscar, 1981 Base Model"
+           3. "2077 Cyberpunk, Arasaka Japanese Corp, Arasaka Combat Mech, Prototype Unit, Heavy Class"
+           4. "Modern Day, Chinese Tech, DJI Mavic Drone, Consumer Quadcopter, 2020s Release"
+           5. "Steampunk Era, British Victorian, Steam-Powered Walker, Brass Prototype, Coal-Burning Spec"
+         * **\`creature\`**
+           1. "High Fantasy, Nordic Mythos, Orc Warlord, Male, Adult"
+           2. "Lovecraftian Horror, Oceanic Abyssal, Deep One, N/A, Ancient"
+           3. "Greek Mythology, Ancient Greek, Medusa, Female, Adult"
+           4. "Sci-Fi Horror, Extraterrestrial, Xenomorph, Queen, Mature"
+           5. "Folklore, North American, Bigfoot, Male, Adult"
+         * **\`animal\`**
+           1. "Prehistoric, North American, Sabertooth Tiger, N/A, Adult"
+           2. "Medieval Europe, European, War Horse, N/A, Prime Adult"
+           3. "Modern Urban, Domestic, Stray Cat, N/A, Juvenile"
+           4. "19th Century American West, Great Plains, Bison, N/A, Adult"
+           5. "Antarctic Expedition, Arctic Sled-dog Breed, Husky, N/A, Adult"
+         * **\`object\`**
+           1. "Victorian Era, British Steampunk, Antique Pocket Watch, 1890s Craftsmanship"
+           2. "1944 WWII, US Military Issue, M1 Garand Rifle, Standard Issue Detail"
+           3. "2077 Cyberpunk, Neon-Tech Style, Data Shard, Glowing Red Finish"
+           4. "Ancient Egypt, Egyptian Artifact, Canopic Jar, Alabaster Craftsmanship"
+           5. "Modern Day, Commercial Minimalist, Coffee Mug, Ceramic Texture"
+         * **\`hybrid\`**
+           1. "2150 Sci-Fi, Japanese Cybernetic, Cyborg Mercenary, Female, 30s"
+           2. "High Fantasy, Greek Mythology, Centaur, Male, Adult"
+           3. "Bio-Horror, Artificial Genetic, Mutated Subject, Male, Unknown Age"
+           4. "Steampunk Era, Victorian British, Clockwork Android, Female, Manufactured Appearance"
+           5. "Ancient Mythology, Cretan Greek, Minotaur, Male, Adult"
     5. **\`appearance\`**: The comprehensive visual definition of the entity. 
        - **Global Guidelines**: All sub-fields must strictly adhere to the following protocols to ensure era-consistency and ethical neutrality.
        **[Strict Contextual & Neutrality Protocols]**

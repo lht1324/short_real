@@ -1,0 +1,208 @@
+Scene #1 postVideoGenPrompt() Result
+Scene Summary: A boxer in a dynamic stance prepares for the next round, displaying tension in his defined muscles and sweat glistening as the crowd cheers.
+Scene Summary Reason: This reflects both the physical state of the boxer and the energetic atmosphere of the arena.
+Primary Movement: Dynamic tension and energy before action.
+Primary Movement Reason: The boxer's coiled stance indicates readiness for imminent motion, highlighting his muscular definition and resolve.
+Narrative Vibe: COMBAT
+Narrative Vibe Reason: The scene depicts an active match environment filled with tension and anticipation as the crowd erupts.
+Selected INTENSITY_TIER: HIGH
+INTENSITY_TIER Selected Reason: The boxer is in a moment of dynamic readiness, characterized by muscle tension and physical anticipation.
+Identity Logic: The boxer’s mixed ethnicity, role, and modern era are preserved in motion through the depiction of his athleticism and detailed visuals, enhancing relatability and authenticity.
+Action Focus: The transition from a static narrative of sweat to an active portrayal of kinetic energy in the boxer's poised stance.
+- - - Primary Narrative Block - - -
+Entity[1]
+Raw Sentence: The main hero, a tall muscular boxer, is flexing powerfully, sweat glistening against his skin.
+Action Type: Continuous
+Action Type Reason: The boxer is in a sustained moment of tension while preparing for the next exchange of blows.
+Verb Reason: The verb 'flexing' was chosen to indicate the employ of muscle tension characteristic of combat, matched to the HIGH intensity tier.
+Adverb Reason: Glistening underscores the HIGH kinetic energy level and the visual emphasis on sweat reflecting the harsh lights.
+- - - Atmospheric Lighting Delta - - -
+Delta: A warm spotlight bathes the boxer in radiant light, amplifying the drama of the moment.
+Delta Reason: This lighting matches the narrative vibe of combat, heightening the intensity as the arena erupts.
+- - - Cinematic Camera Vectors - - -
+Camera Action: Zoom Out and Pedestal Up with Handheld Shaky aggressively
+Subject Vectors: [$0X$, $+Y$, $-Z$]
+Subject Vectors Reasoning: The subject is leaping upward in the center of the frame, indicating a vertical motion to engage the audience with intensity.
+- - - Style - - -
+Style Slot 1: Authentic raw textures with clean clarity in 4k fidelity,
+Style Slot 2: while the initial structural integrity of the boxer remains perfectly intact and consistent throughout the motion.
+Style Slot 1 Reason: Raw textures are aligned with the physicality of the boxing scene, enhancing realism.
+Style Slot 2 Reason: This instruction ensures the boxer's detailed motion and environment remain visually coherent.
+Reasoning: 1) The tags selected from the vocabulary_depot such as 'flexing' and 'glistening' enhance the kinetic quality of the scene. 2) The camera vector focuses on the boxer's upward motion to accentuate the dynamic action within the arena. 3) The atmospheric strategy employed with high-intensity spotlighting avoids freezing while showcasing the combat environment effectively, supporting kinetic energy while maintaining clarity in the midst of action.
+- - - Final Output Structure - - -
+Primary Narrative Block: The main hero, a tall muscular boxer, is flexing powerfully, sweat glistening against his skin.
+Atmospheric/Lighting Delta: A warm spotlight bathes the boxer in radiant light, amplifying the drama of the moment.
+Cinematic Camera Vector: CINEMATIC_CAMERA_VECTORS the main hero in a dynamic stance.
+Style: Authentic raw textures with clean clarity in 4k fidelity, while the initial structural integrity of the boxer remains perfectly intact and consistent throughout the motion.
+videoGenPrompt: The main hero, a tall muscular boxer, is flexing powerfully, sweat glistening against his skin, amidst a warm spotlight bathing the boxer in radiant light, amplifying the drama of the moment, captured with CINEMATIC_CAMERA_VECTORS the main hero in a dynamic stance, authentic raw textures with clean clarity in 4k fidelity, while the initial structural integrity of the boxer remains perfectly intact and consistent throughout the motion.
+assembledVideoGenPrompt: The main hero, a tall muscular boxer, is flexing powerfully, sweat glistening against his skin, amidst a warm spotlight bathes the boxer in radiant light, amplifying the drama of the moment, captured with anamorphic Lens, Deep Focus, 9:16 Portrait Cinema, Long/Wide, Zoom Out and Pedestal Up with Handheld Shaky aggressively the main hero in a dynamic stance, rendered in authentic raw textures with clean clarity in 4k fidelity, while the initial structural integrity of the boxer remains perfectly intact and consistent throughout the motion.
+
+Scene #2 postVideoGenPrompt() Result
+Scene Summary: A determined boxer channels his exhaustion and resolve, preparing to engage as the crowd intensifies with anticipation.
+Scene Summary Reason: The summary encapsulates the boxer's emotional state and setting within the context of a boxing match, reflecting the drama and energy of the moment.
+Primary Movement: The boxer stands in a dynamic stance, clenching his jaw and preparing for action as sweat glistens on his skin.
+Primary Movement Reason: The boxer's tense pose and clenched jaw indicate readiness and physical exertion, aligning with the intense atmosphere of the boxing ring.
+Narrative Vibe: COMBAT
+Narrative Vibe Reason: The energetic and tense atmosphere of the boxing match creates a strong sense of conflict and anticipation.
+Selected INTENSITY_TIER: HIGH
+INTENSITY_TIER Selected Reason: The primary movement is characterized by decisive kinetic energy, as the boxer is visibly engaged and ready to strike, indicating a high level of action.
+Identity Logic: The boxer's modern era, role as a professional athlete, and defined physical traits are preserved as he exhibits a dynamic stance, highlighting tension and readiness.
+Action Focus: The transformation from simple descriptive narration to action-driven kinetic verbs is executed to enhance visual engagement and illustrate the boxer's intensity.
+- - - Primary Narrative Block - - -
+Entity[entity_1]
+Raw Sentence: The boxer stands firmly, muscles tense and jaw clenched, emanating fierce resolve as sweat glistens on his skin.
+Action Type: Temporary-Single
+Action Type Reason: The action describes a distinct, controlled pose rather than continuous movement, focusing on the boxer's readiness for combat.
+Verb Reason: The use of 'stands' effectively conveys the boxer's situational awareness and readiness, aligning with the action context of high intensity.
+Adverb Reason:
+- - - Atmospheric Lighting Delta - - -
+Delta: Single high-intensity overhead key spotlight casting dynamic shadows while reflections from the ring floor enhance visibility.
+Delta Reason: The lighting setup supports the combat vibe, underlining the drama and intensity of the boxing match.
+- - - Cinematic Camera Vectors - - -
+Camera Action: Zoom Out with Handheld Shaky aggressively
+Subject Vectors: [$0X$, $0Y$, $-Z$]
+Subject Vectors Reasoning: The subject is centered in the frame, indicating no lateral movement, and maintains a dominant presence in the foreground with a clear focus on his readiness.
+- - - Style - - -
+Style Slot 1: Raw textures and clean resolution in 4K fidelity
+Style Slot 2: the initial structural integrity of the subject remains perfectly intact and consistent throughout the motion.
+Style Slot 1 Reason: Raw textures emphasize the physicality of the boxer and the ring environment, enhancing realism.
+Style Slot 2 Reason: Preserving structural integrity is crucial to maintain the authenticity of the intense moment represented.
+Reasoning: The vocabulary selections were made based on the physical engagement of the boxer and the intense atmosphere of the match. The choice of camera focus on the boxer's dynamic stance underlines the athleticism while the atmospheric setup accentuates the combat theme. This approach maximizes visual impact without sacrificing the physical authenticity of the scene.
+- - - Final Output Structure - - -
+Primary Narrative Block: The boxer stands firmly, muscles tense and jaw clenched, emanating fierce resolve as sweat glistens on his skin.
+Atmospheric/Lighting Delta: Single high-intensity overhead key spotlight casting dynamic shadows while reflections from the ring floor enhance visibility.
+Cinematic Camera Vector: CINEMATIC_CAMERA_VECTORS the focused boxer in a dynamic stance
+Style: Raw textures and clean resolution in 4K fidelity, while the initial structural integrity of the subject remains perfectly intact and consistent throughout the motion.
+videoGenPrompt: The boxer stands firmly, muscles tense and jaw clenched, emanating fierce resolve as sweat glistens on his skin, while a single high-intensity overhead key spotlight casts dynamic shadows, captured with CINEMATIC_CAMERA_VECTORS the focused boxer in a dynamic stance, rendered in raw textures and clean resolution in 4K fidelity, while the initial structural integrity of the subject remains perfectly intact and consistent throughout the motion.
+assembledVideoGenPrompt: The boxer stands firmly, muscles tense and jaw clenched, emanating fierce resolve as sweat glistens on his skin, amidst single high-intensity overhead key spotlight casting dynamic shadows while reflections from the ring floor enhance visibility, captured with anamorphic Lens, Deep Focus, 9:16 Portrait Cinema, Long/Wide, Zoom Out with Handheld Shaky aggressively the focused boxer in a dynamic stance, rendered in raw textures and clean resolution in 4K fidelity, while the initial structural integrity of the subject remains perfectly intact and consistent throughout the motion.
+
+Scene #3 postVideoGenPrompt() Result
+Scene Summary: A boxer steps back from the ropes, raising his gloves as the referee signals the fight to continue, preparing for the next round.
+Scene Summary Reason: This summary captures the main action happening in the scene as the boxer readies himself while the fight continues, focusing on both the boxer's posture and the referee's signaling.
+Primary Movement: Dynamic stance, raising gloves, stepping back.
+Primary Movement Reason: The boxer's action of raising his gloves indicates readiness and anticipation, while stepping back suggests he's positioning himself strategically within the ring.
+Narrative Vibe: ANXIOUS
+Narrative Vibe Reason: The tension in the air, as the boxer prepares for the upcoming clash, creates a vibe of anxiety and anticipation.
+Selected INTENSITY_TIER: LOW
+INTENSITY_TIER Selected Reason: The movement involves a controlled, rhythmic stance as the boxer prepares for the fight, indicating a lower tier of intensity rather than explosive action.
+Identity Logic: The boxer's modern-day persona as a professional athlete is emphasized through his physicality and attire, maintaining a consistent theme of competitive sportsmanship during motion.
+Action Focus: The shift from narrative to kinetic verb emphasizes the boxer's physical preparation and stance in the ring, showcasing a balance of readiness and tension in the moment.
+- - - Primary Narrative Block - - -
+Entity[1]
+Raw Sentence: The tall muscular professional boxer is stepping back from the ropes, raising his gloves dynamically, his muscles tense and ready for action.
+Action Type: Continuous
+Action Type Reason: The action of stepping back while raising gloves indicates a sustained motion with a focus on readiness.
+Verb Reason: The verb 'stepping' was chosen as it conveys the action of positioning which corresponds to the intense moment in the boxing ring.
+Adverb Reason: The adverb 'dynamically' adds intensity to the action, reflecting the boxer's readiness.
+Entity[2]
+Raw Sentence: The athletic referee is signaling the fight continues, arm extended with gloved hand dropping to indicate the resuming action.
+Action Type: Continuous
+Action Type Reason: The action of extending the arm to signal indicates a sustained interaction in the context of the ongoing fight.
+Verb Reason: The verb 'signaling' illustrates the referee's clear intention, aligning with the ongoing narrative of the bout.
+Adverb Reason: No adverb is needed for this action as it is already a strong directive.
+- - - Atmospheric Lighting Delta - - -
+Delta: The lighting exposes sweat glistening dynamically off the boxer's skin as he prepares for the fight, while the high-intensity overhead spotlight casts deep shadows.
+Delta Reason: The lighting accentuates the physicality of the scene, enhancing the boxer's sweat and tension in the moment.
+- - - Cinematic Camera Vectors - - -
+Camera Action: Zoom Out with Handheld Shaky smoothly
+Subject Vectors: [$0X$, $0Y$, $-Z$]
+Subject Vectors Reasoning: The subject's stance remains grounded, with no lateral motion, while the camera remains centered on the fight, reinforcing the atmosphere of anticipation.
+- - - Style - - -
+Style Slot 1: Clean textures with raw fidelity in 4K resolution.
+Style Slot 2: The initial structural integrity of the subject remains perfectly intact and consistent throughout the motion.
+Style Slot 1 Reason: Clean textures enhance overall clarity and focus on the fighters’ physical details, aligning with the high-security athletic setting.
+Style Slot 2 Reason: Preserving the subject's integrity ensures the authentic representation of the boxer's physique and environment.
+Reasoning: The vocabulary selected emphasizes the dynamic nature of the fight while avoiding excessive redundancy. The high-key lighting setup enhances the action and maintains thematic alignment with the sports arena atmosphere. This ensures clarity of movement and emotion during the boxing match, avoiding freezing effects in the visual narrative.
+- - - Final Output Structure - - -
+Primary Narrative Block: The tall muscular professional boxer is stepping back from the ropes, raising his gloves dynamically, his muscles tense and ready for action. The athletic referee is signaling the fight continues, arm extended with gloved hand dropping to indicate the resuming action.
+Atmospheric/Lighting Delta: The lighting exposes sweat glistening dynamically off the boxer's skin as he prepares for the fight, while the high-intensity overhead spotlight casts deep shadows.
+Cinematic Camera Vector: CINEMATIC_CAMERA_VECTORS the centered arena capturing the fighters in action.
+Style: Clean textures with raw fidelity in 4K resolution, while the initial structural integrity of the subject remains perfectly intact and consistent throughout the motion.
+videoGenPrompt: The tall muscular professional boxer is stepping back from the ropes, raising his gloves dynamically, his muscles tense and ready for action. The athletic referee is signaling the fight continues, arm extended with gloved hand dropping to indicate the resuming action, enhanced by the lighting exposing sweat glistening dynamically off the boxer's skin as he prepares for the fight, while the high-intensity overhead spotlight casts deep shadows, captured with CINEMATIC_CAMERA_VECTORS the centered arena capturing the fighters in action, rendered in clean textures with raw fidelity in 4K resolution while the initial structural integrity of the subject remains perfectly intact and consistent throughout the motion.
+assembledVideoGenPrompt: The tall muscular professional boxer is stepping back from the ropes, raising his gloves dynamically, his muscles tense and ready for action. The athletic referee is signaling the fight continues, arm extended with gloved hand dropping to indicate the resuming action, amidst the lighting exposes sweat glistening dynamically off the boxer's skin as he prepares for the fight, while the high-intensity overhead spotlight casts deep shadows, captured with anamorphic Lens, Deep Focus, 9:16 Portrait Cinema, Long/Wide, Zoom Out with Handheld Shaky smoothly the centered arena capturing the fighters in action, rendered in clean textures with raw fidelity in 4K resolution, while the initial structural integrity of the subject remains perfectly intact and consistent throughout the motion.
+
+Scene #4 postVideoGenPrompt() Result
+Scene Summary: The two fighters clash intensely in the boxing ring, surrounded by the roar of the crowd, with sweat glistening on their bodies as strikes are delivered.
+Scene Summary Reason: The summary reflects the action of the fighters colliding and the vigorous atmosphere of the boxing match, indicating the excitement conveyed in the video description.
+Primary Movement: Active collision and dynamic striking between the fighters.
+Primary Movement Reason: This movement is critical as it emphasizes the core activity of combating in the boxing context.
+Narrative Vibe: COMBAT
+Narrative Vibe Reason: The intense physical engagement and the surrounding energy from the crowd establishes a combat vibe.
+Selected INTENSITY_TIER: HIGH
+INTENSITY_TIER Selected Reason: The pronounced action of the fighters clashing indicates a decisive kinetic energy, aligning with the HIGH intensity tier.
+Identity Logic: The subject's identity as professional boxers is preserved through their attire and physical expressions reflective of their combat roles, maintaining the era and sport context.
+Action Focus: The shift from static observation to expressions of kinetic energy highlights the dynamic movements and physical interactions inherent to boxing matches.
+- - - Primary Narrative Block - - -
+Entity[main_hero]
+Raw Sentence: The center-weighted boxer in sweat-soaked red satin trunks **extends** his fist decisively, causing **dynamic muscle ripple** across his arms.
+Action Type: Temporary-Single
+Action Type Reason: The boxer initiates a distinct action of extending his fist, illustrating a moment of active engagement in combat.
+Verb Reason: The verb 'extends' reflects the explosive kinetic force appropriate for the boxing action dynamics as he prepares to hit.
+Adverb Reason:
+Entity[sub_character]
+Raw Sentence: The dynamic mid-frame opponent fighter in dark blue satin trunks **shifts** his weight with a guarded stance, causing **tense muscle definition** across his torso.
+Action Type: Temporary-Single
+Action Type Reason: The opponent shifts his stance, which indicates a preparatory movement to counter the attack, qualifying as active during the fight.
+Verb Reason: The verb 'shifts' captures the controlled maneuvering essential during combat, aligning with the physical strain of the intensity level.
+Adverb Reason:
+- - - Atmospheric Lighting Delta - - -
+Delta: Bright overhead spotlight illuminates the ring while rapid sweat glistens across their bodies.
+Delta Reason: The lighting creates a dramatic contrast, enhancing the intensity of the combat atmosphere and the physical strain of the fighters.
+Delta: Surrounding crowd noise crescendos with every move, amplifying the tension within the ring.
+Delta Reason: The reaction of the crowd adds to the suspense and excitement, simulating a more immersive fight environment.
+- - - Cinematic Camera Vectors - - -
+Camera Action: Zoom Out with Handheld Shaky aggressively
+Subject Vectors: [$0X$, $0Y$, $-Z$]
+Subject Vectors Reasoning: The fighters maintain a dynamic interaction in a static horizontal camera frame, reflecting the intensity and focus of their engagement.
+- - - Style - - -
+Style Slot 1: Raw textures with clean visuals in 4K fidelity
+Style Slot 2: maintain absolute consistency of the subject's form and environmental details.
+Style Slot 1 Reason: The raw textures align with the physicality and combat wear of the fighters, enhancing the visual depth during intense moments.
+Style Slot 2 Reason: This ensures viewers perceive an authentic and cohesive environment, crucial for engagement.
+Reasoning: The tags selected reflect the intense physical activity of fighters maintaining high momentum in combat, appropriately aligning with camera technology conducive to portraying the vibrancy of the boxing match, and atmospheric strategies to amplify engagement without freezing the excitement.
+- - - Final Output Structure - - -
+Primary Narrative Block: The center-weighted boxer in sweat-soaked red satin trunks extends his fist decisively, causing dynamic muscle ripple across his arms. The dynamic mid-frame opponent fighter in dark blue satin trunks shifts his weight with a guarded stance, causing tense muscle definition across his torso.
+Atmospheric/Lighting Delta: Bright overhead spotlight illuminates the ring while rapid sweat glistens across their bodies, surrounded by crowd noise crescendos with every move, amplifying the tension within the ring.
+Cinematic Camera Vector: CINEMATIC_CAMERA_VECTORS the dynamic ring interaction.
+Style: Raw textures with clean visuals in 4K fidelity, while maintain absolute consistency of the subject's form and environmental details.
+videoGenPrompt: The center-weighted boxer in sweat-soaked red satin trunks extends his fist decisively, causing dynamic muscle ripple across his arms. The dynamic mid-frame opponent fighter in dark blue satin trunks shifts his weight with a guarded stance, causing tense muscle definition across his torso, bright overhead spotlight illuminates the ring while rapid sweat glistens across their bodies, surrounded by crowd noise crescendos with every move, amplifying the tension within the ring, captured with CINEMATIC_CAMERA_VECTORS the dynamic ring interaction, rendered in raw textures with clean visuals in 4K fidelity, while maintain absolute consistency of the subject's form and environmental details.
+assembledVideoGenPrompt: The center-weighted boxer in sweat-soaked red satin trunks extends his fist decisively, causing dynamic muscle ripple across his arms. The dynamic mid-frame opponent fighter in dark blue satin trunks shifts his weight with a guarded stance, causing tense muscle definition across his torso, amidst bright overhead spotlight illuminates the ring while rapid sweat glistens across their bodies, surrounded by crowd noise crescendos with every move, amplifying the tension within the ring, captured with anamorphic Lens, Deep Focus, 9:16 Portrait Cinema, Long/Wide, Zoom Out with Handheld Shaky aggressively the dynamic ring interaction, rendered in raw textures with clean visuals in 4K fidelity, while maintain absolute consistency of the subject's form and environmental details.
+
+Scene #5 postVideoGenPrompt() Result
+Scene Summary: The stadium erupts in excitement as the knockout occurs, with a sea of spectators cheering enthusiastically.
+Scene Summary Reason: This captures the climax of the boxing match, showing the lively atmosphere and the emotional peak of the audience.
+Primary Movement: The crowd is cheering energetically, creating a rhythmic wave of excitement.
+Primary Movement Reason: This movement reflects the intense emotional response of the spectators witnessing the knockout.
+Narrative Vibe: FOCUS
+Narrative Vibe Reason: The scene's concentrated energy is focused on the climax of the boxing event, highlighting the moment of victory and audience engagement.
+Selected INTENSITY_TIER: LOW
+INTENSITY_TIER Selected Reason: The movement is celebratory yet contained within the cheering crowd, indicating a lower intensity of kinetic activity rather than explosive or chaotic movement.
+Identity Logic: The spectators' modern casual attire and positioning reflect their role as onlookers in a contemporary sports setting, maintaining their identity amidst the movements of the match.
+Action Focus: The narrative shifts from a general description of the knockout to specific actions of the crowd, focusing on their reactions and interactions as they celebrate.
+- - - Primary Narrative Block - - -
+Entity[1]
+Raw Sentence: The looming background presence of various casual cotton and denim clothing absorbs the ambient light as the crowd cheers energetically, creating a rhythmic wave of excitement.
+Action Type: Continuous
+Action Type Reason: The crowd's ongoing cheering represents a sustained, rhythmic reaction to the knockout, showcasing their engagement throughout the scene.
+Verb Reason: The choice of 'cheering' aligns with the LOW intensity tier, reflecting the fluid, rhythmic movement of the spectators as they react to the knockout.
+Adverb Reason: The adverb isn't applicable here since the action type is continuous, but the cheering captures the emotional intensity nicely.
+- - - Atmospheric Lighting Delta - - -
+Delta: Ambient lighting softens over the crowd while the overhead spotlight enhances the climax of the knockout, creating a vibrant visual show.
+Delta Reason: This choice reflects the lighting dynamics of a live sports event, which typically features intense spotlights and ambient light interplay to accentuate moments of action.
+- - - Cinematic Camera Vectors - - -
+Camera Action: Zoom Out and Tilt Up smoothly
+Subject Vectors: [$0X$, $+Y$, $-Z$]
+Subject Vectors Reasoning: The crowd is stationary but rises in excitement, emphasizing their vertical positioning as they cheer, with no lateral movement indicated.
+- - - Style - - -
+Style Slot 1: Authentic raw textures with clean clarity in 4k resolution, while the subject's identity and environmental geometry are consistently preserved with absolute precision.
+Style Slot 2: The initial structural integrity of the spectators and their clothing remains perfectly intact and consistent throughout the motion.
+Style Slot 1 Reason: Raw textures and clarity enhance the visual fidelity of the arena atmosphere, adding realism to the depiction of the crowd's reactions.
+Style Slot 2 Reason: Preserving the structural integrity ensures the crowd and setting authenticity are maintained in the dynamic visual flows.
+Reasoning: The selection of specific kinetic descriptors reflects the fluid vibrancy of the crowd's reactions while maintaining a coherent visual identity. The choice of camera techniques and lighting aligns with the grand atmosphere typically found in sports arenas, ensuring a dynamic visual narrative that complements the cheer of the audience.
+- - - Final Output Structure - - -
+Primary Narrative Block: The looming background presence of various casual cotton and denim clothing absorbs the ambient light as the crowd cheers energetically, creating a rhythmic wave of excitement.
+Atmospheric/Lighting Delta: Ambient lighting softens over the crowd while the overhead spotlight enhances the climax of the knockout, creating a vibrant visual show.
+Cinematic Camera Vector: CINEMATIC_CAMERA_VECTORS the cheering crowd in the sports arena
+Style: Authentic raw textures with clean clarity in 4k resolution, while the subject's identity and environmental geometry are consistently preserved with absolute precision.
+videoGenPrompt: A droplet of sweat rolls down the boxer’s bruised temple as he summons fierce resolve. The looming background presence of various casual cotton and denim clothing absorbs the ambient light as the crowd cheers energetically, creating a rhythmic wave of excitement, amidst ambient lighting softens over the crowd while the overhead spotlight enhances the climax of the knockout, creating a vibrant visual show, captured with CINEMATIC_CAMERA_VECTORS the cheering crowd in the sports arena, featuring authentic raw textures with clean clarity in 4k resolution, while the subject's identity and environmental geometry are consistently preserved with absolute precision.
+assembledVideoGenPrompt: The looming background presence of various casual cotton and denim clothing absorbs the ambient light as the crowd cheers energetically, creating a rhythmic wave of excitement, amidst ambient lighting softens over the crowd while the overhead spotlight enhances the climax of the knockout, creating a vibrant visual show, captured with anamorphic Lens, Deep Focus, 9:16 Portrait Cinema, Long/Wide, Zoom Out and Tilt Up smoothly the cheering crowd in the sports arena, rendered in authentic raw textures with clean clarity in 4k resolution, while the subject's identity and environmental geometry are consistently preserved with absolute precision.

@@ -1,3 +1,5 @@
+import {STYLE_PROMPT_LIBRARY} from "@/api/types/open-ai/StylePromptLibrary";
+
 export interface TechnicalIntent {
     angleIntent: "Default/Neutral" | "Heroic/Scale" | "Extreme Power/Ground-level" | "Dialogue/Interaction" | "Surveillance/Map-view" | "Stylized/Technical";
     compositionIntent: "Symmetry" | "Balance" | "Strength" | "Action" | "Motion" | "Depth" | "Minimalism";
@@ -343,8 +345,17 @@ export function assembleFullImageGenPromptSentence(
             const entity = sceneEntityManifestList.find(e => e.id === subject.id);
             if (!entity) return subject.description;
 
+            /**
+             * - **Structures by `type`**:
+             *   * **`human`**: `[ERA/PERIOD], [NATIONALITY/ETHNICITY], [ROLE], [GENDER], [AGE]`
+             *   * **`machine`**: `[ERA/PERIOD], [NATION/MARKINGS], [MODEL NAME], [SUB-TYPE], [PRODUCTION YEAR/SPEC]`
+             *   * **`creature`**: `[ERA/PERIOD], [CULTURAL ORIGIN], [SPECIES/ARCHETYPE], [GENDER/`N/A`], [AGE/MATURITY]`
+             *   * **`animal`**: `[ERA/PERIOD], [GEOGRAPHIC REGION], [SPECIES], [GENDER/`N/A`], [AGE/MATURITY]`
+             *   * **`object`**: `[ERA/PERIOD], [CULTURAL/NATIONAL STYLE], [ITEM NAME], [CRAFTSMANSHIP/DETAIL]`
+             *   * **`hybrid`**: `[ERA/PERIOD], [NATIONALITY/ETHNICITY], [HYBRID TYPE], [GENDER], [AGE]`
+             */
             const demoParts = entity.demographics.split(', ');
-            const demographicAnchor = `${demoParts[0]} ${demoParts[1]}`;
+            const demographicAnchor = `${demoParts[0]} ${demoParts[1]} ${demoParts[2]}`;
 
             const hasHelmet = entity.appearance.accessories?.some(acc => acc.toLowerCase().includes('helmet') || acc.toLowerCase().includes('hat'));
 
@@ -386,7 +397,7 @@ export function assembleFullImageGenPromptSentence(
     if (canvasType === 'Vertical' && style.toLowerCase().includes("cinematic")) {
         safeStyle = style.replace(/cinematic/gi, "high-fidelity RAW portrait photography");
     }
-    const sentence3 = `rendered in ${safeStyle}, this image is captured with a ${camera.lens} lens at ${camera.fNumber} for ${camera.focus} and ISO ${camera.ISO}, featuring ${formatList(effects)}`;
+    const sentence3 = `rendered in ${safeStyle}, captured with a ${camera.lens} lens at ${camera.fNumber} for ${camera.focus} and ISO ${camera.ISO}, featuring ${formatList(effects)}`;
 
     // 최종 결과: 3개의 문장을 공백 한 칸씩 띄워서 합침
     return `${sentence1}, ${sentence2}, ${sentence3}.`.replaceAll(".,", ",");
@@ -396,12 +407,14 @@ export function assembleFullImageGenPromptSentence(
  * @param technicalIntent
  * @param masterStyleInfo
  * @param entityManifestList
+ * @param styleId
  * @param aspectRatio
  */
 export function composeOpticalAndTechnicalOption(
     technicalIntent: TechnicalIntent,
     masterStyleInfo: MasterStyleInfo,
     entityManifestList: Entity[],
+    styleId: keyof typeof STYLE_PROMPT_LIBRARY,
     aspectRatio: { width: number; height: number; } = { width: 9, height: 16 }
 ): Omit<FluxPrompt, 'scene' | 'subjects' | 'color_palette' | 'lighting' | 'mood' | 'background'> {
     const { width, height } = aspectRatio;
@@ -410,6 +423,10 @@ export function composeOpticalAndTechnicalOption(
         : width < height
             ? "Vertical"
             : "Square";
+    const {
+        style: definedStyle,
+        effects: definedEffects,
+    } = STYLE_PROMPT_LIBRARY[styleId];
     const framingStyle = masterStyleInfo.composition.framingStyle;
     const focusDepth = masterStyleInfo.optics.focusDepth;
     const grainLevel = masterStyleInfo.fidelity.grainLevel;
@@ -425,44 +442,39 @@ export function composeOpticalAndTechnicalOption(
             return entity.physics_profile?.action_context.includes('aerodynamics') === true;
         });
 
-        switch (canvasType) {
-            case "Horizontal": {
-                switch (angleIntent) {
-                    case "Default/Neutral": return "eye level"
-                    case "Heroic/Scale": return "low angle"
-                    case "Extreme Power/Ground-level": return "worm's-eye"
-                    case "Dialogue/Interaction": return "over-the-shoulder"
-                    case "Surveillance/Map-view": return isEveryEntityAeroDynamics
-                        ? "bird's-eye"
-                        : "high angle shot looking down"
-                    case "Stylized/Technical": return "isometric"
-                }
-            }
-            case "Vertical": {
-                switch (angleIntent) {
-                    case "Default/Neutral": return "eye level"
-                    case "Heroic/Scale":
-                    case "Extreme Power/Ground-level": return "low angle"
-                    case "Dialogue/Interaction": return "over-the-shoulder"
-                    case "Surveillance/Map-view": return "high angle shot looking down"
-                    case "Stylized/Technical": return "slightly low"
-                }
-            }
-            case "Square": {
-                switch (angleIntent) {
-                    case "Default/Neutral":
-                    case "Dialogue/Interaction":
-                    case "Stylized/Technical": return "eye level"
-                    case "Heroic/Scale": return "slightly low"
-                    case "Extreme Power/Ground-level": return "low angle"
-                    case "Surveillance/Map-view": return "high angle"
-                }
+        const angleMap = {
+            "Horizontal": {
+                "Default/Neutral": "eye level",
+                "Heroic/Scale": "low angle",
+                "Extreme Power/Ground-level": "worm's-eye",
+                "Dialogue/Interaction": "over-the-shoulder",
+                "Surveillance/Map-view": isEveryEntityAeroDynamics
+                    ? "bird's-eye"
+                    : "high angle shot looking down",
+                "Stylized/Technical": "isometric"
+            },
+            "Vertical": {
+                "Default/Neutral": "eye level",
+                "Heroic/Scale": "low angle",
+                "Extreme Power/Ground-level": "low angle",
+                "Dialogue/Interaction": "over-the-shoulder",
+                "Surveillance/Map-view": "high angle shot looking down",
+                "Stylized/Technical": "slightly low",
+            },
+            "Square": {
+                "Default/Neutral": "eye level",
+                "Heroic/Scale": "slightly low",
+                "Extreme Power/Ground-level": "low angle",
+                "Dialogue/Interaction": "eye level",
+                "Surveillance/Map-view": "high angle",
+                "Stylized/Technical": "eye level",
             }
         }
+
+        return angleMap[canvasType][angleIntent];
     }
 
     const getDistance = () => {
-        // framingStyle enum으로 교체 후 default 제거
         const distanceMap = {
             "Horizontal": {
                 "Extreme Long/Wide": "extreme wide shot",
@@ -475,7 +487,7 @@ export function composeOpticalAndTechnicalOption(
             "Vertical": {
                 "Extreme Long/Wide": "vertical panoramic environmental shot",
                 "Long/Wide": "full-length vertical capture",
-                "Full/Medium Wide": "full-body shot",
+                "Full/Medium Wide": "full-body shot with headroom",
                 "Medium/Waist": "medium full shot",
                 "Bust/Chest": "medium close-up",
                 "Face/Detail": "close-up",
@@ -490,7 +502,6 @@ export function composeOpticalAndTechnicalOption(
             }
         }
 
-        // 이후 '무조건' 교체
         return distanceMap[canvasType][framingStyle];
     }
     const distance = getDistance();
@@ -657,79 +668,50 @@ export function composeOpticalAndTechnicalOption(
     };
 
     const getComposition = () => {
-            const unifiedCompositionMap = {
-                "Horizontal": {
-                    "Symmetry": "vanishing point center",
-                    "Balance": "rule of thirds",
-                    "Strength": "strong horizontal lines",
-                    "Action": "dynamic off-center",
-                    "Motion": "S-curve through the horizon",
-                    "Depth": "leading lines toward the horizon",
-                    "Minimalism": "minimalist negative space"
-                },
-                "Vertical": {
-                    "Symmetry": "centered vertical symmetry",
-                    "Balance": "vertical rule of thirds",
-                    "Strength": "strong verticals",
-                    "Action": "steep diagonal tension",
-                    "Motion": "vertical S-curve",
-                    "Depth": "low-to-high leading lines",
-                    "Minimalism": "vertical minimalist negative space"
-                },
-                "Square": {
-                    "Symmetry": "central symmetry",
-                    "Balance": "rule of thirds",
-                    "Strength": "centered framing",
-                    "Action": "dynamic off-center",
-                    "Motion": "circular arrangement",
-                    "Depth": "centered framing",
-                    "Minimalism": "minimalist negative space"
-                }
-            };
-            return unifiedCompositionMap[canvasType][technicalIntent.compositionIntent] || "rule of thirds";
+        const unifiedCompositionMap = {
+            "Horizontal": {
+                "Symmetry": "vanishing point center",
+                "Balance": "rule of thirds",
+                "Strength": "strong horizontal lines",
+                "Action": "dynamic off-center",
+                "Motion": "S-curve through the horizon",
+                "Depth": "leading lines toward the horizon",
+                "Minimalism": "minimalist negative space"
+            },
+            "Vertical": {
+                "Symmetry": "centered vertical symmetry",
+                "Balance": "vertical rule of thirds",
+                "Strength": "strong verticals",
+                "Action": "steep diagonal tension",
+                "Motion": "vertical S-curve",
+                "Depth": "low-to-high leading lines",
+                "Minimalism": "vertical minimalist negative space"
+            },
+            "Square": {
+                "Symmetry": "central symmetry",
+                "Balance": "rule of thirds",
+                "Strength": "centered framing",
+                "Action": "dynamic off-center",
+                "Motion": "circular arrangement",
+                "Depth": "centered framing",
+                "Minimalism": "minimalist negative space"
+            }
         };
+        return unifiedCompositionMap[canvasType][technicalIntent.compositionIntent] || "rule of thirds";
+    };
 
     const getStyle = () => {
         const textureDetail = masterStyleInfo.fidelity.textureDetail;
 
-        switch (canvasType) {
-            case "Horizontal": return `Professional cinematic RAW aesthetic with ${textureDetail} detail and ${grainLevel} grain.`
-            case "Vertical": return `High-fidelity RAW portrait photography with ${textureDetail} surface detail and ${grainLevel} organic texture.`
-            case "Square": return `Balanced RAW texture style with ${textureDetail} and ${grainLevel} definition.`
-        }
+        return definedStyle[canvasType](textureDetail, grainLevel);
     }
 
     const getEffects = () => {
-        const effectList: string[] = [];
-
-        switch (grainLevel) {
-            case "Gritty": {
-                effectList.push("heavy film grain");
-                break;
-            }
-            case "Filmic": {
-                effectList.push("subtle film grain");
-                break;
-            }
-            case "Clean": {
-                effectList.push("clean digital sensor finish");
-                break;
-            }
-        }
-
-        switch (canvasType) {
-            case "Horizontal": {
-                effectList.push("4K UHD", "8K resolution", "ultra-sharp details");
-                break;
-            }
-            case "Vertical":
-            case "Square": {
-                effectList.push("highly defined textures", "hyper-detailed rendering", "extreme visual fidelity")
-                break;
-            }
-        }
-
-        return effectList;
+        return [
+            ...definedEffects.grain[grainLevel],
+            ...definedEffects.canvas[canvasType],
+            ...definedEffects.base,
+        ]
     }
 
     const effects = getEffects();

@@ -27,7 +27,7 @@ export const imageServerAPI = {
             try {
                 const output = await falAIClient.subscribe('fal-ai/nano-banana', {
                     input: {
-                        prompt: `${imageGenPromptSentence} --no letterbox`,
+                        prompt: ` --MUST NOT letterbox ${imageGenPromptSentence}`,
                         num_images: 1,
                         aspect_ratio: "9:16",
                         output_format: "jpeg",

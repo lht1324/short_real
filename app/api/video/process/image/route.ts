@@ -53,8 +53,9 @@ export async function POST(request: NextRequest) {
         const videoDescription = videoGenerationTask.video_description;
         const masterStyleInfo = videoGenerationTask.master_style_info;
         const entityManifestList = videoGenerationTask.entity_manifest_list;
+        const styleId = videoGenerationTask.selected_style_id;
 
-        if (!sceneDataList || !videoTitle || !videoDescription || !masterStyleInfo || !entityManifestList) {
+        if (!sceneDataList || !videoTitle || !videoDescription || !masterStyleInfo || !entityManifestList || !styleId) {
             await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
 
             return getNextBaseResponse({
@@ -76,7 +77,7 @@ export async function POST(request: NextRequest) {
                 entityManifestList.filter((entity) => {
                     return sceneData.sceneCastingEntityIdList?.includes(entity.id) === true;
                 }),
-                sceneData.sceneCastingEntityIdList ?? [],
+                styleId,
             );
 
             if (!postImageGenPromptResult.success || !postImageGenPromptResult.imageGenPrompt || !postImageGenPromptResult.imageGenPromptSentence) {
@@ -92,67 +93,67 @@ export async function POST(request: NextRequest) {
         });
         const sceneDataWithImageGenPromptList = await Promise.all(sceneDataWithImageGenPromptPromiseList);
 
-        // TEST!!
-        await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
-
-        return getNextBaseResponse({
-            success: true,
-            status: 200,
-            message: "Generating ImageGenPrompt Test finished."
-        })
-
-        // for (const sceneData of sceneDataWithImageGenPromptList) {
-        //     console.log(`Scene #${sceneData.sceneNumber} postImage() is executed.`);
-        //
-        //     if (!sceneData.imageGenPrompt || !sceneData.imageGenPromptSentence) {
-        //         await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
-        //
-        //         return getNextBaseResponse({
-        //             success: false,
-        //             status: 404,
-        //             error: `Scene #${sceneData.sceneNumber} imageGenPrompt is not exist.`
-        //         });
-        //     }
-        //
-        //     const postImageResult = await imageServerAPI.postImage(
-        //         sceneData.imageGenPrompt,
-        //         sceneData.imageGenPromptSentence,
-        //         taskId,
-        //         sceneData.sceneNumber,
-        //     );
-        //
-        //     if (!postImageResult.success) {
-        //         await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
-        //
-        //         return getNextBaseResponse({
-        //             success: false,
-        //             status: 500,
-        //             error: 'Failed to generate image with Imagen 4.'
-        //         });
-        //     }
-        // }
-        //
-        // const patchVideoGenerationTaskStatusResult = await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, {
-        //     status: VideoGenerationTaskStatus.GENERATING_VIDEO_PROMPT,
-        //     scene_breakdown_list: sceneDataWithImageGenPromptList,
-        // });
-        //
-        // const checkFinalResult = await taskCheckAndCleanupIfCancelled(patchVideoGenerationTaskStatusResult);
-        //
-        // if (checkFinalResult) {
-        //     return checkFinalResult;
-        // }
-        //
-        // // fire and forget
-        // internalFireAndForgetFetch(`${process.env.BASE_URL}/api/video/process/video?taskId=${taskId}`, {
-        //     method: 'POST',
-        // });
+        // // TEST!!
+        // await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
         //
         // return getNextBaseResponse({
         //     success: true,
         //     status: 200,
-        //     message: "Video base images are successfully generated."
+        //     message: "Generating ImageGenPrompt Test finished."
         // })
+
+        for (const sceneData of sceneDataWithImageGenPromptList) {
+            console.log(`Scene #${sceneData.sceneNumber} postImage() is executed.`);
+
+            if (!sceneData.imageGenPrompt || !sceneData.imageGenPromptSentence) {
+                await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
+
+                return getNextBaseResponse({
+                    success: false,
+                    status: 404,
+                    error: `Scene #${sceneData.sceneNumber} imageGenPrompt is not exist.`
+                });
+            }
+
+            const postImageResult = await imageServerAPI.postImage(
+                sceneData.imageGenPrompt,
+                sceneData.imageGenPromptSentence,
+                taskId,
+                sceneData.sceneNumber,
+            );
+
+            if (!postImageResult.success) {
+                await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
+
+                return getNextBaseResponse({
+                    success: false,
+                    status: 500,
+                    error: 'Failed to generate image with Imagen 4.'
+                });
+            }
+        }
+
+        const patchVideoGenerationTaskStatusResult = await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, {
+            status: VideoGenerationTaskStatus.GENERATING_VIDEO_PROMPT,
+            scene_breakdown_list: sceneDataWithImageGenPromptList,
+        });
+
+        const checkFinalResult = await taskCheckAndCleanupIfCancelled(patchVideoGenerationTaskStatusResult);
+
+        if (checkFinalResult) {
+            return checkFinalResult;
+        }
+
+        // fire and forget
+        internalFireAndForgetFetch(`${process.env.BASE_URL}/api/video/process/video?taskId=${taskId}`, {
+            method: 'POST',
+        });
+
+        return getNextBaseResponse({
+            success: true,
+            status: 200,
+            message: "Video base images are successfully generated."
+        })
     } catch (error) {
         console.error(error);
 

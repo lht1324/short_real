@@ -26,6 +26,7 @@ import {
     composeOpticalAndTechnicalOption, generateTechnicalLensString, subjectVectorsToCameraVectorString,
     surgicallyReplaceVideoGenPromptByCameraKey, TechnicalIntent
 } from "@/utils/promptUtils";
+import {STYLE_PROMPT_LIBRARY} from "@/api/types/open-ai/StylePromptLibrary";
 
 enum OpenAIModel {
     GPT_4O_MINI = "gpt-4o-mini-2024-07-18",
@@ -302,7 +303,7 @@ const imageGenResponseFormat: OpenAI.ResponseFormatJSONSchema = {
                 }
             },
             // 최상위 required
-            required: ["image_gen_prompt", "image_gen_prompt_sentence", "updated_entity_manifest_list"],
+            required: ["image_gen_prompt", "technical_intent", "updated_entity_manifest_list"],
             additionalProperties: false
         }
     }
@@ -759,7 +760,7 @@ Instruction: Analyze the input <target_aspect_ratio>, <style_guidelines>, <full_
         videoTitle: string,
         videoDescription: string,
         sceneEntityManifestList: InitialEntityManifestItem[],
-        sceneCastingIdList: string[],
+        styleId: string,
         aspectRatio: VideoAspectRatio = VIDEO_ASPECT_RATIOS.PORTRAIT_9_16
     ): Promise<{
         success: boolean;
@@ -896,48 +897,28 @@ Instruction: Generate the scene instruction JSON.
                     technicalIntent,
                     masterStylePromptInfo,
                     newEntityManifestList,
+                    styleId as (keyof typeof STYLE_PROMPT_LIBRARY),
                 );
+
+                console.log(`Scene #${sceneNumber} OpticalAndTechnicalOption: ${JSON.stringify(opticalAndTechnicalOption)}`);
 
                 const fullImageGenPrompt: FluxPrompt = {
                     ...imageGenPrompt,
                     ...opticalAndTechnicalOption,
                 }
 
-                const testSentence = assembleFullImageGenPromptSentence(
+                const imageGenPromptSentence = assembleFullImageGenPromptSentence(
                     fullImageGenPrompt,
                     newEntityManifestList,
                 )
 
-                console.log(`Scene #${sceneNumber} Test sentence: ${testSentence}`);
+                console.log(`Scene #${sceneNumber} Test sentence: ${imageGenPromptSentence}`);
 
                 return {
                     success: true,
-                    // imageGenPrompt: imageGenPrompt,
                     imageGenPrompt: fullImageGenPrompt,
-                    imageGenPromptSentence: testSentence,
-                    sceneEntityManifestList: updatedEntityManifestList ? updatedEntityManifestList.map(instruction => {
-                        const originalEntity = sceneEntityManifestList.find((entityManifest) => {
-                            return entityManifest.id === instruction.id;
-                        });
-
-                        if (!originalEntity) {
-                            console.warn(`Warning: LLM generated unknown ID '${instruction.id}'`);
-                            throw Error("LLM generated unknown ID '${instruction.id}'.")
-                        }
-
-                        return {
-                            // LLM이 생성한 핵심 물리/시각 데이터로 덮어쓰기
-                            id: instruction.id,
-                            physics_profile: instruction.physics_profile,
-                            type: originalEntity.type,
-                            demographics: originalEntity.demographics,
-                            appearance: {
-                                ...originalEntity.appearance,
-                                ...instruction.appearance,
-                            },
-                            role: originalEntity.role,
-                        };
-                    }) : [],
+                    imageGenPromptSentence: imageGenPromptSentence,
+                    sceneEntityManifestList: newEntityManifestList,
                 };
             } catch (jsonError) {
                 console.error('Failed to parse generated JSON:', jsonError);
