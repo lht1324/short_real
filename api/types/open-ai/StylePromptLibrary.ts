@@ -2,7 +2,7 @@ export const STYLE_PROMPT_LIBRARY = {
     realistic: {
         style: {
             Horizontal: (textureDetail: string, grainLevel: string) => `Professional cinematic RAW aesthetic with ${textureDetail} detail and ${grainLevel} grain.`,
-            Vertical: (textureDetail: string, grainLevel: string) => `High-fidelity RAW portrait photography with ${textureDetail} surface detail and ${grainLevel} organic texture.`,
+            Vertical: (textureDetail: string, grainLevel: string) => `High-fidelity RAW photography with ${textureDetail} surface detail and ${grainLevel} organic texture.`,
             Square: (textureDetail: string, grainLevel: string) => `Balanced RAW texture style with ${textureDetail} and ${grainLevel} definition.`,
         },
         effects: {
@@ -25,7 +25,7 @@ export const STYLE_PROMPT_LIBRARY = {
     anime: {
         style: {
             Horizontal: (textureDetail: string, grainLevel: string) => `High-budget anime production with ${textureDetail} line art and ${grainLevel} cinematic shading.`,
-            Vertical: (textureDetail: string, grainLevel: string) => `Detailed anime character portrait featuring ${textureDetail} outlines and ${grainLevel} surface texture.`,
+            Vertical: (textureDetail: string, grainLevel: string) => `Detailed anime composition featuring ${textureDetail} outlines and ${grainLevel} surface texture.`,
             Square: (textureDetail: string, grainLevel: string) => `Balanced anime art style with ${textureDetail} linework and ${grainLevel} color depth.`,
         },
         effects: {

@@ -638,7 +638,7 @@ Instruction: Process the input data and return the JSON output according to the 
   </full_script_context>
 </input_data>
 
-Instruction: Analyze the input <target_aspect_ratio>, <style_guidelines>, <full_script_context> to generate the \`masterStyle\` and \`entityManifest\` JSON output.
+Instruction: Analyze the input <target_aspect_ratio>, <style_guidelines>, <full_script_context> to generate the \`master_style_info\` and \`entity_manifest_list\` JSON output.
 `;
 
             const client = new OpenAI({ apiKey });

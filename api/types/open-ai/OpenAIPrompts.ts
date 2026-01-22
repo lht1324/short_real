@@ -742,9 +742,10 @@ export const POST_IMAGE_GEN_PROMPT_PROMPT = `
            * **Source**: Input <entity_list>.[n].\`appearance\` and above Sub Field \`physics_profile\` impact.
            * **Logic**: Do NOT change the core design (e.g., don't change "Wool" to "Silk"). ONLY add context-aware modifiers if necessary (e.g., "muddy", "wet", "torn").
            * **Constraint**: Keep it concise. This is the source of truth, not the final poetic prompt.
-         - **Field: 'state' (Internal Logic)**:
+         - **Field: 'state'**:
            * **Logic**: Derive the **Abstract Physical State** (Gravity relationship, Momentum).
            * **Output**: This value IS outputted to JSON (\`updated_entity_manifest_list\`) and serves as the core logic for **[Phase: \`image_gen_prompt.subjects\` Mapping]**.
+           * **Constraint**: NEVER use 'Suspended in ~' UNLESS every <entity_list>.[n].\`physics_profile.action_context\` is \`aerodynamics\`. It makes Entity 'fly'.
       2. **[Phase: \`image_gen_prompt.subjects\` Mapping]**
         - **Selection Protocol**:
           * **INCLUDE**: Any entity with role \`main_hero\`, \`sub_character\`, or \`prop\`.
