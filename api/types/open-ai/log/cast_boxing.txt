@@ -1,0 +1,42 @@
+Scene #1 Reasoning
+Scene #1 Cast: main_boxer, boxing_ring, arena_lights
+Scene #1 Casting Logic: Close-up on main boxer with environmental anchors to maintain ring context and harsh arena lighting for continuity.
+Entity[main_boxer] Reason: Narration mentions a sweat drop and bruised temple, indicating the boxer's close-up presence.
+Entity[boxing_ring] Reason: Setting of a boxing match implies the ring as an environmental anchor.
+Entity[arena_lights] Reason: Narration references harsh arena lights, necessitating the lighting props.
+
+Scene #2 Reasoning
+Scene #2 Cast: main_boxer, boxing_ring, arena_lights, mouthpiece
+Scene #2 Casting Logic: Emphasis on the boxer's gear within the ring environment under consistent lighting.
+Entity[main_boxer] Reason: Narration describes the boxer biting his mouthpiece, confirming his presence.
+Entity[boxing_ring] Reason: Ring remains as the consistent combat environment.
+Entity[arena_lights] Reason: Persistent arena lighting shapes the scene's highlights and shadows.
+Entity[mouthpiece] Reason: Narration explicitly mentions the mouthpiece being bitten.
+
+Scene #3 Reasoning
+Scene #3 Cast: main_boxer, boxing_ring, arena_lights, boxing_gloves, referee
+Scene #3 Casting Logic: Mid-ring action shot combining the boxer, his gloves, and the referee's signal within the arena space.
+Entity[main_boxer] Reason: Narration 'He steps back...' indicates the boxer's movement.
+Entity[boxing_ring] Reason: Reference to ropes confirms the ring environment.
+Entity[arena_lights] Reason: Harsh arena lights continue illuminating the scene.
+Entity[boxing_gloves] Reason: Narration mentions raising gloves, introducing the glove props.
+Entity[referee] Reason: Narration notes the referee signaling to continue.
+
+Scene #4 Reasoning
+Scene #4 Cast: main_boxer, opponent_boxer, boxing_ring, arena_lights, referee, crowd_front_row
+Scene #4 Casting Logic: Action scene of both fighters clashing with audience elements and established environmental anchors.
+Entity[main_boxer] Reason: Narration 'two fighters clash' includes the main boxer.
+Entity[opponent_boxer] Reason: Clash implies the presence of the opponent boxer.
+Entity[boxing_ring] Reason: The center ring setting is specified.
+Entity[arena_lights] Reason: Continuous reference to arena lights.
+Entity[referee] Reason: Referee persists as the match official.
+Entity[crowd_front_row] Reason: Narration mentions the front row's screaming frenzy.
+
+Scene #5 Reasoning
+Scene #5 Cast: main_boxer, opponent_boxer, boxing_ring, arena_lights, stadium_crowd
+Scene #5 Casting Logic: Wide stadium shot capturing fighters, ring, lighting, and the full crowd to convey the knockout's impact.
+Entity[main_boxer] Reason: Primary fighter is present during the knockout event.
+Entity[opponent_boxer] Reason: Opponent remains as part of the combat.
+Entity[boxing_ring] Reason: Ring persists as central element.
+Entity[arena_lights] Reason: Arena lights illuminate the full stadium.
+Entity[stadium_crowd] Reason: Narration 'sea of thousands' indicates the stadium crowd

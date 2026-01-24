@@ -41,6 +41,33 @@ const masterStyleInfoResponseFormat: OpenAI.ResponseFormatJSONSchema = {
         schema: {
             type: "object",
             properties: {
+                scene_casting_list: {
+                    type: "array",
+                    items: {
+                        type: "object",
+                        properties: {
+                            scene_number: { type: "number" },
+                            cast_id_list: { type: "array", items: { type: "string" } },
+                            casting_logic: { type: "string" },
+                            entity_reasoning_list: {
+                                type: "array",
+                                items: {
+                                    type: "object",
+                                    properties: {
+                                        id: { type: "string" },
+                                        reasoning: { type: "string" },
+                                    },
+                                    required: ["id", "reasoning"],
+                                    additionalProperties: false,
+                                }
+                            },
+                            scene_empty_reasoning: { type: "string" },
+                        },
+                        required: ["scene_number", "cast_id_list", "casting_logic", "entity_reasoning_list", "scene_empty_reasoning"],
+                        additionalProperties: false,
+                    }
+                },
+                scene_casting_list_empty_reason: { type: "string" },
                 master_style_info: {
                     type: "object",
                     properties: {
@@ -137,46 +164,9 @@ const masterStyleInfoResponseFormat: OpenAI.ResponseFormatJSONSchema = {
                         additionalProperties: false,
                     }
                 },
-                entity_reasoning_list: {
-                    type: "array",
-                    items: {
-                        type: "object",
-                        properties: {
-                            scene_number: { type: "number" },
-                            reasoning_list: {
-                                type: "array",
-                                items: {
-                                    type: "object",
-                                    properties: {
-                                        id: { type: "string" },
-                                        reasoning: { type: "string" },
-                                    },
-                                    required: ["id", "reasoning"],
-                                    additionalProperties: false,
-                                }
-                            },
-                            scene_empty_reasoning: { type: "string" },
-                        },
-                        required: ["scene_number", "reasoning_list", "scene_empty_reasoning"],
-                        additionalProperties: false,
-                    }
-                },
-                scene_casting_list: {
-                    type: "array",
-                    items: {
-                        type: "object",
-                        properties: {
-                            scene_number: { type: "number" },
-                            cast_id_list: { type: "array", items: { type: "string" } },
-                            casting_logic: { type: "string" },
-                        },
-                        required: ["scene_number", "cast_id_list", "casting_logic"],
-                        additionalProperties: false,
-                    }
-                }
             },
             // 최상위 required
-            required: ["master_style_info", "entity_manifest_list", "entity_reasoning_list", "scene_casting_list"],
+            required: ["scene_casting_list", "scene_casting_list_empty_reason", "master_style_info", "entity_manifest_list"],
             additionalProperties: false
         }
     }
@@ -618,6 +608,26 @@ Instruction: Process the input data and return the JSON output according to the 
             // 수정한 프롬프트 (Pre-Production 역할)
             const developerMessage = POST_MASTER_STYLE_INFO_PROMPT;
 
+            console.log("postMasterStyleInfo() Input");
+            console.log(`
+<input_data>
+  <video_metadata>
+    <video_title>${videoTitle}</video_title>
+    <video_description>${videoDescription}</video_description>
+    <video_duration>${videoDuration} secs</video_duration>
+  </video_metadata>
+  <target_aspect_ratio>${aspectRatio}</target_aspect_ratio>
+  <style_guidelines>
+    <core_concept>${style.coreConcept}</core_concept>
+    <visual_keywords>${style.visualKeywords.join(',')}</visual_keywords>
+    <negative_guidance>${style.negativeGuidance}</negative_guidance>
+    <preferred_framing_logic>${style.preferredFramingLogic}</preferred_framing_logic>
+  </style_guidelines>
+  <full_script_context>
+    ${JSON.stringify(scriptDataList, null, 2)}
+  </full_script_context>
+</input_data>
+            `)
             // [수정 3] scriptDataList를 JSON 문자열로 변환하여 컨텍스트 제공
             const userMessage = `
 <input_data>
@@ -638,7 +648,7 @@ Instruction: Process the input data and return the JSON output according to the 
   </full_script_context>
 </input_data>
 
-Instruction: Analyze the input <target_aspect_ratio>, <style_guidelines>, <full_script_context> to generate the \`master_style_info\` and \`entity_manifest_list\` JSON output.
+Instruction: Analyze <video_metadata>, <target_aspect_ratio>, <style_guidelines> and <full_script_context> to generate the \`scene_casting_list\`, \`master_style_info\` and \`entity_manifest_list\` JSON output.
 `;
 
             const client = new OpenAI({ apiKey });
@@ -650,8 +660,8 @@ Instruction: Analyze the input <target_aspect_ratio>, <style_guidelines>, <full_
                     { role: 'user', content: userMessage }
                 ],
                 response_format: masterStyleInfoResponseFormat,
-                reasoning_effort: 'medium',
-                max_completion_tokens: 12288, // [팁] Entity Manifest가 길어질 수 있으므로 토큰 한도를 넉넉히 늘렸습니다.
+                reasoning_effort: 'high',
+                max_completion_tokens: 40960, // [팁] Entity Manifest가 길어질 수 있으므로 토큰 한도를 넉넉히 늘렸습니다.
             });
 
             console.log(`postMasterStylePrompt() usage: `, JSON.stringify(completion.usage))
@@ -674,63 +684,66 @@ Instruction: Analyze the input <target_aspect_ratio>, <style_guidelines>, <full_
                 const parsedData: {
                     master_style_info: MasterStyleInfo;
                     entity_manifest_list: InitialEntityManifestItem[];
-                    entity_reasoning_list: {
-                        scene_number: number,
-                        reasoning_list: {
-                            id: string;
-                            reasoning: string;
-                        }[],
-                        scene_empty_reasoning: string
-                    }[];
                     scene_casting_list: {
                         scene_number: number;
                         cast_id_list: string[];
                         casting_logic: string;
+                        entity_reasoning_list: {
+                            id: string;
+                            reasoning: string;
+                        }[],
+                        scene_empty_reasoning: string;
                     }[],
+                    scene_casting_list_empty_reason: string;
                 } = JSON.parse(generatedResult);
 
-                for (const entityReasoningData of parsedData.entity_reasoning_list) {
-                    const {
-                        scene_number: sceneNumber,
-                        reasoning_list: sceneEntityReasoningList,
-                        scene_empty_reasoning: sceneEmptyReasoning,
-                    } = entityReasoningData;
+                console.log(`postMasterStyleInfo() raw content: ${generatedResult}`);
 
-                    console.log(`Scene #${sceneNumber} Reasoning`);
+                const {
+                    master_style_info: masterStyleInfo,
+                    entity_manifest_list: entityManifestList,
+                    scene_casting_list: sceneCastingList,
+                    scene_casting_list_empty_reason: sceneCastingListEmptyReason,
+                } = parsedData;
 
-                    if (sceneEntityReasoningList.length !== 0) {
-                        for (const sceneEntityReasoningData of sceneEntityReasoningList) {
-                            console.log(`Entity[${sceneEntityReasoningData.id}] Reason: ${sceneEntityReasoningData.reasoning}`)
+                if (sceneCastingList.length !== 0) {
+                    for (const sceneCastingData of parsedData.scene_casting_list.sort((a, b) => a.scene_number - b.scene_number)) {
+                        const {
+                            scene_number: sceneNumber,
+                            cast_id_list: castIdList,
+                            casting_logic: castingLogic,
+                            entity_reasoning_list: entityReasoningList,
+                            scene_empty_reasoning: sceneEmptyReasoning,
+                        } = sceneCastingData;
+
+                        console.log(`Scene #${sceneNumber} Reasoning`);
+                        console.log(`Scene #${sceneNumber} Cast: ${castIdList.join(', ')}`);
+                        console.log(`Scene #${sceneNumber} Casting Logic: ${castingLogic}`);
+
+                        if (entityReasoningList.length !== 0) {
+                            for (const sceneEntityReasoningData of entityReasoningList) {
+                                console.log(`Entity[${sceneEntityReasoningData.id}] Reason: ${sceneEntityReasoningData.reasoning}`)
+                            }
+                        } else {
+                            console.log(`Empty: ${sceneEmptyReasoning}`);
                         }
-                    } else {
-                        console.log(`Empty: ${sceneEmptyReasoning}`);
                     }
-                }
-
-                for (const sceneCastingData of parsedData.scene_casting_list.sort((a, b) => a.scene_number - b.scene_number)) {
-                    const {
-                        scene_number: sceneNumber,
-                        cast_id_list: castIdList,
-                        casting_logic: castingLogic,
-                    } = sceneCastingData;
-
-                    console.log(`Scene #${sceneNumber} Cast: ${castIdList.join(', ')}`);
-                    console.log(`Scene #${sceneNumber} Casting Logic: ${castingLogic}`);
+                } else {
+                    console.log(`SceneCastingListEmptyReason: ${sceneCastingListEmptyReason}`);
                 }
 
                 return {
                     success: true,
                     // 구조 분해 할당
-                    masterStyleInfo: parsedData.master_style_info,
-                    entityManifestList: parsedData.entity_manifest_list, // 추출된 캐릭터 시트 반환
-                    sceneCastingDataList: parsedData.scene_casting_list.map((sceneCasting) => {
+                    masterStyleInfo: masterStyleInfo,
+                    entityManifestList: entityManifestList, // 추출된 캐릭터 시트 반환
+                    sceneCastingDataList: sceneCastingList.map((sceneCasting) => {
                         return {
                             sceneNumber: sceneCasting.scene_number,
                             castIdList: sceneCasting.cast_id_list,
                         }
                     })
                 };
-
             } catch (parseError) {
                 console.error('Failed to parse pre-production JSON response:', parseError);
                 return {

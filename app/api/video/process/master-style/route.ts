@@ -5,9 +5,9 @@ import {VideoGenerationTaskStatus} from "@/api/types/supabase/VideoGenerationTas
 import {openAIServerAPI} from "@/api/server/openAIServerAPI";
 import {STYLE_DATA_LIST} from "@/lib/styles";
 import {getNextBaseResponse} from "@/utils/getNextBaseResponse";
+import {getIsValidRequestS2S} from "@/utils/getIsValidRequest";
 import {usersServerAPI} from "@/api/server/usersServerAPI";
 import {internalFireAndForgetFetch} from "@/utils/internalFetch";
-import {getIsValidRequestS2S} from "@/utils/getIsValidRequest";
 
 export async function POST(request: NextRequest) {
     if (!getIsValidRequestS2S(request)) {
@@ -108,6 +108,15 @@ export async function POST(request: NextRequest) {
             });
         }
 
+        // // TEST!!
+        // await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
+        //
+        // return getNextBaseResponse({
+        //     success: true,
+        //     status: 200,
+        //     message: "Generating MasterStyle Test finished."
+        // })
+
         const masterStylePositivePromptInfo = postMasterStyleInfoResult.masterStyleInfo;
         const entityManifestList = postMasterStyleInfoResult.entityManifestList;
         const sceneCastingDataList = postMasterStyleInfoResult.sceneCastingDataList;
@@ -129,15 +138,6 @@ export async function POST(request: NextRequest) {
                 }
             })
         });
-
-        // // TEST!!
-        // await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
-        //
-        // return getNextBaseResponse({
-        //     success: true,
-        //     status: 200,
-        //     message: "Generating MasterStyle Test finished."
-        // })
 
         const sceneCount = sceneDataList.length;
         const totalDuration = sceneDataList.reduce((acc, sceneData) => {

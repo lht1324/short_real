@@ -1,0 +1,1174 @@
+Scene #1 postImageGenPrompt() usage:  {"prompt_tokens":12167,"completion_tokens":568,"total_tokens":12735,"prompt_tokens_details":{"cached_tokens":11392,"audio_tokens":0},"completion_tokens_details":{"reasoning_tokens":0,"audio_tokens":0,"accepted_prediction_tokens":0,"rejected_prediction_tokens":0}}
+Scene #1 raw generated content: {
+  "image_gen_prompt": {
+    "scene": "1970 Space Race oxygen gauge in a spacecraft cabin, rapidly dropping to zero.",
+    "subjects": [],
+    "color_palette": [
+      "#333333",
+      "#CDE5F2",
+      "#507080"
+    ],
+    "lighting": "Overhead fluorescent panels with directional spill from instrument backlights.",
+    "mood": "Tense atmosphere of urgency amid a life-threatening situation.",
+    "background": "Apollo 13 Command Module interior, featuring brushed aluminum plating and various instrument panels."
+  },
+  "technical_intent": {
+    "angleIntent": "Default/Neutral",
+    "compositionIntent": "Balance",
+    "exposureIntent": "Cinematic/Moody"
+  },
+  "updated_entity_manifest_list": [
+    {
+      "id": "apollo_13_command_module_interior",
+      "physics_profile": {
+        "material": [
+          "rigid"
+        ],
+        "action_context": []
+      },
+      "appearance": {
+        "clothing_or_material": "Brushed aluminum plating with exposed rivets and mechanical supports",
+        "hair": null,
+        "accessories": [],
+        "body_features": "",
+        "position_descriptor": "Looming background presence framing other elements in the tight cabin space."
+      },
+      "state": {
+        "pose": "Static and solid, forming the backdrop of the critical scene.",
+        "expression": null
+      }
+    },
+    {
+      "id": "instrument_panel",
+      "physics_profile": {
+        "material": [
+          "rigid"
+        ],
+        "action_context": []
+      },
+      "appearance": {
+        "clothing_or_material": "Matte-finished metal face with engraved markings, tactile knobs and mechanical switches",
+        "hair": null,
+        "accessories": [],
+        "body_features": "",
+        "position_descriptor": "Foreground anchor filling lower third of frame."
+      },
+      "state": {
+        "pose": "Firmly mounted, displaying instruments in a pivotal role.",
+        "expression": null
+      }
+    },
+    {
+      "id": "oxygen_gauge",
+      "physics_profile": {
+        "material": [
+          "rigid"
+        ],
+        "action_context": []
+      },
+      "appearance": {
+        "clothing_or_material": "Chrome bezel and glass face encasing a pressure dial with colored needle",
+        "hair": null,
+        "accessories": [],
+        "body_features": "",
+        "position_descriptor": "Close-up rule-of-thirds on instrument panel segment."
+      },
+      "state": {
+        "pose": "Suspended mid-drop, needle plummeting towards zero.",
+        "expression": null
+      }
+    }
+  ]
+}
+Scene #1 OpticalAndTechnicalOption: {"style":"High-fidelity RAW photography with Ultra-High surface detail and Filmic organic texture.","camera":{"angle":"eye level","distance":"full-length vertical capture","focus":"sharp focus throughout the vertical frame","lens":"35mm","fNumber":"f/11.0","ISO":800},"composition":"vertical rule of thirds","effects":["subtle film grain","highly defined textures","hyper-detailed rendering","extreme visual fidelity","photorealistic textures","physically based rendering"]}
+Scene #1 Test sentence: An eye level full-length vertical capture captures the 1970 Space Race oxygen gauge in a spacecraft cabin, rapidly dropping to zero. elements, the scene is set in Apollo 13 Command Module interior, featuring brushed aluminum plating and various instrument panels, arranged in a vertical rule of thirds composition, where the atmosphere is Tense atmosphere of urgency amid a life-threatening situation, illuminated by Overhead fluorescent panels with directional spill from instrument backlights. and a color palette of (#333333, #CDE5F2, #507080), rendered in High-fidelity RAW photography with Ultra-High surface detail and Filmic organic texture, captured with a 35mm lens at f/11.0 for sharp focus throughout the vertical frame and ISO 800, featuring subtle film grain, highly defined textures, hyper-detailed rendering, extreme visual fidelity, photorealistic textures, and physically based rendering.
+Scene #6 postImageGenPrompt() usage:  {"prompt_tokens":12191,"completion_tokens":993,"total_tokens":13184,"prompt_tokens_details":{"cached_tokens":11904,"audio_tokens":0},"completion_tokens_details":{"reasoning_tokens":0,"audio_tokens":0,"accepted_prediction_tokens":0,"rejected_prediction_tokens":0}}
+Scene #6 raw generated content: {
+  "image_gen_prompt": {
+    "scene": "1970 Space Race astronaut struggling for survival with Earth reflecting in helmet visor",
+    "subjects": [
+      {
+        "id": "apollo_13_crew",
+        "type": "human",
+        "description": "An athletic NASA astronaut wearing a white pressure suit with red trim and mission patches on the chest, helmet with visor reflecting Earth.",
+        "clothes": "White pressure suits with red trim, rigid torso assembly and layered insulation with flexible joints.",
+        "accessories": [
+          "Helmet with visor",
+          "Portable wrist device",
+          "Mission patches on chest"
+        ],
+        "pose": "Gasping for breath, face contorted in strain, helmet visor reflecting the distant blue of Earth.",
+        "position": "foreground"
+      },
+      {
+        "id": "makeshift_co2_filter_adapter",
+        "type": "object",
+        "description": "A jury-rigged CO2 filter adapter made from corrugated cardboard and duct tape, framed against the module wall.",
+        "clothes": "Corrugated cardboard housing bound by silver duct tape with visible cut edges.",
+        "accessories": [],
+        "pose": "Stationary detail emphasizing the makeshift nature of the filter.",
+        "position": "foreground"
+      },
+      {
+        "id": "mission_timer",
+        "type": "object",
+        "description": "An analog countdown clock with a chrome bezel, red countdown hand ticking down, emphasizing the urgency of the moment.",
+        "clothes": "Circular analog clock face with red countdown hand, chrome bezel and mechanical wind assembly.",
+        "accessories": [],
+        "pose": "Fixed in place, marking the countdown to critical oxygen levels.",
+        "position": "midground"
+      }
+    ],
+    "color_palette": [
+      "#333333",
+      "#CDE5F2",
+      "#507080"
+    ],
+    "lighting": "Overhead fluorescent panels with directional spill from instrument backlights and subtle bounce reflections off brushed metal panels.",
+    "mood": "Tense and urgent atmosphere as the crew fights for survival.",
+    "background": "The cramped interior of the Apollo 13 spacecraft, filled with instrument panels and dimly lit by overhead lights."
+  },
+  "technical_intent": {
+    "angleIntent": "Heroic/Scale",
+    "compositionIntent": "Action",
+    "exposureIntent": "Cinematic/Moody"
+  },
+  "updated_entity_manifest_list": [
+    {
+      "id": "apollo_13_crew",
+      "physics_profile": {
+        "material": [
+          "cloth",
+          "rigid"
+        ],
+        "action_context": [
+          "passive",
+          "interaction"
+        ]
+      },
+      "appearance": {
+        "clothing_or_material": "White pressure suits with red trim, rigid torso assembly and layered insulation with flexible joints.",
+        "hair": null,
+        "accessories": [
+          "Helmet with visor",
+          "Portable wrist device",
+          "Mission patches on chest"
+        ],
+        "body_features": "Athletic build typical of trained astronauts.",
+        "position_descriptor": "Foreground anchor with multi-person staging to convey collaboration."
+      },
+      "state": {
+        "pose": "Gasping for breath, face contorted in strain, helmet visor reflecting the distant blue of Earth.",
+        "expression": null
+      }
+    },
+    {
+      "id": "makeshift_co2_filter_adapter",
+      "physics_profile": {
+        "material": [
+          "rigid",
+          "elastoplastic"
+        ],
+        "action_context": [
+          "interaction"
+        ]
+      },
+      "appearance": {
+        "clothing_or_material": "Corrugated cardboard housing bound by silver duct tape with visible cut edges.",
+        "hair": null,
+        "accessories": [],
+        "body_features": "",
+        "position_descriptor": "Foreground detail framed against module wall."
+      },
+      "state": {
+        "pose": "Stationary detail emphasizing the makeshift nature of the filter.",
+        "expression": null
+      }
+    },
+    {
+      "id": "mission_timer",
+      "physics_profile": {
+        "material": [
+          "rigid"
+        ],
+        "action_context": [
+          "passive"
+        ]
+      },
+      "appearance": {
+        "clothing_or_material": "Circular analog clock face with red countdown hand, chrome bezel and mechanical wind assembly.",
+        "hair": null,
+        "accessories": [],
+        "body_features": "",
+        "position_descriptor": "Rule-of-thirds offset for urgency emphasis."
+      },
+      "state": {
+        "pose": "Fixed in place, marking the countdown to critical oxygen levels.",
+        "expression": null
+      }
+    }
+  ]
+}
+Scene #6 OpticalAndTechnicalOption: {"style":"High-fidelity RAW photography with Ultra-High surface detail and Filmic organic texture.","camera":{"angle":"low angle","distance":"full-length vertical capture","focus":"sharp focus throughout the vertical frame","lens":"35mm","fNumber":"f/11.0","ISO":800},"composition":"steep diagonal tension","effects":["subtle film grain","highly defined textures","hyper-detailed rendering","extreme visual fidelity","photorealistic textures","physically based rendering"]}
+Scene #6 Test sentence: A low angle full-length vertical capture captures 1970 Space Race American NASA Astronaut Crew, Athletic build typical of trained astronauts, clad in White pressure suits with red trim, rigid torso assembly and layered insulation with flexible joints, equipped with Helmet with visor, Portable wrist device, and Mission patches on chest who is Gasping for breath, face contorted in strain, helmet visor reflecting the distant blue of Earth. in the foreground, while in the foreground a 1970 Space Race American NASA CO2 Filter Adapter, clad in Corrugated cardboard housing bound by silver duct tape with visible cut edges, equipped with   Stationary detail emphasizing the makeshift nature of the filter, while in the midground a 1970 Space Race American NASA Mission Timer, clad in Circular analog clock face with red countdown hand, chrome bezel and mechanical wind assembly, equipped with   Fixed in place, marking the countdown to critical oxygen levels, the scene is set in The cramped interior of the Apollo 13 spacecraft, filled with instrument panels and dimly lit by overhead lights, depicting 1970 Space Race astronaut struggling for survival with Earth reflecting in helmet visor with a steep diagonal tension composition, where the atmosphere is Tense and urgent atmosphere as the crew fights for survival, illuminated by Overhead fluorescent panels with directional spill from instrument backlights and subtle bounce reflections off brushed metal panels. and a color palette of (#333333, #CDE5F2, #507080), rendered in High-fidelity RAW photography with Ultra-High surface detail and Filmic organic texture, captured with a 35mm lens at f/11.0 for sharp focus throughout the vertical frame and ISO 800, featuring subtle film grain, highly defined textures, hyper-detailed rendering, extreme visual fidelity, photorealistic textures, and physically based rendering.
+Scene #7 postImageGenPrompt() usage:  {"prompt_tokens":12188,"completion_tokens":1003,"total_tokens":13191,"prompt_tokens_details":{"cached_tokens":12160,"audio_tokens":0},"completion_tokens_details":{"reasoning_tokens":0,"audio_tokens":0,"accepted_prediction_tokens":0,"rejected_prediction_tokens":0}}
+Scene #7 raw generated content: {
+  "image_gen_prompt": {
+    "scene": "1970 Space Race astronaut crew collaborating to stabilize oxygen levels, relieved expressions as the improvised filter hums to life.",
+    "subjects": [
+      {
+        "id": "apollo_13_crew",
+        "type": "human",
+        "description": "A mixed crew of NASA astronauts with athletic builds, wearing white pressure suits with red trim, focused on their critical task.",
+        "clothes": "White pressure suits with rigid torso assembly and layered insulation featuring flexible joints, accented by mission patches.",
+        "accessories": [
+          "Helmet with visor",
+          "Portable wrist device"
+        ],
+        "pose": "Engaged in a collaborative effort, tension in their stance as they work on the filter, eyes locked in focused determination.",
+        "position": "foreground"
+      },
+      {
+        "id": "makeshift_co2_filter_adapter",
+        "type": "object",
+        "description": "A jury-rigged CO2 filter adapter, showcasing the ingenuity of the astronauts under pressure.",
+        "clothes": "Corrugated cardboard housing bound by silver duct tape, with visible cut edges indicating a hurried assembly.",
+        "accessories": [],
+        "pose": "Prominently displayed against the module wall, highlighting its critical role in the mission.",
+        "position": "foreground"
+      },
+      {
+        "id": "mission_timer",
+        "type": "object",
+        "description": "An analog mission timer ticking down, symbolizing the urgency of the situation.",
+        "clothes": "Circular analog clock face with a red countdown hand and a chrome bezel.",
+        "accessories": [],
+        "pose": "Positioned prominently, emphasizing the countdown as astronauts glance at it with concern.",
+        "position": "midground"
+      }
+    ],
+    "color_palette": [
+      "#333333",
+      "#CDE5F2",
+      "#507080"
+    ],
+    "lighting": "Overhead fluorescent panels with directional spill from instrument backlights, creating a clinical atmosphere.",
+    "mood": "A tense yet hopeful atmosphere as the astronauts strive to secure their lives.",
+    "background": "The interior of the Apollo 13 spacecraft, filled with instruments and panels, with ambient lighting casting subtle reflections off brushed metal surfaces."
+  },
+  "technical_intent": {
+    "angleIntent": "Dialogue/Interaction",
+    "compositionIntent": "Balance",
+    "exposureIntent": "Balanced/Natural"
+  },
+  "updated_entity_manifest_list": [
+    {
+      "id": "apollo_13_crew",
+      "physics_profile": {
+        "material": [
+          "cloth",
+          "rigid"
+        ],
+        "action_context": [
+          "interaction"
+        ]
+      },
+      "appearance": {
+        "clothing_or_material": "White pressure suits with red trim, rigid torso assembly and layered insulation with flexible joints.",
+        "hair": null,
+        "accessories": [
+          "Helmet with visor",
+          "Portable wrist device",
+          "Mission patches on chest"
+        ],
+        "body_features": "Athletic build typical of trained astronauts.",
+        "position_descriptor": "Foreground anchor with multi-person staging to convey collaboration."
+      },
+      "state": {
+        "pose": "Engaged in a collaborative effort, tension in their stance as they work on the filter, eyes locked in focused determination.",
+        "expression": null
+      }
+    },
+    {
+      "id": "makeshift_co2_filter_adapter",
+      "physics_profile": {
+        "material": [
+          "rigid",
+          "elastoplastic"
+        ],
+        "action_context": [
+          "interaction"
+        ]
+      },
+      "appearance": {
+        "clothing_or_material": "Corrugated cardboard housing bound by silver duct tape with visible cut edges.",
+        "hair": null,
+        "accessories": [],
+        "body_features": "",
+        "position_descriptor": "Foreground detail framed against module wall."
+      },
+      "state": {
+        "pose": "Prominently displayed against the module wall, highlighting its critical role in the mission.",
+        "expression": null
+      }
+    },
+    {
+      "id": "mission_timer",
+      "physics_profile": {
+        "material": [
+          "rigid"
+        ],
+        "action_context": [
+          "interaction"
+        ]
+      },
+      "appearance": {
+        "clothing_or_material": "Circular analog clock face with red countdown hand, chrome bezel and mechanical wind assembly.",
+        "hair": null,
+        "accessories": [],
+        "body_features": "",
+        "position_descriptor": "Rule-of-thirds offset for urgency emphasis."
+      },
+      "state": {
+        "pose": "Positioned prominently, emphasizing the countdown as astronauts glance at it with concern.",
+        "expression": null
+      }
+    }
+  ]
+}
+Scene #7 OpticalAndTechnicalOption: {"style":"High-fidelity RAW photography with Ultra-High surface detail and Filmic organic texture.","camera":{"angle":"over-the-shoulder","distance":"full-length vertical capture","focus":"sharp focus throughout the vertical frame","lens":"35mm","fNumber":"f/11.0","ISO":800},"composition":"vertical rule of thirds","effects":["subtle film grain","highly defined textures","hyper-detailed rendering","extreme visual fidelity","photorealistic textures","physically based rendering"]}
+Scene #7 Test sentence: An over-the-shoulder full-length vertical capture captures 1970 Space Race American NASA Astronaut Crew, Athletic build typical of trained astronauts, clad in White pressure suits with red trim, rigid torso assembly and layered insulation with flexible joints, equipped with Helmet with visor, Portable wrist device, and Mission patches on chest who is Engaged in a collaborative effort, tension in their stance as they work on the filter, eyes locked in focused determination. in the foreground, while in the foreground a 1970 Space Race American NASA CO2 Filter Adapter, clad in Corrugated cardboard housing bound by silver duct tape with visible cut edges, equipped with   Prominently displayed against the module wall, highlighting its critical role in the mission, while in the midground a 1970 Space Race American NASA Mission Timer, clad in Circular analog clock face with red countdown hand, chrome bezel and mechanical wind assembly, equipped with   Positioned prominently, emphasizing the countdown as astronauts glance at it with concern, the scene is set in The interior of the Apollo 13 spacecraft, filled with instruments and panels, with ambient lighting casting subtle reflections off brushed metal surfaces, depicting 1970 Space Race astronaut crew collaborating to stabilize oxygen levels, relieved expressions as the improvised filter hums to life. with a vertical rule of thirds composition, where the atmosphere is A tense yet hopeful atmosphere as the astronauts strive to secure their lives, illuminated by Overhead fluorescent panels with directional spill from instrument backlights, creating a clinical atmosphere. and a color palette of (#333333, #CDE5F2, #507080), rendered in High-fidelity RAW photography with Ultra-High surface detail and Filmic organic texture, captured with a 35mm lens at f/11.0 for sharp focus throughout the vertical frame and ISO 800, featuring subtle film grain, highly defined textures, hyper-detailed rendering, extreme visual fidelity, photorealistic textures, and physically based rendering.
+Scene #5 postImageGenPrompt() usage:  {"prompt_tokens":12194,"completion_tokens":1046,"total_tokens":13240,"prompt_tokens_details":{"cached_tokens":11648,"audio_tokens":0},"completion_tokens_details":{"reasoning_tokens":0,"audio_tokens":0,"accepted_prediction_tokens":0,"rejected_prediction_tokens":0}}
+Scene #5 raw generated content: {
+  "image_gen_prompt": {
+    "scene": "1970 Space Race astronauts collaborating inside the lunar module, surrounded by makeshift CO2 filter adapters and a digital countdown timer ticking ominously.",
+    "subjects": [
+      {
+        "id": "apollo_13_crew",
+        "type": "human",
+        "description": "A group of American NASA astronauts wearing white pressure suits with red trim, showcasing mission patches on their chests, and athletic builds typical of trained professionals.",
+        "clothes": "White pressure suits constructed with rigid torso assemblies, layered insulation, and flexible joints, exhibiting a matte finish under the fluorescent lights.",
+        "accessories": [
+          "Helmet with visor",
+          "Portable wrist device",
+          "Mission patches on chest"
+        ],
+        "pose": "Bending forward in a focused manner, hands deftly applying duct tape to the makeshift filter, muscles tense with concentration.",
+        "position": "foreground"
+      },
+      {
+        "id": "makeshift_co2_filter_adapter",
+        "type": "object",
+        "description": "A jury-rigged CO2 filter adapter constructed from corrugated cardboard, bound tightly with silver duct tape, displayed prominently against the spacecraft wall.",
+        "clothes": "Corrugated cardboard housing with visible cut edges, emphasizing the makeshift nature of the construction.",
+        "accessories": [],
+        "pose": "Stationary against the module wall, providing a critical functional element to the scene.",
+        "position": "midground"
+      },
+      {
+        "id": "mission_timer",
+        "type": "object",
+        "description": "An analog mission timer with a prominent red countdown hand, set against a chrome bezel, symbolizing the urgency of the situation.",
+        "clothes": "Circular analog clock face with a mechanical wind assembly, glossy surface reflecting the overhead lights.",
+        "accessories": [],
+        "pose": "Positioned prominently, its countdown hand nearing zero, amplifying the tension in the environment.",
+        "position": "background"
+      }
+    ],
+    "color_palette": [
+      "#333333",
+      "#CDE5F2",
+      "#507080"
+    ],
+    "lighting": "Overhead fluorescent panels with directional spill from instrument backlights create a clinical atmosphere.",
+    "mood": "Tense and urgent, reflecting the critical nature of the astronauts' efforts to save their mission.",
+    "background": "The interior of the lunar module, fitted with various instruments and equipment, illuminated by the harsh overhead lights."
+  },
+  "technical_intent": {
+    "angleIntent": "Heroic/Scale",
+    "compositionIntent": "Action",
+    "exposureIntent": "Cinematic/Moody"
+  },
+  "updated_entity_manifest_list": [
+    {
+      "id": "apollo_13_crew",
+      "physics_profile": {
+        "material": [
+          "cloth",
+          "rigid"
+        ],
+        "action_context": [
+          "interaction",
+          "locomotion"
+        ]
+      },
+      "appearance": {
+        "clothing_or_material": "White pressure suits with red trim and layered insulation.",
+        "hair": null,
+        "accessories": [
+          "Helmet with visor",
+          "Portable wrist device",
+          "Mission patches on chest"
+        ],
+        "body_features": "Athletic build typical of trained astronauts.",
+        "position_descriptor": "Foreground anchor with multi-person staging to convey collaboration."
+      },
+      "state": {
+        "pose": "Bending forward in a focused manner, hands deftly applying duct tape to the makeshift filter, muscles tense with concentration.",
+        "expression": null
+      }
+    },
+    {
+      "id": "makeshift_co2_filter_adapter",
+      "physics_profile": {
+        "material": [
+          "rigid",
+          "elastoplastic"
+        ],
+        "action_context": [
+          "interaction"
+        ]
+      },
+      "appearance": {
+        "clothing_or_material": "Corrugated cardboard housing bound by silver duct tape.",
+        "hair": null,
+        "accessories": [],
+        "body_features": "",
+        "position_descriptor": "Foreground detail framed against module wall."
+      },
+      "state": {
+        "pose": "Stationary against the module wall, providing a critical functional element to the scene.",
+        "expression": null
+      }
+    },
+    {
+      "id": "mission_timer",
+      "physics_profile": {
+        "material": [
+          "rigid"
+        ],
+        "action_context": [
+          "passive"
+        ]
+      },
+      "appearance": {
+        "clothing_or_material": "Circular analog clock face with a red countdown hand.",
+        "hair": null,
+        "accessories": [],
+        "body_features": "",
+        "position_descriptor": "Rule-of-thirds offset for urgency emphasis."
+      },
+      "state": {
+        "pose": "Positioned prominently, its countdown hand nearing zero, amplifying the tension in the environment.",
+        "expression": null
+      }
+    }
+  ]
+}
+Scene #5 OpticalAndTechnicalOption: {"style":"High-fidelity RAW photography with Ultra-High surface detail and Filmic organic texture.","camera":{"angle":"low angle","distance":"full-length vertical capture","focus":"sharp focus throughout the vertical frame","lens":"35mm","fNumber":"f/11.0","ISO":800},"composition":"steep diagonal tension","effects":["subtle film grain","highly defined textures","hyper-detailed rendering","extreme visual fidelity","photorealistic textures","physically based rendering"]}
+Scene #5 Test sentence: A low angle full-length vertical capture captures 1970 Space Race American NASA Astronaut Crew, Athletic build typical of trained astronauts, clad in White pressure suits with red trim and layered insulation, equipped with Helmet with visor, Portable wrist device, and Mission patches on chest who is Bending forward in a focused manner, hands deftly applying duct tape to the makeshift filter, muscles tense with concentration. in the foreground, while in the midground a 1970 Space Race American NASA CO2 Filter Adapter, clad in Corrugated cardboard housing bound by silver duct tape, equipped with   Stationary against the module wall, providing a critical functional element to the scene, while in the background a 1970 Space Race American NASA Mission Timer, clad in Circular analog clock face with a red countdown hand, equipped with   Positioned prominently, its countdown hand nearing zero, amplifying the tension in the environment, the scene is set in The interior of the lunar module, fitted with various instruments and equipment, illuminated by the harsh overhead lights, depicting 1970 Space Race astronauts collaborating inside the lunar module, surrounded by makeshift CO2 filter adapters and a digital countdown timer ticking ominously. with a steep diagonal tension composition, where the atmosphere is Tense and urgent, reflecting the critical nature of the astronauts' efforts to save their mission, illuminated by Overhead fluorescent panels with directional spill from instrument backlights create a clinical atmosphere. and a color palette of (#333333, #CDE5F2, #507080), rendered in High-fidelity RAW photography with Ultra-High surface detail and Filmic organic texture, captured with a 35mm lens at f/11.0 for sharp focus throughout the vertical frame and ISO 800, featuring subtle film grain, highly defined textures, hyper-detailed rendering, extreme visual fidelity, photorealistic textures, and physically based rendering.
+Scene #2 postImageGenPrompt() usage:  {"prompt_tokens":12546,"completion_tokens":1106,"total_tokens":13652,"prompt_tokens_details":{"cached_tokens":12416,"audio_tokens":0},"completion_tokens_details":{"reasoning_tokens":0,"audio_tokens":0,"accepted_prediction_tokens":0,"rejected_prediction_tokens":0}}
+Scene #2 raw generated content: {
+  "image_gen_prompt": {
+    "scene": "1970 Space Race astronaut crew reacting to a sudden explosion with alarms blaring and sparks flickering around damaged panels",
+    "subjects": [
+      {
+        "id": "apollo_13_crew",
+        "type": "human",
+        "description": "A group of astronauts wearing white pressure suits with red trim, athletic build typical of trained astronauts, collaborating under duress.",
+        "clothes": "White pressure suits with layered insulation, rigid torso assembly, and flexible joints, accented with red trim and mission patches.",
+        "accessories": [
+          "Helmet with visor",
+          "Portable wrist device",
+          "Mission patches on chest"
+        ],
+        "pose": "Reacting with urgency, arms raised in defense as alarms blare and sparks flicker around them.",
+        "position": "foreground"
+      }
+    ],
+    "color_palette": [
+      "#333333",
+      "#CDE5F2",
+      "#507080"
+    ],
+    "lighting": "Overhead fluorescent panels with directional spill from instrument backlights and subtle bounce reflections off brushed metal panels.",
+    "mood": "Tense atmosphere filled with urgency and desperation in the face of a crisis.",
+    "background": "The interior of the Apollo 13 command module, filled with brushed aluminum plating and illuminated by blinking red warning lights."
+  },
+  "technical_intent": {
+    "angleIntent": "Default/Neutral",
+    "compositionIntent": "Balance",
+    "exposureIntent": "Cinematic/Moody"
+  },
+  "updated_entity_manifest_list": [
+    {
+      "id": "apollo_13_command_module_interior",
+      "physics_profile": {
+        "material": [
+          "rigid"
+        ],
+        "action_context": []
+      },
+      "appearance": {
+        "clothing_or_material": "Brushed aluminum plating with exposed rivets and mechanical supports referencing 1970s spacecraft construction.",
+        "hair": "",
+        "accessories": [],
+        "body_features": "",
+        "position_descriptor": "Looming background presence framing other elements in the tight cabin space."
+      },
+      "state": {
+        "pose": "",
+        "expression": ""
+      }
+    },
+    {
+      "id": "apollo_13_crew",
+      "physics_profile": {
+        "material": [
+          "cloth",
+          "viscoelastic"
+        ],
+        "action_context": [
+          "interaction"
+        ]
+      },
+      "appearance": {
+        "clothing_or_material": "White pressure suits with red trim, rigid torso assembly and layered insulation with flexible joints.",
+        "hair": "",
+        "accessories": [
+          "Helmet with visor",
+          "Portable wrist device",
+          "Mission patches on chest"
+        ],
+        "body_features": "Athletic build typical of trained astronauts.",
+        "position_descriptor": "Foreground anchor with multi-person staging to convey collaboration."
+      },
+      "state": {
+        "pose": "Reacting with urgency, arms raised in defense.",
+        "expression": ""
+      }
+    },
+    {
+      "id": "explosion_effect",
+      "physics_profile": {
+        "material": [
+          "fluid"
+        ],
+        "action_context": []
+      },
+      "appearance": {
+        "clothing_or_material": "Transient bright plasma flash with glowing ember particles, simulated energy dispersion.",
+        "hair": "",
+        "accessories": [],
+        "body_features": "",
+        "position_descriptor": "Rule-of-thirds impact point near cockpit center to convey sudden burst."
+      },
+      "state": {
+        "pose": "",
+        "expression": ""
+      }
+    },
+    {
+      "id": "instrument_panel",
+      "physics_profile": {
+        "material": [
+          "rigid"
+        ],
+        "action_context": []
+      },
+      "appearance": {
+        "clothing_or_material": "Matte-finished metal face with engraved markings, tactile knobs and mechanical switches.",
+        "hair": "",
+        "accessories": [],
+        "body_features": "",
+        "position_descriptor": "Foreground anchor filling lower third of frame."
+      },
+      "state": {
+        "pose": "",
+        "expression": ""
+      }
+    },
+    {
+      "id": "oxygen_gauge",
+      "physics_profile": {
+        "material": [
+          "rigid"
+        ],
+        "action_context": []
+      },
+      "appearance": {
+        "clothing_or_material": "Chrome bezel and glass face encasing a pressure dial with colored needle.",
+        "hair": "",
+        "accessories": [],
+        "body_features": "",
+        "position_descriptor": "Close-up rule-of-thirds on instrument panel segment."
+      },
+      "state": {
+        "pose": "",
+        "expression": ""
+      }
+    },
+    {
+      "id": "alarm_siren",
+      "physics_profile": {
+        "material": [
+          "rigid"
+        ],
+        "action_context": []
+      },
+      "appearance": {
+        "clothing_or_material": "Red acrylic dome over rotating beacon light with perforated speaker grille.",
+        "hair": "",
+        "accessories": [],
+        "body_features": "",
+        "position_descriptor": "Foreground highlight near overhead panel."
+      },
+      "state": {
+        "pose": "",
+        "expression": ""
+      }
+    }
+  ]
+}
+Scene #2 OpticalAndTechnicalOption: {"style":"High-fidelity RAW photography with Ultra-High surface detail and Filmic organic texture.","camera":{"angle":"eye level","distance":"full-length vertical capture","focus":"sharp focus throughout the vertical frame","lens":"35mm","fNumber":"f/11.0","ISO":800},"composition":"vertical rule of thirds","effects":["subtle film grain","highly defined textures","hyper-detailed rendering","extreme visual fidelity","photorealistic textures","physically based rendering"]}
+Scene #2 Test sentence: An eye level full-length vertical capture captures 1970 Space Race American NASA Astronaut Crew, Athletic build typical of trained astronauts, clad in White pressure suits with red trim, rigid torso assembly and layered insulation with flexible joints, equipped with Helmet with visor, Portable wrist device, and Mission patches on chest who is Reacting with urgency, arms raised in defense as alarms blare and sparks flicker around them. in the foreground, the scene is set in The interior of the Apollo 13 command module, filled with brushed aluminum plating and illuminated by blinking red warning lights, depicting 1970 Space Race astronaut crew reacting to a sudden explosion with alarms blaring and sparks flickering around damaged panels with a vertical rule of thirds composition, where the atmosphere is Tense atmosphere filled with urgency and desperation in the face of a crisis, illuminated by Overhead fluorescent panels with directional spill from instrument backlights and subtle bounce reflections off brushed metal panels. and a color palette of (#333333, #CDE5F2, #507080), rendered in High-fidelity RAW photography with Ultra-High surface detail and Filmic organic texture, captured with a 35mm lens at f/11.0 for sharp focus throughout the vertical frame and ISO 800, featuring subtle film grain, highly defined textures, hyper-detailed rendering, extreme visual fidelity, photorealistic textures, and physically based rendering.
+Scene #8 postImageGenPrompt() usage:  {"prompt_tokens":12435,"completion_tokens":1153,"total_tokens":13588,"prompt_tokens_details":{"cached_tokens":12288,"audio_tokens":0},"completion_tokens_details":{"reasoning_tokens":0,"audio_tokens":0,"accepted_prediction_tokens":0,"rejected_prediction_tokens":0}}
+Scene #8 raw generated content: {
+  "image_gen_prompt": {
+    "scene": "1970 Space Race Apollo 13 command module splashed down, silhouetted against a glowing horizon at dawn, embodying human ingenuity in crisis.",
+    "subjects": [
+      {
+        "id": "apollo_13_command_module_exterior",
+        "type": "machine",
+        "description": "A sleek Apollo 13 command module with a matte charcoal grey titanium hull and weathered white NASA insignia, center-weighted in the frame.",
+        "clothes": "Matte charcoal grey titanium outer hull with weathered white NASA insignia panels.",
+        "accessories": [],
+        "pose": "Suspended mid-descent, stabilizing against the gentle waves below.",
+        "position": "midground"
+      },
+      {
+        "id": "apollo_13_crew",
+        "type": "human",
+        "description": "A group of astronauts in white pressure suits with red trim, showcasing athletic builds and mission patches, collaborating in front of the command module.",
+        "clothes": "White pressure suits with red trim, rigid torso assembly and layered insulation with flexible joints.",
+        "accessories": [
+          "Helmet with visor",
+          "Portable wrist device",
+          "Mission patches on chest"
+        ],
+        "pose": "Anchored in the foreground, dynamically adjusting their posture to maintain balance in the descent.",
+        "position": "foreground"
+      }
+    ],
+    "color_palette": [
+      "#333333",
+      "#A0BFCB",
+      "#507080"
+    ],
+    "lighting": "Overhead fluorescent panels illuminating the capsule and crew with subtle bounce reflections.",
+    "mood": "An exhilarating yet tense atmosphere, showcasing human ingenuity in the face of adversity.",
+    "background": "A calm water surface with gentle wave ripples reflecting sky tones, integrating the recovery ship partially obscured by splash haze."
+  },
+  "technical_intent": {
+    "angleIntent": "Heroic/Scale",
+    "compositionIntent": "Action",
+    "exposureIntent": "Cinematic/Moody"
+  },
+  "updated_entity_manifest_list": [
+    {
+      "id": "apollo_13_command_module_exterior",
+      "physics_profile": {
+        "material": [
+          "rigid"
+        ],
+        "action_context": [
+          "passive"
+        ]
+      },
+      "appearance": {
+        "clothing_or_material": "Matte charcoal grey titanium outer hull with weathered white NASA insignia panels.",
+        "hair": null,
+        "accessories": [],
+        "body_features": "",
+        "position_descriptor": "Center-weighted with slight tilt to emphasize form."
+      },
+      "state": {
+        "pose": "Suspended mid-descent, stabilizing against the gentle waves below.",
+        "expression": null
+      }
+    },
+    {
+      "id": "apollo_13_crew",
+      "physics_profile": {
+        "material": [
+          "cloth",
+          "viscoelastic"
+        ],
+        "action_context": [
+          "interaction"
+        ]
+      },
+      "appearance": {
+        "clothing_or_material": "White pressure suits with red trim, rigid torso assembly and layered insulation with flexible joints.",
+        "hair": null,
+        "accessories": [
+          "Helmet with visor",
+          "Portable wrist device",
+          "Mission patches on chest"
+        ],
+        "body_features": "Athletic build typical of trained astronauts.",
+        "position_descriptor": "Foreground anchor with multi-person staging to convey collaboration."
+      },
+      "state": {
+        "pose": "Anchored in the foreground, dynamically adjusting their posture to maintain balance in the descent.",
+        "expression": null
+      }
+    },
+    {
+      "id": "ocean_splashdown_area",
+      "physics_profile": {
+        "material": [
+          "fluid"
+        ],
+        "action_context": [
+          "passive"
+        ]
+      },
+      "appearance": {
+        "clothing_or_material": "Calm water surface with gentle wave ripples reflecting sky tones.",
+        "hair": null,
+        "accessories": [],
+        "body_features": "",
+        "position_descriptor": "Looming background presence filling lower half of frame."
+      },
+      "state": {
+        "pose": "",
+        "expression": null
+      }
+    },
+    {
+      "id": "parachute_system",
+      "physics_profile": {
+        "material": [
+          "rigid"
+        ],
+        "action_context": [
+          "passive"
+        ]
+      },
+      "appearance": {
+        "clothing_or_material": "White nylon canopies with reinforced seams and steel suspension cables.",
+        "hair": null,
+        "accessories": [],
+        "body_features": "",
+        "position_descriptor": "Upper frame presence controlling descent path."
+      },
+      "state": {
+        "pose": "",
+        "expression": null
+      }
+    },
+    {
+      "id": "recovery_ship",
+      "physics_profile": {
+        "material": [
+          "rigid"
+        ],
+        "action_context": [
+          "passive"
+        ]
+      },
+      "appearance": {
+        "clothing_or_material": "Steel hull with grey marine paint, deck crane equipment and signal flags.",
+        "hair": null,
+        "accessories": [],
+        "body_features": "",
+        "position_descriptor": "Background mid-frame, partially obscured by splash haze."
+      },
+      "state": {
+        "pose": "",
+        "expression": null
+      }
+    }
+  ]
+}
+Scene #8 OpticalAndTechnicalOption: {"style":"High-fidelity RAW photography with Ultra-High surface detail and Filmic organic texture.","camera":{"angle":"low angle","distance":"full-length vertical capture","focus":"sharp focus throughout the vertical frame","lens":"35mm","fNumber":"f/11.0","ISO":800},"composition":"steep diagonal tension","effects":["subtle film grain","highly defined textures","hyper-detailed rendering","extreme visual fidelity","photorealistic textures","physically based rendering"]}
+Scene #8 Test sentence: A low angle full-length vertical capture captures 1970 Space Race American NASA Apollo 13 Command Module, clad in Matte charcoal grey titanium outer hull with weathered white NASA insignia panels, equipped with  who is Suspended mid-descent, stabilizing against the gentle waves below. in the midground, while in the foreground a 1970 Space Race American NASA Astronaut Crew, Athletic build typical of trained astronauts, clad in White pressure suits with red trim, rigid torso assembly and layered insulation with flexible joints, equipped with Helmet with visor, Portable wrist device, and Mission patches on chest is Anchored in the foreground, dynamically adjusting their posture to maintain balance in the descent, the scene is set in A calm water surface with gentle wave ripples reflecting sky tones, integrating the recovery ship partially obscured by splash haze, depicting 1970 Space Race Apollo 13 command module splashed down, silhouetted against a glowing horizon at dawn, embodying human ingenuity in crisis. with a steep diagonal tension composition, where the atmosphere is An exhilarating yet tense atmosphere, showcasing human ingenuity in the face of adversity, illuminated by Overhead fluorescent panels illuminating the capsule and crew with subtle bounce reflections. and a color palette of (#333333, #A0BFCB, #507080), rendered in High-fidelity RAW photography with Ultra-High surface detail and Filmic organic texture, captured with a 35mm lens at f/11.0 for sharp focus throughout the vertical frame and ISO 800, featuring subtle film grain, highly defined textures, hyper-detailed rendering, extreme visual fidelity, photorealistic textures, and physically based rendering.
+Scene #3 postImageGenPrompt() usage:  {"prompt_tokens":12542,"completion_tokens":1148,"total_tokens":13690,"prompt_tokens_details":{"cached_tokens":12288,"audio_tokens":0},"completion_tokens_details":{"reasoning_tokens":0,"audio_tokens":0,"accepted_prediction_tokens":0,"rejected_prediction_tokens":0}}
+Scene #3 raw generated content: {
+  "image_gen_prompt": {
+    "scene": "1970 Space Race astronaut crew collaborating under dim fluorescent lights with a sense of urgency as power systems fail.",
+    "subjects": [
+      {
+        "id": "apollo_13_crew",
+        "type": "human",
+        "description": "A group of astronauts wearing white pressure suits, adorned with mission patches, showcasing athletic builds and focused expressions.",
+        "clothes": "White pressure suits with red trim, rigid torso assembly and layered insulation with flexible joints.",
+        "accessories": [
+          "Helmet with visor",
+          "Portable wrist device",
+          "Mission patches on chest"
+        ],
+        "pose": "Engaged in a collaborative effort, hands positioned over instruments with tension in their stances.",
+        "position": "foreground"
+      }
+    ],
+    "color_palette": [
+      "#333333",
+      "#A0BFCB",
+      "#507080"
+    ],
+    "lighting": "Overhead fluorescent panels with directional spill from instrument backlights.",
+    "mood": "Tense atmosphere filled with urgency and determination as the astronauts confront critical conditions.",
+    "background": "Dimly lit control panels displaying flickering digital displays and ominous shadows cast by CO2 scrubber gauges."
+  },
+  "technical_intent": {
+    "angleIntent": "Heroic/Scale",
+    "compositionIntent": "Balance",
+    "exposureIntent": "Cinematic/Moody"
+  },
+  "updated_entity_manifest_list": [
+    {
+      "id": "apollo_13_command_module_interior",
+      "physics_profile": {
+        "material": [
+          "rigid"
+        ],
+        "action_context": []
+      },
+      "appearance": {
+        "clothing_or_material": "Brushed aluminum plating with exposed rivets and mechanical supports.",
+        "hair": null,
+        "accessories": [],
+        "body_features": "",
+        "position_descriptor": "Looming background presence framing other elements in the tight cabin space."
+      },
+      "state": {
+        "pose": "Static and imposing, providing structure to the cramped environment.",
+        "expression": null
+      }
+    },
+    {
+      "id": "apollo_13_crew",
+      "physics_profile": {
+        "material": [
+          "cloth",
+          "viscoelastic"
+        ],
+        "action_context": [
+          "interaction"
+        ]
+      },
+      "appearance": {
+        "clothing_or_material": "White pressure suits with red trim, rigid torso assembly and layered insulation with flexible joints.",
+        "hair": null,
+        "accessories": [
+          "Helmet with visor",
+          "Portable wrist device",
+          "Mission patches on chest"
+        ],
+        "body_features": "Athletic build typical of trained astronauts.",
+        "position_descriptor": "Foreground anchor with multi-person staging to convey collaboration."
+      },
+      "state": {
+        "pose": "Engaged in a collaborative effort, hands positioned over instruments with tension in their stances.",
+        "expression": null
+      }
+    },
+    {
+      "id": "co2_gauge",
+      "physics_profile": {
+        "material": [
+          "rigid"
+        ],
+        "action_context": []
+      },
+      "appearance": {
+        "clothing_or_material": "Glass-encased circular dial with colored chemical granule display and metal bezel.",
+        "hair": null,
+        "accessories": [],
+        "body_features": "",
+        "position_descriptor": "Rule-of-thirds offset on instrument panel."
+      },
+      "state": {
+        "pose": "Static, presenting critical information to the crew.",
+        "expression": null
+      }
+    },
+    {
+      "id": "instrument_panel",
+      "physics_profile": {
+        "material": [
+          "rigid"
+        ],
+        "action_context": []
+      },
+      "appearance": {
+        "clothing_or_material": "Matte-finished metal face with engraved markings, tactile knobs and mechanical switches.",
+        "hair": null,
+        "accessories": [],
+        "body_features": "",
+        "position_descriptor": "Foreground anchor filling lower third of frame."
+      },
+      "state": {
+        "pose": "Fixed in place, providing essential control to the astronauts.",
+        "expression": null
+      }
+    },
+    {
+      "id": "oxygen_gauge",
+      "physics_profile": {
+        "material": [
+          "rigid"
+        ],
+        "action_context": []
+      },
+      "appearance": {
+        "clothing_or_material": "Chrome bezel and glass face encasing a pressure dial with colored needle.",
+        "hair": null,
+        "accessories": [],
+        "body_features": "",
+        "position_descriptor": "Close-up rule-of-thirds on instrument panel segment."
+      },
+      "state": {
+        "pose": "Stationary, indicating critical oxygen levels.",
+        "expression": null
+      }
+    },
+    {
+      "id": "power_system_panel",
+      "physics_profile": {
+        "material": [
+          "rigid"
+        ],
+        "action_context": []
+      },
+      "appearance": {
+        "clothing_or_material": "Metal faceplate with labeled breaker switches and multicolor indicator LEDs.",
+        "hair": null,
+        "accessories": [],
+        "body_features": "",
+        "position_descriptor": "Rule-of-thirds offset alongside other instruments."
+      },
+      "state": {
+        "pose": "Presenting critical system statuses to the astronauts.",
+        "expression": null
+      }
+    }
+  ]
+}
+Scene #3 OpticalAndTechnicalOption: {"style":"High-fidelity RAW photography with Ultra-High surface detail and Filmic organic texture.","camera":{"angle":"low angle","distance":"full-length vertical capture","focus":"sharp focus throughout the vertical frame","lens":"35mm","fNumber":"f/11.0","ISO":800},"composition":"vertical rule of thirds","effects":["subtle film grain","highly defined textures","hyper-detailed rendering","extreme visual fidelity","photorealistic textures","physically based rendering"]}
+Scene #3 Test sentence: A low angle full-length vertical capture captures 1970 Space Race American NASA Astronaut Crew, Athletic build typical of trained astronauts, clad in White pressure suits with red trim, rigid torso assembly and layered insulation with flexible joints, equipped with Helmet with visor, Portable wrist device, and Mission patches on chest who is Engaged in a collaborative effort, hands positioned over instruments with tension in their stances. in the foreground, the scene is set in Dimly lit control panels displaying flickering digital displays and ominous shadows cast by CO2 scrubber gauges, depicting 1970 Space Race astronaut crew collaborating under dim fluorescent lights with a sense of urgency as power systems fail. with a vertical rule of thirds composition, where the atmosphere is Tense atmosphere filled with urgency and determination as the astronauts confront critical conditions, illuminated by Overhead fluorescent panels with directional spill from instrument backlights. and a color palette of (#333333, #A0BFCB, #507080), rendered in High-fidelity RAW photography with Ultra-High surface detail and Filmic organic texture, captured with a 35mm lens at f/11.0 for sharp focus throughout the vertical frame and ISO 800, featuring subtle film grain, highly defined textures, hyper-detailed rendering, extreme visual fidelity, photorealistic textures, and physically based rendering.
+Scene #4 postImageGenPrompt() usage:  {"prompt_tokens":12532,"completion_tokens":1662,"total_tokens":14194,"prompt_tokens_details":{"cached_tokens":12288,"audio_tokens":0},"completion_tokens_details":{"reasoning_tokens":0,"audio_tokens":0,"accepted_prediction_tokens":0,"rejected_prediction_tokens":0}}
+Scene #4 raw generated content: {
+  "image_gen_prompt": {
+    "scene": "1970 Space Race mission control engineers hurriedly assembling a makeshift square filter from tape and plastic under bright fluorescent lights",
+    "subjects": [
+      {
+        "id": "ground_control_engineers",
+        "type": "human",
+        "description": "A focused engineer with various builds wearing a light blue short-sleeve shirt, khaki trousers, and a headset, surrounded by colleagues at the consoles.",
+        "clothes": "Light blue short-sleeve shirts with pocket pens, khaki trousers, and wired headsets.",
+        "accessories": [
+          "Headset with microphone",
+          "Engineering wristband",
+          "Identification badge"
+        ],
+        "pose": "Leaning forward with intent focus, eyes locked on the console screens, hands poised over buttons and switches.",
+        "position": "midground"
+      },
+      {
+        "id": "makeshift_co2_filter",
+        "type": "object",
+        "description": "The makeshift CO2 filter, constructed from a square plastic housing sealed with cloth tape, translucent walls showing the internal cartridge, positioned prominently in the foreground.",
+        "clothes": "Square plastic housing sealed with cloth tape.",
+        "accessories": [],
+        "pose": "Anchoring firmly on the console, showcasing the improvised assembly with visible tape seams.",
+        "position": "foreground"
+      },
+      {
+        "id": "mission_control_console",
+        "type": "object",
+        "description": "A dark-coated metal console surface with CRT screens, colored push buttons, and toggle switches, serving as the interactive hub for the engineers.",
+        "clothes": "Dark-coated metal console surface with CRT screens.",
+        "accessories": [],
+        "pose": "Firmly stationed in the midground, supporting the engineers' actions.",
+        "position": "midground"
+      },
+      {
+        "id": "instruction_manual",
+        "type": "object",
+        "description": "The instruction manual, glossy laminated with hand-inked schematics, lying open on the console, providing critical guidance.",
+        "clothes": "Glossy laminated paper pages with hand-inked schematics.",
+        "accessories": [],
+        "pose": "Centered on the desk at eye-level, integral to the engineers' assembly process.",
+        "position": "midground"
+      },
+      {
+        "id": "filter_tape",
+        "type": "object",
+        "description": "Thick cloth-backed adhesive tape, matte surface with slight fabric texture, applied around the edges of the filter.",
+        "clothes": "Thick cloth-backed adhesive tape with matte surface and slight fabric texture.",
+        "accessories": [],
+        "pose": "Foreground detail applied around filter edges, showcasing the improvisation.",
+        "position": "foreground"
+      },
+      {
+        "id": "ground_control_room",
+        "type": "object",
+        "description": "The ground control room, filled with rows of cathode-ray display consoles and fluorescent lighting, creating a high-tech atmosphere.",
+        "clothes": "Rows of cathode-ray display consoles, laminated desks.",
+        "accessories": [],
+        "pose": "Looming background presence filling the frame width.",
+        "position": "background"
+      }
+    ],
+    "color_palette": [
+      "#333333",
+      "#CDE5F2",
+      "#507080"
+    ],
+    "lighting": "Overhead fluorescent panels with directional spill from instrument backlights.",
+    "mood": "Tense atmosphere of urgency and focus amidst a critical mission.",
+    "background": "Rows of cathode-ray display consoles casting a muted glow, with engineers clustered around, under bright fluorescent lights."
+  },
+  "technical_intent": {
+    "angleIntent": "Default/Neutral",
+    "compositionIntent": "Balance",
+    "exposureIntent": "Balanced/Natural"
+  },
+  "updated_entity_manifest_list": [
+    {
+      "id": "filter_tape",
+      "physics_profile": {
+        "material": [
+          "cloth"
+        ],
+        "action_context": []
+      },
+      "appearance": {
+        "clothing_or_material": "Thick cloth-backed adhesive tape with matte surface and slight fabric texture.",
+        "hair": null,
+        "accessories": [],
+        "body_features": "",
+        "position_descriptor": "Foreground detail applied around filter edges."
+      },
+      "state": {
+        "pose": "Positioned securely around the filter edges.",
+        "expression": null
+      }
+    },
+    {
+      "id": "ground_control_engineers",
+      "physics_profile": {
+        "material": [
+          "rigid",
+          "viscoelastic"
+        ],
+        "action_context": [
+          "interaction"
+        ]
+      },
+      "appearance": {
+        "clothing_or_material": "Light blue short-sleeve shirts, pocket pens, wired headsets and khaki trousers.",
+        "hair": null,
+        "accessories": [
+          "Headset with microphone",
+          "Engineering wristband",
+          "Identification badge"
+        ],
+        "body_features": "Various builds, standing posture focused on consoles.",
+        "position_descriptor": "Center-weighted cluster around consoles to emphasize teamwork."
+      },
+      "state": {
+        "pose": "Leaning forward with intent focus, eyes locked on the console screens.",
+        "expression": null
+      }
+    },
+    {
+      "id": "ground_control_room",
+      "physics_profile": {
+        "material": [
+          "rigid"
+        ],
+        "action_context": []
+      },
+      "appearance": {
+        "clothing_or_material": "Rows of cathode-ray display consoles, laminated desks and suspended fluorescent ceiling panels.",
+        "hair": null,
+        "accessories": [],
+        "body_features": "",
+        "position_descriptor": "Looming background presence filling the frame width."
+      },
+      "state": {
+        "pose": "Filling the background with a high-tech atmosphere.",
+        "expression": null
+      }
+    },
+    {
+      "id": "instruction_manual",
+      "physics_profile": {
+        "material": [
+          "brittle"
+        ],
+        "action_context": []
+      },
+      "appearance": {
+        "clothing_or_material": "Glossy laminated paper pages with hand-inked schematics and binding coil.",
+        "hair": null,
+        "accessories": [],
+        "body_features": "",
+        "position_descriptor": "Centered on console desk at eye-level."
+      },
+      "state": {
+        "pose": "Positioned neatly at eye-level.",
+        "expression": null
+      }
+    },
+    {
+      "id": "makeshift_co2_filter",
+      "physics_profile": {
+        "material": [
+          "rigid",
+          "elastoplastic"
+        ],
+        "action_context": [
+          "interaction"
+        ]
+      },
+      "appearance": {
+        "clothing_or_material": "Square plastic housing sealed with cloth tape, translucent walls showing internal cartridge.",
+        "hair": null,
+        "accessories": [],
+        "body_features": "",
+        "position_descriptor": "Foreground anchor near engineer hands."
+      },
+      "state": {
+        "pose": "Anchored firmly, showcasing the improvised assembly.",
+        "expression": null
+      }
+    },
+    {
+      "id": "mission_control_console",
+      "physics_profile": {
+        "material": [
+          "rigid"
+        ],
+        "action_context": []
+      },
+      "appearance": {
+        "clothing_or_material": "Dark-coated metal console surface with CRT screens, colored push buttons and toggle switches.",
+        "hair": null,
+        "accessories": [],
+        "body_features": "",
+        "position_descriptor": "Foreground third of frame to show engineer interaction."
+      },
+      "state": {
+        "pose": "Sturdy and stable, supporting the engineers' actions.",
+        "expression": null
+      }
+    }
+  ]
+}
+Scene #4 OpticalAndTechnicalOption: {"style":"High-fidelity RAW photography with Ultra-High surface detail and Filmic organic texture.","camera":{"angle":"eye level","distance":"full-length vertical capture","focus":"sharp focus throughout the vertical frame","lens":"35mm","fNumber":"f/11.0","ISO":800},"composition":"vertical rule of thirds","effects":["subtle film grain","highly defined textures","hyper-detailed rendering","extreme visual fidelity","photorealistic textures","physically based rendering"]}
+Scene #4 Test sentence: An eye level full-length vertical capture captures 1970 Space Race American Mission Control Engineer, Various builds, standing posture focused on consoles, clad in Light blue short-sleeve shirts, pocket pens, wired headsets and khaki trousers, equipped with Headset with microphone, Engineering wristband, and Identification badge who is Leaning forward with intent focus, eyes locked on the console screens, hands poised over buttons and switches. in the midground, while in the foreground a 1970 Space Race American NASA Makeshift CO2 Filter, clad in Square plastic housing sealed with cloth tape, translucent walls showing internal cartridge, equipped with   Anchoring firmly on the console, showcasing the improvised assembly with visible tape seams, while in the midground a 1970 Space Race American NASA Mission Control Console, clad in Dark-coated metal console surface with CRT screens, colored push buttons and toggle switches, equipped with   Firmly stationed in the midground, supporting the engineers' actions, while in the midground a 1970 Space Race American NASA Instruction Manual, clad in Glossy laminated paper pages with hand-inked schematics and binding coil, equipped with   Centered on the desk at eye-level, integral to the engineers' assembly process, while in the foreground a 1970 Space Race American NASA Adhesive Tape, clad in Thick cloth-backed adhesive tape with matte surface and slight fabric texture, equipped with   Foreground detail applied around filter edges, showcasing the improvisation, while in the background a 1970 Space Race American NASA Ground Control Room, clad in Rows of cathode-ray display consoles, laminated desks and suspended fluorescent ceiling panels, equipped with   Looming background presence filling the frame width, the scene is set in Rows of cathode-ray display consoles casting a muted glow, with engineers clustered around, under bright fluorescent lights, depicting 1970 Space Race mission control engineers hurriedly assembling a makeshift square filter from tape and plastic under bright fluorescent lights with a vertical rule of thirds composition, where the atmosphere is Tense atmosphere of urgency and focus amidst a critical mission, illuminated by Overhead fluorescent panels with directional spill from instrument backlights. and a color palette of (#333333, #CDE5F2, #507080), rendered in High-fidelity RAW photography with Ultra-High surface detail and Filmic organic texture, captured with a 35mm lens at f/11.0 for sharp focus throughout the vertical frame and ISO 800, featuring subtle film grain, highly defined textures, hyper-detailed rendering, extreme visual fidelity, photorealistic textures, and physically based rendering.
