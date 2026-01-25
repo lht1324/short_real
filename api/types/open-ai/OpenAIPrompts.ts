@@ -171,7 +171,11 @@ export const POST_MASTER_STYLE_INFO_PROMPT = `
       - **Unification Logic**:
         1. **Identity Mapping**: Analyze the entire <full_script_context> to check if entities mentioned across different scenes are the same individual. Map them to a single unique \`ID\`.
         2. **Structural Continuity**: Maintain persistent IDs for key environmental structures (e.g., a specific vehicle or room) across all scenes sharing that setting.
-        3. **Hierarchical Coexistence (Anti-Substitution)**: 
+        3. **Individualization & Differentiator Injection (Anti-Cloning)**: 
+           - **Action**: If the narration implies distinct, independent actions for members of a group, or if a scene requires high visual density without repetitive "clone" artifacts, split the collective ID into unique indexed IDs (e.g., \`engineer_01\`, \`engineer_02\`, \`soccer_player_01\`, \`soccer_player_02\`).
+           - **Visual Differentiator**: For each split ID, assign a unique **Visual Marker** (e.g., distinct age, specific accessories like glasses, or unique clothing states like "rolled sleeves") within the \`casting_logic\`. This ensures the downstream VLM treats them as distinct individuals.
+           - **Collective Diversity**: For entities that remain as a group (e.g., background crowds), mandate a "High-Diversity Texture" in the \`casting_logic\` to ensure randomized appearances and prevent identical facial/body features.
+        4. **Hierarchical Coexistence (Anti-Substitution)**: 
            - Even if a macro-environment (e.g., Stadium, City, Galaxy) physically contains a micro-anchor (e.g., Boxing Ring, Specific Storefront, Spaceship), do NOT delete or replace the micro-anchor ID.
            - **Rule**: Both the container (Macro) and the content (Micro) must coexist in the \`cast_id_list\` if the Micro-anchor is a thematic core of the project.
     - **[Step 3: Physical Verification Logic (The Veto Gate)]**
