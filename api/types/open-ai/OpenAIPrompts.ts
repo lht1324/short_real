@@ -185,6 +185,13 @@ export const POST_MASTER_STYLE_INFO_PROMPT = `
         - **Selective Extraction Rule**:
           1. **Inclusion Criteria (Harvest as Entity IDs)**:
              - **Primary Subjects**: All active characters and animals.
+               - **Naming Convention (snake_case)**:
+                 1. **Named Subjects**: If a subject has a specific name in the context (e.g., Private Smith), use the name as ID (e.g., \`private_smith\`).
+                 2. **Generic Single Subject**: If a subject is singular and unnamed, use the subject type directly (e.g., \`astronaut\`).
+                 3. **Generic Multiple Subjects (Split Logic)**: If a group is mentioned (e.g., "soldiers", "crew"), you MUST split them into individual IDs to prevent visual cloning.
+                    * *Format*: \`[singular_noun]_[index]\` (e.g., \`soldier_01\`, \`soldier_02\`).
+                    * *Index Rule*: Always start from \`01\`.
+               - **Individualization Requirement**: For each split ID (e.g., \`_01\`, \`_02\`), ensure that Task 2 assigns distinct visual markers (age, accessory, or pose) to maintain narrative identity.
              - **Interactive/Active Props**: Objects that are manipulated by subjects (e.g., \`plastic_sheeting\`, \`wrench\`) or possess autonomous states (e.g., \`flashing_warning_light\`, \`pressure_gauge\`).
              - **Essential Static Props**: Independent objects that are NOT worn by subjects but are critical for the scene's composition or narrative (e.g., \`instruction_manual\` on a desk, \`oxygen_canister\` in a corner).
              - **Functional Anchors**: Structural objects that require specific material or visual detail (e.g., \`cockpit_console\`, \`vault_door\`).
@@ -192,7 +199,9 @@ export const POST_MASTER_STYLE_INFO_PROMPT = `
              - **Passive Accessories (The Look Filter)**: DO NOT harvest items described as being worn or attached to a subject (e.g., \`headsets\`, \`glasses\`, \`badges\`, \`a pen in pocket\`, \`a necklace\`, \`earrings\`, \`shoes\`, \`sneakers\`). These are treated as internal attributes of the Subject.
              - **Generic Environments**: NEVER harvest overarching stage elements like \`room\`, \`ocean\`, \`interior\`, \`sky\`, \`floor\`, or \`atmosphere\`. These must remain only as textual context in the description.
         - **Rationale**: This rule ensures that the \`included_cast_data_list\` remains focused on high-priority entities, preventing redundant "Prompt Monster" segments while maintaining physical grounding.
-        - **Verification**: Cross-check that every ID in the \`included_cast_data_list\` is an independent noun explicitly derived from the \`scene_visual_description\`.
+        - **Verification**:
+          * Cross-check that every ID in the \`included_cast_data_list\` is an independent noun explicitly derived from the \`scene_visual_description\`.
+          * Every noun mentioned in the \`scene_visual_description\` that is NOT included in the \`included_cast_data_list\` MUST be listed in the \`excluded_cast_data_list\` with a specific reason (e.g., 'Filtered as Environment' or 'Filtered as Accessory').
     - **[Step 2: Global ID Unification & Refinement (Normalization Phase)]**
       - **Objective**: Consolidate the drafted elements into a singular, consistent Entity Registry and assign unique snake_case IDs.
       - **Unification Logic**:
@@ -233,9 +242,9 @@ export const POST_MASTER_STYLE_INFO_PROMPT = `
       - **Example B (Historical/WWII)**:
         - *Metadata*: Title "D-Day Landing", Desc "Grim and chaotic beach assault."
         - *Scene 5 Narration*: "The soldiers crawl through the sand under heavy fire."
-        - *scene_visual_description*: Private Smith crawls forward on the Normandy sand while clutching a weathered rifle. Private Miller crawls behind him on the Normandy sand while holding a medical kit. The Normandy coast shore supports rusted barbed wire, jagged tank traps, and scattered debris.
-        - *Entity Harvesting*: private_smith, private_miller, rifle, medical_kit, normandy_coast_shore, barbed_wire, tank_traps, debris.
-        - *Unification*: Map "soldiers" to \`ID:private_smith\` and \`ID:private_miller\` (Individualized by Step 2-3), map "beach elements" to \`ID:normandy_coast_shore\`.
+        - *scene_visual_description*: The first soldier crawls forward on the Normandy sand while clutching a weathered rifle. The second soldier crawls behind him on the Normandy sand while holding a medical kit. The Normandy coast shore supports rusted barbed wire, jagged tank traps, and scattered debris.
+        - *Entity Harvesting*: soldier_01, soldier_02, rifle, medical_kit, normandy_coast_shore, barbed_wire, tank_traps, debris.
+        - *Unification*: Map "soldiers" to \`ID:soldier_01\` and \`ID:soldier_02\` (Individualized by Step 2-3), map "beach elements" to \`ID:normandy_coast_shore\`.
       - **Example C (High Fantasy)**:
         - *Metadata*: Title "The Dragon's Peak", Desc "Epic mountain journey to a volcanic lair."
         - *Scene 8 Narration*: "The knight draws her sword as the ground shakes."
@@ -245,9 +254,9 @@ export const POST_MASTER_STYLE_INFO_PROMPT = `
       - **Example D (Technological Disaster/Chernobyl)**:
         - *Metadata*: Title "Chernobyl: Point of No Return", Desc "High-tension control room during the nuclear disaster."
         - *Scene Narration*: "The engineers stare in horror at the control panel as the reactor core surges beyond limit."
-        - *scene_visual_description*: Engineer Ivan stands on the tiled floor while staring in horror at the main control panel. Engineer Yuri leans over the metal console desk while frantically pressing buttons near a glowing pressure gauge. The metal console desk supports flickering red warning lights and scattered logbooks.
-        - *Entity Harvesting*: engineer_ivan, engineer_yuri, main_control_panel, tiled_floor, metal_console_desk, pressure_gauge, warning_lights, logbooks.
-        - *Unification*: Map "engineers" to \`ID:engineer_ivan\` and \`ID:engineer_yuri\` (Individualized by Step 2-3), map "control panel" to \`ID:metal_console_desk\`.
+        - *scene_visual_description*: The first engineer stands on the tiled floor while staring in horror at the main control panel. The second engineer leans over the metal console desk while frantically pressing buttons near a glowing pressure gauge. The metal console desk supports flickering red warning lights and scattered logbooks.
+        - *Entity Harvesting*: engineer_01, engineer_02, main_control_panel, tiled_floor, metal_console_desk, pressure_gauge, warning_lights, logbooks.
+        - *Unification*: Map "engineers" to \`ID:engineer_01\` and \`ID:engineer_02\` (Individualized by Step 2-3), map "control panel" to \`ID:metal_console_desk\`.
     - **[Output Specification]**
       - Return a \`scene_casting_list\` where each scene entry contains:
         - \`scene_number\`: Integer matching <full_script_context>[n].\`sceneNumber\`.
