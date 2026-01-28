@@ -47,9 +47,8 @@ const masterStyleInfoResponseFormat: OpenAI.ResponseFormatJSONSchema = {
                         type: "object",
                         properties: {
                             scene_number: { type: "number" },
-                            cast_id_list: { type: "array", items: { type: "string" } },
-                            casting_logic: { type: "string" },
-                            entity_reasoning_list: {
+                            scene_visual_description: { type: "string" },
+                            included_cast_data_list: {
                                 type: "array",
                                 items: {
                                     type: "object",
@@ -61,9 +60,22 @@ const masterStyleInfoResponseFormat: OpenAI.ResponseFormatJSONSchema = {
                                     additionalProperties: false,
                                 }
                             },
+                            excluded_cast_data_list: {
+                                type: "array",
+                                items: {
+                                    type: "object",
+                                    properties: {
+                                        id: { type: "string" },
+                                        reasoning: { type: "string" },
+                                    },
+                                    required: ["id", "reasoning"],
+                                    additionalProperties: false,
+                                }
+                            },
+                            casting_logic: { type: "string" },
                             scene_empty_reasoning: { type: "string" },
                         },
-                        required: ["scene_number", "cast_id_list", "casting_logic", "entity_reasoning_list", "scene_empty_reasoning"],
+                        required: ["scene_number", "scene_visual_description", "included_cast_data_list", "excluded_cast_data_list", "casting_logic", "scene_empty_reasoning"],
                         additionalProperties: false,
                     }
                 },
@@ -686,12 +698,16 @@ Instruction: Analyze <video_metadata>, <target_aspect_ratio>, <style_guidelines>
                     entity_manifest_list: InitialEntityManifestItem[];
                     scene_casting_list: {
                         scene_number: number;
-                        cast_id_list: string[];
-                        casting_logic: string;
-                        entity_reasoning_list: {
+                        scene_visual_description: string;
+                        included_cast_data_list: {
                             id: string;
                             reasoning: string;
                         }[],
+                        excluded_cast_data_list: {
+                            id: string;
+                            reasoning: string;
+                        }[],
+                        casting_logic: string;
                         scene_empty_reasoning: string;
                     }[],
                     scene_casting_list_empty_reason: string;
@@ -710,23 +726,36 @@ Instruction: Analyze <video_metadata>, <target_aspect_ratio>, <style_guidelines>
                     for (const sceneCastingData of parsedData.scene_casting_list.sort((a, b) => a.scene_number - b.scene_number)) {
                         const {
                             scene_number: sceneNumber,
-                            cast_id_list: castIdList,
+                            scene_visual_description: sceneVisualDescription,
+                            included_cast_data_list: includedCastDataList,
+                            excluded_cast_data_list: excludedCastDataList,
                             casting_logic: castingLogic,
-                            entity_reasoning_list: entityReasoningList,
                             scene_empty_reasoning: sceneEmptyReasoning,
                         } = sceneCastingData;
 
                         console.log(`Scene #${sceneNumber} Reasoning`);
-                        console.log(`Scene #${sceneNumber} Cast: ${castIdList.join(', ')}`);
+                        console.log(`Scene #${sceneNumber} Visual Description: ${sceneVisualDescription}`);
                         console.log(`Scene #${sceneNumber} Casting Logic: ${castingLogic}`);
 
-                        if (entityReasoningList.length !== 0) {
-                            for (const sceneEntityReasoningData of entityReasoningList) {
-                                console.log(`Entity[${sceneEntityReasoningData.id}] Reason: ${sceneEntityReasoningData.reasoning}`)
+                        if (includedCastDataList.length !== 0 || excludedCastDataList.length !== 0) {
+                            if (includedCastDataList.length !== 0) {
+                                console.log(`Scene #${sceneNumber} Included Cast: ${includedCastDataList.map((castData) => castData.id).join(', ')}`);
+                                includedCastDataList.forEach((castData) => {
+                                    console.log(`Included Entity[${castData.id}] reasoning: ${castData.reasoning}`);
+                                });
+                            }
+
+                            if (excludedCastDataList.length !== 0) {
+                                console.log(`Scene #${sceneNumber} Excluded Cast: ${excludedCastDataList.map((castData) => castData.id).join(', ')}`);
+                                excludedCastDataList.forEach((castData) => {
+                                    console.log(`Excluded Entity[${castData.id}] reasoning: ${castData.reasoning}`);
+                                });
                             }
                         } else {
-                            console.log(`Empty: ${sceneEmptyReasoning}`);
+                            console.log(`Scene #${sceneNumber} doesn't have casts: ${sceneEmptyReasoning}`);
                         }
+
+                        console.log(" ");
                     }
                 } else {
                     console.log(`SceneCastingListEmptyReason: ${sceneCastingListEmptyReason}`);
@@ -738,9 +767,14 @@ Instruction: Analyze <video_metadata>, <target_aspect_ratio>, <style_guidelines>
                     masterStyleInfo: masterStyleInfo,
                     entityManifestList: entityManifestList, // 추출된 캐릭터 시트 반환
                     sceneCastingDataList: sceneCastingList.map((sceneCasting) => {
+                        const {
+                            scene_number: sceneNumber,
+                            included_cast_data_list: castDataList,
+                        } = sceneCasting;
+
                         return {
-                            sceneNumber: sceneCasting.scene_number,
-                            castIdList: sceneCasting.cast_id_list,
+                            sceneNumber: sceneNumber,
+                            castIdList: castDataList.map((castData) => castData.id),
                         }
                     })
                 };

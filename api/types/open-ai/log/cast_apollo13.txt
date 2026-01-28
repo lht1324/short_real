@@ -1,70 +1,76 @@
 Scene #1 Reasoning
-Scene #1 Cast: command_module_interior, oxygen_level_gauge
-Scene #1 Casting Logic: Scene 1 uses the command module interior as the core anchor to ground the viewer in the Apollo spacecraft. The narration of oxygen levels plunging directly invokes the analog gauge, so we include the oxygen_level_gauge. We veto any crew members here because the narration focuses on instrumentation, not visible astronauts, preserving scale and era consistency.
-Entity[command_module_interior] Reason: Implied by the need to show oxygen systems aboard Apollo 13—Interior environment anchor
-Entity[oxygen_level_gauge] Reason: Narration mentions 'Oxygen levels plunged,' implying a gauge display device
+Scene #1 Visual Description: Instrument panel supports a flashing low oxygen indicator and a digital display reading zero percent.
+Scene #1 Casting Logic: This scene is an interior close-up of the spacecraft’s instrument panel to ground the oxygen-level emergency in a single functional anchor. Generic environment elements like space were omitted to focus on the critical props. All included entities are era-appropriate spacecraft components.
+Scene #1 Included Cast: instrument_panel, low_oxygen_indicator, digital_display
+Included Entity[instrument_panel] reasoning: Included as the functional anchor that displays oxygen levels at the start of the crisis.
+Included Entity[low_oxygen_indicator] reasoning: Included as an active prop indicating critically low oxygen readings.
+Included Entity[digital_display] reasoning: Included as an autonomous prop showing the exact oxygen percentage to set the stakes.
 
 Scene #2 Reasoning
-Scene #2 Cast: command_module_interior, alarm_panel, astronaut_01, astronaut_02, astronaut_03
-Scene #2 Casting Logic: We persist the command_module_interior anchor (temporal continuity) and add alarm_panel because alarms are screaming. The narration calls out the Apollo 13 crew hearing an explosion, so we include all three astronauts (indexed to ensure visual differentiation). Scale and era checks confirm analog panels and period-correct suits.
-Entity[command_module_interior] Reason: Interior persists as core anchor for module scenes
-Entity[alarm_panel] Reason: Narration mentions alarms scream non-stop
-Entity[astronaut_01] Reason: Narration references the Apollo 13 crew hearing the explosion
-Entity[astronaut_02] Reason: Narration references the Apollo 13 crew hearing the explosion
-Entity[astronaut_03] Reason: Narration references the Apollo 13 crew hearing the explosion
+Scene #2 Visual Description: Astronauts in NASA pressure suits react on the lunar_module_cockpit floor as an alarm_panel screams. Lunar_module_cockpit supports overhead_console_lights and scattered procedure_checklists.
+Scene #2 Casting Logic: We selected one dynamic subject (astronauts) and one static anchor (lunar_module_cockpit) with its key props to convey the explosion moment. Environment units like the cabin itself remain implicit, preserving scale and era consistency.
+Scene #2 Included Cast: astronauts, alarm_panel, lunar_module_cockpit, overhead_console_lights, procedure_checklists
+Included Entity[astronauts] reasoning: Included as the active subjects reacting to the sudden explosion and blaring alarms.
+Included Entity[alarm_panel] reasoning: Included as the autonomous prop conveying the audio-visual alarm state.
+Included Entity[lunar_module_cockpit] reasoning: Included as the functional anchor defining the interior ship environment.
+Included Entity[overhead_console_lights] reasoning: Included as static lighting fixtures integral to cockpit illumination.
+Included Entity[procedure_checklists] reasoning: Included as essential static props providing narrative context of mission protocols.
 
 Scene #3 Reasoning
-Scene #3 Cast: command_module_interior, power_control_panel, co2_scrubber_canister, astronaut_01, astronaut_02, astronaut_03
-Scene #3 Casting Logic: We maintain the interior anchor. Scene 3 mentions power systems failure and CO₂ threat, so we add power_control_panel and co2_scrubber_canister. The crew remains visible to convey urgency. All hardware matches 1970 NASA tech levels.
-Entity[command_module_interior] Reason: Continues the spacecraft interior context
-Entity[power_control_panel] Reason: Narration mentions power systems failed
-Entity[co2_scrubber_canister] Reason: Narration mentions carbon dioxide threat
-Entity[astronaut_01] Reason: Crew must be shown reacting to the system failure
-Entity[astronaut_02] Reason: Crew must be shown reacting to the system failure
-Entity[astronaut_03] Reason: Crew must be shown reacting to the system failure
+Scene #3 Visual Description: Power_distribution_panel flickers off on the equipment_rack. Carbon_dioxide threatens the astronauts inside the crew_cabin_bulkhead. Equipment_rack supports disconnected_cables and panel_slots.
+Scene #3 Casting Logic: We identified two dynamic subjects (power_distribution_panel and carbon_dioxide) and one static anchor (equipment_rack) to depict simultaneous system failure and CO₂ threat. All elements align with 1969 spacecraft hardware standards.
+Scene #3 Included Cast: power_distribution_panel, carbon_dioxide, crew_cabin_bulkhead, equipment_rack, disconnected_cables, panel_slots
+Included Entity[power_distribution_panel] reasoning: Included as the active prop that fails to underscore the power loss.
+Included Entity[carbon_dioxide] reasoning: Included as the active substance threatening the crew.
+Included Entity[crew_cabin_bulkhead] reasoning: Included as the structural anchor framing the gas buildup.
+Included Entity[equipment_rack] reasoning: Included as the secondary anchor for power systems components.
+Included Entity[disconnected_cables] reasoning: Included as independent props illustrating system failure.
+Included Entity[panel_slots] reasoning: Included as independent props highlighting missing modules.
 
 Scene #4 Reasoning
-Scene #4 Cast: mission_control_room, ground_control_engineer_01, ground_control_engineer_02, improvised_co2_filter, tape_roll, plastic_sheet, instruction_manual
-Scene #4 Casting Logic: Scene 4 shifts to Mission Control—so we include mission_control_room and two indexed engineers for diversity. Direct narration of a square filter built with tape, plastic and instructions drives inclusion of improvised_co2_filter, tape_roll, plastic_sheet, and instruction_manual. All gear is era-appropriate.
-Entity[mission_control_room] Reason: Narration refers to Ground Control improvising in Mission Control
-Entity[ground_control_engineer_01] Reason: Engineer improvises filter per narration
-Entity[ground_control_engineer_02] Reason: Supporting engineer to avoid cloning, ensures diversity
-Entity[improvised_co2_filter] Reason: Narration mentions a square filter improvised
-Entity[tape_roll] Reason: Narration mentions tape used in the filter
-Entity[plastic_sheet] Reason: Narration mentions plastic used in the filter
-Entity[instruction_manual] Reason: Narration mentions manual instructions used
+Scene #4 Visual Description: Ground_control engineers assemble a square makeshift_co2_filter on the command_center_console using tape and plastic_sheeting guided by manual_instructions. Command_center_console supports scattered data_printouts and communication_cables.
+Scene #4 Casting Logic: One dynamic subject (ground_control) is shown at the command_center_console, with all manipulated and static props drawn from the organic 1969 control-room environment. Era continuity was maintained by excluding generic ‘room’ anchors.
+Scene #4 Included Cast: ground_control, makeshift_co2_filter, command_center_console, tape, plastic_sheeting, manual_instructions, data_printouts, communication_cables
+Included Entity[ground_control] reasoning: Included as the active group improvising the CO₂ filter from mission control.
+Included Entity[makeshift_co2_filter] reasoning: Included as the central prop representing the improvised life-saving device.
+Included Entity[command_center_console] reasoning: Included as the functional anchor for the filter assembly process.
+Included Entity[tape] reasoning: Included as a manipulated prop used to construct the filter.
+Included Entity[plastic_sheeting] reasoning: Included as a manipulated prop used in the jury-rigged assembly.
+Included Entity[manual_instructions] reasoning: Included as a manipulated prop providing procedural guidance.
+Included Entity[data_printouts] reasoning: Included as static props reflecting real-time mission data.
+Included Entity[communication_cables] reasoning: Included as static props illustrating the control-room infrastructure.
 
 Scene #5 Reasoning
-Scene #5 Cast: lunar_module_interior, astronaut_01, astronaut_02, astronaut_03, improvised_co2_filter, makeshift_adapter
-Scene #5 Casting Logic: We switch anchor to the lunar module interior for scenes 5–7. Narration states astronauts build adapters—so we include makeshift_adapter alongside the previously established improvised_co2_filter. Crew remain present to show the assembly process.
-Entity[lunar_module_interior] Reason: Narration occurs inside the lunar module cabin
-Entity[astronaut_01] Reason: Crew builds the makeshift adapter per narration
-Entity[astronaut_02] Reason: Crew builds the makeshift adapter per narration
-Entity[astronaut_03] Reason: Crew builds the makeshift adapter per narration
-Entity[improvised_co2_filter] Reason: Filter from Scene 4 is brought in for adapter integration
-Entity[makeshift_adapter] Reason: Narration mentions building makeshift adapters
+Scene #5 Visual Description: Astronauts in pressure suits assemble adapter_units on the lunar_module_workbench beside a ticking mission_timer. Lunar_module_workbench supports steel toolboxes and loose_wiring.
+Scene #5 Casting Logic: We used astronauts as the dynamic subjects at their workbench anchor, plus all essential assembly props. All components match 1969 Apollo LM interiors and scale logic.
+Scene #5 Included Cast: astronauts, adapter_units, lunar_module_workbench, mission_timer, toolboxes, loose_wiring
+Included Entity[astronauts] reasoning: Included as the main heroes constructing the adapters inside the module.
+Included Entity[adapter_units] reasoning: Included as the active props being assembled to rescue the crew.
+Included Entity[lunar_module_workbench] reasoning: Included as the functional anchor for the assembly workspace.
+Included Entity[mission_timer] reasoning: Included as an active prop underscoring the ticking clock pressure.
+Included Entity[toolboxes] reasoning: Included as static props supplying necessary tools.
+Included Entity[loose_wiring] reasoning: Included as static props indicating an ad-hoc assembly environment.
 
 Scene #6 Reasoning
-Scene #6 Cast: lunar_module_interior, astronaut_01, astronaut_02, astronaut_03
-Scene #6 Casting Logic: Continuing in the lunar module interior, the narration focuses on every breath feeling like a race, requiring close-medium framing of the three astronauts to convey tension. No new props are introduced.
-Entity[lunar_module_interior] Reason: Ongoing interior setting per previous scenes
-Entity[astronaut_01] Reason: Narration implies the astronauts are breathing under duress
-Entity[astronaut_02] Reason: Narration implies the astronauts are breathing under duress
-Entity[astronaut_03] Reason: Narration implies the astronauts are breathing under duress
+Scene #6 Visual Description:
+Scene #6 Casting Logic: This scene is abstract, focusing on the emotional weight of each breath rather than discrete hardware or characters.
+Scene #6 doesn't have casts: Atmospheric shot of the crew cabin interior with no active characters or props to emphasize the silent struggle for oxygen.
 
 Scene #7 Reasoning
-Scene #7 Cast: lunar_module_interior, astronaut_01, astronaut_02, astronaut_03, improvised_co2_filter, co2_scrubber_canister, oxygen_level_gauge
-Scene #7 Casting Logic: Lunar module interior persists. Narration describes the jury-rigged fix stabilizing oxygen—so we re-introduce the improvised filter, canister, and the gauge to show metrics returning to safe levels. Crew are present in relief.
-Entity[lunar_module_interior] Reason: Interior context continues for resolution scene
-Entity[astronaut_01] Reason: Crew is shown relieving tension at restored oxygen levels
-Entity[astronaut_02] Reason: Crew is shown relieving tension at restored oxygen levels
-Entity[astronaut_03] Reason: Crew is shown relieving tension at restored oxygen levels
-Entity[improvised_co2_filter] Reason: Narration references the jury-rigged fix
-Entity[co2_scrubber_canister] Reason: Part of the CO₂ filtration system being stabilized
-Entity[oxygen_level_gauge] Reason: Gauge shows stabilized oxygen levels
+Scene #7 Visual Description: Makeshift_co2_filter remains stabilized on the lunar_module_workbench, its indicator light steady. Lunar_module_workbench supports instructional_diagrams and backup_canisters.
+Scene #7 Casting Logic: Dynamic focus on the CO₂ filter at its workbench anchor communicates resolution. All hardware adheres to era-correct LM designs.
+Scene #7 Included Cast: makeshift_co2_filter, lunar_module_workbench, instructional_diagrams, backup_canisters
+Included Entity[makeshift_co2_filter] reasoning: Included as the stabilized fix that resolved the CO₂ crisis.
+Included Entity[lunar_module_workbench] reasoning: Included as the functional anchor where the filter sits.
+Included Entity[instructional_diagrams] reasoning: Included as static props documenting the filter procedure.
+Included Entity[backup_canisters] reasoning: Included as static props confirming system redundancy.
 
 Scene #8 Reasoning
-Scene #8 Cast: ocean_splashdown, command_module_capsule
-Scene #8 Casting Logic: Final scene shifts to external splashdown—so we include the ocean environment (ocean_splashdown) and the command module reentry capsule (command_module_capsule) to show safe landing. Crew are implied inside, so no astronauts on deck.
-Entity[ocean_splashdown] Reason: Narration mentions splashdown in open water
-Entity[command_module_capsule] Reason: Narration implies the reentry vehicle has landed safely
+Scene #8 Visual Description: Astronauts in orange life vests climb from the command_module_hatch onto the rescue_raft. Command_module_hatch supports heat_shield_scorch and parachute_lines.
+Scene #8 Casting Logic: One dynamic subject (astronauts) and two anchors (rescue_raft and command_module_hatch) with their era-appropriate props ensure physical and thematic closure.
+Scene #8 Included Cast: astronauts, rescue_raft, command_module_hatch, heat_shield_scorch, parachute_lines
+Included Entity[astronauts] reasoning: Included as the dynamic subjects completing the splash-down sequence.
+Included Entity[rescue_raft] reasoning: Included as the functional anchor for the final extraction.
+Included Entity[command_module_hatch] reasoning: Included as the structural anchor where egress occurs.
+Included Entity[heat_shield_scorch] reasoning: Included as a static prop evidencing atmospheric re-entry.
+Included Entity[parachute_lines] reasoning: Included as static props integral to descent and splash-down.

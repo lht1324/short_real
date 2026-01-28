@@ -159,17 +159,44 @@ export const POST_MASTER_STYLE_INFO_PROMPT = `
   </input_data_interpretation>
   <task_1_casting>
     - **Goal**: Populate a unified \`scene_casting_list\` in <output_schema> by first identifying all visual requirements scene-by-scene and then normalizing them into unique Entity IDs to ensure narrative continuity and physical realism.
-    - **[Step 1: Scene-Specific Drafting (Input Phase)]**
-      - **Objective**: For each scene in <full_script_context>, list all necessary visual elements based on direct mention and thematic necessity.
-      - **Logic Gate**: 
-        1. **Direct Extraction**: Identify all entities explicitly mentioned in <full_script_context>[n].\`sceneNarration\`.
-        2. **Aggressive Thematic Inference**: Use <video_metadata>.<video_title> and <video_metadata>.<video_description> to identify **ALL** potential entities that logically coexist within the established theme and location. Do NOT filter for importance; if an object belongs in the overall setting, list it regardless of whether it is the focus of <full_script_context>[n].\`sceneNarration\`.
-        3. **Atmospheric Density**: Ensure the scene contains enough background elements to reflect the emotional and visual weight described in the metadata.
-        4. **Temporal Continuity Drafting**: Cross-reference the \`cast_id_list\` of previous scenes. If the setting remains consistent, automatically include all previously established environmental anchors and key props in the current draft to ensure narrative and physical persistence.
+    - **[Step 1: Visual Sketching & Scene Drafting (Pre-Visualization Phase)]**
+      - **Objective**: For each scene in <full_script_context>, generate a \`scene_visual_description\` that serves as the "Physical Blueprint" before extracting any entity IDs.
+      - **[Phase 1: \`scene_visual_description\` Engineering (The $n+m$ Rule)]**
+        - **Action**: Draft a dry, factual paragraph describing the scene's spatial layout. The paragraph MUST consist of exactly $n$ dynamic sentences and $m$ static anchor sentences.
+        - **Logic Gate**:
+          1. **Initial Frame Visualization (t=0 Snapshot)**:
+             - **Action**: Based on the <video_metadata> and <full_script_context>[n].\`sceneNarration\`, visualize the exact frozen moment at the very start (t=0) of the scene.
+             - **Goal**: Define the literal physical composition of the frame. Determine characters and objects present, their specific spatial coordinates, and their physical states.
+          2. **Sentence Construction ($n+m$ Rule)**: 
+             - **Action**: Breakdown the scene into individual sentences using the following sub-rules:
+               - **(n) Dynamic Sentences**: Create one sentence for each active subject.
+                 * *Format*: \`[Subject] + [Action/Pose] + [Anchor/Surface] + [Optional: Prop/Tool]\`.
+                 * **Placement Rule**: 
+                   - Any item physically worn or attached (e.g., headsets, glasses, a pen in pocket, a necklace) MUST be described as part of the [Subject].
+                   - Any item actively used or manipulated (e.g., plastic sheeting being draped) MUST be listed as the [Prop/Tool].
+               - **(m) Static Sentences**: Create one sentence for each required physical anchor/surface.
+                 * *Format*: \`[Anchor] + [State: holds/supports] + [List of Independent Props & Background Extras]\`.
+                 * **Exclusion Rule**: DO NOT list items here that are already described as being worn or used by a subject in an (n) sentence. Only include stationary, independent objects.
+               - **Exclusivity Rule**: A specific prop or background extra MUST NOT appear in more than one sentence.
+          3. **Paragraph Synthesis**:
+             - **Action**: Assemble all generated sentences into a single, cohesive paragraph without line breaks (\`\\n\`).
+      - **[Phase 2: Entity Harvesting from Sketch]**
+        - **Logic**: Identify and extract nouns from the \`scene_visual_description\` to populate the \`included_cast_data_list\` by applying the **"Selective Extraction Rule"**.
+        - **Selective Extraction Rule**:
+          1. **Inclusion Criteria (Harvest as Entity IDs)**:
+             - **Primary Subjects**: All active characters and animals.
+             - **Interactive/Active Props**: Objects that are manipulated by subjects (e.g., \`plastic_sheeting\`, \`wrench\`) or possess autonomous states (e.g., \`flashing_warning_light\`, \`pressure_gauge\`).
+             - **Essential Static Props**: Independent objects that are NOT worn by subjects but are critical for the scene's composition or narrative (e.g., \`instruction_manual\` on a desk, \`oxygen_canister\` in a corner).
+             - **Functional Anchors**: Structural objects that require specific material or visual detail (e.g., \`cockpit_console\`, \`vault_door\`).
+          2. **Exclusion Criteria (Discard from cast_id_list)**:
+             - **Passive Accessories (The Look Filter)**: DO NOT harvest items described as being worn or attached to a subject (e.g., \`headsets\`, \`glasses\`, \`badges\`, \`a pen in pocket\`, \`a necklace\`, \`earrings\`, \`shoes\`, \`sneakers\`). These are treated as internal attributes of the Subject.
+             - **Generic Environments**: NEVER harvest overarching stage elements like \`room\`, \`ocean\`, \`interior\`, \`sky\`, \`floor\`, or \`atmosphere\`. These must remain only as textual context in the description.
+        - **Rationale**: This rule ensures that the \`included_cast_data_list\` remains focused on high-priority entities, preventing redundant "Prompt Monster" segments while maintaining physical grounding.
+        - **Verification**: Cross-check that every ID in the \`included_cast_data_list\` is an independent noun explicitly derived from the \`scene_visual_description\`.
     - **[Step 2: Global ID Unification & Refinement (Normalization Phase)]**
       - **Objective**: Consolidate the drafted elements into a singular, consistent Entity Registry and assign unique snake_case IDs.
       - **Unification Logic**:
-        1. **Identity Mapping**: Analyze the entire <full_script_context> to check if entities mentioned across different scenes are the same individual. Map them to a single unique \`ID\`.
+        1. **Sketch-to-ID Mapping**: Every noun identified as a Subject, Prop, or Anchor in the sketch MUST be mapped to a unique snake_case ID.
         2. **Structural Continuity**: Maintain persistent IDs for key environmental structures (e.g., a specific vehicle or room) across all scenes sharing that setting.
         3. **Individualization & Differentiator Injection (Anti-Cloning)**: 
            - **Action**: If <full_script_context>[n].\`sceneNarration\` implies distinct, independent actions for members of a group, or if a scene requires high visual density without repetitive "clone" artifacts, split the collective ID into unique indexed IDs.
@@ -178,9 +205,10 @@ export const POST_MASTER_STYLE_INFO_PROMPT = `
                * IF there are 3 soccer players, use \`soccer_player_01\`, \`soccer_player_02\`, \`soccer_player_03\` instead of \`soccer_players\`.
            - **Visual Differentiator**: For each split ID, assign a unique **Visual Marker** (e.g., distinct age, specific accessories like glasses, or unique clothing states like "rolled sleeves") within the \`casting_logic\`. This ensures the downstream VLM treats them as distinct individuals.
            - **Collective Diversity**: For entities that remain as a group (e.g., background crowds), mandate a "High-Diversity Texture" in the \`casting_logic\` to ensure randomized appearances and prevent identical facial/body features.
-        4. **Hierarchical Coexistence (Anti-Substitution)**: 
-           - Even if a macro-environment (e.g., Stadium, City, Galaxy) physically contains a micro-anchor (e.g., Boxing Ring, Specific Storefront, Spaceship), do NOT delete or replace the micro-anchor ID.
-           - **Rule**: Both the container (Macro) and the content (Micro) must coexist in the \`cast_id_list\` if the Micro-anchor is a thematic core of the project.
+        4. **Anchor Integrity & Environment Filtering**:
+           - **Logic**: Ensure that any ID identified as an 'Anchor' in the static (m) sentences of the \`scene_visual_description\` is preserved as the parent coordinate for its respective props.
+           - **The Environment Exception**: If an Anchor is classified as an **Environment** (e.g., \`room\`, \`ocean\`, \`interior\`, \`sky\`, \`floor\`) according to the **[Step 1]**'s **[Phase 2]** definitions, it MUST be stripped of its ID status and excluded from the \`included_cast_data_list\`. 
+           - **Action**: These excluded environment anchors remain only as textual grounding within the \`scene_visual_description\`. Only **Functional Anchors** (e.g., \`console_desk\`, \`surgical_table\`, \`chair\`) that require distinct visual attributes are unified into the final Registry.
     - **[Step 3: Physical Verification Logic (The Veto Gate)]**
       1. **Contextual Alignment (Internal Logic Veto)**: 
          - Veto any drafted entities that contradict the internal world-building rules, technological level, or thematic boundaries established in <video_metadata> and <full_script_context>. 
@@ -188,33 +216,46 @@ export const POST_MASTER_STYLE_INFO_PROMPT = `
       2. **Spatial/Scale Visibility Veto**: 
          - Evaluate whether an entity is physically visible within the specific scene's framing. 
          - **Action**: Remove macro-entities that are impossible to capture in "Face/Detail" or "Bust/Chest" shots unless they function as essential reflections or lighting sources.
-         - **Constraint**: Ensure that removing a macro-entity for scale reasons does NOT lead to the removal of the Core Anchor.
+         - **Constraint**: Do NOT remove an entity if it is designated as an **Anchor** in the \`scene_visual_description\`, even if it is out-of-frame or too large. Its existence is mandatory for the physical grounding of the props it supports.
       3. **Core Anchor Protection & Invariance**: 
-         - **Veto Immunity**: The "Core Anchor" identified from the theme is immune to removal for "lack of mention" or "scale importance." It must remain to anchor the visual context.
+         - **Veto Immunity**: 
+           - **Logic**: The "Core Anchor" and any **Sketch-defined Anchors** are generally immune to removal for "lack of mention" or "scale importance" to preserve physical grounding.
+           - **Strict Exception (Precedence Clause)**: This immunity **DOES NOT apply** to nouns categorized as **Environment** or **Accessory** according to the Selective Extraction Rule in Phase 2. 
+           - **Action**: If a noun is an Environment (e.g., \`ocean\`, \`room\`) or an Accessory (e.g., \`headset\`), it MUST be removed from the \`included_cast_data_list\` even if it functions as a Core Anchor. 
          - **Invariance Check**: Verify that core physical traits (gender, race, fixed identifiers) of all recurring IDs remain identical across all scenes to ensure narrative continuity.
     - **[Execution Examples by Genre]**
-      - **Example A (Historical/WWII)**:
-        - *Metadata*: Title "D-Day Landing", Desc "Grim and chaotic beach assault."
-        - *Scene 5 Narration*: "A soldier crawls through the sand under heavy fire."
-        - *Drafting*: soldier, sand, barbed wire, explosions, tank traps.
-        - *Unification*: Map "soldier" to \`ID:private_smith\` (seen in Scene 1), map "beach elements" to \`ID:normandy_coast_shore\`.
-      - **Example B (Sci-Fi/Cyberpunk)**:
+      - **Example A (Sci-Fi/Cyberpunk)**:
         - *Metadata*: Title "Neon Shadows", Desc "Rainy dystopian city alleyway."
         - *Scene 2 Narration*: "The hacker plugs into the terminal, rain soaking his jacket."
-        - *Drafting*: hacker, terminal, rainy alley, neon signs, cyber-interface.
+        - *\`scene_visual_description\`*: Protagonist Jax standing on the rainy alley floor plugs a cyber-interface cable into a glowing terminal on the wall. The Sector 7 Alleyway supports flickering neon signs and discarded trash bags in the rain.
+        - *Entity Harvesting*: protagonist_jax, cyber_interface, terminal, sector_7_alleyway, neon_signs, trash_bags.
         - *Unification*: Map "hacker" to \`ID:protagonist_jax\`, map "rainy alley" to \`ID:sector_7_alleyway\`.
+      - **Example B (Historical/WWII)**:
+        - *Metadata*: Title "D-Day Landing", Desc "Grim and chaotic beach assault."
+        - *Scene 5 Narration*: "The soldiers crawl through the sand under heavy fire."
+        - *scene_visual_description*: Private Smith crawls forward on the Normandy sand while clutching a weathered rifle. Private Miller crawls behind him on the Normandy sand while holding a medical kit. The Normandy coast shore supports rusted barbed wire, jagged tank traps, and scattered debris.
+        - *Entity Harvesting*: private_smith, private_miller, rifle, medical_kit, normandy_coast_shore, barbed_wire, tank_traps, debris.
+        - *Unification*: Map "soldiers" to \`ID:private_smith\` and \`ID:private_miller\` (Individualized by Step 2-3), map "beach elements" to \`ID:normandy_coast_shore\`.
       - **Example C (High Fantasy)**:
         - *Metadata*: Title "The Dragon's Peak", Desc "Epic mountain journey to a volcanic lair."
         - *Scene 8 Narration*: "The knight draws her sword as the ground shakes."
-        - *Drafting*: knight, sword, trembling ground, volcano entrance, smoke.
+        - *\`scene_visual_description\`*: Lady Elara draws her holy avenger blade while standing firmly on the trembling mountain ground. The volcanic lair entrance supports thick black smoke and glowing magma cracks.
+        - *Entity Harvesting*: lady_elara, holy_avenger_blade, volcanic_lair_entrance, smoke, magma_cracks.
         - *Unification*: Map "knight" to \`ID:lady_elara\`, map "sword" to \`ID:holy_avenger_blade\`.
+      - **Example D (Technological Disaster/Chernobyl)**:
+        - *Metadata*: Title "Chernobyl: Point of No Return", Desc "High-tension control room during the nuclear disaster."
+        - *Scene Narration*: "The engineers stare in horror at the control panel as the reactor core surges beyond limit."
+        - *scene_visual_description*: Engineer Ivan stands on the tiled floor while staring in horror at the main control panel. Engineer Yuri leans over the metal console desk while frantically pressing buttons near a glowing pressure gauge. The metal console desk supports flickering red warning lights and scattered logbooks.
+        - *Entity Harvesting*: engineer_ivan, engineer_yuri, main_control_panel, tiled_floor, metal_console_desk, pressure_gauge, warning_lights, logbooks.
+        - *Unification*: Map "engineers" to \`ID:engineer_ivan\` and \`ID:engineer_yuri\` (Individualized by Step 2-3), map "control panel" to \`ID:metal_console_desk\`.
     - **[Output Specification]**
       - Return a \`scene_casting_list\` where each scene entry contains:
         - \`scene_number\`: Integer matching <full_script_context>[n].\`sceneNumber\`.
-        - \`cast_id_list\`: List of unique IDs finalized after **[Step 2]**.
+        - \`scene_visual_description\`: The finalized $n+m$ paragraph.
+        - \`included_cast_data_list\`: List of unique IDs and their included reasons finalized after **[Step 2]**.
+        - \`excluded_cast_data_list\`: List of excluded IDs and their excluded reasons after **[Step 2]**.
         - \`casting_logic\`: Explanation of how environmental anchors were inferred and how physical consistency (Scale/Era) was verified.
-        - \`entity_reasoning_list\`: Populate with every entity appearing in the scene. Provide a \`reasoning\` citing specific words or context from the narration. Leave this empty if scene's \`cast_id_list\` is empty.
-        - \`scene_empty_reasoning\`: Provide a detailed explanation of why the scene is intentionally devoid of characters/entities. Leave this empty if scene's \`cast_id_list\` is NOT empty.
+        - \`scene_empty_reasoning\`: Provide a detailed explanation of why the scene is intentionally devoid of characters/entities. Leave this empty if scene's \`included_cast_data_list\` is NOT empty.
       - **Constraint**: Do not leave \`scene_casting_list\` empty.
   </task_1_casting>
   <task_2_entity_manifest>
@@ -520,14 +561,20 @@ export const POST_MASTER_STYLE_INFO_PROMPT = `
       "scene_casting_list": [
         {
           "scene_number": "number (Integer, starting from 1, matching <full_script_context>[n].\`sceneNumber\`)",
-          "cast_id_list": "string[] (Must match every \`id\`s identified in <task_1_casting>)",
-          "casting_logic": "string (REQUIRED: Explain why these entities were selected and how physical consistency was verified.)"
-          "entity_reasoning_list": [
+          "scene_visual_description": "string (A focused flight controller leaning over a grey console desk, hurriedly assembling a makeshift filter made of tape and plastic sheeting resting on the desk surface.)"
+          "included_cast_data_list": [
             {
-              "id": "string (Must match an \`id\` from identified in <task_1_casting>)",
-              "reasoning": "string (REQUIRED: Explain WHY this entity is in this scene based on the script. E.g., 'Narration mentions 'he ran', implying the Runner.')"
+              "id": "string (Must match an \`id\` from included in <task_1_casting>)",
+              "reasoning": "string (REQUIRED: Explain WHY this entity is included in this scene based on the entire logic of <task_1_casting>.)"
             }
           ],
+          "excluded_cast_data_list": [
+            {
+              "id": "string (Must match an \`id\` from excluded in <task_1_casting>)",
+              "reasoning": "string (REQUIRED: Explain WHY this entity is excluded in this scene based on the entire logic of <task_1_casting>.)"
+            }
+          ],
+          "casting_logic": "string (REQUIRED: Explain why these entities were selected and how physical consistency was verified.)"
           "scene_empty_reasoning": "string (REQUIRED if \`reasoning_list\` is empty. Explain why NO entities are present. E.g., 'Atmospheric shot of the sky, no actors needed.' If entities exist, leave as empty string \"\".)"
         }
       ],
