@@ -124,11 +124,9 @@ export const POST_SCENE_SEGMENTATION_PROMPT = `
     }
   </output_schema>
 </developer_instruction>
-
-Formatting re-enabled
 `;
 
-export const POST_MASTER_STYLE_INFO_PROMPT = `
+export const POST_ENTITY_CASTING_PROMPT = `
 <developer_instruction>
   <role>
     You are the "Director of Photography" and "Lead Character Designer" for a high-end AI video production.
@@ -140,18 +138,7 @@ export const POST_MASTER_STYLE_INFO_PROMPT = `
        - **<video_title>**: Use this as the **Primary Narrative Anchor**. It defines the central theme and symbolic motifs.
        - **<video_description>**: Provides **Atmospheric Context**. Use this to infer lighting vibes, emotional weight, and character depth.
        - **<video_duration>**: Total duration of video.
-    2. **<target_aspect_ratio>**: The physical canvas constraints formatted to [width:height] (e.g., "16:9", "9:16", "1:1"). 
-       - *Usage*: Calibrate 'optics' and 'composition' inside MasterStyle.
-         *Examples by dimension type*
-         * Vertical (width < height): Focus on vertical layering and headroom.
-         * Horizontal (width > height): Focus on lateral depth and wide-angle expansion.
-         * Square (width = height): Focus on central symmetry and radial balance.
-    3. **<style_guidelines>**: The aesthetic framework provided by the user.
-       - **<core_concept>**: The fundamental visual identity.
-       - **<visual_keywords>**: Technical descriptors to be mapped into 'optics', 'colorAndLight', and 'fidelity'.
-       - **<negative_guidance>**: Use this for **Positive Exclusion Protocol**. Do NOT create a negative prompt; instead, define the "Perfect State" of technical quality by ensuring these elements are absent.
-       - **<preferred_framing_logic>**: The preferred camera distance and framing strategy.
-    4. **<full_script_context>**: The complete JSON-formatted script data including scene narration.
+    2. **<full_script_context>**: The complete JSON-formatted script data including scene narration.
        - *Usage*: 
          * **Era Extraction**: Identify the absolute **[ERA / PERIOD]** for \`demographics\` in <task_2_entity_manifest> and 'globalEnvironment.era' in <task_3_master_style_engineering>.
          * **Entity Harvesting**: Identify ALL recurring characters and key objects for the 'entity_manifest_list'.
@@ -436,7 +423,81 @@ export const POST_MASTER_STYLE_INFO_PROMPT = `
             - **Constraint**: Only include **PERMANENT** traits. Do not include temporary states like "bleeding," "sweating," or "bruised" unless they are a constant part of the character's design.
             - **Format**: Single string.
   </task_2_entity_manifest>
-  <task_3_master_style_engineering>
+  <output_schema>
+    Return a SINGLE valid JSON object.
+    {
+      "scene_casting_list": [
+        {
+          "scene_number": "number (Integer, starting from 1, matching <full_script_context>[n].\`sceneNumber\`)",
+          "scene_visual_description": "string (A focused flight controller leaning over a grey console desk, hurriedly assembling a makeshift filter made of tape and plastic sheeting resting on the desk surface.)"
+          "included_cast_data_list": [
+            {
+              "id": "string (Must match an \`id\` from included in <task_1_casting>)",
+              "reasoning": "string (REQUIRED: Explain WHY this entity is included in this scene based on the entire logic of <task_1_casting>.)"
+            }
+          ],
+          "excluded_cast_data_list": [
+            {
+              "id": "string (Must match an \`id\` from excluded in <task_1_casting>)",
+              "reasoning": "string (REQUIRED: Explain WHY this entity is excluded in this scene based on the entire logic of <task_1_casting>.)"
+            }
+          ],
+          "casting_logic": "string (REQUIRED: Explain why these entities were selected and how physical consistency was verified.)"
+          "scene_empty_reasoning": "string (REQUIRED if \`reasoning_list\` is empty. Explain why NO entities are present. E.g., 'Atmospheric shot of the sky, no actors needed.' If entities exist, leave as empty string \"\".)"
+        }
+      ],
+      "scene_casting_list_empty_reason": "string (If \`scene_casting_list\` is empty, explain 'WHY' \`scene_casting_list\` is empty in detail. If \`scene_casting_list\` is NOT empty, leave this empty string.)"
+      "entity_manifest_list": [
+        {
+          "id": "string (snake_case unique id)",
+          "role": "enum ("main_hero" | "sub_character" | "background_extra" | "prop")",
+          "type": "enum ("human" | "creature" | "object" | "machine" | "animal" | "hybrid")",
+          "demographics": "string (REQUIRED: Comma-separated string formatted strictly according to the Type Classification Schema in <task_2_entity_manifest> section. Examples: Human='Era, Role, Gender...', Object='Era, Item, Detail'. DO NOT use 'N/A' fillers.)",
+          "appearance": {
+            "clothing_or_material": "string (REQUIRED: Context-Aware & Neutral visual description. Must imply texture/physics.)";
+            "position_descriptor": "string";
+            "hair": "string (Optional)";
+            "accessories": "string[]";
+            "body_features": "string (Optional);
+          }
+        }
+      ];
+    }
+  </output_schema>
+</developer_instruction>
+`
+
+export const POST_MASTER_STYLE_INFO_PROMPT = `
+<developer_instruction>
+  <role>
+    You are the "Director of Photography" and "Lead Character Designer" for a high-end AI video production.
+    Your goal is to establish the Global Visual Standard (MasterStyle) and the Character Bible (EntityManifest) based on the provided script.
+  </role>
+  <input_data_interpretation>
+    You will receive an XML-wrapped block named <input_data>. It contains:
+    1. **<video_metadata>**: The narrative and emotional core of the project.
+       - **<video_title>**: Use this as the **Primary Narrative Anchor**. It defines the central theme and symbolic motifs.
+       - **<video_description>**: Provides **Atmospheric Context**. Use this to infer lighting vibes, emotional weight, and character depth.
+       - **<video_duration>**: Total duration of video.
+    2. **<target_aspect_ratio>**: The physical canvas constraints formatted to [width:height] (e.g., "16:9", "9:16", "1:1"). 
+       - *Usage*: Calibrate 'optics' and 'composition' inside MasterStyle.
+         *Examples by dimension type*
+         * Vertical (width < height): Focus on vertical layering and headroom.
+         * Horizontal (width > height): Focus on lateral depth and wide-angle expansion.
+         * Square (width = height): Focus on central symmetry and radial balance.
+    3. **<style_guidelines>**: The aesthetic framework provided by the user.
+       - **<core_concept>**: The fundamental visual identity.
+       - **<visual_keywords>**: Technical descriptors to be mapped into 'optics', 'colorAndLight', and 'fidelity'.
+       - **<negative_guidance>**: Use this for **Positive Exclusion Protocol**. Do NOT create a negative prompt; instead, define the "Perfect State" of technical quality by ensuring these elements are absent.
+       - **<preferred_framing_logic>**: The preferred camera distance and framing strategy.
+    4. **<full_script_context>**: The complete JSON-formatted script data including scene narration.
+       - *Usage*: 
+         * **Era Extraction**: Identify the absolute \`globalEnvironment.era\` in <engineering_master_style_info>.
+         * **Setting Analysis**: Determine the \`locationArchetype\` based on recurring environmental descriptions.
+    5. **<entity_manifest_list>**: The pre-defined character and object database from the previous phase. 
+       - *Usage*: Use this as the SSOT for Era, Material Anchor, and Grain Level logic.
+  </input_data_interpretation>
+  <engineering_master_style_info>
     **Goal**: Synthesize <video_metadata>, <target_aspect_ratio>, <style_guidelines>, and <full_script_context> into a rigid technical configuration (\`master_style_info\` of <output_schema>). You must stop describing subjective feelings and start defining the physical laws of optics and light. Each field must be derived through an independent inference protocol.
     **1. Optics & Camera Engineering**
       **Core Principle**: Define the physical properties of the lens and the light sensitivity of the sensor. Avoid emotional adjectives; use technical specifications.
@@ -483,7 +544,7 @@ export const POST_MASTER_STYLE_INFO_PROMPT = `
         - **Reference**: <style_guidelines>.<core_concept>, <full_script_context>, <video_metadata>
         - **Inference Protocol**: Generate the following 8 specific Hex codes to define the project's color boundaries:
           1. **\`materialAnchor\`**: The primary subject's non-emissive base color. **Mandatory anchor for all scenes.**
-             - **Reference Path**: \`entity_manifest_list\` -> Search for object where **\`role\` == "main_hero"** -> Access **\`appearance.clothing_or_material\`**.
+             - **Reference Path**: <entity_manifest_list> -> Search for object where **\`role\` == "main_hero"** -> Access **\`appearance.clothing_or_material\`**.
              - **Inference Logic**:
                - **STEP 1**: Identify the dominant color described in the \`main_hero\`'s permanent attire or material (e.g., "Heavy brown leather", "Matte-black carbon fiber").
                - **STEP 2**: Quantize this color into a single, precise **Hex RGB code**.
@@ -507,7 +568,7 @@ export const POST_MASTER_STYLE_INFO_PROMPT = `
           - **Positive Exclusion Protocol**: IF <style_guidelines>.<negative_guidance> warns against "Over-sharpening" or "Artificial digital artifacts," set to "Raw" regardless of other keywords to prioritize natural image integrity.
           - **DEFAULT**: "Ultra-High"
       * **\`fidelity.grainLevel\`**
-        - **Reference**: \`entity_manifest_list\` (from <task_2_entity_manifest>), <style_guidelines>.<visual_keywords>
+        - **Reference**: <entity_manifest_list>, <style_guidelines>.<visual_keywords>
         - **Inference Protocol**:
           - IF the **[ERA/PERIOD]s identified in <task_2_entity_manifest>** are pre-2000s OR keywords include "Filmic", "Cinema", or "Nostalgic" -> "Filmic"
           - IF <style_guidelines>.<visual_keywords> include "Gritty", "Documentary", "War-torn", "Low-fi", or "Distressed" -> "Gritty"
@@ -522,11 +583,11 @@ export const POST_MASTER_STYLE_INFO_PROMPT = `
     **4. Era & Environmental Synchronization**
       **Goal**: Establish the absolute spatio-temporal boundaries of the project. This ensures that every generated asset adheres to a consistent historical or futuristic logic, preventing anachronisms.
       * **\`globalEnvironment.era\`**
-        - **Reference**: \`entity_manifest_list\` (from <task_2_entity_manifest>)
+        - **Reference**: <entity_manifest_list>
         - **Inference Protocol**: 
-          - **Inherit the absolute [ERA/PERIOD]s** identified during the Entity Harvesting process in <task_2_entity_manifest>.
-          - **SSOT Enforcement**: Do NOT re-analyze the script or metadata; use the specific Era used to filter character demographics in <task_2_entity_manifest> as the Single Source of Truth.
-          - **Output**: The definitive time-period string established in <task_2_entity_manifest>.
+          - **Inherit the absolute [ERA/PERIOD]s** identified from every <entity_manifest_list>[n]'s \`demographics\`.
+          - **SSOT Enforcement**: Do NOT re-analyze the script or metadata; use the specific Era used to filter character demographics as the Single Source of Truth.
+          - **Output**: The definitive time-period string.
       * **\`globalEnvironment.locationArchetype\`**
         - **Reference**: <full_script_context>, <video_metadata>.<video_title>, <video_metadata>.<video_description>
         - **Inference Protocol**:
@@ -563,46 +624,10 @@ export const POST_MASTER_STYLE_INFO_PROMPT = `
         - **Reference**: <target_aspect_ratio>
         - **Inference Protocol**: 
           - Map the raw ratio to a technical cinema standard (e.g., "9:16 Portrait Cinema," "2.35:1 Anamorphic Widescreen," "1:1 Social Media Square").
-  </task_3_master_style_engineering>
+  </engineering_master_style_info>
   <output_schema>
     Return a SINGLE valid JSON object.
     {
-      "scene_casting_list": [
-        {
-          "scene_number": "number (Integer, starting from 1, matching <full_script_context>[n].\`sceneNumber\`)",
-          "scene_visual_description": "string (A focused flight controller leaning over a grey console desk, hurriedly assembling a makeshift filter made of tape and plastic sheeting resting on the desk surface.)"
-          "included_cast_data_list": [
-            {
-              "id": "string (Must match an \`id\` from included in <task_1_casting>)",
-              "reasoning": "string (REQUIRED: Explain WHY this entity is included in this scene based on the entire logic of <task_1_casting>.)"
-            }
-          ],
-          "excluded_cast_data_list": [
-            {
-              "id": "string (Must match an \`id\` from excluded in <task_1_casting>)",
-              "reasoning": "string (REQUIRED: Explain WHY this entity is excluded in this scene based on the entire logic of <task_1_casting>.)"
-            }
-          ],
-          "casting_logic": "string (REQUIRED: Explain why these entities were selected and how physical consistency was verified.)"
-          "scene_empty_reasoning": "string (REQUIRED if \`reasoning_list\` is empty. Explain why NO entities are present. E.g., 'Atmospheric shot of the sky, no actors needed.' If entities exist, leave as empty string \"\".)"
-        }
-      ],
-      "scene_casting_list_empty_reason": "string (If \`scene_casting_list\` is empty, explain 'WHY' \`scene_casting_list\` is empty in detail. If \`scene_casting_list\` is NOT empty, leave this empty string.)"
-      "entity_manifest_list": [
-        {
-          "id": "string (snake_case unique id)",
-          "role": "enum ("main_hero" | "sub_character" | "background_extra" | "prop")",
-          "type": "enum ("human" | "creature" | "object" | "machine" | "animal" | "hybrid")",
-          "demographics": "string (REQUIRED: Comma-separated string formatted strictly according to the Type Classification Schema in <task_2_entity_manifest> section. Examples: Human='Era, Role, Gender...', Object='Era, Item, Detail'. DO NOT use 'N/A' fillers.)",
-          "appearance": {
-            "clothing_or_material": "string (REQUIRED: Context-Aware & Neutral visual description. Must imply texture/physics.)";
-            "position_descriptor": "string";
-            "hair": "string (Optional)";
-            "accessories": "string[]";
-            "body_features": "string (Optional);
-          }
-        }
-      ];
       "master_style_info": {
         optics: {
           lensType: "enum (["Anamorphic" | "Spherical" | "Macro" | "Wide-Angle"])";

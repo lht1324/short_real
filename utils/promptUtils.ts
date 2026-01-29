@@ -355,7 +355,10 @@ export function assembleFullImageGenPromptSentence(
              *   * **`hybrid`**: `[ERA/PERIOD], [NATIONALITY/ETHNICITY], [HYBRID TYPE], [GENDER], [AGE]`
              */
             const demoParts = entity.demographics.split(', ');
-            const demographicAnchor = `${demoParts[0]} ${demoParts[1]} ${demoParts[2]}`;
+            const genderPart = entity.type !== 'machine' && entity.type !== 'object' && demoParts[3] !== "N/A"
+                ? `${demoParts[3]} `
+                : ""
+            const demographicAnchor = `${demoParts[0]} ${demoParts[1]} ${genderPart}${demoParts[2]}`;
 
             const hasHelmet = entity.appearance.accessories?.some(acc => acc.toLowerCase().includes('helmet') || acc.toLowerCase().includes('hat'));
 

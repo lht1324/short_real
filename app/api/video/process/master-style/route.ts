@@ -84,6 +84,28 @@ export async function POST(request: NextRequest) {
             });
         }
 
+        const postEntityCastingResult = await openAIServerAPI.postEntityCasting(
+            sceneDataList.map((sceneData) => {
+                return {
+                    sceneNumber: sceneData.sceneNumber,
+                    sceneNarration: sceneData.narration,
+                }
+            }),
+            videoTitle,
+            videoDescription,
+            videoDuration,
+        )
+
+        if (!postEntityCastingResult.success || !postEntityCastingResult.sceneCastingDataList || !postEntityCastingResult.entityManifestList) {
+            await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
+
+            return getNextBaseResponse({
+                success: false,
+                status: 500,
+                error: postEntityCastingResult?.error?.message || 'Failed to generate casting data with OpenAI'
+            });
+        }
+
         // 2. openAIServerAPI로 비디오 Scene 분리 데이터, 마스터 스타일 프롬프트 생성 요청
         const postMasterStyleInfoResult = await openAIServerAPI.postMasterStyleInfo(
             selectedStyle.generationParams,
@@ -96,6 +118,7 @@ export async function POST(request: NextRequest) {
             videoTitle,
             videoDescription,
             videoDuration,
+            postEntityCastingResult.entityManifestList
         );
 
         if (!postMasterStyleInfoResult.success || !postMasterStyleInfoResult.masterStyleInfo) {
@@ -118,8 +141,8 @@ export async function POST(request: NextRequest) {
         // })
 
         const masterStylePositivePromptInfo = postMasterStyleInfoResult.masterStyleInfo;
-        const entityManifestList = postMasterStyleInfoResult.entityManifestList;
-        const sceneCastingDataList = postMasterStyleInfoResult.sceneCastingDataList;
+        const entityManifestList = postEntityCastingResult.entityManifestList;
+        const sceneCastingDataList = postEntityCastingResult.sceneCastingDataList;
 
         const patchVideoGenerationTaskStatusFinalResult = await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, {
             status: VideoGenerationTaskStatus.GENERATING_IMAGE_PROMPT,

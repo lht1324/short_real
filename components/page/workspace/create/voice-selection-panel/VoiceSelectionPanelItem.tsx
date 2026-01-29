@@ -147,16 +147,16 @@ function VoiceSelectionPanelItem({
                         {/* Voice Name + Descriptive */}
                         <div className="pl-3 text-white font-medium text-base flex items-center gap-2">
                             <span>{voice.name}</span>
-                            {voice.descriptive && (
-                                <span className="text-purple-300 text-sm font-normal">
-                                    • {voice.descriptive.charAt(0).toUpperCase() + voice.descriptive.slice(1)}
-                                </span>
-                            )}
-                            {voice.useCase && (
-                                <span className="text-purple-300 text-sm font-normal">
-                                    • {useCaseText}
-                                </span>
-                            )}
+                            {/*{voice.descriptive && (*/}
+                            {/*    <span className="text-purple-300 text-sm font-normal">*/}
+                            {/*        • {voice.descriptive.charAt(0).toUpperCase() + voice.descriptive.slice(1)}*/}
+                            {/*    </span>*/}
+                            {/*)}*/}
+                            {/*{voice.useCase && (*/}
+                            {/*    <span className="text-purple-300 text-sm font-normal">*/}
+                            {/*        • {useCaseText}*/}
+                            {/*    </span>*/}
+                            {/*)}*/}
                         </div>
 
                         {/* Description */}
