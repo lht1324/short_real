@@ -1173,7 +1173,7 @@ Instruction: Generate the scene instruction JSON.
 
             // JSON 유효성 검증
             try {
-                console.log(`Scene #${sceneNumber} raw generated content: ${generatedContent}`)
+                // console.log(`Scene #${sceneNumber} raw generated content: ${generatedContent}`)
                 const instructionJSON: {
                     image_gen_prompt: Omit<FluxPrompt, 'style' | 'camera' | 'composition' | 'effects'>;
                     technical_intent: TechnicalIntent;
@@ -1185,6 +1185,8 @@ Instruction: Generate the scene instruction JSON.
                     technical_intent: technicalIntent,
                     updated_entity_manifest_list: updatedEntityManifestList,
                 } = instructionJSON;
+
+                console.log(`Scene #${sceneNumber} imageGenPrompt: ${JSON.stringify(imageGenPrompt, null, 2)}`);
 
                 const newEntityManifestList = updatedEntityManifestList ? updatedEntityManifestList.map(instruction => {
                     const originalEntity = sceneEntityManifestList.find((entityManifest) => {
