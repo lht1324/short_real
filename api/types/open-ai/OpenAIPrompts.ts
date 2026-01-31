@@ -138,6 +138,7 @@ export const POST_ENTITY_CASTING_PROMPT = `
        - **<video_title>**: Use this as the **Primary Narrative Anchor**. It defines the central theme and symbolic motifs.
        - **<video_description>**: Provides **Atmospheric Context**. Use this to infer lighting vibes, emotional weight, and character depth.
        - **<video_duration>**: Total duration of video.
+       - **<target_aspect_ratio>**: The physical canvas constraints formatted to [width:height] (e.g., "9:16", "16:9"). 
     2. **<full_script_context>**: The complete JSON-formatted script data including scene narration.
        - *Usage*: 
          * **Era Extraction**: Identify the absolute **[ERA / PERIOD]** for \`demographics\` in <task_2_entity_manifest> and 'globalEnvironment.era' in <task_3_master_style_engineering>.
@@ -148,6 +149,18 @@ export const POST_ENTITY_CASTING_PROMPT = `
     - **Goal**: Populate a unified \`scene_casting_list\` in <output_schema> by first identifying all visual requirements scene-by-scene and then normalizing them into unique Entity IDs to ensure narrative continuity and physical realism.
     - **[Step 1: Visual Sketching & Scene Drafting (Pre-Visualization Phase)]**
       - **Objective**: For each scene in <full_script_context>, generate a \`scene_visual_description\` that serves as the "Physical Blueprint" before extracting any entity IDs.
+      - **[Phase 0 - Aspect Ratio Spatial Calibration]**
+        - **Objective**: Calibrate the spatial density and layering of the \`scene_visual_description\` based on the <video_metadata>.<target_aspect_ratio>.
+        - **Logic Gate: Aspect Ratio Constraints**:
+          1. **Vertical (W < H)**:
+             - **Constraint**: The frame is narrow. Limit the number of primary subjects to prevent visual overcrowding.
+             - **Strategy**: Prioritize **Vertical Layering**. Place secondary subjects or background anchors as "distant silhouettes" or in the upper/lower thirds to maintain a clear focal point. Avoid side-by-side placement of large entities.
+          2. **Horizontal (W > H)**:
+             - **Constraint**: The frame is wide.
+             - **Strategy**: Prioritize **Lateral Expansion**. Distribute subjects across the width using the Rule of Thirds. This is suitable for panoramic storytelling, dual-subject interactions (side-by-side), and wide environmental establishing shots.
+          3. **Square (W = H)**:
+             - **Constraint**: The frame is perfectly balanced and stable.
+             - **Strategy**: Prioritize **Central Symmetry or Radial Balance**. Place the primary subject in the dead center or use a tight focal composition. Since there is no bias towards width or height, focus on the depth axis (Foreground vs. Background) to create 3D volume within the square box.
       - **[Phase 1: \`scene_visual_description\` Engineering (The $n+m$ Rule)]**
         - **Action**: Draft a dry, factual paragraph describing the scene's spatial layout. The paragraph MUST consist of exactly $n$ dynamic sentences and $m$ static anchor sentences.
         - **Logic Gate**:
@@ -168,7 +181,7 @@ export const POST_ENTITY_CASTING_PROMPT = `
           3. **Paragraph Synthesis**:
              - **Action**: Assemble all generated sentences into a single, cohesive paragraph without line breaks (\`\\n\`).
       - **[Phase 2: Entity Harvesting from Sketch]**
-        - **Logic**: Identify and extract nouns from the \`scene_visual_description\` to populate the \`included_cast_data_list\` by applying the **"Selective Extraction Rule"**.
+        - **Logic**: Identify and extract nouns from the \`scene_visual_description\` to populate the \`included_cast_data_list\`.
         - **Selective Extraction Rule**:
           1. **Inclusion Criteria (Harvest as Entity IDs)**:
              - **Primary Subjects**: All active characters and animals.
@@ -179,9 +192,11 @@ export const POST_ENTITY_CASTING_PROMPT = `
                     * *Format*: \`[singular_noun]_[index]\` (e.g., \`soldier_01\`, \`soldier_02\`).
                     * *Index Rule*: Always start from \`01\`.
                - **Individualization Requirement**: For each split ID (e.g., \`_01\`, \`_02\`), ensure that Task 2 assigns distinct visual markers (age, accessory, or pose) to maintain narrative identity.
+             - **Functional Anchors (Critical)**: Structural objects that physically house, carry, or support a subject (e.g., \`fighter_plane\`, \`cockpit\`, \`tank_hull\`, \`bridge_platform\`).
+               - **Physical Connection Protocol**: If a Subject is interacting with a Functional Anchor, the \`scene_visual_description\` MUST use explicit prepositions (**inside, on, upon, within**) to lock their spatial relationship.
+               - **Naming Convention**: If multiple, use \`[anchor_name]_[index]\`.
              - **Interactive/Active Props**: Objects that are manipulated by subjects (e.g., \`plastic_sheeting\`, \`wrench\`) or possess autonomous states (e.g., \`flashing_warning_light\`, \`pressure_gauge\`).
              - **Essential Static Props**: Independent objects that are NOT worn by subjects but are critical for the scene's composition or narrative (e.g., \`instruction_manual\` on a desk, \`oxygen_canister\` in a corner).
-             - **Functional Anchors**: Structural objects that require specific material or visual detail (e.g., \`cockpit_console\`, \`vault_door\`).
           2. **Exclusion Criteria (Discard from cast_id_list)**:
              - **Passive Accessories (The Look Filter)**: DO NOT harvest items described as being worn or attached to a subject (e.g., \`headsets\`, \`glasses\`, \`badges\`, \`a pen in pocket\`, \`a necklace\`, \`earrings\`, \`shoes\`, \`sneakers\`). These are treated as internal attributes of the Subject.
              - **Generic Environments**: NEVER harvest overarching stage elements like \`room\`, \`ocean\`, \`interior\`, \`sky\`, \`floor\`, or \`atmosphere\`. These must remain only as textual context in the description.

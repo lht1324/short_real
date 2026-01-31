@@ -757,6 +757,7 @@ Instruction: Process the input data and return the JSON output according to the 
         videoTitle: string,
         videoDescription: string,
         videoDuration: number,
+        aspectRatio: VideoAspectRatio = VIDEO_ASPECT_RATIOS.PORTRAIT_9_16
     ): Promise<{
         success: boolean;
         entityManifestList?: InitialEntityManifestItem[];
@@ -791,6 +792,7 @@ Instruction: Process the input data and return the JSON output according to the 
     <video_title>${videoTitle}</video_title>
     <video_description>${videoDescription}</video_description>
     <video_duration>${videoDuration} secs</video_duration>
+    <target_aspect_ratio>${aspectRatio}</target_aspect_ratio>
   </video_metadata>
   <full_script_context>
     ${JSON.stringify(scriptDataList, null, 2)}

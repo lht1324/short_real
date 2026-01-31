@@ -403,7 +403,9 @@ export function assembleFullImageGenPromptSentence(
     const sentence3 = `rendered in ${safeStyle}, captured with a ${camera.lens} lens at ${camera.fNumber} for ${camera.focus} and ISO ${camera.ISO}, featuring ${formatList(effects)}`;
 
     // 최종 결과: 3개의 문장을 공백 한 칸씩 띄워서 합침
-    return `${sentence1}, ${sentence2}, ${sentence3}.`.replaceAll(".,", ",");
+    return `${sentence1}, ${sentence2}, ${sentence3}.`
+        .replaceAll(".,", ",")
+        .replaceAll("  ", " ");
 }
 
 /**
