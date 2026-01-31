@@ -764,6 +764,7 @@ Instruction: Process the input data and return the JSON output according to the 
         sceneCastingDataList?: {
             sceneNumber: number;
             castIdList: string[];
+            sceneVisualDescription: string;
         }[];
         error?: {
             message: string;
@@ -907,11 +908,13 @@ Instruction: Analyze <video_metadata>, <target_aspect_ratio>, <style_guidelines>
                         const {
                             scene_number: sceneNumber,
                             included_cast_data_list: castDataList,
+                            scene_visual_description: sceneVisualDescription,
                         } = sceneCasting;
 
                         return {
                             sceneNumber: sceneNumber,
                             castIdList: castDataList.map((castData) => castData.id),
+                            sceneVisualDescription: sceneVisualDescription,
                         }
                     })
                 };
@@ -1072,6 +1075,7 @@ Instruction: Analyze <video_metadata>, <target_aspect_ratio>, <style_guidelines>
         videoTitle: string,
         videoDescription: string,
         sceneEntityManifestList: InitialEntityManifestItem[],
+        sceneVisualDescription: string,
         styleId: string,
         aspectRatio: VideoAspectRatio = VIDEO_ASPECT_RATIOS.PORTRAIT_9_16
     ): Promise<{
@@ -1122,6 +1126,7 @@ Instruction: Analyze <video_metadata>, <target_aspect_ratio>, <style_guidelines>
   <scene_content>
     ${imageGenPromptDirective}
   </scene_content>
+  <scene_visual_description>${sceneVisualDescription}</scene_visual_description>
 </input_data>
 
 ${isEntityListNotEmpty ? `

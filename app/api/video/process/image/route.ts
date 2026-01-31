@@ -65,7 +65,37 @@ export async function POST(request: NextRequest) {
             });
         }
 
-        const sceneDataWithImageGenPromptPromiseList: Promise<SceneData>[] = sceneDataList.map(async (sceneData) => {
+        // const sceneDataWithImageGenPromptPromiseList: Promise<SceneData>[] = sceneDataList.map(async (sceneData) => {
+        //     console.log(`Scene #${sceneData.sceneNumber} postImageGenPrompt() is executed.`);
+        //     const postImageGenPromptResult = await openAIServerAPI.postImageGenPrompt(
+        //         sceneData.imageGenPromptDirective,
+        //         masterStyleInfo,
+        //         sceneData.narration,
+        //         sceneData.sceneNumber,
+        //         videoTitle,
+        //         videoDescription,
+        //         entityManifestList.filter((entity) => {
+        //             return sceneData.sceneCastingEntityIdList?.includes(entity.id) === true;
+        //         }),
+        //         sceneData.sceneVisualDescription ?? sceneData.imageGenPromptDirective,
+        //         styleId,
+        //     );
+        //
+        //     if (!postImageGenPromptResult.success || !postImageGenPromptResult.imageGenPrompt || !postImageGenPromptResult.imageGenPromptSentence) {
+        //         throw new Error(`Scene #${sceneData.sceneNumber} error: ${postImageGenPromptResult.error?.message ?? "Failed to generate image gen prompt"}`);
+        //     }
+        //
+        //     return {
+        //         ...sceneData,
+        //         imageGenPrompt: postImageGenPromptResult.imageGenPrompt,
+        //         imageGenPromptSentence: postImageGenPromptResult.imageGenPromptSentence,
+        //         sceneEntityManifestList: postImageGenPromptResult.sceneEntityManifestList,
+        //     };
+        // });
+        // const sceneDataWithImageGenPromptList = await Promise.all(sceneDataWithImageGenPromptPromiseList);
+        const sceneDataWithImageGenPromptList: SceneData[] = [];
+
+        for (const sceneData of sceneDataList) {
             console.log(`Scene #${sceneData.sceneNumber} postImageGenPrompt() is executed.`);
             const postImageGenPromptResult = await openAIServerAPI.postImageGenPrompt(
                 sceneData.imageGenPromptDirective,
@@ -77,21 +107,19 @@ export async function POST(request: NextRequest) {
                 entityManifestList.filter((entity) => {
                     return sceneData.sceneCastingEntityIdList?.includes(entity.id) === true;
                 }),
+                sceneData.sceneVisualDescription ?? sceneData.imageGenPromptDirective,
                 styleId,
             );
-
             if (!postImageGenPromptResult.success || !postImageGenPromptResult.imageGenPrompt || !postImageGenPromptResult.imageGenPromptSentence) {
                 throw new Error(`Scene #${sceneData.sceneNumber} error: ${postImageGenPromptResult.error?.message ?? "Failed to generate image gen prompt"}`);
             }
-
-            return {
+            sceneDataWithImageGenPromptList.push({
                 ...sceneData,
                 imageGenPrompt: postImageGenPromptResult.imageGenPrompt,
                 imageGenPromptSentence: postImageGenPromptResult.imageGenPromptSentence,
                 sceneEntityManifestList: postImageGenPromptResult.sceneEntityManifestList,
-            };
-        });
-        const sceneDataWithImageGenPromptList = await Promise.all(sceneDataWithImageGenPromptPromiseList);
+            });
+        }
 
         // // TEST!!
         // await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);

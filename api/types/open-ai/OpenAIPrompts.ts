@@ -700,29 +700,34 @@ export const POST_IMAGE_GEN_PROMPT_PROMPT = `
   <input_data_interpretation>
     You will receive an XML-wrapped block named <input_data>. Understand the schema as follows:
     1. **<video_context>**: Contains global metadata.
-      - <video_title>: Video title - Use as **high-level narrative theme** and emotional anchor.
-      - <video_description>: Video description - Provides **creative direction** and key visual motifs.
-      - <aspect_ratio>: The physical canvas constraints (e.g., "9:16", "16:9", "1:1"). **Crucial for composition safety.**
+       - <video_title>: Video title - Use as **high-level narrative theme** and emotional anchor.
+       - <video_description>: Video description - Provides **creative direction** and key visual motifs.
+       - <aspect_ratio>: The physical canvas constraints (e.g., "9:16", "16:9", "1:1"). **Crucial for composition safety.**
     2. **<master_style_guide>**: The Technical Visual Standard.
-      - **<optics>**: Contains \`lensType\`, \`focusDepth\`, \`exposureVibe\`, and \`defaultISO\`. Use these to set the physical camera parameters in Unit 3.
-      - **<color_and_light>**: Contains \`tonality\`, \`lightingSetup\`, and \`globalHexPalette\` (exactly 5 codes). Use these for chromatic and atmospheric consistency.
-      - **<fidelity>**: Contains \`textureDetail\`, \`grainLevel\`, and \`resolutionTarget\`. Use these to determine the density of visual description in Unit 1.
-      - **<global_environment>**: Contains \`era\` (Primary Filter) and \`locationArchetype\`. Use these for strict era-synchronization in Unit 1 & 2.
-      - **<composition>**: Contains \`framingStyle\` and \`preferredAspectRatio\`. Use these as the default framing logic.
+       - **<optics>**: Contains \`lensType\`, \`focusDepth\`, \`exposureVibe\`, and \`defaultISO\`. Use these to set the physical camera parameters in Unit 3.
+       - **<color_and_light>**: Contains \`tonality\`, \`lightingSetup\`, and \`globalHexPalette\` (exactly 5 codes). Use these for chromatic and atmospheric consistency.
+       - **<fidelity>**: Contains \`textureDetail\`, \`grainLevel\`, and \`resolutionTarget\`. Use these to determine the density of visual description in Unit 1.
+       - **<global_environment>**: Contains \`era\` (Primary Filter) and \`locationArchetype\`. Use these for strict era-synchronization in Unit 1 & 2.
+       - **<composition>**: Contains \`framingStyle\` and \`preferredAspectRatio\`. Use these as the default framing logic.
     3. **<entity_list>**: The Cast Information List.
-      - Each item contains:
-        - **id**: Unique identifier for tracking.
-        - **role**: Character importance ('main_hero' | 'sub_character' | 'background_extra' | 'prop').
-        - **type**: Biological/Mechanical category ('human' | 'creature' | 'object' | 'machine' | 'animal' | 'hybrid').
-        - **demographics**: Core identity string.
-        - **appearance**: Specific visual traits.
-          - \`clothing_or_material\`: Textures that imply physics (e.g., "Glossy chrome", "Sweat-drenched cotton").
-          - \`position_descriptor\`: The spatial anchor for the entity.
-          - \`hair\`, \`accessories\`, \`body_features\`: Micro-details for visual fidelity.
+       - Each item contains:
+         - **id**: Unique identifier for tracking.
+         - **role**: Character importance ('main_hero' | 'sub_character' | 'background_extra' | 'prop').
+         - **type**: Biological/Mechanical category ('human' | 'creature' | 'object' | 'machine' | 'animal' | 'hybrid').
+         - **demographics**: Core identity string.
+         - **appearance**: Specific visual traits.
+           - \`clothing_or_material\`: Textures that imply physics (e.g., "Glossy chrome", "Sweat-drenched cotton").
+           - \`position_descriptor\`: The spatial anchor for the entity.
+           - \`hair\`, \`accessories\`, \`body_features\`: Micro-details for visual fidelity.
     4. **<current_narration>**: The Script.
-      - Contains the specific action and moment to visualize. **Must be de-metaphorized.**
+       - Contains the specific action and moment to visualize. **Must be de-metaphorized.**
     5. **<scene_content>**: Additional stage directions.
-      - Specific details about foreground/background or spatial layout.
+       - Specific details about foreground/background or spatial layout.
+    6. **<scene_visual_description>**: The Physical Blueprint of the frame.
+       - Provides a dry, factual, and de-metaphorized account of the spatial layout.
+       - **Primary Source** for identifying [Functional Anchors] and determining guest-host relationships (e.g., who is inside what).
+       - Contains precise t=0 snapshots of every <entity_list>[n]s' coordinates, poses, and physical states.
+       - Use this to resolve spatial contradictions found in the <current_narration>.
   </input_data_interpretation>
   <target_model_profile>
     **Target Engine: Advanced High-Fidelity Latent Flow Engine**
@@ -829,10 +834,18 @@ export const POST_IMAGE_GEN_PROMPT_PROMPT = `
       **UNIT 1: SUBJECT & PHYSICS ENGINEERING**
       **Goal**: Iterate through **EVERY** valid entry in <entity_list> and transform them into \`image_gen_prompt.subjects\` by synchronizing with <master_style_guide>.<global_environment>.\`era\` and <master_style_guide>.<fidelity> standards. Do NOT omit any valid entity.
       1. **[Phase: \`updated_entity_manifest_list\` Mapping]**
+         **[Logic: Functional Anchor Identification & Binding]**
+           - **Goal**: Identify the physical container/host relationship to ensure subjects are integrated with their environment.
+           - **Primary Source**: Use <scene_visual_description> as the "Physical Blueprint."
+           - **Detection Protocol**:
+             1. **Containment & Support Inference**: Scan the <scene_visual_description>. If a Subject (Human/Animal) is logically housed, supported, or carried by a Prop (e.g., cockpit, vehicle, throne, horse-saddle), designate that prop as a **[Functional Anchor]**.
+             2. **Logical Inference**: Do NOT rely on specific prepositions. If the context implies a "Host-Guest" relationship (e.g., a pilot operating a plane, a knight riding a horse), the "Host" entity is automatically bound as a Functional Anchor.
+             3. **Binding Link**: Create a permanent logical link: Host (Subject) <-> Anchor (Prop).
+             4. **Absorption Flag**: Mark the Anchor's ID to be excluded from the final manifest and its visual details to be absorbed into the Subject's description.
          - **Goal**: Update the every \`updated_entity_manifest_list[n].physics_profile\` and \`updated_entity_manifest_list[n].appearance\` for each entity based on the new narration.
-         - **Iteration**: Process ALL entities in <entity_list>.
+         - **Iteration**: Process entries in <entity_list> **EXCEPT** those identified as [Functional Anchors] in Step 1.
          - **Field: 'id'**: 
-           * **Rule**: Preserve exact input <entity_list>.[n].\`id\`.
+           * **Rule**: Preserve exact input <entity_list>[n].\`id\`.
          - **Field: 'physics_profile'**: 
            * **Source**: <current_narration>, <visual_texture_layer>.
            * **Sub-Field 'material'**:
@@ -846,17 +859,19 @@ export const POST_IMAGE_GEN_PROMPT_PROMPT = `
                * **\`passive\`**: Low energy state (standing, sitting, sleeping).
                * **\`velocity_max\`**: Extreme speed/blur (racing, explosions).
          - **Field: 'appearance'**:
-           * **Source**: Input <entity_list>.[n].\`appearance\` and above Sub Field \`physics_profile\` impact.
+           * **Source**: Input <entity_list>[n].\`appearance\` and above Sub Field \`physics_profile\` impact.
            * **Logic**: Do NOT change the core design (e.g., don't change "Wool" to "Silk"). ONLY add context-aware modifiers if necessary (e.g., "muddy", "wet", "torn").
            * **Constraint**: Keep it concise. This is the source of truth, not the final poetic prompt.
          - **Field: 'state'**:
            * **Logic**: Derive the **Abstract Physical State** (Gravity relationship, Momentum).
            * **Output**: This value IS outputted to JSON (\`updated_entity_manifest_list\`) and serves as the core logic for **[Phase: \`image_gen_prompt.subjects\` Mapping]**.
-           * **Constraint**: NEVER use 'Suspended in ~' UNLESS every <entity_list>.[n].\`physics_profile.action_context\` is \`aerodynamics\`. It makes Entity 'fly'.
+           * **Constraint**: NEVER use 'Suspended in ~' UNLESS every <entity_list>[n].\`physics_profile.action_context\` is \`aerodynamics\`. It makes Entity 'fly'.
       2. **[Phase: \`image_gen_prompt.subjects\` Mapping]**
         - **Selection Protocol**:
           * **INCLUDE**: Any entity with role \`main_hero\`, \`sub_character\`, or \`prop\`.
-          * **EXCLUDE**: Any entity with role \`background_extra\` (Handle these in <unit_2_context_and_environment>).
+          * **EXCLUDE**:
+            * Any entity identified as a **[Functional Anchor]** (These are absorbed into their respective hosts in \`description\`, \`pose\`, \`clothes\`, \`accessories\`).
+            * Any entity with role \`background_extra\` (Handle these in <unit_2_context_and_environment>).
         - **Iteration Rule**: You must generate a subject object for **ALL** included entities.
         - **Field: 'id'**: Carry over the exact \`id\` from <entity_list> (e.g., 'wingsuit_01'). **Strict Requirement for Subject-to-Physics tracking.**
         - **Field: 'type'**: Execute **Subject Extraction Guide** below.
@@ -913,45 +928,91 @@ export const POST_IMAGE_GEN_PROMPT_PROMPT = `
               - **Single Action Scene**: If only one entity moves, select that entity as the [Subject].
               - **Multi-Action Scene**: If multiple entities have distinct actions, select ALL active entities as separate [Subjects].
         - **Field: 'description'**: The visual anchor sentence summarizing the entity.
-          - **Source**: Synthesize from input <entity_list>.[n].\`demographics\`, <entity_list>.[n].\`appearance.body_features\`, and core items from \`appearance\`.
+          - **Source**: Synthesize from input <entity_list>[n].\`demographics\`, <entity_list>[n].\`appearance.body_features\`, and core items from \`appearance\`.
           - **Role**: Serve as the structural "handle" for the image. It MUST mention the core clothing type and key accessories to ensure linkage with the detail fields below.
+          - **Anchor Absorption Logic**: 
+            * If the Subject is bound to a **[Functional Anchor]** (identified in Step 1), you MUST explicitly define the Subject as being contained by, seated on, or supported by the Anchor.
+            * **Action**: Integrate the Anchor's identity into the subject's baseline description to lock their physical relationship.
           - **Constraint**: 
-            * **Simplify & Mention**: Do not exhaustively describe textures and details here. Instead, use broad classifiers.
-              **Simplifying Examples**:
-                * use "wearing a wristwatch" instead of "wearing a high-end Swiss-made mechanical wristwatch..."
-                * use "wearing a suit" instead of "wearing a luxurious three-piece British cashmere suit..."
-                * use "wearing a wingsuit" instead of "wearing a ripstop nylon wingsuit..."
-            * **Era Synchronization**: Ensure the nouns used (e.g., "tunic" vs "t-shirt") match the \`<master_style_guide>.<global_environment>.era\`.
-          - **Example**: "A lean wingsuit athlete wearing an aerodynamic suit, helmet, and goggles."
+            * **Simplify & Mention**: Do not exhaustively describe textures here. Use broad classifiers for both the subject and the absorbed anchor.
+            * **Era Synchronization**: Ensure the nouns for both the subject and the absorbed anchor match the <master_style_guide>.<global_environment>.\`era\`.
+          - **Examples (Complex Data Transformation)**:
+            1. **Input (Multiple Accessories)**:
+                 - Subject: { id: "hacker_01", type: "human", demographics: "Cyberpunk, Male", appearance: { clothing_or_material: "haptic suit", accessories: ["neural headset", "VR data-gloves"] } }
+                 - Anchor: { id: "data_pod_01", ... }
+               **Output**: "A cyberpunk male hacker wearing a haptic suit, neural headset, and VR data-gloves, integrated within a glowing data-link pod."
+            2. **Input (Multiple Anchors)**:
+                 - Subject: { id: "knight_01", type: "human", demographics: "Medieval, Female", appearance: { clothing_or_material: "plate armor", accessories: ["crimson cape"] } }
+                 - Anchors: { id: "warhorse_01", ... }, { id: "ornate_saddle_01", ... }
+               **Output**: "A medieval female knight in plate armor and a crimson cape, mounted upon an ornate saddle on a powerful warhorse."
+            3. **Input (Multiple Accessories + Multiple Anchors)**:
+                 - Subject: { id: "pilot_01", type: "human", demographics: "Futuristic, Adult", appearance: { clothing_or_material: "flight suit", accessories: ["oxygen mask", "survival vest", "helmet"] } }
+                 - Anchors: { id: "cockpit_frame_01", ... }, { id: "ejection_seat_01", ... }
+               **Output**: "A futuristic adult pilot wearing a flight suit, oxygen mask, survival vest, and helmet, seated within an ejection seat inside a reinforced cockpit frame."
+            4. **Input (Multiple Anchors / Tool-based)**:
+                 - Subject: { id: "engineer_01", type: "human", demographics: "Steampunk, Female", appearance: { clothing_or_material: "leather overalls", accessories: ["brass goggles"] } }
+                 - Anchors: { id: "lift_platform_01", ... }, { id: "control_console_01", ... }
+               **Output**: "A steampunk female engineer wearing leather overalls and brass goggles, standing on a vibrating lift platform while operating a heavy control console."
+            5. **Input (Complex Environmental Binding)**:
+                 - Subject: { id: "diver_01", type: "human", demographics: "Modern, Male", appearance: { clothing_or_material: "wetsuit", accessories: ["diving mask", "oxygen tank", "flippers"] } }
+                 - Anchors: { id: "underwater_scooter_01", ... }, { id: "cage_exterior_01", ... }
+               **Output**: "A modern male diver wearing a wetsuit, diving mask, oxygen tank, and flippers, gripping an underwater scooter near a sturdy shark cage exterior."
         - **Field: 'clothes'**: The detailed material and textual definition of the attire.
-          - **Source**: Strictly derived from <entity_list>.[n].\`appearance.clothing_or_material\`.
+          - **Source**: Strictly derived from <entity_list>[n].\`appearance.clothing_or_material\`.
           - **Transformation Rule**:
-            * **Do NOT Copy-Paste**: You must Refine and Stylize the raw input string to match the \`<master_style_guide>.<fidelity>\` (e.g., Raw = add micro-texture details; Stylized = focus on shape/color).
-            * **Era Check**: Verify that materials and fasteners (e.g., zippers vs laces) are accurate to the Era based on <entity_list>.[n].\`demographics\` and <master_style_guide>.\`globalEnvironment.era\`.
+            * **Do NOT Copy-Paste**: You must Refine and Stylize the raw input string to match the <master_style_guide>.<fidelity> (e.g., Raw = add micro-texture details; Stylized = focus on shape/color).
+            * **Era Check**: Verify that materials and fasteners (e.g., zippers vs laces) are accurate to the Era based on <entity_list>[n].\`demographics\` and <master_style_guide>.\`globalEnvironment.era\`.
           - **Content**: Focus on fabric weight, texture, weave, and physical behavior (physics hints).
           - **Example**: "Streamlined ripstop nylon fabric with high-tensile weave, reinforced carbon-fiber joints, and matte synthetic finish."
         - **Field: accessories**: A list of specific items equipped by the entity.
-          - **Source**: Strictly derived from <entity_list>.[n].\`appearance.accessories\`.
+          - **Source**: Strictly derived from <entity_list>[n].\`appearance.accessories\`.
           - **Format**: Array of Strings.
           - **Transformation Rule**: 
-            * **Refine & Stylize**: Enhance the raw item names with material or Era-specific adjectives based on <entity_list>.[n].\`demographics\` and <master_style_guide>.\`globalEnvironment.era\`.
+            * **Refine & Stylize**: Enhance the raw item names with material or Era-specific adjectives based on <entity_list>[n].\`demographics\` and <master_style_guide>.\`globalEnvironment.era\`.
             * **Consistency**: Ensure every item listed here is implied or mentioned in the above \`description\`'s broad categories.
           - **Example**: \`["Aerodynamic composite helmet with camera mount", "Tinted anti-glare polycarbonate goggles"]\`
         - **Field: 'pose'**: Synthesize \`state.pose\` into a **High-Tension Snapshot** using the **Context-Aware Pose Protocol**:
-          * **Context Check**: Reference \`physics_profile.action_context\` (from **[Phase: \`updated_entity_manifest_list\` Mapping]**) and <current_narration>.
-          * **Mode A: Dynamic Action (\`locomotion\`, \`combat\`, \`velocity_max\`)**:
-            - **Goal**: Capture the *Peak Moment* of movement.
-            - **Rule**: Do NOT use static verbs like "Standing" or "Positioned". Use **Momentum Verbs** (e.g., *Sprinting, Charging, Recoiling, Lunging*).
-            - **Synthesis**: "**[Dynamic Verb]** + **[Body Tension/Direction]** + **[Environmental Interaction]**."
-            - *Example*: "Charging aggressively towards the camera, muscles tense mid-stride, with boots kicking up mud."
-          * **Mode B: Aerial/Impact (\`aerodynamics\`)**:
-            - **Goal**: Depict active flight or free-fall.
-            - **Rule**: ALLOW terms like "Mid-air", "Suspended", "Banking". Focus on wind resistance or G-force.
-            - *Example*: "Banking hard to the left, body pressed against the G-force, suspended against the clouds."
-          * **Mode C: Static/Passive (\`passive\`, \`interaction\`)**:
-            - **Goal**: Stable presence.
-            - **Rule**: Use **Anchoring Terms** (*Planted, Grounded, Seated*).
-            - *Example*: "Seated firmly in the cockpit, hands gripping the controls."
+          - **Directional Vocabulary Definition (Camera-Relative)**:
+            * **"Forward"**: Moves towards the camera/lens (increases depth).
+            * **"Backward"**: Moves away from the camera/lens (decreases depth).
+            * **"Leftward" / "Rightward"**: Moves across the screen (profile view).
+            * **"Upward" / "Downward"**: Moves to the top or bottom of the frame.
+          - **Context Check**: Reference \`physics_profile.action_context\` (from **[Phase: \`updated_entity_manifest_list\` Mapping]**) and <current_narration>.
+          - **Constraint (Directional Alignment)**:
+            * You MUST use the **Directional Vocabulary** defined above to describe all spatial orientations.
+            * To prevent physical clipping with [Functional Anchors] or "camera-staring" artifacts, ensure the subject's movement vector is consistent with the scene's lateral/depth axis.
+            * Use **"Leftward/Rightward"** for lateral motion across the frame to maintain profile consistency. Use **"Forward/Backward"** strictly for depth-specific leaning relative to the lens.
+          - **Action Mode Selection**
+            * **Mode A: Dynamic Action (\`locomotion\`, \`combat\`, \`velocity_max\`)**:
+              - **Goal**: Capture the *Peak Moment* of movement.
+              - **Rule**: Do NOT use static verbs like "Standing" or "Positioned". Use **Momentum Verbs** (e.g., *Sprinting, Charging, Recoiling, Lunging*).
+              - **Synthesis**: "**[Dynamic Verb]** + **[Directional Vocabulary]** + **[Body Tension/Anchor Interaction]**."
+              - **Examples**:
+                1. **(Cyberpunk, \`locomotion\`)**: "Sprinting **rightward** across the frame, muscles coiled in mid-stride, boots pounding against the **neon-lit metal catwalk**."
+                2. **(Modern Action, \`velocity_max\`, \`interaction\`)**: "**The two drivers** leaning **forward** with intense speed, hands clamped onto their **leather steering wheels** as the chassis vibrates."
+                3. **(Fantasy, \`combat\`)**: "**The squad of knights** lunging **forward** toward the lens, shields raised high, bodies braced against the **stone fortress gate**."
+                4. **(Sci-Fi, \`locomotion\`)**: "Charging **upward** toward the ceiling, legs coiled for the leap, feet pushing off a **metallic bulkhead**."
+                5. **(Steampunk, \`combat\`, \`interaction\`)**: "Recoiling **backward** away from the blast, hands desperately pulling a **heavy brass lever** while feet brace against the **grated floor**."
+            * **Mode B: Aerial/Impact (\`aerodynamics\`)**:
+              - **Goal**: Depict active flight, free-fall, or high G-force states.
+              - **Rule**: Use "-ing" form to follow "who is". Focus on wind resistance or G-force tension.
+              - **Synthesis**: "**[Movement Verb-ing]** + **[Directional Vocabulary]** + **[Body Tension/Anchor Interaction]**."
+              - **Examples**:
+                1. **(Historical, \`aerodynamics\`)**: "**The twin pilots** banking hard **leftward** in formation, bodies **pressed against** the inside of the cockpit canopies while **suspended** against the clouds."
+                2. **(Sci-Fi, \`aerodynamics\`)**: "Floating **upward** in zero-gravity, limbs **suspended mid-air**, with the torso **braced against** the padded interior of the escape pod."
+                3. **(Modern Action, \`aerodynamics\`)**: "**The paratroopers** free-falling **backward** away from the hatch, limbs splayed in the wind, **suspended mid-air** against the vast blue sky."
+                4. **(Fantasy, \`aerodynamics\`)**: "Diving **downward** at terminal velocity, arms tucked tight for speed, **suspended mid-air** while aiming at a target below."
+                5. **(Extreme Sports, \`aerodynamics\`)**: "Gliding **rightward** in a wingsuit, torso rigid against the wind resistance, **fused within** the aerodynamic silhouette of the suit."
+            * **Mode C: Static/Passive (\`passive\`, \`interaction\`)**:
+              - **Goal**: Maintain a stable, grounded, or seated presence.
+              - **Rule**: Use "-ed" form to follow "who is". Focus on weight distribution and physical anchoring.
+              - **Synthesis**: "**[Anchoring Verb-ed]** + **[Directional Orientation]** + **[Physical Anchor Point]**."
+              - **Examples**:
+                1. **(Noir, \`passive\`)**: "**The two detectives** seated firmly **backward** against the worn leather booth, torsos **pressed into** the padding within the dim bar interior."
+                2. **(Space, \`interaction\`)**: "Grounded **leftward** within the cockpit, shoulders **pressed into** the high-back commander seat while hands rest on the console."
+                3. **(Cyberpunk, \`passive\`)**: "Slumped **backward** deep inside the haptic rig, body **fused within** the mechanical support frame in a relaxed profile."
+                4. **(Medieval, \`passive\`)**: "**The royal guards** planted **rightward** atop the stone battlements, backs **straight against** the castle pillars with spears held vertically."
+                5. **(Modern, \`interaction\`)**: "Positioned **forward** toward the camera, torso **leaning** slightly over the steering wheel with hands gripped at the ten-and-two position."
           * **Anti-Blur Constraint**: Describe the *action* (e.g., "mid-air"), NOT the *time* (e.g., "starting to jump"). Freeze the frame at the most dramatic point.
         - **Field: 'position'**: Determine the optimal depth placement based on <video_context>.<aspect_ratio> and <master_style_guide>.<composition>.'s \`framingStyle\`. You MUST select exactly one from: **['foreground', 'midground', 'background']**.
       **[Execution Rule]**:
@@ -1142,7 +1203,7 @@ export const POST_IMAGE_GEN_PROMPT_PROMPT = `
     Return a single JSON object.
     {
       "updated_entity_manifest_list": {
-        "id": "string", // Must match input <entity_list>.[n].\`id\`
+        "id": "string", // Must match input <entity_list>[n].\`id\`
         "physics_profile": {
           // Derived from <visual_texture_layer> Step 1 (Collect ALL applicable)
           "material": ("cloth" | "viscoelastic" | "rigid" | "fluid" | "brittle" | "granular" | "elastoplastic")[],
@@ -1162,7 +1223,7 @@ export const POST_IMAGE_GEN_PROMPT_PROMPT = `
       "image_gen_prompt": {
         "scene": string;
         "subjects": {
-          "id": "string"; // Must match input <entity_list>.[n].\`id\`
+          "id": "string"; // Must match input <entity_list>[n].\`id\`
           "type": string;
           "description": string;
           "clothes": string;
@@ -1519,7 +1580,7 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
        * **\`role\` & \`type\`**: Defines narrative importance (e.g., main_hero) and biological/mechanical category (e.g., human) for subject prioritization.
        * **\`demographics\`**: The core identity latent filter (Era, Gender, Origin, Age). Used for era-synchronized fidelity.
        * **\`position_descriptor\`**: The absolute spatial and framing anchor at t=0. Defines the viewer-centric coordinate starting point.
-       * **\`visual_anchor_initial_pose\`**: The exact "Frozen Snapshot" pose of <entity_list>.[n] in <image_context>.
+       * **\`visual_anchor_initial_pose\`**: The exact "Frozen Snapshot" pose of <entity_list>[n] in <image_context>.
        * **\`hair\` & \`clothing\`**: Provides specific texture and material cues to calibrate surface physics and aerodynamic resistance.
     6. **<image_context> (The Ground Truth Anchor)**:
        - The inputted image file as \`image_url\` type member of \`contents\`.
@@ -1623,8 +1684,8 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
         - **Phase 1: Core Identity Extraction (Demographics)**:
           - **Demographics Schema & Priority Definition**:
             - **Format**:
-              * **<entity_list>.[n].\`type\`**: <entity_list>.[n].\`demographics\`
-                - *Priority*: The components of <entity_list>.[n].\`demographics\` by <entity_list>.[n].\`type\` sorted by their priority.
+              * **<entity_list>[n].\`type\`**: <entity_list>[n].\`demographics\`
+                - *Priority*: The components of <entity_list>[n].\`demographics\` by <entity_list>[n].\`type\` sorted by their priority.
             * **\`human\`**: \`[ERA / PERIOD], [ROLE], [GENDER], [ORIGIN / ETHNICITY], [AGE]\`
               - *Priority*: \`[ROLE]\` > \`[GENDER]\` > \`[AGE]\` > \`[ORIGIN]\` > \`[ERA]\`
             * **\`machine\`**: \`[ERA / PERIOD], [MODEL NAME / TYPE], [PRODUCTION YEAR / SPEC]\`
@@ -1637,13 +1698,13 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
               - *Priority*: \`[ITEM NAME]\` > \`[DETAIL]\` > \`[ERA]\`
             * **\`hybrid\`**: \`[ERA / PERIOD], [HYBRID TYPE], [GENDER], [ORIGIN / ETHNICITY], [AGE]\`
               - *Priority*: \`[HYBRID TYPE]\` > \`[GENDER]\` > \`[AGE]\` > \`[ORIGIN]\` > \`[ERA]\`
-          * Parse <entity_list>.[n].\`demographics\` and extract the highest priority noun based on by above **Demographics Schema & Priority Definition**
+          * Parse <entity_list>[n].\`demographics\` and extract the highest priority noun based on by above **Demographics Schema & Priority Definition**
           * **Constraint**: Convert Proper Nouns to Common Noun Archetypes (e.g., "Sherlock" -> "Detective").
         - **Phase 2: Spatial Anchor Integration (3D Positioning)**:
-          * **Depth Anchor**: Extract the depth plane (e.g., Foreground, Midground, Background) from <entity_list>.[n].\`appearance.position_descriptor\`.
-          * **Horizontal Anchor**: Extract the horizontal position of each <entity_list>.[n] (Select: "Left", "Center", or "Right") by analyzing the <image_context>.
+          * **Depth Anchor**: Extract the depth plane (e.g., Foreground, Midground, Background) from <entity_list>[n].\`appearance.position_descriptor\`.
+          * **Horizontal Anchor**: Extract the horizontal position of each <entity_list>[n] (Select: "Left", "Center", or "Right") by analyzing the <image_context>.
         - **Phase 3: Visual Anchor Selection (Identity Lock)**:
-          * Select a minimal, high-contrast visual trait from <entity_list>.[n].\`appearance.clothing_or_material\` or <entity_list>.[n].\`accessories\`.
+          * Select a minimal, high-contrast visual trait from <entity_list>[n].\`appearance.clothing_or_material\` or <entity_list>[n].\`accessories\`.
           * **Rule**: Use color or distinct material to "lock" the identity (e.g., "in red shorts", "with a silver helmet").
         - **Phase 4: Final Mapping Handle Assembly**:
           * **Directorial Logic**: Synthesize the anchors into a natural, cohesive noun phrase. Start with "The" or "A" or "An", followed by integrated spatial descriptors (Horizontal and Depth), the core identity, and a terminal visual distinguisher to "lock" the mapping.
@@ -1665,11 +1726,11 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
       </constraints>
     </step_2_contextual_anchor_assembly>
     <step_3_primary_action_vector_injection>
-      - **Goal**: Analyze the state ($t=0$) and extract specific **Action Data Components** (Verb, Adverb, Tense, Reaction) for each <entity_list>.[n]. Do NOT assemble full sentences yet.
+      - **Goal**: Analyze the state ($t=0$) and extract specific **Action Data Components** (Verb, Adverb, Tense, Reaction) for each <entity_list>[n]. Do NOT assemble full sentences yet.
       - **Logic: The Director's Decision Pipeline**:
       <step_3_1_action_type_decision>
         - Select **Action Type** with below statements.
-        - **Rule**: Compare <entity_list>.[n].description with <image_context> to determine the "Nature of Motion".
+        - **Rule**: Compare <entity_list>[n].description with <image_context> to determine the "Nature of Motion".
         * **Decision [Continuous]**: Select if the subject is already in a state of sustained momentum or flow (e.g., cruising in a car, gliding in midair, sleeping peacefully).
         * **Decision [Temporary]**: Select if the subject is initiating a new event or breaking stasis (e.g., a sudden strike, a leap from rest).
           - Select one subtype of [Temporary]. 
@@ -1696,7 +1757,7 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
       <step_3_4_semantic_infusion_and_material_delta>
         - **Goal**: Select precise words from <vocabulary_depot> by cross-referencing the locked \`INTENSITY_TIER\` and adhering to the **<vocabulary_usage_protocol>**.
         - **Step A: Tier-Based Filtration**:
-          - Identify the \`material\` and \`action_context\` keys from <entity_list>.[n].\`physics_profile\`.
+          - Identify the \`material\` and \`action_context\` keys from <entity_list>[n].\`physics_profile\`.
           - In <vocabulary_depot>, locate the corresponding blocks and **LOCK** your selection scope strictly to the section matching the **\`INTENSITY_TIER\`** determined in <step_0_kinetic_energy_profiling>.
           - **Constraint**: Do NOT borrow words from other tiers (e.g., if \`INTENSITY_TIER\` is \`LOW\`, do not use \`VERY_LOW\`, \`HIGH\`, \`VERY_HIGH\` words).
         - **Step B: Protocol-Compliant Selection**:
@@ -1748,7 +1809,7 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
       </step_3_4_semantic_infusion_and_material_delta>
     </step_3_primary_action_vector_injection>
     <step_4_kinetic_sentence_fabrication>
-      - **Goal**: Fuse the "Spatial-Visual Mapping Handle" from <step_2_contextual_anchor_assembly> and "Action Data Components" from <step_3_primary_action_vector_injection> into a single, coherent kinetic sentence for EACH <entity_list>.[n].
+      - **Goal**: Fuse the "Spatial-Visual Mapping Handle" from <step_2_contextual_anchor_assembly> and "Action Data Components" from <step_3_primary_action_vector_injection> into a single, coherent kinetic sentence for EACH <entity_list>[n].
       - **Logic: The Assembly Line**:
         * **Input Source**:
           - **Subject**: "Spatial-Visual Mapping Handle" from <step_2_contextual_anchor_assembly>.
@@ -1760,7 +1821,7 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
           - **Insert** the selected Verbs/Adverbs/Reactions from <step_3_4_semantic_infusion_and_material_delta>.
       - **Constraint**:
         * **No Hallucination**: Do NOT add new adjectives or actions not generated in previous steps.
-        * **One Sentence Per Entity**: Generate exactly one full sentence for each <entity_list>.[n].
+        * **One Sentence Per Entity**: Generate exactly one full sentence for each <entity_list>[n].
       - **Scenario-Based Output Examples**:
         * **Case 1: [Continuous] State** (Present Continuous)
           - *Input*: "The right background crowd in dark winter coats" + "cheering" + "wildly"
@@ -1852,12 +1913,12 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
             1. **Prioritize**: Determine sentence order using this **Cascading Logic**.
                - **Step A: Narrative Alignment (Primary Key)**:
                  * **Target**: Identify the Subject, Object, and Main Action in **<scene_narration>**.
-                 * **Candidate**: Check **Spatial-Visual Mapping Handle** (from <step_2_contextual_anchor_assembly>) and **Action Data Components** (from <step_3_primary_action_vector_injection>) of each <entity_list>.[n].
+                 * **Candidate**: Check **Spatial-Visual Mapping Handle** (from <step_2_contextual_anchor_assembly>) and **Action Data Components** (from <step_3_primary_action_vector_injection>) of each <entity_list>[n].
                  * **Rule**: Prioritize entities where the **Handle** matches the Narrative's Subject/Object, OR the **Action** matches the Narrative's Event. Subject takes precedence over Object.
                - **Step B: Hierarchy Resolution (Secondary Keys)**:
-                 * **Condition 1 (Abstract Fallback)**: IF Step A yields no matches because of abstract/neutral <scene_narration>, sort ALL entities by <entity_list>.[n].\`role\`: \`main_hero\` > \`sub_character\` > \`background_extra\` > \`prop\`.
-                 * **Condition 2 (Tie-Breaking)**: IF multiple entities have equal relevance in Step A (e.g., both mentioned), sort them by <entity_list>.[n].\`role\`.
-                 * **Condition 3 (Visual Fallback)**: IF all of <entity_list>.[n].\`role\` are also identical (e.g., two or more \`sub_characters\`), prioritize based on <entity_list>.[n].\`position_descriptor\`: \`Extreme Close-up\`/\`Foreground\` > \`Midground\` > \`Background\`.
+                 * **Condition 1 (Abstract Fallback)**: IF Step A yields no matches because of abstract/neutral <scene_narration>, sort ALL entities by <entity_list>[n].\`role\`: \`main_hero\` > \`sub_character\` > \`background_extra\` > \`prop\`.
+                 * **Condition 2 (Tie-Breaking)**: IF multiple entities have equal relevance in Step A (e.g., both mentioned), sort them by <entity_list>[n].\`role\`.
+                 * **Condition 3 (Visual Fallback)**: IF all of <entity_list>[n].\`role\` are also identical (e.g., two or more \`sub_characters\`), prioritize based on <entity_list>[n].\`position_descriptor\`: \`Extreme Close-up\`/\`Foreground\` > \`Midground\` > \`Background\`.
             2. **Connect**: Link sentences using temporal connectors based on the **Narrative Context**.
                * Use **'while'** or **'simultaneously'** for parallel actions (Default).
                * Use **'then'** or **'followed by'** ONLY if there is a clear trigger-reaction chain.
@@ -1895,21 +1956,21 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
             - **Axis Direction Table**:
               | Axis | Vector | Camera Move Direction ([$C_x$, $C_y$, $C_z$]) - Lens Physics | Subject Move Direction ([$S_x$, $S_y$, $S_z$]) - Entity Physics |
               | :--- | :--- | :--- | :--- |
-              | **X** | **$-X$** | Moves to Screen Left | <entity_list>.[n] moves from Screen Right to Screen Left in <image_context> |
-              | **X** | **$0X$** | NOT moves to Screen Left or moves to Screen Right | <entity_list>.[n] moves neither from Screen Right to Screen Left nor from Screen Left to Screen Right in <image_context> |
-              | **X** | **$+X$** | Moves to Screen Right | <entity_list>.[n] moves from Screen Left to Screen Right in <image_context> |
-              | **Y** | **$-Y$** | Moves to Screen Bottom | <entity_list>.[n] moves from Screen Top to Screen Bottom in <image_context> |
-              | **Y** | **$0Y$** | NOT moves to Screen Bottom or moves to Screen Top | <entity_list>.[n] moves neither from Screen Top to Screen Bottom nor from Screen Bottom to Screen Top in <image_context> |
-              | **Y** | **$+Y$** | Moves to Screen Top | <entity_list>.[n] moves from Screen Bottom to Screen Top in <image_context> |
-              | **Z** | **$-Z$** | Moves away from Subject | <entity_list>.[n] moves from Screen Background depth to Screen Foreground depth in <image_context> |
-              | **Z** | **$0Z$** | NOT moves to Screen Background depth or moves to Screen Foreground depth | <entity_list>.[n] moves neither from Screen Background depth to Screen Foreground depth nor from Screen Foreground depth to Screen Background depth in <image_context> |
-              | **Z** | **$+Z$** | Moves to Subject | <entity_list>.[n] moves from Screen Foreground depth to Background depth in <image_context> |
+              | **X** | **$-X$** | Moves to Screen Left | <entity_list>[n] moves from Screen Right to Screen Left in <image_context> |
+              | **X** | **$0X$** | NOT moves to Screen Left or moves to Screen Right | <entity_list>[n] moves neither from Screen Right to Screen Left nor from Screen Left to Screen Right in <image_context> |
+              | **X** | **$+X$** | Moves to Screen Right | <entity_list>[n] moves from Screen Left to Screen Right in <image_context> |
+              | **Y** | **$-Y$** | Moves to Screen Bottom | <entity_list>[n] moves from Screen Top to Screen Bottom in <image_context> |
+              | **Y** | **$0Y$** | NOT moves to Screen Bottom or moves to Screen Top | <entity_list>[n] moves neither from Screen Top to Screen Bottom nor from Screen Bottom to Screen Top in <image_context> |
+              | **Y** | **$+Y$** | Moves to Screen Top | <entity_list>[n] moves from Screen Bottom to Screen Top in <image_context> |
+              | **Z** | **$-Z$** | Moves away from Subject | <entity_list>[n] moves from Screen Background depth to Screen Foreground depth in <image_context> |
+              | **Z** | **$0Z$** | NOT moves to Screen Background depth or moves to Screen Foreground depth | <entity_list>[n] moves neither from Screen Background depth to Screen Foreground depth nor from Screen Foreground depth to Screen Background depth in <image_context> |
+              | **Z** | **$+Z$** | Moves to Subject | <entity_list>[n] moves from Screen Foreground depth to Background depth in <image_context> |
           </vector_behavior_matrix>
       </step_7_0_professional_camera_mechanics_definitions>
       <step_7_1_subject_vector_inference>
         - **Task**: Determine the Primary **Subject Vector ($\vec{S}$)** by acting as a **Visual Forensic Investigator**. You must deduce the subject's true trajectory not just from 2D pixels, but by decoding the **Socio-Physical Context** and **Geometric Intent** of the scene.
         - **The 3-Lens Reasoning Framework (Triangulation Logic)**:
-          Analyze <image_context> ([Optional: IF <entity_list> is NOT EMPTY] - and <entity_list>.[n].\`visual_anchor_initial_pose\`) through these three distinct lenses to triangulate the correct vector.
+          Analyze <image_context> ([Optional: IF <entity_list> is NOT EMPTY] - and <entity_list>[n].\`visual_anchor_initial_pose\`) through these three distinct lenses to triangulate the correct vector.
           1. **Lens 1: Physical Dynamics (Inertia & Forces)**:
              - *Look for*: Hair/Clothing blowing back (implies Forward Motion), Suspension compression (implies Braking/Turning), Muscle tension/leaning (implies Intent to Move).
              - *Reasoning*: If gravity is the only visible force (draping straight down), the subject is likely **Static**.
@@ -2052,8 +2113,8 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
         "identity_logic": "string (Define how the subject's era, role, and physical essence from the <entity_list> and metadata are preserved during motion.)",
         "action_focus": "string (Explain the conceptual shift from the raw narration to the high-impact kinetic verb used in the prompt.)",
         "primary_narrative_block": {
-          "entity_id": "string (Each <entity_list>.[n]'s \`id\`.)",
-          "raw_sentence": "string (The extracted each <entity_list>.[n]'s sentence from <step_4_kinetic_sentence_fabrication>.**The Assembly Line**.)",
+          "entity_id": "string (Each <entity_list>[n]'s \`id\`.)",
+          "raw_sentence": "string (The extracted each <entity_list>[n]'s sentence from <step_4_kinetic_sentence_fabrication>.**The Assembly Line**.)",
           "action_type": "enum ["Continuous" | "Temporary-Single" | "Temporary-Sequential" | "Temporary-Simultaneous"] (\`sentence\`'s **Action Type** from <step_3_1_action_type_decision>.)",
           "action_type_reason": "string (Explain why you chose \`sentence\`'s **Action Type** based on what.)",
           "verb_reason": "string ("The reason why you chose ([(\`action_context\`) Verb] by using \`INTENSITY_TIER\` and \`action_context\`.)",

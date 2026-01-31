@@ -153,10 +153,12 @@ export async function POST(request: NextRequest) {
                     return sceneCastingData.sceneNumber === sceneData.sceneNumber;
                 });
 
+                const sceneVisualDescription = sceneCastingData?.sceneVisualDescription;
                 const sceneCastingIdList = sceneCastingData?.castIdList;
 
                 return {
                     ...sceneData,
+                    sceneVisualDescription: sceneVisualDescription,
                     sceneCastingEntityIdList: sceneCastingIdList,
                 }
             })
