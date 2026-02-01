@@ -1,439 +1,358 @@
-short-real-server  | Speed Webhook: Scene 6c6fc799-cda8-471b-8bff-b7ba860df417 finished. Progress: 2/8
-short-real-server  | Speed Webhook: Scene 68310c5e-b9c2-47cc-9417-f3f88e5a8bdf finished. Progress: 3/8
-short-real-server  | Speed Webhook: Scene 992ea726-5aef-453c-bfec-7abdc75a0bdd finished. Progress: 4/8
-short-real-server  | Speed Webhook: Scene 2805be47-39c0-45c0-a700-1092ff4e2402 finished. Progress: 5/8
-short-real-server  |  POST /api/video/process/speed?taskId=f7fa12ea-53ee-47f7-a14e-a15b31875399&isRetriedByViolence=false 200 in 41s (compile: 2ms, render: 41s)
-short-real-server  | Speed Webhook: Scene 48126320-35df-4565-a32c-2a0924371b5e finished. Progress: 6/8
-short-real-server  | Speed Webhook: Scene cb5c7d8c-ecb4-48d1-8aec-e298d59df76f finished. Progress: 7/8
-short-real-server  |  OPTIONS /api/user/b39d639b-95b8-46de-b3a8-19a7d83072f3 204 in 2.1s (compile: 2.1s, render: 19ms)
-short-real-server  |  OPTIONS /api/user/b39d639b-95b8-46de-b3a8-19a7d83072f3 204 in 2.1s (compile: 2.1s, render: 19ms)
-short-real-server  |  GET /api/user/b39d639b-95b8-46de-b3a8-19a7d83072f3 200 in 198ms (compile: 12ms, render: 186ms)
-short-real-server  |  GET /api/user/b39d639b-95b8-46de-b3a8-19a7d83072f3 200 in 183ms (compile: 2ms, render: 181ms)
-short-real-server  |  OPTIONS /api/video/task/user/b39d639b-95b8-46de-b3a8-19a7d83072f3 204 in 828ms (compile: 822ms, render: 5ms)
-short-real-server  |  GET /api/video/task/user/b39d639b-95b8-46de-b3a8-19a7d83072f3 200 in 440ms (compile: 10ms, render: 430ms)
-short-real-server  |  OPTIONS /api/video/task/f7fa12ea-53ee-47f7-a14e-a15b31875399/retry 204 in 400ms (compile: 393ms, render: 7ms)
-short-real-server  |  POST /api/video/task/f7fa12ea-53ee-47f7-a14e-a15b31875399/retry 200 in 528ms (compile: 1669µs, render: 526ms)
-short-real-server  | Scene #2 postVideoGenPrompt() usage:  {"prompt_tokens":54604,"completion_tokens":855,"total_tokens":55459,"prompt_tokens_details":{"cached_tokens":16128,"audio_tokens":0},"completion_tokens_details":{"reasoning_tokens":0,"audio_tokens":0,"accepted_prediction_tokens":0,"rejected_prediction_tokens":0}}
-short-real-server  | Scene #2 postVideoGenPrompt() Result
-short-real-server  | Scene Summary: Tanks rumble across scarred battlefields while engines roar and dust clouds swirl around them.
-short-real-server  | Scene Summary Reason: The scene captures a dynamic moment in WWII as tanks move across a ravaged landscape, visually summarizing the chaos and intensity of battle.
-short-real-server  | Primary Movement: The tanks are rumbling across the battlefield with engines roaring.
-short-real-server  | Primary Movement Reason: This action indicates decisive movement with sound, perfectly aligning with the chaotic environment of a battlefield.
-short-real-server  | Narrative Vibe: COMBAT
-short-real-server  | Narrative Vibe Reason: The atmosphere is tense and dynamic, characteristic of a battlefield setting, filled with noise and movement.
-short-real-server  | Selected INTENSITY_TIER: HIGH
-short-real-server  | INTENSITY_TIER Selected Reason: The decisive rumbling of the tanks indicates strong movement, aligning with the characteristics of the HIGH intensity tier.
-short-real-server  | Identity Logic: The M4 Sherman Tank's industrial and military aspects are preserved in motion, showcasing its power and presence as it moves across the battlefield while maintaining its visual traits.
-short-real-server  | Action Focus: The primary action of 'rumbling' encapsulates the physical essence of the tank's movement through sound and vibration, yielding a kinetic verb that enhances the scene's intensity.
-short-real-server  | - - - Primary Narrative Block - - -
-short-real-server  | Entity[0]
-short-real-server  | Raw Sentence: The imposing M4 Sherman Tank is rumbling aggressively, engines roaring and dust swirling around its tracks.
-short-real-server  | Action Type: Continuous
-short-real-server  | Action Type Reason: The tank is actively moving across the landscape, seamlessly connected to the sounds and visual effects of the battlefield.
-short-real-server  | Verb Reason: The verb 'rumbling' directly captures the tank's powerful locomotion, utilizing the HIGH intensity tier which reflects strong kinetic energy.
-short-real-server  | Adverb Reason: The action is described in a continuous manner, fitting for its ongoing movement as the tank maneuvers through the landscape.
-short-real-server  | - - - Atmospheric Lighting Delta - - -
-short-real-server  | Delta: Dense dust swirling around the tank as it moves through the wreckage.
-short-real-server  | Delta Reason: Dust particles are kicked up by the tank's movement, enhancing the sense of motion and environmental interaction.
-short-real-server  | - - - Cinematic Camera Vectors - - -
-short-real-server  | Camera Action: Zoom Out with Handheld Shaky aggressively
-short-real-server  | Subject Vectors: [$0X$, $0Y$, $-Z$]
-short-real-server  | Subject Vectors Reasoning: The tank is moving directly toward the viewer with a strong forward presence without lateral movement.
-short-real-server  | - - - Style - - -
-short-real-server  | Style Slot 1: Raw textures with fine cinematic film grain in 4k fidelity
-short-real-server  | Style Slot 2: the initial structural integrity of the subject remains perfectly intact and consistent throughout the motion.
-short-real-server  | Style Slot 1 Reason: Raw textures are suitable for adding realistic detail to a military-themed scene, emphasizing the battle's gritty nature.
-short-real-server  | Style Slot 2 Reason: Preserving the structural integrity of the tank and surrounding detail is crucial to maintain continuity and realism throughout the video.
-short-real-server  | Reasoning: The vocabulary was chosen based on the physics profiles assigned to the tank, focusing on 'rumbling' as the main verb to reflect the chaotic movements typical in a battlefield scenario. The atmospheric strategy integrated dust interaction and the lighting setup was structured to enhance the military theme. The camera tech was derived from a cinematic approach suitable for a dramatic WWII narrative, aligning with the shallow depth of field that maintains focus on the subject while blending with its environment.
-short-real-server  | - - - Final Output Structure - - -
-short-real-server  | Primary Narrative Block: The imposing M4 Sherman Tank is rumbling aggressively, engines roaring and dust swirling around its tracks.
-short-real-server  | Atmospheric/Lighting Delta: Dense dust swirling around the tank as it moves through the wreckage.
-short-real-server  | Cinematic Camera Vector: CINEMATIC_CAMERA_VECTORS the imposing M4 Sherman Tank
-short-real-server  | Style: Raw textures with fine cinematic film grain in 4k fidelity, while the initial structural integrity of the subject remains perfectly intact and consistent throughout the motion.
-short-real-server  | videoGenPrompt: The imposing M4 Sherman Tank is rumbling aggressively, engines roaring and dust swirling around its tracks, amidst dense dust swirling around the tank as it moves through the wreckage, captured with CINEMATIC_CAMERA_VECTORS the imposing M4 Sherman Tank, rendered in raw textures with fine cinematic film grain in 4k fidelity, while the initial structural integrity of the subject remains perfectly intact and consistent throughout the motion.
-short-real-server  | assembledVideoGenPrompt: The imposing M4 Sherman Tank is rumbling aggressively, engines roaring and dust swirling around its tracks, amidst dense dust swirling around the tank as it moves through the wreckage, captured with anamorphic Lens, Deep Focus, 9:16 Portrait Cinema, Long/Wide, Zoom Out with Handheld Shaky aggressively the imposing M4 Sherman Tank, rendered in raw textures with fine cinematic film grain in 4k fidelity, while the initial structural integrity of the subject remains perfectly intact and consistent throughout the motion.
-short-real-server  | Scene #8 postVideoGenPrompt() usage:  {"prompt_tokens":54698,"completion_tokens":977,"total_tokens":55675,"prompt_tokens_details":{"cached_tokens":18304,"audio_tokens":0},"completion_tokens_details":{"reasoning_tokens":0,"audio_tokens":0,"accepted_prediction_tokens":0,"rejected_prediction_tokens":0}}
-short-real-server  | Scene #8 postVideoGenPrompt() Result
-short-real-server  | Scene Summary: The remnants of war are scattered on the battlefield, marked by twisted metal and glowing embers.
-short-real-server  | Scene Summary Reason: This summary reflects the scene's visual elements, showcasing the aftermath of combat with debris and fire.
-short-real-server  | Primary Movement: Static / Micro-movement only
-short-real-server  | Primary Movement Reason: There is no primary action occurring; only the remnants of the battlefield are visible.
-short-real-server  | Narrative Vibe: COMBAT
-short-real-server  | Narrative Vibe Reason: The presence of war debris and the ambiance of embers evoke a sense of conflict and battle aftermath.
-short-real-server  | Selected INTENSITY_TIER: VERY_LOW
-short-real-server  | INTENSITY_TIER Selected Reason: The scene displays no significant action or movement, only static elements and remnants, justifying a very low intensity tier.
-short-real-server  | Identity Logic: The physical attributes of the props—rusted metal and glowing embers—are preserved with structural integrity amidst the ruins, reflecting the WWII era distinctly.
-short-real-server  | Action Focus: The focus shifts from narrative descriptions of battle to a vivid portrayal of the post-conflict remnants, emphasizing the static nature of the scene.
-short-real-server  | - - - Primary Narrative Block - - -
-short-real-server  | Entity[1]
-short-real-server  | Raw Sentence: The scattered glowing coals flicker softly, pooling remnants of heat around them.
-short-real-server  | Action Type: Continuous
-short-real-server  | Action Type Reason: The coals are exhibiting a sustained motion of flickering light, indicating constant, low-energy activity.
-short-real-server  | Verb Reason: The verb 'flicker' aligns with low intensity and describes the delicate nature of the coal's glow from a state of heat.
-short-real-server  | Adverb Reason: The adverb 'softly' captures the gentle quality of the flickering flames.
-short-real-server  | Entity[2]
-short-real-server  | Raw Sentence: The jagged steel shards remain dormant, rusted and pitted, presenting a static tableau of war's destruction.
-short-real-server  | Action Type: Continuous
-short-real-server  | Action Type Reason: The metal remains unchanged in its position despite the historical context, indicating stillness.
-short-real-server  | Verb Reason: The verb 'remain' supports a very low intensity tier, indicating no active motion or energy.
-short-real-server  | Adverb Reason: 
-short-real-server  | - - - Atmospheric Lighting Delta - - -
-short-real-server  | Delta: Glowing embers softly illuminating the surroundings, amidst deep soft shadows.
-short-real-server  | Delta Reason: This atmospheric layer enhances the eerie ambiance of the battlefield remnants, consistent with the existing low-key lights.
-short-real-server  | Delta: Sunlight filtering through the haze, casting a warm glow over the battlefield debris.
-short-real-server  | Delta Reason: This enhances the visibility of the scene while maintaining a war-like quality with muted tones.
-short-real-server  | - - - Cinematic Camera Vectors - - -
-short-real-server  | Camera Action: Zoom Out with Handheld Shaky steadily
-short-real-server  | Subject Vectors: [$0X$, $0Y$, $-Z$]
-short-real-server  | Subject Vectors Reasoning: The scene remains stable with no lateral or vertical movement, focusing instead on depth and existing structures.
-short-real-server  | - - - Style - - -
-short-real-server  | Style Slot 1: Raw textures with fine cinematic film grain in 4k fidelity.
-short-real-server  | Style Slot 2: the initial structural integrity of the subject remains perfectly intact and consistent throughout the motion.
-short-real-server  | Style Slot 1 Reason: The raw textures elevate the realism and historical authenticity, fitting the chaos of war.
-short-real-server  | Style Slot 2 Reason: Maintaining structural integrity is crucial for conveying the serious and undisturbed nature of the battlefield.
-short-real-server  | Reasoning: The selected tags from the vocabulary_depot accurately convey the types of materials present in the scene, with focus on the very low intensity tier as neither tangible movement nor aggressive actions are depicted within the frame. The camera mechanics follow established principles for static shots, keeping the viewer's focus on the details of the battlefield remnants. Atmospheric elements were intentionally woven to enhance the emotional weight and historical context without introducing freezing.
-short-real-server  | - - - Final Output Structure - - -
-short-real-server  | Primary Narrative Block: The scattered glowing coals flicker softly, pooling remnants of heat around them. The jagged steel shards remain dormant, rusted and pitted, presenting a static tableau of war's destruction.
-short-real-server  | Atmospheric/Lighting Delta: Glowing embers softly illuminating the surroundings, amidst deep soft shadows. Sunlight filtering through the haze, casting a warm glow over the battlefield debris.
-short-real-server  | Cinematic Camera Vector: CINEMATIC_CAMERA_VECTORS the static battlefield debris
-short-real-server  | Style: Raw textures with fine cinematic film grain in 4k fidelity, while the initial structural integrity of the subject remains perfectly intact and consistent throughout the motion.
-short-real-server  | videoGenPrompt: The scattered glowing coals flicker softly, pooling remnants of heat around them, while the jagged steel shards remain dormant, rusted and pitted, presenting a static tableau of war's destruction, captured with CINEMATIC_CAMERA_VECTORS the static battlefield debris, rendered in raw textures with fine cinematic film grain in 4k fidelity, while the initial structural integrity of the subject remains perfectly intact and consistent throughout the motion.
-short-real-server  | assembledVideoGenPrompt: The scattered glowing coals flicker softly, pooling remnants of heat around them. The jagged steel shards remain dormant, rusted and pitted, presenting a static tableau of war's destruction, amidst glowing embers softly illuminating the surroundings, amidst deep soft shadows. Sunlight filtering through the haze, casting a warm glow over the battlefield debris, captured with anamorphic Lens, Deep Focus, 9:16 Portrait Cinema, Long/Wide, Zoom Out with Handheld Shaky steadily the static battlefield debris, rendered in raw textures with fine cinematic film grain in 4k fidelity, while the initial structural integrity of the subject remains perfectly intact and consistent throughout the motion.
-short-real-server  | Scene #7 postVideoGenPrompt() usage:  {"prompt_tokens":54810,"completion_tokens":1094,"total_tokens":55904,"prompt_tokens_details":{"cached_tokens":18304,"audio_tokens":0},"completion_tokens_details":{"reasoning_tokens":0,"audio_tokens":0,"accepted_prediction_tokens":0,"rejected_prediction_tokens":0}}
-short-real-server  | Scene #7 postVideoGenPrompt() Result
-short-real-server  | Scene Summary: Amidst the ruins of a WWII battlefield, soldiers emerge, eyes set on the horizon, reflecting the heavy toll of conflict.
-short-real-server  | Scene Summary Reason: The description reflects the aftermath of battle, focusing on soldiers in a visual presentation of post-conflict emotions and atmospheres.
-short-real-server  | Primary Movement: Soldiers stand resolute, gauging their surroundings amidst destruction.
-short-real-server  | Primary Movement Reason: The focus is on the soldiers' stillness and posture amidst a chaotic backdrop, emphasizing the theme of readiness and loss.
-short-real-server  | Narrative Vibe: ANXIOUS
-short-real-server  | Narrative Vibe Reason: The presence of soldiers in a ruined battlefield evokes a feeling of tension and uncertainty.
-short-real-server  | Selected INTENSITY_TIER: LOW
-short-real-server  | INTENSITY_TIER Selected Reason: The overall atmosphere is one of quiet tension rather than explosive action; soldiers are engaged but in a stationary state.
-short-real-server  | Identity Logic: The visual appearance of soldiers and their gear reflects the era's specifics (1944 WWII) and matches the descriptions of military uniforms and awards present in the context.
-short-real-server  | Action Focus: The transition from static imagery to evoking stillness among soldiers signifies tension while keeping a historical backdrop intact.
-short-real-server  | - - - Primary Narrative Block - - -
-short-real-server  | Entity[prop_1]
-short-real-server  | Raw Sentence: The foreground cluster of M1 steel helmets is gleaming in the sunlight, reflecting the day's somber events.
-short-real-server  | Action Type: Temporary-Single
-short-real-server  | Action Type Reason: The helmet's response to sunlight signifies a static yet impactful visual shift rather than ongoing action.
-short-real-server  | Verb Reason: 'Gleaming' aligns with the material's rigid profile and enhances the light interaction during the soldier's stillness.
-short-real-server  | Adverb Reason: 
-short-real-server  | Entity[prop_2]
-short-real-server  | Raw Sentence: The victory medals, partially submerged in mud, catch the dim light, glinting softly.
-short-real-server  | Action Type: Temporary-Single
-short-real-server  | Action Type Reason: Their interaction with the environment, specifically being submerged, creates a momentary focus amidst the chaos.
-short-real-server  | Verb Reason: 'Glinting' was chosen to match the subtle dynamics of light on the medals without implying movement.
-short-real-server  | Adverb Reason: 
-short-real-server  | Entity[prop_3]
-short-real-server  | Raw Sentence: The dark crimson pooled blood on the ground remains vivid, contrasting against the desaturated backdrop.
-short-real-server  | Action Type: Temporary-Single
-short-real-server  | Action Type Reason: The blood's color draw focus in a stationary state, contradicting the surrounding environment's stillness.
-short-real-server  | Verb Reason: 'Remains' showcases the ongoing presence of loss and life without direct action, enhancing the emotional content.
-short-real-server  | Adverb Reason: 
-short-real-server  | - - - Atmospheric Lighting Delta - - -
-short-real-server  | Delta: Subtle fog curling around the ruins
-short-real-server  | Delta Reason: The fog enhances the scene's mood, creating a haunting reflection of past conflict.
-short-real-server  | Delta: Gradual sunlight filtering through destruction
-short-real-server  | Delta Reason: Sunlight balances the somber tone with warmth while providing a contrast to the cold environment.
-short-real-server  | - - - Cinematic Camera Vectors - - -
-short-real-server  | Camera Action: Zoom Out with Handheld Shaky smoothly
-short-real-server  | Subject Vectors: [$0X$, $0Y$, $-Z$]
-short-real-server  | Subject Vectors Reasoning: The soldiers are positioned centrally and facing the camera, indicating a neutral camera vector for direct engagement.
-short-real-server  | - - - Style - - -
-short-real-server  | Style Slot 1: Raw textures with filmic grain in 4K fidelity
-short-real-server  | Style Slot 2: the initial structural integrity of the subjects remains perfectly intact and consistent throughout the motion.
-short-real-server  | Style Slot 1 Reason: Raw textures enhance the reality of the battlefield context, aligning with a historical narrative.
-short-real-server  | Style Slot 2 Reason: Maintaining integrity ensures authenticity in the portrayal of soldiers and their equipment.
-short-real-server  | Reasoning: The vocabulary from the depot focuses on maintaining a historical portrayal of WWII by using both action-driven and atmosphere-driven verbs that reflect the spine of tension and uncertainty. The camera mechanics leverage the optical effects paired with an authentic representation of the era, ensuring each layer interacts fluidly despite the overall stillness. Atmospheric elements were designed to balance emotional weight and signal the aftermath of conflict, avoiding abrupt movements to preserve narrative integrity.
-short-real-server  | - - - Final Output Structure - - -
-short-real-server  | Primary Narrative Block: The foreground cluster of M1 steel helmets is gleaming in the sunlight, reflecting the day's somber events. The victory medals, partially submerged in mud, catch the dim light, glinting softly. The dark crimson pooled blood on the ground remains vivid, contrasting against the desaturated backdrop.
-short-real-server  | Atmospheric/Lighting Delta: Subtle fog curling around the ruins, gradually filtered sunlight through destruction.
-short-real-server  | Cinematic Camera Vector: CINEMATIC_CAMERA_VECTORS the central cluster of soldiers standing amidst the ruins.
-short-real-server  | Style: Raw textures with filmic grain in 4K fidelity, while the initial structural integrity of the subjects remains perfectly intact and consistent throughout the motion.
-short-real-server  | videoGenPrompt: The foreground cluster of M1 steel helmets is gleaming in the sunlight, reflecting the day's somber events, while the victory medals, partially submerged in mud, catch the dim light, glinting softly. The dark crimson pooled blood on the ground remains vivid, contrasting against the desaturated backdrop, amidst subtle fog curling around the ruins, captured with CINEMATIC_CAMERA_VECTORS the central cluster of soldiers standing amidst the ruins, rendered in raw textures with filmic grain in 4K fidelity, while the initial structural integrity of the subjects remains perfectly intact and consistent throughout the motion.
-short-real-server  | assembledVideoGenPrompt: The foreground cluster of M1 steel helmets is gleaming in the sunlight, reflecting the day's somber events. The victory medals, partially submerged in mud, catch the dim light, glinting softly. The dark crimson pooled blood on the ground remains vivid, contrasting against the desaturated backdrop, amidst subtle fog curling around the ruins, gradually filtered sunlight through destruction, captured with anamorphic Lens, Deep Focus, 9:16 Portrait Cinema, Long/Wide, Zoom Out with Handheld Shaky smoothly the central cluster of soldiers standing amidst the ruins, rendered in raw textures with filmic grain in 4K fidelity, while the initial structural integrity of the subjects remains perfectly intact and consistent throughout the motion.
-short-real-server  | Scene #4 postVideoGenPrompt() usage:  {"prompt_tokens":55901,"completion_tokens":1199,"total_tokens":57100,"prompt_tokens_details":{"cached_tokens":16128,"audio_tokens":0},"completion_tokens_details":{"reasoning_tokens":0,"audio_tokens":0,"accepted_prediction_tokens":0,"rejected_prediction_tokens":0}}
-short-real-server  | Scene #4 postVideoGenPrompt() Result
-short-real-server  | Scene Summary: A British infantry soldier descends onto the beaches of Normandy, facing challenges head-on as he trudges through the waves.
-short-real-server  | Scene Summary Reason: The scene evokes a moment of intense bravery as the soldier engages with the environment while storming the beach, critical during WWII.
-short-real-server  | Primary Movement: The soldier aggressively pushes forward through the water, bracing against the incoming waves.
-short-real-server  | Primary Movement Reason: The soldier's pose conveys an active struggle against the elements, emphasizing his determination and setting the scene's energetic tone.
-short-real-server  | Narrative Vibe: COMBAT
-short-real-server  | Narrative Vibe Reason: The environment and actions depicted reflect a high-stakes battle scenario, creating a sense of urgency and tension.
-short-real-server  | Selected INTENSITY_TIER: HIGH
-short-real-server  | INTENSITY_TIER Selected Reason: The soldier is actively moving through the water with tension and aggression, necessitating a kinetic tier that reflects decisive actions.
-short-real-server  | Identity Logic: The British infantry soldier's role and identity are preserved through his determined posture and the struggle against the water, embodying the spirit of resilience during the invasion of Normandy.
-short-real-server  | Action Focus: Transitioned the vague narration of bravery into a specific moment of kinetic action with the verb 'pushing forward', emphasizing the physical resistance against waves.
-short-real-server  | - - - Primary Narrative Block - - -
-short-real-server  | Entity[1]
-short-real-server  | Raw Sentence: The stocky British infantry soldier is pushing forward through the water aggressively, his muscles straining against the waves.
-short-real-server  | Action Type: Continuous
-short-real-server  | Action Type Reason: The soldier is sustained in action, effectively embodying continuous struggle as he engages with the turbulent water.
-short-real-server  | Verb Reason: The verb 'pushing' aligns well with the focus on physical exertion and the context of navigating a challenging environment, suitable for the HIGH intensity tier.
-short-real-server  | Adverb Reason: The adverb 'aggressively' supports the intensity of the action, emphasizing the soldier's demeanor during his progression.
-short-real-server  | Entity[2]
-short-real-server  | Raw Sentence: The long carbon steel bayonet is gleaming in the sunlight.
-short-real-server  | Action Type: Continuous
-short-real-server  | Action Type Reason: The bayonet remains static but emphasizes a connection to the soldier's readiness and the intensity of the combat environment.
-short-real-server  | Verb Reason: The verb 'gleaming' captures the reflective surface of the bayonet, important for emphasizing its presence in the scene.
-short-real-server  | Adverb Reason: 
-short-real-server  | Entity[3]
-short-real-server  | Raw Sentence: The rough reinforced concrete of the sea wall is standing tall, showing scars of battle.
-short-real-server  | Action Type: Continuous
-short-real-server  | Action Type Reason: The sea wall represents a static but essential element of the battlefield, marking the challenges faced by the soldier.
-short-real-server  | Verb Reason: The verb 'standing' signifies the wall's immovable presence, crucial for establishing the scene’s context.
-short-real-server  | Adverb Reason: 
-short-real-server  | Entity[4]
-short-real-server  | Raw Sentence: The frayed burlap sandbags are piled as a makeshift barrier at the beach.
-short-real-server  | Action Type: Continuous
-short-real-server  | Action Type Reason: The sandbags serve as a static prop but contribute to the atmosphere and historical context of the scene.
-short-real-server  | Verb Reason: The verb 'piled' indicates their arrangement, essential for setting the gritty realism of combat.
-short-real-server  | Adverb Reason: 
-short-real-server  | Entity[5]
-short-real-server  | Raw Sentence: The twisted galvanized steel barbed wire is forming a hazardous entanglement amidst the chaos.
-short-real-server  | Action Type: Continuous
-short-real-server  | Action Type Reason: The barbed wire consistently contributes to the combat scene, acting as a physical obstacle for advancing soldiers.
-short-real-server  | Verb Reason: The verb 'forming' highlights the wire's role in shaping the chaotic environment of battle.
-short-real-server  | Adverb Reason: 
-short-real-server  | - - - Atmospheric Lighting Delta - - -
-short-real-server  | Delta: Waves crashing rhythmically against the soldier while sunlight pierces through the clouds, creating a surreal glow.
-short-real-server  | Delta Reason: This reflects the continuous interactions between the soldier and his environment, enhancing the scene's immersion.
-short-real-server  | - - - Cinematic Camera Vectors - - -
-short-real-server  | Camera Action: Zoom Out and Pedestal Up with Handheld Shaky aggressively
-short-real-server  | Subject Vectors: [$0X$, $+Y$, $-Z$]
-short-real-server  | Subject Vectors Reasoning: The soldier's forward movement through the water indicates a downward direction through the frame, poised between a horizontal advance across the beach.
-short-real-server  | - - - Style - - -
-short-real-server  | Style Slot 1: Raw textures with fine cinematic film grain in 4k fidelity
-short-real-server  | Style Slot 2: the initial structural integrity of the subject remains perfectly intact and consistent throughout the motion.
-short-real-server  | Style Slot 1 Reason: Emphasizes the raw and gritty atmosphere of the battlefield, suitable for the WWII theme.
-short-real-server  | Style Slot 2 Reason: Ensures that the soldier's form and protective gear appear authentic and consistent amid turbulent action.
-short-real-server  | Reasoning: The vocabulary chosen reflects the kinetic tension and reality of a soldier navigating rough waters in combat, while the camera tech was selected to encapsulate the gravity of the moment. The atmospheric strategy amplifies the dynamic interplay of light and water against the soldier, enhancing visual complexity without freezing the action.
-short-real-server  | - - - Final Output Structure - - -
-short-real-server  | Primary Narrative Block: The stocky British infantry soldier is pushing forward through the water aggressively, his muscles straining against the waves.
-short-real-server  | Atmospheric/Lighting Delta: Waves crashing rhythmically against the soldier while sunlight pierces through the clouds, creating a surreal glow.
-short-real-server  | Cinematic Camera Vector: CINEMATIC_CAMERA_VECTORS the stocky British infantry soldier
-short-real-server  | Style: Raw textures with fine cinematic film grain in 4k fidelity, while the initial structural integrity of the subject remains perfectly intact and consistent throughout the motion.
-short-real-server  | videoGenPrompt: The stocky British infantry soldier is pushing forward through the water aggressively, his muscles straining against the waves, waves crashing rhythmically against the soldier while sunlight pierces through the clouds, creating a surreal glow, filmed using CINEMATIC_CAMERA_VECTORS the stocky British infantry soldier, rendered in raw textures with fine cinematic film grain in 4k fidelity, while the initial structural integrity of the subject remains perfectly intact and consistent throughout the motion.
-short-real-server  | assembledVideoGenPrompt: The stocky British infantry soldier is pushing forward through the water aggressively, his muscles straining against the waves, amidst waves crashing rhythmically against the soldier while sunlight pierces through the clouds, creating a surreal glow, captured with anamorphic Lens, Deep Focus, 9:16 Portrait Cinema, Long/Wide, Zoom Out and Pedestal Up with Handheld Shaky aggressively the stocky British infantry soldier, rendered in raw textures with fine cinematic film grain in 4k fidelity, while the initial structural integrity of the subject remains perfectly intact and consistent throughout the motion.
-short-real-server  | Scene #6 postVideoGenPrompt() usage:  {"prompt_tokens":55196,"completion_tokens":1227,"total_tokens":56423,"prompt_tokens_details":{"cached_tokens":16128,"audio_tokens":0},"completion_tokens_details":{"reasoning_tokens":0,"audio_tokens":0,"accepted_prediction_tokens":0,"rejected_prediction_tokens":0}}
-short-real-server  | Scene #6 postVideoGenPrompt() Result
-short-real-server  | Scene Summary: Bombs cascade from the clouds, impacting the ground with chaotic force, while debris erupts around them.
-short-real-server  | Scene Summary Reason: The summary focuses on the dynamic and explosive nature of bombs falling and their impact, capturing the primary action of the scene.
-short-real-server  | Primary Movement: Impact and debris explosion; debris erupts from the ground as bombs hit.
-short-real-server  | Primary Movement Reason: The primary action focuses on the impact of bombs, which leads to debris being scattered violently, reflecting the chaos described.
-short-real-server  | Narrative Vibe: CHAOTIC
-short-real-server  | Narrative Vibe Reason: The scene embodies chaos with multiple falling bombs and the resulting destruction, consistent with the intensity of battle.
-short-real-server  | Selected INTENSITY_TIER: VERY_HIGH
-short-real-server  | INTENSITY_TIER Selected Reason: The action involves explosive impacts that cause substantial fragmentation and chaos, justifying the choice of the `VERY_HIGH` intensity tier.
-short-real-server  | Identity Logic: Each entity's properties, including its material, action context, and historical era, are preserved while depicting the kinetic energy and impact during motion, ensuring the authenticity of the WWII battlefield environment.
-short-real-server  | Action Focus: The shift emphasizes the transition from bomb impact to the resulting physical disruption and chaos, focusing on high-impact kinetic verbs that convey urgency and destruction.
-short-real-server  | - - - Primary Narrative Block - - -
-short-real-server  | Entity[1]
-short-real-server  | Raw Sentence: The high-frame foreground descent SC 250 Bomb **bursts** violently, causing debris **to explode** around its impact point.
-short-real-server  | Action Type: Temporary-Single
-short-real-server  | Action Type Reason: The bomb is represented as initiating a distinct action (bursting), reflecting the chaos of the scene.
-short-real-server  | Verb Reason: Chosen to reflect the explosive nature of the bomb's impact, aligning with the `VERY_HIGH` intensity tier's kinetic context.
-short-real-server  | Adverb Reason: 
-short-real-server  | Entity[2]
-short-real-server  | Raw Sentence: The diagonal mid-frame streaks of Tracer Rounds **stream** rapidly, illuminating the sky with bright phosphor trails.
-short-real-server  | Action Type: Temporary-Single
-short-real-server  | Action Type Reason: The tracer rounds are depicted as quickly moving through the air, emphasizing their rapid descent.
-short-real-server  | Verb Reason: The verb 'stream' conveys swift movement and light interaction, suitable for the kinetic moment in this chaotic atmosphere.
-short-real-server  | Adverb Reason: 
-short-real-server  | Entity[3]
-short-real-server  | Raw Sentence: The upper background volume of billowing clouds **rolls** ominously as explosions **displace** the dense moisture.
-short-real-server  | Action Type: Continuous
-short-real-server  | Action Type Reason: The rolling clouds suggest an ongoing atmospheric change influenced by the explosions below.
-short-real-server  | Verb Reason: The verb 'rolls' suggests continuous movement influenced by the atmosphere and the chaotic events on the ground, appropriate for the fluid context.
-short-real-server  | Adverb Reason: The action reflects a sustained atmospheric change rather than a singular event.
-short-real-server  | - - - Atmospheric Lighting Delta - - -
-short-real-server  | Delta: Explosive splash burst impacting the ground, causing shockwaves in the billowing clouds.
-short-real-server  | Delta Reason: The layer reflects the immediate atmospheric response to the bomb impacts, enhancing the chaotic feel of the scene.
-short-real-server  | Delta: Thick aerosolized mist swirling around the impact sites, reflecting the suspended debris in the air.
-short-real-server  | Delta Reason: This visual enhances the chaos of destruction caused by the bombs, showcasing kinetic energy.
-short-real-server  | Delta: Dimmed ambient shadows thickening among the smoke, enhancing the depth of the battlefield.
-short-real-server  | Delta Reason: This atmospheric detail adds to the narrative's seriousness and tension.
-short-real-server  | - - - Cinematic Camera Vectors - - -
-short-real-server  | Camera Action: Zoom Out and Pedestal Up with Handheld Shaky violently
-short-real-server  | Subject Vectors: [$0X$, $+Y$, $-Z$]
-short-real-server  | Subject Vectors Reasoning: The subject vectors indicate the bombs move straight downwards towards the ground while the camera captures the scene from a mid-height perspective, giving a direct view towards the ground impact.
-short-real-server  | - - - Style - - -
-short-real-server  | Style Slot 1: Authentic raw textures with fine cinematic film grain in 4k fidelity.
-short-real-server  | Style Slot 2: the initial structural integrity of the subject remains perfectly intact and consistent throughout the motion.
-short-real-server  | Style Slot 1 Reason: The raw textures emphasize the gritty realism of the battlefield, fitting the historical context.
-short-real-server  | Style Slot 2 Reason: This statement ensures the visual consistency of bomb artifacts throughout their explosive motion.
-short-real-server  | Reasoning: The vocabulary selection aligns with the intensity of chaotic destruction, showcasing high-impact verbs and descriptive nouns that reflect the frenetic energy of WWII bomb impacts. The cinematic techniques chosen, including the use of a low-key lighting setup and long/wide framing style, enhance the filmic narrative appropriate for this WWII scene, balancing aesthetic with the intense action depicted.
-short-real-server  | - - - Final Output Structure - - -
-short-real-server  | Primary Narrative Block: The high-frame foreground descent SC 250 Bomb bursts violently, causing debris to explode around its impact point. The diagonal mid-frame streaks of Tracer Rounds stream rapidly, illuminating the sky with bright phosphor trails. The upper background volume of billowing clouds rolls ominously as explosions displace the dense moisture.
-short-real-server  | Atmospheric/Lighting Delta: Explosive splash burst impacting the ground, causing shockwaves in the billowing clouds, thick aerosolized mist swirling around the impact sites, reflecting the suspended debris in the air, dimmed ambient shadows thickening among the smoke.
-short-real-server  | Cinematic Camera Vector: CINEMATIC_CAMERA_VECTORS the explosive impacts hurl clouds of debris amidst the chaotic aerial battle.
-short-real-server  | Style: Authentic raw textures with fine cinematic film grain in 4k fidelity, while the initial structural integrity of the subject remains perfectly intact and consistent throughout the motion.
-short-real-server  | videoGenPrompt: The high-frame foreground descent SC 250 Bomb bursts violently, causing debris to explode around its impact point, while the diagonal mid-frame streaks of Tracer Rounds stream rapidly, illuminating the sky with bright phosphor trails, captured with CINEMATIC_CAMERA_VECTORS the explosive impacts hurl clouds of debris amidst the chaotic aerial battle, rendered in authentic raw textures with fine cinematic film grain in 4k fidelity, while the initial structural integrity of the subject remains perfectly intact and consistent throughout the motion.
-short-real-server  | assembledVideoGenPrompt: The high-frame foreground descent SC 250 Bomb bursts violently, causing debris to explode around its impact point. The diagonal mid-frame streaks of Tracer Rounds stream rapidly, illuminating the sky with bright phosphor trails. The upper background volume of billowing clouds rolls ominously as explosions displace the dense moisture, amidst explosive splash burst impacting the ground, causing shockwaves in the billowing clouds, thick aerosolized mist swirling around the impact sites, reflecting the suspended debris in the air, dimmed ambient shadows thickening among the smoke, captured with anamorphic Lens, Deep Focus, 9:16 Portrait Cinema, Long/Wide, Zoom Out and Pedestal Up with Handheld Shaky violently the explosive impacts hurl clouds of debris amidst the chaotic aerial battle, rendered in authentic raw textures with fine cinematic film grain in 4k fidelity, while the initial structural integrity of the subject remains perfectly intact and consistent throughout the motion.
-short-real-server  | Scene #5 postVideoGenPrompt() usage:  {"prompt_tokens":57199,"completion_tokens":1327,"total_tokens":58526,"prompt_tokens_details":{"cached_tokens":16128,"audio_tokens":0},"completion_tokens_details":{"reasoning_tokens":0,"audio_tokens":0,"accepted_prediction_tokens":0,"rejected_prediction_tokens":0}}
-short-real-server  | Scene #5 postVideoGenPrompt() Result
-short-real-server  | Scene Summary: A fighter pilot lunges forward in an airplane cockpit, intensely focused as aerial debris whizzes past him.
-short-real-server  | Scene Summary Reason: I decided that the scene summary reflects the action of the pilot and the chaotic environment around him, emphasizing movement and intensity.
-short-real-server  | Primary Movement: Lunging forward with focused intensity while gripping controls tightly.
-short-real-server  | Primary Movement Reason: The primary movement clearly indicates a decisive action in response to an intense situation, aligning with the visual context of the pilot's posture.
-short-real-server  | Narrative Vibe: COMBAT
-short-real-server  | Narrative Vibe Reason: The narrative vibe is characterized by the urgency and danger of aerial combat, which is depicted in both scene content and context.
-short-real-server  | Selected INTENSITY_TIER: HIGH
-short-real-server  | INTENSITY_TIER Selected Reason: The chosen INTENSITY_TIER is HIGH due to the decisive kinetic actions of the pilot amidst the chaotic battle atmosphere.
-short-real-server  | Identity Logic: The pilot's identity as an American fighter pilot during WWII is maintained in the narrative through his age, clothing, and determined expression, ensuring historical accuracy in the action.
-short-real-server  | Action Focus: The action focus shifts from a static description of the pilot to a dynamic portrayal of his intense engagement in combat, reflected through kinetic verbs that express action.
-short-real-server  | - - - Primary Narrative Block - - -
-short-real-server  | Entity[1]
-short-real-server  | Raw Sentence: The focused American fighter pilot lunges forward, gripping the dual-handled yoke tightly.
-short-real-server  | Action Type: Temporary-Single
-short-real-server  | Action Type Reason: This is classified as a Temporary-Single action because the pilot’s sudden lunge represents a new, decisive movement in response to his surroundings.
-short-real-server  | Verb Reason: The verb 'lunges' encapsulates a sudden, aggressive movement, fitting well within the HIGH intensity tier for decisiveness.
-short-real-server  | Adverb Reason: 
-short-real-server  | Entity[2]
-short-real-server  | Raw Sentence: The rugged fighter cockpit encases the pilot, reflecting the intense battle outside.
-short-real-server  | Action Type: Continuous
-short-real-server  | Action Type Reason: This action is continuous as the cockpit remains a steady presence while the environment outside shifts dynamically during combat.
-short-real-server  | Verb Reason: The verb 'encases' shows a static action but integrates with the pilot's dynamic surrounding without change in motion.
-short-real-server  | Adverb Reason: 
-short-real-server  | Entity[3]
-short-real-server  | Raw Sentence: The dual-handled yoke is held tightly, showcasing the pilot’s firm grip as he maneuvers through the chaos.
-short-real-server  | Action Type: Continuous
-short-real-server  | Action Type Reason: This is a continuous interaction as the grip remains firm amidst the ongoing engagement, representing ongoing combat dynamics.
-short-real-server  | Verb Reason: The verb 'held' signifies a sustained action, aligning with the environment's continuous tension.
-short-real-server  | Adverb Reason: 
-short-real-server  | Entity[4]
-short-real-server  | Raw Sentence: The curved plexiglass canopy arches over the pilot, a protective barrier against the aerial chaos.
-short-real-server  | Action Type: Continuous
-short-real-server  | Action Type Reason: As part of the cockpit setup, the canopy’s presence remains stable, continuously framing the action within the cockpit.
-short-real-server  | Verb Reason: The verb 'arches' suggests the structural position of the canopy as it supports the cockpit environment without exhibiting movement.
-short-real-server  | Adverb Reason: 
-short-real-server  | Entity[5]
-short-real-server  | Raw Sentence: The cockpit instrument lights flicker softly, enhancing the urgency within the cockpit during the combat.
-short-real-server  | Action Type: Continuous
-short-real-server  | Action Type Reason: This is a continuous action where the soft flickering of lights provides ambient context for the scene's urgency.
-short-real-server  | Verb Reason: The verb 'flicker' indicates a persistent minor action that enhances the scene's dynamic without significant physical change.
-short-real-server  | Adverb Reason: 
-short-real-server  | - - - Atmospheric Lighting Delta - - -
-short-real-server  | Delta: Thick clouds gathering as light rays penetrate, while subtly glowing cockpit lights flicker in response to the chaos outside.
-short-real-server  | Delta Reason: I chose this atmospheric layer to emphasize the tension and urgency of the combat scene, with light rays contrasting against the thick clouds, aligning with the intense energy of aerial combat.
-short-real-server  | - - - Cinematic Camera Vectors - - -
-short-real-server  | Camera Action: Zoom Out and Truck Left with Handheld Shaky aggressively
-short-real-server  | Subject Vectors: [$-X$, $0Y$, $-Z$]
-short-real-server  | Subject Vectors Reasoning: The subject vectors indicate that the pilot is positioned toward the left of the screen and is leaning forward; this motion suggests a departure towards the left while being constrained within the cockpit.
-short-real-server  | - - - Style - - -
-short-real-server  | Style Slot 1: Raw textures with fine cinematic film grain in 4K fidelity, while the initial structural integrity of the subject remains perfectly intact and consistent throughout the motion.
-short-real-server  | Style Slot 2: the initial structural integrity of the cockpit and environment remains perfectly intact and consistent throughout the motion.
-short-real-server  | Style Slot 1 Reason: The choice of raw textures enhances the gritty realism of the combat scenario, suitable for a WWII context.
-short-real-server  | Style Slot 2 Reason: Emphasizing the preservation of architectural details aligns with the cinematic goal of maintaining immersion.
-short-real-server  | Reasoning: The selected verbs from the vocabulary depot were chosen based on their alignment with the defined narrative and action context of the scene. The use of action verbs like 'lunges' and 'held' emphasizes kinetic energy. The atmospheric strategy was selected to enhance tension and prevent a static feel in a dynamic combat environment, reflecting aerial chaos while maintaining the integrity of the presented structures.
-short-real-server  | - - - Final Output Structure - - -
-short-real-server  | Primary Narrative Block: The focused American fighter pilot lunges forward, gripping the dual-handled yoke tightly. The rugged fighter cockpit encases the pilot, reflecting the intense battle outside. The dual-handled yoke is held tightly, showcasing the pilot’s firm grip as he maneuvers through the chaos. The curved plexiglass canopy arches over the pilot, a protective barrier against the aerial chaos. The cockpit instrument lights flicker softly, enhancing the urgency within the cockpit during the combat.
-short-real-server  | Atmospheric/Lighting Delta: Thick clouds gathering as light rays penetrate, while subtly glowing cockpit lights flicker in response to the chaos outside.
-short-real-server  | Cinematic Camera Vector: CINEMATIC_CAMERA_VECTORS the focused American fighter pilot
-short-real-server  | Style: Raw textures with fine cinematic film grain in 4K fidelity, while the initial structural integrity of the subject remains perfectly intact and consistent throughout the motion.
-short-real-server  | videoGenPrompt: The focused American fighter pilot lunges forward, gripping the dual-handled yoke tightly, amidst thick clouds gathering as light rays penetrate, while subtly glowing cockpit lights flicker in response to the chaos outside, captured with CINEMATIC_CAMERA_VECTORS the focused American fighter pilot, rendered in raw textures with fine cinematic film grain in 4K fidelity, while the initial structural integrity of the subject remains perfectly intact and consistent throughout the motion.
-short-real-server  | assembledVideoGenPrompt: The focused American fighter pilot lunges forward, gripping the dual-handled yoke tightly. The rugged fighter cockpit encases the pilot, reflecting the intense battle outside. The dual-handled yoke is held tightly, showcasing the pilot’s firm grip as he maneuvers through the chaos. The curved plexiglass canopy arches over the pilot, a protective barrier against the aerial chaos. The cockpit instrument lights flicker softly, enhancing the urgency within the cockpit during the combat, amidst thick clouds gathering as light rays penetrate, while subtly glowing cockpit lights flicker in response to the chaos outside, captured with anamorphic Lens, Deep Focus, 9:16 Portrait Cinema, Long/Wide, Zoom Out and Truck Left with Handheld Shaky aggressively the focused American fighter pilot, rendered in raw textures with fine cinematic film grain in 4K fidelity, while the initial structural integrity of the subject remains perfectly intact and consistent throughout the motion.
-short-real-server  | Scene #3 postVideoGenPrompt() usage:  {"prompt_tokens":56155,"completion_tokens":1078,"total_tokens":57233,"prompt_tokens_details":{"cached_tokens":20096,"audio_tokens":0},"completion_tokens_details":{"reasoning_tokens":0,"audio_tokens":0,"accepted_prediction_tokens":0,"rejected_prediction_tokens":0}}
-short-real-server  | Scene #3 postVideoGenPrompt() Result
-short-real-server  | Scene Summary: A soldier charges forward into the chaos of battle, with fellow troops advancing behind him amidst explosions and the sounds of war.
-short-real-server  | Scene Summary Reason: This summary reflects the intense action described in the scene, highlighting individual and collective soldier movements toward the battlefield.
-short-real-server  | Primary Movement: Charge forward through the mud with determination and urgency.
-short-real-server  | Primary Movement Reason: The main action features the soldier moving energetically through a challenging environment, which aligns with the description provided.
-short-real-server  | Narrative Vibe: COMBAT
-short-real-server  | Narrative Vibe Reason: The atmosphere is charged with the tension and urgency typical of a combat scene, emphasizing the intensity of warfare.
-short-real-server  | Selected INTENSITY_TIER: HIGH
-short-real-server  | INTENSITY_TIER Selected Reason: The action of charging forward indicates a decisive kinetic movement consistent with a high intensity of activity.
-short-real-server  | Identity Logic: The soldier's identity as an American infantryman in WWII is preserved through his specific demographics and physical actions, showing resilience amidst chaos.
-short-real-server  | Action Focus: The shift from narration to kinetic action emphasizes the explosive urgency associated with battle, capturing the soldier's dynamic movement.
-short-real-server  | - - - Primary Narrative Block - - -
-short-real-server  | Entity[0]
-short-real-server  | Raw Sentence: The soldier charges forward aggressively, his muscles rippling as he splashes through the mud.
-short-real-server  | Action Type: Temporary-Single
-short-real-server  | Action Type Reason: The soldier's rapid advance is a temporary action breaking from readiness into motion.
-short-real-server  | Verb Reason: The verb 'charges' was chosen for its association with an aggressive forward motion, fitting the high intensity of the scene.
-short-real-server  | Adverb Reason: The action does not require an adverb because it is a strong, singular verb reflecting urgency.
-short-real-server  | Entity[1]
-short-real-server  | Raw Sentence: The M1 Garand rifle rests in the foreground, showcasing worn textures and rugged steel.
-short-real-server  | Action Type: Static
-short-real-server  | Action Type Reason: The rifle is positioned statically as a prop, emphasizing its detail without motion.
-short-real-server  | Verb Reason: 'Rests' signifies a state of stillness that maintains focus on the weapon's character and importance in the scene.
-short-real-server  | Adverb Reason: 
-short-real-server  | Entity[2]
-short-real-server  | Raw Sentence: The M1 steel helmet is positioned at the lower edge, hinting at the chaos of battle.
-short-real-server  | Action Type: Static
-short-real-server  | Action Type Reason: The helmet serves as a static element in a chaotic environment, enhancing the battlefield’s context.
-short-real-server  | Verb Reason: 'Is positioned' captures its stillness while suggesting a dismissive loss amidst the larger battle context.
-short-real-server  | Adverb Reason: 
-short-real-server  | Entity[3]
-short-real-server  | Raw Sentence: The scattered shell casings lie in the dirt, revealing signs of recent conflict.
-short-real-server  | Action Type: Static
-short-real-server  | Action Type Reason: As static props, the shell casings contribute to the depicted chaos without motion of their own.
-short-real-server  | Verb Reason: 'Lie' emphasizes their stillness and the aftermath of battle, anchoring the scene's context.
-short-real-server  | Adverb Reason: 
-short-real-server  | - - - Atmospheric Lighting Delta - - -
-short-real-server  | Delta: Thick smoke swirling through the air while embers flicker across the battlefield.
-short-real-server  | Delta Reason: This description enhances the chaotic atmosphere of war, providing a vivid representation of the intense activity in the scene.
-short-real-server  | - - - Cinematic Camera Vectors - - -
-short-real-server  | Camera Action: Zoom Out and Pedestal Up with Handheld Shaky aggressively
-short-real-server  | Subject Vectors: [$0X$, $+Y$, $-Z$]
-short-real-server  | Subject Vectors Reasoning: The soldier's forward motion signifies a progression towards the viewer, which is shown through positive Y movement and maintaining focus as he runs.
-short-real-server  | - - - Style - - -
-short-real-server  | Style Slot 1: Authentic raw textures with fine cinematic film grain in 4k fidelity,
-short-real-server  | Style Slot 2: while the initial structural integrity of the subject remains perfectly intact and consistent throughout the motion.
-short-real-server  | Style Slot 1 Reason: This selection ensures visual realism suitable for the wartime setting, enhancing the authenticity of the soldier's uniform and battlefield.
-short-real-server  | Style Slot 2 Reason: Maintaining structural integrity ensures that the visual consistency of the soldier contrasts dynamically with his environment.
-short-real-server  | Reasoning: The vocabulary was selected based on the physical dynamics evident in the soldiers' rapid movements through mud, underlining kinesis while respecting battlefield authenticity. The camera technique was chosen to capture intense action with a deep focus, allowing for emotional engagement during the combat scene. The atmospheric strategy was to depict chaotic elements such as smoke and flickering flames, enhancing immersion without freezing background activity.
-short-real-server  | - - - Final Output Structure - - -
-short-real-server  | Primary Narrative Block: The soldier charges forward aggressively, his muscles rippling as he splashes through the mud.
-short-real-server  | Atmospheric/Lighting Delta: Thick smoke swirling through the air while embers flicker across the battlefield.
-short-real-server  | Cinematic Camera Vector: CINEMATIC_CAMERA_VECTORS the charging soldier in mid-action, cropped for tension.
-short-real-server  | Style: Authentic raw textures with fine cinematic film grain in 4k fidelity, while the initial structural integrity of the subject remains perfectly intact and consistent throughout the motion.
-short-real-server  | videoGenPrompt: The soldier charges forward aggressively, his muscles rippling as he splashes through the mud, thick smoke swirling through the air while embers flicker across the battlefield, captured with CINEMATIC_CAMERA_VECTORS the charging soldier in mid-action, cropped for tension, authentic raw textures with fine cinematic film grain in 4k fidelity, while the initial structural integrity of the subject remains perfectly intact and consistent throughout the motion.
-short-real-server  | assembledVideoGenPrompt: The soldier charges forward aggressively, his muscles rippling as he splashes through the mud, amidst thick smoke swirling through the air while embers flicker across the battlefield, captured with anamorphic Lens, Deep Focus, 9:16 Portrait Cinema, Long/Wide, Zoom Out and Pedestal Up with Handheld Shaky aggressively the charging soldier in mid-action, cropped for tension, rendered in authentic raw textures with fine cinematic film grain in 4k fidelity, while the initial structural integrity of the subject remains perfectly intact and consistent throughout the motion.
-short-real-server  | Scene #1 postVideoGenPrompt() usage:  {"prompt_tokens":53651,"completion_tokens":1161,"total_tokens":54812,"prompt_tokens_details":{"cached_tokens":16128,"audio_tokens":0},"completion_tokens_details":{"reasoning_tokens":0,"audio_tokens":0,"accepted_prediction_tokens":0,"rejected_prediction_tokens":0}}
-short-real-server  | Scene #1 postVideoGenPrompt() Result
-short-real-server  | Scene Summary: In the midst of WWII chaos, an abandoned building stands defiantly amidst billowing smoke, craters, and destroyed tanks, while bombs rain down all around, creating a vivid tableau of destruction.
-short-real-server  | Scene Summary Reason: The scene captures the essence of chaos evident from the destruction surrounding the central building, with smoke and fire indicating ongoing battle, aligned with the video description.
-short-real-server  | Primary Movement: Tanks maneuver across the battlefield, while bombs burst overhead, sending debris and smoke shooting into the air.
-short-real-server  | Primary Movement Reason: The description indicates ongoing tank movements and bomb detonations which represent action and chaos prevalent in the depicted WWII scene.
-short-real-server  | Narrative Vibe: CHAOTIC
-short-real-server  | Narrative Vibe Reason: The visual elements of explosions, smoke trails, and the ravaged landscape evoke a sense of chaos and destruction, fitting the historical conflict narrative.
-short-real-server  | Selected INTENSITY_TIER: VERY_HIGH
-short-real-server  | INTENSITY_TIER Selected Reason: Given the visual chaotic nature of explosions and movement suggested in the scene, the intense actions and reactions strongly align with a ‘VERY_HIGH’ intensity tier.
-short-real-server  | Identity Logic: Due to the absence of specific entities in the scene, the identity is derived from the overarching themes of destruction relating to WWII, preserving the historical context and chaotic essence of the depicted environment.
-short-real-server  | Action Focus: The transition from the abstract narration of chaos to concrete kinetic action is emphasized by focusing on the physical destruction and movement resulting from artillery and strategic maneuvers in the battlefield setting.
-short-real-server  | - - - Primary Narrative Block - - -
-short-real-server  | Entity[tank1]
-short-real-server  | Raw Sentence: Tanks rumble powerfully across the devastated battlefield, causing deep tracks in the ground and sending up dust clouds.
-short-real-server  | Action Type: Temporary-Single
-short-real-server  | Action Type Reason: The tank movement portrays a single, powerful action in response to the chaotic environment nearby.
-short-real-server  | Verb Reason: The choice of ‘rumble’ captures the heavy, dominant movement characteristic of tanks during wartime while matching the ‘VERY_HIGH’ intensity of the action.
-short-real-server  | Adverb Reason: The verb ‘powerfully’ enhances the imagery of the tank's imposing movement amidst the chaos.
-short-real-server  | Entity[explosion1]
-short-real-server  | Raw Sentence: Bombs fall violently from the sky, triggering massive shockwaves that ripple through the ground.
-short-real-server  | Action Type: Temporary-Single
-short-real-server  | Action Type Reason: The bomb explosions represent a singular dramatic action that correlates with the chaos surrounding the battlefield.
-short-real-server  | Verb Reason: The verb 'fall' signifies the continuous action of the bombs descending, which aligns with the intense atmosphere of destruction and urgency.
-short-real-server  | Adverb Reason: The adverb ‘violently’ effectively portrays the intensity and force of the falling bombs.
-short-real-server  | - - - Atmospheric Lighting Delta - - -
-short-real-server  | Delta: Smoke and debris expelled by explosions fills the air, alongside occasional flashes of gunfire amidst the chaos.
-short-real-server  | Delta Reason: This description directly correlates with the explosive activity evident in the scene, creating a dynamic atmosphere of battle.
-short-real-server  | Delta: Deep soft shadows stretch across the battlefield due to low-key sunlight, punctuated by the harsh light of explosions.
-short-real-server  | Delta Reason: The lighting setup corresponds to the time of day and the atmospheric conditions, enhancing the overall tension of the scene.
-short-real-server  | - - - Cinematic Camera Vectors - - -
-short-real-server  | Camera Action: Crash Zoom Out with Handheld Shaky violently
-short-real-server  | Subject Vectors: [$0X$, $0Y$, $-Z$]
-short-real-server  | Subject Vectors Reasoning: The camera maintains a neutral position while capturing the chaotic battlefield, enhancing continuity in the perspective of the destruction below.
-short-real-server  | - - - Style - - -
-short-real-server  | Style Slot 1: Raw textures with fine cinematic film grain in 4k fidelity
-short-real-server  | Style Slot 2: the initial structural integrity of the subject remains perfectly intact and consistent throughout the motion.
-short-real-server  | Style Slot 1 Reason: Raw textures align with the chaotic and gritty essence of a WWII battlefield, embraced by filmic grain to enhance realism.
-short-real-server  | Style Slot 2 Reason: The emphasis on maintaining the integrity ensures visual coherence as destruction unfolds.
-short-real-server  | Reasoning: The tags selected from the vocabulary depot encapsulate the chaotic nature of a WWII battlefield, focusing on the physical intensity of the tanks and explosives. The camera technique reflects a documentary style, emphasizing realism in the portrayal of destruction, while atmospheric strategies prevent a static feel, enhancing dynamic movement and depth in the visuals.
-short-real-server  | - - - Final Output Structure - - -
-short-real-server  | Primary Narrative Block: Tanks rumble powerfully across the devastated battlefield, causing deep tracks in the ground and sending up dust clouds. Bombs fall violently from the sky, triggering massive shockwaves that ripple through the ground.
-short-real-server  | Atmospheric/Lighting Delta: Smoke and debris expelled by explosions fills the air, alongside occasional flashes of gunfire amidst the chaos, and deep soft shadows stretch across the battlefield due to low-key sunlight, punctuated by the harsh light of explosions.
-short-real-server  | Cinematic Camera Vector: CINEMATIC_CAMERA_VECTORS the devastated battlefield as tanks maneuver amid explosions and chaos,
-short-real-server  | Style: Raw textures with fine cinematic film grain in 4k fidelity, while the initial structural integrity of the subject remains perfectly intact and consistent throughout the motion.
-short-real-server  | videoGenPrompt: Tanks rumble powerfully across the devastated battlefield, causing deep tracks in the ground and sending up dust clouds. Bombs fall violently from the sky, triggering massive shockwaves that ripple through the ground, amidst smoke and debris expelled by explosions filling the air, while deep soft shadows stretch across the battlefield due to low-key sunlight, punctuated by the harsh light of explosions, captured with CINEMATIC_CAMERA_VECTORS the devastated battlefield as tanks maneuver amid explosions and chaos, rendered in raw textures with fine cinematic film grain in 4k fidelity, while the initial structural integrity of the subject remains perfectly intact and consistent throughout the motion.
-short-real-server  | fassembledVideoGenPrompt: Tanks rumble powerfully across the devastated battlefield, causing deep tracks in the ground and sending up dust clouds. Bombs fall violently from the sky, triggering massive shockwaves that ripple through the ground, amidst smoke and debris expelled by explosions filling the air, while deep soft shadows stretch across the battlefield due to low-key sunlight, punctuated by the harsh light of explosions, captured with Crash Zoom Out with Handheld Shaky violently the devastated battlefield as tanks maneuver amid explosions and chaos, rendered in Raw textures with fine cinematic film grain in 4k fidelity, while the initial structural integrity of the subject remains perfectly intact and consistent throughout the motion.
+Scene #1 postVideoGenPrompt() Result
+Scene Summary: The scene portrays a post-battle battlefield where the devastation of war is evident, with smoke rising from the ruins and debris scattered across the terrain.
+Scene Summary Reason: This summary reflects the chaotic aftermath of warfare, where destruction is prevalent and aligns with the visual representation of the battlefield.
+Primary Movement: Static / Micro-movement only
+Primary Movement Reason: The image depicts a static scene filled with debris and smoke; there are no subjects actively moving, signifying that the primary action is the stillness of chaos.
+Narrative Vibe: CHAOTIC
+Narrative Vibe Reason: The vibe is chaotic due to the destruction and the remnants of battle that fill the frame, illustrating a world in turmoil.
+Selected INTENSITY_TIER: VERY_LOW
+INTENSITY_TIER Selected Reason: The imagery conveys stillness amidst destruction, lacking any dynamic motion, which fits the `VERY_LOW` tier.
+Identity Logic: The visual context of the WWII battlefield is preserved through the details of the debris and smoke that align with the historic setting of 1944, ensuring authenticity.
+Action Focus: The transition from a mere description of chaos to highlighting the physical remains of battle reflects the underlying tension of war without depicting direct action.
+- - - Atmospheric Lighting Delta - - -
+Delta: Subtle dust and smoke swirling gently in the air, enhancing the feeling of destruction and despair.
+Delta Reason: This atmospheric detail amplifies the chaotic vibe and aligns with the post-battle scenario, emphasizing the pervasive ash and smoke.
+- - - Cinematic Camera Vectors - - -
+Camera Action: Zoom Out with Handheld Shaky steadily
+Subject Vectors: [$0X$, $0Y$, $-Z$]
+Subject Vectors Reasoning: The analysis indicates a stationary scene with a slight depth perspective, reinforcing the $-Z$ movement as it portrays the aftermath of war.
+- - - Style - - -
+Style Slot 1: Raw textures with fine cinematic film grain in 4k fidelity, while the subject's identity and environmental geometry are consistently preserved with absolute precision.
+Style Slot 2: Exquisite masterwork textures in stunning 4k resolution.
+Style Slot 1 Reason: Raw textures and film grain effectively capture the gritty aftermath of battle, enhancing the atmospheric tension.
+Style Slot 2 Reason: Exquisite textures ensure the visual fidelity remains high, stressing historical authenticity.
+Reasoning: To underpin the chaotic yet still atmosphere of the WWII battlefield, technical vocabulary was selected from the locked `VERY_LOW` tier, emphasizing motionless aspects of destruction like subtle dust and smoke. The styling opts for raw textures in 4K to highlight the environmental impact of warfare and aligns with the cinematic techniques established in the master style guide, particularly focusing on low-key lighting to enhance the mood.
+- - - Final Output Structure - - -
+Primary Narrative Block: 
+Atmospheric/Lighting Delta: Subtle dust and smoke swirling gently in the air, enhancing the feeling of destruction and despair.
+Cinematic Camera Vector: CINEMATIC_CAMERA_VECTORS the silent battlefield under a clouded sky
+Style: Raw textures with fine cinematic film grain in 4k fidelity, while the subject's identity and environmental geometry are consistently preserved with absolute precision.
+videoGenPrompt: The scene portrays a post-battle battlefield where the devastation of war is evident, with smoke rising from the ruins and debris scattered across the terrain, amidst subtle dust and smoke swirling gently in the air, enhancing the feeling of destruction and despair, captured with CINEMATIC_CAMERA_VECTORS the silent battlefield under a clouded sky, rendered in raw textures with fine cinematic film grain in 4k fidelity, while the subject's identity and environmental geometry are consistently preserved with absolute precision.
+assembledVideoGenPrompt: The scene portrays a post-battle battlefield where the devastation of war is evident, with smoke rising from the ruins and debris scattered across the terrain, amidst subtle dust and smoke swirling gently in the air, enhancing the feeling of destruction and despair, captured with Zoom Out with Handheld Shaky steadily the silent battlefield under a clouded sky, rendered in Raw textures with fine cinematic film grain in 4k fidelity, while the subject's identity and environmental geometry are consistently preserved with absolute precision.
+
+Scene #2 postVideoGenPrompt() Result
+Scene Summary: Tanks rumble relentlessly across the devastated landscape, engines roaring as they navigate the war-torn battlefield.
+Scene Summary Reason: This summary encapsulates the dynamic presence of tanks in action across a visibly damaged terrain, reflecting chaos and movement.
+Primary Movement: Rumbling and moving
+Primary Movement Reason: The tanks are actively engaging with the environment, with their movement resulting in physical changes to the terrain.
+Narrative Vibe: COMBAT
+Narrative Vibe Reason: The presence of tanks and the description of a battle environment evoke a strong sense of conflict and action.
+Selected INTENSITY_TIER: HIGH
+INTENSITY_TIER Selected Reason: The tanks exhibit decisive kinetic action as they navigate the battlefield, suggesting significant momentum and engagement with their surroundings.
+Identity Logic: The era and role of the tanks as 1944 WWII Allied forces machines are preserved through their rugged, combat-ready appearance and their interaction with the scoured landscape of Normandy.
+Action Focus: Transitioning from a static description of tanks to an active kinetic representation emphasizes the movement and aggression typical of a battlefield scene.
+- - - Primary Narrative Block - - -
+Entity[1]
+Raw Sentence: The first medium tank rumbles aggressively, its tracks grinding into the scarred earth, causing a dust cloud to billow behind.
+Action Type: Temporary-Single
+Action Type Reason: The sentence describes a single, decisive action of the tank moving forward while interacting with its environment.
+Verb Reason: The verb 'rumbles' effectively conveys the aggressive motion of the tank in a high-intensity context, aligning with the 'HIGH' intensity tier.
+Adverb Reason:
+Entity[2]
+Raw Sentence: The second medium tank follows closely, rumbling steadily while its tracks stir up loose soil and debris.
+Action Type: Temporary-Simultaneous
+Action Type Reason: This sentence reflects the simultaneous action of both tanks moving forward, implying a calculated tactical maneuver.
+Verb Reason: The verb 'follows' indicates a continued action in relation to the first tank, showcasing the coordinated movement in combat.
+Adverb Reason:
+- - - Atmospheric Lighting Delta - - -
+Delta: A thick dust cloud swirls around the tanks while debris particles hang in the air, all enhanced by volumetric haze and desaturated earthy tones.
+Delta Reason: This atmospheric layer captures the chaotic environment of a battlefield where tanks are in motion, reflecting the disturbances they create.
+- - - Cinematic Camera Vectors - - -
+Camera Action: Zoom Out and Truck Left with Handheld Shaky aggressively
+Subject Vectors: [$-X$, $0Y$, $-Z$]
+Subject Vectors Reasoning: The tanks are moving horizontally left on the screen while remaining parallel to the ground, denoting a movement towards the viewer following the path along the battlefield.
+- - - Style - - -
+Style Slot 1: Raw textures with fine cinematic film grain in 4K fidelity
+Style Slot 2: The initial structural integrity of the tanks and surroundings remains perfectly intact and consistent throughout the motion.
+Style Slot 1 Reason: The raw texture detail complements the rugged environment of WWII, enhancing the realism of the tanks on a battlefield.
+Style Slot 2 Reason: Maintaining the integrity ensures the tanks' battle forms are preserved as they move, critical to the authenticity of the scene.
+Reasoning: 1) Selected the vocabulary based on the HIGH intensity tier that reflects decisive kinetic actions such as 'rumble' and 'grind' to convey the weight and power of the moving tanks. 2) Chose camera techniques emphasizing a sense of movement through the tanks' trajectories, crucial for capturing the action of the battle scene effectively. 3) The atmospheric strategy involves portraying the chaos of dust and debris that accompanies tank movement, enhancing the immersion of the battlefield without freezing the background activity.
+- - - Final Output Structure - - -
+Primary Narrative Block: The first medium tank rumbles aggressively, its tracks grinding into the scarred earth, causing a dust cloud to billow behind. The second medium tank follows closely, rumbling steadily while its tracks stir up loose soil and debris.
+Atmospheric/Lighting Delta: A thick dust cloud swirls around the tanks while debris particles hang in the air, all enhanced by volumetric haze and desaturated earthy tones.
+Cinematic Camera Vector: CINEMATIC_CAMERA_VECTORS the rumbling medium tanks
+Style: Raw textures with fine cinematic film grain in 4K fidelity, while the initial structural integrity of the tanks and surroundings remains perfectly intact and consistent throughout the motion.
+videoGenPrompt: The first medium tank rumbles aggressively, its tracks grinding into the scarred earth, causing a dust cloud to billow behind. The second medium tank follows closely, rumbling steadily while its tracks stir up loose soil and debris, amidst a thick dust cloud swirling around the tanks while debris particles hang in the air, all enhanced by volumetric haze and desaturated earthy tones, captured with CINEMATIC_CAMERA_VECTORS the rumbling medium tanks, rendered in Raw textures with fine cinematic film grain in 4K fidelity, while the initial structural integrity of the tanks and surroundings remains perfectly intact and consistent throughout the motion.
+assembledVideoGenPrompt: The first medium tank rumbles aggressively, its tracks grinding into the scarred earth, causing a dust cloud to billow behind. The second medium tank follows closely, rumbling steadily while its tracks stir up loose soil and debris, amidst a thick dust cloud swirls around the tanks while debris particles hang in the air, all enhanced by volumetric haze and desaturated earthy tones, captured with anamorphic Lens, Deep Focus, 9:16 Portrait Cinema, Long/Wide, Zoom Out and Truck Left with Handheld Shaky aggressively the rumbling medium tanks, rendered in raw textures with fine cinematic film grain in 4K fidelity, while the initial structural integrity of the tanks and surroundings remains perfectly intact and consistent throughout the motion.
+
+Scene #3 postVideoGenPrompt() Result
+Scene Summary: Soldiers charge forward into battle amidst smokes and flames, showcasing their intense effort and determination.
+Scene Summary Reason: The video description highlights the dynamic action of soldiers storming the shores, indicating their urgency and intensity which I captured in the summary.
+Primary Movement: Charging forward with rifles drawn, hearts pounding in action.
+Primary Movement Reason: The scene depicts soldiers actively moving into the conflict, which aligns with the idea of a battle charge.
+Narrative Vibe: COMBAT
+Narrative Vibe Reason: The imagery and description center around a military conflict, emphasizing tension and urgency fitting for a combat narrative.
+Selected INTENSITY_TIER: HIGH
+INTENSITY_TIER Selected Reason: The soldiers are in a decisive kinetic motion with structural strain as they charge into the battlefield, matching the action format of HIGH intensity.
+Identity Logic: The infantry soldiers maintain their identity through their WWII apparel and physical demeanor, preserving the historical and character essence during motion.
+Action Focus: The transition from narrated action ('charged into the fray') to kinetic verbs ('charging forward') highlights the urgency and vitality of the soldiers' movements.
+- - - Primary Narrative Block - - -
+Entity[1]
+Raw Sentence: The left sub-character, a lean infantry soldier with a worn olive drab uniform, charges forward aggressively, his rifle whipping through the mud.
+Action Type: Temporary-Single
+Action Type Reason: The action depicts a singular, decisive movement as he charges ahead in the fray.
+Verb Reason: I chose 'charges' to depict a decisive kinetic action consistent with the narrative's intensity and momentum.
+Adverb Reason: 
+Entity[2]
+Raw Sentence: The right sub-character, an athletic infantry soldier with a sandy blond buzz cut, charges determinedly, his rifle angled forward while mud splatters around him.
+Action Type: Temporary-Single
+Action Type Reason: This soldier's movement demonstrates another singular action focused on determination in combat.
+Verb Reason: The choice of 'charges' reflects an explosive engagement fitting the high intensity of the scene.
+Adverb Reason: 
+- - - Atmospheric Lighting Delta - - -
+Delta: Smoke clouds billowing around the soldiers, enhancing their dynamic movement while muddy water splashes up as they charge through dirt.
+Delta Reason: This description captures the action-packed movement and interaction with the environment, illustrating the physical chaos of battle.
+- - - Cinematic Camera Vectors - - -
+Camera Action: Zoom Out and Truck Left with Handheld Shaky aggressively
+Subject Vectors: [$-X$, $+Y$, $-Z$]
+Subject Vectors Reasoning: The soldiers are charging from a leftward position towards the viewer, moving upward in the frame, indicating depth in the foreground.
+- - - Style - - -
+Style Slot 1: Authentic raw textures with fine cinematic film grain in 4k fidelity
+Style Slot 2: the initial structural integrity of the subject and environment remains perfectly intact and consistent throughout the motion.
+Style Slot 1 Reason: The choice for raw textures amplifies the gritty realism expected in a WWII battlefield scenario.
+Style Slot 2 Reason: This instruction preserves visual consistency essential for immersive storytelling in motion.
+Reasoning: I selected high-impact kinetic verbs from the vocabulary_depot that align with the descriptive intensity of battle actions. The camera technique emphasizes each soldier's efforts while ensuring their historical identities remain intact. The atmospheric details amplify the conflict's urgency and depth, avoiding static elements or visual redundancy.
+- - - Final Output Structure - - -
+Primary Narrative Block: The left sub-character, a lean infantry soldier with a worn olive drab uniform, charges forward aggressively, his rifle whipping through the mud. The right sub-character, an athletic infantry soldier with a sandy blond buzz cut, charges determinedly, his rifle angled forward while mud splatters around him.
+Atmospheric/Lighting Delta: Smoke clouds billowing around the soldiers, enhancing their dynamic movement while muddy water splashes up as they charge through dirt.
+Cinematic Camera Vector: CINEMATIC_CAMERA_VECTORS the soldiers charging through the battlefield
+Style: Authentic raw textures with fine cinematic film grain in 4k fidelity, while the initial structural integrity of the subject and environment remains perfectly intact and consistent throughout the motion.
+videoGenPrompt: The left sub-character, a lean infantry soldier with a worn olive drab uniform, charges forward aggressively, his rifle whipping through the mud. The right sub-character, an athletic infantry soldier with a sandy blond buzz cut, charges determinedly, his rifle angled forward while mud splatters around him, amidst smoke clouds billowing around the soldiers, enhancing their dynamic movement while muddy water splashes up as they charge through dirt, captured with CINEMATIC_CAMERA_VECTORS the soldiers charging through the battlefield, rendered in Authentic raw textures with fine cinematic film grain in 4k fidelity, while the initial structural integrity of the subject and environment remains perfectly intact and consistent throughout the motion.
+assembledVideoGenPrompt: The left sub-character, a lean infantry soldier with a worn olive drab uniform, charges forward aggressively, his rifle whipping through the mud. The right sub-character, an athletic infantry soldier with a sandy blond buzz cut, charges determinedly, his rifle angled forward while mud splatters around him, amidst smoke clouds billowing around the soldiers, enhancing their dynamic movement while muddy water splashes up as they charge through dirt, captured with anamorphic Lens, Deep Focus, 9:16 Portrait Cinema, Long/Wide, Zoom Out and Truck Left with Handheld Shaky aggressively the soldiers charging through the battlefield, rendered in authentic raw textures with fine cinematic film grain in 4k fidelity, while the initial structural integrity of the subject and environment remains perfectly intact and consistent throughout the motion.
+
+Scene #4 postVideoGenPrompt() Result
+Scene Summary: The scene captures American infantry soldiers storming the beaches of Normandy amidst a chaotic battle environment.
+Scene Summary Reason: This aligns with the video description emphasizing the tank movements and soldier assaults during WWII.
+Primary Movement: Soldiers charging forward through the surf.
+Primary Movement Reason: This action reflects the urgent and aggressive nature of the scene as soldiers engage in the invasion.
+Narrative Vibe: COMBAT
+Narrative Vibe Reason: The scene exudes a strong sense of urgency and action, characteristic of battle scenarios.
+Selected INTENSITY_TIER: HIGH
+INTENSITY_TIER Selected Reason: The soldiers are engaged in decisive kinetic motion while actively participating in combat.
+Identity Logic: The soldiers maintain their identities as American infantrymen from 1944, with their physical expressions and historical clothing firmly rooted in the WWII era during active combat.
+Action Focus: Shifting from mere observation of soldiers in static poses to emphasizing their forward momentum and interaction with the environment, underlining the urgency of their advance.
+- - - Primary Narrative Block - - -
+Entity[1]
+Raw Sentence: The left sub-character, a lean American infantry soldier, strides determinedly through the surf, his olive drab uniform billowing in the wind.
+Action Type: Temporary-Single
+Action Type Reason: This depicts the soldier initiating a decisive action of moving forward without any prior motion indicated in the frame.
+Verb Reason: The verb 'strides' was chosen for its association with aggressive advancement, resonating with the combat context.
+Adverb Reason:
+Entity[2]
+Raw Sentence: The right sub-character, an athletic American infantry soldier, charges across the sand, his muscles tensed for action with a Thompson submachine gun held ready.
+Action Type: Temporary-Single
+Action Type Reason: Similar to the first soldier, he is described as initiating movement towards the battle scene directly from a static pose.
+Verb Reason: The verb 'charges' conveys the urgency and aggressive intent of the soldier's action.
+Adverb Reason:
+- - - Atmospheric Lighting Delta - - -
+Delta: Thick smoke billowing from distant explosions while raindrops create ripples on the water's surface.
+Delta Reason: The chaos of battle is emphasized with sensory elements like smoke and water disturbances, enhancing the atmosphere of conflict.
+- - - Cinematic Camera Vectors - - -
+Camera Action: Zoom Out and Truck Left with Handheld Shaky aggressively
+Subject Vectors: [$-X$, $+Y$, $-Z$]
+Subject Vectors Reasoning: The soldiers are moving leftward towards the explosion and forward into the water, emulating a physically dynamic subject vector.
+- - - Style - - -
+Style Slot 1: Authentic raw textures with fine cinematic film grain in 4k fidelity
+Style Slot 2: the initial structural integrity of the subjects and their surroundings remains perfectly intact and consistent throughout the motion.
+Style Slot 1 Reason: Raw textures enhance the gritty realism demanded in a WWII battle scene.
+Style Slot 2 Reason: The emphasis on maintaining structural integrity ensures that the historical details of the uniforms and battlefield are preserved during animation.
+Reasoning: The vocabulary was selected based on physical descriptors aligned with the visual representation of soldiers and their actions. The settings chosen for camera technology complements the unfolding combat visuals, designed to capture movement dynamics. The atmospheric details bolster the urgent and chaotic nature of the scenario without freezing the scene.
+- - - Final Output Structure - - -
+Primary Narrative Block: The left sub-character, a lean American infantry soldier, strides determinedly through the surf, his olive drab uniform billowing in the wind. The right sub-character, an athletic American infantry soldier, charges across the sand, his muscles tensed for action with a Thompson submachine gun held ready.
+Atmospheric/Lighting Delta: Thick smoke billowing from distant explosions while raindrops create ripples on the water's surface.
+Cinematic Camera Vector: CINEMATIC_CAMERA_VECTORS the charging soldiers
+Style: Authentic raw textures with fine cinematic film grain in 4k fidelity, while the initial structural integrity of the subjects and their surroundings remains perfectly intact and consistent throughout the motion.
+videoGenPrompt: The left sub-character, a lean American infantry soldier, strides determinedly through the surf, his olive drab uniform billowing in the wind. The right sub-character, an athletic American infantry soldier, charges across the sand, his muscles tensed for action with a Thompson submachine gun held ready, amidst thick smoke billowing from distant explosions while raindrops create ripples on the water's surface, captured with CINEMATIC_CAMERA_VECTORS the charging soldiers, rendered in authentic raw textures with fine cinematic film grain in 4k fidelity, while the initial structural integrity of the subjects and their surroundings remains perfectly intact and consistent throughout the motion.
+assembledVideoGenPrompt: The left sub-character, a lean American infantry soldier, strides determinedly through the surf, his olive drab uniform billowing in the wind. The right sub-character, an athletic American infantry soldier, charges across the sand, his muscles tensed for action with a Thompson submachine gun held ready, amidst thick smoke billowing from distant explosions while raindrops create ripples on the water's surface, captured with anamorphic Lens, Deep Focus, 9:16 Portrait Cinema, Long/Wide, Zoom Out and Truck Left with Handheld Shaky aggressively the charging soldiers, rendered in authentic raw textures with fine cinematic film grain in 4k fidelity, while the initial structural integrity of the subjects and their surroundings remains perfectly intact and consistent throughout the motion.
+
+Scene #5 postVideoGenPrompt() Result
+Scene Summary: Intense dogfights occur in the skies with pilots maneuvering deftly during the chaos of WWII.
+Scene Summary Reason: The video description mentions pilots engaging in aerial duels, thus indicating dynamic movement in the skies.
+Primary Movement: Pilots executing intricate maneuvers in their aircraft.
+Primary Movement Reason: The pilots are depicted in action, with their bodies leaning forward, gripping controls, indicating active engagement with their aircraft.
+Narrative Vibe: CHAOTIC
+Narrative Vibe Reason: The presence of aerial combat and explosives raining down contributes to a vibe of chaos during wartime.
+Selected INTENSITY_TIER: HIGH
+INTENSITY_TIER Selected Reason: The dynamic movement of pilots gripping controls indicates decisive kinetic action in a chaotic environment.
+Identity Logic: The pilots' role as fighter pilots during WWII is highlighted through their clothing and actions, preserving the historical context.
+Action Focus: The narration transitions from a general description of the pilots to a kinetic focus on their physical actions involved in aerial maneuvers, emphasizing their engagement with the aircraft controls.
+- - - Primary Narrative Block - - -
+Entity[1]
+Raw Sentence: The British fighter pilot is gripping the control stick tightly, displaying intense focus, while his flight suit shows wear from battle.
+Action Type: Continuous
+Action Type Reason: The action is sustained as the pilot actively maneuvers his aircraft, indicating continuous engagement with the control stick.
+Verb Reason: I chose 'gripping' as it fits the ongoing action of interacting with the stick, which aligns with the chaotic context of aerial combat.
+Adverb Reason: The pilot is fully engaged, thus the adverb 'tightly' conveys the tension in his grip.
+Entity[2]
+Raw Sentence: The German fighter pilot is adjusting the throttle with precision, embodying focused intensity at the controls.
+Action Type: Continuous
+Action Type Reason: The throttle adjustment requires ongoing engagement, illustrating continuous action in a chaotic environment.
+Verb Reason: I selected 'adjusting' since it indicates a precise motion that shows the pilot's control in a high-stakes scenario.
+Adverb Reason: This emphasizes the meticulous nature of his movements amidst the chaos.
+- - - Atmospheric Lighting Delta - - -
+Delta: Thick clouds swirling around, with flak bursts lighting the foreground with explosive flashes of orange and dark fumes, enhancing the sense of chaos.
+Delta Reason: The flak bursts and swirling clouds emphasize the chaotic aerial combat atmosphere with visible explosive action.
+- - - Cinematic Camera Vectors - - -
+Camera Action: Zoom Out and Pedestal Down with Handheld Shaky aggressively
+Subject Vectors: [$0X$, $-Y$, $-Z$]
+Subject Vectors Reasoning: The pilots are positioned in the center of the image, suggesting a central horizontal (X) focus while they are grounded (Y) and facing just below the camera (Z).
+- - - Style - - -
+Style Slot 1: Raw textures with fine cinematic film grain in 4K fidelity
+Style Slot 2: the initial structural integrity of the subjects and environment remains perfectly intact and consistent throughout the motion.
+Style Slot 1 Reason: This enhances the immersive quality of the visual experience, reflecting the worn appearance of the pilots' flight suits.
+Style Slot 2 Reason: It ensures that while the action unfolds, the essence of the pilots remains clear and identifiable.
+Reasoning: The vocabulary selections were based on the essence of kinetic energy involved in aerial combat, focusing on grip and adjustment actions that align with WWII pilot scenarios. The camera technology was chosen to highlight the intense feelings of focus and chaos, supported by low-key lighting that enhances drama. The atmospheric strategy involved using surplus visual action like flak bursts to avoid static backgrounds, thus maintaining engagement in the scene.
+- - - Final Output Structure - - -
+Primary Narrative Block: The British fighter pilot is gripping the control stick tightly, displaying intense focus, while his flight suit shows wear from battle. The German fighter pilot is adjusting the throttle with precision, embodying focused intensity at the controls.
+Atmospheric/Lighting Delta: Thick clouds swirling around, with flak bursts lighting the foreground with explosive flashes of orange and dark fumes, enhancing the sense of chaos.
+Cinematic Camera Vector: CINEMATIC_CAMERA_VECTORS the pilots maneuvering their aircraft amid flak bursts and chaotic skies
+Style: Raw textures with fine cinematic film grain in 4K fidelity, while the initial structural integrity of the subjects and environment remains perfectly intact and consistent throughout the motion.
+videoGenPrompt: The British fighter pilot is gripping the control stick tightly, displaying intense focus, while his flight suit shows wear from battle. The German fighter pilot is adjusting the throttle with precision, embodying focused intensity at the controls, thick clouds swirling around, with flak bursts lighting the foreground with explosive flashes of orange and dark fumes, enhancing the sense of chaos, captured with CINEMATIC_CAMERA_VECTORS the pilots maneuvering their aircraft amid flak bursts and chaotic skies, rendered in raw textures with fine cinematic film grain in 4K fidelity, while the initial structural integrity of the subjects and environment remains perfectly intact and consistent throughout the motion.
+assembledVideoGenPrompt: The British fighter pilot is gripping the control stick tightly, displaying intense focus, while his flight suit shows wear from battle. The German fighter pilot is adjusting the throttle with precision, embodying focused intensity at the controls, amidst thick clouds swirling around, with flak bursts lighting the foreground with explosive flashes of orange and dark fumes, enhancing the sense of chaos, captured with anamorphic Lens, Deep Focus, 9:16 Portrait Cinema, Long/Wide, Zoom Out and Pedestal Down with Handheld Shaky aggressively the pilots maneuvering their aircraft amid flak bursts and chaotic skies, rendered in raw textures with fine cinematic film grain in 4K fidelity, while the initial structural integrity of the subjects and environment remains perfectly intact and consistent throughout the motion.
+
+Scene #6 postVideoGenPrompt() Result
+Scene Summary: Tanks roll across scarred battlefields as soldiers storm Normandy’s shores, bombs raining down onto the devastated landscape.
+Scene Summary Reason: The scene summary reflects the chaotic setting of WWII with the intense activity of the battlefield and the impact of bombs, aligning with the video title and description.
+Primary Movement: Bombs descending from the sky.
+Primary Movement Reason: The bombs are actively falling, which is the main physical action occurring, representing the impactful scene described.
+Narrative Vibe: CHAOTIC
+Narrative Vibe Reason: The use of bombs and the destruction they cause evoke a chaotic atmosphere typical of battle scenarios.
+Selected INTENSITY_TIER: VERY_HIGH
+INTENSITY_TIER Selected Reason: The high momentum and explosive nature of bombs impacting the ground necessitate the classification in the `VERY_HIGH` intensity tier.
+Identity Logic: Each bomb follows a distinct trajectory as it descends, maintaining characteristics of general purpose bombs from 1944, reflecting wear from descent.
+Action Focus: Transforming the narrative from a static description to a vigorous visualization of bombs in motion conveys the urgency and chaos of the battlefield.
+- - - Primary Narrative Block - - -
+Entity[0]
+Raw Sentence: The descending diagonal trajectory bomb in smooth steel casing with olive paint and rivet flanges **emits** a low rumble while falling, causing disturbed earth as it approaches.
+Action Type: Temporary-Single
+Action Type Reason: The bomb is in a single descending motion, initiating the event of falling explosively.
+Verb Reason: The verb 'emits' encapsulates the physical action reflecting the motion involved and adheres to the intensity tier classification.
+Adverb Reason: The action manifests a dynamic visual description reinforced by the context of descent.
+Entity[1]
+Raw Sentence: The slightly angled descending bomb with a matte steel body **glide** smoothly downwards, triggering a wake of coarse impact into the earth.
+Action Type: Temporary-Single
+Action Type Reason: The bomb follows an angled descent, embodying a defined physical movement as it impacts.
+Verb Reason: The verb 'glide' highlights the continuous, fluid motion implied by the bomb's trajectory.
+Adverb Reason: The word emphasizes the motion's fluidity, mirroring the narrative context.
+Entity[2]
+Raw Sentence: Ground-level depressions **expand** swiftly causing disturbed soil as the bomb impacts the terrain.
+Action Type: Temporary-Single
+Action Type Reason: The ground reacts to the bombing, portraying destructive force.
+Verb Reason: The choice of 'expand' effectively conveys the immediate impact from the bomb's explosion on the landscape.
+Adverb Reason: 
+Entity[3]
+Raw Sentence: Jagged metal fragments **scatter** chaotically across the battlefield, resulting from the explosion's force.
+Action Type: Temporary-Single
+Action Type Reason: The bombs' impacts generate resulting shrapnel, indicating chaotic movement.
+Verb Reason: The verb 'scatter' powerfully illustrates the forceful disturbance caused by the falling bombs.
+Adverb Reason: 
+- - - Atmospheric Lighting Delta - - -
+Delta: Volumetric dust cloud engulfing the area.
+Delta Reason: The layer accentuates the chaotic atmosphere, embodying the debris kicked up by the bomb explosions.
+- - - Cinematic Camera Vectors - - -
+Camera Action: Zoom Out and Pedestal Down with Handheld Shaky violently
+Subject Vectors: [$0X$, $-Y$, $-Z$]
+Subject Vectors Reasoning: The bombs are vertically descending towards the ground creating a downward motion while remaining stationary on the X-axis.
+- - - Style - - -
+Style Slot 1: Authentic raw textures with fine cinematic film grain in 4k fidelity.
+Style Slot 2: The initial structural integrity of the subject remains perfectly intact and consistent throughout the motion.
+Style Slot 1 Reason: The raw textures fit the historical context, while the film grain enhances the wartime aesthetic.
+Style Slot 2 Reason: This directive ensures that the visual integrity of the bombs and battlefield are consistently represented.
+Reasoning: The selected tags from the vocabulary_depot focus on high-intensity kinetic verbs and atmospheric elements that enhance the chaotic military scenario depicted. The cinematic camera vectors reflect the bombs' downward trajectory and the tactile feel of wartime aesthetics is maintained through selected styles, matching the scene's theme seamlessly.
+- - - Final Output Structure - - -
+Primary Narrative Block: The descending diagonal trajectory bomb in smooth steel casing with olive paint and rivet flanges emits a low rumble while falling, causing disturbed earth as it approaches. The slightly angled descending bomb with a matte steel body glides smoothly downwards, triggering a wake of coarse impact into the earth. Ground-level depressions expand swiftly causing disturbed soil as the bomb impacts the terrain. Jagged metal fragments scatter chaotically across the battlefield, resulting from the explosion's force.
+Atmospheric/Lighting Delta: Volumetric dust cloud engulfing the area.
+Cinematic Camera Vector: CINEMATIC_CAMERA_VECTORS the falling bombs.
+Style: Authentic raw textures with fine cinematic film grain in 4k fidelity, while the initial structural integrity of the subject remains perfectly intact and consistent throughout the motion.
+videoGenPrompt: The descending diagonal trajectory bomb in smooth steel casing with olive paint and rivet flanges emits a low rumble while falling, causing disturbed earth as it approaches. The slightly angled descending bomb with a matte steel body glides smoothly downwards, triggering a wake of coarse impact into the earth. Ground-level depressions expand swiftly causing disturbed soil as the bomb impacts the terrain. Jagged metal fragments scatter chaotically across the battlefield, resulting from the explosion's force, amidst the volumetric dust cloud engulfing the area, captured with CINEMATIC_CAMERA_VECTORS the falling bombs, rendered in authentic raw textures with fine cinematic film grain in 4k fidelity, while the initial structural integrity of the subject remains perfectly intact and consistent throughout the motion.
+assembledVideoGenPrompt: The descending diagonal trajectory bomb in smooth steel casing with olive paint and rivet flanges emits a low rumble while falling, causing disturbed earth as it approaches. The slightly angled descending bomb with a matte steel body glides smoothly downwards, triggering a wake of coarse impact into the earth. Ground-level depressions expand swiftly causing disturbed soil as the bomb impacts the terrain. Jagged metal fragments scatter chaotically across the battlefield, resulting from the explosion's force, amidst volumetric dust cloud engulfing the area, captured with anamorphic Lens, Deep Focus, 9:16 Portrait Cinema, Long/Wide, Zoom Out and Pedestal Down with Handheld Shaky violently the falling bombs, rendered in authentic raw textures with fine cinematic film grain in 4k fidelity, while the initial structural integrity of the subject remains perfectly intact and consistent throughout the motion.
+
+Scene #7 postVideoGenPrompt() Result
+Scene Summary: The scene depicts remnants of a fierce battle on the Normandy beachhead, intensively showcasing abandoned military helmets looming amidst debris.
+Scene Summary Reason: The description in the metadata speaks of tanks, soldiers, and an aerial backdrop that indicates chaos, reflecting the post-battle environment.
+Primary Movement: Static / Micro-movement only
+Primary Movement Reason: The focus is on the props (helmets and bandages), presenting a still composition rather than dynamic actions.
+Narrative Vibe: CATASTROPHIC
+Narrative Vibe Reason: The presence of war debris, blood-stained bandages, and abandoned helmets invokes a sense of tragedy and destruction typical of war scenes.
+Selected INTENSITY_TIER: VERY_LOW
+INTENSITY_TIER Selected Reason: The scene reflects a static aftermath with no visible physical actions indicating movement, categorizing it at a very low kinetic tier.
+Identity Logic: The identity of 1944 WWII soldiers and battlefield props is preserved through realistic material depictions and atmospheric cues.
+Action Focus: The transition from narrative description to kinetic verb focuses on the static portrayal of war remnants rather than active combat, emphasizing the emotional aftermath.
+- - - Primary Narrative Block - - -
+Entity[0]
+Raw Sentence: The ground-level cluster of dented steel helmets with chipped olive paint remains undisturbed, epitomizing the tragedy of battle.
+Action Type: Continuous
+Action Type Reason: The visualization remains static, reflecting a continuous state of aftermath abundant with details on the props.
+Verb Reason: The verb 'remains' was selected to communicate the stillness of the helmets as they occupy the battlefield debris.
+Adverb Reason:
+Entity[1]
+Raw Sentence: The draped strips of blood-stained cotton lay over the debris silently, a haunting reminder of lost lives.
+Action Type: Continuous
+Action Type Reason: The action reflects a continuous presence, capturing the unchanging state of the medical remnants in this dire environment.
+Verb Reason: The verb 'lay' was selected to denote the static state of the cloth without movement, aligning with the scene's stillness.
+Adverb Reason:
+- - - Atmospheric Lighting Delta - - -
+Delta: Subtle mist drifting along the battlefield while ambient haze fills the space, all enhanced by volumetric haze ambient fill and low-angle fill bounce from muddy ground.
+Delta Reason: The combination of mist and ambient haze effectively reflects the serious nature of the scene, creating a somber tone in alignment with the battlefield's grim reality.
+- - - Cinematic Camera Vectors - - -
+Camera Action: Zoom Out with Handheld Shaky steadily
+Subject Vectors: [$0X$, $0Y$, $-Z$]
+Subject Vectors Reasoning: The vectors indicate a static position, with no lateral or vertical movement, holding a fixed perspective focused on the foreground props.
+- - - Style - - -
+Style Slot 1: Raw textures with fine cinematic film grain in 4K fidelity
+Style Slot 2: the initial structural integrity of the props remains perfectly intact and consistent throughout the motion.
+Style Slot 1 Reason: The raw textures coupled with film grain enhance the gritty, realistic quality of the scene reflective of wartime debris.
+Style Slot 2 Reason: Emphasizing the preservation of the visual identity aligns with the scene’s focus on the aftermath without alteration.
+Reasoning: The vocabulary selected reflects the intended visual and kinetic tone of the scene; the use of verbs from the VERY_LOW tier emphasizes the continued stillness and solemnity of the battlefield remnants. The camera vectors assure synchronization with the scene static nature, while the atmospheric details enhance the sense of place and history. Additionally, the low-key exposure complements the heavy emotional weight of the narrative.
+- - - Final Output Structure - - -
+Primary Narrative Block: The ground-level cluster of dented steel helmets with chipped olive paint remains undisturbed, epitomizing the tragedy of battle. The draped strips of blood-stained cotton lay over the debris silently, a haunting reminder of lost lives.
+Atmospheric/Lighting Delta: Subtle mist drifting along the battlefield while ambient haze fills the space, all enhanced by volumetric haze ambient fill and low-angle fill bounce from muddy ground.
+Cinematic Camera Vector: CINEMATIC_CAMERA_VECTORS the ground-level cluster of dented steel helmets with chipped olive paint and the draped strips of blood-stained cotton.
+Style: Raw textures with fine cinematic film grain in 4K fidelity, while the initial structural integrity of the props remains perfectly intact and consistent throughout the motion.
+videoGenPrompt: The ground-level cluster of dented steel helmets with chipped olive paint remains undisturbed, epitomizing the tragedy of battle. The draped strips of blood-stained cotton lay over the debris silently, a haunting reminder of lost lives, amidst subtle mist drifting along the battlefield while ambient haze fills the space, all enhanced by volumetric haze ambient fill and low-angle fill bounce from muddy ground, captured with CINEMATIC_CAMERA_VECTORS the ground-level cluster of dented steel helmets with chipped olive paint and the draped strips of blood-stained cotton, rendered in raw textures with fine cinematic film grain in 4K fidelity, while the initial structural integrity of the props remains perfectly intact and consistent throughout the motion.
+assembledVideoGenPrompt: The ground-level cluster of dented steel helmets with chipped olive paint remains undisturbed, epitomizing the tragedy of battle. The draped strips of blood-stained cotton lay over the debris silently, a haunting reminder of lost lives, amidst subtle mist drifting along the battlefield while ambient haze fills the space, all enhanced by volumetric haze ambient fill and low-angle fill bounce from muddy ground, captured with anamorphic Lens, Deep Focus, 9:16 Portrait Cinema, Long/Wide, Zoom Out with Handheld Shaky steadily the ground-level cluster of dented steel helmets with chipped olive paint and the draped strips of blood-stained cotton, rendered in raw textures with fine cinematic film grain in 4K fidelity, while the initial structural integrity of the props remains perfectly intact and consistent throughout the motion.
+
+Scene #8 postVideoGenPrompt() Result
+Scene Summary: Tanks roll through a devastated battlefield, while smoke billows from fiery debris, and glowing embers flicker amidst the chaos.
+Scene Summary Reason: This encapsulates the essence of WWII chaos, where tanks and fires create a vivid wartime scene.
+Primary Movement: Dynamic turbulence as smoke rises and embers glow across the battlefield.
+Primary Movement Reason: The movement is driven by the chaotic elements of warfare, notably the fires and smoke rising dynamically as if reacting to the chaos around them.
+Narrative Vibe: COMBAT
+Narrative Vibe Reason: The scene clearly reflects a combat environment with active destruction and chaos, consistent with the WWII theme.
+Selected INTENSITY_TIER: VERY_HIGH
+INTENSITY_TIER Selected Reason: The very high intensity tier is selected due to the explosive visual aspects of the battlefield, characterized by smoke and glowing embers indicating significant activity.
+Identity Logic: The props maintain their historical essence from WWII, with visual representations of battlefield fires and their physical changes during the kinetic movements of smoke and embers.
+Action Focus: The narrative was transformed from a static observation of battle history to dynamic action verbs, emphasizing the intense, explosive nature of the scene through kinetic expressions.
+- - - Primary Narrative Block - - -
+Entity[0]
+Raw Sentence: The low-ground scattered glowing embers **spark** violently amidst the rubble, emanating heat.
+Action Type: Temporary-Single
+Action Type Reason: The sentence highlights a decisive single action of sparking relating to the glowing embers, fitting the observed dynamics.
+Verb Reason: The verb 'spark' was chosen from the VERY_HIGH tier due to its association with explosive actions appropriate for the battlefield's intensity.
+Adverb Reason: 
+Entity[1]
+Raw Sentence: The rising smoke **erupts** chaotically from the fiery wreckage, creating a turbulent plume.
+Action Type: Temporary-Single
+Action Type Reason: The smoke rising is depicted as a single action of eruption, consistent with the narrative's focus on dynamic chaos.
+Verb Reason: The verb 'erupts' was selected from the VERY_HIGH tier to convey the explosive nature of the smoke as it interacts with the battlefield environment.
+Adverb Reason: 
+- - - Atmospheric Lighting Delta - - -
+Delta: Explosive splash burst from the embers while violent spray from the smoke clouds.
+Delta Reason: This selection vividly describes the chaotic interaction between glowing embers and rising smoke, enhancing the dramatic atmosphere of the scene.
+- - - Cinematic Camera Vectors - - -
+Camera Action: Crash Zoom Out with Handheld Shaky violently
+Subject Vectors: [$0X$, $0Y$, $-Z$]
+Subject Vectors Reasoning: The $S_x$ and $S_y$ values indicate no lateral or vertical movement; instead, the perspective is centered on the aftermath with a downward view toward the ground, reflecting an overhead vantage point.
+- - - Style - - -
+Style Slot 1: Authentic raw textures with fine cinematic film grain in 4k fidelity
+Style Slot 2: The initial structural integrity of the subject remains perfectly intact and consistent throughout the motion.
+Style Slot 1 Reason: The choice of raw textures with cinematic film grain was made to evoke a gritty and realistic portrayal of war, aligning with the historical context.
+Style Slot 2 Reason: This promotes continuity in visual presentation, ensuring that the essence of the battlefield is preserved during the dynamic movements.
+Reasoning: The vocabulary was selected based on the intensity and materials present in the scene. Very high-tier verbs such as 'spark' and 'erupts' capture the explosive nature of the cinematic moment. The camera was set to reflect a low-key aesthetic suitable for the dramatic lighting on a battlefield. The described atmosphere combines physical interactions of particles reacting to the embers and smoke while maintaining the integrity of the visual frame.
+- - - Final Output Structure - - -
+Primary Narrative Block: The low-ground scattered glowing embers spark violently amidst the rubble, emanating heat. The rising smoke erupts chaotically from the fiery wreckage, creating a turbulent plume.
+Atmospheric/Lighting Delta: Explosive splash burst from the embers while violent spray from the smoke clouds.
+Cinematic Camera Vector: CINEMATIC_CAMERA_VECTORS the Normandy Beachhead Battlefield
+Style: Authentic raw textures with fine cinematic film grain in 4k fidelity, while the initial structural integrity of the subject remains perfectly intact and consistent throughout the motion.
+videoGenPrompt: The low-ground scattered glowing embers spark violently amidst the rubble, emanating heat. The rising smoke erupts chaotically from the fiery wreckage, creating a turbulent plume, explosive splash burst from the embers while violent spray from the smoke clouds, captured with CINEMATIC_CAMERA_VECTORS the Normandy Beachhead Battlefield, authentic raw textures with fine cinematic film grain in 4k fidelity, while the initial structural integrity of the subject remains perfectly intact and consistent throughout the motion.
+assembledVideoGenPrompt: The low-ground scattered glowing embers spark violently amidst the rubble, emanating heat. The rising smoke erupts chaotically from the fiery wreckage, creating a turbulent plume, amidst explosive splash burst from the embers while violent spray from the smoke clouds, captured with anamorphic Lens, Deep Focus, 9:16 Portrait Cinema, Long/Wide, Crash Zoom Out with Handheld Shaky violently the Normandy Beachhead Battlefield, rendered in authentic raw textures with fine cinematic film grain in 4k fidelity, while the initial structural integrity of the subject remains perfectly intact and consistent throughout the motion.

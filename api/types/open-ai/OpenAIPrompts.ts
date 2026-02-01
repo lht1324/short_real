@@ -700,34 +700,29 @@ export const POST_IMAGE_GEN_PROMPT_PROMPT = `
   <input_data_interpretation>
     You will receive an XML-wrapped block named <input_data>. Understand the schema as follows:
     1. **<video_context>**: Contains global metadata.
-       - <video_title>: Video title - Use as **high-level narrative theme** and emotional anchor.
-       - <video_description>: Video description - Provides **creative direction** and key visual motifs.
-       - <aspect_ratio>: The physical canvas constraints (e.g., "9:16", "16:9", "1:1"). **Crucial for composition safety.**
+      - <video_title>: Video title - Use as **high-level narrative theme** and emotional anchor.
+      - <video_description>: Video description - Provides **creative direction** and key visual motifs.
+      - <aspect_ratio>: The physical canvas constraints (e.g., "9:16", "16:9", "1:1"). **Crucial for composition safety.**
     2. **<master_style_guide>**: The Technical Visual Standard.
-       - **<optics>**: Contains \`lensType\`, \`focusDepth\`, \`exposureVibe\`, and \`defaultISO\`. Use these to set the physical camera parameters in Unit 3.
-       - **<color_and_light>**: Contains \`tonality\`, \`lightingSetup\`, and \`globalHexPalette\` (exactly 5 codes). Use these for chromatic and atmospheric consistency.
-       - **<fidelity>**: Contains \`textureDetail\`, \`grainLevel\`, and \`resolutionTarget\`. Use these to determine the density of visual description in Unit 1.
-       - **<global_environment>**: Contains \`era\` (Primary Filter) and \`locationArchetype\`. Use these for strict era-synchronization in Unit 1 & 2.
-       - **<composition>**: Contains \`framingStyle\` and \`preferredAspectRatio\`. Use these as the default framing logic.
+      - **<optics>**: Contains \`lensType\`, \`focusDepth\`, \`exposureVibe\`, and \`defaultISO\`. Use these to set the physical camera parameters in Unit 3.
+      - **<color_and_light>**: Contains \`tonality\`, \`lightingSetup\`, and \`globalHexPalette\` (exactly 5 codes). Use these for chromatic and atmospheric consistency.
+      - **<fidelity>**: Contains \`textureDetail\`, \`grainLevel\`, and \`resolutionTarget\`. Use these to determine the density of visual description in Unit 1.
+      - **<global_environment>**: Contains \`era\` (Primary Filter) and \`locationArchetype\`. Use these for strict era-synchronization in Unit 1 & 2.
+      - **<composition>**: Contains \`framingStyle\` and \`preferredAspectRatio\`. Use these as the default framing logic.
     3. **<entity_list>**: The Cast Information List.
-       - Each item contains:
-         - **id**: Unique identifier for tracking.
-         - **role**: Character importance ('main_hero' | 'sub_character' | 'background_extra' | 'prop').
-         - **type**: Biological/Mechanical category ('human' | 'creature' | 'object' | 'machine' | 'animal' | 'hybrid').
-         - **demographics**: Core identity string.
-         - **appearance**: Specific visual traits.
-           - \`clothing_or_material\`: Textures that imply physics (e.g., "Glossy chrome", "Sweat-drenched cotton").
-           - \`position_descriptor\`: The spatial anchor for the entity.
-           - \`hair\`, \`accessories\`, \`body_features\`: Micro-details for visual fidelity.
+      - Each item contains:
+        - **id**: Unique identifier for tracking.
+        - **role**: Character importance ('main_hero' | 'sub_character' | 'background_extra' | 'prop').
+        - **type**: Biological/Mechanical category ('human' | 'creature' | 'object' | 'machine' | 'animal' | 'hybrid').
+        - **demographics**: Core identity string.
+        - **appearance**: Specific visual traits.
+          - \`clothing_or_material\`: Textures that imply physics (e.g., "Glossy chrome", "Sweat-drenched cotton").
+          - \`position_descriptor\`: The spatial anchor for the entity.
+          - \`hair\`, \`accessories\`, \`body_features\`: Micro-details for visual fidelity.
     4. **<current_narration>**: The Script.
-       - Contains the specific action and moment to visualize. **Must be de-metaphorized.**
+      - Contains the specific action and moment to visualize. **Must be de-metaphorized.**
     5. **<scene_content>**: Additional stage directions.
-       - Specific details about foreground/background or spatial layout.
-    6. **<scene_visual_description>**: The Physical Blueprint of the frame.
-       - Provides a dry, factual, and de-metaphorized account of the spatial layout.
-       - **Primary Source** for identifying [Functional Anchors] and determining guest-host relationships (e.g., who is inside what).
-       - Contains precise t=0 snapshots of every <entity_list>[n]s' coordinates, poses, and physical states.
-       - Use this to resolve spatial contradictions found in the <current_narration>.
+      - Specific details about foreground/background or spatial layout.
   </input_data_interpretation>
   <target_model_profile>
     **Target Engine: Advanced High-Fidelity Latent Flow Engine**
@@ -834,16 +829,8 @@ export const POST_IMAGE_GEN_PROMPT_PROMPT = `
       **UNIT 1: SUBJECT & PHYSICS ENGINEERING**
       **Goal**: Iterate through **EVERY** valid entry in <entity_list> and transform them into \`image_gen_prompt.subjects\` by synchronizing with <master_style_guide>.<global_environment>.\`era\` and <master_style_guide>.<fidelity> standards. Do NOT omit any valid entity.
       1. **[Phase: \`updated_entity_manifest_list\` Mapping]**
-         **[Logic: Functional Anchor Identification & Binding]**
-           - **Goal**: Identify the physical container/host relationship to ensure subjects are integrated with their environment.
-           - **Primary Source**: Use <scene_visual_description> as the "Physical Blueprint."
-           - **Detection Protocol**:
-             1. **Containment & Support Inference**: Scan the <scene_visual_description>. If a Subject (Human/Animal) is logically housed, supported, or carried by a Prop (e.g., cockpit, vehicle, throne, horse-saddle), designate that prop as a **[Functional Anchor]**.
-             2. **Logical Inference**: Do NOT rely on specific prepositions. If the context implies a "Host-Guest" relationship (e.g., a pilot operating a plane, a knight riding a horse), the "Host" entity is automatically bound as a Functional Anchor.
-             3. **Binding Link**: Create a permanent logical link: Host (Subject) <-> Anchor (Prop).
-             4. **Absorption Flag**: Mark the Anchor's ID to be excluded from the final manifest and its visual details to be absorbed into the Subject's description.
          - **Goal**: Update the every \`updated_entity_manifest_list[n].physics_profile\` and \`updated_entity_manifest_list[n].appearance\` for each entity based on the new narration.
-         - **Iteration**: Process entries in <entity_list> **EXCEPT** those identified as [Functional Anchors] in Step 1.
+         - **Iteration**: Process ALL entities in <entity_list>.
          - **Field: 'id'**: 
            * **Rule**: Preserve exact input <entity_list>[n].\`id\`.
          - **Field: 'physics_profile'**: 
@@ -869,9 +856,7 @@ export const POST_IMAGE_GEN_PROMPT_PROMPT = `
       2. **[Phase: \`image_gen_prompt.subjects\` Mapping]**
         - **Selection Protocol**:
           * **INCLUDE**: Any entity with role \`main_hero\`, \`sub_character\`, or \`prop\`.
-          * **EXCLUDE**:
-            * Any entity identified as a **[Functional Anchor]** (These are absorbed into their respective hosts in \`description\`, \`pose\`, \`clothes\`, \`accessories\`).
-            * Any entity with role \`background_extra\` (Handle these in <unit_2_context_and_environment>).
+          * **EXCLUDE**: Any entity with role \`background_extra\` (Handle these in <unit_2_context_and_environment>).
         - **Iteration Rule**: You must generate a subject object for **ALL** included entities.
         - **Field: 'id'**: Carry over the exact \`id\` from <entity_list> (e.g., 'wingsuit_01'). **Strict Requirement for Subject-to-Physics tracking.**
         - **Field: 'type'**: Execute **Subject Extraction Guide** below.
@@ -930,37 +915,18 @@ export const POST_IMAGE_GEN_PROMPT_PROMPT = `
         - **Field: 'description'**: The visual anchor sentence summarizing the entity.
           - **Source**: Synthesize from input <entity_list>[n].\`demographics\`, <entity_list>[n].\`appearance.body_features\`, and core items from \`appearance\`.
           - **Role**: Serve as the structural "handle" for the image. It MUST mention the core clothing type and key accessories to ensure linkage with the detail fields below.
-          - **Anchor Absorption Logic**: 
-            * If the Subject is bound to a **[Functional Anchor]** (identified in Step 1), you MUST explicitly define the Subject as being contained by, seated on, or supported by the Anchor.
-            * **Action**: Integrate the Anchor's identity into the subject's baseline description to lock their physical relationship.
           - **Constraint**: 
-            * **Simplify & Mention**: Do not exhaustively describe textures here. Use broad classifiers for both the subject and the absorbed anchor.
-            * **Era Synchronization**: Ensure the nouns for both the subject and the absorbed anchor match the <master_style_guide>.<global_environment>.\`era\`.
-          - **Examples (Complex Data Transformation)**:
-            1. **Input (Multiple Accessories)**:
-                 - Subject: { id: "hacker_01", type: "human", demographics: "Cyberpunk, Male", appearance: { clothing_or_material: "haptic suit", accessories: ["neural headset", "VR data-gloves"] } }
-                 - Anchor: { id: "data_pod_01", ... }
-               **Output**: "A cyberpunk male hacker wearing a haptic suit, neural headset, and VR data-gloves, integrated within a glowing data-link pod."
-            2. **Input (Multiple Anchors)**:
-                 - Subject: { id: "knight_01", type: "human", demographics: "Medieval, Female", appearance: { clothing_or_material: "plate armor", accessories: ["crimson cape"] } }
-                 - Anchors: { id: "warhorse_01", ... }, { id: "ornate_saddle_01", ... }
-               **Output**: "A medieval female knight in plate armor and a crimson cape, mounted upon an ornate saddle on a powerful warhorse."
-            3. **Input (Multiple Accessories + Multiple Anchors)**:
-                 - Subject: { id: "pilot_01", type: "human", demographics: "Futuristic, Adult", appearance: { clothing_or_material: "flight suit", accessories: ["oxygen mask", "survival vest", "helmet"] } }
-                 - Anchors: { id: "cockpit_frame_01", ... }, { id: "ejection_seat_01", ... }
-               **Output**: "A futuristic adult pilot wearing a flight suit, oxygen mask, survival vest, and helmet, seated within an ejection seat inside a reinforced cockpit frame."
-            4. **Input (Multiple Anchors / Tool-based)**:
-                 - Subject: { id: "engineer_01", type: "human", demographics: "Steampunk, Female", appearance: { clothing_or_material: "leather overalls", accessories: ["brass goggles"] } }
-                 - Anchors: { id: "lift_platform_01", ... }, { id: "control_console_01", ... }
-               **Output**: "A steampunk female engineer wearing leather overalls and brass goggles, standing on a vibrating lift platform while operating a heavy control console."
-            5. **Input (Complex Environmental Binding)**:
-                 - Subject: { id: "diver_01", type: "human", demographics: "Modern, Male", appearance: { clothing_or_material: "wetsuit", accessories: ["diving mask", "oxygen tank", "flippers"] } }
-                 - Anchors: { id: "underwater_scooter_01", ... }, { id: "cage_exterior_01", ... }
-               **Output**: "A modern male diver wearing a wetsuit, diving mask, oxygen tank, and flippers, gripping an underwater scooter near a sturdy shark cage exterior."
+            * **Simplify & Mention**: Do not exhaustively describe textures and details here. Instead, use broad classifiers.
+              **Simplifying Examples**:
+                * use "wearing a wristwatch" instead of "wearing a high-end Swiss-made mechanical wristwatch..."
+                * use "wearing a suit" instead of "wearing a luxurious three-piece British cashmere suit..."
+                * use "wearing a wingsuit" instead of "wearing a ripstop nylon wingsuit..."
+            * **Era Synchronization**: Ensure the nouns used (e.g., "tunic" vs "t-shirt") match the \`<master_style_guide>.<global_environment>.era\`.
+          - **Example**: "A lean wingsuit athlete wearing an aerodynamic suit, helmet, and goggles."
         - **Field: 'clothes'**: The detailed material and textual definition of the attire.
           - **Source**: Strictly derived from <entity_list>[n].\`appearance.clothing_or_material\`.
           - **Transformation Rule**:
-            * **Do NOT Copy-Paste**: You must Refine and Stylize the raw input string to match the <master_style_guide>.<fidelity> (e.g., Raw = add micro-texture details; Stylized = focus on shape/color).
+            * **Do NOT Copy-Paste**: You must Refine and Stylize the raw input string to match the \`<master_style_guide>.<fidelity>\` (e.g., Raw = add micro-texture details; Stylized = focus on shape/color).
             * **Era Check**: Verify that materials and fasteners (e.g., zippers vs laces) are accurate to the Era based on <entity_list>[n].\`demographics\` and <master_style_guide>.\`globalEnvironment.era\`.
           - **Content**: Focus on fabric weight, texture, weave, and physical behavior (physics hints).
           - **Example**: "Streamlined ripstop nylon fabric with high-tensile weave, reinforced carbon-fiber joints, and matte synthetic finish."
