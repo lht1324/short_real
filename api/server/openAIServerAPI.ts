@@ -32,578 +32,23 @@ enum OpenAIModel {
     GPT_4O_MINI = "gpt-4o-mini-2024-07-18",
     GPT_O4_MINI = "o4-mini-2025-04-16",
 }
-
-const entityCastingResponseFormat: OpenAI.ResponseFormatJSONSchema = {
-    type: "json_schema",
-    json_schema: {
-        name: "master_style_info_response",
-        strict: true,
-        schema: {
-            type: "object",
-            properties: {
-                scene_casting_list: {
-                    type: "array",
-                    items: {
-                        type: "object",
-                        properties: {
-                            scene_number: { type: "number" },
-                            scene_visual_description: { type: "string" },
-                            included_cast_data_list: {
-                                type: "array",
-                                items: {
-                                    type: "object",
-                                    properties: {
-                                        id: { type: "string" },
-                                        reasoning: { type: "string" },
-                                    },
-                                    required: ["id", "reasoning"],
-                                    additionalProperties: false,
-                                }
-                            },
-                            excluded_cast_data_list: {
-                                type: "array",
-                                items: {
-                                    type: "object",
-                                    properties: {
-                                        id: { type: "string" },
-                                        reasoning: { type: "string" },
-                                    },
-                                    required: ["id", "reasoning"],
-                                    additionalProperties: false,
-                                }
-                            },
-                            casting_logic: { type: "string" },
-                            scene_empty_reasoning: { type: "string" },
-                        },
-                        required: ["scene_number", "scene_visual_description", "included_cast_data_list", "excluded_cast_data_list", "casting_logic", "scene_empty_reasoning"],
-                        additionalProperties: false,
-                    }
-                },
-                scene_casting_list_empty_reason: { type: "string" },
-                entity_manifest_list: {
-                    type: "array",
-                    items: {
-                        type: "object",
-                        properties: {
-                            id: { type: "string" },
-                            role: { type: "string", enum: ["main_hero", "sub_character", "background_extra", "prop"]},
-                            type: { type: "string", enum: ["human", "creature", "object", "machine", "animal", "hybrid"]},
-                            demographics: { type: "string" },
-                            appearance: {
-                                type: "object",
-                                properties: {
-                                    clothing_or_material: { type: "string" },
-                                    position_descriptor: { type: "string" },
-                                    hair: { type: ["string", "null"] },
-                                    accessories: { type: "array", items: { type: "string" } },
-                                    body_features: { type: "string" },
-                                },
-                                required: ["clothing_or_material", "position_descriptor", "hair", "accessories", "body_features"],
-                                additionalProperties: false,
-                            }
-                        },
-                        required: ["id", "role", "type", "demographics", "appearance"],
-                        additionalProperties: false,
-                    }
-                },
-            },
-            // 최상위 required
-            required: ["scene_casting_list", "scene_casting_list_empty_reason", "entity_manifest_list"],
-            additionalProperties: false
-        }
-    }
+enum DeepSeekModel {
+    DEEPSEEK_NON_THINKING = "deepseek-chat",
+    DEEPSEEK_THINKING = "deepseek-reasoner",
 }
 
-const masterStyleInfoResponseFormat: OpenAI.ResponseFormatJSONSchema = {
-    type: "json_schema",
-    json_schema: {
-        name: "master_style_info_response",
-        strict: true,
-        schema: {
-            type: "object",
-            properties: {
-                master_style_info: {
-                    type: "object",
-                    properties: {
-                        optics: {
-                            type: "object",
-                            properties: {
-                                lensType: { type: "string", enum: ["Anamorphic", "Spherical", "Macro", "Wide-Angle"] },
-                                focusDepth: { type: "string", enum: ["Shallow", "Deep", "Selective"] },
-                                exposureVibe: { type: "string", enum: ["High-Key", "Low-Key", "Natural"] },
-                                defaultISO: { type: "number" },
-                            },
-                            required: ["lensType", "focusDepth", "exposureVibe", "defaultISO"],
-                            additionalProperties: false,
-                        },
-                        colorAndLight: {
-                            type: "object",
-                            properties: {
-                                tonality: { type: "string" },
-                                lightingSetup: { type: "string" },
-                                globalHexPalette: { // 8 Hex RGB codes (#[00~FF][00~FF][00~FF])
-                                    type: "object",
-                                    properties: {
-                                        materialAnchor: { type: "string" },
-                                        keyLightSpectrumMin: { type: "string" },
-                                        keyLightSpectrumMax: { type: "string" },
-                                        fillLightSpectrumMin: { type: "string" },
-                                        fillLightSpectrumMax: { type: "string" },
-                                        shadowAnchor: { type: "string" },
-                                        ambientSpectrumMin: { type: "string" },
-                                        ambientSpectrumMax: { type: "string" },
-                                    },
-                                    required: ["materialAnchor", "keyLightSpectrumMin", "keyLightSpectrumMax", "fillLightSpectrumMin", "fillLightSpectrumMax", "shadowAnchor", "ambientSpectrumMin", "ambientSpectrumMax"],
-                                    additionalProperties: false,
-                                },
-                            },
-                            required: ["tonality", "lightingSetup", "globalHexPalette"],
-                            additionalProperties: false,
-                        },
-                        fidelity: {
-                            type: "object",
-                            properties: {
-                                textureDetail: { type: "string", enum: ["Ultra-High", "Raw", "Stylized"] },
-                                grainLevel: { type: "string", enum: ["Clean", "Filmic", "Gritty"] },
-                                resolutionTarget: { type: "string", enum: ["8K", "4K", "Filmic Scan"] },
-                            },
-                            required: ["textureDetail", "grainLevel", "resolutionTarget"],
-                            additionalProperties: false,
-                        },
-                        globalEnvironment: {
-                            type: "object",
-                            properties: {
-                                era: { type: "string" },
-                                locationArchetype: { type: "string" },
-                            },
-                            required: ["era", "locationArchetype"],
-                            additionalProperties: false,
-                        },
-                        composition: {
-                            type: "object",
-                            properties: {
-                                framingStyle: { type: "string", enum: ["Extreme Long/Wide", "Long/Wide", "Full/Medium Wide", "Medium/Waist", "Bust/Chest", "Face/Detail"] },
-                                preferredAspectRatio: { type: "string" },
-                            },
-                            required: ["framingStyle", "preferredAspectRatio"],
-                            additionalProperties: false,
-                        },
-                    },
-                    required: ["optics", "colorAndLight", "fidelity", "globalEnvironment", "composition"],
-                    additionalProperties: false,
-                },
-            },
-            // 최상위 required
-            required: ["master_style_info"],
-            additionalProperties: false
-        }
-    }
-};
-
-// const masterStyleInfoResponseFormat: OpenAI.ResponseFormatJSONSchema = {
-//     type: "json_schema",
-//     json_schema: {
-//         name: "master_style_info_response",
-//         strict: true,
-//         schema: {
-//             type: "object",
-//             properties: {
-//                 scene_casting_list: {
-//                     type: "array",
-//                     items: {
-//                         type: "object",
-//                         properties: {
-//                             scene_number: { type: "number" },
-//                             scene_visual_description: { type: "string" },
-//                             included_cast_data_list: {
-//                                 type: "array",
-//                                 items: {
-//                                     type: "object",
-//                                     properties: {
-//                                         id: { type: "string" },
-//                                         reasoning: { type: "string" },
-//                                     },
-//                                     required: ["id", "reasoning"],
-//                                     additionalProperties: false,
-//                                 }
-//                             },
-//                             excluded_cast_data_list: {
-//                                 type: "array",
-//                                 items: {
-//                                     type: "object",
-//                                     properties: {
-//                                         id: { type: "string" },
-//                                         reasoning: { type: "string" },
-//                                     },
-//                                     required: ["id", "reasoning"],
-//                                     additionalProperties: false,
-//                                 }
-//                             },
-//                             casting_logic: { type: "string" },
-//                             scene_empty_reasoning: { type: "string" },
-//                         },
-//                         required: ["scene_number", "scene_visual_description", "included_cast_data_list", "excluded_cast_data_list", "casting_logic", "scene_empty_reasoning"],
-//                         additionalProperties: false,
-//                     }
-//                 },
-//                 scene_casting_list_empty_reason: { type: "string" },
-//                 master_style_info: {
-//                     type: "object",
-//                     properties: {
-//                         optics: {
-//                             type: "object",
-//                             properties: {
-//                                 lensType: { type: "string", enum: ["Anamorphic", "Spherical", "Macro", "Wide-Angle"] },
-//                                 focusDepth: { type: "string", enum: ["Shallow", "Deep", "Selective"] },
-//                                 exposureVibe: { type: "string", enum: ["High-Key", "Low-Key", "Natural"] },
-//                                 defaultISO: { type: "number" },
-//                             },
-//                             required: ["lensType", "focusDepth", "exposureVibe", "defaultISO"],
-//                             additionalProperties: false,
-//                         },
-//                         colorAndLight: {
-//                             type: "object",
-//                             properties: {
-//                                 tonality: { type: "string" },
-//                                 lightingSetup: { type: "string" },
-//                                 globalHexPalette: { // 8 Hex RGB codes (#[00~FF][00~FF][00~FF])
-//                                     type: "object",
-//                                     properties: {
-//                                         materialAnchor: { type: "string" },
-//                                         keyLightSpectrumMin: { type: "string" },
-//                                         keyLightSpectrumMax: { type: "string" },
-//                                         fillLightSpectrumMin: { type: "string" },
-//                                         fillLightSpectrumMax: { type: "string" },
-//                                         shadowAnchor: { type: "string" },
-//                                         ambientSpectrumMin: { type: "string" },
-//                                         ambientSpectrumMax: { type: "string" },
-//                                     },
-//                                     required: ["materialAnchor", "keyLightSpectrumMin", "keyLightSpectrumMax", "fillLightSpectrumMin", "fillLightSpectrumMax", "shadowAnchor", "ambientSpectrumMin", "ambientSpectrumMax"],
-//                                     additionalProperties: false,
-//                                 },
-//                             },
-//                             required: ["tonality", "lightingSetup", "globalHexPalette"],
-//                             additionalProperties: false,
-//                         },
-//                         fidelity: {
-//                             type: "object",
-//                             properties: {
-//                                 textureDetail: { type: "string", enum: ["Ultra-High", "Raw", "Stylized"] },
-//                                 grainLevel: { type: "string", enum: ["Clean", "Filmic", "Gritty"] },
-//                                 resolutionTarget: { type: "string", enum: ["8K", "4K", "Filmic Scan"] },
-//                             },
-//                             required: ["textureDetail", "grainLevel", "resolutionTarget"],
-//                             additionalProperties: false,
-//                         },
-//                         globalEnvironment: {
-//                             type: "object",
-//                             properties: {
-//                                 era: { type: "string" },
-//                                 locationArchetype: { type: "string" },
-//                             },
-//                             required: ["era", "locationArchetype"],
-//                             additionalProperties: false,
-//                         },
-//                         composition: {
-//                             type: "object",
-//                             properties: {
-//                                 framingStyle: { type: "string", enum: ["Extreme Long/Wide", "Long/Wide", "Full/Medium Wide", "Medium/Waist", "Bust/Chest", "Face/Detail"] },
-//                                 preferredAspectRatio: { type: "string" },
-//                             },
-//                             required: ["framingStyle", "preferredAspectRatio"],
-//                             additionalProperties: false,
-//                         },
-//                     },
-//                     required: ["optics", "colorAndLight", "fidelity", "globalEnvironment", "composition"],
-//                     additionalProperties: false,
-//                 },
-//                 entity_manifest_list: {
-//                     type: "array",
-//                     items: {
-//                         type: "object",
-//                         properties: {
-//                             id: { type: "string" },
-//                             role: { type: "string", enum: ["main_hero", "sub_character", "background_extra", "prop"]},
-//                             type: { type: "string", enum: ["human", "creature", "object", "machine", "animal", "hybrid"]},
-//                             demographics: { type: "string" },
-//                             appearance: {
-//                                 type: "object",
-//                                 properties: {
-//                                     clothing_or_material: { type: "string" },
-//                                     position_descriptor: { type: "string" },
-//                                     hair: { type: ["string", "null"] },
-//                                     accessories: { type: "array", items: { type: "string" } },
-//                                     body_features: { type: "string" },
-//                                 },
-//                                 required: ["clothing_or_material", "position_descriptor", "hair", "accessories", "body_features"],
-//                                 additionalProperties: false,
-//                             }
-//                         },
-//                         required: ["id", "role", "type", "demographics", "appearance"],
-//                         additionalProperties: false,
-//                     }
-//                 },
-//             },
-//             // 최상위 required
-//             required: ["scene_casting_list", "scene_casting_list_empty_reason", "master_style_info", "entity_manifest_list"],
-//             additionalProperties: false
-//         }
-//     }
-// };
-
-const imageGenResponseFormat: OpenAI.ResponseFormatJSONSchema = {
-    type: "json_schema",
-    json_schema: {
-        name: "image_gen_response",
-        strict: true,
-        schema: {
-            type: "object",
-            properties: {
-                // 1. image_gen_prompt (FluxPrompt 인터페이스 완벽 매핑)
-                image_gen_prompt: {
-                    type: "object",
-                    properties: {
-                        scene: { type: "string" },
-                        subjects: {
-                            type: "array",
-                            items: {
-                                type: "object",
-                                properties: {
-                                    id: { type: "string" },
-                                    type: { type: "string" },
-                                    description: { type: "string" },
-                                    clothes: { type: "string" },
-                                    accessories: {
-                                        type: "array",
-                                        items: { type: "string" },
-                                    },
-                                    pose: { type: "string" },
-                                    position: {
-                                        type: "string",
-                                        enum: ["foreground", "midground", "background"]
-                                    }
-                                },
-                                required: ["id", "type", "description", "clothes", "accessories", "pose", "position"],
-                                additionalProperties: false
-                            }
-                        },
-                        color_palette: { type: "array", items: { type: "string" } },
-                        lighting: { type: "string" },
-                        mood: { type: "string" },
-                        background: { type: "string" },
-                    },
-                    // FluxPrompt의 모든 필드를 필수(required)로 지정
-                    required: ["scene", "subjects", "color_palette", "lighting", "mood", "background"],
-                    additionalProperties: false
-                },
-
-                // 2. technical_intent
-                technical_intent: {
-                    type: "object",
-                    properties: {
-                        angleIntent: { type: "string", enum: ["Default/Neutral", "Heroic/Scale", "Extreme Power/Ground-level", "Dialogue/Interaction", "Surveillance/Map-view", "Stylized/Technical"] },
-                        compositionIntent: { type: "string", enum: ["Symmetry", "Balance", "Strength", "Action", "Motion", "Depth", "Minimalism"] },
-                        exposureIntent: { type: "string", enum: ["Vibrant/High-Key", "Ethereal/Dreamy", "Balanced/Natural", "Cinematic/Moody", "Gritty/Noisy", "Silhouetted/Backlit", "Nocturnal/Deep-Night", "Harsh/High-Energy"] },
-                    },
-                    required: ["angleIntent", "compositionIntent", "exposureIntent"],
-                    additionalProperties: false,
-                },
-
-                // 3. updated_entity_manifest (Entity 인터페이스 매핑)
-                // Omit<Entity, 'role' | 'type' | 'appearance_scenes' | 'demographics'>[]
-                updated_entity_manifest_list: {
-                    type: ["array", "null"], // Optional이므로 null 허용
-                    items: {
-                        type: "object",
-                        properties: {
-                            id: { type: "string" },
-                            // physics_profile (optional in TS -> nullable in schema)
-                            physics_profile: {
-                                type: ["object", "null"],
-                                properties: {
-                                    material: {
-                                        type: "array",
-                                        items: {
-                                            type: "string",
-                                            enum: ["rigid", "viscoelastic", "brittle", "cloth", "fluid", "elastoplastic", "granular"]
-                                        }
-                                    },
-                                    action_context: {
-                                        type: "array",
-                                        items: {
-                                            type: "string",
-                                            enum: ["locomotion", "combat", "interaction", "aerodynamics", "passive", "velocity_max"]
-                                        }
-                                    }
-                                },
-                                required: ["material", "action_context"],
-                                additionalProperties: false
-                            },
-                            // appearance object
-                            appearance: {
-                                type: "object",
-                                properties: {
-                                    clothing_or_material: { type: "string" },
-                                    // Entity.ts에서 hair, accessories, body_features는 optional임 -> null 허용
-                                    hair: { type: ["string", "null"] },
-                                    accessories: { type: ["array", "null"], items: { type: "string" } },
-                                    body_features: { type: ["string", "null"] },
-                                    position_descriptor: { type: ["string", "null"] }
-                                },
-                                // strict 모드에서는 optional 필드도 required 목록에 넣고 타입에 null을 허용해야 함
-                                required: ["clothing_or_material", "hair", "accessories", "body_features", "position_descriptor"],
-                                additionalProperties: false
-                            },
-                            // state object (optional in TS -> nullable in schema)
-                            state: {
-                                type: ["object", "null"],
-                                properties: {
-                                    pose: { type: "string" },
-                                    expression: { type: ["string", "null"] }
-                                },
-                                required: ["pose", "expression"],
-                                additionalProperties: false
-                            }
-                        },
-                        // Entity의 필수 키들 (Omit 된 것 제외하고 남은 것들)
-                        required: ["id", "physics_profile", "appearance", "state"],
-                        additionalProperties: false
-                    }
-                }
-            },
-            // 최상위 required
-            required: ["image_gen_prompt", "technical_intent", "updated_entity_manifest_list"],
-            additionalProperties: false
-        }
-    }
-};
-
-const videoGenResponseFormat: OpenAI.ResponseFormatJSONSchema = {
-    type: "json_schema",
-    json_schema: {
-        name: "video_gen_response",
-        strict: true,
-        schema: {
-            type: "object",
-            properties: {
-                logical_bridge: {
-                    type: "object",
-                    properties: {
-                        scene_fundamental_data: {
-                            type: "object",
-                            properties: {
-                                scene_summary: { type: "string" },
-                                scene_summary_reason: { type: "string" },
-                                primary_movement: { type: "string" },
-                                primary_movement_reason: { type: "string" },
-                                narrative_vibe: { type: "string", enum: ["NORMAL", "CHAOTIC", "COMBAT", "ANXIOUS", "CATASTROPHIC", "VERTIGO", "SHOCK", "DREAMY", "SURREAL", "EMOTIONAL", "FOCUS"] },
-                                narrative_vibe_reason: { type: "string" },
-                                intensity_tier: { type: "string", enum: ["VERY_LOW", "LOW", "HIGH", "VERY_HIGH"] },
-                                intensity_tier_selected_reason: { type: "string" },
-                            },
-                            required: ["scene_summary", "scene_summary_reason", "primary_movement", "primary_movement_reason", "narrative_vibe", "narrative_vibe_reason", "intensity_tier", "intensity_tier_selected_reason"],
-                            additionalProperties: false
-                        },
-                        identity_logic: { type: "string" },
-                        action_focus: { type: "string" },
-                        primary_narrative_block: {
-                            type: "array",
-                            items: {
-                                type: "object",
-                                properties: {
-                                    entity_id: { type: "string" },
-                                    raw_sentence: { type: "string" },
-                                    action_type: { type: "string" },
-                                    action_type_reason: { type: "string" },
-                                    verb_reason: { type: "string" },
-                                    adverb_reason: { type: "string" },
-                                },
-                                required: ["entity_id", "raw_sentence", "action_type", "action_type_reason", "verb_reason", "adverb_reason"],
-                                additionalProperties: false
-                            }
-                        },
-                        atmospheric_lighting_delta: {
-                            type: "array",
-                            items: {
-                                type: "object",
-                                properties: {
-                                    selected_atmospheric_or_lighting_layer: { type: "string" },
-                                    selected_reason: { type: "string" },
-                                },
-                                required: ["selected_atmospheric_or_lighting_layer", "selected_reason"],
-                                additionalProperties: false,
-                            }
-                        },
-                        cinematic_camera_vectors: {
-                            type: "object",
-                            properties: {
-                                // Subject & Camera Axis Ref: [X: Screen Left <-> Screen Right], [Y: Screen Bottom <-> Screen Top], [Z: Deep Background <-> Screen Surface]
-                                subject_vectors: {
-                                    type: "object",
-                                    properties: {
-                                        sx: { type: "string", enum: ["$-X$", "$0X$", "$+X$"] },
-                                        sy: { type: "string", enum: ["$-Y$", "$0Y$", "$+Y$"] },
-                                        sz: { type: "string", enum: ["$-Z$", "$0Z$", "$+Z$"] },
-                                    },
-                                    required: ["sx", "sy", "sz"],
-                                    additionalProperties: false,
-                                },
-                                subject_vectors_reasoning: { type: "string" },
-                            },
-                            required: ["subject_vectors", "subject_vectors_reasoning"],
-                            additionalProperties: false,
-                        },
-                        style: {
-                            type: "object",
-                            properties: {
-                                slot_1: { type: "string" },
-                                slot_2: { type: "string" },
-                                slot_1_reason: { type: "string" },
-                                slot_2_reason: { type: "string" },
-                            },
-                            required: ["slot_1", "slot_2", "slot_1_reason", "slot_2_reason"],
-                            additionalProperties: false,
-                        }
-                    },
-                    required: ["scene_fundamental_data", "identity_logic", "action_focus", "primary_narrative_block", "atmospheric_lighting_delta", "cinematic_camera_vectors", "style"],
-                    additionalProperties: false
-                },
-                reasoning: { type: "string" },
-                final_output_structure: {
-                    type: "object",
-                    properties: {
-                        primary_narrative_block: { type: "string" },
-                        atmospheric_lighting_delta: { type: "string" },
-                        cinematic_camera_vector: { type: "string" },
-                        style: { type: "string" },
-                    },
-                    required: ["primary_narrative_block", "atmospheric_lighting_delta", "cinematic_camera_vector", "style"],
-                    additionalProperties: false,
-                },
-                video_gen_prompt: { type: "string" },
-            },
-            required: [
-                "logical_bridge",
-                "reasoning",
-                "final_output_structure",
-                "video_gen_prompt",
-            ],
-            additionalProperties: false
-        }
-    }
-};
-
+const DEEPSEEK_BASE_URL = "https://api.deepseek.com";
 
 export const openAIServerAPI = {
     async postScript(userPrompt: string): Promise<ScriptGenerationResponse> {
         try {
             // OpenAI API 키 확인
-            const apiKey = process.env.OPENAI_API_KEY;
+            const apiKey = process.env.DEEPSEEK_API_KEY;
             if (!apiKey) {
                 return {
                     success: false,
                     status: 400,
-                    error: 'OpenAI API key is not configured',
+                    error: 'DeepSeek API Key is not configured',
                 };
             }
 
@@ -611,7 +56,10 @@ export const openAIServerAPI = {
             const systemMessage = POST_SCRIPT_PROMPT;
 
             // OpenAI SDK 클라이언트 초기화
-            const client = new OpenAI({ apiKey });
+            const client = new OpenAI({
+                baseURL: DEEPSEEK_BASE_URL,
+                apiKey: apiKey,
+            });
 
             // OpenAI API 호출
             const completion = await client.chat.completions.create({
@@ -672,7 +120,7 @@ export const openAIServerAPI = {
     ): Promise<StoryboardData | null> {
         try {
             // OpenAI API 키 확인
-            const apiKey = process.env.OPENAI_API_KEY;
+            const apiKey = process.env.DEEPSEEK_API_KEY;
             if (!apiKey) {
                 return null;
             }
@@ -699,11 +147,14 @@ Instruction: Process the input data and return the JSON output according to the 
 `;
 
             // OpenAI SDK 클라이언트 초기화
-            const client = new OpenAI({ apiKey });
+            const client = new OpenAI({
+                baseURL: DEEPSEEK_BASE_URL,
+                apiKey: apiKey,
+            });
 
             // OpenAI API 호출
             const completion = await client.chat.completions.create({
-                model: OpenAIModel.GPT_O4_MINI,
+                model: DeepSeekModel.DEEPSEEK_THINKING,
                 messages: [
                     { role: 'developer', content: developerMessage },
                     {
@@ -772,12 +223,13 @@ Instruction: Process the input data and return the JSON output according to the 
         }
     }> {
         try {
-            const apiKey = process.env.OPENAI_API_KEY;
+            // const apiKey = process.env.DEEPSEEK_API_KEY;
+            const apiKey = process.env.DEEPSEEK_API_KEY;
             if (!apiKey) {
                 return {
                     success: false,
                     error: {
-                        message: 'OpenAI API key is not configured',
+                        message: 'DeepSeek API Key is not configured',
                         code: 'MISSING_API_KEY'
                     }
                 };
@@ -803,19 +255,26 @@ Instruction: Process the input data and return the JSON output according to the 
 Instruction: Analyze <video_metadata>, <target_aspect_ratio>, <style_guidelines> and <full_script_context> to generate the \`scene_casting_list\` and \`entity_manifest_list\` JSON output.
 `;
 
-            const client = new OpenAI({ apiKey });
-
-            const completion = await client.chat.completions.create({
-                model: OpenAIModel.GPT_O4_MINI, // 복잡한 분석이므로 o4-mini 적합
-                messages: [
-                    { role: 'developer', content: developerMessage },
-                    { role: 'user', content: userMessage }
-                ],
-                response_format: entityCastingResponseFormat,
-                reasoning_effort: 'high',
-                max_completion_tokens: 40960, // [팁] Entity Manifest가 길어질 수 있으므로 토큰 한도를 넉넉히 늘렸습니다.
+            const client = new OpenAI({
+                baseURL: DEEPSEEK_BASE_URL,
+                apiKey: apiKey,
+                timeout: 600 * 1000,
+                maxRetries: 3,
             });
 
+            const completion = await client.chat.completions.create({
+                model: DeepSeekModel.DEEPSEEK_THINKING,
+                messages: [
+                    { role: 'system', content: developerMessage },
+                    { role: 'user', content: userMessage }
+                ],
+                response_format: { type: "json_object" },
+                // response_format: entityCastingResponseFormat,
+                // reasoning_effort: 'high',
+                max_completion_tokens: 20480, // [팁] Entity Manifest가 길어질 수 있으므로 토큰 한도를 넉넉히 늘렸습니다.
+            });
+
+            console.log(`postEntityCasting() raw completion: ${JSON.stringify(completion)}`);
             console.log(`postEntityCasting() usage: `, JSON.stringify(completion.usage))
 
             const generatedResult = completion.choices[0]?.message?.content;
@@ -852,7 +311,7 @@ Instruction: Analyze <video_metadata>, <target_aspect_ratio>, <style_guidelines>
                     scene_casting_list_empty_reason: string;
                 } = JSON.parse(generatedResult);
 
-                console.log(`postMasterStyleInfo() raw content: ${generatedResult}`);
+                console.log(`postEntityCasting() raw content: ${generatedResult}`);
 
                 const {
                     entity_manifest_list: entityManifestList,
@@ -959,12 +418,12 @@ Instruction: Analyze <video_metadata>, <target_aspect_ratio>, <style_guidelines>
         }
     }> {
         try {
-            const apiKey = process.env.OPENAI_API_KEY;
+            const apiKey = process.env.DEEPSEEK_API_KEY;
             if (!apiKey) {
                 return {
                     success: false,
                     error: {
-                        message: 'OpenAI API key is not configured',
+                        message: 'DeepSeek API Key is not configured',
                         code: 'MISSING_API_KEY'
                     }
                 };
@@ -999,19 +458,26 @@ Instruction: Analyze <video_metadata>, <target_aspect_ratio>, <style_guidelines>
 Instruction: Analyze <video_metadata>, <target_aspect_ratio>, <style_guidelines>, <full_script_context> and <entity_manifest_list> to generate the \`master_style_info\` JSON output.
 `;
 
-            const client = new OpenAI({ apiKey });
-
-            const completion = await client.chat.completions.create({
-                model: OpenAIModel.GPT_O4_MINI, // 복잡한 분석이므로 o4-mini 적합
-                messages: [
-                    { role: 'developer', content: developerMessage },
-                    { role: 'user', content: userMessage }
-                ],
-                response_format: masterStyleInfoResponseFormat,
-                reasoning_effort: 'high',
-                max_completion_tokens: 40960, // [팁] Entity Manifest가 길어질 수 있으므로 토큰 한도를 넉넉히 늘렸습니다.
+            const client = new OpenAI({
+                baseURL: DEEPSEEK_BASE_URL,
+                apiKey: apiKey,
+                timeout: 600 * 1000,
+                maxRetries: 3,
             });
 
+            const completion = await client.chat.completions.create({
+                model: DeepSeekModel.DEEPSEEK_THINKING,
+                messages: [
+                    { role: 'system', content: developerMessage },
+                    { role: 'user', content: userMessage }
+                ],
+                response_format: { type: "json_object" },
+                // response_format: masterStyleInfoResponseFormat,
+                // reasoning_effort: 'high',
+                max_completion_tokens: 10240, // [팁] Entity Manifest가 길어질 수 있으므로 토큰 한도를 넉넉히 늘렸습니다.
+            });
+
+            console.log(`postMasterStyleInfo() raw completion: ${JSON.stringify(completion)}`);
             console.log(`postMasterStylePrompt() usage: `, JSON.stringify(completion.usage))
 
             const generatedResult = completion.choices[0]?.message?.content;
@@ -1089,12 +555,12 @@ Instruction: Analyze <video_metadata>, <target_aspect_ratio>, <style_guidelines>
         }
     }> {
         try {
-            const apiKey = process.env.OPENAI_API_KEY;
+            const apiKey = process.env.DEEPSEEK_API_KEY;
             if (!apiKey) {
                 return {
                     success: false,
                     error: {
-                        message: 'OpenAI API key is not configured',
+                        message: 'DeepSeek API Key is not configured',
                         code: 'MISSING_API_KEY'
                     }
                 };
@@ -1144,16 +610,22 @@ Instruction: Generate the scene instruction JSON.
 `}
 `;
 
-            const client = new OpenAI({ apiKey });
+            const client = new OpenAI({
+                baseURL: DEEPSEEK_BASE_URL,
+                apiKey: apiKey,
+                timeout: 600 * 1000,
+                maxRetries: 3,
+            });
             const completion = await client.chat.completions.create({
                 // model: OpenAIModel.GPT_O4_MINI,
-                model: OpenAIModel.GPT_4O_MINI,
+                model: DeepSeekModel.DEEPSEEK_THINKING,
                 messages: [
-                    { role: 'developer', content: developerMessage },
+                    { role: 'system', content: developerMessage },
                     { role: 'user', content: userMessage }
                 ],
-                response_format: imageGenResponseFormat,
-                max_completion_tokens: 16384,
+                response_format: { type: "json_object" },
+                // response_format: imageGenResponseFormat,
+                max_completion_tokens: 20480,
                 temperature: 0.7,
             });
 
@@ -1173,15 +645,16 @@ Instruction: Generate the scene instruction JSON.
 
             // JSON 유효성 검증
             try {
-                // console.log(`Scene #${sceneNumber} raw generated content: ${generatedContent}`)
                 const instructionJSON: {
                     image_gen_prompt: Omit<FluxPrompt, 'style' | 'camera' | 'composition' | 'effects'>;
+                    image_gen_prompt_sentence: string;
                     technical_intent: TechnicalIntent;
                     updated_entity_manifest_list?: Omit<Entity, 'role' | 'type' | 'demographics'>[] | null
                 } = JSON.parse(generatedContent);
 
                 const {
                     image_gen_prompt: imageGenPrompt,
+                    image_gen_prompt_sentence: imageGenPromptSentence,
                     technical_intent: technicalIntent,
                     updated_entity_manifest_list: updatedEntityManifestList,
                 } = instructionJSON;
@@ -1226,12 +699,12 @@ Instruction: Generate the scene instruction JSON.
                     ...opticalAndTechnicalOption,
                 }
 
-                const imageGenPromptSentence = assembleFullImageGenPromptSentence(
-                    fullImageGenPrompt,
-                    newEntityManifestList,
-                )
+                // const imageGenPromptSentence = assembleFullImageGenPromptSentence(
+                //     fullImageGenPrompt,
+                //     newEntityManifestList,
+                // )
 
-                console.log(`Scene #${sceneNumber} Test sentence: ${imageGenPromptSentence}`);
+                console.log(`Scene #${sceneNumber} ImageGenPromptSentence: ${imageGenPromptSentence}`);
 
                 return {
                     success: true,
@@ -1241,6 +714,8 @@ Instruction: Generate the scene instruction JSON.
                 };
             } catch (jsonError) {
                 console.error('Failed to parse generated JSON:', jsonError);
+
+                console.log(`Scene #${sceneNumber} raw generated content: ${generatedContent.replace(/[\r\n]+/g, "")}`)
                 return {
                     success: false,
                     error: {
@@ -1278,12 +753,12 @@ Instruction: Generate the scene instruction JSON.
     }> {
         try {
             // OpenAI API 키 확인
-            const apiKey = process.env.OPENAI_API_KEY;
+            const apiKey = process.env.DEEPSEEK_API_KEY;
             if (!apiKey) {
                 return {
                     success: false,
                     error: {
-                        message: 'OpenAI API key is not configured',
+                        message: 'DeepSeek API Key is not configured',
                         code: 'MISSING_API_KEY'
                     }
                 };
@@ -1455,10 +930,13 @@ Instruction: Generate the scene instruction JSON.
 `;
 
             // OpenAI SDK 클라이언트 초기화 및 API 호출
-            const client = new OpenAI({ apiKey });
+            const client = new OpenAI({
+                baseURL: DEEPSEEK_BASE_URL,
+                apiKey: apiKey,
+            });
             const completion = await client.chat.completions.create({
                 // model: OpenAIModel.GPT_O4_MINI,
-                model: OpenAIModel.GPT_4O_MINI,
+                model: DeepSeekModel.DEEPSEEK_THINKING,
                 messages: [
                     { role: 'developer', content: developerMessage },
                     {
@@ -1479,8 +957,8 @@ Instruction: Generate the scene instruction JSON.
                     }
                 ],
                 // reasoning_effort: 'medium',
-                // response_format: { type: 'json_object' },
-                response_format: videoGenResponseFormat,
+                response_format: { type: 'json_object' },
+                // response_format: videoGenResponseFormat,
                 // max_completion_tokens: 20480,
                 max_completion_tokens: 16384,
             });
@@ -1721,12 +1199,12 @@ Instruction: Generate the scene instruction JSON.
         error?: string
     }> {
         try {
-            const apiKey = process.env.OPENAI_API_KEY;
+            const apiKey = process.env.DEEPSEEK_API_KEY;
             if (!apiKey) {
                 return {
                     success: false,
                     status: 400,
-                    error: 'OpenAI API key is not configured',
+                    error: 'DeepSeek API Key is not configured',
                 };
             }
 
@@ -1780,15 +1258,17 @@ Instruction: Generate the scene instruction JSON.
 </input_data>
 `;
 
-            const client = new OpenAI({ apiKey });
+            const client = new OpenAI({
+                baseURL: DEEPSEEK_BASE_URL,
+                apiKey: apiKey,
+            });
 
             const completion = await client.chat.completions.create({
-                model: OpenAIModel.GPT_O4_MINI,
+                model: DeepSeekModel.DEEPSEEK_THINKING,
                 messages: [
-                    { role: 'developer', content: developerMessage },
+                    { role: 'system', content: developerMessage },
                     { role: 'user', content: userMessage }
                 ],
-                reasoning_effort: 'medium',
                 response_format: { type: 'json_object' },
                 max_completion_tokens: 4096,
             });

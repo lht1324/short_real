@@ -491,9 +491,11 @@ export function composeOpticalAndTechnicalOption(
             },
             "Vertical": {
                 "Extreme Long/Wide": "vertical panoramic environmental shot",
-                "Long/Wide": "full-length vertical capture",
-                "Full/Medium Wide": "full-body shot with headroom",
-                "Medium/Waist": "medium full shot",
+                // "full-length" 대신 인물의 활동 범위를 강조하는 명칭으로 변경
+                "Long/Wide": "vertical full-body action shot",
+                "Full/Medium Wide": "medium wide vertical shot",
+                // 콕핏 장면에서 가장 많이 쓰일 "Medium" 구간의 명칭을 명확히 함
+                "Medium/Waist": "cinematic waist-up vertical capture",
                 "Bust/Chest": "medium close-up",
                 "Face/Detail": "close-up",
             },

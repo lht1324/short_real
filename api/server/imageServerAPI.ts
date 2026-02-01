@@ -25,16 +25,26 @@ export const imageServerAPI = {
             let imageUrl: string;
 
             try {
-                const output = await falAIClient.subscribe('fal-ai/nano-banana', {
+                // const output = await falAIClient.subscribe('fal-ai/nano-banana', {
+                //     input: {
+                //         prompt: ` --MUST NOT letterbox ${imageGenPromptSentence}`,
+                //         num_images: 1,
+                //         aspect_ratio: "9:16",
+                //         output_format: "jpeg",
+                //         sync_mode: false,
+                //         limit_generations: false,
+                //     }
+                // });
+
+                const output = await falAIClient.subscribe('xai/grok-imagine-image', {
                     input: {
-                        prompt: ` --MUST NOT letterbox ${imageGenPromptSentence}`,
+                        prompt: `${imageGenPromptSentence} --MUST NOT letterbox`,
                         num_images: 1,
                         aspect_ratio: "9:16",
                         output_format: "jpeg",
                         sync_mode: false,
-                        limit_generations: false,
                     }
-                });
+                })
 
                 resultImageUrlList = output.data.images;
             } catch (error) {

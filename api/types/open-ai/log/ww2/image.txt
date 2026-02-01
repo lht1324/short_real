@@ -207,6 +207,178 @@ Scene #5 imageGenPrompt: {
   "mood": "Tense and exhilarating atmosphere underscored by the chaos of aerial warfare.",
   "background": "Turbulent clouds filled with tracer rounds and sporadic flak bursts, creating a dynamic backdrop for the aerial dogfight."
 }
+[
+      {
+        "id": "pilot_01",
+        "role": "sub_character",
+        "type": "human",
+        "appearance": {
+          "hair": "Short dark brown hair visible under headset",
+          "accessories": [
+            "Leather flight helmet",
+            "Goggles perched on forehead"
+          ],
+          "body_features": "Athletic build, 5'9\" tall",
+          "position_descriptor": "center-weighted gazing forward",
+          "clothing_or_material": "Dark green flight suit with leather straps and harness, showing wear from battle."
+        },
+        "demographics": "1944 WWII, British, Fighter Pilot, Male, Late 20s",
+        "physics_profile": {
+          "material": [
+            "cloth",
+            "viscoelastic"
+          ],
+          "action_context": [
+            "locomotion",
+            "interaction"
+          ]
+        }
+      },
+      {
+        "id": "pilot_02",
+        "role": "sub_character",
+        "type": "human",
+        "appearance": {
+          "hair": "Short blonde hair",
+          "accessories": [
+            "Leather flight helmet",
+            "Black rubber oxygen mask"
+          ],
+          "body_features": "Lean build, 5'8\" tall",
+          "position_descriptor": "center-weighted facing camera",
+          "clothing_or_material": "Khaki flight suit with canvas harness and patched elbows, reflecting the wear of aerial combat."
+        },
+        "demographics": "1944 WWII, German, Fighter Pilot, Male, Late 20s",
+        "physics_profile": {
+          "material": [
+            "cloth",
+            "viscoelastic"
+          ],
+          "action_context": [
+            "locomotion",
+            "interaction"
+          ]
+        }
+      },
+      {
+        "id": "fighter_plane_cockpit_01",
+        "role": "prop",
+        "type": "machine",
+        "appearance": {
+          "hair": "",
+          "accessories": [
+            "Control panel with analog gauges"
+          ],
+          "body_features": "Arched canopy with bullet-fragment chips",
+          "position_descriptor": "enclosed background structure framing pilot",
+          "clothing_or_material": "Olive drab metal framework with canvas padding and exposed rivets"
+        },
+        "demographics": "1944 WWII, RAF, Supermarine Spitfire, Fighter Aircraft, 1940 Production Model",
+        "physics_profile": {
+          "material": [
+            "rigid"
+          ],
+          "action_context": []
+        }
+      },
+      {
+        "id": "fighter_plane_cockpit_02",
+        "role": "prop",
+        "type": "machine",
+        "appearance": {
+          "hair": "",
+          "accessories": [
+            "Polished throttle quadrant"
+          ],
+          "body_features": "Reinforced bulkhead plating",
+          "position_descriptor": "enclosed background structure framing pilot",
+          "clothing_or_material": "Grey metal fuselage interior with pressure gauges and wire looms"
+        },
+        "demographics": "1944 WWII, Luftwaffe, Messerschmitt Bf 109, Fighter Aircraft, 1942 Production Model",
+        "physics_profile": {
+          "material": [
+            "rigid"
+          ],
+          "action_context": []
+        }
+      },
+      {
+        "id": "control_stick",
+        "role": "prop",
+        "type": "object",
+        "appearance": {
+          "hair": "",
+          "accessories": [],
+          "body_features": "U-shaped yoke",
+          "position_descriptor": "foreground handheld lever",
+          "clothing_or_material": "Black bakelite grip with steel shaft"
+        },
+        "demographics": "1944 WWII, Fighter Cockpit, Control Stick, Metal Construction",
+        "physics_profile": {
+          "material": [
+            "rigid"
+          ],
+          "action_context": []
+        }
+      },
+      {
+        "id": "throttle_lever",
+        "role": "prop",
+        "type": "object",
+        "appearance": {
+          "hair": "",
+          "accessories": [],
+          "body_features": "Pivot-mounted bar",
+          "position_descriptor": "foreground near bottom frame",
+          "clothing_or_material": "Silver steel lever with knurled knob"
+        },
+        "demographics": "1944 WWII, Fighter Cockpit, Throttle Lever, Steel Construction",
+        "physics_profile": {
+          "material": [
+            "rigid"
+          ],
+          "action_context": []
+        }
+      },
+      {
+        "id": "contrails",
+        "role": "prop",
+        "type": "object",
+        "appearance": {
+          "hair": "",
+          "accessories": [],
+          "body_features": "Linear wispy streaks",
+          "position_descriptor": "upper-frame extending diagonally",
+          "clothing_or_material": "Thin white vapor trails dissolving into sky"
+        },
+        "demographics": "1944 WWII, High Altitude, Contrails, Vapor Trail Detail",
+        "physics_profile": {
+          "material": [
+            "fluid"
+          ],
+          "action_context": []
+        }
+      },
+      {
+        "id": "flak_bursts",
+        "role": "prop",
+        "type": "object",
+        "appearance": {
+          "hair": "",
+          "accessories": [],
+          "body_features": "Radiating fragment pattern",
+          "position_descriptor": "midframe small bursts",
+          "clothing_or_material": "Orange explosive flashes with dark fumes"
+        },
+        "demographics": "1944 WWII, Anti-Aircraft Fire, Flak Bursts, Explosive Fragment Detail",
+        "physics_profile": {
+          "material": [
+            "fluid"
+          ],
+          "action_context": []
+        }
+      }
+    ]
 Scene #5 OpticalAndTechnicalOption: {"style":"High-fidelity RAW photography with Raw surface detail and Filmic organic texture.","camera":{"angle":"eye level","distance":"full-length vertical capture","focus":"sharp focus throughout the vertical frame","lens":"35mm","fNumber":"f/8.0","ISO":800},"composition":"steep diagonal tension","effects":["subtle film grain","highly defined textures","hyper-detailed rendering","extreme visual fidelity","photorealistic textures","physically based rendering"]}
 Scene #5 Test sentence: An eye level full-length vertical capture captures 1944 WWII British Male Fighter Pilot, Athletic build, 5'9" tall, clad in Dark green flight suit with leather straps and harness, showing wear from battle, equipped with Leather flight helmet, and Goggles perched on forehead who is Leaning forward with an athletic build, gripping the control stick as if maneuvering through the skies. in the foreground, while in the foreground a 1944 WWII German Male Fighter Pilot, Lean build, 5'8" tall, clad in Khaki flight suit with canvas harness and patched elbows, reflecting the wear of aerial combat, equipped with Leather flight helmet, and Black rubber oxygen mask is Center-weighted facing camera, adjusting the throttle with precision, the scene is set in Turbulent clouds filled with tracer rounds and sporadic flak bursts, creating a dynamic backdrop for the aerial dogfight, depicting 1944 WWII fighter pilots engaged in a perilous aerial duel among turbulent clouds with tracer rounds slicing through the sky. with a steep diagonal tension composition, where the atmosphere is Tense and exhilarating atmosphere underscored by the chaos of aerial warfare, illuminated by Overhead diffused key mimicking overcast sky; low-angle fill bounce from muddy ground; narrow backlight rim for silhouette separation; volumetric haze ambient fill. and a color palette of (#6B8E23, #F2EDE8, #A3ADB7), rendered in High-fidelity RAW photography with Raw surface detail and Filmic organic texture, captured with a 35mm lens at f/8.0 for sharp focus throughout the vertical frame and ISO 800, featuring subtle film grain, highly defined textures, hyper-detailed rendering, extreme visual fidelity, photorealistic textures, and physically based rendering.
 
