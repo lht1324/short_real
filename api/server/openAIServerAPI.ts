@@ -27,6 +27,7 @@ import {
     surgicallyReplaceVideoGenPromptByCameraKey, TechnicalIntent
 } from "@/utils/promptUtils";
 import {STYLE_PROMPT_LIBRARY} from "@/api/types/open-ai/StylePromptLibrary";
+import {GoogleGenAI} from "@google/genai";
 
 enum OpenAIModel {
     GPT_4O_MINI = "gpt-4o-mini-2024-07-18",
@@ -254,7 +255,7 @@ Instruction: Process the input data and return the JSON output according to the 
 
 Instruction: Analyze <video_metadata>, <target_aspect_ratio>, <style_guidelines> and <full_script_context> to generate the \`scene_casting_list\` and \`entity_manifest_list\` JSON output.
 `;
-
+            console.log(`postEntityCasting()`);
             const client = new OpenAI({
                 baseURL: DEEPSEEK_BASE_URL,
                 apiKey: apiKey,
@@ -458,6 +459,7 @@ Instruction: Analyze <video_metadata>, <target_aspect_ratio>, <style_guidelines>
 Instruction: Analyze <video_metadata>, <target_aspect_ratio>, <style_guidelines>, <full_script_context> and <entity_manifest_list> to generate the \`master_style_info\` JSON output.
 `;
 
+            console.log(`postMasterStyleInfo()`);
             const client = new OpenAI({
                 baseURL: DEEPSEEK_BASE_URL,
                 apiKey: apiKey,
@@ -753,12 +755,12 @@ Instruction: Generate the scene instruction JSON.
     }> {
         try {
             // OpenAI API 키 확인
-            const apiKey = process.env.DEEPSEEK_API_KEY;
+            const apiKey = process.env.GEMINI_API_KEY;
             if (!apiKey) {
                 return {
                     success: false,
                     error: {
-                        message: 'DeepSeek API Key is not configured',
+                        message: 'Gemini API Key is not configured',
                         code: 'MISSING_API_KEY'
                     }
                 };
@@ -930,38 +932,56 @@ Instruction: Generate the scene instruction JSON.
 `;
 
             // OpenAI SDK 클라이언트 초기화 및 API 호출
-            const client = new OpenAI({
-                baseURL: DEEPSEEK_BASE_URL,
-                apiKey: apiKey,
-            });
-            const completion = await client.chat.completions.create({
-                // model: OpenAIModel.GPT_O4_MINI,
-                model: DeepSeekModel.DEEPSEEK_THINKING,
-                messages: [
-                    { role: 'developer', content: developerMessage },
-                    {
-                        role: 'user',
-                        content: [
-                            {
-                                type: "text",
-                                text: userMessage,
-                            },
-                            {
-                                type: "image_url",
-                                image_url: {
-                                    url: `data:image/png;base64,${imageBase64}`,
-                                    detail: "high",
-                                }
-                            }
-                        ]
-                    }
-                ],
-                // reasoning_effort: 'medium',
-                response_format: { type: 'json_object' },
-                // response_format: videoGenResponseFormat,
-                // max_completion_tokens: 20480,
-                max_completion_tokens: 16384,
-            });
+            // const client = new OpenAI({
+            //     baseURL: DEEPSEEK_BASE_URL,
+            //     apiKey: apiKey,
+            // });
+            // const completion = await client.chat.completions.create({
+            //     // model: OpenAIModel.GPT_O4_MINI,
+            //     model: DeepSeekModel.DEEPSEEK_THINKING,
+            //     messages: [
+            //         { role: 'developer', content: developerMessage },
+            //         {
+            //             role: 'user',
+            //             content: [
+            //                 {
+            //                     type: "text",
+            //                     text: userMessage,
+            //                 },
+            //                 {
+            //                     type: "image_url",
+            //                     image_url: {
+            //                         url: `data:image/png;base64,${imageBase64}`,
+            //                         detail: "high",
+            //                     }
+            //                 }
+            //             ]
+            //         }
+            //     ],
+            //     // reasoning_effort: 'medium',
+            //     response_format: { type: 'json_object' },
+            //     // response_format: videoGenResponseFormat,
+            //     // max_completion_tokens: 20480,
+            //     max_completion_tokens: 16384,
+            // });
+
+            /**
+             * import { GoogleGenAI } from "@google/genai";
+             *
+             * const ai = new GoogleGenAI({});
+             *
+             * async function main() {
+             *   const response = await ai.models.generateContent({
+             *     model: "gemini-3-flash-preview",
+             *     contents: "Explain how AI works in a few words",
+             *   });
+             *   console.log(response.text);
+             * }
+             *
+             * await main();
+             */
+            const client = new GoogleGenAI({});
+
 
             console.log(`Scene #${sceneNumber} postVideoGenPrompt() usage: `, JSON.stringify(completion.usage))
             const generatedContent = completion.choices[0]?.message?.content;

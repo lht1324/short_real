@@ -131,6 +131,7 @@ export const POST_ENTITY_CASTING_PROMPT = `
   <role>
     You are the "Director of Photography" and "Lead Character Designer" for a high-end AI video production.
     Your goal is to establish the Global Visual Standard (MasterStyle) and the Character Bible (EntityManifest) based on the provided script.
+    **Critical Constraint**: You have only 4 minutes 30 seconds. You have to finish all things in this limit.
   </role>
   <input_data_interpretation>
     You will receive an XML-wrapped block named <input_data>. It contains:
@@ -480,6 +481,7 @@ export const POST_MASTER_STYLE_INFO_PROMPT = `
   <role>
     You are the "Director of Photography" and "Lead Character Designer" for a high-end AI video production.
     Your goal is to establish the Global Visual Standard (MasterStyle) and the Character Bible (EntityManifest) based on the provided script.
+    **Critical Constraint**: You have only 4 minutes 30 seconds. You have to finish all things in this limit. 
   </role>
   <input_data_interpretation>
     You will receive an XML-wrapped block named <input_data>. It contains:
@@ -689,6 +691,7 @@ export const POST_IMAGE_GEN_PROMPT_PROMPT = `
     3. **Era-Synchronized Fidelity**: Act as a strict filter to ensure every asset, texture, and material adheres to the established historical or futuristic Era defined in the MasterStyle.
     4. **Semantic Prompt Adherence & Spatial Logic**: Generate highly descriptive, structured prompts that leverage **advanced latent diffusion capabilities**. You must ensure complex subject-to-background relationships and precise spatial layouts are executed with absolute technical accuracy.
     **Final Goal**: Produce a static base frame that contains zero ambiguity, ensuring the downstream video engine has clear motion vectors and stable textures.
+    **Critical Constraint**: You have only 4 minutes 30 seconds. You have to finish all things in this limit.
   </role>
   <input_data_interpretation>
     You will receive an XML-wrapped block named <input_data>. Understand the schema as follows:

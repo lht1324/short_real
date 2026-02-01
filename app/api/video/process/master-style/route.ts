@@ -131,76 +131,76 @@ export async function POST(request: NextRequest) {
             });
         }
 
-        // TEST!!
-        await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
-
-        return getNextBaseResponse({
-            success: true,
-            status: 200,
-            message: "Generating MasterStyle Test finished."
-        });
-
-        // const masterStylePositivePromptInfo = postMasterStyleInfoResult.masterStyleInfo;
-        // const entityManifestList = postEntityCastingResult.entityManifestList;
-        // const sceneCastingDataList = postEntityCastingResult.sceneCastingDataList;
-        //
-        // const patchVideoGenerationTaskStatusFinalResult = await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, {
-        //     status: VideoGenerationTaskStatus.GENERATING_IMAGE_PROMPT,
-        //     master_style_info: masterStylePositivePromptInfo,
-        //     entity_manifest_list: entityManifestList,
-        //     scene_breakdown_list: sceneDataList.map((sceneData) => {
-        //         const sceneCastingData = sceneCastingDataList?.find((sceneCastingData) => {
-        //             return sceneCastingData.sceneNumber === sceneData.sceneNumber;
-        //         });
-        //
-        //         const sceneVisualDescription = sceneCastingData?.sceneVisualDescription;
-        //         const sceneCastingIdList = sceneCastingData?.castIdList;
-        //
-        //         return {
-        //             ...sceneData,
-        //             sceneVisualDescription: sceneVisualDescription,
-        //             sceneCastingEntityIdList: sceneCastingIdList,
-        //         }
-        //     })
-        // });
-        //
-        // const sceneCount = sceneDataList.length;
-        // const totalDuration = sceneDataList.reduce((acc, sceneData) => {
-        //     return acc + sceneData.sceneDuration;
-        // }, 0);
-        // const additionalTotalDurationUsage = totalDuration > 30
-        //     ? Math.ceil((totalDuration - 30) / 2) * 5
-        //     : 0;
-        // const additionalSceneCountUsage = sceneCount > 6
-        //     ? (sceneCount - 6) * 5
-        //     : 0;
-        // const creditUsage = 100 + additionalTotalDurationUsage + additionalSceneCountUsage;
-        // const patchUserCreditCountResult = await usersServerAPI.patchUserCreditCountByUserId(videoGenerationTask.user_id, -creditUsage);
-        //
-        // if (!patchUserCreditCountResult) {
-        //     return getNextBaseResponse({
-        //         success: false,
-        //         status: 500,
-        //         error: 'Failed to patch user\'s credit count.'
-        //     });
-        // }
-        //
-        // const checkFinalResult = await taskCheckAndCleanupIfCancelled(patchVideoGenerationTaskStatusFinalResult);
-        //
-        // if (checkFinalResult) {
-        //     return checkFinalResult;
-        // }
-        //
-        // // fire and forget
-        // internalFireAndForgetFetch(`${process.env.BASE_URL}/api/video/process/image?taskId=${taskId}`, {
-        //     method: 'POST',
-        // });
+        // // TEST!!
+        // await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
         //
         // return getNextBaseResponse({
         //     success: true,
         //     status: 200,
-        //     message: "Master Style Prompt is successfully generated."
+        //     message: "Generating MasterStyle Test finished."
         // });
+
+        const masterStylePositivePromptInfo = postMasterStyleInfoResult.masterStyleInfo;
+        const entityManifestList = postEntityCastingResult.entityManifestList;
+        const sceneCastingDataList = postEntityCastingResult.sceneCastingDataList;
+
+        const patchVideoGenerationTaskStatusFinalResult = await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, {
+            status: VideoGenerationTaskStatus.GENERATING_IMAGE_PROMPT,
+            master_style_info: masterStylePositivePromptInfo,
+            entity_manifest_list: entityManifestList,
+            scene_breakdown_list: sceneDataList.map((sceneData) => {
+                const sceneCastingData = sceneCastingDataList?.find((sceneCastingData) => {
+                    return sceneCastingData.sceneNumber === sceneData.sceneNumber;
+                });
+
+                const sceneVisualDescription = sceneCastingData?.sceneVisualDescription;
+                const sceneCastingIdList = sceneCastingData?.castIdList;
+
+                return {
+                    ...sceneData,
+                    sceneVisualDescription: sceneVisualDescription,
+                    sceneCastingEntityIdList: sceneCastingIdList,
+                }
+            })
+        });
+
+        const sceneCount = sceneDataList.length;
+        const totalDuration = sceneDataList.reduce((acc, sceneData) => {
+            return acc + sceneData.sceneDuration;
+        }, 0);
+        const additionalTotalDurationUsage = totalDuration > 30
+            ? Math.ceil((totalDuration - 30) / 2) * 5
+            : 0;
+        const additionalSceneCountUsage = sceneCount > 6
+            ? (sceneCount - 6) * 5
+            : 0;
+        const creditUsage = 100 + additionalTotalDurationUsage + additionalSceneCountUsage;
+        const patchUserCreditCountResult = await usersServerAPI.patchUserCreditCountByUserId(videoGenerationTask.user_id, -creditUsage);
+
+        if (!patchUserCreditCountResult) {
+            return getNextBaseResponse({
+                success: false,
+                status: 500,
+                error: 'Failed to patch user\'s credit count.'
+            });
+        }
+
+        const checkFinalResult = await taskCheckAndCleanupIfCancelled(patchVideoGenerationTaskStatusFinalResult);
+
+        if (checkFinalResult) {
+            return checkFinalResult;
+        }
+
+        // fire and forget
+        internalFireAndForgetFetch(`${process.env.BASE_URL}/api/video/process/image?taskId=${taskId}`, {
+            method: 'POST',
+        });
+
+        return getNextBaseResponse({
+            success: true,
+            status: 200,
+            message: "Master Style Prompt is successfully generated."
+        });
     } catch (error) {
         console.error(error);
 
