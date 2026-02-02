@@ -3,7 +3,7 @@ import {createSupabaseServiceRoleClient} from "@/lib/supabaseServiceRole";
 import {videoGenerationTasksServerAPI} from "@/api/server/videoGenerationTasksServerAPI";
 import {taskCheckAndCleanupIfCancelled} from "@/utils/taskCheckAndCleanupIfCancelled";
 import {SceneData, VideoGenerationTaskStatus} from "@/api/types/supabase/VideoGenerationTasks";
-import {openAIServerAPI} from "@/api/server/openAIServerAPI";
+import {llmServerAPI} from "@/api/server/llmServerAPI";
 import {videoServerAPI} from "@/api/server/videoServerAPI";
 import {getNextBaseResponse} from "@/utils/getNextBaseResponse";
 import {delay} from "@/utils/asyncUtils";
@@ -103,7 +103,7 @@ export async function POST(request: NextRequest) {
                 throw new Error('Image metadata is invalid.');
             }
 
-            const postVideoGenPromptResult = await openAIServerAPI.postVideoGenPrompt(
+            const postVideoGenPromptResult = await llmServerAPI.postVideoGenPrompt(
                 sceneData.narration,
                 sceneData.sceneNumber,
                 imageBase64,

@@ -3,7 +3,7 @@ import {sunoAPIServerAPI} from "@/api/server/sunoAPIServerAPI";
 import {PostGenerateRequest, SunoModelType} from "@/api/types/suno-api/SunoAPIRequests";
 import {videoGenerationTasksServerAPI} from "@/api/server/videoGenerationTasksServerAPI";
 import {taskCheckAndCleanupIfCancelled} from "@/utils/taskCheckAndCleanupIfCancelled";
-import {openAIServerAPI} from "@/api/server/openAIServerAPI";
+import {llmServerAPI} from "@/api/server/llmServerAPI";
 import {getNextBaseResponse} from "@/utils/getNextBaseResponse";
 import {MusicGenerationData} from "@/api/types/suno-api/MusicGenerationData";
 import {getIsValidRequestS2S} from "@/utils/getIsValidRequest";
@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
         }
 
         // OpenAI로 Music Generation Data 생성
-        const postMusicGenerationDataResult = await openAIServerAPI.postMusicGenerationData(
+        const postMusicGenerationDataResult = await llmServerAPI.postMusicGenerationData(
             videoGenerationTask.video_title,
             videoGenerationTask.video_description,
             videoGenerationTask.narration_script,

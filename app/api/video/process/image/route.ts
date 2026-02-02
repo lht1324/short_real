@@ -2,7 +2,7 @@ import {NextRequest} from "next/server";
 import {videoGenerationTasksServerAPI} from "@/api/server/videoGenerationTasksServerAPI";
 import {taskCheckAndCleanupIfCancelled} from "@/utils/taskCheckAndCleanupIfCancelled";
 import {SceneData, VideoGenerationTaskStatus} from "@/api/types/supabase/VideoGenerationTasks";
-import {openAIServerAPI} from "@/api/server/openAIServerAPI";
+import {llmServerAPI} from "@/api/server/llmServerAPI";
 import {imageServerAPI} from "@/api/server/imageServerAPI";
 import {getNextBaseResponse} from "@/utils/getNextBaseResponse";
 import {internalFireAndForgetFetch} from "@/utils/internalFetch";
@@ -67,7 +67,7 @@ export async function POST(request: NextRequest) {
 
         const sceneDataWithImageGenPromptPromiseList: Promise<SceneData>[] = sceneDataList.map(async (sceneData) => {
             console.log(`Scene #${sceneData.sceneNumber} postImageGenPrompt() is executed.`);
-            const postImageGenPromptResult = await openAIServerAPI.postImageGenPrompt(
+            const postImageGenPromptResult = await llmServerAPI.postImageGenPrompt(
                 sceneData.imageGenPromptDirective,
                 masterStyleInfo,
                 sceneData.narration,

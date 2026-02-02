@@ -10,24 +10,24 @@ import {StoryboardData} from "@/api/types/api/open-ai/scene/PostOpenAISceneRespo
 import {
     POST_SCRIPT_PROMPT,
     POST_SCENE_SEGMENTATION_PROMPT,
+    POST_ENTITY_CASTING_PROMPT,
     POST_MASTER_STYLE_INFO_PROMPT,
     POST_IMAGE_GEN_PROMPT_PROMPT,
     POST_IMAGE_GEN_PROMPT_NO_ENTITIES_PROMPT,
     POST_VIDEO_GEN_PROMPT_PROMPT,
-    POST_MUSIC_GENERATION_DATA_PROMPT, POST_ENTITY_CASTING_PROMPT,
+    POST_MUSIC_GENERATION_DATA_PROMPT,
 } from "@/api/types/open-ai/OpenAIPrompts";
 import {MusicGenerationData} from "@/api/types/suno-api/MusicGenerationData";
 import {Entity, InitialEntityManifestItem} from "@/api/types/open-ai/Entity";
 import {PHYSICS_LIBRARY} from "@/api/types/open-ai/PhysicsPromptLibrary";
 import {FluxPrompt, FluxPromptSubject} from "@/api/types/open-ai/FluxPrompt";
 import {
-    assembleFullImageGenPromptSentence,
     assembleFullVideoGenPromptSentence,
     composeOpticalAndTechnicalOption, generateTechnicalLensString, subjectVectorsToCameraVectorString,
     surgicallyReplaceVideoGenPromptByCameraKey, TechnicalIntent
 } from "@/utils/promptUtils";
 import {STYLE_PROMPT_LIBRARY} from "@/api/types/open-ai/StylePromptLibrary";
-import {GoogleGenAI} from "@google/genai";
+import {GoogleGenAI, SchemaUnion} from "@google/genai";
 
 enum OpenAIModel {
     GPT_4O_MINI = "gpt-4o-mini-2024-07-18",
@@ -38,9 +38,108 @@ enum DeepSeekModel {
     DEEPSEEK_THINKING = "deepseek-reasoner",
 }
 
+const videoGenResponseFormat: SchemaUnion = {
+    type: "OBJECT",
+    properties: {
+        logical_bridge: {
+            type: "OBJECT",
+            properties: {
+                scene_fundamental_data: {
+                    type: "OBJECT",
+                    properties: {
+                        scene_summary: { type: "STRING" },
+                        scene_summary_reason: { type: "STRING" },
+                        primary_movement: { type: "STRING" },
+                        primary_movement_reason: { type: "STRING" },
+                        narrative_vibe: { type: "STRING", enum: ["NORMAL", "CHAOTIC", "COMBAT", "ANXIOUS", "CATASTROPHIC", "VERTIGO", "SHOCK", "DREAMY", "SURREAL", "EMOTIONAL", "FOCUS"] },
+                        narrative_vibe_reason: { type: "STRING" },
+                        intensity_tier: { type: "STRING", enum: ["VERY_LOW", "LOW", "HIGH", "VERY_HIGH"] },
+                        intensity_tier_selected_reason: { type: "STRING" },
+                    },
+                    required: ["scene_summary", "scene_summary_reason", "primary_movement", "primary_movement_reason", "narrative_vibe", "narrative_vibe_reason", "intensity_tier", "intensity_tier_selected_reason"],
+                },
+                identity_logic: { type: "STRING" },
+                action_focus: { type: "STRING" },
+                primary_narrative_block: {
+                    type: "ARRAY",
+                    items: {
+                        type: "OBJECT",
+                        properties: {
+                            entity_id: { type: "STRING" },
+                            raw_sentence: { type: "STRING" },
+                            action_type: { type: "STRING" },
+                            action_type_reason: { type: "STRING" },
+                            verb_reason: { type: "STRING" },
+                            adverb_reason: { type: "STRING" },
+                        },
+                        required: ["entity_id", "raw_sentence", "action_type", "action_type_reason", "verb_reason", "adverb_reason"],
+                    }
+                },
+                atmospheric_lighting_delta: {
+                    type: "ARRAY",
+                    items: {
+                        type: "OBJECT",
+                        properties: {
+                            selected_atmospheric_or_lighting_layer: { type: "STRING" },
+                            selected_reason: { type: "STRING" },
+                        },
+                        required: ["selected_atmospheric_or_lighting_layer", "selected_reason"],
+                    }
+                },
+                cinematic_camera_vectors: {
+                    type: "OBJECT",
+                    properties: {
+                        // Subject & Camera Axis Ref: [X: Screen Left <-> Screen Right], [Y: Screen Bottom <-> Screen Top], [Z: Deep Background <-> Screen Surface]
+                        subject_vectors: {
+                            type: "OBJECT",
+                            properties: {
+                                sx: { type: "STRING", enum: ["$-X$", "$0X$", "$+X$"] },
+                                sy: { type: "STRING", enum: ["$-Y$", "$0Y$", "$+Y$"] },
+                                sz: { type: "STRING", enum: ["$-Z$", "$0Z$", "$+Z$"] },
+                            },
+                            required: ["sx", "sy", "sz"],
+                        },
+                        subject_vectors_reasoning: { type: "STRING" },
+                    },
+                    required: ["subject_vectors", "subject_vectors_reasoning"],
+                },
+                style: {
+                    type: "OBJECT",
+                    properties: {
+                        slot_1: { type: "STRING" },
+                        slot_2: { type: "STRING" },
+                        slot_1_reason: { type: "STRING" },
+                        slot_2_reason: { type: "STRING" },
+                    },
+                    required: ["slot_1", "slot_2", "slot_1_reason", "slot_2_reason"],
+                }
+            },
+            required: ["scene_fundamental_data", "identity_logic", "action_focus", "primary_narrative_block", "atmospheric_lighting_delta", "cinematic_camera_vectors", "style"],
+        },
+        reasoning: { type: "STRING" },
+        final_output_structure: {
+            type: "OBJECT",
+            properties: {
+                primary_narrative_block: { type: "STRING" },
+                atmospheric_lighting_delta: { type: "STRING" },
+                cinematic_camera_vector: { type: "STRING" },
+                style: { type: "STRING" },
+            },
+            required: ["primary_narrative_block", "atmospheric_lighting_delta", "cinematic_camera_vector", "style"],
+        },
+        video_gen_prompt: { type: "STRING" },
+    },
+    required: [
+        "logical_bridge",
+        "reasoning",
+        "final_output_structure",
+        "video_gen_prompt",
+    ],
+};
+
 const DEEPSEEK_BASE_URL = "https://api.deepseek.com";
 
-export const openAIServerAPI = {
+export const llmServerAPI = {
     async postScript(userPrompt: string): Promise<ScriptGenerationResponse> {
         try {
             // OpenAI API 키 확인
@@ -980,11 +1079,41 @@ Instruction: Generate the scene instruction JSON.
              *
              * await main();
              */
-            const client = new GoogleGenAI({});
+            const client = new GoogleGenAI({ apiKey });
+            const response = await client.models.generateContent({
+                model: "gemini-2.5-flash-preview-09-2025",
+                contents: [
+                    {
+                        role: 'user',
+                        parts: [
+                            {
+                                text: `
+${developerMessage}
+
+${userMessage}
+`
+                            },
+                            {
+                                inlineData: {
+                                    mimeType: 'image/jpeg',
+                                    data: imageBase64,
+                                }
+                            }
+                        ]
+                    }
+                ],
+                config: {
+                    responseMimeType: 'application/json',
+                    responseSchema: videoGenResponseFormat,
+                    temperature: 0.7,
+                }
+            })
 
 
-            console.log(`Scene #${sceneNumber} postVideoGenPrompt() usage: `, JSON.stringify(completion.usage))
-            const generatedContent = completion.choices[0]?.message?.content;
+            // console.log(`Scene #${sceneNumber} postVideoGenPrompt() usage: `, JSON.stringify(completion.usage))
+            // const generatedContent = completion.choices[0]?.message?.content;
+            console.log(`Scene #${sceneNumber} postVideoGenPrompt() usage: `, JSON.stringify(response))
+            const generatedContent = response.text;
 
             if (!generatedContent) {
                 return {

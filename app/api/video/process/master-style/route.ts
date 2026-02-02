@@ -2,7 +2,7 @@ import {NextRequest} from "next/server";
 import {videoGenerationTasksServerAPI} from "@/api/server/videoGenerationTasksServerAPI";
 import {taskCheckAndCleanupIfCancelled} from "@/utils/taskCheckAndCleanupIfCancelled";
 import {VideoGenerationTaskStatus} from "@/api/types/supabase/VideoGenerationTasks";
-import {openAIServerAPI} from "@/api/server/openAIServerAPI";
+import {llmServerAPI} from "@/api/server/llmServerAPI";
 import {STYLE_DATA_LIST} from "@/lib/styles";
 import {getNextBaseResponse} from "@/utils/getNextBaseResponse";
 import {getIsValidRequestS2S} from "@/utils/getIsValidRequest";
@@ -84,7 +84,7 @@ export async function POST(request: NextRequest) {
             });
         }
 
-        const postEntityCastingResult = await openAIServerAPI.postEntityCasting(
+        const postEntityCastingResult = await llmServerAPI.postEntityCasting(
             sceneDataList.map((sceneData) => {
                 return {
                     sceneNumber: sceneData.sceneNumber,
@@ -107,7 +107,7 @@ export async function POST(request: NextRequest) {
         }
 
         // 2. openAIServerAPI로 비디오 Scene 분리 데이터, 마스터 스타일 프롬프트 생성 요청
-        const postMasterStyleInfoResult = await openAIServerAPI.postMasterStyleInfo(
+        const postMasterStyleInfoResult = await llmServerAPI.postMasterStyleInfo(
             selectedStyle.generationParams,
             sceneDataList.map((sceneData) => {
                 return {

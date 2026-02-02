@@ -1,5 +1,5 @@
 import {NextRequest, NextResponse} from 'next/server';
-import {openAIServerAPI} from '@/api/server/openAIServerAPI';
+import {llmServerAPI} from '@/api/server/llmServerAPI';
 import {PostOpenAISceneRequest} from '@/api/types/api/open-ai/scene/PostOpenAISceneRequest';
 import {PostOpenAISceneResponse} from '@/api/types/api/open-ai/scene/PostOpenAISceneResponse';
 import {voiceServerAPI} from "@/api/server/voiceServerAPI";
@@ -74,7 +74,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<PostOpenA
         await videoGenerationTasksServerAPI.patchVideoGenerationTaskStatus(taskId ?? videoGenerationTask.id, VideoGenerationTaskStatus.DRAFTING);
 
         // OpenAI API를 통해 Scene 분리 처리
-        const postSceneSegmentationResult = await openAIServerAPI.postSceneSegmentation(
+        const postSceneSegmentationResult = await llmServerAPI.postSceneSegmentation(
             taskId ?? videoGenerationTask.id,
             narrationScript,
             voiceGenerationResult.subtitleSegmentList
