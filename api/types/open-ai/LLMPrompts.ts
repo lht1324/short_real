@@ -142,7 +142,7 @@ export const POST_ENTITY_CASTING_PROMPT = `
        - **<target_aspect_ratio>**: The physical canvas constraints formatted to [width:height] (e.g., "9:16", "16:9"). 
     2. **<full_script_context>**: The complete JSON-formatted script data including scene narration.
        - *Usage*: 
-         * **Era Extraction**: Identify the absolute **[ERA / PERIOD]** for \`demographics\` in <task_2_entity_manifest> and 'globalEnvironment.era' in <task_3_master_style_engineering>.
+         * **Era Extraction**: Identify the absolute **[ERA/PERIOD]** for \`demographics\` in <task_2_entity_manifest>.
          * **Entity Harvesting**: Identify ALL recurring characters and key objects for the 'entity_manifest_list'.
          * **Setting Analysis**: Determine the 'locationArchetype' based on recurring environmental descriptions.
   </input_data_interpretation>
