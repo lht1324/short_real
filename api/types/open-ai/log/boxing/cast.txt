@@ -1,0 +1,246 @@
+postEntityCasting() raw content: {
+  "scene_casting_list": [
+    {
+      "scene_number": 1,
+      "scene_visual_description": "The boxer stands on the boxing ring canvas with a bruised temple and glistening sweat drop under harsh lights. The boxing ring canvas supports the harsh reflection of arena lights.",
+      "included_cast_data_list": [
+        {"id": "boxer_01", "reasoning": "Primary subject in the scene, actively standing with bruised temple as described in narration."},
+        {"id": "boxing_ring_canvas", "reasoning": "Essential physical anchor that supports the boxer and reflects lights, providing spatial grounding for the vertical frame."}
+      ],
+      "excluded_cast_data_list": [
+        {"id": "sweat_drop", "reasoning": "Temporary feature on the boxer's skin, not a separate entity and excluded as per selective extraction rules."},
+        {"id": "arena_lights", "reasoning": "Generic environment element, discarded to focus on tangible entities as per casting rules."}
+      ],
+      "casting_logic": "Vertical aspect ratio 9:16 used to focus on the boxer in close-up with vertical layering, limiting primary subjects. The boxing ring canvas is included as a physical anchor to define the space. Physical consistency verified with modern boxing era from script context.",
+      "scene_empty_reasoning": ""
+    },
+    {
+      "scene_number": 2,
+      "scene_visual_description": "The boxer bites down on his mouthpiece while standing with wide eyes on the boxing ring canvas. The boxing ring ropes frame the edge of the canvas.",
+      "included_cast_data_list": [
+        {"id": "boxer_01", "reasoning": "Active subject biting mouthpiece and showing resolve as per narration."},
+        {"id": "mouthpiece", "reasoning": "Prop actively used and manipulated by the boxer, included as per interactive prop rule."},
+        {"id": "boxing_ring_canvas", "reasoning": "Anchor supporting the boxer's stance and physical context."},
+        {"id": "boxing_ring_ropes", "reasoning": "Static prop framing the ring, essential for spatial context and included as a physical anchor."}
+      ],
+      "excluded_cast_data_list": [],
+      "casting_logic": "Vertical framing emphasizes the boxer's upper body to prevent overcrowding. Mouthpiece included as an interactive prop, while ropes and canvas provide physical anchors. Era consistency maintained with modern boxing equipment from inferred setting.",
+      "scene_empty_reasoning": ""
+    },
+    {
+      "scene_number": 3,
+      "scene_visual_description": "The boxer steps back from the ropes raising his gloves on the boxing ring canvas. The referee signals the fight to continue from the ring edge. The boxing ring canvas holds the boxer's footprints and referee's position.",
+      "included_cast_data_list": [
+        {"id": "boxer_01", "reasoning": "Active subject stepping back and raising gloves as described in narration."},
+        {"id": "referee", "reasoning": "Active subject signaling the fight, included as a primary character."},
+        {"id": "gloves", "reasoning": "Prop worn and actively raised by the boxer, included as per interactive prop rule."},
+        {"id": "boxing_ring_canvas", "reasoning": "Anchor supporting both subjects and their actions."},
+        {"id": "boxing_ring_ropes", "reasoning": "Prop from which the boxer steps back, included as a physical anchor."}
+      ],
+      "excluded_cast_data_list": [],
+      "casting_logic": "Two active subjects placed with vertical layering to avoid side-by-side overcrowding in the 9:16 frame. Gloves and ropes included as essential props. Physical scale verified for close-up shots based on narrative focus.",
+      "scene_empty_reasoning": ""
+    },
+    {
+      "scene_number": 4,
+      "scene_visual_description": "Boxer 01 clashes with boxer 02 in the center of the boxing ring canvas. The front row seats support the screaming spectators.",
+      "included_cast_data_list": [
+        {"id": "boxer_01", "reasoning": "Active subject clashing in the ring as per narration."},
+        {"id": "boxer_02", "reasoning": "Active subject clashing with boxer_01, included as a second fighter."},
+        {"id": "boxing_ring_canvas", "reasoning": "Anchor for the clash and spatial grounding."},
+        {"id": "front_row_seats", "reasoning": "Static prop that supports the background spectators, adding depth and physical context."}
+      ],
+      "excluded_cast_data_list": [
+        {"id": "spectators", "reasoning": "Part of the background crowd, not individually specified and covered by front_row_seats as per selective extraction rules."}
+      ],
+      "casting_logic": "Vertical aspect ratio used to layer the two boxers in the center with front row seats in the background to maintain clarity. Front row seats included as a physical anchor for crowd presence. Era consistency with modern stadium seating inferred from script.",
+      "scene_empty_reasoning": ""
+    },
+    {
+      "scene_number": 5,
+      "scene_visual_description": "The stadium crowd erupts in light and noise around the boxing ring canvas. Boxer 02 falls to the canvas in knockout. The boxing ring canvas supports the fallen boxer and the cheering fans.",
+      "included_cast_data_list": [
+        {"id": "stadium_crowd", "reasoning": "Active background subject erupting in light and noise, included as a primary subject for atmospheric context."},
+        {"id": "boxer_02", "reasoning": "Active subject falling in knockout, key to the narrative climax."},
+        {"id": "boxing_ring_canvas", "reasoning": "Anchor supporting the fallen boxer and crowd atmosphere."},
+        {"id": "boxer_01", "reasoning": "Implied subject witnessing the knockout, included for narrative continuity based on script context."}
+      ],
+      "excluded_cast_data_list": [],
+      "casting_logic": "Vertical framing used to layer the crowd in background with boxers in foreground, emphasizing scale. Stadium crowd included as an active entity for emotional weight. Physical consistency verified with modern boxing event scale.",
+      "scene_empty_reasoning": ""
+    }
+  ],
+  "scene_casting_list_empty_reason": "",
+  "entity_manifest_list": [
+    {
+      "id": "boxer_01",
+      "role": "main_hero",
+      "type": "human",
+      "demographics": "Modern Day, Various, Professional Boxer, Male, Late 20s",
+      "appearance": {
+        "clothing_or_material": "Modern boxing shorts and tank top made of moisture-wicking fabric, with boxing gloves on hands.",
+        "position_descriptor": "Often center-weighted in the frame, with a direct gaze or focused stance.",
+        "hair": "Short, cropped hair, possibly sweaty and messy.",
+        "accessories": ["Mouthpiece", "Boxing gloves", "Athletic tape"],
+        "body_features": "Athletic build with visible muscles, bruised temple and face from the fight."
+      }
+    },
+    {
+      "id": "boxer_02",
+      "role": "sub_character",
+      "type": "human",
+      "demographics": "Modern Day, Various, Professional Boxer, Male, Late 20s",
+      "appearance": {
+        "clothing_or_material": "Similar boxing attire, possibly different color, with boxing gloves.",
+        "position_descriptor": "Often in opposition to boxer_01, positioned laterally or in background during clashes.",
+        "hair": "Short hair, similar style.",
+        "accessories": ["Boxing gloves", "Mouthpiece"],
+        "body_features": "Athletic build, with signs of fatigue and impact."
+      }
+    },
+    {
+      "id": "referee",
+      "role": "sub_character",
+      "type": "human",
+      "demographics": "Modern Day, Various, Boxing Referee, Male, 40s",
+      "appearance": {
+        "clothing_or_material": "Official referee shirt with stripes, black pants, and comfortable shoes.",
+        "position_descriptor": "Positioned at the ring edge or between boxers, often in profile or from the side.",
+        "hair": "Neat, short hair, possibly greying.",
+        "accessories": ["Whistle", "Stopwatch"],
+        "body_features": "Average build, focused expression."
+      }
+    },
+    {
+      "id": "mouthpiece",
+      "role": "prop",
+      "type": "object",
+      "demographics": "Modern Day, Sporting Goods, Mouthguard, Rubber/Silicone Material",
+      "appearance": {
+        "clothing_or_material": "Rubber or silicone material, molded to fit, with possible team colors.",
+        "position_descriptor": "Often close to the boxer's face, in use or held.",
+        "hair": "",
+        "accessories": [],
+        "body_features": "Small, handheld size."
+      }
+    },
+    {
+      "id": "gloves",
+      "role": "prop",
+      "type": "object",
+      "demographics": "Modern Day, Boxing Equipment, Boxing Gloves, Leather/Padding",
+      "appearance": {
+        "clothing_or_material": "Leather exterior with internal padding, laced or velcro closure.",
+        "position_descriptor": "Worn on the boxer's hands, often raised or in motion.",
+        "hair": "",
+        "accessories": [],
+        "body_features": "Bulky, padded shape."
+      }
+    },
+    {
+      "id": "boxing_ring_canvas",
+      "role": "prop",
+      "type": "object",
+      "demographics": "Modern Day, Boxing Arena, Ring Canvas, Vinyl/Canvas Material",
+      "appearance": {
+        "clothing_or_material": "Vinyl or canvas material, taut over the ring floor, with possible logos or markings.",
+        "position_descriptor": "Foreground anchor or background surface, supporting all action.",
+        "hair": "",
+        "accessories": [],
+        "body_features": "Large, flat surface with slight give."
+      }
+    },
+    {
+      "id": "boxing_ring_ropes",
+      "role": "prop",
+      "type": "object",
+      "demographics": "Modern Day, Boxing Arena, Ring Ropes, Rope with Padding",
+      "appearance": {
+        "clothing_or_material": "Rope wrapped with padding and tape, stretched between posts.",
+        "position_descriptor": "Framing the ring, often in the periphery.",
+        "hair": "",
+        "accessories": [],
+        "body_features": "Cylindrical, flexible structure."
+      }
+    },
+    {
+      "id": "front_row_seats",
+      "role": "prop",
+      "type": "object",
+      "demographics": "Modern Day, Stadium Seating, Arena Seats, Plastic/Metal Construction",
+      "appearance": {
+        "clothing_or_material": "Plastic seats with metal frames, possibly with cushions or markings.",
+        "position_descriptor": "Background anchor, supporting the crowd presence.",
+        "hair": "",
+        "accessories": [],
+        "body_features": "Row of seats, empty or occupied."
+      }
+    },
+    {
+      "id": "stadium_crowd",
+      "role": "background_extra",
+      "type": "object",
+      "demographics": "Modern Day, Sports Event, Stadium Crowd, Cheering Spectators",
+      "appearance": {
+        "clothing_or_material": "Diverse clothing of spectators, creating a textured, moving mass.",
+        "position_descriptor": "Background presence, often blurred or in motion to imply scale.",
+        "hair": "",
+        "accessories": [],
+        "body_features": "Large, amorphous group with varying shapes and colors."
+      }
+    }
+  ]
+}
+Scene #1 Reasoning
+Scene #1 Visual Description: The boxer stands on the boxing ring canvas with a bruised temple and glistening sweat drop under harsh lights. The boxing ring canvas supports the harsh reflection of arena lights.
+Scene #1 Casting Logic: Vertical aspect ratio 9:16 used to focus on the boxer in close-up with vertical layering, limiting primary subjects. The boxing ring canvas is included as a physical anchor to define the space. Physical consistency verified with modern boxing era from script context.
+Scene #1 Included Cast: boxer_01, boxing_ring_canvas
+Included Entity[boxer_01] reasoning: Primary subject in the scene, actively standing with bruised temple as described in narration.
+Included Entity[boxing_ring_canvas] reasoning: Essential physical anchor that supports the boxer and reflects lights, providing spatial grounding for the vertical frame.
+Scene #1 Excluded Cast: sweat_drop, arena_lights
+Excluded Entity[sweat_drop] reasoning: Temporary feature on the boxer's skin, not a separate entity and excluded as per selective extraction rules.
+Excluded Entity[arena_lights] reasoning: Generic environment element, discarded to focus on tangible entities as per casting rules.
+ 
+Scene #2 Reasoning
+Scene #2 Visual Description: The boxer bites down on his mouthpiece while standing with wide eyes on the boxing ring canvas. The boxing ring ropes frame the edge of the canvas.
+Scene #2 Casting Logic: Vertical framing emphasizes the boxer's upper body to prevent overcrowding. Mouthpiece included as an interactive prop, while ropes and canvas provide physical anchors. Era consistency maintained with modern boxing equipment from inferred setting.
+Scene #2 Included Cast: boxer_01, mouthpiece, boxing_ring_canvas, boxing_ring_ropes
+Included Entity[boxer_01] reasoning: Active subject biting mouthpiece and showing resolve as per narration.
+Included Entity[mouthpiece] reasoning: Prop actively used and manipulated by the boxer, included as per interactive prop rule.
+Included Entity[boxing_ring_canvas] reasoning: Anchor supporting the boxer's stance and physical context.
+Included Entity[boxing_ring_ropes] reasoning: Static prop framing the ring, essential for spatial context and included as a physical anchor.
+ 
+Scene #3 Reasoning
+Scene #3 Visual Description: The boxer steps back from the ropes raising his gloves on the boxing ring canvas. The referee signals the fight to continue from the ring edge. The boxing ring canvas holds the boxer's footprints and referee's position.
+Scene #3 Casting Logic: Two active subjects placed with vertical layering to avoid side-by-side overcrowding in the 9:16 frame. Gloves and ropes included as essential props. Physical scale verified for close-up shots based on narrative focus.
+Scene #3 Included Cast: boxer_01, referee, gloves, boxing_ring_canvas, boxing_ring_ropes
+Included Entity[boxer_01] reasoning: Active subject stepping back and raising gloves as described in narration.
+Included Entity[referee] reasoning: Active subject signaling the fight, included as a primary character.
+Included Entity[gloves] reasoning: Prop worn and actively raised by the boxer, included as per interactive prop rule.
+Included Entity[boxing_ring_canvas] reasoning: Anchor supporting both subjects and their actions.
+Included Entity[boxing_ring_ropes] reasoning: Prop from which the boxer steps back, included as a physical anchor.
+ 
+Scene #4 Reasoning
+Scene #4 Visual Description: Boxer 01 clashes with boxer 02 in the center of the boxing ring canvas. The front row seats support the screaming spectators.
+Scene #4 Casting Logic: Vertical aspect ratio used to layer the two boxers in the center with front row seats in the background to maintain clarity. Front row seats included as a physical anchor for crowd presence. Era consistency with modern stadium seating inferred from script.
+Scene #4 Included Cast: boxer_01, boxer_02, boxing_ring_canvas, front_row_seats
+Included Entity[boxer_01] reasoning: Active subject clashing in the ring as per narration.
+Included Entity[boxer_02] reasoning: Active subject clashing with boxer_01, included as a second fighter.
+Included Entity[boxing_ring_canvas] reasoning: Anchor for the clash and spatial grounding.
+Included Entity[front_row_seats] reasoning: Static prop that supports the background spectators, adding depth and physical context.
+Scene #4 Excluded Cast: spectators
+Excluded Entity[spectators] reasoning: Part of the background crowd, not individually specified and covered by front_row_seats as per selective extraction rules.
+ 
+Scene #5 Reasoning
+Scene #5 Visual Description: The stadium crowd erupts in light and noise around the boxing ring canvas. Boxer 02 falls to the canvas in knockout. The boxing ring canvas supports the fallen boxer and the cheering fans.
+Scene #5 Casting Logic: Vertical framing used to layer the crowd in background with boxers in foreground, emphasizing scale. Stadium crowd included as an active entity for emotional weight. Physical consistency verified with modern boxing event scale.
+Scene #5 Included Cast: stadium_crowd, boxer_02, boxing_ring_canvas, boxer_01
+Included Entity[stadium_crowd] reasoning: Active background subject erupting in light and noise, included as a primary subject for atmospheric context.
+Included Entity[boxer_02] reasoning: Active subject falling in knockout, key to the narrative climax.
+Included Entity[boxing_ring_canvas] reasoning: Anchor supporting the fallen boxer and crowd atmosphere.
+Included Entity[boxer_01] reasoning: Implied subject witnessing the knockout, included for narrative continuity based on script context.
+ 
+Entire Entity Id List: boxer_01, boxer_02, referee, mouthpiece, gloves, boxing_ring_canvas, boxing_ring_ropes, front_row_seats, stadium_crowd
+
+postMasterStyleInfo() raw content: {"master_style_info":{"optics":{"lensType":"Anamorphic","focusDepth":"Deep","exposureVibe":"High-Key","defaultISO":400},"colorAndLight":{"tonality":"Contrast-rich neutral palette with warm arena highlights","lightingSetup":"Harsh overhead key light with soft fill from stadium ambiance","globalHexPalette":{"materialAnchor":"#1E3A8A","keyLightSpectrumMin":"#FFD700","keyLightSpectrumMax":"#FFFFFF","fillLightSpectrumMin":"#A9A9A9","fillLightSpectrumMax":"#D3D3D3","shadowAnchor":"#000000","ambientSpectrumMin":"#2F4F4F","ambientSpectrumMax":"#778899"}},"fidelity":{"textureDetail":"Raw","grainLevel":"Clean","resolutionTarget":"4K"},"globalEnvironment":{"era":"Modern Day","locationArchetype":"Modern Indoor Boxing Arena"},"composition":{"framingStyle":"Full/Medium Wide","preferredAspectRatio":"9:16 Portrait Cinema"}}}
+MasterStyleInfo: {"optics":{"lensType":"Anamorphic","focusDepth":"Deep","exposureVibe":"High-Key","defaultISO":400},"colorAndLight":{"tonality":"Contrast-rich neutral palette with warm arena highlights","lightingSetup":"Harsh overhead key light with soft fill from stadium ambiance","globalHexPalette":{"materialAnchor":"#1E3A8A","keyLightSpectrumMin":"#FFD700","keyLightSpectrumMax":"#FFFFFF","fillLightSpectrumMin":"#A9A9A9","fillLightSpectrumMax":"#D3D3D3","shadowAnchor":"#000000","ambientSpectrumMin":"#2F4F4F","ambientSpectrumMax":"#778899"}},"fidelity":{"textureDetail":"Raw","grainLevel":"Clean","resolutionTarget":"4K"},"globalEnvironment":{"era":"Modern Day","locationArchetype":"Modern Indoor Boxing Arena"},"composition":{"framingStyle":"Full/Medium Wide","preferredAspectRatio":"9:16 Portrait Cinema"}}

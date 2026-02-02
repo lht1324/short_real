@@ -1,0 +1,275 @@
+Scene #1 imageGenPrompt: {
+  "scene": "Modern Day Boxing Boxer with a glistening sweat drop on a bruised temple under harsh lights",
+  "subjects": [
+    {
+      "id": "boxer_01",
+      "type": "The Boxer",
+      "description": "A professional boxer with an athletic build, wearing boxing gear and showing signs of a fight",
+      "clothes": "Streamlined moisture-wicking fabric of boxing shorts and tank top, clinging damply with sweat, reinforced with boxing gloves and athletic tape",
+      "accessories": [
+        "Mouthpiece",
+        "Boxing gloves",
+        "Athletic tape"
+      ],
+      "pose": "Positioned forward toward the camera, head tilted leftward with the bruised temple centered in extreme close-up",
+      "position": "foreground"
+    },
+    {
+      "id": "boxing_ring_canvas",
+      "type": "The Ring Canvas",
+      "description": "A boxing ring canvas made of vinyl or canvas material, taut and reflective under arena lights",
+      "clothes": "Taut vinyl or canvas material with a glossy finish, reflecting harsh overhead key light",
+      "accessories": [],
+      "pose": "Lying flat and stable on the ring floor, taut against the support structure",
+      "position": "background"
+    }
+  ],
+  "color_palette": [
+    "#1E3A8A",
+    "#FFFFFF",
+    "#D3D3D3"
+  ],
+  "lighting": "Harsh overhead key light with soft fill from stadium ambiance",
+  "mood": "Intense and dramatic atmosphere with high energy and contrast-rich visuals",
+  "background": "Blurred out-of-focus boxing ring canvas and distant arena lights, with high-contrast lighting and gritty texture"
+}
+Scene #1 OpticalAndTechnicalOption: {"style":"High-fidelity RAW photography with Raw surface detail and Clean organic texture.","camera":{"angle":"slightly low","distance":"medium wide vertical shot","focus":"sharp focus throughout the vertical frame","lens":"50mm","fNumber":"f/11.0","ISO":320},"composition":"vertical minimalist negative space","effects":["clean digital sensor finish","highly defined textures","hyper-detailed rendering","extreme visual fidelity","photorealistic textures","physically based rendering"]}
+Scene #1 ImageGenPromptSentence: A Modern Day Male Professional Boxer, with short cropped sweaty hair and a bruised temple, clad in moisture-wicking boxing shorts and tank top, equipped with boxing gloves and athletic tape, who is positioned forward with head tilted leftward for an extreme close-up in the foreground, with a Modern Day Boxing Arena Ring Canvas, constructed from taut vinyl or canvas material with a glossy finish, lying flat in the background.
+Scene #1 AssembledImageGenPromptSentence: A slightly low medium wide vertical shot captures a Modern Day Male Professional Boxer, with short cropped sweaty hair and a bruised temple, clad in moisture-wicking boxing shorts and tank top, equipped with boxing gloves and athletic tape, who is positioned forward with head tilted leftward for an extreme close-up in the foreground, with a Modern Day Boxing Arena Ring Canvas, constructed from taut vinyl or canvas material with a glossy finish, lying flat in the background. the scene is set in Blurred out-of-focus boxing ring canvas and distant arena lights, with high-contrast lighting and gritty texture, depicting Modern Day Boxing Boxer with a glistening sweat drop on a bruised temple under harsh lights with a vertical minimalist negative space composition, where the atmosphere is Intense and dramatic atmosphere with high energy and contrast-rich visuals, illuminated by Harsh overhead key light with soft fill from stadium ambiance and a color palette of (#1E3A8A, #FFFFFF, #D3D3D3). rendered in High-fidelity RAW photography with Raw surface detail and Clean organic texture, captured with a 50mm lens at f/11.0 for sharp focus throughout the vertical frame and ISO 320, featuring clean digital sensor finish, highly defined textures, hyper-detailed rendering, extreme visual fidelity, photorealistic textures, and physically based rendering.
+
+Scene #2 imageGenPrompt: {
+  "scene": "Modern Boxing Boxer with tense jaws and determined eyes in dramatic shadows",
+  "subjects": [
+    {
+      "id": "boxer_01",
+      "type": "The Boxer",
+      "description": "A professional boxer with an athletic build, wearing modern boxing gear including gloves and mouthpiece",
+      "clothes": "Moisture-wicking boxing shorts and tank top, with boxing gloves made of leather and padding",
+      "accessories": [
+        "Mouthpiece",
+        "Boxing gloves",
+        "Athletic tape"
+      ],
+      "pose": "Jaw clenched tightly on the mouthpiece, eyes wide with intensity, body grounded forward toward the camera",
+      "position": "foreground"
+    },
+    {
+      "id": "mouthpiece",
+      "type": "The Mouthguard",
+      "description": "A rubber or silicone mouthguard being bitten by the boxer",
+      "clothes": "Rubber or silicone material, molded to fit",
+      "accessories": [],
+      "pose": "Clamped firmly between the boxer's teeth",
+      "position": "foreground"
+    },
+    {
+      "id": "boxing_ring_canvas",
+      "type": "The Ring Canvas",
+      "description": "The canvas floor of the boxing ring",
+      "clothes": "Vinyl or canvas material, taut and marked",
+      "accessories": [],
+      "pose": "Flat and supporting the boxer's feet",
+      "position": "background"
+    },
+    {
+      "id": "boxing_ring_ropes",
+      "type": "The Ring Ropes",
+      "description": "The ropes framing the boxing ring",
+      "clothes": "Rope wrapped with padding and tape, stretched between posts",
+      "accessories": [],
+      "pose": "Taut and framing the scene",
+      "position": "background"
+    }
+  ],
+  "color_palette": [
+    "#1E3A8A",
+    "#FFFFFF",
+    "#D3D3D3"
+  ],
+  "lighting": "Harsh overhead key light with soft fill, high-key exposure",
+  "mood": "Intense and exhilarating atmosphere with high contrast and dramatic tension",
+  "background": "Blurred modern boxing arena environment with ring canvas and ropes under harsh lighting, creating dramatic shadows"
+}
+Scene #2 OpticalAndTechnicalOption: {"style":"High-fidelity RAW photography with Raw surface detail and Clean organic texture.","camera":{"angle":"over-the-shoulder","distance":"medium wide vertical shot","focus":"sharp focus throughout the vertical frame","lens":"50mm","fNumber":"f/11.0","ISO":320},"composition":"strong verticals","effects":["clean digital sensor finish","highly defined textures","hyper-detailed rendering","extreme visual fidelity","photorealistic textures","physically based rendering"]}
+Scene #2 ImageGenPromptSentence: A Modern Male Professional Boxer, with short, cropped sweaty hair and athletic build with bruised temple, clad in moisture-wicking boxing shorts and tank top, equipped with mouthpiece, boxing gloves, and athletic tape, who is jaw clenched tightly on the mouthpiece, eyes wide with exhaustion and resolve, positioned forward in the foreground, with the Ring Canvas and Ring Ropes in the background under harsh lighting creating dramatic shadows.
+Scene #2 AssembledImageGenPromptSentence: An over-the-shoulder medium wide vertical shot captures a Modern Male Professional Boxer, with short, cropped sweaty hair and athletic build with bruised temple, clad in moisture-wicking boxing shorts and tank top, equipped with mouthpiece, boxing gloves, and athletic tape, who is jaw clenched tightly on the mouthpiece, eyes wide with exhaustion and resolve, positioned forward in the foreground, with the Ring Canvas and Ring Ropes in the background under harsh lighting creating dramatic shadows. the scene is set in Blurred modern boxing arena environment with ring canvas and ropes under harsh lighting, creating dramatic shadows, depicting Modern Boxing Boxer with tense jaws and determined eyes in dramatic shadows with a strong verticals composition, where the atmosphere is Intense and exhilarating atmosphere with high contrast and dramatic tension, illuminated by Harsh overhead key light with soft fill, high-key exposure and a color palette of (#1E3A8A, #FFFFFF, #D3D3D3). rendered in High-fidelity RAW photography with Raw surface detail and Clean organic texture, captured with a 50mm lens at f/11.0 for sharp focus throughout the vertical frame and ISO 320, featuring clean digital sensor finish, highly defined textures, hyper-detailed rendering, extreme visual fidelity, photorealistic textures, and physically based rendering.
+
+Scene #3 imageGenPrompt: {
+  "scene": "Modern Boxing Boxer Illuminated by Harsh Arena Lights",
+  "subjects": [
+    {
+      "id": "boxer_01",
+      "type": "The Boxer",
+      "description": "A late 20s male professional boxer with an athletic build, wearing modern boxing shorts and a tank top, and boxing gloves.",
+      "clothes": "Sweat-drenched moisture-wicking fabric of modern boxing shorts and tank top, with leather boxing gloves.",
+      "accessories": [
+        "Mouthpiece",
+        "Boxing gloves",
+        "Athletic tape"
+      ],
+      "pose": "Recoiling backward with arms raised in a defensive guard, body braced against the canvas.",
+      "position": "midground"
+    },
+    {
+      "id": "referee",
+      "type": "The Referee",
+      "description": "A 40s male boxing referee with an average build, wearing an official referee shirt and black pants.",
+      "clothes": "Official referee shirt with stripes, black pants, and comfortable shoes.",
+      "accessories": [
+        "Whistle",
+        "Stopwatch"
+      ],
+      "pose": "Standing firmly at the ring edge, hand dropping to signal fight continuation.",
+      "position": "background"
+    },
+    {
+      "id": "gloves",
+      "type": "The Boxing Gloves",
+      "description": "A pair of bulky, padded boxing gloves made of leather with internal padding.",
+      "clothes": "Impact-ready leather with internal padding and secure closure.",
+      "accessories": [],
+      "pose": "Raised in a defensive guard on the boxer's hands.",
+      "position": "midground"
+    },
+    {
+      "id": "boxing_ring_canvas",
+      "type": "The Ring Canvas",
+      "description": "A large, flat vinyl or canvas surface taut over the boxing ring floor, with possible logos.",
+      "clothes": "Vinyl or canvas material, taut over the ring floor.",
+      "accessories": [],
+      "pose": "Lying flat, taut over the ring, supporting footprints.",
+      "position": "background"
+    },
+    {
+      "id": "boxing_ring_ropes",
+      "type": "The Ring Ropes",
+      "description": "Cylindrical ropes wrapped with padding and tape, stretching between posts to frame the ring.",
+      "clothes": "Rope wrapped with padding and tape, stretched between posts.",
+      "accessories": [],
+      "pose": "Stretched taut between posts, forming the ring boundary.",
+      "position": "background"
+    }
+  ],
+  "color_palette": [
+    "#1E3A8A",
+    "#FFFFFF",
+    "#D3D3D3"
+  ],
+  "lighting": "Harsh overhead key light with soft fill from stadium ambiance, high-key exposure",
+  "mood": "Intense and exhilarating atmosphere with dramatic contrast and warm arena highlights",
+  "background": "Modern indoor boxing arena with taut vinyl ring canvas, padded ring ropes stretched between posts, and harsh overhead lighting casting deep shadows."
+}
+Scene #3 OpticalAndTechnicalOption: {"style":"High-fidelity RAW photography with Raw surface detail and Clean organic texture.","camera":{"angle":"low angle","distance":"medium wide vertical shot","focus":"sharp focus throughout the vertical frame","lens":"50mm","fNumber":"f/11.0","ISO":320},"composition":"steep diagonal tension","effects":["clean digital sensor finish","highly defined textures","hyper-detailed rendering","extreme visual fidelity","photorealistic textures","physically based rendering"]}
+Scene #3 ImageGenPromptSentence: A Modern Day Male Professional Boxer, with short cropped sweaty hair and athletic build with visible muscles bruised temple and face, clad in sweat-drenched modern boxing shorts and tank top made of moisture-wicking fabric, equipped with mouthpiece, boxing gloves, and athletic tape, who is recoiling backward with arms raised in a defensive guard, body braced against the canvas in the midground, while in the background a Modern Day Male Boxing Referee, with neat short greying hair and average build focused expression, clad in official referee shirt with stripes black pants and comfortable shoes, equipped with whistle and stopwatch, is standing firmly with hand dropping to signal fight continuation, with the Boxing Gloves being raised midground, the Ring Canvas lying flat in the background, and the Ring Ropes stretched taut between posts in the background.
+Scene #3 AssembledImageGenPromptSentence: A low angle medium wide vertical shot captures a Modern Day Male Professional Boxer, with short cropped sweaty hair and athletic build with visible muscles bruised temple and face, clad in sweat-drenched modern boxing shorts and tank top made of moisture-wicking fabric, equipped with mouthpiece, boxing gloves, and athletic tape, who is recoiling backward with arms raised in a defensive guard, body braced against the canvas in the midground, while in the background a Modern Day Male Boxing Referee, with neat short greying hair and average build focused expression, clad in official referee shirt with stripes black pants and comfortable shoes, equipped with whistle and stopwatch, is standing firmly with hand dropping to signal fight continuation, with the Boxing Gloves being raised midground, the Ring Canvas lying flat in the background, and the Ring Ropes stretched taut between posts in the background. the scene is set in Modern indoor boxing arena with taut vinyl ring canvas, padded ring ropes stretched between posts, and harsh overhead lighting casting deep shadows, depicting Modern Boxing Boxer Illuminated by Harsh Arena Lights with a steep diagonal tension composition, where the atmosphere is Intense and exhilarating atmosphere with dramatic contrast and warm arena highlights, illuminated by Harsh overhead key light with soft fill from stadium ambiance, high-key exposure and a color palette of (#1E3A8A, #FFFFFF, #D3D3D3). rendered in High-fidelity RAW photography with Raw surface detail and Clean organic texture, captured with a 50mm lens at f/11.0 for sharp focus throughout the vertical frame and ISO 320, featuring clean digital sensor finish, highly defined textures, hyper-detailed rendering, extreme visual fidelity, photorealistic textures, and physically based rendering.
+
+Scene #4 imageGenPrompt: {
+  "scene": "Modern Boxing Arena Fighters clashing with motion blur",
+  "subjects": [
+    {
+      "id": "boxer_01",
+      "type": "Left Boxer",
+      "description": "A professional boxer with an athletic build, wearing boxing shorts and a tank top",
+      "clothes": "Moisture-wicking fabric boxing shorts and tank top, now sweat-drenched",
+      "accessories": [
+        "Mouthpiece",
+        "Boxing gloves",
+        "Athletic tape"
+      ],
+      "pose": "Clashing forward with motion-blurred fists, body coiled in impact",
+      "position": "midground"
+    },
+    {
+      "id": "boxer_02",
+      "type": "Right Boxer",
+      "description": "A professional boxer with an athletic build, wearing similar boxing attire",
+      "clothes": "Similar moisture-wicking boxing shorts and tank top, sweat-drenched",
+      "accessories": [
+        "Boxing gloves",
+        "Mouthpiece"
+      ],
+      "pose": "Recoiling from the clash with motion-blurred fists, body tensed",
+      "position": "midground"
+    },
+    {
+      "id": "boxing_ring_canvas",
+      "type": "Ring Canvas",
+      "description": "The boxing ring canvas made of vinyl material",
+      "clothes": "Vinyl canvas material taut over the ring floor",
+      "accessories": [],
+      "pose": "Stationary and taut underfoot",
+      "position": "background"
+    },
+    {
+      "id": "front_row_seats",
+      "type": "Arena Seats",
+      "description": "The front row seats made of plastic and metal",
+      "clothes": "Plastic seats with metal frames",
+      "accessories": [],
+      "pose": "Static with spectators visible",
+      "position": "background"
+    }
+  ],
+  "color_palette": [
+    "#1E3A8A",
+    "#FFFFFF",
+    "#D3D3D3"
+  ],
+  "lighting": "Harsh overhead key light with soft fill from stadium ambiance",
+  "mood": "Intense and exhilarating atmosphere with high contrast and warm arena highlights",
+  "background": "Modern indoor boxing arena with flashing lights, frozen roaring crowd in the seats, and the ring canvas as the focal point"
+}
+Scene #4 OpticalAndTechnicalOption: {"style":"High-fidelity RAW photography with Raw surface detail and Clean organic texture.","camera":{"angle":"low angle","distance":"medium wide vertical shot","focus":"sharp focus throughout the vertical frame","lens":"50mm","fNumber":"f/11.0","ISO":320},"composition":"steep diagonal tension","effects":["clean digital sensor finish","highly defined textures","hyper-detailed rendering","extreme visual fidelity","photorealistic textures","physically based rendering"]}
+Scene #4 ImageGenPromptSentence: A Modern Day Male Professional Boxer, with short sweaty hair and an athletic build with bruised temple and face, clad in moisture-wicking boxing shorts and tank top, equipped with a mouthpiece, boxing gloves, and athletic tape, who is clashing forward with motion-blurred fists in the midground, while a Modern Day Male Professional Boxer, with short hair and an athletic build with signs of fatigue, clad in similar boxing attire, equipped with boxing gloves and a mouthpiece, is recoiling from the clash with motion-blurred fists in the midground, with the Modern Day Boxing Arena Ring Canvas, constructed from vinyl canvas material, which is stationary and taut in the background, and the Modern Day Stadium Seating Arena Seats, made of plastic and metal, which are static with spectators in the background.
+Scene #4 AssembledImageGenPromptSentence: A low angle medium wide vertical shot captures a Modern Day Male Professional Boxer, with short sweaty hair and an athletic build with bruised temple and face, clad in moisture-wicking boxing shorts and tank top, equipped with a mouthpiece, boxing gloves, and athletic tape, who is clashing forward with motion-blurred fists in the midground, while a Modern Day Male Professional Boxer, with short hair and an athletic build with signs of fatigue, clad in similar boxing attire, equipped with boxing gloves and a mouthpiece, is recoiling from the clash with motion-blurred fists in the midground, with the Modern Day Boxing Arena Ring Canvas, constructed from vinyl canvas material, which is stationary and taut in the background, and the Modern Day Stadium Seating Arena Seats, made of plastic and metal, which are static with spectators in the background. the scene is set in Modern indoor boxing arena with flashing lights, frozen roaring crowd in the seats, and the ring canvas as the focal point, depicting Modern Boxing Arena Fighters clashing with motion blur with a steep diagonal tension composition, where the atmosphere is Intense and exhilarating atmosphere with high contrast and warm arena highlights, illuminated by Harsh overhead key light with soft fill from stadium ambiance and a color palette of (#1E3A8A, #FFFFFF, #D3D3D3). rendered in High-fidelity RAW photography with Raw surface detail and Clean organic texture, captured with a 50mm lens at f/11.0 for sharp focus throughout the vertical frame and ISO 320, featuring clean digital sensor finish, highly defined textures, hyper-detailed rendering, extreme visual fidelity, photorealistic textures, and physically based rendering.
+
+Scene #5 imageGenPrompt: {
+  "scene": "Modern boxing arena with an erupting crowd under neon lights during a knockout moment",
+  "subjects": [
+    {
+      "id": "boxer_01",
+      "type": "Left Boxer",
+      "description": "A professional boxer with athletic build, wearing boxing attire and gloves",
+      "clothes": "Sweat-drenched moisture-wicking boxing shorts and tank top",
+      "accessories": [
+        "Mouthpiece",
+        "Boxing gloves",
+        "Athletic tape"
+      ],
+      "pose": "Standing with arms raised in victory, looking down at the fallen opponent in the midground",
+      "position": "midground"
+    },
+    {
+      "id": "boxer_02",
+      "type": "Right Boxer",
+      "description": "A professional boxer falling to the canvas after knockout",
+      "clothes": "Similar boxing attire, possibly different color, sweat-stained",
+      "accessories": [
+        "Boxing gloves",
+        "Mouthpiece"
+      ],
+      "pose": "Falling backward to the canvas with limbs splayed in the midground",
+      "position": "midground"
+    },
+    {
+      "id": "boxing_ring_canvas",
+      "type": "Ring Canvas",
+      "description": "The boxing ring surface supporting the action",
+      "clothes": "Vinyl or canvas material taut over the floor with logos",
+      "accessories": [],
+      "pose": "Laying flat with the fallen boxer on it in the foreground",
+      "position": "foreground"
+    }
+  ],
+  "color_palette": [
+    "#1E3A8A",
+    "#FFFFFF",
+    "#778899"
+  ],
+  "lighting": "Harsh overhead key light with soft fill from stadium ambiance, high-key exposure",
+  "mood": "Intense and exhilarating atmosphere with contrast-rich warm highlights",
+  "background": "Packed modern indoor stadium with thousands of cheering spectators forming a wave of celebration under neon and floodlights, with the boxing ring canvas below supporting the action"
+}
+Scene #5 OpticalAndTechnicalOption: {"style":"High-fidelity RAW photography with Raw surface detail and Clean organic texture.","camera":{"angle":"high angle shot looking down","distance":"medium wide vertical shot","focus":"sharp focus throughout the vertical frame","lens":"50mm","fNumber":"f/11.0","ISO":320},"composition":"low-to-high leading lines","effects":["clean digital sensor finish","highly defined textures","hyper-detailed rendering","extreme visual fidelity","photorealistic textures","physically based rendering"]}
+Scene #5 ImageGenPromptSentence: The Left Boxer, with short, cropped sweaty hair and an athletic build with bruised temple, clad in sweat-drenched moisture-wicking boxing attire, equipped with a mouthpiece, boxing gloves, and athletic tape, who is standing triumphantly in the midground, while the Right Boxer, with short hair and an athletic build with signs of fatigue, clad in similar boxing attire, equipped with boxing gloves and mouthpiece, is falling to the canvas in the midground, with the Ring Canvas, constructed from vinyl or canvas material, supporting in the foreground.
+Scene #5 AssembledImageGenPromptSentence: A high angle shot looking down medium wide vertical shot captures the Left Boxer, with short, cropped sweaty hair and an athletic build with bruised temple, clad in sweat-drenched moisture-wicking boxing attire, equipped with a mouthpiece, boxing gloves, and athletic tape, who is standing triumphantly in the midground, while the Right Boxer, with short hair and an athletic build with signs of fatigue, clad in similar boxing attire, equipped with boxing gloves and mouthpiece, is falling to the canvas in the midground, with the Ring Canvas, constructed from vinyl or canvas material, supporting in the foreground. the scene is set in Packed modern indoor stadium with thousands of cheering spectators forming a wave of celebration under neon and floodlights, with the boxing ring canvas below supporting the action, depicting Modern boxing arena with an erupting crowd under neon lights during a knockout moment with a low-to-high leading lines composition, where the atmosphere is Intense and exhilarating atmosphere with contrast-rich warm highlights, illuminated by Harsh overhead key light with soft fill from stadium ambiance, high-key exposure and a color palette of (#1E3A8A, #FFFFFF, #778899). rendered in High-fidelity RAW photography with Raw surface detail and Clean organic texture, captured with a 50mm lens at f/11.0 for sharp focus throughout the vertical frame and ISO 320, featuring clean digital sensor finish, highly defined textures, hyper-detailed rendering, extreme visual fidelity, photorealistic textures, and physically based rendering.

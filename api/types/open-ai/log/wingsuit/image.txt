@@ -1,0 +1,172 @@
+Scene #1 imageGenPrompt: {
+  "scene": "Modern Day verdant mountain range shrouded in morning mist under soft natural light",
+  "subjects": [
+    {
+      "type": "mountain_range",
+      "description": "A silent, verdant mountain range with lush green foliage and misty peaks",
+      "pose": "stretching across the horizon",
+      "position": "Occupying the entire background, towering over the vertical frame"
+    }
+  ],
+  "color_palette": [
+    "#2F4F4F",
+    "#FFA500",
+    "#E6E6FA"
+  ],
+  "lighting": "Outdoor daylight with directional morning sun and ambient sky fill",
+  "mood": "Serene and expansive atmosphere with vibrant natural hues"
+}
+Scene #1 OpticalAndTechnicalOption: {"style":"High-fidelity RAW photography with Raw surface detail and Clean organic texture.","camera":{"angle":"high angle shot looking down","distance":"vertical full-body action shot","focus":"sharp focus throughout the vertical frame","lens":"35mm","fNumber":"f/11.0","ISO":160},"composition":"low-to-high leading lines","effects":["clean digital sensor finish","highly defined textures","hyper-detailed rendering","extreme visual fidelity","photorealistic textures","physically based rendering"]}
+Scene #1 ImageGenPromptSentence: A verdant mountain range stretching across the horizon in the background, towering over the vertical frame.
+Scene #1 AssembledImageGenPromptSentence: A high angle shot looking down vertical full-body action shot captures a verdant mountain range stretching across the horizon in the background, towering over the vertical frame. the scene is set in undefined, depicting Modern Day verdant mountain range shrouded in morning mist under soft natural light with a low-to-high leading lines composition, where the atmosphere is Serene and expansive atmosphere with vibrant natural hues, illuminated by Outdoor daylight with directional morning sun and ambient sky fill and a color palette of (#2F4F4F, #FFA500, #E6E6FA). rendered in High-fidelity RAW photography with Raw surface detail and Clean organic texture, captured with a 35mm lens at f/11.0 for sharp focus throughout the vertical frame and ISO 160, featuring clean digital sensor finish, highly defined textures, hyper-detailed rendering, extreme visual fidelity, photorealistic textures, and physically based rendering.
+
+Scene #2 imageGenPrompt: {
+  "scene": "Modern extreme sports wingsuit jumper leaning forward with suit snapping open in the wind.",
+  "subjects": [
+    {
+      "id": "jumper",
+      "type": "The Jumper",
+      "description": "A wingsuit jumper wearing an aerodynamic suit, helmet, and goggles.",
+      "clothes": "Form-fitting wingsuit made of aerodynamic nylon with padded sections, fabric snapping taut in the wind.",
+      "accessories": [
+        "Aviator helmet",
+        "Protective goggles",
+        "Altimeter watch",
+        "Parachute harness"
+      ],
+      "pose": "Leaning forward towards the camera, body streamlined against the wind, wingsuit fabric snapping open dynamically.",
+      "position": "foreground"
+    }
+  ],
+  "color_palette": [
+    "#2F4F4F",
+    "#FFCC00",
+    "#99CCFF"
+  ],
+  "lighting": "Outdoor daylight with directional sun key and ambient sky fill",
+  "mood": "Exhilarating and intense atmosphere with a sense of speed and freedom.",
+  "background": "A vertical backdrop of green mountain ranges with a rushing river below, under a clear sky."
+}
+Scene #2 OpticalAndTechnicalOption: {"style":"High-fidelity RAW photography with Raw surface detail and Clean organic texture.","camera":{"angle":"slightly low","distance":"vertical full-body action shot","focus":"sharp focus throughout the vertical frame","lens":"35mm","fNumber":"f/11.0","ISO":160},"composition":"steep diagonal tension","effects":["clean digital sensor finish","highly defined textures","hyper-detailed rendering","extreme visual fidelity","photorealistic textures","physically based rendering"]}
+Scene #2 ImageGenPromptSentence: A Modern Day Caucasian Male wingsuit jumper, with an athletic and streamlined build and visible muscle definition, clad in a form-fitting wingsuit made of aerodynamic nylon, equipped with an aviator helmet, protective goggles, an altimeter watch, and a parachute harness, who is leaning forward towards the camera, body streamlined against the wind, wingsuit fabric snapping open dynamically in the foreground.
+Scene #2 AssembledImageGenPromptSentence: A slightly low vertical full-body action shot captures a Modern Day Caucasian Male wingsuit jumper, with an athletic and streamlined build and visible muscle definition, clad in a form-fitting wingsuit made of aerodynamic nylon, equipped with an aviator helmet, protective goggles, an altimeter watch, and a parachute harness, who is leaning forward towards the camera, body streamlined against the wind, wingsuit fabric snapping open dynamically in the foreground. the scene is set in A vertical backdrop of green mountain ranges with a rushing river below, under a clear sky, depicting Modern extreme sports wingsuit jumper leaning forward with suit snapping open in the wind. with a steep diagonal tension composition, where the atmosphere is Exhilarating and intense atmosphere with a sense of speed and freedom, illuminated by Outdoor daylight with directional sun key and ambient sky fill and a color palette of (#2F4F4F, #FFCC00, #99CCFF). rendered in High-fidelity RAW photography with Raw surface detail and Clean organic texture, captured with a 35mm lens at f/11.0 for sharp focus throughout the vertical frame and ISO 160, featuring clean digital sensor finish, highly defined textures, hyper-detailed rendering, extreme visual fidelity, photorealistic textures, and physically based rendering.
+
+Scene #3 imageGenPrompt: {
+  "scene": "Modern Day wingsuit jumper suspended in high-speed descent.",
+  "subjects": [
+    {
+      "id": "jumper",
+      "type": "The Wingsuit Jumper",
+      "description": "A lean wingsuit athlete wearing an aerodynamic suit, helmet, and goggles.",
+      "clothes": "Streamlined ripstop nylon fabric with high-tensile weave, matte finish for aerodynamics.",
+      "accessories": [
+        "Aviator helmet",
+        "Protective goggles",
+        "Altimeter watch",
+        "Parachute harness"
+      ],
+      "pose": "Plummeting downward in a streamlined posture, body rigid against the wind resistance.",
+      "position": "foreground"
+    },
+    {
+      "id": "cliff_face",
+      "type": "The Cliff Face",
+      "description": "A sheer vertical cliff face with rugged rock texture.",
+      "clothes": "Rugged rock formation with coarse texture.",
+      "accessories": [],
+      "pose": "Towering vertically in the background.",
+      "position": "background"
+    }
+  ],
+  "color_palette": [
+    "#2F4F4F",
+    "#FFFFE0",
+    "#B0E0E6"
+  ],
+  "lighting": "Natural outdoor daylight with directional sunlight and ambient sky fill.",
+  "mood": "Exhilarating and intense atmosphere with a sense of high-speed freedom.",
+  "background": "Vertical cliff face rushing past as a blur of rugged rock, with deep valleys and distant mountains in the haze."
+}
+Scene #3 OpticalAndTechnicalOption: {"style":"High-fidelity RAW photography with Raw surface detail and Clean organic texture.","camera":{"angle":"slightly low","distance":"vertical full-body action shot","focus":"sharp focus throughout the vertical frame","lens":"35mm","fNumber":"f/11.0","ISO":160},"composition":"vertical S-curve","effects":["clean digital sensor finish","highly defined textures","hyper-detailed rendering","extreme visual fidelity","photorealistic textures","physically based rendering"]}
+Scene #3 ImageGenPromptSentence: A Modern Day Caucasian male wingsuit jumper, with an athletic and streamlined build clad in a form-fitting aerodynamic wingsuit and equipped with an aviator helmet, protective goggles, altimeter watch, and parachute harness, who is plummeting downward in a streamlined posture in the foreground, while a Modern Day natural mountain landscape cliff face, featuring a rugged rock formation with coarse texture, is towering vertically in the background.
+Scene #3 AssembledImageGenPromptSentence: A slightly low vertical full-body action shot captures a Modern Day Caucasian male wingsuit jumper, with an athletic and streamlined build clad in a form-fitting aerodynamic wingsuit and equipped with an aviator helmet, protective goggles, altimeter watch, and parachute harness, who is plummeting downward in a streamlined posture in the foreground, while a Modern Day natural mountain landscape cliff face, featuring a rugged rock formation with coarse texture, is towering vertically in the background. the scene is set in Vertical cliff face rushing past as a blur of rugged rock, with deep valleys and distant mountains in the haze, depicting Modern Day wingsuit jumper suspended in high-speed descent. with a vertical S-curve composition, where the atmosphere is Exhilarating and intense atmosphere with a sense of high-speed freedom, illuminated by Natural outdoor daylight with directional sunlight and ambient sky fill. and a color palette of (#2F4F4F, #FFFFE0, #B0E0E6). rendered in High-fidelity RAW photography with Raw surface detail and Clean organic texture, captured with a 35mm lens at f/11.0 for sharp focus throughout the vertical frame and ISO 160, featuring clean digital sensor finish, highly defined textures, hyper-detailed rendering, extreme visual fidelity, photorealistic textures, and physically based rendering.
+
+Scene #4 imageGenPrompt: {
+  "scene": "Extreme sports wingsuit jumper navigating blurring rock terrain",
+  "subjects": [
+    {
+      "id": "jumper",
+      "type": "The Wingsuit Jumper",
+      "description": "A wingsuit jumper wearing an aerodynamic suit, helmet, and goggles",
+      "clothes": "Streamlined ripstop nylon fabric with high-tensile weave, reinforced padding, and matte finish for aerodynamics",
+      "accessories": [
+        "Aerodynamic composite helmet",
+        "Tinted protective goggles",
+        "Digital altimeter watch",
+        "Secure parachute harness"
+      ],
+      "pose": "Flying rightward with body arched in streamlined posture, limbs positioned for aerodynamics, suspended mid-air",
+      "position": "midground"
+    },
+    {
+      "id": "rocks_and_walls",
+      "type": "The Rocks and Walls",
+      "description": "Rugged rock walls with black and brown surfaces, creating a blurred background",
+      "clothes": "Mixed black and brown rock surfaces with jagged textures and motion blur",
+      "accessories": [],
+      "pose": "Rushing past in a blur, inches from the lens",
+      "position": "foreground"
+    }
+  ],
+  "color_palette": [
+    "#2F4F4F",
+    "#FFFFE0",
+    "#B0E0E6"
+  ],
+  "lighting": "Outdoor daylight with directional sun key and ambient sky fill, natural exposure",
+  "mood": "Exhilarating and intense atmosphere with a sense of speed and freedom, enhanced by vibrant colors",
+  "background": "Rugged rock walls in black and brown tones, suspended in motion blur inches from the lens, with mountainous terrain in the distance under a clear sky"
+}
+Scene #4 OpticalAndTechnicalOption: {"style":"High-fidelity RAW photography with Raw surface detail and Clean organic texture.","camera":{"angle":"slightly low","distance":"vertical full-body action shot","focus":"sharp focus throughout the vertical frame","lens":"35mm","fNumber":"f/11.0","ISO":160},"composition":"steep diagonal tension","effects":["clean digital sensor finish","highly defined textures","hyper-detailed rendering","extreme visual fidelity","photorealistic textures","physically based rendering"]}
+Scene #4 ImageGenPromptSentence: A Modern Day Caucasian Male Wingsuit Jumper, with an athletic and streamlined build, clad in a form-fitting wingsuit made of aerodynamic nylon, equipped with an aviator helmet, protective goggles, altimeter watch, and parachute harness, who is flying rightward with body arched in streamlined posture, limbs positioned for aerodynamics, suspended mid-air against the mountain backdrop in the midground, with the Rocks and Walls, constructed from mixed black and brown rock surfaces with jagged textures, rushing past in a blur, inches from the lens in the foreground.
+Scene #4 AssembledImageGenPromptSentence: A slightly low vertical full-body action shot captures a Modern Day Caucasian Male Wingsuit Jumper, with an athletic and streamlined build, clad in a form-fitting wingsuit made of aerodynamic nylon, equipped with an aviator helmet, protective goggles, altimeter watch, and parachute harness, who is flying rightward with body arched in streamlined posture, limbs positioned for aerodynamics, suspended mid-air against the mountain backdrop in the midground, with the Rocks and Walls, constructed from mixed black and brown rock surfaces with jagged textures, rushing past in a blur, inches from the lens in the foreground. the scene is set in Rugged rock walls in black and brown tones, suspended in motion blur inches from the lens, with mountainous terrain in the distance under a clear sky, depicting Extreme sports wingsuit jumper navigating blurring rock terrain with a steep diagonal tension composition, where the atmosphere is Exhilarating and intense atmosphere with a sense of speed and freedom, enhanced by vibrant colors, illuminated by Outdoor daylight with directional sun key and ambient sky fill, natural exposure and a color palette of (#2F4F4F, #FFFFE0, #B0E0E6). rendered in High-fidelity RAW photography with Raw surface detail and Clean organic texture, captured with a 35mm lens at f/11.0 for sharp focus throughout the vertical frame and ISO 160, featuring clean digital sensor finish, highly defined textures, hyper-detailed rendering, extreme visual fidelity, photorealistic textures, and physically based rendering.
+
+Scene #5 imageGenPrompt: {
+  "scene": "Modern Day wingsuit jumper skimming the rushing river",
+  "subjects": [
+    {
+      "id": "jumper",
+      "type": "The Wingsuit Jumper",
+      "description": "A wingsuit jumper wearing an aerodynamic nylon suit, aviator helmet, and protective goggles.",
+      "clothes": "Streamlined, form-fitting nylon wingsuit with padded sections and aerodynamic texture, taut against the body.",
+      "accessories": [
+        "Aviator helmet",
+        "Protective goggles",
+        "Altimeter watch",
+        "Parachute harness"
+      ],
+      "pose": "Pulling up hard upward with body arched against the wind resistance, skimming the river surface.",
+      "position": "midground"
+    },
+    {
+      "id": "river",
+      "type": "The Rushing River",
+      "description": "A rushing river with whitewater rapids and a glistening water surface.",
+      "clothes": "Fluid, turbulent water with frothy rapids and reflective surface, glistening in the light.",
+      "accessories": [],
+      "pose": "Flowing rapidly leftward with turbulent whitewater and spray.",
+      "position": "background"
+    }
+  ],
+  "color_palette": [
+    "#2F4F4F",
+    "#FFFFE0",
+    "#B0E0E6"
+  ],
+  "lighting": "Natural outdoor daylight with directional sunlight and ambient sky fill",
+  "mood": "Exhilarating and intense atmosphere with vibrant cinematic saturation",
+  "background": "Mountainous terrain with a rushing river below, expansive golden horizon in the distance, under a vibrant sky with clean air."
+}
+Scene #5 OpticalAndTechnicalOption: {"style":"High-fidelity RAW photography with Raw surface detail and Clean organic texture.","camera":{"angle":"low angle","distance":"vertical full-body action shot","focus":"sharp focus throughout the vertical frame","lens":"35mm","fNumber":"f/11.0","ISO":160},"composition":"low-to-high leading lines","effects":["clean digital sensor finish","highly defined textures","hyper-detailed rendering","extreme visual fidelity","photorealistic textures","physically based rendering"]}
+Scene #5 ImageGenPromptSentence: a Modern Day Caucasian Male wingsuit jumper, with an athletic and streamlined build, clad in a form-fitting wingsuit made of aerodynamic nylon, equipped with an aviator helmet, protective goggles, altimeter watch, and parachute harness, who is pulling up hard upward with body arched against the wind resistance, skimming the river surface in the midground, with a Modern Day natural rushing river, featuring a glistening water surface with frothy white rapids, flowing rapidly leftward with turbulent whitewater and spray in the background.
+Scene #5 AssembledImageGenPromptSentence: A low angle vertical full-body action shot captures a Modern Day Caucasian Male wingsuit jumper, with an athletic and streamlined build, clad in a form-fitting wingsuit made of aerodynamic nylon, equipped with an aviator helmet, protective goggles, altimeter watch, and parachute harness, who is pulling up hard upward with body arched against the wind resistance, skimming the river surface in the midground, with a Modern Day natural rushing river, featuring a glistening water surface with frothy white rapids, flowing rapidly leftward with turbulent whitewater and spray in the background. the scene is set in Mountainous terrain with a rushing river below, expansive golden horizon in the distance, under a vibrant sky with clean air, depicting Modern Day wingsuit jumper skimming the rushing river with a low-to-high leading lines composition, where the atmosphere is Exhilarating and intense atmosphere with vibrant cinematic saturation, illuminated by Natural outdoor daylight with directional sunlight and ambient sky fill and a color palette of (#2F4F4F, #FFFFE0, #B0E0E6). rendered in High-fidelity RAW photography with Raw surface detail and Clean organic texture, captured with a 35mm lens at f/11.0 for sharp focus throughout the vertical frame and ISO 160, featuring clean digital sensor finish, highly defined textures, hyper-detailed rendering, extreme visual fidelity, photorealistic textures, and physically based rendering.
