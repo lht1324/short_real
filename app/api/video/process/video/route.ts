@@ -135,7 +135,7 @@ export async function POST(request: NextRequest) {
         //     success: true,
         //     status: 200,
         //     message: "Generating VideoGenPrompt Test finished."
-        // })
+        // });
 
         const patchVideoGenerationTaskResult = await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, {
             status: VideoGenerationTaskStatus.GENERATING_VIDEO,

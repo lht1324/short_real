@@ -739,3 +739,44 @@ export function composeOpticalAndTechnicalOption(
         }),
     }
 }
+
+export function assembleEnvironmentalAndAtmosphereSentence(
+    environmentalAndAtmosphereOptions: Omit<FluxPrompt, 'camera' | 'style' | 'effects'>,
+) {
+    const { subjects, scene, background, composition, mood, lighting, color_palette } = environmentalAndAtmosphereOptions;
+
+    // --- UNIT 4 - Sentence 2: Environment & Atmosphere ---
+    const hexPalette = `(${color_palette.join(', ')})`;
+    const s2Connector = subjects.length > 0 ? `depicting ${scene} with a` : `arranged in a`;
+    // 문장 시작은 대문자로 (Unit 4 준수)
+    const environmentalAndAtmosphereSentence = `the scene is set in ${background}, ${s2Connector} ${composition} composition, where the atmosphere is ${mood}, illuminated by ${lighting} and a color palette of ${hexPalette}`;
+
+    return environmentalAndAtmosphereSentence
+        .replaceAll(".,", ",")
+        .replaceAll("  ", " ");
+}
+
+export function assembleOpticalAndTechnicalSentence(
+    opticalAndTechnicalOptions: Omit<FluxPrompt, 'scene' | 'subjects' | 'color_palette' | 'composition' | 'lighting' | 'mood' | 'background'>,
+    canvasType: 'Vertical' | 'Horizontal' | 'Square' = 'Vertical',
+) {
+    const { camera, style, effects } = opticalAndTechnicalOptions;
+
+    const formatList = (list: string[]) => {
+        if (!list || list.length === 0) return "";
+        if (list.length === 1) return list[0];
+        return `${list.slice(0, -1).join(", ")}, and ${list.slice(-1)}`;
+    };
+
+    // --- UNIT 4 - Sentence 3: Technical Specifications ---
+    let safeStyle = style;
+
+    if (canvasType === 'Vertical' && style.toLowerCase().includes("cinematic")) {
+        safeStyle = style.replace(/cinematic/gi, "high-fidelity RAW portrait photography");
+    }
+    const opticalAndTechnicalSentence = `rendered in ${safeStyle}, captured with a ${camera.lens} lens at ${camera.fNumber} for ${camera.focus} and ISO ${camera.ISO}, featuring ${formatList(effects)}.`;
+
+    return opticalAndTechnicalSentence
+        .replaceAll(".,", ",")
+        .replaceAll("  ", " ");
+}

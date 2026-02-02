@@ -16,18 +16,21 @@ import {
     POST_IMAGE_GEN_PROMPT_NO_ENTITIES_PROMPT,
     POST_VIDEO_GEN_PROMPT_PROMPT,
     POST_MUSIC_GENERATION_DATA_PROMPT,
-} from "@/api/types/open-ai/OpenAIPrompts";
+} from "@/api/types/open-ai/LLMPrompts";
 import {MusicGenerationData} from "@/api/types/suno-api/MusicGenerationData";
 import {Entity, InitialEntityManifestItem} from "@/api/types/open-ai/Entity";
 import {PHYSICS_LIBRARY} from "@/api/types/open-ai/PhysicsPromptLibrary";
 import {FluxPrompt, FluxPromptSubject} from "@/api/types/open-ai/FluxPrompt";
 import {
-    assembleFullVideoGenPromptSentence,
+    assembleEnvironmentalAndAtmosphereSentence,
+    assembleFullVideoGenPromptSentence, assembleOpticalAndTechnicalSentence,
     composeOpticalAndTechnicalOption, generateTechnicalLensString, subjectVectorsToCameraVectorString,
     surgicallyReplaceVideoGenPromptByCameraKey, TechnicalIntent
 } from "@/utils/promptUtils";
 import {STYLE_PROMPT_LIBRARY} from "@/api/types/open-ai/StylePromptLibrary";
 import {GoogleGenAI, SchemaUnion} from "@google/genai";
+import {cleanAndParseJSON} from "@/utils/jsonUtils";
+import {addArticleToWord} from "@/utils/stringUtils";
 
 enum OpenAIModel {
     GPT_4O_MINI = "gpt-4o-mini-2024-07-18",
@@ -409,7 +412,7 @@ Instruction: Analyze <video_metadata>, <target_aspect_ratio>, <style_guidelines>
                         scene_empty_reasoning: string;
                     }[],
                     scene_casting_list_empty_reason: string;
-                } = JSON.parse(generatedResult);
+                } = cleanAndParseJSON(generatedResult);
 
                 console.log(`postEntityCasting() raw content: ${generatedResult}`);
 
@@ -598,7 +601,7 @@ Instruction: Analyze <video_metadata>, <target_aspect_ratio>, <style_guidelines>
                 // 프롬프트의 output_schema와 일치해야 함
                 const parsedData: {
                     master_style_info: MasterStyleInfo;
-                } = JSON.parse(generatedResult);
+                } = cleanAndParseJSON(generatedResult);
 
                 console.log(`postMasterStyleInfo() raw content: ${generatedResult}`);
 
@@ -751,7 +754,7 @@ Instruction: Generate the scene instruction JSON.
                     image_gen_prompt_sentence: string;
                     technical_intent: TechnicalIntent;
                     updated_entity_manifest_list?: Omit<Entity, 'role' | 'type' | 'demographics'>[] | null
-                } = JSON.parse(generatedContent);
+                } = cleanAndParseJSON(generatedContent);
 
                 const {
                     image_gen_prompt: imageGenPrompt,
@@ -800,17 +803,35 @@ Instruction: Generate the scene instruction JSON.
                     ...opticalAndTechnicalOption,
                 }
 
-                // const imageGenPromptSentence = assembleFullImageGenPromptSentence(
-                //     fullImageGenPrompt,
-                //     newEntityManifestList,
-                // )
+                const cameraPhrases = `${addArticleToWord(fullImageGenPrompt.camera.angle, true)} ${fullImageGenPrompt.camera.distance} ${fullImageGenPrompt.subjects.length !== 0 ? "captures" : "focuses entirely on"}`;
+
+                const environmentalAndAtmosphereSentence = assembleEnvironmentalAndAtmosphereSentence({
+                    scene: fullImageGenPrompt.scene,
+                    subjects: fullImageGenPrompt.subjects,
+                    color_palette: fullImageGenPrompt.color_palette,
+                    lighting: fullImageGenPrompt.lighting,
+                    mood: fullImageGenPrompt.mood,
+                    background: fullImageGenPrompt.background,
+                    composition: fullImageGenPrompt.composition,
+                });
+
+                const opticalAndTechnicalSentence = assembleOpticalAndTechnicalSentence({
+                    camera: fullImageGenPrompt.camera,
+                    style: fullImageGenPrompt.style,
+                    effects: fullImageGenPrompt.effects,
+                });
+
+                const lowerCaseFirst = (str: string) => str.charAt(0).toLowerCase() + str.slice(1);
+                const assembledImageGenPromptSentence = `${cameraPhrases} ${lowerCaseFirst(imageGenPromptSentence)}. ${environmentalAndAtmosphereSentence}. ${opticalAndTechnicalSentence}.`
+                    .replaceAll("..", ".");
 
                 console.log(`Scene #${sceneNumber} ImageGenPromptSentence: ${imageGenPromptSentence}`);
+                console.log(`Scene #${sceneNumber} AssembledImageGenPromptSentence: ${assembledImageGenPromptSentence}`);
 
                 return {
                     success: true,
                     imageGenPrompt: fullImageGenPrompt,
-                    imageGenPromptSentence: imageGenPromptSentence,
+                    imageGenPromptSentence: assembledImageGenPromptSentence,
                     sceneEntityManifestList: newEntityManifestList,
                 };
             } catch (jsonError) {

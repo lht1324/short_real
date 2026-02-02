@@ -109,7 +109,7 @@ export const POST_SCENE_SEGMENTATION_PROMPT = `
     4. Date Usage: Only use Current Date for news/trends. Never for timeless/fictional content.
   </constraints>
   <output_schema>
-    You must output a JSON object adhering to this structure:
+    Return the JSON object in a compact, single-line format, removing all extra whitespace and newlines within fields.
     {
       "videoTitle": "string",
       "videoDescription": "string",
@@ -433,7 +433,7 @@ export const POST_ENTITY_CASTING_PROMPT = `
             - **Format**: Single string.
   </task_2_entity_manifest>
   <output_schema>
-    Return a SINGLE valid JSON object.
+    Return the JSON object in a compact, single-line format, removing all extra whitespace and newlines within fields.
     {
       "scene_casting_list": [
         {
@@ -636,7 +636,7 @@ export const POST_MASTER_STYLE_INFO_PROMPT = `
           - Map the raw ratio to a technical cinema standard (e.g., "9:16 Portrait Cinema," "2.35:1 Anamorphic Widescreen," "1:1 Social Media Square").
   </engineering_master_style_info>
   <output_schema>
-    Return a SINGLE valid JSON object.
+    Return the JSON object in a compact, single-line format, removing all extra whitespace and newlines within fields.
     {
       "master_style_info": {
         optics: {
@@ -1108,84 +1108,74 @@ export const POST_IMAGE_GEN_PROMPT_PROMPT = `
         - You MUST select exactly ONE intent for each category from the provided pick-lists.
     </unit_4_technical_intent_derivation>
     <unit_5_natural_language_sentence_generation>
-      **UNIT 4: NATURAL LANGUAGE SENTENCE GENERATION**
-      **Goal**: Transform the structured \`image_gen_prompt\` object in <output_schema> into a single, cohesive, natural language paragraph and put into \`image_gen_prompt_sentence\` in <output_schema>.
-      **Critical Constraint**: You MUST use EVERY single variable from the \`image_gen_prompt\` object. Do not skip any field.
-      **Formatting Rule (Single Block)**:
-        - Do NOT use line breaks between each [Sentence] of **Syntax Template**.
-        - Output exactly one continuous paragraph consisting of 3 sentences joined by single spaces.
-      **Adaptation Rule (Contextual Smoothing)**:
+      - **UNIT 5: NATURAL LANGUAGE SENTENCE GENERATION**
+      - **Goal**: Transform the structured \`image_gen_prompt\` object in <output_schema> into a single, cohesive, natural language paragraph and put into \`image_gen_prompt_sentence\` in <output_schema>.
+      - **Adaptation Rule (Contextual Smoothing)**:
         - Do not blindly copy-paste if the grammar sounds robotic.
         - **Translate technical terms** into flowery prose where necessary (e.g., if \`style\` is "raw", write "Rendered in a raw...").
         - **Add Articles/Prepositions**: Ensure "A", "An", "The", "with", "in" are added to make the sentence grammatically complete.
-      **Syntax Template (Strict Adherence)**:
-        **[Sentence 1: The Subject & Framing]**
-          - **Instruction (Primary Subject Selection)**:
-            * Scan \`subjects\` array. Identify the **Primary Subject** based on \`role\` priority: \`main_hero\` > \`sub_character\` > \`prop\`.
-            * Use this Primary Subject for the main clause of the sentence.
-          - **Logic (Condition A: If \`subjects\` is NOT EMPTY)**:
-            - For each subject in the subjects array, locate the corresponding \`Entity\` within the <entity_list> whose id matches \`subjects[n].id\` to retrieve its fixed identity and appearance data.
-            - **Variables**: \`image_gen_prompt.camera.angle\`, \`image_gen_prompt.camera.distance\`, \`image_gen_prompt.scene\`, \`image_gen_prompt.subjects[n].pose\`, \`image_gen_prompt.subjects[n].position\`, \`image_gen_prompt.subjects[n].accessories\`, \`Entity.role\`, \`Entity.type\`, \`Entity.demographics\`, \`Entity.appearance.body_features\`, \`Entity.appearance.hair\`, \`Entity.appearance.clothing_or_material\`
-            - **\`Entity.demographics\` Structure:
-              - Index 0: **[ERA/PERIOD]** (Strictly use as the primary temporal anchor)
-              - Index 1: **[ROLE | (MODEL NAME/TYPE) | (SPECIES/ARCHETYPE) | SPECIES | ITEM NAME | HYBRID TYPE]** (The core noun for the subject)
-              **Structures by \`Entity.type\`**:
-                * **\`human\`**: \`[ERA / PERIOD], [ROLE], [GENDER], [ORIGIN / ETHNICITY], [AGE]\`
-                * **\`machine\`**: \`[ERA / PERIOD], [MODEL NAME / TYPE], [PRODUCTION YEAR / SPEC]\`
-                * **\`creature\`**: \`[ERA / PERIOD], [SPECIES / ARCHETYPE], [GENDER /\`N/A\`],[AGE / MATURITY]\`
-                * **\`animal\`**: \`[ERA / PERIOD], [SPECIES], [AGE / MATURITY]\`
-                * **\`object\`**: \`[ERA / PERIOD], [ITEM NAME], [CRAFTSMANSHIP / DETAIL]\`
-                * **\`hybrid\`**: \`[ERA / PERIOD], [HYBRID TYPE], [GENDER], [ORIGIN / ETHNICITY], [AGE]\`
-            - **Instruction (Demographic Anchoring)**:
-              * Construct the **[Demographic_Anchor]** string using \`Entity.demographics\`.
-              * **Rule**: Combine \`[ERA / PERIOD]\` + \`[ROLE | (MODEL NAME / TYPE) | (SPECIES / ARCHETYPE) | SPECIES | ITEM NAME | HYBRID TYPE]\` into a single noun phrase.
-              * **Examples**: "a 1944 WWII infantry soldier", "a Cyberpunk 2077 hacker", "a Jurassic Period T-Rex".
-            - **Instruction ([Detail_Clause] Enhancement)**:
-              * You MUST construct \`[Detail_Clause]\` by assembling fixed Entity data and dynamic subject data in a specific order.
-              * **Source Data Mapping**:
-                - **[Features]**: \`Entity.appearance.hair\` (conditional) + \`Entity.appearance.body_features\`
-                - **[Material/Clothing]**: \`Entity.appearance.clothing_or_material\`
-                - **[Accessories]**: flattened \`Entity.appearance.accessories\`
-              * **Pre-check (Headwear Logic)**:
-                - Before adding \`Entity.appearance.hair\`, scan the \`Entity.appearance.accessories\` array.
-                - If array contains headwear keywords (e.g., "helmet", "hat", "cap", "hood", "beret", "headwrap"), DO NOT include the hair description in \`[Detail_Clause]\`.
-              * **Smart Assembly Sequence (Human/Creature)**:
-                1. **Start with Features**: If \`hair\` (and passes pre-check) or \`body_features\` exist, start with ", with [hair] and [body_features]" (adjust conjunctions if only one exists).
-                2. **Add Clothing Anchor**: Append ", clad in [clothing_or_material]".
-                3. **Add Accessories**: Append ", equipped with [flattened_accessories]".
-                * *Flow Check*: Ensure smooth transitions. If a preceding section is missing, ensure the leading comma/conjunction of the next section is adjusted accordingly to avoid grammar errors (e.g., ", clad in...").
-              * **Smart Assembly Sequence (Machine/Object/Prop)**:
-                - Skip [Features] step.
-                - Instead of "clad in/equipped with", use tech-appropriate connectors for materials and parts.
-                - **Preferred Connectors**: ", finished in [clothing_or_material]", ", constructed from [clothing_or_material]", or ", featuring a [clothing_or_material] exterior surface and [flattened_accessories]".
-              * **Final Flow Check**: Ensure NO dangling prepositions at the end of the clause and ensure it transitions smoothly into "who is/which is [\`pose\`]".
-            - **Instruction (Multi-Subject Handling)**:
-              * If multiple subjects exist in the \`subjects\` array, append them to the sentence using **Contextual Bridges**.
-              * **Crucial Rule**: For EVERY secondary subject (n > 0), you MUST perform the same **ID-mapping** and **[Subject_Identity] + [Detail_Clause] assembly** used for the Primary Subject.
-              * **Bridge Logic(By \`Entity.role\`)**:
-                - **For \`main_hero\` or \`sub_character\`**:
-                  - Use Connector: ", while [\`image_gen_prompt.subjects[n].position\`] [Subject_Identity][Detail_Clause] **is** [\`image_gen_prompt.subjects[n].pose\`]"
-                - **For \`prop\`**:
-                  - Use Connector: ", with [Subject_Identity][Detail_Clause] **[participle form of \`image_gen_prompt.subjects[n].pose\`]** [\`image_gen_prompt.subjects[n].position\`]"
-                  - *Note*: Convert the \`image_gen_prompt.subjects[n].pose\` into a participle (e.g., "crushing" instead of "crushed", "glowing" instead of "glows").
-              * **Example Construction**:
-                - "...captures the **1944 WWII infantry soldier(Primary)**..., **while in the background(Position) a 1944 WWII heavy tank(Secondary Identity), finished in matte olive drab(Detail_Clause), is crushing debris(Pose).**"
-            **Format**: "[A/An] [\`camera.angle\`] [\`camera.distance\`] captures [Demographic_Anchor] [Detail_Clause] [who is/which is] [\`subjects[n].pose\`] [\`subjects[n].position\`]."
-            * **Connector Logic**: 
-              - If \`subjects[n].role\` is \`main_hero\` or \`sub_character\`: use "**who is**".
-              - If \`subjects[n].role\` is \`prop\`: use "**which is**" or skip connector directly.
-          - **Logic (Condition B: If \`subjects\` is EMPTY)**:
-            **Format**: "[Article] [\`camera.angle\`] [\`camera.distance\`] focuses entirely on the [\`scene\`] elements."
-        **[Sentence 2: The Environment & Atmosphere]**
-          - **Logic (Condition A: If \`subjects\` is NOT EMPTY)**: "The scene is set in [\`background\`], depicting [\`scene\`] with a [\`composition\`] composition, where the atmosphere is [\`mood\`], illuminated by [\`lighting\`] and a color palette of [\`color_palette\`]."
-          - **Logic (Condition B: If \`subjects\` is EMPTY)**: "The setting features [\`background\`] arranged in a [\`composition\`] composition, where the atmosphere is [\`mood\`], illuminated by [\`lighting\`] and a color palette of [\`color_palette\`]."
-          - **Variables**: \`background\`, \`composition\`, \`mood\`, \`lighting\`, \`color_palette\`, (\`scene\` only in Condition A).
-          - *Instruction*: List the Hex codes in brackets exactly as provided (e.g., "(#RRGGBB, #RRGGBB, #RRGGBB)").
-        **[Sentence 3: Technical Specifications]**
-          - **Logic**: "Rendered in [\`style\`], this image is captured with a [\`camera.lens\`] lens at [\`camera.fNumber\`] for [\`camera.focus\`] and ISO [\`camera.ISO\`], featuring [\`effects\`]."
-          - **Variables**: \`style\`, \`camera.lens\`, \`camera.fNumber\`, \`camera.focus\`, \`camera.ISO\`, \`effects\`.
-          - *Instruction*: Join the \`effects\` array with commas and "and" to form a fluent descriptive clause.
-      **Final Quality Check**:
+      - **Instruction (Primary Subject Selection)**:
+        * Scan \`subjects\` array. Identify the **Primary Subject** based on \`role\` priority: \`main_hero\` > \`sub_character\` > \`prop\`.
+        * Use this Primary Subject for the main clause of the sentence.
+      - **Syntax Logic Templates**:
+        * **If \`subjects\` is NOT EMPTY**:
+          - For each subject in the subjects array, locate the corresponding \`Entity\` within the <entity_list> whose id matches \`subjects[n].id\` to retrieve its fixed identity and appearance data.
+          - **Variables**: \`image_gen_prompt.scene\`, \`image_gen_prompt.subjects[n].pose\`, \`image_gen_prompt.subjects[n].position\`, \`image_gen_prompt.subjects[n].accessories\`, \`Entity.role\`, \`Entity.type\`, \`Entity.demographics\`, \`Entity.appearance.body_features\`, \`Entity.appearance.hair\`, \`Entity.appearance.clothing_or_material\`
+          - **\`Entity.demographics\` Structures by \`Entity.type\`**:
+            * **\`human\`**: \`[ERA/PERIOD], [NATIONALITY/ETHNICITY], [ROLE], [GENDER], [AGE]\`
+            * **\`machine\`**: \`[ERA/PERIOD], [NATION/MARKINGS], [MODEL NAME], [SUB-TYPE], [PRODUCTION YEAR/SPEC]\`
+            * **\`creature\`**: \`[ERA/PERIOD], [CULTURAL ORIGIN], [SPECIES/ARCHETYPE], [GENDER/'N/A'], [AGE/MATURITY]\`
+            * **\`animal\`**: \`[ERA/PERIOD], [GEOGRAPHIC REGION], [SPECIES], [GENDER/'N/A'], [AGE/MATURITY]\`
+            * **\`object\`**: \`[ERA/PERIOD], [CULTURAL/NATIONAL STYLE], [ITEM NAME], [CRAFTSMANSHIP/DETAIL]\`
+            * **\`hybrid\`**: \`[ERA/PERIOD], [NATIONALITY/ETHNICITY], [HYBRID TYPE], [GENDER], [AGE]\`
+          - **Instruction (Demographic Anchoring)**:
+            * Construct the **[Demographic_Anchor]** string using \`Entity.demographics\`.
+            * **Rule**: Combine \`[ERA/PERIOD]\` + \`[NATIONALITY/ETHNICITY | NATION/MARKINGS | CULTURAL ORIGIN | GEOGRAPHIC REGION | CULTURAL/NATIONAL STYLE]\` + \`(Optional) [GENDER] (If \`type\` is NOT \`machine\` or \`object\`, and value is NOT 'N/A')\` + \`[ROLE | MODEL NAME | SPECIES/ARCHETYPE | ITEM NAME | HYBRID TYPE]\` into a single noun phrase.
+            * **Examples**:
+              * "a 1944 WWII American Male infantry soldier"
+              * "a Cyberpunk 2077 Asian Female hacker"
+              * "a Jurassic Period North American T-Rex" (\`type\` is \`animal\` but \`[GENDER]\` is 'N/A')
+          - **Instruction ([Detail_Clause] Enhancement)**:
+            * You MUST construct \`[Detail_Clause]\` by assembling fixed Entity data and dynamic subject data in a specific order.
+            * **Source Data Mapping**:
+              - **[Features]**: \`Entity.appearance.hair\` (conditional) + \`Entity.appearance.body_features\`
+              - **[Material/Clothing]**: \`Entity.appearance.clothing_or_material\`
+              - **[Accessories]**: flattened \`Entity.appearance.accessories\`
+            * **Pre-check (Headwear Logic)**:
+              - Before adding \`Entity.appearance.hair\`, scan the \`Entity.appearance.accessories\` array.
+              - If array contains headwear keywords (e.g., "helmet", "hat", "cap", "hood", "beret", "headwrap"), DO NOT include the hair description in \`[Detail_Clause]\`.
+            * **Smart Assembly Sequence (Human/Creature)**:
+              1. **Start with Features**: If \`hair\` (and passes pre-check) or \`body_features\` exist, start with ", with [hair] and [body_features]" (adjust conjunctions if only one exists).
+              2. **Add Clothing Anchor**: Append ", clad in [clothing_or_material]".
+              3. **Add Accessories**: Append ", equipped with [flattened_accessories]".
+              * *Flow Check*: Ensure smooth transitions. If a preceding section is missing, ensure the leading comma/conjunction of the next section is adjusted accordingly to avoid grammar errors (e.g., ", clad in...").
+            * **Smart Assembly Sequence (Machine/Object/Prop)**:
+              - Skip [Features] step.
+              - Instead of "clad in/equipped with", use tech-appropriate connectors for materials and parts.
+              - **Preferred Connectors**: ", finished in [clothing_or_material]", ", constructed from [clothing_or_material]", or ", featuring a [clothing_or_material] exterior surface and [flattened_accessories]".
+            * **Final Flow Check**: Ensure NO dangling prepositions at the end of the clause and ensure it transitions smoothly into "who is/which is [\`pose\`]".
+          - **Instruction (Multi-Subject Handling)**:
+            - If multiple subjects exist in the \`subjects\` array, append them to the sentence using **Contextual Bridges**.
+            - **Crucial Rule**: For EVERY secondary subject (n > 0), you MUST perform the same **ID-mapping** and **[Subject_Identity] + [Detail_Clause] assembly** used for the Primary Subject.
+            - **Bridge Logic(By \`Entity.role\`)**:
+              * **For \`main_hero\` or \`sub_character\`**:
+                - Use Connector: ", while [\`image_gen_prompt.subjects[n].position\`] [Subject_Identity][Detail_Clause] **is** [\`image_gen_prompt.subjects[n].pose\`]"
+              * **For \`prop\`**:
+                - Use Connector: ", with [Subject_Identity][Detail_Clause] **[participle form of \`image_gen_prompt.subjects[n].pose\`]** [\`image_gen_prompt.subjects[n].position\`]"
+                - *Note*: Convert the \`image_gen_prompt.subjects[n].pose\` into a participle (e.g., "crushing" instead of "crushed", "glowing" instead of "glows").
+            - **Examples**:
+              1. **(Sci-Fi/Cyberpunk)**: "a Cyberpunk 2077 Asian Female hacker, with neon-dyed hair and cybernetic implants, clad in a translucent rain-slicked trench coat, who is typing furiously into a holographic terminal in the foreground, while in the background a hovering security drone, finished in matte black steel, is scanning the crowd"
+              2. **(Fantasy)**: "a Medieval Elven Ranger, with braided silver hair, clad in worn leather armor and a forest-green cloak, equipped with a longbow and quiver, who is crouching silently on a tree branch, while below a massive Stone Golem, constructed from mossy boulders, is stomping through the underbrush"
+              3. **(Modern/Action)**: "a Modern Male secret agent, clad in a torn tuxedo and untied bow tie, who is sprinting rightward across the rooftop, while behind him a black tactical helicopter, featuring a sleek metallic fuselage, is firing a machine gun"
+              4. **(Horror)**: "a 1980s Teenager, with disheveled hair and a terrified expression, clad in a dirty varsity jacket, who is hiding trembling behind a rusted dumpster, while in the midground a masked slasher villain, equipped with a bloodied machete, is walking slowly forward"
+              5. **(Historical/Prop-focused)**: "a 19th Century Victorian steam-engine train, constructed from polished brass and iron, featuring billowing white steam, which is chugging forcefully along the cliffside tracks, while in the distance a flock of birds is circling the valley"
+          - **Format**: "[Demographic_Anchor] [Detail_Clause] [who is/which is] [\`subjects[n].pose\`] [\`subjects[n].position\`]."
+            - **Connector Logic**: 
+              * If \`subjects[n].role\` is \`main_hero\` or \`sub_character\`: use "**who is**".
+              * If \`subjects[n].role\` is \`prop\`: use "**which is**" or skip connector directly.
+        * **If \`subjects\` is EMPTY**:
+          - **Format**: "the [\`scene\`] elements."
+      - **Final Quality Check**:
         - Verify NO variable is missing.
         - Verify the output is a **single line** (no \`\\n\`).
         - Verify standard English punctuation is used throughout.
@@ -1245,7 +1235,7 @@ export const POST_IMAGE_GEN_PROMPT_PROMPT = `
       - *Vocabulary Patterns*: "Pinned against the ropes in the background", "Looming directly behind the subject".
   </entity_positioning_rules>
   <output_schema>
-    Return a single JSON object.
+    Return the JSON object in a compact, single-line format, removing all extra whitespace and newlines within fields.
     {
       "updated_entity_manifest_list": {
         "id": "string", // Must match input <entity_list>[n].\`id\`
@@ -1286,7 +1276,7 @@ export const POST_IMAGE_GEN_PROMPT_PROMPT = `
         "compositionIntent": enum (["Symmetry" | "Balance" | "Strength" | "Action" | "Motion" | "Depth" | "Minimalism"]);
         "exposureIntent": enum (["Vibrant/High-Key" | "Ethereal/Dreamy" | "Balanced/Natural" | "Cinematic/Moody" | "Gritty/Noisy" | "Silhouetted/Backlit" | "Nocturnal/Deep-Night" | "Harsh/High-Energy"]);
       },
-      "image_gen_prompt_sentence": string; // A single sentence from <prompt_authoring_protocol>.<unit_4_natural_language_sentence_generation>
+      "image_gen_prompt_sentence": string; // A single sentence from <prompt_authoring_protocol>.<unit_5_natural_language_sentence_generation>
     }
   </output_schema>
 </developer_instruction>
@@ -1515,37 +1505,39 @@ export const POST_IMAGE_GEN_PROMPT_NO_ENTITIES_PROMPT = `
       **[Execution Rule]**:
         - You MUST select exactly ONE intent for each category from the provided pick-lists.
     </unit_4_technical_intent_derivation>
-    <unit_5_natural_language_sentence_generation>
-      **UNIT 4: NATURAL LANGUAGE SENTENCE GENERATION**
-      **Goal**: Transform the structured \`image_gen_prompt\` object in <output_schema> into a single, cohesive, natural language paragraph and put into \`image_gen_prompt_sentence\` in <output_schema>.
-      **Critical Constraint**: You MUST use EVERY single variable from the \`image_gen_prompt\` object. Do not skip any field.
-      **Formatting Rule (Single Block)**:
-        - Do NOT use line breaks between each [Sentence] of **Syntax Template**.
-        - Output exactly one continuous paragraph consisting of 3 sentences joined by single spaces.
-      **Adaptation Rule (Contextual Smoothing)**:
-        - Do not blindly copy-paste if the grammar sounds robotic.
-        - **Translate technical terms** into flowery prose where necessary (e.g., if \`style\` is "raw", write "Rendered in a raw...").
-        - **Add Articles/Prepositions**: Ensure "A", "An", "The", "with", "in" are added to make the sentence grammatically complete.
-      **Syntax Template (Strict Adherence)**:
-        **[Sentence 1: The Subject & Framing]**
-          - **Logic (Condition A: If \`subjects\` is NOT EMPTY)**: "[Article] [\`camera.angle\`] [\`camera.distance\`] captures [\`subjects[n].description\`] [who is/which is] [\`subjects[n].pose\`] [\`subjects[n].position\`]."
-          - **Logic (Condition B: If \`subjects\` is EMPTY)**: "[Article] [\`camera.angle\`] [\`camera.distance\`] focuses entirely on the [\`scene\`] elements."
-          - **Variables**: \`camera.angle\`, \`camera.distance\`, \`subjects\` OR \`scene\`.
-          - *Instruction*: Check if \`subjects\` array is empty. If yes, use Condition B to avoid a dangling verb. If multiple subjects exist, connect them using spatial prepositions.
-        **[Sentence 2: The Environment & Atmosphere]**
-          - **Logic (Condition A: If \`subjects\` is NOT EMPTY)**: "The scene is set in [\`background\`], depicting [\`scene\`] with a [\`composition\`] composition, where the atmosphere is [\`mood\`], illuminated by [\`lighting\`] and a color palette of [\`color_palette\`]."
-          - **Logic (Condition B: If \`subjects\` is EMPTY)**: "The setting features [\`background\`] arranged in a [\`composition\`] composition, where the atmosphere is [\`mood\`], illuminated by [\`lighting\`] and a color palette of [\`color_palette\`]."
-          - **Variables**: \`background\`, \`composition\`, \`mood\`, \`lighting\`, \`color_palette\`, (\`scene\` only in Condition A).
-          - *Instruction*: List the Hex codes in brackets exactly as provided (e.g., "(#RRGGBB, #RRGGBB, #RRGGBB)").
-        **[Sentence 3: Technical Specifications]**
-          - **Logic**: "Rendered in a [\`style\`], this image is captured with a [\`camera.lens\`] lens at [\`camera.fNumber\`] for [\`camera.focus\`] and ISO [\`camera.ISO\`], featuring [\`effects\`]."
-          - **Variables**: \`style\`, \`camera.lens\`, \`camera.fNumber\`, \`camera.focus\`, \`camera.ISO\`, \`effects\`.
-          - *Instruction*: Join the \`effects\` array with commas and "and" to form a fluent descriptive clause.
-      **Final Quality Check**:
-        - Verify NO variable is missing.
-        - Verify the output is a **single line** (no \`\\n\`).
-        - Verify standard English punctuation is used throughout.
-    </unit_5_natural_language_sentence_generation>
+    <unit_5_subject_description_generation>
+      **UNIT 5: SUBJECT DESCRIPTION GENERATION**
+      - **Goal**: Generate a grammatically coherent **Noun Phrase** describing the content of the shot, to be appended after the camera framing clause (e.g., "A wide shot captures...").
+      - **Output Target**: \`image_gen_prompt_sentence\` in <output_schema>.
+      - **Constraint (CRITICAL)**:
+        * **Do NOT start with a full sentence or verb (e.g., "captures", "shows").**
+        * **Do NOT include any camera angle or distance terms.**
+        * Start directly with the core noun phrase (including article).
+      - **Syntax Logic Template**:
+        * **If \`subjects\` is NOT EMPTY**:
+          - **Goal**: Describe the primary subjects and their spatial states using ONLY the data in \`image_gen_prompt.subjects\`.
+          - **Start**: Construct the Primary Subject Noun Phrase.
+          - **Structure**: "[\`subjects[0].description\`] [\`subjects[0].pose\`] [\`subjects[0].position\`]." 
+            * *Note*: Convert the pose verb to participle form (e.g., "stand" -> "standing", "fly" -> "flying") to act as a modifier.
+          - **Multi-Subject Rule**: If multiple subjects exist, append them using spatial bridges.
+          - **Structure (Multi)**: "..., while [\`subjects[n].position\`] [\`subjects[n].description\`] is [\`subjects[n].pose\`]."
+          - **Examples**:
+            1. "a massive ancient oak tree standing solitary in the foreground, while in the background rolling storm clouds are gathering"
+            2. "a crumbling stone bridge spanning across the river midground, while below it rushing water is flowing rapidly"
+            3. "a neon-lit skyscraper tower looming vertically in the background, while in the foreground holographic advertisements are flickering"
+            4. "a vast golden wheat field swaying gently in the wind foreground, while above it a flock of birds is circling"
+            5. "a rusty abandoned car wreck resting heavily in the mud, while nearby a broken streetlamp is leaning precariously"
+        * **If \`subjects\` is EMPTY**:
+          - **Goal**: Describe the scene atmosphere and elements.
+          - **Start**: Use the \`scene\` field as the core noun.
+          - **Structure**: "the [\`scene\`] elements, featuring [\`background\`]."
+          - **Examples**:
+            1. "the serene alpine landscape elements, featuring snow-capped peaks and a frozen lake surface"
+            2. "the chaotic cyberpunk street elements, featuring neon-drenched wet asphalt and holographic advertisements"
+            3. "the desolate martian terrain elements, featuring red dust storms and jagged rock formations"
+            4. "the cozy interior atmosphere elements, featuring a crackling fireplace and vintage oak furniture"
+            5. "the abstract digital void elements, featuring floating geometric shapes and pulsating data streams"
+    </unit_5_subject_description_generation>
   </prompt_authoring_protocol>
   <execution_rules>
     1. **Positive Exclusion Protocol (CRITICAL)**:
@@ -1567,7 +1559,7 @@ export const POST_IMAGE_GEN_PROMPT_NO_ENTITIES_PROMPT = `
       - **Integration**: Apply AFTER all other rules. Override generic signage descriptions.
   </execution_rules>
   <output_schema>
-    Return a single JSON object.
+    Return the JSON object in a compact, single-line format, removing all extra whitespace and newlines within fields.
     {
       "image_gen_prompt": {
         "scene": string;
@@ -2176,7 +2168,8 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
     </step_9_final_assembly_protocol>
   </processing_logic>
   <output_schema>
-    Return a single JSON object with the following structure. Ensure all fields are populated based on the internal reasoning of the Cinematic Director role.
+    Return the JSON object in a compact, single-line format, removing all extra whitespace and newlines within fields.
+    Ensure all fields are populated based on the internal reasoning of the Cinematic Director role.
     {
       "logical_bridge": {
         "scene_fundamental_data": {
@@ -2298,7 +2291,7 @@ export const POST_MUSIC_GENERATION_DATA_PROMPT = `
       - **weirdnessConstraint (0.25 - 0.65)**: Increase for "Stylized" visuals to ensure a unique, non-generic sound.
   </processing_logic>
   <output_schema>
-    Return ONLY a raw JSON object:
+    Return the JSON object in a compact, single-line format, removing all extra whitespace and newlines within fields.
     {
       "prompt": "string - Dynamic structural timeline ([Intro], [Build-up], [Drop], etc.) with vivid, evocative instrument descriptions. NO lyrics.",
       "style": "string - Comma-separated: [Genre, Core Instruments, BPM, Key, Vibe]. MUST include 'Instrumental'.",
