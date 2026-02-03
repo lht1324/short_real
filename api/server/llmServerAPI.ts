@@ -31,6 +31,7 @@ import {STYLE_PROMPT_LIBRARY} from "@/api/types/open-ai/StylePromptLibrary";
 import {GoogleGenAI, SchemaUnion} from "@google/genai";
 import {cleanAndParseJSON} from "@/utils/jsonUtils";
 import {addArticleToWord} from "@/utils/stringUtils";
+import { logger } from "@trigger.dev/sdk";
 
 enum DeepSeekModel {
     DEEPSEEK_NON_THINKING = "deepseek-chat",
@@ -372,7 +373,6 @@ Instruction: Analyze <video_metadata>, <target_aspect_ratio>, <style_guidelines>
                 max_completion_tokens: 20480, // [팁] Entity Manifest가 길어질 수 있으므로 토큰 한도를 넉넉히 늘렸습니다.
             });
 
-            console.log(`postEntityCasting() raw completion: ${JSON.stringify(completion)}`);
             console.log(`postEntityCasting() usage: `, JSON.stringify(completion.usage))
 
             const generatedResult = completion.choices[0]?.message?.content;
@@ -428,34 +428,46 @@ Instruction: Analyze <video_metadata>, <target_aspect_ratio>, <style_guidelines>
                             scene_empty_reasoning: sceneEmptyReasoning,
                         } = sceneCastingData;
 
-                        console.log(`Scene #${sceneNumber} Reasoning`);
-                        console.log(`Scene #${sceneNumber} Visual Description: ${sceneVisualDescription}`);
-                        console.log(`Scene #${sceneNumber} Casting Logic: ${castingLogic}`);
+                        logger.info('Scene #${sceneNumber} Analysis', {
+                            visualDescription: sceneVisualDescription,
+                            castingLogic: castingLogic,
+                        })
 
                         if (includedCastDataList.length !== 0 || excludedCastDataList.length !== 0) {
                             if (includedCastDataList.length !== 0) {
-                                console.log(`Scene #${sceneNumber} Included Cast: ${includedCastDataList.map((castData) => castData.id).join(', ')}`);
-                                includedCastDataList.forEach((castData) => {
-                                    console.log(`Included Entity[${castData.id}] reasoning: ${castData.reasoning}`);
+                                logger.info(`Scene #${sceneNumber} Included Cast`, {
+                                    castIds: includedCastDataList.map(c => c.id), // ID 목록 한눈에 보기
+                                    details: includedCastDataList.map(c => ({     // 상세 추론 이유
+                                        id: c.id,
+                                        reasoning: c.reasoning
+                                    }))
                                 });
                             }
 
                             if (excludedCastDataList.length !== 0) {
-                                console.log(`Scene #${sceneNumber} Excluded Cast: ${excludedCastDataList.map((castData) => castData.id).join(', ')}`);
-                                excludedCastDataList.forEach((castData) => {
-                                    console.log(`Excluded Entity[${castData.id}] reasoning: ${castData.reasoning}`);
+                                logger.info(`Scene #${sceneNumber} Excluded Cast`, {
+                                    castIds: excludedCastDataList.map(c => c.id),
+                                    details: excludedCastDataList.map(c => ({
+                                        id: c.id,
+                                        reasoning: c.reasoning
+                                    }))
                                 });
                             }
                         } else {
-                            console.log(`Scene #${sceneNumber} doesn't have casts: ${sceneEmptyReasoning}`);
+                            logger.info(`Scene #${sceneNumber} has no cast info`, {
+                                reason: sceneEmptyReasoning
+                            });
                         }
-
-                        console.log(" ");
                     }
                 } else {
-                    console.log(`SceneCastingListEmptyReason: ${sceneCastingListEmptyReason}`);
+                    logger.warn(`Scene Casting List is Empty`, {
+                        reason: sceneCastingListEmptyReason
+                    });
                 }
-                console.log(`Entire Entity Id List: ${entityManifestList.map((entity) => entity.id).join(", ")}`)
+                logger.info(`Final Entity Manifest`, {
+                    entityIds: entityManifestList.map((entity) => entity.id),
+                    totalCount: entityManifestList.length
+                });
 
                 return {
                     success: true,

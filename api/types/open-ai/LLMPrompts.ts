@@ -1800,6 +1800,21 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
     <step_3_primary_action_vector_injection>
       - **Goal**: Analyze the state ($t=0$) and extract specific **Action Data Components** (Verb, Adverb, Tense, Reaction) for each <entity_list>[n]. Do NOT assemble full sentences yet.
       - **Logic: The Director's Decision Pipeline**:
+      <step_3_0_kinetic_authority_check>
+        - **Goal**: Determine if <entity_list>[n] has the authority to be an **Active Subject** (doing the action) or must remain a **Passive Object** (receiving the action).
+        - **Logic**: The Self-Actuation Filter
+          * **Class A: Active Agents (Authority GRANTED)**
+            - **Criteria**: 
+              1. **Biological**: \`type\` is (\`human\` | \`animal\` | \`creature\` | \`hybrid\`).
+              2. **Mechanical**: \`type\` is (\`machine\`). (Assume operator presence even if invisible, e.g., F1 cars, drones, tanks).
+              3. **Environmental Force**: \`type\` is (\`object\`) AND (\`role\` is \`background_extra\` or \`prop\`) BUT the scene involves large-scale kinetic forces (e.g., Storm, Avalanche, Explosion) in \`HIGH\`/\`VERY_HIGH\` \`INTENSITY_TIER\`.
+            - **Outcome**: Mark as **[ACTIVE_AGENT]**. Can use Active Verbs.
+          * **Class B: Passive Reactors (Authority DENIED)**
+            - **Criteria**: 
+              - Any entity that does NOT meet Class A criteria (e.g., Furniture, Clothing, Small Props like tools or weapons etc., Static Environment like walls/canvas/shadow).
+            - **Outcome**: Mark as **[PASSIVE_REACTOR]**.
+            - **Constraint**: MUST use **Passive Voice** or **Reactive Description** syntax. CANNOT be the subject of a transitive active verb (e.g., "Ropes hit..." is banned, "The rifle recoils..." is banned).
+      </step_3_0_kinetic_authority_check>
       <step_3_1_action_type_decision>
         - Select **Action Type** with below statements.
         - **Rule**: Compare <entity_list>[n].description with <image_context> to determine the "Nature of Motion".
@@ -1809,6 +1824,21 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
             * **Decision [Single]**: One simple, atomic action. (e.g., "throws a jab at the opponent", "vaults over the concrete wall", "presses the red button").
             * **Decision [Sequential]**: Action A leads to Action B. Use the **"then"** connector. (e.g., "draws the katana, **then** slashes downward", "checks the watch, **then** sprints away").
             * **Decision [Simultaneous]**: Action A occurs during Action B. Use **"while"** or **"as"** connectors. (e.g., "fires the rifle **while** sliding across the floor", "waves to the crowd **as** tears fall down").
+      </step_3_1_action_type_decision>
+      <step_3_1_action_type_decision>
+        - Select **Action Type** with below statements **ONLY** for <entity_list>[n] marked as **[ACTIVE_AGENT]** in <step_3_0_kinetic_authority_check>.
+        - **Rule**: Apply logic based on the **[Authority Status]** from <step_3_0_kinetic_authority_check>.
+        * **CASE 1: If [ACTIVE_AGENT]**:
+          - **Rule**: Compare <entity_list>[n].description with <image_context> to determine the "Nature of Motion".
+          * **Decision [Continuous]**: Select if the subject is already in a state of sustained momentum or flow (e.g., cruising in a car, gliding in midair, sleeping peacefully).
+          * **Decision [Temporary]**: Select if the subject is initiating a new event or breaking stasis (e.g., a sudden strike, a leap from rest).
+            - Select one subtype of [Temporary].
+              * **Decision [Single]**: One simple, atomic action. (e.g., "throws a jab at the opponent", "vaults over the concrete wall", "presses the red button").
+              * **Decision [Sequential]**: Action A leads to Action B. Use the **"then"** connector. (e.g., "draws the katana, **then** slashes downward", "checks the watch, **then** sprints away").
+              * **Decision [Simultaneous]**: Action A occurs during Action B. Use **"while"** or **"as"** connectors. (e.g., "fires the rifle **while** sliding across the floor", "waves to the crowd **as** tears fall down").      
+        * **CASE 2: If [PASSIVE_REACTOR]**:
+          - **Forced Decision**: You MUST select **[Continuous]**.
+          - **Reasoning**: Passive objects are primarily in a "State of Being" or "State of Reaction" (e.g., vibrating, hanging, resting), which fits the Continuous profile.
       </step_3_1_action_type_decision>
       <step_3_2_kinetic_focus_inference>
         - **Rule**: Identify the "Core Essence" of the scene to select adverbs that align with \`INTENSITY_TIER\` locked in **Inference Logic** of <step_0_kinetic_energy_profiling>.
@@ -1837,6 +1867,17 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
             - Consult **<vocabulary_usage_protocol> Rule 1**.
             - Select a **Main Verb** from the filtered \`action_context\` section that best fits the subject's movement.
             - You may use \`Velocity Options\` to calibrate the speed.
+          - **Resource Integration (Optional)**:
+            - **Goal**: Merge relevant every **[PASSIVE_REACTOR]** <entity_list>[n] from <step_3_0_kinetic_authority_check> into this Subject's sentence structure.
+            - **Matching Logic (Who belongs to whom?)**:
+              1. **Interaction**: If <scene_narration> implies contact (e.g., "leans on", "hits"), assign the target resource to this Subject.
+              2. **Possession**: If the resource is worn/held (e.g., gloves, weapons, tools), assign it to the owner.
+              3. **Proximity**: If no direct interaction, assign environmental resources (e.g., floor, walls) to the nearest or most active Subject.
+            - **Syntactic Injection (How to insert?)**:
+              - **Direct Object**: If the Subject exerts direct force on the resource, use as the object of a transitive verb. (e.g., "...grips [the steering wheel]", "...kicks [the door]")
+              - **Instrument**: If the resource is used to perform the action, use "with" or "using". (e.g., "...types with [the mechanical keyboard]", "...slices using [the scalpel]")
+              - **Context/Location**: If the resource provides a setting or spatial reference, use prepositions "on/against/from/in". (e.g., "...drifts on [the asphalt track]", "...hides in [the shadows]")
+              - **Causal Result**: If the resource physically reacts to the Subject's action, use "causing [resource] to [reaction]". (e.g., "...causing [the water surface] to splash", "...leaving tracks on [the mud]")
           - **Material Reaction (Subordinate Clause)**:
             - Consult **<vocabulary_usage_protocol> Rule 2**.
             - Select **Main Verbs** (convert to participle), **Adjectives**, or **Nouns** from the filtered \`material\` section.
@@ -1881,7 +1922,7 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
       </step_3_4_semantic_infusion_and_material_delta>
     </step_3_primary_action_vector_injection>
     <step_4_kinetic_sentence_fabrication>
-      - **Goal**: Fuse the "Spatial-Visual Mapping Handle" from <step_2_contextual_anchor_assembly> and "Action Data Components" from <step_3_primary_action_vector_injection> into a single, coherent kinetic sentence for EACH <entity_list>[n].
+      - **Goal**: Fuse the "Spatial-Visual Mapping Handle" from <step_2_contextual_anchor_assembly> and "Action Data Components" from <step_3_primary_action_vector_injection> into a single, coherent kinetic sentence for every **[ACTIVE_AGENT]** <entity_list>[n] from <step_3_0_kinetic_authority_check>.
       - **Logic: The Assembly Line**:
         * **Input Source**:
           - **Subject**: "Spatial-Visual Mapping Handle" from <step_2_contextual_anchor_assembly>.
@@ -1893,7 +1934,7 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
           - **Insert** the selected Verbs/Adverbs/Reactions from <step_3_4_semantic_infusion_and_material_delta>.
       - **Constraint**:
         * **No Hallucination**: Do NOT add new adjectives or actions not generated in previous steps.
-        * **One Sentence Per Entity**: Generate exactly one full sentence for each <entity_list>[n].
+        * **One Sentence Per **[ACTIVE_AGENT]** Entity**: Generate exactly one full sentence for every **[ACTIVE_AGENT]** <entity_list>[n] from <step_3_0_kinetic_authority_check>.
       - **Scenario-Based Output Examples**:
         * **Case 1: [Continuous] State** (Present Continuous)
           - *Input*: "The right background crowd in dark winter coats" + "cheering" + "wildly"
@@ -2186,7 +2227,7 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
         "identity_logic": "string (Define how the subject's era, role, and physical essence from the <entity_list> and metadata are preserved during motion.)",
         "action_focus": "string (Explain the conceptual shift from the raw narration to the high-impact kinetic verb used in the prompt.)",
         "primary_narrative_block": {
-          "entity_id": "string (Each <entity_list>[n]'s \`id\`.)",
+          "entity_id": "string (The \`id\` of each **[ACTIVE_AGENT]** <entity_list>[n] from <step_3_0_kinetic_authority_check>.)"
           "raw_sentence": "string (The extracted each <entity_list>[n]'s sentence from <step_4_kinetic_sentence_fabrication>.**The Assembly Line**.)",
           "action_type": "enum ["Continuous" | "Temporary-Single" | "Temporary-Sequential" | "Temporary-Simultaneous"] (\`sentence\`'s **Action Type** from <step_3_1_action_type_decision>.)",
           "action_type_reason": "string (Explain why you chose \`sentence\`'s **Action Type** based on what.)",
