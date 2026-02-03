@@ -1,0 +1,387 @@
+Scene #1 postVideoGenPrompt() usage:  {"prompt_tokens":53647,"completion_tokens":787,"total_tokens":54434,"prompt_tokens_details":{"cached_tokens":0,"audio_tokens":0},"completion_tokens_details":{"reasoning_tokens":0,"audio_tokens":0,"accepted_prediction_tokens":0,"rejected_prediction_tokens":0}}
+Scene #1 postVideoGenPrompt() Result
+Scene Summary: A troubled ship navigates stormy waters, close to a Byzantine coastal harbor, amidst an unsettling atmosphere.
+Scene Summary Reason: This captures the chaotic movement of the ship against the backdrop of Constantinople, fitting the description of the crusade's blunder.
+Primary Movement: The ship sails through turbulent waves.
+Primary Movement Reason: The ship is visibly battling the tumultuous sea, indicative of movement and struggle against nature's force.
+Narrative Vibe: CHAOTIC
+Narrative Vibe Reason: The turbulent seas and unsettling sky evoke a sense of disorder and danger, aligning with the notion of a failed expedition.
+Selected INTENSITY_TIER: HIGH
+INTENSITY_TIER Selected Reason: The intense movement of the ship through crashing waves necessitates a high-level kinetic response.
+Identity Logic: The medieval maritime context and visual dynamics preserve the ship's identity while depicting the challenging environment of 1202.
+Action Focus: The shift from a narrative of a failed crusade to a kinetic focus on the ship's movement emphasizes urgency and struggle.
+- - - Primary Narrative Block - - -
+Entity[ship_movement_1]
+Raw Sentence: The ship **battles** powerfully against the waves, causing turbulent spray around it.
+Action Type: Temporary-Single
+Action Type Reason: The ship is engaged in a distinct action of combating the sea, indicative of its current urgency.
+Verb Reason: The choice of **battles** reflects the intensity and conflict present in the scene, matched with the **HIGH** intensity tier.
+Adverb Reason:
+- - - Atmospheric Lighting Delta - - -
+Delta: Thick cloud cover darkening the horizon while waves crash dramatically.
+Delta Reason: The increase in wave turbulence and dark cloud cover enhances the chaotic atmosphere of the depicted scene.
+- - - Cinematic Camera Vectors - - -
+Camera Action: Truck Right and Pedestal Up with Handheld Shaky aggressively
+Subject Vectors: [$+X$, $+Y$, $0Z$]
+Subject Vectors Reasoning: The ship is moving laterally across the scene while rising slightly in the waves, indicating a dynamic movement towards the horizon.
+- - - Style - - -
+Style Slot 1: Authentic raw textures with fine cinematic film grain in 4k fidelity
+Style Slot 2: the initial structural integrity of the subject remains perfectly intact and consistent throughout the motion.
+Style Slot 1 Reason: This choice reflects the raw maritime elements of the 1202 setting, heightening realism.
+Style Slot 2 Reason: Ensuring that the ship's structure is preserved during the dynamic scene enhances visual consistency.
+Reasoning: 1) The vocabulary was derived from the tense and chaotic visual cues in the scene, emphasizing turbulent actions and interactions with the environment. 2) The chosen camera tech prioritizes low-key natural saturation reflecting the era's atmosphere while enhancing the intense subject movement. 3) The atmospheric strategy accentuates depth and movement while maintaining a historical ambiance to prevent freezing of the scene.
+- - - Final Output Structure - - -
+Primary Narrative Block: The ship battles powerfully against the waves, causing turbulent spray around it.
+Atmospheric/Lighting Delta: Thick cloud cover darkening the horizon while waves crash dramatically.
+Cinematic Camera Vector: CINEMATIC_CAMERA_VECTORS the ship in the turbulent sea
+Style: Authentic raw textures with fine cinematic film grain in 4k fidelity, while the initial structural integrity of the subject remains perfectly intact and consistent throughout the motion.
+videoGenPrompt: The ship battles powerfully against the waves, causing turbulent spray around it, thick cloud cover darkening the horizon while waves crash dramatically, captured with CINEMATIC_CAMERA_VECTORS the ship in the turbulent sea, authentic raw textures with fine cinematic film grain in 4k fidelity, while the initial structural integrity of the subject remains perfectly intact and consistent throughout the motion.
+assembledVideoGenPrompt: The ship battles powerfully against the waves, causing turbulent spray around it, thick cloud cover darkening the horizon while waves crash dramatically, captured with Truck Right and Pedestal Up with Handheld Shaky aggressively the ship in the turbulent sea, rendered in Authentic raw textures with fine cinematic film grain in 4k fidelity, while the initial structural integrity of the subject remains perfectly intact and consistent throughout the motion.
+Scene #8 postVideoGenPrompt() usage:  {"prompt_tokens":53647,"completion_tokens":800,"total_tokens":54447,"prompt_tokens_details":{"cached_tokens":0,"audio_tokens":0},"completion_tokens_details":{"reasoning_tokens":0,"audio_tokens":0,"accepted_prediction_tokens":0,"rejected_prediction_tokens":0}}
+Scene #8 postVideoGenPrompt() Result
+Scene Summary: In 1202, Mediterranean waters glisten with chaotic ship movements while the ancient Byzantine ruins stand silently.
+Scene Summary Reason: The setting highlights the historical confrontation between Crusaders and Constantinople amid a contrasting backdrop of ruin and maritime activity.
+Primary Movement: Dynamic ripples across the harbor's surface with sporadic ship motions in the water.
+Primary Movement Reason: The image captures an essence of energy and historical conflict, despite the primary focus on static ruins.
+Narrative Vibe: CHAOTIC
+Narrative Vibe Reason: The vibrancy of ship activity contrasts sharply with the stillness of ruins, reflecting the chaos of the Fourth Crusade's controversial journey.
+Selected INTENSITY_TIER: HIGH
+INTENSITY_TIER Selected Reason: The water's movement and the ships' disruption indicate a significant level of action and environmental interaction.
+Identity Logic: The absence of specific entities allows the focus to remain on the rich details of the devastated coastal scene, with the ruins embodying the historical essence of the era.
+Action Focus: The scene shifts from a static historical setting to a kinetic representation of maritime activity, emphasizing the tumultuous events of the Crusade.
+- - - Atmospheric Lighting Delta - - -
+Delta: Rippling reflections in the water and soft natural light illuminating the ruins.
+Delta Reason: The dynamic water surface captures the atmospheric feel of a bustling harbor while soft light enhances the ruins' contours.
+- - - Cinematic Camera Vectors - - -
+Camera Action: Dolly-In with Handheld Shaky aggressively
+Subject Vectors: [$0X$, $0Y$, $+Z$]
+Subject Vectors Reasoning: Static architecture is highlighted with respect to the harbor activity, suggesting a slight depth perspective focusing on the ruins against the background.
+- - - Style - - -
+Style Slot 1: Raw authentic textures with fine cinematic film grain in 4k fidelity.
+Style Slot 2: The initial structural integrity of the subject remains perfectly intact and consistent throughout the motion.
+Style Slot 1 Reason: The natural and textured approach fits well with the historical context, providing depth and richness.
+Style Slot 2 Reason: The narrative emphasizes the importance of preserving the detailed essence of the ruins amidst the chaos of the scene.
+Reasoning: The language draws from the chaos and complexity of history while adhering to the physics of motion within the scene. The transitions are tessellated to respect the background's static elements while enhancing the ship movements. The cinematographic strategy utilizes natural lighting to reflect historical aspects alongside the turbulent maritime energy.
+- - - Final Output Structure - - -
+Primary Narrative Block:
+Atmospheric/Lighting Delta: Rippling reflections in the water and soft natural light illuminating the ruins.
+Cinematic Camera Vector: CINEMATIC_CAMERA_VECTORS the crumbled ruins in the harbor.
+Style: Raw authentic textures with fine cinematic film grain in 4k fidelity, while the initial structural integrity of the subject remains perfectly intact and consistent throughout the motion.
+videoGenPrompt: Dynamic ripples across the harbor's surface with sporadic ship motions in the water, amidst rippling reflections in the water and soft natural light illuminating the ruins, captured with CINEMATIC_CAMERA_VECTORS the crumbled ruins in the harbor, rendered in Raw authentic textures with fine cinematic film grain in 4k fidelity, while the initial structural integrity of the subject remains perfectly intact and consistent throughout the motion.
+assembledVideoGenPrompt: Dynamic ripples across the harbor's surface with sporadic ship motions in the water, amidst rippling reflections in the water and soft natural light illuminating the ruins, captured with CINEMATIC_CAMERA_VECTORS the crumbled ruins in the harbor, rendered in Raw authentic textures with fine cinematic film grain in 4k fidelity, while the initial structural integrity of the subject remains perfectly intact and consistent throughout the motion.
+Scene #4 postVideoGenPrompt() usage:  {"prompt_tokens":56437,"completion_tokens":927,"total_tokens":57364,"prompt_tokens_details":{"cached_tokens":0,"audio_tokens":0},"completion_tokens_details":{"reasoning_tokens":0,"audio_tokens":0,"accepted_prediction_tokens":0,"rejected_prediction_tokens":0}}
+Scene #4 postVideoGenPrompt() Result
+Scene Summary: Crusaders are tempted by gold, displaying greed and conflict over loot.
+Scene Summary Reason: The gathered gold coins and the visible treasure chest signify the main focus of greed among the crusaders.
+Primary Movement: The knight kneels, cupping gold coins tightly, indicating a decisive interaction with the treasure at hand.
+Primary Movement Reason: The knight's hand is openly grasping gold coins, emphasizing his greedy action and intent.
+Narrative Vibe: CATASTROPHIC
+Narrative Vibe Reason: The scene contrasts the holy goals of the Crusaders against their corrupting greed, showcasing their moral failure.
+Selected INTENSITY_TIER: HIGH
+INTENSITY_TIER Selected Reason: The act of gripping the coins indicates a decisive and intentional action revealing a level of tension and kinetic energy.
+Identity Logic: The depiction of a medieval French knight, with his historical attire and physical stance, preserves the era and character's essence during motion, reflecting the conflict of greed versus holiness.
+Action Focus: The raw narrative is transformed into kinetic action through the decisive verb 'gripping', which encapsulates the tension of the moment.
+- - - Primary Narrative Block - - -
+Entity[0]
+Raw Sentence: The French knight kneels with one hand extended, gripping gold coins tightly, indicating his overwhelming greed.
+Action Type: Temporary-Single
+Action Type Reason: The action focuses on a singular moment of greed as the knight interacts with the gold.
+Verb Reason: Gripped is chosen as it emphasizes the strong attachment to the gold, aligning with the high intensity of the scene.
+Adverb Reason:
+Entity[1]
+Raw Sentence: The Norman knight stands with clenched fists, poised defensively, ready to protect their ill-gotten gains.
+Action Type: Temporary-Single
+Action Type Reason: The motion captures the knight's readiness and tension during this moment.
+Verb Reason: Stands portrays a sense of readiness and tension, fitting the context of the scene entirely.
+Adverb Reason:
+- - - Atmospheric Lighting Delta - - -
+Delta: Soft diffused natural daylight key with minimal fill bounce maintaining architectural shadow depth.
+Delta Reason: The soft lighting adds to the emotional weight of the scene, emphasizing the contrast between greed and righteousness.
+- - - Cinematic Camera Vectors - - -
+Camera Action: Zoom Out with Handheld Shaky aggressively
+Subject Vectors: [$0X$, $0Y$, $-Z$]
+Subject Vectors Reasoning: The camera remains focused on the subjects, capturing their expressions and gestures without any lateral or vertical movement.
+- - - Style - - -
+Style Slot 1: Filmic grain with raw texture in 4K resolution.
+Style Slot 2: The initial structural integrity of the subjects remains perfectly intact and consistent throughout the motion.
+Style Slot 1 Reason: Filmic grain adds depth to the historical authenticity, providing a cinematic quality.
+Style Slot 2 Reason: Structural integrity assures consistency in character portrayals, maintaining fidelity during motions.
+Reasoning: I have selected technical tags focused on the interaction between the characters and the treasure, emphasizing the high-energy kinetic action with the gripping verb. The camera technology chosen allows for a deep focus, lending clarity to the emotional weight of the scene while ensuring visual continuity. The atmospheric strategy employed leverages soft natural light to highlight the tension between greed and divine purpose in this narrative.
+- - - Final Output Structure - - -
+Primary Narrative Block: The French knight kneels with one hand extended, gripping gold coins tightly, indicating his overwhelming greed. The Norman knight stands with clenched fists, poised defensively, ready to protect their ill-gotten gains.
+Atmospheric/Lighting Delta: Soft diffused natural daylight key with minimal fill bounce maintaining architectural shadow depth.
+Cinematic Camera Vector: CINEMATIC_CAMERA_VECTORS the medieval knights in a Byzantine coastal harbor
+Style: Filmic grain with raw texture in 4K resolution, while the initial structural integrity of the subjects remains perfectly intact and consistent throughout the motion.
+videoGenPrompt: The French knight kneels with one hand extended, gripping gold coins tightly, indicating his overwhelming greed. The Norman knight stands with clenched fists, poised defensively, ready to protect their ill-gotten gains, amidst soft diffused natural daylight key with minimal fill bounce maintaining architectural shadow depth, captured with CINEMATIC_CAMERA_VECTORS the medieval knights in a Byzantine coastal harbor, rendered in filmic grain with raw texture in 4K resolution, while the initial structural integrity of the subjects remains perfectly intact and consistent throughout the motion.
+assembledVideoGenPrompt: The French knight kneels with one hand extended, gripping gold coins tightly, indicating his overwhelming greed. The Norman knight stands with clenched fists, poised defensively, ready to protect their ill-gotten gains, amidst soft diffused natural daylight key with minimal fill bounce maintaining architectural shadow depth, captured with macro Lens, Deep Focus, 9:16 Portrait Cinema, Long/Wide, Zoom Out with Handheld Shaky aggressively the medieval knights in a Byzantine coastal harbor, rendered in filmic grain with raw texture in 4K resolution, while the initial structural integrity of the subjects remains perfectly intact and consistent throughout the motion.
+Scene #5 postVideoGenPrompt() usage:  {"prompt_tokens":57116,"completion_tokens":1003,"total_tokens":58119,"prompt_tokens_details":{"cached_tokens":0,"audio_tokens":0},"completion_tokens_details":{"reasoning_tokens":0,"audio_tokens":0,"accepted_prediction_tokens":0,"rejected_prediction_tokens":0}}
+Scene #5 postVideoGenPrompt() Result
+Scene Summary: In a Byzantine interior, Venetian merchants examine valuable spoils from the Fourth Crusade as they cheer, revealing both greed and betrayal.
+Scene Summary Reason: The scene captures the dynamic between Christian churches being exploited as material wealth, fitting the narrative of the crusaders' blunder.
+Primary Movement: Cheering merchants examine their spoils.
+Primary Movement Reason: The merchants are actively involved in examining the artifacts, conveying their excitement and greed.
+Narrative Vibe: NORMAL
+Narrative Vibe Reason: The atmosphere reflects a moment of commerce and celebration without heightened tension or chaos.
+Selected INTENSITY_TIER: LOW
+INTENSITY_TIER Selected Reason: The merchants' actions indicate a rhythmic, subtle flow as they interact with their surroundings, fitting the low intensity category.
+Identity Logic: Subjects maintain their medieval roles as Venetian merchants, and the props accurately reflect Byzantine wealth, ensuring historical context remains intact throughout the motion.
+Action Focus: The transition from simple narration of the merchants to the impactful kinetic verbs enhances the dynamic interactions and atmosphere of commerce and wealth.
+- - - Primary Narrative Block - - -
+Entity[prop_1]
+Raw Sentence: The stunning bronze chalice held close gleams under the soft light, showcasing intricate gold filigree details.
+Action Type: Temporary-Single
+Action Type Reason: The chalice is being actively presented, signifying a single decisive action.
+Verb Reason: The word 'gleams' was selected due to its connotation of subtle light interaction, appropriate for the LOW intensity tier.
+Adverb Reason:
+Entity[sub_character_1]
+Raw Sentence: The stocky Venetian merchant stands confidently, surveying the market.
+Action Type: Continuous
+Action Type Reason: The merchant's stance and surveying are ongoing actions reflecting continuous presence and observation.
+Verb Reason: The verb 'stands' indicates stability and ongoing observation, suitable for the LOW intensity tier.
+Adverb Reason: The term 'confidently' describes the manner in which the merchant is standing, enhancing the action's vitality.
+Entity[sub_character_2]
+Raw Sentence: The tall Venetian merchant leans forward, observing intently.
+Action Type: Continuous
+Action Type Reason: The action of leaning forward denotes an active engagement with the scene, indicating sustained motion.
+Verb Reason: The verb 'leans' demonstrates an ongoing state of engagement, suited for the LOW intensity tier.
+Adverb Reason: The adverb 'intently' adds depth to the action, highlighting the merchant's focus.
+- - - Atmospheric Lighting Delta - - -
+Delta: Soft daylight filters through stained glass, casting delicate patterns on the merchant's faces.
+Delta Reason: The description aligns with the natural lighting of Byzantine interiors, enhancing depth and contrast in the scene.
+- - - Cinematic Camera Vectors - - -
+Camera Action: Zoom Out smoothly
+Subject Vectors: [$0X$, $0Y$, $-Z$]
+Subject Vectors Reasoning: The static nature of the characters combined with the midframe positioning suggests a stationary camera with a focus on the central subjects.
+- - - Style - - -
+Style Slot 1: Authentic raw textures with fine cinematic film grain in 4k fidelity.
+Style Slot 2: the initial structural integrity of the subject remains perfectly intact and consistent throughout the motion.
+Style Slot 1 Reason: Chosen to enhance visual authenticity in alignment with the historical setting.
+Style Slot 2 Reason: Maintaining structural integrity is crucial for conveying the historical context.
+Reasoning: The selected tags emphasize the historical accuracy and emotional engagement of the scene, ensuring a coherent narrative flow. The choice of lighting complements the setting’s depth while adhering to the filmic quality expected from the genre.
+- - - Final Output Structure - - -
+Primary Narrative Block: The stunning bronze chalice held close gleams under the soft light, showcasing intricate gold filigree details. The stocky Venetian merchant stands confidently, surveying the market. The tall Venetian merchant leans forward, observing intently.
+Atmospheric/Lighting Delta: Soft daylight filters through stained glass, casting delicate patterns on the merchant's faces.
+Cinematic Camera Vector: CINEMATIC_CAMERA_VECTORS the merchants engaged with their atmosphere.
+Style: Authentic raw textures with fine cinematic film grain in 4k fidelity, while the initial structural integrity of the subject remains perfectly intact and consistent throughout the motion.
+videoGenPrompt: The stunning bronze chalice held close gleams under the soft light, showcasing intricate gold filigree details. The stocky Venetian merchant stands confidently, surveying the market. The tall Venetian merchant leans forward, observing intently, softened by daylight filtering through stained glass, casting delicate patterns on the merchant's faces, captured with CINEMATIC_CAMERA_VECTORS the merchants engaged with their atmosphere, authentic raw textures with fine cinematic film grain in 4k fidelity, while the initial structural integrity of the subject remains perfectly intact and consistent throughout the motion.
+assembledVideoGenPrompt: The stunning bronze chalice held close gleams under the soft light, showcasing intricate gold filigree details. The stocky Venetian merchant stands confidently, surveying the market. The tall Venetian merchant leans forward, observing intently, amidst soft daylight filters through stained glass, casting delicate patterns on the merchant's faces, captured with macro Lens, Deep Focus, 9:16 Portrait Cinema, Long/Wide, Zoom Out smoothly the merchants engaged with their atmosphere, rendered in authentic raw textures with fine cinematic film grain in 4k fidelity, while the initial structural integrity of the subject remains perfectly intact and consistent throughout the motion.
+Scene #7 postVideoGenPrompt() usage:  {"prompt_tokens":55509,"completion_tokens":1009,"total_tokens":56518,"prompt_tokens_details":{"cached_tokens":0,"audio_tokens":0},"completion_tokens_details":{"reasoning_tokens":0,"audio_tokens":0,"accepted_prediction_tokens":0,"rejected_prediction_tokens":0}}
+Scene #7 postVideoGenPrompt() Result
+Scene Summary: The Pope expresses frustration in the pulpit, indicating a sense of betrayal while facepalming.
+Scene Summary Reason: This summary captures the Pope's emotional reaction to the historic betrayal referred to in the description of the Fourth Crusade.
+Primary Movement: Facial expression and arm movement indicating frustration.
+Primary Movement Reason: The primary movement reflects the Pope's emotional state, which is characterized by his raised arms and facepalming gesture.
+Narrative Vibe: EMOTIONAL
+Narrative Vibe Reason: The scene encapsulates a moment of significant emotional turmoil for the Pope, aligning with the vibe described.
+Selected INTENSITY_TIER: VERY_LOW
+INTENSITY_TIER Selected Reason: The motion and expressions of the Pope are marked by subtle actions depicting feelings of frustration and despair.
+Identity Logic: The visual depiction of the Pope's facepalming intent and action is dynamically tied to the historical context of 1202, ensuring that the character, eras, and essence are preserved throughout the representation of motion.
+Action Focus: The transition from a narrative of betrayal to the kinetic expressions of frustration is achieved through the Pope's body language, specifically his head and hand movements.
+- - - Primary Narrative Block - - -
+Entity[0]
+Raw Sentence: The center-weighted Pope in a crimson woolen cassock **is facepalming** subtly out of frustration, his arms **hanging** momentarily as he expresses dismay.
+Action Type: Continuous
+Action Type Reason: The use of 'is facepalming' indicates ongoing action indicating the Pope's emotional state, emphasizing fluidity.
+Verb Reason: Chosen 'is facepalming' to convey the core action of frustration, aligning with the VERY_LOW intensity.
+Adverb Reason:
+Entity[1]
+Raw Sentence: The dark oak pulpit **holds** steady, anchoring the scene at his chest height, providing a stark contrast to the Pope's motions.
+Action Type: Static
+Action Type Reason: The pulpit remains stationary, providing a contrast to the active gesture of the Pope, thereby grounding the scene.
+Verb Reason: Selected 'holds' to convey stability, which is fitting for a passive object within the scene.
+Adverb Reason:
+- - - Atmospheric Lighting Delta - - -
+Delta: Soft diffused natural daylight key
+Delta Reason: This lighting enhances the emotional weight of the Pope’s expression, reflecting the setting's solemnity.
+Delta: architectural shadow depth
+Delta Reason: Architectural shadows create a maximal contrast that draws focus to the Pope's expression as well as enhancing the pulpit.
+- - - Cinematic Camera Vectors - - -
+Camera Action: Zoom Out steadily
+Subject Vectors: [$0X$, $0Y$, $-Z$]
+Subject Vectors Reasoning: The vectors indicate no lateral or vertical movement but focus on the Pope's frontal expression as he interacts with the pulpit.
+- - - Style - - -
+Style Slot 1: Raw textures with fine cinematic film grain in 4K fidelity
+Style Slot 2: the initial structural integrity of the subject remains perfectly intact and consistent throughout the motion.
+Style Slot 1 Reason: This choice of texture emphasizes a tactile quality in the setting, matching the emotional gravity of the moment.
+Style Slot 2 Reason: Emphasizing the consistency in the Pope's appearance maintains focus on his character amid the action.
+Reasoning: The selected tags from the vocabulary_depot reflect the subtle physical actions demonstrating an emotional response while respecting the very low INTENSITY_TIER. The choice of cinematic techniques underscores the architectural integrity of the environment while maintaining focus on the Pope. The atmospheric strategy involves soft natural lighting and shadows to evoke an emotional reaction, aligning with the historic context.
+- - - Final Output Structure - - -
+Primary Narrative Block: The center-weighted Pope in a crimson woolen cassock is facepalming subtly out of frustration, his arms hanging momentarily as he expresses dismay. The dark oak pulpit holds steady, anchoring the scene at his chest height, providing a stark contrast to the Pope's motions.
+Atmospheric/Lighting Delta: Soft diffused natural daylight key with architectural shadow depth.
+Cinematic Camera Vector: CINEMATIC_CAMERA_VECTORS the center-weighted Pope in a crimson woolen cassock.
+Style: Raw textures with fine cinematic film grain in 4K fidelity, while the initial structural integrity of the subject remains perfectly intact and consistent throughout the motion.
+videoGenPrompt: The center-weighted Pope in a crimson woolen cassock is facepalming subtly out of frustration, his arms hanging momentarily as he expresses dismay, captured with CINEMATIC_CAMERA_VECTORS the center-weighted Pope in a crimson woolen cassock, rendered in Raw textures with fine cinematic film grain in 4K fidelity, while the initial structural integrity of the subject remains perfectly intact and consistent throughout the motion.
+assembledVideoGenPrompt: The center-weighted Pope in a crimson woolen cassock is facepalming subtly out of frustration, his arms hanging momentarily as he expresses dismay. The dark oak pulpit holds steady, anchoring the scene at his chest height, providing a stark contrast to the Pope's motions, amidst soft diffused natural daylight key with architectural shadow depth, captured with macro Lens, Deep Focus, 9:16 Portrait Cinema, Long/Wide, Zoom Out steadily the center-weighted Pope in a crimson woolen cassock, rendered in raw textures with fine cinematic film grain in 4K fidelity, while the initial structural integrity of the subject remains perfectly intact and consistent throughout the motion.
+Scene #3 postVideoGenPrompt() usage:  {"prompt_tokens":56110,"completion_tokens":1392,"total_tokens":57502,"prompt_tokens_details":{"cached_tokens":0,"audio_tokens":0},"completion_tokens_details":{"reasoning_tokens":0,"audio_tokens":0,"accepted_prediction_tokens":0,"rejected_prediction_tokens":0}}
+Scene #3 postVideoGenPrompt() Result
+Scene Summary: In a Byzantine interior, knights find themselves in a chaotic moment as one clutches a gilded chalice while another prepares for action.
+Scene Summary Reason: This summary reflects the essence of the scene, highlighting the tension of the knights in an important historical moment, also aligning with the provided image context.
+Primary Movement: The knights are lunging forward, engaging in a dynamic action sequence.
+Primary Movement Reason: The initial poses of the knights indicate aggressive moves, with one knight charging and the other poised for further action, showcasing an active combat scenario.
+Narrative Vibe: COMBAT
+Narrative Vibe Reason: The scene exudes a sense of urgency and physical engagement fitting for a combat situation among knights during the Fourth Crusade.
+Selected INTENSITY_TIER: HIGH
+INTENSITY_TIER Selected Reason: The action depicted involves decisive kinetic movements, reflecting both the urgency and engagement in combat, necessitating a selection of `HIGH` intensity.
+Identity Logic: Each knight’s era and role as medieval warriors is emphasized through their actions and appearances, with the knight clutching the chalice underlining the contrast between their intended mission and the unfolding chaos.
+Action Focus: The shift to high-impact kinetic verbs signifies the imminent engagement in combat during the historical blunder, translating the narration into dynamic actions such as lunging and clutching.
+- - - Primary Narrative Block - - -
+Entity[0]
+Raw Sentence: The robust French knight in polished steel chainmail hauberk **lunges** forward aggressively, his sword **extended** high, displaying **his muscle tension** while ready for the imminent attack.
+Action Type: Temporary-Single
+Action Type Reason: The knight is engaging in a decisive action, initiating a lunge forward, indicative of a singular focused act in a chaotic setting.
+Verb Reason: The verb 'lunges' is chosen for its concise representation of aggressive forward motion captured in the scene's context and matching the locked intensity tier.
+Adverb Reason:
+Entity[1]
+Raw Sentence: The broad-shouldered Norman knight in interlinked steel chainmail **prepares** to act, his body **coiled** for action amidst the disorder.
+Action Type: Continuous
+Action Type Reason: The positioning of the Norman knight indicates he is in a state of readiness while also suggesting ongoing tension in the scene.
+Verb Reason: The verb 'prepares' is fitting as it encapsulates the continuous tension and imminent motion, aligning seamlessly with the combat nature of the scene and 'HIGH' intensity level.
+Adverb Reason: The verb reflects a focused and measured stance that yields visual tension.
+Entity[2]
+Raw Sentence: The gilded chalice, tightly **gripped** in the knight's hand, **reflects the chaotic light** as a symbol of the plunder.
+Action Type: Temporary-Single
+Action Type Reason: The chalice's gripping action is indicative of a decisive interaction, pointing to a significant object amidst ongoing movement.
+Verb Reason: The choice of the verb 'gripped' signifies a firm control over an important object in a turbulent environment, fitting the narrative and intensity level.
+Adverb Reason:
+- - - Atmospheric Lighting Delta - - -
+Delta: Light streams filter through stained glass, illuminating the scattered debris strategically well.
+Delta Reason: The presence of light beams through stained glass amplifies the chaos and adds to the dramatic tension of the setting, enhancing the overall atmosphere.
+Delta: A mist of dust lingers in the air, caught in the shafts of light, indicating recent upheaval.
+Delta Reason: The dust not only indicates movement but also adds a layer of realism to the chaotic scene, intertwining with the atmosphere and physical space.
+- - - Cinematic Camera Vectors - - -
+Camera Action: Zoom Out and Truck Left with Handheld Shaky aggressively
+Subject Vectors: [$-X$, $0Y$, $-Z$]
+Subject Vectors Reasoning: The knights are depicted lunging and moving towards the camera, suggesting a strong leftward motion while remaining on the same horizontal plane.
+- - - Style - - -
+Style Slot 1: Raw textures with filmic grain in 4K fidelity
+Style Slot 2: the initial structural integrity of both knights and environment remains perfectly intact and consistent throughout the motion.
+Style Slot 1 Reason: Raw textures highlight the historical context by reflecting the materials and conditions of the medieval scene, while the filmic grain adds a cinematic quality.
+Style Slot 2 Reason: This instruction ensures that the essence and details of the characters and the environment are impeccably preserved in motion.
+Reasoning: The vocabulary selections stem from the specified entity characteristics, emphasizing the physics of the scene. The knights' kinetic actions reflect the battle context, while the atmospheric developments enhance the narrative's visual depth. The macro lens settings will emphasize textures and details relevant to the medieval era, complemented by the grainy texture to evoke a historical feel.
+- - - Final Output Structure - - -
+Primary Narrative Block: The robust French knight in polished steel chainmail hauberk lunges forward aggressively, his sword extended high, displaying his muscle tension while ready for the imminent attack. The broad-shouldered Norman knight in interlinked steel chainmail prepares to act, his body coiled for action amidst the disorder. The gilded chalice, tightly gripped in the knight's hand, reflects the chaotic light as a symbol of the plunder.
+Atmospheric/Lighting Delta: Light streams filter through stained glass, illuminating the scattered debris strategically well, while a mist of dust lingers in the air, caught in the shafts of light, indicating recent upheaval.
+Cinematic Camera Vector: CINEMATIC_CAMERA_VECTORS the knights lunging towards the camera in an ecclesiastical interior.
+Style: Raw textures with filmic grain in 4K fidelity, while the initial structural integrity of both knights and environment remains perfectly intact and consistent throughout the motion.
+videoGenPrompt: The robust French knight in polished steel chainmail hauberk lunges forward aggressively, his sword extended high, displaying his muscle tension while ready for the imminent attack. The broad-shouldered Norman knight in interlinked steel chainmail prepares to act, his body coiled for action amidst the disorder. The gilded chalice, tightly gripped in the knight's hand, reflects the chaotic light as a symbol of the plunder, light streams filter through stained glass, illuminating the scattered debris strategically well, while a mist of dust lingers in the air, caught in the shafts of light, indicating recent upheaval, captured with CINEMATIC_CAMERA_VECTORS the knights lunging towards the camera in an ecclesiastical interior, raw textures with filmic grain in 4K fidelity, while the initial structural integrity of both knights and environment remains perfectly intact and consistent throughout the motion.
+assembledVideoGenPrompt: The robust French knight in polished steel chainmail hauberk lunges forward aggressively, his sword extended high, displaying his muscle tension while ready for the imminent attack. The broad-shouldered Norman knight in interlinked steel chainmail prepares to act, his body coiled for action amidst the disorder. The gilded chalice, tightly gripped in the knight's hand, reflects the chaotic light as a symbol of the plunder, amidst light streams filter through stained glass, illuminating the scattered debris strategically well, while a mist of dust lingers in the air, caught in the shafts of light, indicating recent upheaval, captured with macro Lens, Deep Focus, 9:16 Portrait Cinema, Long/Wide, Zoom Out and Truck Left with Handheld Shaky aggressively the knights lunging towards the camera in an ecclesiastical interior, rendered in raw textures with filmic grain in 4K fidelity, while the initial structural integrity of both knights and environment remains perfectly intact and consistent throughout the motion.
+Scene #6 postVideoGenPrompt() usage:  {"prompt_tokens":57588,"completion_tokens":1390,"total_tokens":58978,"prompt_tokens_details":{"cached_tokens":0,"audio_tokens":0},"completion_tokens_details":{"reasoning_tokens":0,"audio_tokens":0,"accepted_prediction_tokens":0,"rejected_prediction_tokens":0}}
+Scene #6 postVideoGenPrompt() Result
+Scene Summary: In a Byzantine hall, a French knight stands proudly with stolen treasures while a Norman knight and a distressed Byzantine emperor observe.
+Scene Summary Reason: The scene depicts the aftermath of the Crusaders' blunder, showcasing the knights with their spoils and the emperor's reaction.
+Primary Movement: The French knight stands proudly while the Byzantine emperor paces anxiously and the Norman knight displays a smug grin.
+Primary Movement Reason: The main action revolves around the knight holding stolen artifacts, embodying pride amidst the chaos around them.
+Narrative Vibe: CHAOTIC
+Narrative Vibe Reason: The scene captures a mix of triumph for the knights and tumult for the emperor, creating an atmosphere of chaotic victory and tension.
+Selected INTENSITY_TIER: LOW
+INTENSITY_TIER Selected Reason: The movements are fluid yet deliberate, matching the low intensity of the characters' actions, such as standing confidently, displaying jewels, and the anxious pacing of the emperor.
+Identity Logic: The identity of the French knight is preserved through his attire, stance, and the act of displaying stolen treasures, reflecting his role as a conqueror despite the chaos around him.
+Action Focus: The transition from mere description of standing idly to a dynamic portrayal of the knight holding treasures effectively captures the pride and chaos of the moment.
+- - - Primary Narrative Block - - -
+Entity[1]
+Raw Sentence: The French knight stands confidently, displaying the stolen treasures, his adorned chainmail glinting softly in the dim light.
+Action Type: Continuous
+Action Type Reason: The knight is engaged in a sustained act of displaying and showing off his finds, indicating continuous action rather than episodic.
+Verb Reason: 'stands' captures the knight’s posture while 'displaying' highlights the active nature of his pride over the treasures, which aligns with the LOW intensity tier’s vocabulary.
+Adverb Reason: The choice to reflect actions in the present continuous form effectively portrays the knight's pride in the scene.
+Entity[2]
+Raw Sentence: The Norman knight stands to the right, arms crossed smugly, showcasing his share of the spoils, his posture embodying confidence.
+Action Type: Continuous
+Action Type Reason: The Norman knight’s stance and placement indicate he remains in a confident position, captivating attention in a steady action through the scene.
+Verb Reason: The choice of 'stands' preserves the knight's active observation while reflecting confidence, fitting the LOW intensity context.
+Adverb Reason: His posture indicates ongoing confidence, meriting a continuous representation.
+Entity[3]
+Raw Sentence: The Byzantine emperor paces anxiously, wringing his hands as he watches the knights and their treasures.
+Action Type: Continuous
+Action Type Reason: The emperor’s pacing reflects a continuous state of distress and reaction to the unfolding situation.
+Verb Reason: 'paces' indicates the emperor's constant movement, conveying his anxiety and concern effectively within the LOW tier vocabulary.
+Adverb Reason: His wringing hands and anxious pacing indicate non-stop movement.
+- - - Atmospheric Lighting Delta - - -
+Delta: subtle light stream emanating from the high windows, casting intricate shadows on the marble floor
+Delta Reason: The soft diffused natural daylight key emphasizes the opulence of the Byzantine setting while maintaining depth with architectural shadows.
+Delta: a gentle grain of filmic texture in the ambient light, enriching the retro feel of the medieval era
+Delta Reason: The filmic grain provides a touch of authenticity and historical depth, enhancing the overall visual while complementing the medieval setting.
+Delta: dust motes drifting slowly in the air
+Delta Reason: Subtle dust motes enhance the atmosphere of quiet tension and reflect the ambient light in a peaceful yet chaotic aftermath.
+- - - Cinematic Camera Vectors - - -
+Camera Action: Zoom Out and Tilt Up with Handheld Shaky smoothly
+Subject Vectors: [$0X$, $+Y$, $-Z$]
+Subject Vectors Reasoning: The camera captures the knights from a slightly elevated angle that centers on their actions while maintaining the perspective of the emperor below.
+- - - Style - - -
+Style Slot 1: Authentic raw textures with fine cinematic film grain in 4k fidelity
+Style Slot 2: the initial structural integrity of the subject remains perfectly intact and consistent throughout the motion.
+Style Slot 1 Reason: The raw texture enhances the historical authenticity of the clothing and artifacts, reflective of the setting’s medieval nature.
+Style Slot 2 Reason: Preserving the initial integrity ensures that the visual continuity of the knights and the emperor is maintained without distraction.
+Reasoning: The selected verbs from the vocabulary depot align with the low intensity tier selected in the kinetic energy profiling, as enacted actions reflect a calm yet deliberate atmosphere amidst chaos. The cinematographic choices support organic and natural representations of the interactions. The subtle light plays a crucial role in enriching the overall aesthetic, emphasizing the antique quality of the space while minimizing distraction. Lastly, the atmospheric and artistic strategies reinforce the narrative tone and handle coherence without presenting any symbolic inconsistencies.
+- - - Final Output Structure - - -
+Primary Narrative Block: The French knight stands confidently, displaying the stolen treasures, his adorned chainmail glinting softly in the dim light. The Norman knight stands to the right, arms crossed smugly, showcasing his share of the spoils, his posture embodying confidence. The Byzantine emperor paces anxiously, wringing his hands as he watches the knights and their treasures.
+Atmospheric/Lighting Delta: subtle light stream emanating from the high windows, casting intricate shadows on the marble floor, enhanced by gentle filmic grain, with dust motes drifting slowly in the air.
+Cinematic Camera Vector: CINEMATIC_CAMERA_VECTORS the knights standing proudly with treasures and the emperor watching anxiously.
+Style: Authentic raw textures with fine cinematic film grain in 4k fidelity, while the initial structural integrity of the subject remains perfectly intact and consistent throughout the motion.
+videoGenPrompt: The French knight stands confidently, displaying the stolen treasures, his adorned chainmail glinting softly in the dim light. The Norman knight stands to the right, arms crossed smugly, showcasing his share of the spoils, his posture embodying confidence. The Byzantine emperor paces anxiously, wringing his hands as he watches the knights and their treasures, amidst subtle light stream emanating from the high windows, casting intricate shadows on the marble floor, enhanced by the gentle filmic grain, with dust motes drifting slowly in the air, captured with CINEMATIC_CAMERA_VECTORS the knights standing proudly with treasures and the emperor watching anxiously, rendered in authentic raw textures with fine cinematic film grain in 4k fidelity, while the initial structural integrity of the subject remains perfectly intact and consistent throughout the motion.
+assembledVideoGenPrompt: The French knight stands confidently, displaying the stolen treasures, his adorned chainmail glinting softly in the dim light. The Norman knight stands to the right, arms crossed smugly, showcasing his share of the spoils, his posture embodying confidence. The Byzantine emperor paces anxiously, wringing his hands as he watches the knights and their treasures, amidst subtle light stream emanating from the high windows, casting intricate shadows on the marble floor, enhanced by gentle filmic grain, with dust motes drifting slowly in the air, captured with macro Lens, Deep Focus, 9:16 Portrait Cinema, Long/Wide, Zoom Out and Tilt Up with Handheld Shaky smoothly the knights standing proudly with treasures and the emperor watching anxiously, rendered in authentic raw textures with fine cinematic film grain in 4k fidelity, while the initial structural integrity of the subject remains perfectly intact and consistent throughout the motion.
+Scene #2 postVideoGenPrompt() usage:  {"prompt_tokens":56914,"completion_tokens":1231,"total_tokens":58145,"prompt_tokens_details":{"cached_tokens":0,"audio_tokens":0},"completion_tokens_details":{"reasoning_tokens":0,"audio_tokens":0,"accepted_prediction_tokens":0,"rejected_prediction_tokens":0}}
+Scene #2 postVideoGenPrompt() Result
+Scene Summary: In 1202, knights are in a Venetian harbor preparing for their journey to the Holy Land.
+Scene Summary Reason: The central action involves the knights at the harbor, contextualized by their interaction with Venice for transportation.
+Primary Movement: The knight is extending a pouch of coins towards a merchant in a confident gesture.
+Primary Movement Reason: The visual focus is on the knight's action of offering payment, which defines the scene's dynamic.
+Narrative Vibe: COMBAT
+Narrative Vibe Reason: The atmosphere suggests tension between expectations of the crusade and the unfolding negotiation, highlighting potential conflict.
+Selected INTENSITY_TIER: LOW
+INTENSITY_TIER Selected Reason: The physical actions are subtle and imply an exchange rather than high-energy combat or chaos.
+Identity Logic: The identity of the French knight is prominently preserved through his attire and gesture, reflecting the medieval era seamlessly while he interacts with his environment, maintaining historical accuracy.
+Action Focus: The translation of the knight's gesture from a static potential to an active exchange is underscored by the deliberate arm movement towards the merchant, marking it as a decisive act in the narrative progression.
+- - - Primary Narrative Block - - -
+Entity[1]
+Raw Sentence: The French knight with short dark brown hair is extending a pouch of coins confidently, while the leather pouch settles gently in his hand.
+Action Type: Continuous
+Action Type Reason: The knight's gesture of extending the pouch suggests a sustained action rather than a single motion, fitting the continuous tense.
+Verb Reason: The verb 'extending' reflects the active engagement and intention of the knight towards the merchant, aligning with the LOW intensity tier.
+Adverb Reason:
+Entity[2]
+Raw Sentence: The Norman knight stands observantly just right of the French knight, arms crossed and watchful, maintaining a passive stance amidst the transaction.
+Action Type: Continuous
+Action Type Reason: The action of standing is continuous, showing the knight's ongoing readiness and attentiveness without physical movement.
+Verb Reason: 'Standing' conveys stability and observation, reinforcing the LOW intensity tier's theme of passive engagement.
+Adverb Reason:
+Entity[3]
+Raw Sentence: The tawny leather pouch is being grasped securely, showcasing the worn stitching indicative of its use.
+Action Type: Continuous
+Action Type Reason: The details of the pouch indicate a persistent state of being handled within the scene's context.
+Verb Reason: The verb 'grasped' suggests a controlled, passive interaction concerning the pouch's role as a transactional item.
+Adverb Reason:
+Entity[4]
+Raw Sentence: The Venetian war galley looms in the background, remaining motionless, establishing the maritime context.
+Action Type: Continuous
+Action Type Reason: The galley's position in the scene remains unchanged, emphasizing its significance in the setting.
+Verb Reason: 'Looming' effectively captures the passive, imposing nature of the galley, echoing the LOW intensity tier while providing structural context.
+Adverb Reason:
+Entity[5]
+Raw Sentence: The roughhewn wooden crate is positioned near the quay edge, enhancing the harbor atmosphere without any drastic movement.
+Action Type: Continuous
+Action Type Reason: The crate's stationary presence provides a solid background anchor to the scene's visual depth.
+Verb Reason: 'Positioned' reflects its steady state within the scene, aligning with the LOW intensity tier.
+Adverb Reason:
+- - - Atmospheric Lighting Delta - - -
+Delta: soft diffused natural daylight
+Delta Reason: The soft daylight accentuates the historical context and enhances the realism of the scene.
+Delta: subtle desaturation with warm earthy tones
+Delta Reason: This choice gives a slightly nostalgic feel typical of historical reenactments, contrasting the scene's seriousness.
+- - - Cinematic Camera Vectors - - -
+Camera Action: Zoom Out with Handheld Shaky smoothly
+Subject Vectors: [$0X$, $0Y$, $-Z$]
+Subject Vectors Reasoning: The camera is set slightly lower than the subjects, capturing the breadth of the harbor setting while focusing directly on the knights and their interaction.
+- - - Style - - -
+Style Slot 1: Raw texture details with filmic grain in 4K fidelity
+Style Slot 2: The initial structural integrity of the subjects remains perfectly intact and consistent throughout the motion.
+Style Slot 1 Reason: This enhances the tactile quality of the medieval scene and ensures clarity of clothing details and materials in high resolution.
+Style Slot 2 Reason: It establishes consistency and helps retain the visual essence of the characters while they engage.
+Reasoning: The selected vocabulary represents nuanced interactions, aligning the knight's gestures with historical context while avoiding excessive motion to reflect the subdued tension of the negotiations. The camera settings are designed to create an intimate yet expansive portrayal of the harbor, accentuating both characters and their environment without sacrificing quality. The atmospheric strategy utilizes natural lighting to add emotional depth while maintaining visual coherence throughout.
+- - - Final Output Structure - - -
+Primary Narrative Block: The French knight with short dark brown hair is extending a pouch of coins confidently, while the leather pouch settles gently in his hand.
+Atmospheric/Lighting Delta: soft diffused natural daylight, amidst subtle desaturation with warm earthy tones
+Cinematic Camera Vector: CINEMATIC_CAMERA_VECTORS the foreground knights and Venetian war galley
+Style: Raw texture details with filmic grain in 4K fidelity, while the initial structural integrity of the subjects remains perfectly intact and consistent throughout the motion.
+videoGenPrompt: The French knight with short dark brown hair is extending a pouch of coins confidently, while the leather pouch settles gently in his hand, amid soft diffused natural daylight, while subtle desaturation with warm earthy tones, captured with CINEMATIC_CAMERA_VECTORS the foreground knights and Venetian war galley, rendered with raw texture details with filmic grain in 4K fidelity, while the initial structural integrity of the subjects remains perfectly intact and consistent throughout the motion.
+assembledVideoGenPrompt: The French knight with short dark brown hair is extending a pouch of coins confidently, while the leather pouch settles gently in his hand, amidst soft diffused natural daylight, amidst subtle desaturation with warm earthy tones, captured with macro Lens, Deep Focus, 9:16 Portrait Cinema, Long/Wide, Zoom Out with Handheld Shaky smoothly the foreground knights and Venetian war galley, rendered in raw texture details with filmic grain in 4K fidelity, while the initial structural integrity of the subjects remains perfectly intact and consistent throughout the motion.

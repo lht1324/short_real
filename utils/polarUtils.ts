@@ -1,4 +1,4 @@
-import {Product} from "@polar-sh/sdk/dist/commonjs/models/components/product";
+import {Product} from "@polar-sh/sdk/models/components/product";
 import {ProductData} from "@/api/types/api/polar/products/ProductData";
 import {SubscriptionPlan} from "@/api/types/supabase/Users";
 

@@ -4,6 +4,7 @@ import { CaptionData, CaptionConfigState } from '@/components/page/workspace/edi
  * CaptionData와 CaptionConfigState를 ASS 파일 문자열로 변환
  */
 export function generateASSContent(
+    isCaptionEnabled: boolean,
     captionDataList: CaptionData[],
     captionConfig: CaptionConfigState,
     videoWidth: number,
@@ -12,12 +13,14 @@ export function generateASSContent(
     captionAreaVerticalPadding: number,
     captionOneLineHeight: number,
 ): string {
+    const alphaValue = isCaptionEnabled ? "00" : "FF"
+
     // 색상을 BGR 포맷으로 변환 (ASS 포맷 요구사항)
     const hexToASSColor = (hex: string): string => {
         const r = parseInt(hex.slice(1, 3), 16);
         const g = parseInt(hex.slice(3, 5), 16);
         const b = parseInt(hex.slice(5, 7), 16);
-        return `&H00${b.toString(16).padStart(2, '0').toUpperCase()}${g.toString(16).padStart(2, '0').toUpperCase()}${r.toString(16).padStart(2, '0').toUpperCase()}`;
+        return `&H${alphaValue}${b.toString(16).padStart(2, '0').toUpperCase()}${g.toString(16).padStart(2, '0').toUpperCase()}${r.toString(16).padStart(2, '0').toUpperCase()}`;
     };
 
     // ASS는 lineHeight을 폰트 사이즈로 사용함
@@ -58,7 +61,7 @@ PlayResY: ${videoHeight}
 
 [V4+ Styles]
 Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
-Style: Default,${fontName},${fontSize},&H00FFFFFF,&H000000FF,&H00000000,&H00000000,${fontWeightName === "Bold" ? 1 : 0},0,0,0,100,100,0,0,1,0,0,8,10,10,${marginV},1
+Style: Default,${fontName},${fontSize},&H${alphaValue}FFFFFF,&H${alphaValue}0000FF,&H${alphaValue}000000,&H${alphaValue}000000,${fontWeightName === "Bold" ? 1 : 0},0,0,0,100,100,0,0,1,0,0,8,10,10,${marginV},1
 
 [Events]
 Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text

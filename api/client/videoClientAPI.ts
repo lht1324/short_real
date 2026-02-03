@@ -7,9 +7,10 @@ export const videoClientAPI = {
      * 영상 생성 요청을 서버에 전송합니다.
      * 음성 생성 → OpenAI 분석 → Scene별 영상 생성 → DB 저장의 전체 플로우를 실행합니다.
      */
-    async postVideo(taskId: string, selectedStyleId: string): Promise<boolean> {
+    async postVideo(taskId: string, userId: string, selectedStyleId: string): Promise<boolean> {
         try {
             const response = await postFetch(`/api/video?taskId=${taskId}`, {
+                userId: userId,
                 selectedStyleId: selectedStyleId,
             });
 
@@ -20,7 +21,7 @@ export const videoClientAPI = {
             const postVideoResult = await response.json();
 
             if (!postVideoResult.success) {
-                throw Error(postVideoResult.error ?? "Unknown error occured while generating video.");
+                throw Error(postVideoResult.error ?? "Unknown error occurred while generating video.");
             }
 
             return true;
@@ -237,11 +238,9 @@ export const videoClientAPI = {
         }
     },
 
-    async postVideoExportYoutube(userId: string, taskId: string): Promise<string | null> {
+    async postVideoExportYoutube(taskId: string): Promise<string | null> {
         try {
-            const response = await postFetch(`/api/video/export/youtube?taskId=${taskId}`, {
-                userId: userId,
-            });
+            const response = await postFetch(`/api/video/export/youtube?taskId=${taskId}`);
 
             if (!response.ok) {
                 throw Error(`HTTP error! status: ${response.status}`);

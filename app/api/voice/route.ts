@@ -14,7 +14,7 @@ export async function GET() {
         const cached = voiceCache.get(cacheKey);
 
         if (cached) {
-            console.log('✅ Cache HIT - Products served from cache');
+            console.log('✅ Cache HIT - Voices in /voice served from cache');
             return getNextBaseResponse({
                 success: true,
                 status: 200,

@@ -11,14 +11,14 @@ export async function createSupabaseServer(mode: Mode = "readOnly") {
         process.env.SUPABASE_SERVICE_ROLE_KEY!,
         {
             cookies: {
-                getAll() {
+                getAll(): { name: string; value: string; options: CookieOptions }[] {
                     return store.getAll().map(({ name, value, ...opts }) => ({
                         name,
                         value,
                         options: opts as CookieOptions,
                     }))
                 },
-                setAll(all) {
+                setAll(all: { name: string; value: string; options: CookieOptions }[]) {
                     if (mode === "mutate") {
                         all.forEach(({ name, value, options }) =>
                             store.set({ name, value, ...options }),

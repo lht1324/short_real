@@ -1,0 +1,438 @@
+Scene #1 imageGenPrompt: {
+  "scene": "WWII infantry soldier entrenched in muddy chaos",
+  "subjects": [
+    {
+      "id": "soldier",
+      "type": "Soldier",
+      "description": "A lean infantry soldier wearing an olive drab uniform, helmet, and clutching a rifle",
+      "clothes": "Rough olive drab wool uniform with canvas webbing, metal buttons, and leather boots, mud-splattered and damp",
+      "accessories": [
+        "Steel helmet",
+        "Ammunition pouches",
+        "Dog tags"
+      ],
+      "pose": "Crouching firmly leftward in the muddy trench, hands tightly clutching the rifle",
+      "position": "midground"
+    },
+    {
+      "id": "rifle",
+      "type": "Rifle",
+      "description": "A standard M1 Garand rifle with wooden stock and steel barrel",
+      "clothes": "Wooden stock with steel barrel and mechanism, showing wear and tear, caked with mud",
+      "accessories": [],
+      "pose": "Gripped tightly in the soldier's hands, barrel pointing forward",
+      "position": "midground"
+    },
+    {
+      "id": "shell_casings",
+      "type": "Shell Casings",
+      "description": "Spent brass shell casings scattered on the ground",
+      "clothes": "Brass metal casings, tarnished and lying in the mud",
+      "accessories": [],
+      "pose": "Scattered randomly on the trench floor",
+      "position": "foreground"
+    },
+    {
+      "id": "helmet",
+      "type": "Helmet",
+      "description": "A discarded M1 steel helmet",
+      "clothes": "Steel helmet with canvas liner, dented and muddy",
+      "accessories": [],
+      "pose": "Lying overturned in the mud",
+      "position": "foreground"
+    }
+  ],
+  "color_palette": [
+    "#6B8E23",
+    "#FF8C00",
+    "#C0C0C0"
+  ],
+  "lighting": "Natural daylight with low-key exposure, enhanced by artificial fire and smoke effects creating high contrast",
+  "mood": "Chaotic and intense atmosphere with desaturated gritty tones and high contrast",
+  "background": "Devastated WWII battlefield with stagnant smoke plumes, shattered concrete structures, and distant explosion flashes"
+}
+Scene #1 OpticalAndTechnicalOption: {"style":"High-fidelity RAW photography with Raw surface detail and Filmic organic texture.","camera":{"angle":"high angle shot looking down","distance":"medium wide vertical shot","focus":"sharp focus throughout the vertical frame","lens":"50mm","fNumber":"f/8.0","ISO":1600},"composition":"steep diagonal tension","effects":["subtle film grain","highly defined textures","hyper-detailed rendering","extreme visual fidelity","photorealistic textures","physically based rendering"]}
+Scene #1 ImageGenPromptSentence: A 1944 WWII American Male infantry soldier, with a lean and muscular build and stern expression, clad in olive drab wool uniform with canvas webbing, equipped with steel helmet, ammunition pouches, and dog tags, who is crouching firmly leftward in the muddy trench midground with hands tightly clutching a rifle, while the rifle, featuring a wooden stock with steel barrel and mechanism, showing wear and tear, is gripped tightly midground, with shell casings, made of brass metal casings slightly tarnished, scattered randomly on the trench floor foreground, and a helmet, constructed from steel with canvas liner, dented and muddy, lying overturned in the mud foreground.
+Scene #1 AssembledImageGenPromptSentence: A high angle shot looking down medium wide vertical shot captures a 1944 WWII American Male infantry soldier, with a lean and muscular build and stern expression, clad in olive drab wool uniform with canvas webbing, equipped with steel helmet, ammunition pouches, and dog tags, who is crouching firmly leftward in the muddy trench midground with hands tightly clutching a rifle, while the rifle, featuring a wooden stock with steel barrel and mechanism, showing wear and tear, is gripped tightly midground, with shell casings, made of brass metal casings slightly tarnished, scattered randomly on the trench floor foreground, and a helmet, constructed from steel with canvas liner, dented and muddy, lying overturned in the mud foreground. the scene is set in Devastated WWII battlefield with stagnant smoke plumes, shattered concrete structures, and distant explosion flashes, depicting WWII infantry soldier entrenched in muddy chaos with a steep diagonal tension composition, where the atmosphere is Chaotic and intense atmosphere with desaturated gritty tones and high contrast, illuminated by Natural daylight with low-key exposure, enhanced by artificial fire and smoke effects creating high contrast and a color palette of (#6B8E23, #FF8C00, #C0C0C0). rendered in High-fidelity RAW photography with Raw surface detail and Filmic organic texture, captured with a 50mm lens at f/8.0 for sharp focus throughout the vertical frame and ISO 1600, featuring subtle film grain, highly defined textures, hyper-detailed rendering, extreme visual fidelity, photorealistic textures, and physically based rendering.
+
+Scene #2 imageGenPrompt: {
+  "scene": "1944 WWII European Battlefield tank crushing debris on a barren wasteland",
+  "subjects": [
+    {
+      "id": "tank",
+      "type": "The Sherman Tank",
+      "description": "A Sherman tank with a boxy shape, turret, and tracks, painted green with dust coating.",
+      "clothes": "Green painted steel hull with scratched plates, treads, and heavy dust coating.",
+      "accessories": [
+        "Main gun",
+        "Machine gun",
+        "Headlights"
+      ],
+      "pose": "Rumbling forward with tracks crushing debris, body leaning slightly from momentum in the midground.",
+      "position": "midground"
+    },
+    {
+      "id": "tread_marks",
+      "type": "The Tank Tread Impressions",
+      "description": "Deep tread marks in the mud showing soil compression.",
+      "clothes": "Muddy impressions with grooves indicating heavy weight and motion.",
+      "accessories": [],
+      "pose": "Embedded in the soil, forming parallel grooves in the foreground.",
+      "position": "foreground"
+    },
+    {
+      "id": "smoke",
+      "type": "The Smoke Plumes",
+      "description": "Wispy smoke clouds rising from the battlefield.",
+      "clothes": "Grey and black smoke with translucent, ethereal texture.",
+      "accessories": [],
+      "pose": "Billowing upward, dissipating into the atmosphere in the background.",
+      "position": "background"
+    }
+  ],
+  "color_palette": [
+    "#6B8E23",
+    "#FF8C00",
+    "#B0E0E6"
+  ],
+  "lighting": "Low-key natural daylight with dramatic backlighting highlighting metal textures, enhanced by smoke effects.",
+  "mood": "Chaotic and intense atmosphere with desaturated, gritty visuals and high contrast.",
+  "background": "A scarred, barren WWII battlefield with deep tread marks in the mud, wispy smoke plumes rising in the distance, under a desaturated sky."
+}
+Scene #2 OpticalAndTechnicalOption: {"style":"High-fidelity RAW photography with Raw surface detail and Filmic organic texture.","camera":{"angle":"low angle","distance":"medium wide vertical shot","focus":"sharp focus throughout the vertical frame","lens":"50mm","fNumber":"f/8.0","ISO":1600},"composition":"low-to-high leading lines","effects":["subtle film grain","highly defined textures","hyper-detailed rendering","extreme visual fidelity","photorealistic textures","physically based rendering"]}
+Scene #2 ImageGenPromptSentence: A 1944 WWII US Army Sherman Tank, finished in green painted steel hull with scratched plates, treads, and heavy dust coating, equipped with main gun, machine gun, and headlights, which is rumbling forward with tracks crushing debris in the midground, with tank tread impressions in the foreground which are embedded in the soil, and smoke plumes in the background which are billowing upward.
+Scene #2 AssembledImageGenPromptSentence: A low angle medium wide vertical shot captures a 1944 WWII US Army Sherman Tank, finished in green painted steel hull with scratched plates, treads, and heavy dust coating, equipped with main gun, machine gun, and headlights, which is rumbling forward with tracks crushing debris in the midground, with tank tread impressions in the foreground which are embedded in the soil, and smoke plumes in the background which are billowing upward. the scene is set in A scarred, barren WWII battlefield with deep tread marks in the mud, wispy smoke plumes rising in the distance, under a desaturated sky, depicting 1944 WWII European Battlefield tank crushing debris on a barren wasteland with a low-to-high leading lines composition, where the atmosphere is Chaotic and intense atmosphere with desaturated, gritty visuals and high contrast, illuminated by Low-key natural daylight with dramatic backlighting highlighting metal textures, enhanced by smoke effects. and a color palette of (#6B8E23, #FF8C00, #B0E0E6). rendered in High-fidelity RAW photography with Raw surface detail and Filmic organic texture, captured with a 50mm lens at f/8.0 for sharp focus throughout the vertical frame and ISO 1600, featuring subtle film grain, highly defined textures, hyper-detailed rendering, extreme visual fidelity, photorealistic textures, and physically based rendering.
+
+Scene #3 imageGenPrompt: {
+  "scene": "1944 WWII infantry soldiers sprinting through mud-splattered battlefield",
+  "subjects": [
+    {
+      "id": "rifle",
+      "type": "rifle",
+      "description": "A standard infantry rifle with wooden stock and steel barrel, showing wear and tear",
+      "clothes": "Wooden stock with steel barrel and mechanism, showing wear and tear and mud-stains",
+      "accessories": [],
+      "pose": "gripped firmly in a soldier's hands",
+      "position": "foreground"
+    },
+    {
+      "id": "medical_kit",
+      "type": "medical kit",
+      "description": "A practical medical field kit with canvas bag and metal clasps",
+      "clothes": "Canvas bag with metal clasps, containing bandages and tools, mud-splattered",
+      "accessories": [],
+      "pose": "being carried over the shoulder",
+      "position": "foreground"
+    },
+    {
+      "id": "barbed_wire",
+      "type": "barbed wire",
+      "description": "A hazardous barbed wire obstacle with rusted steel coils",
+      "clothes": "Rusted steel wire with sharp barbs, coiled or stretched",
+      "accessories": [],
+      "pose": "coiled on the ground",
+      "position": "midground"
+    },
+    {
+      "id": "craters",
+      "type": "shell craters",
+      "description": "Impact-formed shell craters with dirt and debris",
+      "clothes": "Dirt and debris forming bowl-shaped depressions, rough and uneven",
+      "accessories": [],
+      "pose": "depressions in the earth",
+      "position": "background"
+    }
+  ],
+  "color_palette": [
+    "#6B8E23",
+    "#FF8C00",
+    "#B0E0E6"
+  ],
+  "lighting": "Natural daylight with artificial fire and smoke effects in a low-key exposure",
+  "mood": "Chaotic and intense atmosphere with desaturated gritty war-tones and high contrast",
+  "background": "Rubble-strewn WWII European battlefield with mud-splattered terrain, barbed wire obstacles, and shell craters, with soldiers charging forward in the midground illuminated by flickering fires and stagnant thick smoke"
+}
+Scene #3 OpticalAndTechnicalOption: {"style":"High-fidelity RAW photography with Raw surface detail and Filmic organic texture.","camera":{"angle":"over-the-shoulder","distance":"medium wide vertical shot","focus":"sharp focus throughout the vertical frame","lens":"50mm","fNumber":"f/8.0","ISO":1600},"composition":"steep diagonal tension","effects":["subtle film grain","highly defined textures","hyper-detailed rendering","extreme visual fidelity","photorealistic textures","physically based rendering"]}
+Scene #3 ImageGenPromptSentence: In a 1944 WWII infantry soldiers sprinting through mud-splattered battlefield, a US Military rifle is gripped firmly in the foreground, with a medical field kit carried nearby, barbed wire coiled in the midground, and shell craters scattered in the background.
+Scene #3 AssembledImageGenPromptSentence: An over-the-shoulder medium wide vertical shot captures in a 1944 WWII infantry soldiers sprinting through mud-splattered battlefield, a US Military rifle is gripped firmly in the foreground, with a medical field kit carried nearby, barbed wire coiled in the midground, and shell craters scattered in the background. the scene is set in Rubble-strewn WWII European battlefield with mud-splattered terrain, barbed wire obstacles, and shell craters, with soldiers charging forward in the midground illuminated by flickering fires and stagnant thick smoke, depicting 1944 WWII infantry soldiers sprinting through mud-splattered battlefield with a steep diagonal tension composition, where the atmosphere is Chaotic and intense atmosphere with desaturated gritty war-tones and high contrast, illuminated by Natural daylight with artificial fire and smoke effects in a low-key exposure and a color palette of (#6B8E23, #FF8C00, #B0E0E6). rendered in High-fidelity RAW photography with Raw surface detail and Filmic organic texture, captured with a 50mm lens at f/8.0 for sharp focus throughout the vertical frame and ISO 1600, featuring subtle film grain, highly defined textures, hyper-detailed rendering, extreme visual fidelity, photorealistic textures, and physically based rendering.
+
+Scene #4 imageGenPrompt: {
+  "scene": "WWII infantry soldier emerging from water under fire on Normandy beach",
+  "subjects": [
+    {
+      "id": "soldier",
+      "type": "infantry soldier",
+      "description": "A 1944 WWII American infantry soldier wearing a wet uniform and holding a rifle",
+      "clothes": "Water-soaked olive drab wool uniform with canvas webbing and leather boots, rough and heavy texture",
+      "accessories": [
+        "Steel helmet",
+        "Ammunition pouches",
+        "Dog tags"
+      ],
+      "pose": "Wading forward toward the camera, body leaning against the water resistance, holding rifle ready",
+      "position": "foreground"
+    },
+    {
+      "id": "rifle",
+      "type": "M1 Garand rifle",
+      "description": "An M1 Garand rifle with wooden stock and steel barrel",
+      "clothes": "Wooden stock with steel barrel, showing wear and tear",
+      "accessories": [],
+      "pose": "Gripped in the soldier's hands, pointing forward",
+      "position": "foreground"
+    },
+    {
+      "id": "debris",
+      "type": "washed-up debris",
+      "description": "Scattered debris including wood planks and metal fragments",
+      "clothes": "Broken wood and metal materials, weathered and jagged",
+      "accessories": [],
+      "pose": "Lying scattered on the sand in various orientations",
+      "position": "midground"
+    },
+    {
+      "id": "tank_traps",
+      "type": "concrete tank traps",
+      "description": "Concrete tank traps arranged defensively on the beach",
+      "clothes": "Grey concrete blocks with rough texture",
+      "accessories": [],
+      "pose": "Stationary in lines on the beach sand",
+      "position": "background"
+    }
+  ],
+  "color_palette": [
+    "#6B8E23",
+    "#FF8C00",
+    "#696969"
+  ],
+  "lighting": "Low-key natural daylight with fire and smoke effects, creating high contrast shadows",
+  "mood": "Chaotic and intense atmosphere with gritty, desaturated war-tones and high contrast",
+  "background": "Normandy beach with smoke, water sprays, warm sunrise light cutting through haze, scattered debris and concrete tank traps in the distance"
+}
+Scene #4 OpticalAndTechnicalOption: {"style":"High-fidelity RAW photography with Raw surface detail and Filmic organic texture.","camera":{"angle":"low angle","distance":"medium wide vertical shot","focus":"sharp focus throughout the vertical frame","lens":"50mm","fNumber":"f/8.0","ISO":1600},"composition":"low-to-high leading lines","effects":["subtle film grain","highly defined textures","hyper-detailed rendering","extreme visual fidelity","photorealistic textures","physically based rendering"]}
+Scene #4 ImageGenPromptSentence: A 1944 WWII American male infantry soldier, with a lean and muscular build, clad in an olive drab wool uniform, equipped with a steel helmet, ammunition pouches, and dog tags, who is wading forward out of the water onto the sand in the foreground, holding an M1 Garand rifle, while in the midground, washed-up debris, constructed from wood and metal, is scattered on the sand, and in the background, concrete tank traps, made of grey concrete, are stationed defensively.
+Scene #4 AssembledImageGenPromptSentence: A low angle medium wide vertical shot captures a 1944 WWII American male infantry soldier, with a lean and muscular build, clad in an olive drab wool uniform, equipped with a steel helmet, ammunition pouches, and dog tags, who is wading forward out of the water onto the sand in the foreground, holding an M1 Garand rifle, while in the midground, washed-up debris, constructed from wood and metal, is scattered on the sand, and in the background, concrete tank traps, made of grey concrete, are stationed defensively. the scene is set in Normandy beach with smoke, water sprays, warm sunrise light cutting through haze, scattered debris and concrete tank traps in the distance, depicting WWII infantry soldier emerging from water under fire on Normandy beach with a low-to-high leading lines composition, where the atmosphere is Chaotic and intense atmosphere with gritty, desaturated war-tones and high contrast, illuminated by Low-key natural daylight with fire and smoke effects, creating high contrast shadows and a color palette of (#6B8E23, #FF8C00, #696969). rendered in High-fidelity RAW photography with Raw surface detail and Filmic organic texture, captured with a 50mm lens at f/8.0 for sharp focus throughout the vertical frame and ISO 1600, featuring subtle film grain, highly defined textures, hyper-detailed rendering, extreme visual fidelity, photorealistic textures, and physically based rendering.
+
+Scene #5 imageGenPrompt: {
+  "scene": "WWII fighter pilot in high-speed aerial combat with tracer rounds and sun glint",
+  "subjects": [
+    {
+      "id": "pilot",
+      "type": "Fighter Pilot",
+      "description": "An American fighter pilot in WWII, wearing a leather bomber jacket and flight suit, with flight gear",
+      "clothes": "Brown leather bomber jacket with sheepskin collar and durable flight suit, with raw textures, minor damage, and sweat-stains",
+      "accessories": [
+        "Flight goggles",
+        "Oxygen mask",
+        "Parachute harness"
+      ],
+      "pose": "Leaning forward and gripping the control stick firmly while maneuvering at high speed, with crisp motion clarity",
+      "position": "midground"
+    },
+    {
+      "id": "cockpit_interior",
+      "type": "Aircraft Cockpit",
+      "description": "A detailed aircraft cockpit interior with metal and glass components, surrounding the pilot",
+      "clothes": "Metal frame with glass instruments and leather seats, showing functional wear and vibration from motion",
+      "accessories": [],
+      "pose": "Surrounding the pilot as part of the aircraft structure, with instruments active",
+      "position": "foreground"
+    },
+    {
+      "id": "instrument_panels",
+      "type": "Control Panels",
+      "description": "Glowing instrument panels with dials and gauges, positioned within the cockpit",
+      "clothes": "Metal panels with glass dials and glowing indicators, with intricate surfaces",
+      "accessories": [],
+      "pose": "Glowing with active indicators on the side panels, positioned for pilot interaction",
+      "position": "background"
+    },
+    {
+      "id": "window",
+      "type": "Cockpit Window",
+      "description": "A scratched glass window providing a view outside to the sky",
+      "clothes": "Glass pane with minor scratches and reflections, clear material",
+      "accessories": [],
+      "pose": "Positioned in the upper frame with a view to the cloudy skies, showing scratches",
+      "position": "foreground"
+    }
+  ],
+  "color_palette": [
+    "#6B8E23",
+    "#FF8C00",
+    "#696969"
+  ],
+  "lighting": "Low-key natural daylight with artificial fire and smoke effects from tracer rounds, high contrast",
+  "mood": "Intense, gritty, and chaotic atmosphere with high contrast and aerial energy",
+  "background": "Cloudy skies visible through the window with tracer round streaks, sun glint on wing edges, and motion-blurred cloud formations"
+}
+Scene #5 OpticalAndTechnicalOption: {"style":"High-fidelity RAW photography with Raw surface detail and Filmic organic texture.","camera":{"angle":"slightly low","distance":"medium wide vertical shot","focus":"sharp focus throughout the vertical frame","lens":"50mm","fNumber":"f/8.0","ISO":1600},"composition":"low-to-high leading lines","effects":["subtle film grain","highly defined textures","hyper-detailed rendering","extreme visual fidelity","photorealistic textures","physically based rendering"]}
+Scene #5 ImageGenPromptSentence: A 1944 WWII American Male Fighter Pilot, with slicked-back dark hair under a flight cap and confident posture with experienced hands, clad in a brown leather bomber jacket with sheepskin collar and flight suit, equipped with flight goggles, oxygen mask, and parachute harness, who is leaning forward and gripping the control stick firmly in the midground, while in the foreground the Aircraft Cockpit, constructed from metal frame with glass instruments and leather seats, surrounds him, with the Control Panels, featuring glowing dials and gauges, positioned in the background, and the Cockpit Window, made of scratched glass, providing a view to the cloudy skies with tracer round streaks and sun glint in the foreground.
+Scene #5 AssembledImageGenPromptSentence: A slightly low medium wide vertical shot captures a 1944 WWII American Male Fighter Pilot, with slicked-back dark hair under a flight cap and confident posture with experienced hands, clad in a brown leather bomber jacket with sheepskin collar and flight suit, equipped with flight goggles, oxygen mask, and parachute harness, who is leaning forward and gripping the control stick firmly in the midground, while in the foreground the Aircraft Cockpit, constructed from metal frame with glass instruments and leather seats, surrounds him, with the Control Panels, featuring glowing dials and gauges, positioned in the background, and the Cockpit Window, made of scratched glass, providing a view to the cloudy skies with tracer round streaks and sun glint in the foreground. the scene is set in Cloudy skies visible through the window with tracer round streaks, sun glint on wing edges, and motion-blurred cloud formations, depicting WWII fighter pilot in high-speed aerial combat with tracer rounds and sun glint with a low-to-high leading lines composition, where the atmosphere is Intense, gritty, and chaotic atmosphere with high contrast and aerial energy, illuminated by Low-key natural daylight with artificial fire and smoke effects from tracer rounds, high contrast and a color palette of (#6B8E23, #FF8C00, #696969). rendered in High-fidelity RAW photography with Raw surface detail and Filmic organic texture, captured with a 50mm lens at f/8.0 for sharp focus throughout the vertical frame and ISO 1600, featuring subtle film grain, highly defined textures, hyper-detailed rendering, extreme visual fidelity, photorealistic textures, and physically based rendering.
+
+Scene #6 imageGenPrompt: {
+  "scene": "1944 WWII bomb drop descending through somber gray clouds",
+  "subjects": [
+    {
+      "id": "bomb",
+      "type": "The Aerial Bomb",
+      "description": "A cylindrical high-explosive bomb with metal casing and fins.",
+      "clothes": "Metal casing with fins and fuse, painted olive drab, showing scratches and wear.",
+      "accessories": [],
+      "pose": "Falling downward through the frame with streamlined posture.",
+      "position": "foreground"
+    },
+    {
+      "id": "aircraft_fuselage",
+      "type": "The Bomber Aircraft Fuselage",
+      "description": "An aluminum fuselage with riveted plates and camouflage paint.",
+      "clothes": "Aluminum skin with riveted plates, painted camouflage.",
+      "accessories": [],
+      "pose": "Flying steadily leftward in the background.",
+      "position": "background"
+    },
+    {
+      "id": "bomb_bay_doors",
+      "type": "The Bomb Bay Doors",
+      "description": "Metal doors open to reveal the bomb bay.",
+      "clothes": "Metal doors with hinges and latches, open.",
+      "accessories": [],
+      "pose": "Positioned open on the fuselage.",
+      "position": "background"
+    },
+    {
+      "id": "riveted_metal_plates",
+      "type": "The Riveted Metal Plates",
+      "description": "Riveted plates on the aircraft surface.",
+      "clothes": "Metal plates with visible rivets.",
+      "accessories": [],
+      "pose": "Adhering to the fuselage surface.",
+      "position": "background"
+    }
+  ],
+  "color_palette": [
+    "#6B8E23",
+    "#FF8C00",
+    "#87CEEB"
+  ],
+  "lighting": "Low-key natural daylight with artificial fire and smoke highlights",
+  "mood": "Chaotic and somber atmosphere with gritty, high-contrast visuals",
+  "background": "Gray clouds with suspended dust particles, over a WWII European battlefield with distant impact craters and debris"
+}
+Scene #6 OpticalAndTechnicalOption: {"style":"High-fidelity RAW photography with Raw surface detail and Filmic organic texture.","camera":{"angle":"low angle","distance":"medium wide vertical shot","focus":"sharp focus throughout the vertical frame","lens":"50mm","fNumber":"f/8.0","ISO":1600},"composition":"low-to-high leading lines","effects":["subtle film grain","highly defined textures","hyper-detailed rendering","extreme visual fidelity","photorealistic textures","physically based rendering"]}
+Scene #6 ImageGenPromptSentence: A 1944 WWII US Air Force Aerial Bomb, constructed from metal casing with fins and fuse, painted olive drab, with cylindrical body and tail fins, which is falling downward through the frame with streamlined posture in the foreground, while in the background a 1944 WWII US Air Force Bomber Aircraft Fuselage, finished in aluminum skin with riveted plates and camouflage paint, is flying steadily leftward, with the Bomb Bay Doors, constructed from metal doors with hinges, positioned open on the fuselage, and the Riveted Metal Plates, featuring metal plates with rivets, adhering to the surface.
+Scene #6 AssembledImageGenPromptSentence: A low angle medium wide vertical shot captures a 1944 WWII US Air Force Aerial Bomb, constructed from metal casing with fins and fuse, painted olive drab, with cylindrical body and tail fins, which is falling downward through the frame with streamlined posture in the foreground, while in the background a 1944 WWII US Air Force Bomber Aircraft Fuselage, finished in aluminum skin with riveted plates and camouflage paint, is flying steadily leftward, with the Bomb Bay Doors, constructed from metal doors with hinges, positioned open on the fuselage, and the Riveted Metal Plates, featuring metal plates with rivets, adhering to the surface. the scene is set in Gray clouds with suspended dust particles, over a WWII European battlefield with distant impact craters and debris, depicting 1944 WWII bomb drop descending through somber gray clouds with a low-to-high leading lines composition, where the atmosphere is Chaotic and somber atmosphere with gritty, high-contrast visuals, illuminated by Low-key natural daylight with artificial fire and smoke highlights and a color palette of (#6B8E23, #FF8C00, #87CEEB). rendered in High-fidelity RAW photography with Raw surface detail and Filmic organic texture, captured with a 50mm lens at f/8.0 for sharp focus throughout the vertical frame and ISO 1600, featuring subtle film grain, highly defined textures, hyper-detailed rendering, extreme visual fidelity, photorealistic textures, and physically based rendering.
+
+Scene #7 imageGenPrompt: {
+  "scene": "1944 WWII weary soldier surveying a ruined field",
+  "subjects": [
+    {
+      "id": "soldier",
+      "type": "Soldier",
+      "description": "A weary American infantry soldier wearing an olive drab wool uniform and steel helmet",
+      "clothes": "Olive drab wool uniform with mud-caked texture, canvas webbing, and leather boots",
+      "accessories": [
+        "Steel helmet",
+        "Ammunition pouches",
+        "Dog tags"
+      ],
+      "pose": "lying backward on the ground, torso pressed into the mud, hand clutching the medal",
+      "position": "midground"
+    },
+    {
+      "id": "medal",
+      "type": "Medal",
+      "description": "A bronze victory medal with a colored ribbon",
+      "clothes": "Tarnished bronze metal with engraved design and faded cloth ribbon",
+      "accessories": [],
+      "pose": "resting in the soldier's palm",
+      "position": "foreground"
+    },
+    {
+      "id": "blood_stains",
+      "type": "Blood Stains",
+      "description": "Dark red blood stains on the muddy ground",
+      "clothes": "Dark coagulating fluid on soil",
+      "accessories": [],
+      "pose": "spread across the soil",
+      "position": "background"
+    },
+    {
+      "id": "discarded_equipment",
+      "type": "Discarded Equipment",
+      "description": "Scattered military equipment like backpacks and canteens",
+      "clothes": "Dirty, mud-splattered backpacks and dented canteens",
+      "accessories": [],
+      "pose": "scattered haphazardly on the ground",
+      "position": "background"
+    }
+  ],
+  "color_palette": [
+    "#6B8E23",
+    "#FF8C00",
+    "#696969"
+  ],
+  "lighting": "Low-key natural daylight enhanced by flickering fire and smoke effects, creating deep shadows",
+  "mood": "Somber and gritty atmosphere with a sense of loss and desolation",
+  "background": "Rubble-strewn WWII European battlefield with scattered debris, muted desaturated tones, and somber atmosphere"
+}
+Scene #7 OpticalAndTechnicalOption: {"style":"High-fidelity RAW photography with Raw surface detail and Filmic organic texture.","camera":{"angle":"eye level","distance":"medium wide vertical shot","focus":"sharp focus throughout the vertical frame","lens":"50mm","fNumber":"f/8.0","ISO":1600},"composition":"low-to-high leading lines","effects":["subtle film grain","highly defined textures","hyper-detailed rendering","extreme visual fidelity","photorealistic textures","physically based rendering"]}
+Scene #7 ImageGenPromptSentence: A 1944 WWII American Male infantry soldier, with a weary expression and muscular build, clad in an olive drab wool uniform with canvas webbing, equipped with a steel helmet, ammunition pouches, and dog tags, who is lying backward on the ground with torso pressed into the mud and hand clutching a bronze victory medal with a colored ribbon in the foreground, while dark red blood stains on the muddy ground are spread across the soil in the background, and scattered military equipment including backpacks and canteens are scattered haphazardly on the ground in the background.
+Scene #7 AssembledImageGenPromptSentence: An eye level medium wide vertical shot captures a 1944 WWII American Male infantry soldier, with a weary expression and muscular build, clad in an olive drab wool uniform with canvas webbing, equipped with a steel helmet, ammunition pouches, and dog tags, who is lying backward on the ground with torso pressed into the mud and hand clutching a bronze victory medal with a colored ribbon in the foreground, while dark red blood stains on the muddy ground are spread across the soil in the background, and scattered military equipment including backpacks and canteens are scattered haphazardly on the ground in the background. the scene is set in Rubble-strewn WWII European battlefield with scattered debris, muted desaturated tones, and somber atmosphere, depicting 1944 WWII weary soldier surveying a ruined field with a low-to-high leading lines composition, where the atmosphere is Somber and gritty atmosphere with a sense of loss and desolation, illuminated by Low-key natural daylight enhanced by flickering fire and smoke effects, creating deep shadows and a color palette of (#6B8E23, #FF8C00, #696969). rendered in High-fidelity RAW photography with Raw surface detail and Filmic organic texture, captured with a 50mm lens at f/8.0 for sharp focus throughout the vertical frame and ISO 1600, featuring subtle film grain, highly defined textures, hyper-detailed rendering, extreme visual fidelity, photorealistic textures, and physically based rendering.
+
+Scene #8 imageGenPrompt: {
+  "scene": "WWII Infantry Soldier solemnly standing before destruction",
+  "subjects": [
+    {
+      "id": "soldier",
+      "type": "The Infantry Soldier",
+      "description": "A lean and muscular soldier wearing an olive drab uniform, helmet, and webbing.",
+      "clothes": "Dust-coated and sweat-stained olive drab wool uniform with canvas webbing, metal buttons, and leather boots, rough texture implying weight and durability.",
+      "accessories": [
+        "Steel helmet",
+        "Ammunition pouches",
+        "Dog tags"
+      ],
+      "pose": "Standing firmly forward with a solemn expression, grounded in the foreground.",
+      "position": "foreground"
+    },
+    {
+      "id": "smoke",
+      "type": "The Smoke Plumes",
+      "description": "Billowing grey and black smoke adding atmospheric depth.",
+      "clothes": "Thick, voluminous wispy grey and black smoke, rising and dissipating.",
+      "accessories": [],
+      "pose": "Suspended mid-air, rising slowly in the background.",
+      "position": "background"
+    },
+    {
+      "id": "burning_tank_hull",
+      "type": "The Destroyed Tank Hull",
+      "description": "A charred and burning tank hull with structural damage.",
+      "clothes": "Charred and scorched metal hull with severe dents and orange embers.",
+      "accessories": [],
+      "pose": "Stationary and leaning slightly, burning intensely in the background.",
+      "position": "background"
+    },
+    {
+      "id": "flames",
+      "type": "The Fire Flames",
+      "description": "Intense orange and yellow flames rising from the tank hull.",
+      "clothes": "Flickering orange and yellow flames with bright cores.",
+      "accessories": [],
+      "pose": "Rising vertically and flickering on the tank hull in the background.",
+      "position": "background"
+    }
+  ],
+  "color_palette": [
+    "#6B8E23",
+    "#FF8C00",
+    "#696969"
+  ],
+  "lighting": "Low-key natural daylight accentuated by artificial fire glows and smoke shadows.",
+  "mood": "Chaotic and gritty atmosphere with high tension and destruction.",
+  "background": "Scorched earth with glowing embers, rubble-strewn terrain, and thick smoke haze in a WWII European battlefield."
+}
+Scene #8 OpticalAndTechnicalOption: {"style":"High-fidelity RAW photography with Raw surface detail and Filmic organic texture.","camera":{"angle":"eye level","distance":"medium wide vertical shot","focus":"sharp focus throughout the vertical frame","lens":"50mm","fNumber":"f/8.0","ISO":1600},"composition":"low-to-high leading lines","effects":["subtle film grain","highly defined textures","hyper-detailed rendering","extreme visual fidelity","photorealistic textures","physically based rendering"]}
+Scene #8 ImageGenPromptSentence: A 1944 WWII American Male Infantry Soldier, with a lean and muscular build and stern expression, clad in a dust-coated and sweat-stained olive drab wool uniform with canvas webbing, metal buttons, and leather boots, equipped with a steel helmet, ammunition pouches, and dog tags, who is standing firmly forward in the foreground, while in the background The Smoke Plumes, with billowing grey and black clouds, is suspended mid-air rising slowly, The Destroyed Tank Hull, constructed from charred and scorched metal hull, is stationary and leaning slightly burning, and The Fire Flames, featuring intense flickering orange and yellow tongues, is rising vertically on the tank hull.
+Scene #8 AssembledImageGenPromptSentence: An eye level medium wide vertical shot captures a 1944 WWII American Male Infantry Soldier, with a lean and muscular build and stern expression, clad in a dust-coated and sweat-stained olive drab wool uniform with canvas webbing, metal buttons, and leather boots, equipped with a steel helmet, ammunition pouches, and dog tags, who is standing firmly forward in the foreground, while in the background The Smoke Plumes, with billowing grey and black clouds, is suspended mid-air rising slowly, The Destroyed Tank Hull, constructed from charred and scorched metal hull, is stationary and leaning slightly burning, and The Fire Flames, featuring intense flickering orange and yellow tongues, is rising vertically on the tank hull. the scene is set in Scorched earth with glowing embers, rubble-strewn terrain, and thick smoke haze in a WWII European battlefield, depicting WWII Infantry Soldier solemnly standing before destruction with a low-to-high leading lines composition, where the atmosphere is Chaotic and gritty atmosphere with high tension and destruction, illuminated by Low-key natural daylight accentuated by artificial fire glows and smoke shadows. and a color palette of (#6B8E23, #FF8C00, #696969). rendered in High-fidelity RAW photography with Raw surface detail and Filmic organic texture, captured with a 50mm lens at f/8.0 for sharp focus throughout the vertical frame and ISO 1600, featuring subtle film grain, highly defined textures, hyper-detailed rendering, extreme visual fidelity, photorealistic textures, and physically based rendering.

@@ -1,6 +1,6 @@
-function getRootPath(route: string) {
-    const isProd = process.env.NODE_ENV === 'production';
+const isProd = process.env.NODE_ENV === 'production';
 
+function getRootPath(route: string) {
     return isProd || route.includes("http") || route.includes("https")
         ? ""
         : `${process.env.NEXT_PUBLIC_BASE_URL!}`
@@ -12,8 +12,11 @@ export async function getFetch(route: string) {
         method: 'GET',
         headers: {
             'Content-Type': 'application/json',
-            'ngrok-skip-browser-warning': '69420',
+            ...(isProd ? { }: {
+                'ngrok-skip-browser-warning': '69420'
+            }),
         },
+        credentials: 'include',
     });
 
     if (!response.ok) {
@@ -30,9 +33,12 @@ export async function postFetch(route: string, body?: unknown) {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-            'ngrok-skip-browser-warning': '69420',
+            ...(isProd ? { }: {
+                'ngrok-skip-browser-warning': '69420'
+            }),
         },
         body: body ? JSON.stringify(body) : undefined,
+        credentials: 'include',
     });
 
     if (!response.ok) {
@@ -49,9 +55,12 @@ export async function patchFetch(route: string, body?: unknown) {
         method: 'PATCH',
         headers: {
             'Content-Type': 'application/json',
-            'ngrok-skip-browser-warning': '69420',
+            ...(isProd ? { }: {
+                'ngrok-skip-browser-warning': '69420'
+            }),
         },
         body: body ? JSON.stringify(body) : undefined,
+        credentials: 'include',
     });
 
     if (!response.ok) {
@@ -68,8 +77,11 @@ export async function deleteFetch(route: string) {
         method: 'DELETE',
         headers: {
             'Content-Type': 'application/json',
-            'ngrok-skip-browser-warning': '69420',
+            ...(isProd ? { }: {
+                'ngrok-skip-browser-warning': '69420'
+            }),
         },
+        credentials: 'include',
     });
 
     if (!response.ok) {

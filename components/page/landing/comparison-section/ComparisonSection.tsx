@@ -7,11 +7,11 @@ import {useVideoCleanup} from "@/hooks/videoHooks";
 
 // 대본 데이터
 const scriptLines = [
-    { text: "A masterpiece carved not from stone, but from sheer will.", start: 0, end: 4.2 },
-    { text: "Every fiber screams perfectly silent power.", start: 4.2, end: 8.1 },
-    { text: "The back tells the story of a thousand heavy days.", start: 8.1, end: 11.3 },
-    { text: "Focus remains absolute, unbroken by the burning pain.", start: 11.3, end: 14.6 },
-    { text: "This is not just a body, it is a living trophy.", start: 14.6, end: 17.5 },
+    { text: "A masterpiece carved not from stone, but from sheer will.", start: 0, end: 3.877 },
+    { text: "Every fiber screams perfectly silent power.", start: 3.877, end: 7.372 },
+    { text: "The back tells the story of a thousand heavy days.", start: 7.372, end: 10.077 },
+    { text: "Focus remains absolute, unbroken by the burning pain.", start: 10.077, end: 13.688 },
+    { text: "This is not just a body, it is a living trophy.", start: 13.688, end: 16.3 },
 ];
 
 const TOTAL_DURATION = 17.5;

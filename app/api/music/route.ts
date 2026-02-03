@@ -1,13 +1,22 @@
-import {NextRequest, NextResponse} from "next/server";
+import {NextRequest} from "next/server";
 import {sunoAPIServerAPI} from "@/api/server/sunoAPIServerAPI";
 import {PostGenerateRequest, SunoModelType} from "@/api/types/suno-api/SunoAPIRequests";
 import {videoGenerationTasksServerAPI} from "@/api/server/videoGenerationTasksServerAPI";
 import {taskCheckAndCleanupIfCancelled} from "@/utils/taskCheckAndCleanupIfCancelled";
-import {openAIServerAPI} from "@/api/server/openAIServerAPI";
+import {llmServerAPI} from "@/api/server/llmServerAPI";
 import {getNextBaseResponse} from "@/utils/getNextBaseResponse";
 import {MusicGenerationData} from "@/api/types/suno-api/MusicGenerationData";
+import {getIsValidRequestS2S} from "@/utils/getIsValidRequest";
 
 export async function POST(request: NextRequest) {
+    if (!getIsValidRequestS2S(request)) {
+        return getNextBaseResponse({
+            success: false,
+            status: 401,
+            error: 'Unauthorized internal request',
+        });
+    }
+
     // URL에서 파라미터 추출
     const { searchParams } = new URL(request.url);
     const taskId = searchParams.get('taskId');
@@ -47,21 +56,21 @@ export async function POST(request: NextRequest) {
             });
         }
 
-        if (!videoGenerationTask.master_style_positive_prompt) {
+        if (!videoGenerationTask.master_style_info) {
             await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
             return getNextBaseResponse({
                 success: false,
                 status: 404,
-                error: 'master_style_positive_prompt is missing from task'
+                error: 'master_style_info is missing from task'
             });
         }
 
         // OpenAI로 Music Generation Data 생성
-        const postMusicGenerationDataResult = await openAIServerAPI.postMusicGenerationData(
+        const postMusicGenerationDataResult = await llmServerAPI.postMusicGenerationData(
             videoGenerationTask.video_title,
             videoGenerationTask.video_description,
             videoGenerationTask.narration_script,
-            videoGenerationTask.master_style_positive_prompt,
+            videoGenerationTask.master_style_info,
             videoGenerationTask.scene_breakdown_list,
         );
 

@@ -1,36 +1,29 @@
 'use client'
 
-import {memo, useCallback, useEffect, useMemo, useRef, useState} from "react";
+import {ChangeEvent, memo, useCallback, useEffect, useMemo, useState} from "react";
 import Link from "next/link";
 import Image from "next/image";
 import {
-    AlertTriangle,
-    ChevronDown,
-    ChevronRight,
     Coins,
-    Film,
     ListTodo,
-    Play,
     Plus,
-    Save,
     Sparkles,
-    Square,
-    X,
 } from 'lucide-react';
 import {openAIClientAPI} from '@/api/client/openAIClientAPI';
-import {ScriptGenerationRequest} from "@/api/types/open-ai/ScriptGeneration";
 import {Style} from "@/api/types/supabase/Styles";
 import {SceneData, VideoGenerationTask, VideoGenerationTaskStatus} from "@/api/types/supabase/VideoGenerationTasks";
 import {videoClientAPI} from "@/api/client/videoClientAPI";
 import {StoryboardData} from "@/api/types/api/open-ai/scene/PostOpenAISceneResponse";
-import StoryboardItem from "@/components/page/workspace/create/StoryboardItem";
-import VoiceSelectionPanel from "@/components/page/workspace/create/VoiceSelectionPanel";
+import VoiceSelectionPanel from "@/components/page/workspace/create/voice-selection-panel/VoiceSelectionPanel";
 import {useRouter, useSearchParams} from "next/navigation";
 import {PostOpenAISceneRequest} from "@/api/types/api/open-ai/scene/PostOpenAISceneRequest";
 import DefaultModal from "@/components/public/DefaultModal";
 import {useAuth} from "@/context/AuthContext";
 import {STYLE_DATA_LIST} from "@/lib/styles";
 import {voiceClientAPI} from "@/api/client/voiceClientAPI";
+import ResultPanel from "@/components/page/workspace/create/result-panel/ResultPanel";
+import ScriptGenerationModal from "@/components/page/workspace/create/ScriptGenerationModal";
+import CreateFormPanel from "@/components/page/workspace/create/create-form-panel/CreateFormPanel";
 
 function WorkspaceCreatePageClient() {
     const router = useRouter();
@@ -58,11 +51,6 @@ function WorkspaceCreatePageClient() {
     const [videoTitle, setVideoTitle] = useState<string | null>(null);
     const [videoDescription, setVideoDescription] = useState<string | null>(null);
     const [voiceUrl, setVoiceUrl] = useState<string | null>(null);
-    const [isPlayingVoice, setIsPlayingVoice] = useState<boolean>(false);
-    const [currentPlayTime, setCurrentPlayTime] = useState<number>(0);
-
-    // Audio ref for voice preview
-    const audioRef = useRef<HTMLAudioElement | null>(null);
 
     const isVideoGenerationEnabled = useMemo(() => {
         const isScriptNotEmpty = script.length !== 0;
@@ -82,10 +70,10 @@ function WorkspaceCreatePageClient() {
     const [isGeneratingScript, setIsGeneratingScript] = useState(false);
     const [isGeneratingStoryboardData, setIsGeneratingStoryboardData] = useState(false);
     const [showAIModal, setShowAIModal] = useState(false);
-    const [aiPrompt, setAiPrompt] = useState('');
     const [isSaving, setIsSaving] = useState(false);
     const [showSaveSuccessModal, setShowSaveSuccessModal] = useState(false);
     const [showVoiceChangeWarningModal, setShowVoiceChangeWarningModal] = useState(false);
+    const [showInsufficientCreditModal, setShowInsufficientCreditModal] = useState(false);
     const [pendingVoiceId, setPendingVoiceId] = useState<string | null>(null);
     
     // Collapse states for sections
@@ -96,10 +84,14 @@ function WorkspaceCreatePageClient() {
     }, [user?.credit_count]);
 
     const expectedVideoTotalDuration = useMemo(() => {
-        // 시간
-        return sceneDataList.reduce((acc, sceneData) => {
-            return acc + sceneData.sceneDuration;
-        }, 0);
+        if (sceneDataList.length === 0) return 0;
+
+        // 장면 사이 간격 포함
+        const lastSceneSegmentList = sceneDataList[sceneDataList.length - 1].sceneSubtitleSegments;
+
+        if (!lastSceneSegmentList || lastSceneSegmentList.length === 0) return 0;
+
+        return lastSceneSegmentList[lastSceneSegmentList.length - 1].endSec;
     }, [sceneDataList]);
 
     const expectedVideoSceneCount = useMemo(() => {
@@ -125,6 +117,10 @@ function WorkspaceCreatePageClient() {
         return 100 + (expectedDurationUsage + expectedSceneCountUsage);
     }, [expectedDurationUsage, expectedSceneCountUsage]);
 
+    const isCreditInsufficient = useMemo(() => {
+        return userCreditCount < expectedCreditUsage;
+    }, [userCreditCount, expectedCreditUsage]);
+
     // Style examples for preview
     const styleList = useMemo((): Style[] => STYLE_DATA_LIST, []);
 
@@ -134,37 +130,9 @@ function WorkspaceCreatePageClient() {
         { id: 'create', icon: Plus, name: 'Create', href: '/workspace/create', active: true }
     ], []);
 
-    const onClickGenerateScript = useCallback(async () => {
-        if (!aiPrompt.trim()) return;
-        
-        setIsGeneratingScript(true);
-        
-        try {
-            // API 요청 데이터 구성
-            const requestData: ScriptGenerationRequest = {
-                userPrompt: aiPrompt,
-            };
-
-            console.log('Generating script with data:', requestData);
-
-            // OpenAI API 호출
-            const result = await openAIClientAPI.postOpenAIScript(requestData);
-
-            if (!result.data) {
-                throw new Error("Failed to generate script.");
-            }
-
-            setScript(result.data.script);
-            setIsGeneratingScript(false);
-            setShowAIModal(false);
-            setAiPrompt('');
-
-        } catch (error) {
-            console.error('Error generating script:', error);
-            alert('An error occurred while generating script. Please try again.');
-            setIsGeneratingScript(false);
-        }
-    }, [aiPrompt]);
+    const onChangeScript = useCallback((e: ChangeEvent<HTMLTextAreaElement>) => {
+        setScript(e.target.value);
+    }, []);
     
     const onClickGenerateStoryboard = useCallback(async (voiceId?: string) => {
         try {
@@ -185,7 +153,6 @@ function WorkspaceCreatePageClient() {
 
             console.log(`selectedVoice = ${voiceId}`)
             const request: PostOpenAISceneRequest = {
-                userId: user?.id,
                 taskId: taskId,
                 narrationScript: script,
                 styleId: selectedStyleId,
@@ -217,6 +184,10 @@ function WorkspaceCreatePageClient() {
             setIsGeneratingStoryboardData(false);
         }
     }, [user?.id, taskId, script, selectedStyleId]);
+
+    const onClickGenerateStoryboardInCreateFormPanel = useCallback(async () => {
+        await onClickGenerateStoryboard(selectedVoiceId);
+    }, [onClickGenerateStoryboard, selectedVoiceId]);
     
     const onSelectVoice = useCallback((voiceId: string) => {
         if (voiceId !== selectedVoiceId) {
@@ -236,60 +207,29 @@ function WorkspaceCreatePageClient() {
         setIsVoiceLoading(isVoiceLoading);
     }, []);
 
-    const openAIModal = useCallback(() => {
+    const onClickGenerateWithAI = useCallback(() => {
         setShowAIModal(true);
     }, []);
 
-    const closeAIModal = useCallback(() => {
+    const onChangeIsGeneratingScript = useCallback((isGenerating: boolean) => {
+        setIsGeneratingScript(isGenerating);
+    }, []);
+
+    const onClickCloseScriptGenerationModal = useCallback(() => {
         if (!isGeneratingScript) {
             setShowAIModal(false);
-            setAiPrompt('');
+            // setAiPrompt('');
             setIsGeneratingScript(false);
         }
     }, [isGeneratingScript]);
 
-    // 예상 영상 시간 계산 (2.5단어/초 기준)
-    const estimatedDuration = useMemo(() => {
-        if (!script.trim()) return 0;
-        const wordCount = script.split(' ').length;
-        return Math.round(wordCount / 2.5);
-    }, [script]);
+    const onFinishGeneratingScript = useCallback((newScript: string) => {
+        setScript(newScript);
+        setIsGeneratingScript(false);
+        setShowAIModal(false);
+    }, []);
 
-    const onClickPlayAndStopButton = useCallback(async () => {
-        if (!voiceUrl) return;
-
-        if (isPlayingVoice) {
-            // 재생 중일 때: 정지
-            if (audioRef.current) {
-                audioRef.current.pause();
-                audioRef.current.currentTime = 0;
-            }
-            setIsPlayingVoice(false);
-            setCurrentPlayTime(0);
-        } else {
-            // 재생 중이 아닐 때: 재생
-            if (!audioRef.current) {
-                audioRef.current = new Audio(voiceUrl);
-                audioRef.current.onended = () => {
-                    setIsPlayingVoice(false);
-                    setCurrentPlayTime(0);
-                };
-                audioRef.current.ontimeupdate = () => {
-                    if (audioRef.current) {
-                        setCurrentPlayTime(audioRef.current.currentTime);
-                    }
-                };
-            } else {
-                // voiceUrl이 변경되었을 수 있으므로 src 업데이트
-                audioRef.current.src = voiceUrl;
-                audioRef.current.currentTime = 0;
-            }
-            await audioRef.current.play();
-            setIsPlayingVoice(true);
-        }
-    }, [voiceUrl, isPlayingVoice]);
-
-    const onClickGenerateVideo = useCallback(async () => {
+    const generateVideo = useCallback(async () => {
         if (!script.trim()) {
             alert('Please enter a script.');
             return;
@@ -303,7 +243,7 @@ function WorkspaceCreatePageClient() {
             }
 
             // Video API 호출
-            const postVideoResult = await videoClientAPI.postVideo(taskId, selectedStyleId);
+            const postVideoResult = await videoClientAPI.postVideo(taskId, user.id as string, selectedStyleId);
 
             if (postVideoResult) {
                 console.log('Video data generation succeed.');
@@ -325,6 +265,14 @@ function WorkspaceCreatePageClient() {
             setIsSubmitting(false);
         }
     }, [script, taskId, user?.id, selectedStyleId]);
+
+    const onClickGenerateVideo = useCallback(async () => {
+        if (isCreditInsufficient) {
+            setShowInsufficientCreditModal(true);
+        } else {
+            await generateVideo();
+        }
+    }, [generateVideo, isCreditInsufficient]);
 
     const onClickSaveDraft = useCallback(async () => {
         setIsSaving(true);
@@ -361,10 +309,7 @@ function WorkspaceCreatePageClient() {
 
     const onConfirmVoiceChange = useCallback(async () => {
         if (pendingVoiceId) {
-            setSelectedVoiceId((prev) => {
-                console.log(`prevVoice = ${prev}, newVoice = ${pendingVoiceId}`)
-                return pendingVoiceId;
-            });
+            setSelectedVoiceId(pendingVoiceId);
 
             setShowVoiceChangeWarningModal(false);
 
@@ -429,6 +374,20 @@ function WorkspaceCreatePageClient() {
             setVoiceUrl(null);
         }
     }, [taskId, sceneDataList]);
+
+    useEffect(() => {
+        let timeout: NodeJS.Timeout;
+
+        if (!user) {
+            timeout = setTimeout(() => {
+                router.push('/');
+            }, 10000);
+        }
+
+        return () => {
+            clearTimeout(timeout);
+        };
+    }, [user, router]);
 
     return (
         <div className="min-h-screen bg-black text-white">
@@ -533,208 +492,20 @@ function WorkspaceCreatePageClient() {
                 </div>
 
                 {/* Create Form Panel */}
-                <div className="flex-[4.3] bg-gray-900/30 backdrop-blur-sm border-r border-purple-500/20 overflow-y-auto">
-                    <div className="p-6">
-                        <div className="text-purple-300 text-2xl font-medium mb-6">Create New Video</div>
-                        
-                        <div className="space-y-6">
-
-                            {/* Script Section */}
-                            <div>
-                                <div className="flex items-center justify-between mb-3">
-                                    <div className="flex items-center space-x-3">
-                                        <label className="block text-xl font-semibold text-purple-300">
-                                            Script
-                                        </label>
-                                        {script.trim() && (
-                                            <span className="px-2 py-1 bg-blue-500/20 text-blue-300 text-sm font-medium rounded border border-blue-400/30">
-                                                ~{estimatedDuration}s
-                                            </span>
-                                        )}
-                                    </div>
-                                    <button
-                                        type="button"
-                                        onClick={openAIModal}
-                                        className="px-3 py-1.5 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg text-sm font-medium hover:from-purple-600 hover:to-pink-600 transition-all duration-300 flex items-center space-x-1"
-                                    >
-                                        <Sparkles size={14} />
-                                        <span>Generate with AI</span>
-                                    </button>
-                                </div>
-                                <textarea
-                                    value={script}
-                                    onChange={(e) => setScript(e.target.value)}
-                                    placeholder="Describe what you want to create. Be as detailed as possible..."
-                                    rows={6}
-                                    className="w-full px-4 py-3 rounded-xl bg-gray-800/50 border border-purple-500/30 text-white placeholder-gray-400 focus:border-purple-400 focus:ring-2 focus:ring-purple-400/20 focus:outline-none transition-all resize-none text-base"
-                                />
-                            </div>
-
-                            {/* Storyboard Section */}
-                            <div>
-                                <div className="flex items-center justify-between mb-4">
-                                    <div className="flex items-center space-x-2">
-                                        <label className="block text-xl font-semibold text-purple-300">
-                                            Storyboard
-                                        </label>
-                                        {voiceUrl && (
-                                            <button
-                                                className="flex items-center space-x-1 px-2 py-1 rounded bg-purple-500/20 hover:bg-purple-500/30 transition-colors border border-purple-400/30"
-                                                onClick={onClickPlayAndStopButton}
-                                            >
-                                                {isPlayingVoice ? (
-                                                    <Square size={12} className="text-purple-300" />
-                                                ) : (
-                                                    <Play size={12} className="text-purple-300" />
-                                                )}
-                                                <span className="text-xs text-purple-300 font-medium">Preview</span>
-                                            </button>
-                                        )}
-                                    </div>
-                                    <div className="relative group">
-                                        <div className="flex flex-row space-x-2 items-center">
-                                            {sceneDataList.length > 0 && videoTitle && (
-                                                <div className="flex items-center space-x-1 px-2 py-1 bg-white/10 rounded-lg">
-                                                    <Coins className="w-3.5 h-3.5 text-yellow-400" />
-                                                    <span className="text-xs font-medium">-2</span>
-                                                </div>
-                                            )}
-                                            <button
-                                                type="button"
-                                                onClick={async () => {
-                                                    await onClickGenerateStoryboard(selectedVoiceId);
-                                                }}
-                                                disabled={isGeneratingStoryboardData || !script.trim() || !selectedVoiceId}
-                                                className="px-3 py-1.5 bg-gradient-to-r from-green-500 to-blue-500 text-white rounded-lg text-sm font-medium hover:from-green-600 hover:to-blue-600 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-1"
-                                            >
-                                                {isGeneratingStoryboardData ? (
-                                                    <>
-                                                        <div className="w-3 h-3 border border-white/30 border-t-white rounded-full animate-spin"></div>
-                                                        <span>Generating...</span>
-                                                    </>
-                                                ) : sceneDataList.length === 0 && !videoTitle ? (
-                                                    <span>Generate Storyboard</span>
-                                                ) : (
-                                                    <span>Regenerate Storyboard</span>
-                                                )}
-                                            </button>
-                                        </div>
-
-                                        {/* 툴팁 오버레이 */}
-                                        {(!script.trim() || !selectedVoiceId) && (
-                                            <div className="absolute top-full right-0 mt-2 w-64 bg-gray-900/95 backdrop-blur-sm border border-purple-500/30 rounded-lg p-3 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-10 shadow-xl">
-                                                <div className="text-xs font-medium text-purple-300 mb-2">Requirements</div>
-                                                <div className="space-y-1.5">
-                                                    <div className="flex items-center space-x-2 text-xs">
-                                                        <span>{script.trim() ? '🟢' : '🔴'}</span>
-                                                        <span className={script.trim() ? 'text-green-300' : 'text-gray-400'}>
-                                                            Script written
-                                                        </span>
-                                                    </div>
-                                                    <div className="flex items-center space-x-2 text-xs">
-                                                        <span>{selectedVoiceId ? '🟢' : '🔴'}</span>
-                                                        <span className={selectedVoiceId ? 'text-green-300' : 'text-gray-400'}>
-                                                            Voice selected
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-
-                                {/* Storyboard 그리드 */}
-                                {sceneDataList.length !== 0 && videoTitle && (
-                                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 max-w-4xl">
-                                        {sceneDataList.sort((a, b) => {
-                                            return a.sceneNumber - b.sceneNumber;
-                                        }).map((sceneData) => {
-                                            const sceneSubtitleSegmentList = sceneData.sceneSubtitleSegments ?? [];
-                                            const isVoicePlayingScene = isPlayingVoice && sceneSubtitleSegmentList && sceneSubtitleSegmentList.length > 0
-                                                ? currentPlayTime >= sceneSubtitleSegmentList[0].startSec &&
-                                                  currentPlayTime <= sceneSubtitleSegmentList[sceneSubtitleSegmentList.length - 1].endSec
-                                                : false;
-
-                                            console.log(`currentTime = ${currentPlayTime}, isPlaying = ${isVoicePlayingScene}, start = ${sceneSubtitleSegmentList[0]?.startSec}, end = ${sceneSubtitleSegmentList[sceneSubtitleSegmentList.length - 1]?.endSec}`)
-
-                                            return <StoryboardItem
-                                                key={sceneData.sceneNumber}
-                                                sceneData={sceneData}
-                                                isVoicePlayingScene={isVoicePlayingScene}
-                                            />
-                                        })}
-                                    </div>
-                                )}
-
-                                {/* 로딩 상태 또는 빈 상태 메시지 */}
-                                {sceneDataList.length === 0 && (
-                                    <div className="text-center py-8 px-4 bg-gray-800/30 border border-gray-600/30 rounded-lg">
-                                        {isGeneratingStoryboardData ? (
-                                            // 로딩 중 상태
-                                            <>
-                                                <div className="text-purple-400 mb-4">
-                                                    <div className="w-16 h-16 mx-auto mb-4 relative">
-                                                        <div className="absolute inset-0 border-4 border-purple-200/20 rounded-full"></div>
-                                                        <div className="absolute inset-0 border-4 border-purple-400 border-t-transparent rounded-full animate-spin"></div>
-                                                        <div className="absolute inset-2 border-2 border-purple-300/40 border-b-transparent rounded-full animate-spin" style={{animationDirection: 'reverse', animationDuration: '1.5s'}}></div>
-                                                    </div>
-                                                </div>
-                                                <p className="text-base text-purple-300 font-medium mb-2">AI Screenwriter at Work</p>
-                                                <p className="text-sm text-gray-400">Crafting your storyboard with cinematic precision...</p>
-                                                <div className="mt-4 flex justify-center space-x-1">
-                                                    <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{animationDelay: '0ms'}}></div>
-                                                    <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{animationDelay: '150ms'}}></div>
-                                                    <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{animationDelay: '300ms'}}></div>
-                                                </div>
-                                            </>
-                                        ) : (
-                                            // 빈 상태
-                                            <>
-                                                <div className="text-gray-400 mb-2">
-                                                    <Film className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                                                </div>
-                                                <p className="text-base text-gray-400 font-medium">No storyboard generated yet</p>
-                                                <p className="text-sm text-gray-500 mt-1">Generate a storyboard to see scene breakdown</p>
-                                            </>
-                                        )}
-                                    </div>
-                                )}
-                            </div>
-
-                            {/* Visual Style Selection */}
-                            {/*<div>*/}
-                            {/*    <button*/}
-                            {/*        type="button"*/}
-                            {/*        onClick={() => setIsStyleExpanded(!isStyleExpanded)}*/}
-                            {/*        className="flex items-center text-xl font-semibold text-purple-300 mb-4 hover:text-purple-200 transition-colors"*/}
-                            {/*    >*/}
-                            {/*        <span>Visual Style</span>*/}
-                            {/*        <span className="ml-2">*/}
-                            {/*            {isStyleExpanded ? <ChevronDown size={20} /> : <ChevronRight size={20} />}*/}
-                            {/*        </span>*/}
-                            {/*    </button>*/}
-                            {/*    {isStyleExpanded && (*/}
-                            {/*        <div className="grid grid-cols-2 gap-3">*/}
-                            {/*        {styleList.map((style) => (*/}
-                            {/*            <button*/}
-                            {/*                key={style.id}*/}
-                            {/*                onClick={() => { setSelectedStyleId(style.id); }}*/}
-                            {/*                className={`w-full p-3 rounded-lg border transition-all text-left ${*/}
-                            {/*                    selectedStyleId === style.id*/}
-                            {/*                        ? 'border-pink-500 bg-pink-500/10'*/}
-                            {/*                        : 'border-purple-500/30 bg-gray-800/30 hover:border-purple-400/50'*/}
-                            {/*                }`}*/}
-                            {/*            >*/}
-                            {/*                <div className="text-white font-medium text-base">{style.name}</div>*/}
-                            {/*                <div className="text-gray-400 text-sm mt-1">{style.description}</div>*/}
-                            {/*            </button>*/}
-                            {/*        ))}*/}
-                            {/*        </div>*/}
-                            {/*    )}*/}
-                            {/*</div>*/}
-                        </div>
-                    </div>
-                </div>
+                <CreateFormPanel
+                    script={script}
+                    sceneDataList={sceneDataList}
+                    videoTitle={videoTitle}
+                    videoDescription={videoDescription}
+                    voiceUrl={voiceUrl}
+                    selectedVoiceId={selectedVoiceId}
+                    expectedVideoTotalDuration={expectedVideoTotalDuration}
+                    userCredit={userCreditCount}
+                    isGeneratingStoryboardData={isGeneratingStoryboardData}
+                    onChangeScript={onChangeScript}
+                    onClickGenerateWithAI={onClickGenerateWithAI}
+                    onClickGenerateStoryboard={onClickGenerateStoryboardInCreateFormPanel}
+                />
 
                 {/* Voice Selection Panel */}
                 <VoiceSelectionPanel
@@ -744,222 +515,35 @@ function WorkspaceCreatePageClient() {
                 />
 
                 {/* Result Panel */}
-                <div className="flex-[3] bg-black flex flex-col relative">
-                    {/* Vaporwave Background Effects */}
-                    <div className="absolute inset-0 opacity-10">
-                        <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-gradient-to-r from-pink-500 to-purple-600 rounded-full blur-3xl"></div>
-                        <div className="absolute bottom-1/4 right-1/4 w-52 h-52 bg-gradient-to-r from-purple-500 to-indigo-600 rounded-full blur-3xl"></div>
-                        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-48 h-48 bg-gradient-to-r from-indigo-500 to-cyan-500 rounded-full blur-3xl"></div>
-                    </div>
-                    
-                    <div className="flex-1 flex p-8 items-center justify-center relative z-10">
-                        {(sceneDataList.length !== 0 && videoTitle && videoDescription) ? (<div>
-                            {/* Video Metadata Section */}
-                            <div className="mb-4 space-y-3">
-                                {/* Title Card */}
-                                <div className="group relative rounded-xl border border-purple-500/30 bg-gradient-to-r from-purple-500/5 via-pink-500/5 to-purple-500/5 p-4 backdrop-blur-sm transition-all hover:border-purple-400/50 hover:shadow-lg hover:shadow-purple-500/10">
-                                    <div className="flex items-start space-x-3">
-                                        <div className="flex-shrink-0 mt-0.5">
-                                            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center shadow-lg">
-                                                <Film className="w-4 h-4 text-white" />
-                                            </div>
-                                        </div>
-                                        <div className="flex-1 min-w-0">
-                                            <div className="text-sm font-medium text-purple-300 mb-1.5">Video Title</div>
-                                            <h3 className="text-lg font-bold leading-snug text-white">
-                                                {videoTitle}
-                                            </h3>
-                                        </div>
-                                    </div>
-                                </div>
+                <ResultPanel
+                    isStoryboardGenerated={sceneDataList.length !== 0}
+                    videoTitle={videoTitle}
+                    videoDescription={videoDescription}
+                    expectedVideoTotalDuration={expectedVideoTotalDuration}
+                    expectedDurationUsage={expectedDurationUsage}
+                    expectedVideoSceneCount={expectedVideoSceneCount}
+                    expectedSceneCountUsage={expectedSceneCountUsage}
+                    expectedCreditUsage={expectedCreditUsage}
+                    script={script}
+                    selectedVoiceId={selectedVoiceId}
+                    selectedStyleId={selectedStyleId}
+                    isSaving={isSaving}
+                    isSubmitting={isSubmitting}
+                    isCreditInsufficient={isCreditInsufficient}
+                    isVideoGenerationEnabled={isVideoGenerationEnabled}
+                    onClickSaveDraft={onClickSaveDraft}
+                    onClickGenerateVideo={onClickGenerateVideo}
+                />
 
-                                {/* Description Card */}
-                                <div className="group relative rounded-xl border border-purple-500/30 bg-gradient-to-r from-pink-500/5 via-purple-500/5 to-pink-500/5 p-4 backdrop-blur-sm transition-all hover:border-purple-400/50 hover:shadow-lg hover:shadow-pink-500/10">
-                                    <div className="flex items-start space-x-3">
-                                        <div className="flex-shrink-0 mt-0.5">
-                                            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-600 to-pink-500 flex items-center justify-center shadow-lg">
-                                                <Sparkles className="w-4 h-4 text-white" />
-                                            </div>
-                                        </div>
-                                        <div className="flex-1 min-w-0">
-                                            <div className="text-sm font-medium text-purple-300 mb-1.5">Description</div>
-                                            <p className="whitespace-pre-wrap text-base leading-relaxed text-gray-300">
-                                                {videoDescription}
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Credit Usage Card */}
-                            <div className="group relative mb-6 rounded-xl border border-purple-500/30 bg-gradient-to-r from-yellow-500/5 via-orange-500/5 to-yellow-500/5 p-4 backdrop-blur-sm transition-all hover:border-purple-400/50 hover:shadow-lg hover:shadow-yellow-500/10">
-                                <div className="flex items-start space-x-3">
-                                    <div className="flex-shrink-0 mt-0.5">
-                                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-yellow-500 to-orange-500 flex items-center justify-center shadow-lg">
-                                            <Coins className="w-4 h-4 text-white" />
-                                        </div>
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                        <div className="text-sm font-medium text-purple-300 mb-1.5">Estimated Credit Usage</div>
-
-                                        <div className="flex flex-col space-y-2">
-                                            <div className="flex items-center justify-between">
-                                                <span className="text-base text-gray-300">Base (30s / 6 scenes)</span>
-                                                <div className="flex items-center space-x-1">
-                                                    <Coins className="w-4 h-4 text-white" />
-                                                    <span className="text-base font-semibold text-white">100</span>
-                                                </div>
-                                            </div>
-
-                                            <div className="border-t border-purple-500/20 my-2"></div>
-
-                                            <div className="flex items-center justify-between">
-                                                    <span className="text-sm text-gray-400">
-                                                        {`Extra Duration (+${expectedVideoTotalDuration > 30 ? Math.ceil(expectedVideoTotalDuration - 30) : 0}s)`}
-                                                    </span>
-                                                <div className="flex items-center space-x-1">
-                                                    <Coins className={`w-3.5 h-3.5 ${expectedVideoTotalDuration > 30 ? 'text-yellow-300' : 'text-gray-500'}`} />
-                                                    <span className={`text-sm font-medium ${expectedVideoTotalDuration > 30 ? 'text-yellow-300' : 'text-gray-500'}`}>
-                                                        +{expectedDurationUsage}
-                                                    </span>
-                                                </div>
-                                            </div>
-
-                                            <div className="flex items-center justify-between">
-                                                    <span className="text-sm text-gray-400">
-                                                        {`Extra Scenes (+${expectedVideoSceneCount > 6 ? expectedVideoSceneCount - 6 : 0})`}
-                                                    </span>
-                                                <div className="flex items-center space-x-1">
-                                                    <Coins className={`w-3.5 h-3.5 ${expectedVideoSceneCount > 6 ? 'text-yellow-300' : 'text-gray-500'}`} />
-                                                    <span className={`text-sm font-medium ${expectedVideoSceneCount > 6 ? 'text-yellow-300' : 'text-gray-500'}`}>
-                                                        +{expectedSceneCountUsage}
-                                                    </span>
-                                                </div>
-                                            </div>
-
-                                            <div className="border-t border-purple-500/20 my-2"></div>
-
-                                            {/* Policy Footnote */}
-                                            <div className="flex w-fit self-start items-center justify-between">
-                                                <span className="text-xs mr-2 text-gray-400">Overage Policy</span>
-                                                <div className="flex items-center space-x-2 text-xs text-gray-300">
-                                                    <div className="flex items-center space-x-1">
-                                                        <Coins className="w-3 h-3 text-yellow-400" />
-                                                        <span>5 / 2s</span>
-                                                    </div>
-                                                    <span className="text-gray-500">•</span>
-                                                    <div className="flex items-center space-x-1">
-                                                        <Coins className="w-3 h-3 text-yellow-400" />
-                                                        <span>5 / scene</span>
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <div className="flex items-center justify-between">
-                                                <span className="text-base font-semibold text-purple-300">Total</span>
-                                                <div className="flex items-center space-x-1">
-                                                    <Coins className="w-5 h-5 text-yellow-400" />
-                                                    <span className="text-lg font-bold text-yellow-400">{expectedCreditUsage}</span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>) : (
-                            <div className="text-center">
-                                <div className="text-gray-400 mb-4">
-                                    <Sparkles className="w-16 h-16 mx-auto mb-3 opacity-50" />
-                                </div>
-                                <p className="text-base text-gray-400 font-medium">No results yet</p>
-                                <p className="text-sm text-gray-500 mt-1">Generate a storyboard to see your video details</p>
-                            </div>
-                        )}
-                    </div>
-                    
-                    <div className="p-6 border-t border-purple-500/20 bg-gray-900/50 backdrop-blur-sm relative z-10">
-                        <div className="flex w-fit items-center space-x-4 max-w-2xl mx-auto">
-                            {/* Save Draft 버튼 */}
-                            <button
-                                onClick={onClickSaveDraft}
-                                disabled={isSaving}
-                                className="flex items-center space-x-2 px-4 py-3 bg-gray-800/50 hover:bg-gray-800 border border-gray-600/50 hover:border-gray-500/50 text-gray-300 hover:text-white rounded-lg font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                                {isSaving ? (
-                                    <>
-                                        <div className="w-4 h-4 border-2 border-gray-400/30 border-t-gray-400 rounded-full animate-spin"></div>
-                                        <span className="text-sm">Saving...</span>
-                                    </>
-                                ) : (
-                                    <>
-                                        <Save size={16} />
-                                        <span className="text-sm">Save Draft</span>
-                                    </>
-                                )}
-                            </button>
-
-                            {/* Generate Video 버튼 */}
-                            <div className="relative group">
-                                <button
-                                    onClick={onClickGenerateVideo}
-                                    disabled={!isVideoGenerationEnabled || isSubmitting}
-                                    className="flex-1 min-w-[280px] group bg-gradient-to-r from-pink-500 to-purple-600 text-white px-6 py-3 rounded-xl text-lg font-semibold hover:from-pink-600 hover:to-purple-700 transition-all duration-300 transform hover:scale-105 flex items-center justify-center space-x-2 shadow-lg shadow-purple-500/25 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
-                                >
-                                    {isSubmitting ? (
-                                        <>
-                                            <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                                            <span>Requesting...</span>
-                                        </>
-                                    ) : (
-                                        <>
-                                            <div className="flex items-center space-x-1 px-2 py-1 bg-black/40 rounded-lg">
-                                                <Coins className="w-3.5 h-3.5 text-yellow-400" />
-                                                <span className="text-xs font-medium">-{expectedCreditUsage}</span>
-                                            </div>
-                                            <span>Generate Video</span>
-                                            <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                                            </svg>
-                                        </>
-                                    )}
-                                </button>
-
-                                {/* 툴팁 오버레이 */}
-                                {!isVideoGenerationEnabled && (
-                                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-64 bg-gray-900/95 backdrop-blur-sm border border-purple-500/30 rounded-lg p-3 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-10 shadow-xl">
-                                        <div className="text-xs font-medium text-purple-300 mb-2">Requirements</div>
-                                        <div className="space-y-1.5">
-                                            <div className="flex items-center space-x-2 text-xs">
-                                                <span>{script.trim() ? '🟢' : '🔴'}</span>
-                                                <span className={script.trim() ? 'text-green-300' : 'text-gray-400'}>
-                                                    Script written
-                                                </span>
-                                            </div>
-                                            <div className="flex items-center space-x-2 text-xs">
-                                                <span>{sceneDataList.length !== 0 && videoTitle ? '🟢' : '🔴'}</span>
-                                                <span className={sceneDataList.length !== 0 && videoTitle ? 'text-green-300' : 'text-gray-400'}>
-                                                    Storyboard generated
-                                                </span>
-                                            </div>
-                                            <div className="flex items-center space-x-2 text-xs">
-                                                <span>{selectedVoiceId ? '🟢' : '🔴'}</span>
-                                                <span className={selectedVoiceId ? 'text-green-300' : 'text-gray-400'}>
-                                                    Voice selected
-                                                </span>
-                                            </div>
-                                            <div className="flex items-center space-x-2 text-xs">
-                                                <span>{selectedStyleId ? '🟢' : '🔴'}</span>
-                                                <span className={selectedStyleId ? 'text-green-300' : 'text-gray-400'}>
-                                                    Style selected
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                {/* Insufficient Credit Modal */}
+                {showInsufficientCreditModal && (
+                    <DefaultModal
+                        title="Insufficient Credits"
+                        message={`You need ${expectedCreditUsage} credits to generate this video,\nbut you only have ${userCreditCount} credits.\n\nPlease top up your credits to continue.`}
+                        cancelText="Close"
+                        onClickCancel={() => setShowInsufficientCreditModal(false)}
+                    />
+                )}
 
                 {/* Save Success Modal */}
                 {showSaveSuccessModal && (
@@ -988,73 +572,12 @@ function WorkspaceCreatePageClient() {
                 )}
 
                 {/* AI Generation Modal */}
-                {showAIModal && (
-                    <div
-                        onClick={closeAIModal}
-                        className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50"
-                    >
-                        <div
-                            onClick={(e) => e.stopPropagation()}
-                            className="bg-gray-900/95 backdrop-blur-sm border border-purple-500/30 rounded-xl max-w-lg w-full mx-4 overflow-hidden shadow-2xl"
-                        >
-                            <div className="p-6">
-                                <div className="flex items-center justify-between mb-4">
-                                    <h3 className="text-xl font-semibold text-purple-300">
-                                        Generate Script with AI
-                                    </h3>
-                                    {!isGeneratingScript && <button
-                                        onClick={closeAIModal}
-                                        className="text-gray-400 hover:text-pink-400 transition-colors p-1 rounded-lg hover:bg-gray-800/50"
-                                    >
-                                        <X size={18} />
-                                    </button>}
-                                </div>
-
-                                <div className="space-y-4">
-                                    <div>
-                                        <label className="block text-sm font-medium text-white mb-2">What do you want to create?</label>
-                                        <textarea
-                                            placeholder="Tell me about Elon Musk's early SpaceX struggles"
-                                            value={aiPrompt}
-                                            onChange={(e) => setAiPrompt(e.target.value)}
-                                            rows={4}
-                                            className="w-full bg-gray-800/50 border border-purple-500/30 rounded-lg px-3 py-2 text-white text-sm focus:border-purple-400 focus:outline-none resize-none placeholder-gray-400 transition-all"
-                                        />
-                                    </div>
-
-                                    {/* Warning Message - Simplified */}
-                                    <div className="bg-amber-500/10 border border-amber-400/30 rounded-lg p-3">
-                                        <div className="flex items-start space-x-2">
-                                            <AlertTriangle className="w-4 h-4 text-amber-400 mt-0.5 flex-shrink-0" />
-                                            <div className="text-sm text-amber-100">
-                                                <p className="font-medium">Be specific to avoid wasting credits</p>
-                                                <p className="text-xs text-amber-200 mt-1">Vague requests may produce unwanted results.</p>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <button
-                                        onClick={onClickGenerateScript}
-                                        disabled={isGeneratingScript || !aiPrompt.trim()}
-                                        className="w-full bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white px-4 py-3 rounded-lg font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2 shadow-lg shadow-purple-500/25"
-                                    >
-                                        {isGeneratingScript ? (
-                                            <>
-                                                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                                                <span>Generating...</span>
-                                            </>
-                                        ) : (
-                                            <>
-                                                <Sparkles size={16} />
-                                                <span>Generate Script</span>
-                                            </>
-                                        )}
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                )}
+                {showAIModal && (<ScriptGenerationModal
+                    isGeneratingScript={isGeneratingScript}
+                    onClickClose={onClickCloseScriptGenerationModal}
+                    onChangeIsGeneratingScript={onChangeIsGeneratingScript}
+                    onFinishGeneratingScript={onFinishGeneratingScript}
+                />)}
             </div>
         </div>
     )

@@ -30,6 +30,7 @@ export interface VideoPlayerHandle {
 interface VideoPlayerPanelProps {
     videoUrl: string;
     currentTime: number;
+    isCaptionEnabled: boolean;
     captionDataList: CaptionData[];
     captionConfigState: CaptionConfigState;
     selectedFontFamilyFullShape: string;
@@ -44,6 +45,7 @@ interface VideoPlayerPanelProps {
 const VideoPlayerPanel = forwardRef<VideoPlayerHandle, VideoPlayerPanelProps>(({
     videoUrl,
     currentTime,
+    isCaptionEnabled,
     captionDataList,
     captionConfigState,
     selectedFontFamilyFullShape,
@@ -65,6 +67,7 @@ const VideoPlayerPanel = forwardRef<VideoPlayerHandle, VideoPlayerPanelProps>(({
     const [isVideoEnded, setIsVideoEnded] = useState(false);
     const [videoDuration, setVideoDuration] = useState(0);
     const [isDraggingTimeline, setIsDraggingTimeline] = useState(false);
+    const [isHoveringVideo, setIsHoveringVideo] = useState(false);
     const [videoContainerWidth, setVideoContainerWidth] = useState<number>(324); // 16/9
     const [videoContainerHeight, setVideoContainerHeight] = useState<number>(576); // 16/9
 
@@ -387,7 +390,6 @@ const VideoPlayerPanel = forwardRef<VideoPlayerHandle, VideoPlayerPanelProps>(({
             const maxSliderPercentage = (sliderHeight / videoContainerHeight) * 100;
 
             if (captionPosition > maxSliderPercentage) {
-                console.log(`captionPosition = ${captionPosition}, maxSliderPercentage = ${maxSliderPercentage}`)
                 onChangeCaptionPosition(100);
             }
 
@@ -547,9 +549,9 @@ const VideoPlayerPanel = forwardRef<VideoPlayerHandle, VideoPlayerPanelProps>(({
             <div className="flex flex-row p-8 justify-center z-10">
                 {/* Caption Position Slider */}
                 {/* w-6 + w-2 + w-6 */}
-                <div
+                {isCaptionEnabled && <div
                     className="w-14 relative z-30"
-                    style={{ height: `${sliderHeight}px` }}
+                    style={{height: `${sliderHeight}px`}}
                 >
                     {/* Caption Position Toggle Button */}
                     <button
@@ -562,9 +564,9 @@ const VideoPlayerPanel = forwardRef<VideoPlayerHandle, VideoPlayerPanelProps>(({
                         }}
                     >
                         {showCaptionLine ? (
-                            <Eye size={14} className="text-gray-300" />
+                            <Eye size={14} className="text-gray-300"/>
                         ) : (
-                            <EyeOff size={14} className="text-gray-500" />
+                            <EyeOff size={14} className="text-gray-500"/>
                         )}
                     </button>
                     <input
@@ -591,7 +593,7 @@ const VideoPlayerPanel = forwardRef<VideoPlayerHandle, VideoPlayerPanelProps>(({
                             accentColor: "#A855F7",
                         }}
                     />
-                </div>
+                </div>}
                 <div className="w-8"/>
                 <div
                     className="flex justify-center relative"
@@ -606,6 +608,8 @@ const VideoPlayerPanel = forwardRef<VideoPlayerHandle, VideoPlayerPanelProps>(({
                             width: `${videoContainerWidth}px`,
                             height: `${videoContainerHeight}px`
                         }}
+                        onMouseEnter={() => setIsHoveringVideo(true)}
+                        onMouseLeave={() => setIsHoveringVideo(false)}
                     >
                         {videoUrl ? (
                             <div className="relative w-full h-full flex items-center justify-center">
@@ -627,7 +631,9 @@ const VideoPlayerPanel = forwardRef<VideoPlayerHandle, VideoPlayerPanelProps>(({
                                 )}
 
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent pointer-events-none"></div>
-                                <div className="absolute inset-0 flex items-center justify-center z-30 pointer-events-none">
+                                <div className={`absolute inset-0 flex items-center justify-center z-30 pointer-events-none transition-opacity duration-200 ${
+                                    (videoRef.current?.currentTime === 0 || isHoveringVideo || isVideoEnded) ? 'opacity-100' : 'opacity-0'
+                                }`}>
                                     <button
                                         onClick={isVideoEnded ? onClickReplay : onClickPlayAndPause}
                                         className="w-16 h-16 bg-black/40 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-black/60 transition-all border border-purple-400/50 pointer-events-auto"
@@ -680,7 +686,7 @@ const VideoPlayerPanel = forwardRef<VideoPlayerHandle, VideoPlayerPanelProps>(({
                     </div>
 
                     {/* Caption Area */}
-                    {fontSize > 0 && <div
+                    {isCaptionEnabled && fontSize > 0 && <div
                         className="absolute flex flex-col z-20"
                         style={{
                             top: `${captionAreaTop}px`,

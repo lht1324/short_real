@@ -4,6 +4,7 @@ import { waitUntil } from '@vercel/functions'
 import {createSupabaseServiceRoleClient} from "@/lib/supabaseServiceRole";
 import {getNextBaseResponse} from "@/utils/getNextBaseResponse";
 import {ExportResult} from "@/components/page/workspace/dashboard/ExportResult";
+import {internalFireAndForgetFetch} from "@/utils/internalFetch";
 
 export async function GET(request: NextRequest) {
     const supabase = createSupabaseServiceRoleClient();
@@ -89,17 +90,11 @@ export async function GET(request: NextRequest) {
             );
         }
 
-        waitUntil(
-            fetch(`${process.env.BASE_URL}/api/video/export/youtube/upload?taskId=${taskId}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ userId })
-            }).then(res => {
-                console.log('[YouTube Callback] Upload initiated, status:', res.status);
-            }).catch(err => {
-                console.error('[YouTube Callback] Upload initiation error:', err);
-            })
-        );
+        internalFireAndForgetFetch(`${process.env.BASE_URL}/api/video/export/youtube/upload?taskId=${taskId}`, {
+            method: 'POST',
+        }, {
+            userId: userId,
+        });
 
         // 5. 성공 리다이렉트
         return NextResponse.redirect(

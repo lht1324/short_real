@@ -1,0 +1,77 @@
+Scene #1 Reasoning
+Scene #1 Visual Description: The couch holds a neon-lit smartphone and a plush throw pillow. The coffee_table holds a ring light and an open laptop displaying the TikTok interface.
+Scene #1 Casting Logic: An establishing shot of a modern living room transformed into a dance hub. Functional anchors couch and coffee_table support core influencer props. Environment scale verified by relative object proportions; era consistency maintained with modern consumer electronics.
+Scene #1 Included Cast: couch, coffee_table, smartphone, ring_light, open_laptop
+Included Entity[couch] reasoning: Included as a functional anchor providing seating in the living room environment.
+Included Entity[coffee_table] reasoning: Included as a functional anchor supporting influencer equipment.
+Included Entity[smartphone] reasoning: Included as an essential influencer prop for TikTok interaction.
+Included Entity[ring_light] reasoning: Included as a key lighting device used in the scene.
+Included Entity[open_laptop] reasoning: Included as the source displaying the TikTok interface and metrics.
+Scene #1 Excluded Cast: throw_pillow, TikTok_interface
+Excluded Entity[throw_pillow] reasoning: Filtered as a decorative prop not critical for narrative focus.
+Excluded Entity[TikTok_interface] reasoning: Filtered as a non-physical UI component of the laptop display.
+
+Scene #2 Reasoning
+Scene #2 Visual Description: The influencer moves in electric rhythm on the living_room floor while holding a smartphone.
+Scene #2 Casting Logic: Dynamic focus on the influencer and their smartphone. Environment nouns are generic and filtered; props align with sustained modern-day residential context.
+Scene #2 Included Cast: influencer, smartphone
+Included Entity[influencer] reasoning: Active subject performing the dance central to the narrative.
+Included Entity[smartphone] reasoning: Held prop that captures and streams the dance performance.
+Scene #2 Excluded Cast: living_room, floor
+Excluded Entity[living_room] reasoning: Filtered as a generic environment anchor.
+Excluded Entity[floor] reasoning: Filtered as a generic environment surface.
+
+Scene #3 Reasoning
+Scene #3 Visual Description: The heart_icons pulse in time with each step above the living_room floor.
+Scene #3 Casting Logic: Heart_icons extracted as interactive animations; environment terms are filtered to maintain focus on active props.
+Scene #3 Included Cast: heart_icons
+Included Entity[heart_icons] reasoning: Active UI element visualizing audience engagement.
+Scene #3 Excluded Cast: living_room, floor
+Excluded Entity[living_room] reasoning: Filtered as a generic environment anchor.
+Excluded Entity[floor] reasoning: Filtered as a generic environment surface.
+
+Scene #4 Reasoning
+Scene #4 Visual Description: The light_beams pulse across the tv_screen and flicker against the living_room walls.
+Scene #4 Casting Logic: Light_beams and tv_screen selected for their active visual roles; environment surfaces filtered as context only.
+Scene #4 Included Cast: light_beams, tv_screen
+Included Entity[light_beams] reasoning: Active volumetric FX illustrating pulsing energy.
+Included Entity[tv_screen] reasoning: Display surface for visual effects.
+Scene #4 Excluded Cast: living_room, walls
+Excluded Entity[living_room] reasoning: Filtered as a generic environment anchor.
+Excluded Entity[walls] reasoning: Filtered as a generic environment structure.
+
+Scene #5 Reasoning
+Scene #5 Visual Description: The likes_counter soars upward on the tv_screen.
+Scene #5 Casting Logic: Likes_counter extracted as an interactive overlay; tv_screen retained as a functional display anchor.
+Scene #5 Included Cast: likes_counter, tv_screen
+Included Entity[likes_counter] reasoning: Active UI prop representing viral engagement metrics.
+Included Entity[tv_screen] reasoning: Display surface showcasing the likes counter animation.
+
+Scene #6 Reasoning
+Scene #6 Visual Description: The influencer sits on the couch and flips through a scribbled_notepad.
+Scene #6 Casting Logic: Influencer and key props (couch, scribbled_notepad) defined; seating anchor retained for spatial continuity.
+Scene #6 Included Cast: influencer, couch, scribbled_notepad
+Included Entity[influencer] reasoning: Active subject reflecting on creative process.
+Included Entity[couch] reasoning: Functional seating anchor.
+Included Entity[scribbled_notepad] reasoning: Interactive prop illustrating rehearsal notes.
+
+Scene #7 Reasoning
+Scene #7 Visual Description: The calendar_pages flip rapidly in a blur on the coffee_table.
+Scene #7 Casting Logic: Calendar_pages animate to show time lapse; coffee_table retained as anchor for prop placement.
+Scene #7 Included Cast: calendar_pages, coffee_table
+Included Entity[calendar_pages] reasoning: Active prop conveying passage of time.
+Included Entity[coffee_table] reasoning: Functional anchor for calendar visualization.
+
+Scene #8 Reasoning
+Scene #8 Visual Description: The follower_avatars cluster around the influencer on the living_room floor. The influencer stands on the living_room floor and raises arms in celebration amidst a web-like network_overlay of icons.
+Scene #8 Casting Logic: Dual dynamic subjects (follower_avatars, influencer) and interactive network_overlay emphasize community; environment references filtered for clarity.
+Scene #8 Included Cast: follower_avatars, influencer, network_overlay
+Included Entity[follower_avatars] reasoning: Collective digital representations forming the community.
+Included Entity[influencer] reasoning: Main subject at the center of the community cluster.
+Included Entity[network_overlay] reasoning: Interactive prop visualizing follower connections.
+Scene #8 Excluded Cast: living_room, floor, icons
+Excluded Entity[living_room] reasoning: Filtered as a generic environment anchor.
+Excluded Entity[floor] reasoning: Filtered as a generic environment surface.
+Excluded Entity[icons] reasoning: Filtered as component elements of the network overlay.
+
+Entire Entity Id List: influencer, couch, coffee_table, smartphone, ring_light, open_laptop, heart_icons, light_beams, tv_screen, likes_counter, scribbled_notepad, calendar_pages, follower_avatars, network_overlay

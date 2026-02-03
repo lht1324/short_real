@@ -1,5 +1,5 @@
 import {NextRequest, NextResponse} from 'next/server';
-import {openAIServerAPI} from '@/api/server/openAIServerAPI';
+import {llmServerAPI} from '@/api/server/llmServerAPI';
 import {PostOpenAISceneRequest} from '@/api/types/api/open-ai/scene/PostOpenAISceneRequest';
 import {PostOpenAISceneResponse} from '@/api/types/api/open-ai/scene/PostOpenAISceneResponse';
 import {voiceServerAPI} from "@/api/server/voiceServerAPI";
@@ -12,11 +12,25 @@ import {
 } from "@/api/types/supabase/VideoGenerationTasks";
 import {getNextBaseResponse} from "@/utils/getNextBaseResponse";
 import {usersServerAPI} from "@/api/server/usersServerAPI";
+import {createSupabaseServer} from "@/lib/supabaseServer";
 
 export async function POST(request: NextRequest): Promise<NextResponse<PostOpenAISceneResponse>> {
     try {
+        const supabase = await createSupabaseServer();
+        const {data: {user: authUser}, error: authError} = await supabase.auth.getUser();
+
+        if (authError || !authUser) {
+            console.error("/api/open-ai/scene authError: ", authError);
+            return getNextBaseResponse({
+                success: false,
+                status: 401,
+                error: 'Unauthorized request.',
+            });
+        }
+
+        const userId = authUser.id;
+
         const {
-            userId,
             taskId,
             narrationScript,
             voiceId,
@@ -60,7 +74,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<PostOpenA
         await videoGenerationTasksServerAPI.patchVideoGenerationTaskStatus(taskId ?? videoGenerationTask.id, VideoGenerationTaskStatus.DRAFTING);
 
         // OpenAI API를 통해 Scene 분리 처리
-        const postSceneSegmentationResult = await openAIServerAPI.postSceneSegmentation(
+        const postSceneSegmentationResult = await llmServerAPI.postSceneSegmentation(
             taskId ?? videoGenerationTask.id,
             narrationScript,
             voiceGenerationResult.subtitleSegmentList
@@ -75,6 +89,24 @@ export async function POST(request: NextRequest): Promise<NextResponse<PostOpenA
         }
 
         if (videoGenerationTask.scene_breakdown_list) {
+            const user = await usersServerAPI.getUserByUserId(userId);
+
+            if (!user) {
+                return getNextBaseResponse({
+                    success: false,
+                    status: 404,
+                    error: 'User not found.'
+                });
+            }
+
+            if (!user.credit_count || user.credit_count < 2) {
+                return getNextBaseResponse({
+                    success: false,
+                    status: 402,
+                    error: "Insufficient credits."
+                });
+            }
+
             const patchUserCreditCountResult = await usersServerAPI.patchUserCreditCountByUserId(userId, -2);
 
             if (!patchUserCreditCountResult) {
@@ -149,8 +181,27 @@ export async function POST(request: NextRequest): Promise<NextResponse<PostOpenA
             };
         });
 
+        const sceneDataListWithSceneDuration = sceneDataList.map((sceneData, index) => {
+            const isLastScene = index === sceneDataList.length - 1;
+            const currentSceneSegmentList = sceneData.sceneSubtitleSegments ?? [];
+            let actualSceneDuration: number;
+
+            if (isLastScene) {
+                actualSceneDuration = currentSceneSegmentList[currentSceneSegmentList.length - 1].endSec - currentSceneSegmentList[0].startSec + 0.75; // 여운
+            } else {
+                const nextSceneSegmentList = sceneDataList[index + 1].sceneSubtitleSegments ?? [];
+
+                actualSceneDuration = nextSceneSegmentList[0].startSec - currentSceneSegmentList[0].startSec;
+            }
+
+            return {
+                ...sceneData,
+                sceneDuration: actualSceneDuration,
+            }
+        });
+
         const patchVideoGenerationTaskRequest: Partial<VideoGenerationTask> = {
-            scene_breakdown_list: sceneDataList,
+            scene_breakdown_list: sceneDataListWithSceneDuration,
             subtitle_segment_list: voiceGenerationResult.subtitleSegmentList,
             video_title: postSceneSegmentationResult.videoTitle,
             video_description: postSceneSegmentationResult.videoDescription,
@@ -182,7 +233,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<PostOpenA
             status: 200,
             data: {
                 taskId: videoGenerationTask.id,
-                sceneDataList: sceneDataList,
+                sceneDataList: sceneDataListWithSceneDuration,
                 videoTitle: postSceneSegmentationResult.videoTitle,
                 videoDescription: postSceneSegmentationResult.videoDescription,
             }

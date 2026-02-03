@@ -82,7 +82,7 @@ export async function POST(request: NextRequest) {
         const cached = productCache.get(cacheKey);
 
         if (cached) {
-            console.log('✅ Cache HIT - Products served from cache');
+            console.log('✅ Cache HIT - Products in /subscriptions/change served from cache');
             productDataList = cached;
         }
 

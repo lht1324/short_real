@@ -83,7 +83,7 @@ function WorkspaceDashboardPageClient() {
 
             const getPostExportByPlatformPromise = (exportPlatform: ExportPlatform) => {
                 switch (exportPlatform) {
-                    case ExportPlatform.YOUTUBE: return videoClientAPI.postVideoExportYoutube(user?.id, taskId);
+                    case ExportPlatform.YOUTUBE: return videoClientAPI.postVideoExportYoutube(taskId);
                     case ExportPlatform.INSTAGRAM: return videoClientAPI.postVideoExportInstagram(user?.id, taskId);
                     case ExportPlatform.TIKTOK: return videoClientAPI.postVideoExportTikTok(user?.id, taskId);
                 }
@@ -145,10 +145,7 @@ function WorkspaceDashboardPageClient() {
             setShowRetryLoadingModal(false);
         } catch (error) {
             console.error(error);
-
-            await videoClientAPI.patchVideoTaskByTaskId(taskId, {
-                is_user_cancelled_task: true,
-            })
+            alert(error instanceof Error ? error.message : 'Unknown error occurred. Try again.');
             setShowRetryLoadingModal(false);
         }
         console.log('Retry generation:', taskId);
@@ -416,6 +413,20 @@ function WorkspaceDashboardPageClient() {
             loadOrderData().then();
         }
     }, [customerSessionToken]);
+
+    useEffect(() => {
+        let timeout: NodeJS.Timeout;
+
+        if (!user) {
+            timeout = setTimeout(() => {
+                router.push('/');
+            }, 10000);
+        }
+
+        return () => {
+            clearTimeout(timeout);
+        };
+    }, [user, router]);
 
     return (
         <div className="min-h-screen bg-black text-white">

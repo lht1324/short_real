@@ -1,0 +1,495 @@
+Scene #1 postVideoGenPrompt() Result
+Scene Summary: A WWII infantry soldier, crouched low in a muddy, war-torn trench, reacts intensely to nearby combat, executing a sharp, decisive action.
+Scene Summary Reason: The image shows a soldier in a defensive, ready posture amidst destruction and smoke, indicating a scene focused on immediate, high-stress reaction.
+Primary Movement: Decisive tensing and gripping of the rifle, combined with environmental objects jolting from external shockwaves.
+Primary Movement Reason: The short duration requires high-impact kinetic energy. The soldier's posture and intense gaze imply latent force, which is translated into a sudden, decisive grip and muscle strain.
+Narrative Vibe: ANXIOUS
+Narrative Vibe Reason: The overall context of 'Chaos and War' combined with the soldier's strained, defensive, and focused expression creates a strong sense of urgency and latent anxiety.
+Selected INTENSITY_TIER: HIGH
+INTENSITY_TIER Selected Reason: Although the soldier is not running, the action involves intentional force and structural strain (Decisive Kinetic), such as tight gripping and muscle torque, which justifies the HIGH tier for internal and micro-kinetic movement.
+Identity Logic: The identity of the 1944 WWII Infantry Soldier is anchored by his olive drab uniform and tense posture. The motion focuses on enhancing the realism of his physical exertion and material physics (muscle torque, fabric drag) under extreme pressure, ensuring visual consistency across the temporal delta.
+Action Focus: The core action shifts from the static pose of 'crouching' to the kinetic reality of 'gripping intensely,' focusing on high-impact micro-expressions of force and structural strain across the soldier's body and equipment.
+- - - Primary Narrative Block - - -
+Entity[0]
+Raw Sentence: The midground left Infantry Soldier in an olive drab uniform grips the M1 Garand Rifle intensely, causing muscle torque and skin rippling on his neck, while the midground center M1 Garand Rifle with wooden stock strains against the soldier's firm traction, exhibiting surface shearing on the steel.
+Action Type: Temporary-Simultaneous
+Action Type Reason: The primary action (gripping) and the resulting material reaction (straining/shearing) occur concurrently, requiring a simultaneous action type.
+Verb Reason: Chosen 'grips' (Interaction, HIGH tier) and 'strains' (Passive/Interaction, HIGH tier inference) to show decisive, intentional force applied to the weapon and the corresponding structural resistance.
+Adverb Reason:
+Entity[1]
+Raw Sentence: The midground center M1 Garand Rifle with wooden stock strains against the soldier's firm traction, exhibiting surface shearing on the steel.
+Action Type: Temporary-Single
+Action Type Reason: Describes a singular, structural reaction of the rifle to the soldier's grip, which can be treated as a decisive, temporary state of stress.
+Verb Reason: Chosen 'strains' (Passive/Interaction, HIGH tier inference) to describe the rigid object's reaction to extreme applied force.
+Adverb Reason: The action is intrinsically modified by 'against the soldier's firm traction,' so a separate adverb is not required.
+Entity[2]
+Raw Sentence: The foreground center Spent Cartridge Casings jolt sharply, shifting the coarse mineral grain of the mud.
+Action Type: Temporary-Single
+Action Type Reason: The casings are props reacting to an external, sudden force (implied shockwave), making this a singular, temporary kinetic event.
+Verb Reason: Chosen 'jolt' (Passive, HIGH tier) to indicate a sharp, sudden displacement from an external shockwave/vibration.
+Adverb Reason: The action is modified by 'sharply,' which is an environmental descriptor of the force, not a velocity option from the depot.
+Entity[3]
+Raw Sentence: The foreground center discarded M1 steel helmet staggers from the ground vibration, highlighting its structural dents.
+Action Type: Temporary-Single
+Action Type Reason: The helmet is a prop reacting to an external, sudden force, making this a singular, temporary kinetic event.
+Verb Reason: Chosen 'staggers' (Passive, HIGH tier inference) to describe the heavy object's unstable movement due to external force.
+Adverb Reason: The action is modified by 'from the ground vibration,' so a separate adverb is not required.
+- - - Atmospheric Lighting Delta - - -
+Delta: granular dust swirls around the low crouched soldier
+Delta Reason: HIGH intensity allows for visible displacement. The soldier's sudden tension causes the loose granular material (mud/dust) to react and swirl around him.
+Delta: heavy smoke and fiery embers stream rapidly away from the lens
+Delta Reason: The camera pushes in (+Z), so environmental particles (smoke/embers from the background fire) must move rapidly opposite (-Z) to validate the camera's physical momentum.
+Delta: Volumetric lighting, dynamic refraction, and hard rim lighting
+Delta Reason: Selected Volumetric lighting for depth foundation and Dynamic refraction/Hard rim lighting to align with the Action/Sharp Reality archetype, amplifying the contrast and visual impact of the chaotic environment.
+Delta: jagged motion blur and turbulent kinetic embers
+Delta Reason: These technical tags support the HIGH intensity and ANXIOUS vibe, emphasizing chaotic movement and high energy displacement.
+- - - Cinematic Camera Vectors - - -
+Camera Action: Zoom Out with Handheld Shaky aggressively
+Subject Vectors: [$0X$, $0Y$, $-Z$]
+Subject Vectors Reasoning: The soldier is centered ($0X$) and crouched low ($0Y$). His frontal orientation and low position in the frame suggest latent motion toward the viewer (Background to Foreground, $-Z$), reinforcing his aggressive readiness.
+- - - Style - - -
+Style Slot 1: Authentic raw textures with fine cinematic film grain in 4k fidelity
+Style Slot 2: the initial structural integrity of the subject and environment remains perfectly intact and consistent throughout the motion.
+Style Slot 1 Reason: Direct translation of the master style guide's fidelity requirements (Raw, Filmic, 4K) to maximize visual quality and cinematic authenticity.
+Style Slot 2 Reason: Mandatory positive structural preservation instruction to ensure the subject's identity and geometry (uniform, helmet, rifle) are consistently preserved despite the high kinetic movement.
+Reasoning: The HIGH intensity tier was chosen based on the soldier's tense, focused posture, translating to structural strain and decisive action. Vocabulary was strictly filtered to the HIGH tier, using 'muscle torque' and 'surface shearing' to describe the physics of the human body and rigid materials under stress. The camera uses a $0X, 0Y, +Z$ Dolly In to maximize the emotional intensity of the soldier's face, aligning with the $S_{-Z}$ vector. The atmospheric strategy ensures that particles (heavy smoke, fiery embers) stream away from the lens ($-Z$ flow) to validate the camera's physical push, preventing background freezing and reinforcing the turbulent environment with Volumetric lighting and jagged motion blur.
+- - - Final Output Structure - - -
+Primary Narrative Block: The midground left Infantry Soldier in an olive drab uniform grips the M1 Garand Rifle intensely, causing muscle torque and skin rippling on his neck, while the midground center M1 Garand Rifle with wooden stock strains against the soldier's firm traction, exhibiting surface shearing on the steel. Simultaneously, the foreground center discarded M1 steel helmet staggers from the ground vibration, highlighting its structural dents, and the foreground center Spent Cartridge Casings jolt sharply, shifting the coarse mineral grain of the mud.
+Atmospheric/Lighting Delta: amidst granular dust swirls around the low crouched soldier, while heavy smoke and fiery embers stream rapidly away from the lens, all enhanced by Volumetric lighting, dynamic refraction, and hard rim lighting and jagged motion blur and turbulent kinetic embers
+Cinematic Camera Vector: captured with CINEMATIC_CAMERA_VECTORS the midground left Infantry Soldier in an olive drab uniform
+Style: rendered in Authentic raw textures with fine cinematic film grain in 4k fidelity, while the initial structural integrity of the subject and environment remains perfectly intact and consistent throughout the motion.
+videoGenPrompt: The midground left Infantry Soldier in an olive drab uniform grips the M1 Garand Rifle intensely, causing muscle torque and skin rippling on his neck, while the midground center M1 Garand Rifle with wooden stock strains against the soldier's firm traction, exhibiting surface shearing on the steel. Simultaneously, the foreground center discarded M1 steel helmet staggers from the ground vibration, highlighting its structural dents, and the foreground center Spent Cartridge Casings jolt sharply, shifting the coarse mineral grain of the mud, amidst granular dust swirls around the low crouched soldier, while heavy smoke and fiery embers stream rapidly away from the lens, all enhanced by Volumetric lighting, dynamic refraction, and hard rim lighting and jagged motion blur and turbulent kinetic embers, captured with CINEMATIC_CAMERA_VECTORS the midground left Infantry Soldier in an olive drab uniform, rendered in Authentic raw textures with fine cinematic film grain in 4k fidelity, while the initial structural integrity of the subject and environment remains perfectly intact and consistent throughout the motion.
+assembledVideoGenPrompt: The midground left Infantry Soldier in an olive drab uniform grips the M1 Garand Rifle intensely, causing muscle torque and skin rippling on his neck, while the midground center M1 Garand Rifle with wooden stock strains against the soldier's firm traction, exhibiting surface shearing on the steel. Simultaneously, the foreground center discarded M1 steel helmet staggers from the ground vibration, highlighting its structural dents, and the foreground center Spent Cartridge Casings jolt sharply, shifting the coarse mineral grain of the mud, amidst granular dust swirls around the low crouched soldier, while heavy smoke and fiery embers stream rapidly away from the lens, all enhanced by Volumetric lighting, dynamic refraction, and hard rim lighting and jagged motion blur and turbulent kinetic embers, captured with anamorphic Lens, Deep Focus, 9:16 Portrait Cinema, Full/Medium Wide, Zoom Out with Handheld Shaky aggressively the midground left Infantry Soldier in an olive drab uniform, rendered in Authentic raw textures with fine cinematic film grain in 4k fidelity, while the initial structural integrity of the subject and environment remains perfectly intact and consistent throughout the motion.
+
+Scene #2 postVideoGenPrompt() Result
+Scene Summary: A WWII Sherman tank is advancing aggressively through a muddy, debris-strewn battlefield, generating smoke and leaving deep tracks.
+Scene Summary Reason: The image shows a Sherman tank centered, driving over rough, muddy terrain, with large plumes of dark smoke rising in the background, consistent with the 'Battle Unleashed' narrative.
+Primary Movement: The tank is driving forward, crushing the terrain, accompanied by billowing smoke.
+Primary Movement Reason: The narration explicitly states, 'Tanks rumbled across scarred landscapes,' and the visual anchor of the tank's tracks and forward lean confirms high-momentum locomotion.
+Narrative Vibe: CHAOTIC
+Narrative Vibe Reason: The environment (battlefield, smoke, fire) and the action (tank advance) create a sense of military urgency and kinetic destruction, fitting the CHAOTIC descriptor.
+Selected INTENSITY_TIER: HIGH
+INTENSITY_TIER Selected Reason: The movement involves heavy machinery executing decisive acceleration and locomotion over a rough surface, requiring significant structural strain and kinetic displacement, which maps directly to the HIGH intensity tier.
+Identity Logic: The identity of the 1944 WWII Sherman Tank is preserved by anchoring the movement to its green steel hull and tracks, ensuring the physics reflect heavy machine locomotion and the material strain (`rigid`) required for battlefield traversal.
+Action Focus: The conceptual shift is from general 'rumbling' to precise, high-impact kinetic actions. The tank is actively 'pushing' the terrain, the metal is 'grinding,' the ground is 'disrupting' and 'cratering,' and the smoke is 'arching surgingly,' maximizing the visual delta.
+- - - Primary Narrative Block - - -
+Entity[0]
+Raw Sentence: The center midground Sherman Tank in a green hull is pushing powerfully, its hull grinding, causing structural dents.
+Action Type: Continuous
+Action Type Reason: The tank is performing a sustained action of forward movement and track rotation, best described by a Continuous state.
+Verb Reason: The verb 'push' from locomotion/HIGH reflects the decisive force required to move a heavy tank over rough ground.
+Adverb Reason: The adverb 'powerfully' aligns with the HIGH tier's Impact focus, emphasizing the force being exerted by the tank.
+Entity[1]
+Raw Sentence: The center foreground Tank Tread Impressions in the muddy soil is disrupting intensely, causing deep cratering.
+Action Type: Continuous
+Action Type Reason: The ground is being continuously deformed as the tank rolls over it, making the deformation action continuous.
+Verb Reason: The verb 'disrupt' from passive/HIGH reflects the kinetic displacement caused by the tank's ongoing movement.
+Adverb Reason: The adverb 'intensely' aligns with the HIGH tier's Tension focus, emphasizing the strain and pressure being applied to the muddy surface.
+Entity[2]
+Raw Sentence: The center background Smoke Plumes of wispy grey and black smoke is arching surgingly, streaming aerosolized mist.
+Action Type: Continuous
+Action Type Reason: The smoke is perpetually rising and dissipating, representing a sustained flow state.
+Verb Reason: The verb 'arch' from aerodynamics/HIGH reflects the forceful, decisive shape of the rising smoke column, driven by high heat and turbulence.
+Adverb Reason: The adverb 'surgingly' aligns with the HIGH tier's Flow focus, indicating rapid, turbulent movement in the gaseous medium.
+- - - Atmospheric Lighting Delta - - -
+Delta: Turbulent dust and kinetic embers are swirling around the tracks.
+Delta Reason: This describes the Subject-Atmosphere interaction, using high-intensity physics (turbulent dust, kinetic embers) appropriate for the tank's aggressive movement over the battlefield terrain.
+Delta: high-velocity debris streaks past the lens radially outward.
+Delta Reason: This describes the Camera-Atmosphere flow. Since the subject is moving -Z (toward camera), the camera is implied to be moving +Z (pushing in). The debris must move radially outward/backward to create a parallax effect and validate the camera's momentum.
+Delta: dynamic refraction, hard rim lighting, specular highlights
+Delta Reason: This lighting setup is selected for Action/Sharp Reality to enhance the CHAOTIC vibe and emphasize the metallic surfaces and debris in high contrast.
+Delta: turbulent dust and jagged motion blur
+Delta Reason: These technical tags are required for the HIGH intensity tier to visually support the speed and chaos of the moving tank.
+- - - Cinematic Camera Vectors - - -
+Camera Action: Zoom Out with Handheld Shaky aggressively
+Subject Vectors: [$0X$, $0Y$, $-Z$]
+Subject Vectors Reasoning: The tank is centered ($0X$), remains on the ground plane ($0Y$), and is clearly moving directly toward the viewer from the background to the foreground ($-Z$), confirmed by the perspective lines and forward lean.
+- - - Style - - -
+Style Slot 1: Authentic raw textures with fine cinematic film grain in 4k fidelity
+Style Slot 2: the initial structural integrity of the subject and environment remains perfectly intact and consistent throughout the motion
+Style Slot 1 Reason: Direct translation of the master style guide's fidelity requirements (Raw textureDetail, Filmic grainLevel, 4K resolutionTarget) for maximum visual quality.
+Style Slot 2 Reason: Standard structural preservation instruction to prevent identity distortion or geometric artifacts during high-kinetic video generation.
+Reasoning: The prompt prioritizes kinetic energy and contextual consistency. The HIGH intensity tier dictates the use of forceful, decisive verbs ('pushing', 'disrupting', 'arching') and material reactions ('structural dents', 'deep cratering', 'aerosolized mist') sourced strictly from the vocabulary depot. The atmospheric section is critical to prevent background freezing, generating turbulent dust and high-velocity debris streaks that validate the tank's movement and the camera's implied forward push. The cinematic vector is locked to the subject's $-Z$ trajectory, and the anamorphic, high-contrast style ensures the final output meets the RLHF cinematic reward optimization criteria.
+- - - Final Output Structure - - -
+Primary Narrative Block: The center midground Sherman Tank in a green hull is pushing powerfully, its hull grinding, causing structural dents. Simultaneously, the center foreground Tank Tread Impressions in the muddy soil is disrupting intensely, causing deep cratering, while the center background Smoke Plumes of wispy grey and black smoke is arching surgingly, streaming aerosolized mist.
+Atmospheric/Lighting Delta: amidst turbulent dust and kinetic embers are swirling around the tracks, while high-velocity debris streaks past the lens radially outward, all enhanced by dynamic refraction, hard rim lighting, specular highlights and turbulent dust and jagged motion blur
+Cinematic Camera Vector: captured with CINEMATIC_CAMERA_VECTORS the center midground Sherman Tank in a green hull
+Style: presented with Authentic raw textures with fine cinematic film grain in 4k fidelity, while the initial structural integrity of the subject and environment remains perfectly intact and consistent throughout the motion
+videoGenPrompt: The center midground Sherman Tank in a green hull is pushing powerfully, its hull grinding, causing structural dents. Simultaneously, the center foreground Tank Tread Impressions in the muddy soil is disrupting intensely, causing deep cratering, while the center background Smoke Plumes of wispy grey and black smoke is arching surgingly, streaming aerosolized mist, amidst turbulent dust and kinetic embers are swirling around the tracks, while high-velocity debris streaks past the lens radially outward, all enhanced by dynamic refraction, hard rim lighting, specular highlights and turbulent dust and jagged motion blur, captured with CINEMATIC_CAMERA_VECTORS the center midground Sherman Tank in a green hull, presented with Authentic raw textures with fine cinematic film grain in 4k fidelity, while the initial structural integrity of the subject and environment remains perfectly intact and consistent throughout the motion.
+assembledVideoGenPrompt: The center midground Sherman Tank in a green hull is pushing powerfully, its hull grinding, causing structural dents. Simultaneously, the center foreground Tank Tread Impressions in the muddy soil is disrupting intensely, causing deep cratering, while the center background Smoke Plumes of wispy grey and black smoke is arching surgingly, streaming aerosolized mist, amidst turbulent dust and kinetic embers are swirling around the tracks, while high-velocity debris streaks past the lens radially outward, all enhanced by dynamic refraction, hard rim lighting, specular highlights and turbulent dust and jagged motion blur, captured with anamorphic Lens, Deep Focus, 9:16 Portrait Cinema, Full/Medium Wide, Zoom Out with Handheld Shaky aggressively the center midground Sherman Tank in a green hull, rendered in presented with Authentic raw textures with fine cinematic film grain in 4k fidelity, while the initial structural integrity of the subject and environment remains perfectly intact and consistent throughout the motion.
+
+Scene #3 postVideoGenPrompt() Result
+Scene Summary: Soldiers are charging across a muddy, burning WWII battlefield under heavy smoke, transitioning from cover to engagement.
+Scene Summary Reason: The image shows soldiers running through a heavily damaged, burning environment (Normandy beach/battlefield), consistent with the WWII narrative and visual context.
+Primary Movement: High-speed locomotion (running/charging) toward the background obstacle line.
+Primary Movement Reason: The soldiers in the midground are actively mid-stride, clearly moving forward and away from the camera, driven by the narrative of charging into the fray.
+Narrative Vibe: COMBAT
+Narrative Vibe Reason: The presence of fire, smoke, obstacles, and armed soldiers charging under duress defines a high-stakes, kinetic combat scenario.
+Selected INTENSITY_TIER: HIGH
+INTENSITY_TIER Selected Reason: The primary movement is rapid, decisive locomotion (running/charging) across difficult terrain, which requires significant kinetic force and falls under the HIGH tier for structural strain and high momentum.
+Identity Logic: The identity logic preserves the WWII era and the specific roles (Infantry Soldier, Medic) and material states (Wood and Steel, Canvas, Rusted Steel Coils) by anchoring them spatially (foreground, midground, background) to ensure visual consistency throughout the motion sequence.
+Action Focus: The core action shifts from the narrative concept of "charging" to the tangible physics of "Decisive Acceleration" (locomotion) and "Explosive Kinetic Force" (combat/interaction) to describe how the bodies and equipment move rapidly through the heavy, muddy terrain.
+- - - Primary Narrative Block - - -
+Entity[0]
+Raw Sentence: The foreground Infantry Soldier leans rapidly, causing his uniform's billowing folds to resist the wind-drag resistance.
+Action Type: Temporary-Single
+Action Type Reason: The action is a single, decisive kinetic motion (the charge) initiated from a momentary pause or slower pace.
+Verb Reason: Chose 'lean' (locomotion, HIGH tier) to denote the forward drive and aggressive posture required for rapid acceleration.
+Adverb Reason: Chose 'rapidly' (Velocity, HIGH tier) to accurately represent the high speed and urgency of the charge across the battlefield.
+Entity[1]
+Raw Sentence: The foreground Medic with a Red Cross Armband strides rapidly, his skin rippling with muscle torque.
+Action Type: Temporary-Single
+Action Type Reason: The action is a single, sustained kinetic stride, initiated decisively.
+Verb Reason: Chose 'stride' (locomotion, HIGH tier) to emphasize aggressive, powerful steps over the uneven ground.
+Adverb Reason: Chose 'rapidly' (Velocity, HIGH tier) to ensure the Medic's movement matches the high-speed charge of the soldier.
+Entity[2]
+Raw Sentence: The foreground M1 Garand Rifle of Wood and Steel Construction is gripping intensely, causing surface shearing and structural dents.
+Action Type: Continuous
+Action Type Reason: The rifle is continuously held and stressed throughout the soldier's run, representing a sustained state of interaction and tension.
+Verb Reason: Chose 'grip' (interaction, HIGH tier) to convey the tight, intentional hold required during high-speed movement in combat.
+Adverb Reason: Chose 'intensely' (Tension, HIGH tier) to reflect the white-knuckled stress applied to the weapon during the charge.
+Entity[3]
+Raw Sentence: The foreground Canvas Medical Bag is jolting sharply, causing a heavy ripple in the fabric.
+Action Type: Continuous
+Action Type Reason: The bag is continuously reacting to the Medic's rapid movement and jarring steps.
+Verb Reason: Chose 'jolt' (passive, HIGH tier) to describe the sudden, disruptive movement caused by external kinetic force.
+Adverb Reason: Chose 'sharply' (Kinetic Displacement, HIGH tier) to emphasize the sudden, disruptive nature of the movement on the bag.
+Entity[4]
+Raw Sentence: The midground Barbed Wire Obstacle with Rusted Steel Coils is disrupting turbulently, causing structural dents and pitted erosion.
+Action Type: Continuous
+Action Type Reason: The wire is a static obstacle continuously disturbed by the environment and nearby kinetic activity.
+Verb Reason: Chose 'disrupt' (passive, HIGH tier) to show the structural stress applied to the static obstacle by explosions, feet, or wind.
+Adverb Reason:
+Entity[5]
+Raw Sentence: The background Shell Craters of Earth and Debris is swirling turbulently, causing streaming particle trails and eddying dust.
+Action Type: Continuous
+Action Type Reason: The dust/granular material is continuously reacting to the turbulence created by the soldiers and the battlefield atmosphere.
+Verb Reason: Chose 'swirl' (granular, HIGH tier) to describe the turbulent, high-momentum movement of the loose earth.
+Adverb Reason:
+- - - Atmospheric Lighting Delta - - -
+Delta: Wet earth and mud spray radially from the subjects' feet.
+Delta Reason: This describes the subject-atmosphere interaction (Slot 1), adhering to the HIGH intensity tier by showing kinetic displacement of the muddy terrain visible in the image.
+Delta: firelight and smoke plumes streak past the lens in turbulent motion.
+Delta Reason: This describes the camera-atmosphere flow (Slot 2), utilizing the visible fire and smoke elements and aligning the flow with the camera's movement (+Z push).
+Delta: dynamic refraction, Hard rim lighting, Specular highlights
+Delta Reason: This is the Volumetric Lighting Anchor (Slot 3), chosen to amplify the sharp reality and action focus of the COMBAT vibe.
+Delta: Jagged Motion Blur, Volumetric smoke and fire
+Delta Reason: These are HIGH tier technical tags (Slot 4) supporting the kinetic chaos and high-speed motion of the scene.
+- - - Cinematic Camera Vectors - - -
+Camera Action: Dolly-In and Pedestal Up with Handheld Shaky aggressively
+Subject Vectors: [$0X$, $+Y$, $+Z$]
+Subject Vectors Reasoning: The subjects are charging directly away from the lens toward the vanishing point (+Z), while also moving slightly uphill (+Y) toward the rampart structure, with no lateral movement (0X).
+- - - Style - - -
+Style Slot 1: Authentic raw textures with fine cinematic film grain in 4k fidelity
+Style Slot 2: the initial structural integrity of the subject and environment remains perfectly intact and consistent throughout the motion.
+Style Slot 1 Reason: Derived directly from the Master Style Guide (Raw textureDetail, Filmic grainLevel, 4K resolutionTarget) to maximize fidelity and cinematic aesthetic.
+Style Slot 2 Reason: Standard structural preservation command to ensure identity and geometry consistency during the high-kinetic motion sequence.
+Reasoning: The overall prompt strategy prioritizes Kinetic Intensity (HIGH) to match the WWII charge context. The Vocabulary Usage Protocol was strictly followed, ensuring that verbs describing the soldier's action (e.g., 'leans', 'strides') were sourced from action_context/locomotion, while descriptive reactions (e.g., 'billowing folds', 'surface shearing') were sourced from the material fields. The camera vector (0X, +Y, +Z) was derived from a forensic analysis showing the soldiers moving away and slightly upward toward the rampart. The atmospheric delta uses 'Wet earth and mud spray' and 'firelight and smoke plumes' to prevent background freezing and amplify the chaotic environment, adhering to the HIGH tier physics threshold. The final composition uses professional cinematic jargon (Anamorphic, Hard rim lighting, Jagged Motion Blur) to satisfy the MMDiT model's RLHF optimization for visual vividness.
+- - - Final Output Structure - - -
+Primary Narrative Block: The foreground Infantry Soldier leans rapidly, causing his uniform's billowing folds to resist the wind-drag resistance. Simultaneously, the foreground Medic with a Red Cross Armband strides rapidly, his skin rippling with muscle torque. The foreground M1 Garand Rifle of Wood and Steel Construction is gripping intensely, causing surface shearing and structural dents, while the foreground Canvas Medical Bag is jolting sharply, causing a heavy ripple in the fabric. Further back, the midground Barbed Wire Obstacle with Rusted Steel Coils is disrupting turbulently, causing structural dents and pitted erosion, and the background Shell Craters of Earth and Debris is swirling turbulently, causing streaming particle trails and eddying dust.
+Atmospheric/Lighting Delta: amidst Wet earth and mud spray radially from the subjects' feet, while firelight and smoke plumes streak past the lens in turbulent motion, all enhanced by dynamic refraction, Hard rim lighting, Specular highlights, and Jagged Motion Blur.
+Cinematic Camera Vector: captured with CINEMATIC_CAMERA_VECTORS tracking the charging foreground Infantry Soldier and Medic
+Style: rendered in Authentic raw textures with fine cinematic film grain in 4k fidelity, while the initial structural integrity of the subject and environment remains perfectly intact and consistent throughout the motion.
+videoGenPrompt: The foreground Infantry Soldier leans rapidly, causing his uniform's billowing folds to resist the wind-drag resistance. Simultaneously, the foreground Medic with a Red Cross Armband strides rapidly, his skin rippling with muscle torque. The foreground M1 Garand Rifle of Wood and Steel Construction is gripping intensely, causing surface shearing and structural dents, while the foreground Canvas Medical Bag is jolting sharply, causing a heavy ripple in the fabric. Further back, the midground Barbed Wire Obstacle with Rusted Steel Coils is disrupting turbulently, causing structural dents and pitted erosion, and the background Shell Craters of Earth and Debris is swirling turbulently, causing streaming particle trails and eddying dust, amidst Wet earth and mud spray radially from the subjects' feet, while firelight and smoke plumes streak past the lens in turbulent motion, all enhanced by dynamic refraction, Hard rim lighting, Specular highlights, and Jagged Motion Blur, captured with CINEMATIC_CAMERA_VECTORS tracking the charging foreground Infantry Soldier and Medic, rendered in Authentic raw textures with fine cinematic film grain in 4k fidelity, while the initial structural integrity of the subject and environment remains perfectly intact and consistent throughout the motion.
+assembledVideoGenPrompt: The foreground Infantry Soldier leans rapidly, causing his uniform's billowing folds to resist the wind-drag resistance. Simultaneously, the foreground Medic with a Red Cross Armband strides rapidly, his skin rippling with muscle torque. The foreground M1 Garand Rifle of Wood and Steel Construction is gripping intensely, causing surface shearing and structural dents, while the foreground Canvas Medical Bag is jolting sharply, causing a heavy ripple in the fabric. Further back, the midground Barbed Wire Obstacle with Rusted Steel Coils is disrupting turbulently, causing structural dents and pitted erosion, and the background Shell Craters of Earth and Debris is swirling turbulently, causing streaming particle trails and eddying dust, amidst Wet earth and mud spray radially from the subjects' feet, while firelight and smoke plumes streak past the lens in turbulent motion, all enhanced by dynamic refraction, Hard rim lighting, Specular highlights, and Jagged Motion Blur, captured with anamorphic Lens, Deep Focus, 9:16 Portrait Cinema, Full/Medium Wide, Dolly-In and Pedestal Up with Handheld Shaky aggressively tracking the charging foreground Infantry Soldier and Medic, rendered in Authentic raw textures with fine cinematic film grain in 4k fidelity, while the initial structural integrity of the subject and environment remains perfectly intact and consistent throughout the motion.
+
+Scene #4 postVideoGenPrompt() Result
+Scene Summary: A WWII American infantry soldier is aggressively moving from the water onto a contested beach amidst heavy fire and destruction.
+Scene Summary Reason: The image shows a soldier wading through water with an urgent expression, surrounded by smoke, fire glow, and concrete debris, clearly indicating immediate battlefield action.
+Primary Movement: Aggressive wading/running through water resistance, forward momentum is key.
+Primary Movement Reason: The soldier's pose is leaning into the water, and large splashes are visible around his legs, confirming intentional, sustained forward propulsion against a resistant medium.
+Narrative Vibe: COMBAT
+Narrative Vibe Reason: The combination of smoke, fire, immediate threat suggested by the soldier's rifle position, and the overall context of a WWII beach assault establishes a highly kinetic and dangerous combat atmosphere.
+Selected INTENSITY_TIER: HIGH
+INTENSITY_TIER Selected Reason: The movement involves active propulsion, displacement of water (a medium), and visible physical strain (muscle tension), which aligns with the Decisive Kinetic and Structural Strain profile of the HIGH tier, despite the water resistance slowing physical speed.
+Identity Logic: The identity of the WWII American Infantry Soldier (20s, wet uniform) and the heavy M1 Garand rifle are locked as the central anchors. All kinetic effects are designed to emphasize the strain and momentum required for this specific identity to operate in a war-torn environment (Normandy Shore).
+Action Focus: The action is focused on translating the soldier's determined wading into a physics-driven vector of 'Decisive Acceleration' and 'Decisive Grip', emphasizing muscle torque, fabric whipping, and violent fluid displacement as he overcomes water resistance.
+- - - Primary Narrative Block - - -
+Entity[0]
+Raw Sentence: The foreground center Infantry Soldier in a wet olive drab uniform pushes rapidly while gripping the rifle, causing the water to churn, his muscle tensing, and his uniform whipping.
+Action Type: Temporary-Simultaneous
+Action Type Reason: The soldier's locomotion (pushing forward) and his interaction (gripping the rifle) occur concurrently as he moves through the water, requiring a simultaneous action type.
+Verb Reason: The verb 'pushes' was chosen from locomotion/Main Verbs (HIGH tier) to describe the aggressive forward momentum against resistance. 'Gripping' was chosen from interaction/Main Verbs (HIGH tier) to describe the tight hold on the weapon under stress.
+Adverb Reason: 
+Entity[1]
+Raw Sentence: The M1 Garand Rifle with wooden stock and steel barrel holds intensely, triggering surface shearing.
+Action Type: Temporary-Single
+Action Type Reason: The rifle's action is purely reactive to the soldier's grip and movement, classified as a single sustained action of being held taut.
+Verb Reason: The verb 'holds' was chosen from interaction/Main Verbs (HIGH tier) to describe the sustained, firm resistance of the object against external force.
+Adverb Reason: The adverb 'intensely' was selected from the Tension/HIGH Kinetic Focus list, reflecting the Decisive Grip and strain applied by the soldier.
+Entity[2]
+Raw Sentence: The mid-ground scattered wood and metal fragments are jolting powerfully, causing internal stress fracturing.
+Action Type: Continuous
+Action Type Reason: The debris is subject to continuous environmental forces (shockwaves, water movement) on the beach, maintaining a state of passive, reactive motion.
+Verb Reason: The verb 'jolting' was chosen from passive/Main Verbs (HIGH tier) to describe the sharp, sudden displacement caused by nearby impacts or shockwaves.
+Adverb Reason: The adverb 'powerfully' was selected from the Impact/HIGH Kinetic Focus list, signifying that the jolting motion is substantial and forceful.
+Entity[3]
+Raw Sentence: The background defensive hexagonal blocks are settling strainingly, showing pitted erosion.
+Action Type: Continuous
+Action Type Reason: The tank traps are massive, stationary objects, but in a combat zone, they are continuously subject to pressure and impact, leading to a state of sustained, settling strain.
+Verb Reason: The verb 'settling' was chosen from passive/Main Verbs (VERY_LOW tier, adjusted to HIGH context) to describe the heavy immobility and gradual shift under constant environmental pressure.
+Adverb Reason: The adverb 'strainingly' was selected from the Tension/HIGH Kinetic Focus list, emphasizing the structural stress these static objects are undergoing.
+- - - Atmospheric Lighting Delta - - -
+Delta: Water displacement churning violently around the subject's feet, while thick, dark smoke billows aggressively across the upper frame.
+Delta Reason: This captures the immediate interaction of the soldier with the water (Slot 1) and the dramatic, chaotic background environment (smoke/fire), adhering to the HIGH intensity threshold for fluid and gaseous displacement.
+Delta: fiery embers and ash particles stream laterally across the lens.
+Delta Reason: This serves as the Camera-Atmosphere Flow (Slot 2), utilizing ambient debris (ash/embers) appropriate for the fire/smoke context, moving laterally to enhance the sense of chaos and lens presence.
+Delta: dynamic refraction, Hard rim lighting, Specular highlights
+Delta Reason: Selected (Slot 3) to reinforce the COMBAT vibe and create depth, using hard light sources (fire/sun) to define edges against the dense smoke and wet surfaces.
+Delta: Turbulent kinetic embers, harsh highlights, jagged motion blur
+Delta Reason: Selected (Slot 4) as HIGH intensity technical tags to amplify the chaotic movement of particles and the speed of the soldier, preventing slow-motion artifacts.
+- - - Cinematic Camera Vectors - - -
+Camera Action: Zoom Out with Handheld Shaky aggressively
+Subject Vectors: [$0X$, $0Y$, $-Z$]
+Subject Vectors Reasoning: The soldier is centered ($0X$) and moving horizontally ($0Y$) toward the camera (Background to Foreground, $-Z$), as indicated by his frontal stance, forward lean, and low-frame position.
+- - - Style - - -
+Style Slot 1: Authentic raw textures with fine cinematic film grain in 4k fidelity
+Style Slot 2: the initial structural integrity of the subject and environment remains perfectly intact and consistent throughout the motion.
+Style Slot 1 Reason: Directly converts the master style guide's 'Raw' textureDetail, 'Filmic' grainLevel, and '4K' resolutionTarget into high-fidelity rendering commands.
+Style Slot 2 Reason: This positive command ensures the identity and complex geometry of the soldier and the WWII battlefield are not distorted or lost during the high-kinetic movement.
+Reasoning: The core strategy was to translate the 'COMBAT' vibe into a 'HIGH' kinetic profile. Tags were strictly selected from the HIGH tier of the vocabulary depot: 'pushes' (locomotion), 'gripping' (interaction), 'churn' (fluid reaction), and 'whipping' (cloth reaction). The atmospheric strategy focuses on violent displacement (water churning, smoke billowing) and high-impact lighting (Hard rim lighting, Dynamic refraction) to support the chaotic scene. The camera vector ($0X, 0Y, -Z$) confirms the subject's aggressive movement toward the viewer, which is then captured with a 'CINEMATIC_CAMERA_VECTORS' handle, ensuring the generative model maintains spatio-temporal coherence throughout the 2.97-second sequence.
+- - - Final Output Structure - - -
+Primary Narrative Block: The foreground center Infantry Soldier in a wet olive drab uniform pushes rapidly while gripping the rifle, causing the water to churn, his muscle tensing, and his uniform whipping. Simultaneously, the M1 Garand Rifle with wooden stock and steel barrel holds intensely, triggering surface shearing. The mid-ground scattered wood and metal fragments are jolting powerfully, causing internal stress fracturing, while the background defensive hexagonal blocks are settling strainingly, showing pitted erosion.
+Atmospheric/Lighting Delta: amidst Water displacement churning violently around the subject's feet, while thick, dark smoke billows aggressively across the upper frame, while fiery embers and ash particles stream laterally across the lens, all enhanced by dynamic refraction, Hard rim lighting, Specular highlights and Turbulent kinetic embers, harsh highlights, jagged motion blur
+Cinematic Camera Vector: captured with CINEMATIC_CAMERA_VECTORS the foreground center Infantry Soldier in a wet olive drab uniform
+Style: rendered in Authentic raw textures with fine cinematic film grain in 4k fidelity, while the initial structural integrity of the subject and environment remains perfectly intact and consistent throughout the motion.
+videoGenPrompt: The foreground center Infantry Soldier in a wet olive drab uniform pushes rapidly while gripping the rifle, causing the water to churn, his muscle tensing, and his uniform whipping. Simultaneously, the M1 Garand Rifle with wooden stock and steel barrel holds intensely, triggering surface shearing. The mid-ground scattered wood and metal fragments are jolting powerfully, causing internal stress fracturing, while the background defensive hexagonal blocks are settling strainingly, showing pitted erosion, amidst Water displacement churning violently around the subject's feet, while thick, dark smoke billows aggressively across the upper frame, while fiery embers and ash particles stream laterally across the lens, all enhanced by dynamic refraction, Hard rim lighting, Specular highlights and Turbulent kinetic embers, harsh highlights, jagged motion blur, captured with CINEMATIC_CAMERA_VECTORS the foreground center Infantry Soldier in a wet olive drab uniform, rendered in Authentic raw textures with fine cinematic film grain in 4k fidelity, while the initial structural integrity of the subject and environment remains perfectly intact and consistent throughout the motion.
+assembledVideoGenPrompt: The foreground center Infantry Soldier in a wet olive drab uniform pushes rapidly while gripping the rifle, causing the water to churn, his muscle tensing, and his uniform whipping. Simultaneously, the M1 Garand Rifle with wooden stock and steel barrel holds intensely, triggering surface shearing. The mid-ground scattered wood and metal fragments are jolting powerfully, causing internal stress fracturing, while the background defensive hexagonal blocks are settling strainingly, showing pitted erosion, amidst Water displacement churning violently around the subject's feet, while thick, dark smoke billows aggressively across the upper frame, while fiery embers and ash particles stream laterally across the lens, all enhanced by dynamic refraction, Hard rim lighting, Specular highlights and Turbulent kinetic embers, harsh highlights, jagged motion blur, captured with anamorphic Lens, Deep Focus, 9:16 Portrait Cinema, Full/Medium Wide, Zoom Out with Handheld Shaky aggressively the foreground center Infantry Soldier in a wet olive drab uniform, rendered in Authentic raw textures with fine cinematic film grain in 4k fidelity, while the initial structural integrity of the subject and environment remains perfectly intact and consistent throughout the motion.
+
+Scene #5 postVideoGenPrompt() Result
+Scene Summary: A WWII fighter pilot maneuvers his aircraft rapidly through an aerial combat zone marked by explosions and extreme speed.
+Scene Summary Reason: The image shows a pilot in a cockpit with extreme speed lines, smoke, and explosions visible outside, confirming aggressive, high-speed aerial combat.
+Primary Movement: Aggressive high-speed aircraft maneuvering and sustained velocity.
+Primary Movement Reason: The pilot's tight grip and focused expression, combined with the background streaking, indicate rapid and decisive maneuvering is occurring.
+Narrative Vibe: COMBAT
+Narrative Vibe Reason: The visual elements (explosions, speed, intense focus) directly correlate with high-stakes aerial combat as described in the video metadata.
+Selected INTENSITY_TIER: VERY_HIGH
+INTENSITY_TIER Selected Reason: The presence of visual streaking, explosions, and implied G-force distortion necessitates the VERY_HIGH tier to capture the hyper-velocity and chaotic destruction inherent in the scene.
+Identity Logic: The pilot's identity as a WWII American Fighter Pilot is preserved through his focused posture and interaction with the cockpit controls. The motion emphasizes the physical strain and rapid, decisive input required to maintain control during extreme high-speed combat, preserving the era and role.
+Action Focus: The focus is shifted from general 'maneuvering' to physics-based actions: 'wrenching' the stick (interaction/force), 'distorting' (velocity/structure), and 'blurring' (aerodynamics), all modulated by high-intensity adverbs like 'crushingly' and 'violently'.
+- - - Primary Narrative Block - - -
+Entity[E1]
+Raw Sentence: The center-weighted Fighter Pilot in a leather bomber jacket wrenches the stick crushingly while blurring through the air, causing violent tissue deformation.
+Action Type: Temporary-Simultaneous
+Action Type Reason: The pilot is executing two synchronized actions: gripping the stick (wrenching) and moving the aircraft (blurring), making the action simultaneous.
+Verb Reason: The verb 'wrenches' was selected from the VERY_HIGH interaction context to reflect the extreme, violent force applied to the controls under high G-loads.
+Adverb Reason: The adverb 'crushingly' was selected from the VERY_HIGH Tension Kinetic Focus to describe the extreme strain and force the pilot is exerting on the controls.
+Entity[E2]
+Raw Sentence: The midground Aircraft Cockpit with metal and glass components is distorting violently, causing structural warping.
+Action Type: Continuous
+Action Type Reason: The cockpit is undergoing sustained physical stress and reaction due to the ongoing high-speed movement and G-forces.
+Verb Reason: The verb 'distorting' was selected from the VERY_HIGH velocity_max context to capture the visual and physical stress placed on the structure at hyper-velocity.
+Adverb Reason: The adverb 'violently' was selected from the VERY_HIGH Impact Kinetic Focus to emphasize the extreme force and chaotic nature of the structural reaction.
+Entity[E3]
+Raw Sentence: The midground Control Panels with glowing dials and gauges is trembling desperately, initiating fractal shattering.
+Action Type: Continuous
+Action Type Reason: The instruments are reacting to sustained high-frequency vibrations and high-speed turbulence, making the action continuous.
+Verb Reason: The verb 'trembling' (inferred from combat/velocity context) captures the high-frequency vibration and structural strain on the gauges leading to failure.
+Adverb Reason: The adverb 'desperately' was selected from the VERY_HIGH Tension Kinetic Focus to illustrate the critical, uncontrolled nature of the instrument's physical breakdown.
+Entity[E4]
+Raw Sentence: The upper frame Cockpit Window with scratched glass is blurring blindingly, ejecting kinetic glass fragments.
+Action Type: Continuous
+Action Type Reason: The window's reaction (blurring) is a sustained effect of the continuous hyper-velocity and air resistance.
+Verb Reason: The verb 'blurring' was selected from the VERY_HIGH aerodynamics context to denote the optical effect of extreme speed on the window's visibility.
+Adverb Reason: The adverb 'blindingly' was selected from the HIGH Velocity Kinetic Focus (best fit for continuous visual speed) to describe the intensity of the optical streaking rushing past the glass.
+- - - Atmospheric Lighting Delta - - -
+Delta: structural debris erupting radially from the impact point
+Delta Reason: Selected based on the VERY_HIGH intensity tier to represent chaotic matter displacement from external explosions or impacts near the cockpit.
+Delta: chaotic shockwave shatter the surrounding air
+Delta Reason: Selected to emphasize the kinetic energy transfer through the atmosphere, ensuring a highly dynamic and visually vivid environment consistent with explosions.
+Delta: dynamic refraction
+Delta Reason: Selected from the Action/Sharp Reality lighting map to enhance the visual clarity of the chaotic air and glass interactions.
+Delta: heavy motion blur, shockwave distortion, and chromatic aberration
+Delta Reason: Maximalist tags required for the VERY_HIGH intensity tier to support the visual effects of hyper-velocity and physical stress, preventing background freezing.
+- - - Cinematic Camera Vectors - - -
+Camera Action: Crash Zoom Out with Handheld Shaky violently
+Subject Vectors: [$0X$, $0Y$, $-Z$]
+Subject Vectors Reasoning: The $0X/0Y$ vectors are chosen because the pilot is centered and maintaining a straight trajectory relative to the frame. The $-Z$ vector is chosen because the speed lines and perspective convergence imply the aircraft is advancing rapidly toward the viewer's depth plane (Background to Foreground).
+- - - Style - - -
+Style Slot 1: Authentic raw textures with fine cinematic film grain in 4k fidelity
+Style Slot 2: the initial structural integrity of the subject and environment remains perfectly intact and consistent throughout the motion.
+Style Slot 1 Reason: Directly maps the Raw texture detail, Filmic grain, and 4K resolution target from the master style guide to ensure gritty, high-definition cinematic output appropriate for a WWII combat scene.
+Style Slot 2 Reason: Ensures the identity of the pilot, the cockpit geometry, and the overall scene structure (t=0 anchor) are maintained despite the high kinetic energy and distortion effects applied.
+Reasoning: The scene depicts hyper-velocity aerial combat, justifying the selection of the VERY_HIGH intensity tier. This tier mandated the use of extreme physical descriptors such as 'wrench crushingly', 'distorting violently', and 'fractal shattering' derived from the vocabulary depot's material and action contexts. The camera vector (0X, 0Y, -Z) was chosen because the visual streaking and frontal perspective confirm the aircraft is moving rapidly toward the viewer's depth plane. The atmospheric strategy focuses on physics amplification, including shockwave effects and debris flow, preventing the background from appearing static ('freezing') despite the high-speed motion, and ensuring the visual vividness aligns with the COMBAT vibe.
+- - - Final Output Structure - - -
+Primary Narrative Block: The center-weighted Fighter Pilot in a leather bomber jacket wrenches the stick crushingly while blurring through the air, causing violent tissue deformation. Simultaneously, the midground Aircraft Cockpit with metal and glass components is distorting violently, causing structural warping. The midground Control Panels with glowing dials and gauges is trembling desperately, initiating fractal shattering, and the upper frame Cockpit Window with scratched glass is blurring blindingly, ejecting kinetic glass fragments.
+Atmospheric/Lighting Delta: amidst structural debris erupting radially from the impact point, while chaotic shockwave shatter the surrounding air, all enhanced by dynamic refraction and heavy motion blur, shockwave distortion, and chromatic aberration
+Cinematic Camera Vector: captured with CINEMATIC_CAMERA_VECTORS the center-weighted Fighter Pilot in a leather bomber jacket
+Style: rendered in Authentic raw textures with fine cinematic film grain in 4k fidelity, while the initial structural integrity of the subject and environment remains perfectly intact and consistent throughout the motion.
+videoGenPrompt: The center-weighted Fighter Pilot in a leather bomber jacket wrenches the stick crushingly while blurring through the air, causing violent tissue deformation. Simultaneously, the midground Aircraft Cockpit with metal and glass components is distorting violently, causing structural warping. The midground Control Panels with glowing dials and gauges is trembling desperately, initiating fractal shattering, and the upper frame Cockpit Window with scratched glass is blurring blindingly, ejecting kinetic glass fragments, amidst structural debris erupting radially from the impact point, while chaotic shockwave shatter the surrounding air, all enhanced by dynamic refraction and heavy motion blur, shockwave distortion, and chromatic aberration, captured with CINEMATIC_CAMERA_VECTORS the center-weighted Fighter Pilot in a leather bomber jacket, rendered in Authentic raw textures with fine cinematic film grain in 4k fidelity, while the initial structural integrity of the subject and environment remains perfectly intact and consistent throughout the motion.
+assembledVideoGenPrompt: The center-weighted Fighter Pilot in a leather bomber jacket wrenches the stick crushingly while blurring through the air, causing violent tissue deformation. Simultaneously, the midground Aircraft Cockpit with metal and glass components is distorting violently, causing structural warping. The midground Control Panels with glowing dials and gauges is trembling desperately, initiating fractal shattering, and the upper frame Cockpit Window with scratched glass is blurring blindingly, ejecting kinetic glass fragments, amidst structural debris erupting radially from the impact point, while chaotic shockwave shatter the surrounding air, all enhanced by dynamic refraction and heavy motion blur, shockwave distortion, and chromatic aberration, captured with anamorphic Lens, Deep Focus, 9:16 Portrait Cinema, Full/Medium Wide, Crash Zoom Out with Handheld Shaky violently the center-weighted Fighter Pilot in a leather bomber jacket, rendered in Authentic raw textures with fine cinematic film grain in 4k fidelity, while the initial structural integrity of the subject and environment remains perfectly intact and consistent throughout the motion.
+
+Scene #6 postVideoGenPrompt() Result
+Scene Summary: A WWII high-explosive aerial bomb is captured mid-free-fall from a bomber aircraft over a burning battlefield.
+Scene Summary Reason: The image clearly depicts an aerial bomb released from a military aircraft over a heavily damaged, fiery environment, aligning with the WWII combat theme.
+Primary Movement: Rapid, accelerating free fall of the bomb, accompanied by the high-speed flight of the bomber aircraft.
+Primary Movement Reason: The bomb's position and the implied aerodynamic forces indicate extreme velocity and downward acceleration, while the aircraft is in continuous forward motion.
+Narrative Vibe: CATASTROPHIC
+Narrative Vibe Reason: The visual context (bombing, explosions, smoke, war zone) and the narrative description ('shattering peace,' 'bombs fell like rain') establish a state of high-intensity destruction and chaos.
+Selected INTENSITY_TIER: VERY_HIGH
+INTENSITY_TIER Selected Reason: The primary movement involves hyper-velocity (free fall) and the environment displays chaotic destruction (explosions, fire), demanding the maximum kinetic tier for physical simulation.
+Identity Logic: The identity logic preserves the 1944 WWII military aesthetic, focusing on rigid, industrial materials (metal casing, riveted plates) and simulating the extreme aerodynamic and structural strain these materials undergo during hyper-velocity flight and free fall.
+Action Focus: The core action shifts from the passive narrative event ('Bombs fell') to an active, high-impact physics simulation focused on the bomb's terminal velocity descent and the corresponding material failure (warping, shearing) of both the bomb and the aircraft under extreme G-forces and air resistance.
+- - - Primary Narrative Block - - -
+Entity[0]
+Raw Sentence: The center foreground Aerial Bomb with metal casing falls blindingly, its silhouette distorts, causing structural warping.
+Action Type: Temporary-Single
+Action Type Reason: The bomb's primary action is a single, decisive, high-speed descent initiated at t=0, which is best described as one atomic event.
+Verb Reason: Used 'falls' (aerodynamics, VERY_HIGH) to capture the primary physical state, and 'distorts' (velocity_max, VERY_HIGH) to emphasize the visual effect of hyper-velocity.
+Adverb Reason: Selected 'blindingly' from the VERY_HIGH/Velocity focus list, as it conveys the maximum possible speed and visual streaking required for a catastrophic intensity tier.
+Entity[1]
+Raw Sentence: The top center background Bomber Aircraft Fuselage with riveted plates is blurring chaotically, causing jagged shearing.
+Action Type: Continuous
+Action Type Reason: The aircraft is maintaining its trajectory and speed in a sustained, high-speed flight state.
+Verb Reason: Used 'blurring' (aerodynamics, VERY_HIGH) to depict the visual effect of high-speed movement on the massive object, and 'jagged shearing' (rigid, VERY_HIGH) to describe the material reaction.
+Adverb Reason: Selected 'chaotically' from the VERY_HIGH/Flow focus list, reflecting the violent turbulence expected in a combat zone at high speed.
+Entity[2]
+Raw Sentence: The top center background Bomb Bay Doors with metal hinges is jettisoning desperately, fragmenting from the stress.
+Action Type: Continuous
+Action Type Reason: The doors are continuously subjected to aerodynamic stress while maintaining an open state during flight.
+Verb Reason: Used 'jettisoning' (aerodynamics, VERY_HIGH) to imply the violent act of releasing the payload and the resulting structural stress, coupled with 'fragmenting' (rigid, VERY_HIGH) as the material reaction.
+Adverb Reason: Selected 'desperately' from the VERY_HIGH/Tension focus list, emphasizing the extreme structural strain the doors are under against the airflow.
+Entity[3]
+Raw Sentence: The top center background Riveted Plates with visible rivets are blurring violently, causing structural warping.
+Action Type: Continuous
+Action Type Reason: The plates are continuously experiencing high-speed air pressure and high-frequency vibration during flight.
+Verb Reason: Used 'blurring' (aerodynamics, VERY_HIGH) to show the visual effect of high-frequency vibration and speed, and 'structural warping' (rigid, VERY_HIGH) as the material reaction.
+Adverb Reason: Selected 'violently' from the VERY_HIGH/Impact focus list, reflecting the extreme forces exerted on the aircraft's skin.
+- - - Atmospheric Lighting Delta - - -
+Delta: High-velocity atmospheric shockwaves distort the surrounding air, while ejecta flow disintegration sprays debris
+Delta Reason: To visualize the extreme turbulence and particle displacement generated by the high-speed descent and flight in a VERY_HIGH tier scenario, adhering to feasibility from the battlefield environment.
+Delta: Chaotic smoke plumes and incandescent embers streak radially past the lens
+Delta Reason: To reinforce the CATASTROPHIC vibe and velocity, using radial streaking to imply extreme speed/turbulence relative to the tracking camera, and integrating environmental elements (smoke, fire/embers).
+Delta: Dynamic refraction and hard rim lighting
+Delta Reason: Selected lighting style that aligns with the Action/Sharp Reality archetype for combat scenes, enhancing contrast and spatial depth.
+Delta: heavy motion blur, shockwave distortion, and chromatic aberration
+Delta Reason: Technical tags necessary for a VERY_HIGH intensity tier to simulate hyper-velocity and physical failure effects, maximizing the video vividness reward.
+- - - Cinematic Camera Vectors - - -
+Camera Action: Zoom Out and Pedestal Down with Handheld Shaky violently
+Subject Vectors: [$0X$, $-Y$, $-Z$]
+Subject Vectors Reasoning: The bomb's primary motion is vertically downward ($-Y$) while simultaneously approaching the camera's perspective ($-Z$), as it moves from the release point to the foreground. Lateral motion ($S_x$) is minimal relative to the main descent.
+- - - Style - - -
+Style Slot 1: Authentic raw textures with fine cinematic film grain in 4k fidelity
+Style Slot 2: the initial structural integrity of the subject and environment remains perfectly intact and consistent throughout the motion
+Style Slot 1 Reason: Directly translates the 'Raw' texture detail, 'Filmic' grain level, and '4K' resolution target from the master style guide into professional prose, maximizing aesthetic fidelity.
+Style Slot 2 Reason: A positive preservation command ensuring the identity of the WWII bomb and bomber is structurally consistent despite the extreme kinetic effects applied (warping, shearing) in the VERY_HIGH tier.
+Reasoning: The scene was profiled as CATASTROPHIC (VERY_HIGH intensity) due to the free-falling bomb and battlefield context. This tier dictated the vocabulary: 'blindingly falls,' 'chaotically blurring,' and 'violently warping' were selected to maximize kinetic energy, while material terms like 'structural warping' and 'jagged shearing' were used exclusively in subordinate clauses to describe material reaction, adhering to the vocabulary protocol. The camera vector ($0X, -Y, -Z$) tracks the bomb's rapid descent and approach. The atmospheric strategy prevents freezing by adding high-velocity shockwaves and radial ember streaking, compensating for the camera's tracking movement and reinforcing the chaotic environment. The 'Anamorphic' lens type from the style guide is implicitly supported by the use of 'chromatic aberration' and 'dynamic refraction' in the atmospheric delta.
+- - - Final Output Structure - - -
+Primary Narrative Block: The center foreground Aerial Bomb with metal casing falls blindingly, its silhouette distorts, causing structural warping. Simultaneously, the top center background Bomber Aircraft Fuselage with riveted plates is blurring chaotically, causing jagged shearing, while the Bomb Bay Doors with metal hinges is jettisoning desperately, fragmenting from the stress, and the Riveted Plates with visible rivets are blurring violently, causing structural warping.
+Atmospheric/Lighting Delta: amidst high-velocity atmospheric shockwaves distort the surrounding air, while chaotic smoke plumes and incandescent embers streak radially past the lens, all enhanced by dynamic refraction and hard rim lighting, heavy motion blur, shockwave distortion, and chromatic aberration
+Cinematic Camera Vector: captured with CINEMATIC_CAMERA_VECTORS tracking the center foreground Aerial Bomb with metal casing
+Style: rendered in Authentic raw textures with fine cinematic film grain in 4k fidelity, while the initial structural integrity of the subject and environment remains perfectly intact and consistent throughout the motion
+videoGenPrompt: The center foreground Aerial Bomb with metal casing falls blindingly, its silhouette distorts, causing structural warping. Simultaneously, the top center background Bomber Aircraft Fuselage with riveted plates is blurring chaotically, causing jagged shearing, while the Bomb Bay Doors with metal hinges is jettisoning desperately, fragmenting from the stress, and the Riveted Plates with visible rivets are blurring violently, causing structural warping, amidst high-velocity atmospheric shockwaves distort the surrounding air, while chaotic smoke plumes and incandescent embers streak radially past the lens, all enhanced by dynamic refraction and hard rim lighting, heavy motion blur, shockwave distortion, and chromatic aberration, captured with CINEMATIC_CAMERA_VECTORS tracking the center foreground Aerial Bomb with metal casing, rendered in Authentic raw textures with fine cinematic film grain in 4k fidelity, while the initial structural integrity of the subject and environment remains perfectly intact and consistent throughout the motion.
+assembledVideoGenPrompt: The center foreground Aerial Bomb with metal casing falls blindingly, its silhouette distorts, causing structural warping. Simultaneously, the top center background Bomber Aircraft Fuselage with riveted plates is blurring chaotically, causing jagged shearing, while the Bomb Bay Doors with metal hinges is jettisoning desperately, fragmenting from the stress, and the Riveted Plates with visible rivets are blurring violently, causing structural warping, amidst high-velocity atmospheric shockwaves distort the surrounding air, while chaotic smoke plumes and incandescent embers streak radially past the lens, all enhanced by dynamic refraction and hard rim lighting, heavy motion blur, shockwave distortion, and chromatic aberration, captured with anamorphic Lens, Deep Focus, 9:16 Portrait Cinema, Full/Medium Wide, Zoom Out and Pedestal Down with Handheld Shaky violently tracking the center foreground Aerial Bomb with metal casing, rendered in Authentic raw textures with fine cinematic film grain in 4k fidelity, while the initial structural integrity of the subject and environment remains perfectly intact and consistent throughout the motion.
+
+Scene #7 postVideoGenPrompt() Result
+Scene Summary: A fallen WWII soldier lies motionless on a rubble-strewn battlefield, holding a victory medal, symbolizing the steep cost of conflict.
+Scene Summary Reason: The image clearly shows a soldier lying on the ground amidst debris and blood, focused on a medal he is holding, directly aligning with the narrative of 'Victory came at a steep price'.
+Primary Movement: Static, with subtle micro-movements of tension and breathing.
+Primary Movement Reason: The subject is in a prone position with no visible kinetic acceleration or intent to move, indicating a state of absolute stasis or rest, despite the surrounding chaos.
+Narrative Vibe: EMOTIONAL
+Narrative Vibe Reason: The focus on the soldier's face, the medal, and the surrounding destruction evokes themes of sacrifice, loss, and the emotional weight of war.
+Selected INTENSITY_TIER: VERY_LOW
+INTENSITY_TIER Selected Reason: Despite the emotional intensity, the physical movement of the subject is minimal (static/micro-movement only). Per the Kinetic Profiling rules, physical action dictates the tier, overriding narrative mood.
+Identity Logic: The core identity of the WWII American Infantry Soldier and the symbolic presence of the Victory Medal are preserved by anchoring movement to subtle, controlled actions (resting, gripping) that emphasize latent tension rather than physical trauma.
+Action Focus: The focus shifts from the abstract concept of 'victory at a price' to the physical manifestation of stasis and tension, using micro-expressions and material physics (subsurface scattering, specular occlusion) to convey emotional strain in the absence of large kinetic movement.
+- - - Primary Narrative Block - - -
+Entity[sub_character_0]
+Raw Sentence: The center midground Infantry Soldier in an olive drab uniform is resting motionless, his skin showing subsurface scattering and his uniform maintaining a static drape.
+Action Type: Continuous
+Action Type Reason: The soldier is already in a state of sustained stasis (lying down) which continues through the clip duration, requiring the Present Continuous tense.
+Verb Reason: The verb 'rest' was selected from the 'passive' action_context under the VERY_LOW tier to accurately describe a physical state of absolute rest.
+Adverb Reason: The adverb 'motionless' was chosen from the VERY_LOW 'Tension' Kinetic Focus archetype to emphasize the complete lack of physical movement, aligning with the subject's static pose.
+Entity[prop_1]
+Raw Sentence: The foreground Victory Medal with a colored ribbon is being gripped motionless, its surface reflecting specular occlusion and its ribbon showing frayed fiber detail.
+Action Type: Continuous
+Action Type Reason: The medal is held in a fixed, deliberate position, representing a sustained, controlled state of interaction.
+Verb Reason: The verb 'grip' was selected from the 'interaction' action_context under the VERY_LOW tier to describe the delicate, sustained contact with the medal.
+Adverb Reason: The adverb 'motionless' was chosen from the VERY_LOW 'Tension' Kinetic Focus archetype to highlight the precision and fixed nature of the subject's hold on the medal.
+- - - Atmospheric Lighting Delta - - -
+Delta: Dark red blood is pooling on the ground, forming a glassy meniscus around suspended particulates of dirt
+Delta Reason: Selected Slot 1 (Subject-Atmosphere Interaction) to describe the static, yet detailed, behavior of the fluid (blood) and environmental debris based on the VERY_LOW intensity tier's passive particle allowance.
+Delta: subtle air particles drift away from the lens
+Delta Reason: Selected Slot 2 (Camera-Atmosphere Flow) to introduce subtle atmospheric movement consistent with the VERY_LOW tier, anticipating a gentle Z-axis camera movement (push-in/pull-out).
+Delta: cinematic silhouette, low-key contrast, deep shadow falloff
+Delta Reason: Selected Slot 3 (Volumetric Lighting Anchor) to emphasize the dramatic and tense emotional vibe of the scene, creating necessary depth and mood for a no-audio generation.
+Delta: high contrast, gritty texture, cold color grading, deep shadows
+Delta Reason: Selected Slot 4 (Technical Tags) based on the VERY_LOW intensity and Tense Vibe to reinforce the gritty, desaturated aesthetic of the WWII battlefield environment.
+- - - Cinematic Camera Vectors - - -
+Camera Action: Rack Focus steadily
+Subject Vectors: [$0X$, $0Y$, $0Z$]
+Subject Vectors Reasoning: The soldier is lying flat and motionless, centered in the frame. There is no physical evidence (muscle tension, leaning, environmental effects) that suggests movement along the X, Y, or Z axis. Therefore, the subject vector is static ($0X, 0Y, 0Z$). This necessitates a camera move to create kinetic energy.
+- - - Style - - -
+Style Slot 1: Authentic raw textures with fine cinematic film grain in 4k fidelity
+Style Slot 2: the initial structural integrity of the subject and environment remains perfectly intact and consistent throughout the motion
+Style Slot 1 Reason: Based on the master style guide requirements for 'Raw' texture detail, 'Filmic' grain level, and '4K' resolution target, ensuring high cinematic fidelity for the final output.
+Style Slot 2 Reason: Standard preservation protocol (P-Lock) to command the model to maintain the visual anchor and geometry of the soldier and debris field, preventing temporal distortion.
+Reasoning: The prompt structure prioritizes emotional tension over physical action, as dictated by the static subject pose locking the INTENSITY_TIER to VERY_LOW. The vocabulary selection adheres strictly to the VERY_LOW tier, utilizing terms like 'subsurface scattering' and 'static drape' to describe detailed surface physics in stasis. The atmospheric strategy uses passive flow ('pooling', 'drifting') and high-contrast lighting ('cinematic silhouette', 'deep shadow falloff') to amplify the scene's emotional weight without violating the static physics constraint. The camera vector is $S=(0X, 0Y, 0Z)$, necessitating the camera prompt to provide all the kinetic energy, focusing on the medal as the emotional anchor.
+- - - Final Output Structure - - -
+Primary Narrative Block: The center midground Infantry Soldier in an olive drab uniform is resting motionless, his skin showing subsurface scattering and his uniform maintaining a static drape, while the foreground Victory Medal with a colored ribbon is being gripped motionless, its surface reflecting specular occlusion and its ribbon showing frayed fiber detail.
+Atmospheric/Lighting Delta: amidst dark red blood is pooling on the ground, forming a glassy meniscus around suspended particulates of dirt, while subtle air particles drift away from the lens, all enhanced by cinematic silhouette, low-key contrast, deep shadow falloff, and high contrast, gritty texture, cold color grading, deep shadows
+Cinematic Camera Vector: captured with CINEMATIC_CAMERA_VECTORS the foreground Victory Medal with a colored ribbon
+Style: rendered with Authentic raw textures with fine cinematic film grain in 4k fidelity, while the initial structural integrity of the subject and environment remains perfectly intact and consistent throughout the motion
+videoGenPrompt: The center midground Infantry Soldier in an olive drab uniform is resting motionless, his skin showing subsurface scattering and his uniform maintaining a static drape, while the foreground Victory Medal with a colored ribbon is being gripped motionless, its surface reflecting specular occlusion and its ribbon showing frayed fiber detail, amidst dark red blood is pooling on the ground, forming a glassy meniscus around suspended particulates of dirt, while subtle air particles drift away from the lens, all enhanced by cinematic silhouette, low-key contrast, deep shadow falloff, and high contrast, gritty texture, cold color grading, deep shadows, captured with CINEMATIC_CAMERA_VECTORS the foreground Victory Medal with a colored ribbon, rendered with Authentic raw textures with fine cinematic film grain in 4k fidelity, while the initial structural integrity of the subject and environment remains perfectly intact and consistent throughout the motion.
+assembledVideoGenPrompt: The center midground Infantry Soldier in an olive drab uniform is resting motionless, his skin showing subsurface scattering and his uniform maintaining a static drape, while the foreground Victory Medal with a colored ribbon is being gripped motionless, its surface reflecting specular occlusion and its ribbon showing frayed fiber detail, amidst dark red blood is pooling on the ground, forming a glassy meniscus around suspended particulates of dirt, while subtle air particles drift away from the lens, all enhanced by cinematic silhouette, low-key contrast, deep shadow falloff, and high contrast, gritty texture, cold color grading, deep shadows, captured with anamorphic Lens, Deep Focus, 9:16 Portrait Cinema, Full/Medium Wide, Rack Focus steadily the foreground Victory Medal with a colored ribbon, rendered with Authentic raw textures with fine cinematic film grain in 4k fidelity, while the initial structural integrity of the subject and environment remains perfectly intact and consistent throughout the motion.
+
+Scene #8 postVideoGenPrompt() Result
+Scene Summary: A WWII soldier stands motionless in the foreground amidst the chaotic aftermath of a battle, characterized by a burning tank and billowing smoke.
+Scene Summary Reason: The image shows a soldier in a solemn, static pose, contrasted by the dynamic, destructive elements (fire, smoke, wreckage) in the background, summarizing the juxtaposition of human stasis against environmental chaos.
+Primary Movement: Static / Micro-movement only for the main subject; continuous, turbulent flow for environmental elements (smoke, fire).
+Primary Movement Reason: The soldier's posture is firm and solemn, indicating absolute rest, which dictates the core subject movement must be minimal. Environmental props, however, are inherently dynamic (fire and smoke).
+Narrative Vibe: EMOTIONAL
+Narrative Vibe Reason: The solemn expression of the soldier combined with the devastating battlefield context establishes a powerful, emotionally charged atmosphere of shock and historical weight.
+Selected INTENSITY_TIER: VERY_LOW
+INTENSITY_TIER Selected Reason: Although the environment is HIGH intensity, the primary subject (the soldier) is in a state of absolute rest/inertial stasis. The Kinetic Profiling Rule dictates prioritizing the subject's physical movement, thus locking the tier to VERY_LOW.
+Identity Logic: The soldier's identity is anchored by his 'Infantry Soldier' role and 'olive drab uniform', preserving the 1944 WWII era and the solemn posture from the t=0 image, allowing only micro-movements (breathing/tension) to convey latent emotion.
+Action Focus: The focus is shifted from simple standing to 'Absolute Rest' (Tension Focus) for the soldier, contrasting with the 'Kinetic Displacement' (Flow/Turbulence) of the environmental elements (smoke, fire) to maximize visual vividness without violating the static posture constraint.
+- - - Primary Narrative Block - - -
+Entity[sub_character_0]
+Raw Sentence: The foreground left infantry soldier in an olive drab uniform is resting motionless, his skin breathing with subsurface scattering, causing a static drape of his uniform.
+Action Type: Continuous
+Action Type Reason: The subject is maintaining a sustained state of stasis and internal tension, rather than initiating a temporary, atomic action.
+Verb Reason: The verb 'rest' was selected from the 'passive' action context under the VERY_LOW intensity tier to accurately represent the soldier's absolute stillness.
+Adverb Reason: The adverb 'motionless' was selected from the TENSION kinetic focus category under the VERY_LOW intensity tier to emphasize the static yet highly focused state.
+Entity[prop_1]
+Raw Sentence: The background upper grey and black smoke plumes are churning surgingly, revealing streaming particle trails.
+Action Type: Continuous
+Action Type Reason: Smoke is a continuous, sustained fluid motion, constantly rising and dissipating.
+Verb Reason: The verb 'churn' was selected from the 'fluid' material context under the HIGH intensity tier to describe the internal turbulence of the smoke plumes.
+Adverb Reason:
+Entity[prop_2]
+Raw Sentence: The central background destroyed tank hull of burning metal remains inertially, revealing oxidized patina and surface memory of impact.
+Action Type: Continuous
+Action Type Reason: The tank hull is a static object defining the environment's state of destruction, hence its action is continuous state-holding.
+Verb Reason: The verb 'remains' was selected from the 'rigid' material context under the VERY_LOW intensity tier, defining its persistent, static state.
+Adverb Reason:
+Entity[prop_3]
+Raw Sentence: The background orange and yellow fire flames are streaming fluidly, showing turbulent swirl.
+Action Type: Continuous
+Action Type Reason: Flames are a continuous, sustained turbulent process.
+Verb Reason: The verb 'streaming' was selected from the 'fluid' material context under the HIGH intensity tier to describe the upward flow of the flames.
+Adverb Reason:
+- - - Atmospheric Lighting Delta - - -
+Delta: Subtle dust motes drift laterally
+Delta Reason: Since the soldier is static (VERY_LOW), no subject-generated wake is allowed. Lateral drifting dust motes are added to give subtle movement to the air and enhance depth without kinetic conflict.
+Delta: Cinematic silhouette, low-key contrast, deep shadow falloff
+Delta Reason: These lighting elements reinforce the SHOCK/EMOTIONAL narrative vibe, creating high contrast and volumetric depth suitable for the gritty war-tone aesthetic.
+Delta: High contrast, gritty texture, cold color grading
+Delta Reason: Technical tags chosen to align with the VERY_LOW intensity and EMOTIONAL/Tense vibe, enhancing the fidelity and mood of the battlefield environment.
+- - - Cinematic Camera Vectors - - -
+Camera Action: Rack Focus steadily
+Subject Vectors: [$0X$, $0Y$, $0Z$]
+Subject Vectors Reasoning: The soldier is standing motionless, facing the lens directly, with no visible lean or indication of lateral/vertical/depth movement. The action context is Absolute Rest (VERY_LOW intensity), mandating zero translational vectors.
+- - - Style - - -
+Style Slot 1: Authentic raw textures with fine cinematic film grain in 4k fidelity and deep focus
+Style Slot 2: the initial structural integrity of the soldier and the environmental geometry are consistently preserved with absolute precision
+Style Slot 1 Reason: Combines 'Raw' texture detail, 'Filmic' grain, '4K' resolution, and 'Deep' focus depth from the master style guide to maximize historical and aesthetic fidelity.
+Style Slot 2 Reason: Standard structural preservation command to ensure the identity and composition of the static subject and the background tank are maintained throughout the camera movement.
+Reasoning: The core strategy was to use the soldier's 'VERY_LOW' physical intensity to drive the camera and atmosphere, while allowing the environmental props (smoke, fire) to operate at a higher 'HIGH' intensity to maximize visual contrast (stasis vs. chaos). Specific tags like 'subsurface scattering' and 'static drape' were selected from the VERY_LOW tier to inject micro-movement into the soldier's skin and uniform, respectively, preventing the subject from appearing frozen. The camera vector ($C_z$: $-Z$, Dolly Out) was chosen to slowly reveal the scale of the destruction, reinforcing the EMOTIONAL/SHOCK narrative. Atmospheric elements like 'cinematic silhouette' and 'low-key contrast' were selected to enhance the dramatic, gritty tonality demanded by the Master Style Guide.
+- - - Final Output Structure - - -
+Primary Narrative Block: The foreground left infantry soldier in an olive drab uniform is resting motionless, his skin breathing with subsurface scattering, causing a static drape of his uniform. Simultaneously, the central background destroyed tank hull of burning metal remains inertially, revealing oxidized patina and surface memory of impact, while the background orange and yellow fire flames are streaming fluidly, showing turbulent swirl, and the background upper grey and black smoke plumes are churning surgingly, revealing streaming particle trails.
+Atmospheric/Lighting Delta: subtle dust motes drifting laterally, enhanced by cinematic silhouette, low-key contrast, deep shadow falloff, high contrast, gritty texture, and cold color grading
+Cinematic Camera Vector: captured with CINEMATIC_CAMERA_VECTORS the foreground left infantry soldier in an olive drab uniform
+Style: rendered in Authentic raw textures with fine cinematic film grain in 4k fidelity and deep focus, while the initial structural integrity of the soldier and the environmental geometry are consistently preserved with absolute precision
+videoGenPrompt: The foreground left infantry soldier in an olive drab uniform is resting motionless, his skin breathing with subsurface scattering, causing a static drape of his uniform. Simultaneously, the central background destroyed tank hull of burning metal remains inertially, revealing oxidized patina and surface memory of impact, while the background orange and yellow fire flames are streaming fluidly, showing turbulent swirl, and the background upper grey and black smoke plumes are churning surgingly, revealing streaming particle trails, amidst subtle dust motes drifting laterally, enhanced by cinematic silhouette, low-key contrast, deep shadow falloff, high contrast, gritty texture, and cold color grading, captured with CINEMATIC_CAMERA_VECTORS the foreground left infantry soldier in an olive drab uniform, rendered in Authentic raw textures with fine cinematic film grain in 4k fidelity and deep focus, while the initial structural integrity of the soldier and the environmental geometry are consistently preserved with absolute precision.
+assembledVideoGenPrompt: The foreground left infantry soldier in an olive drab uniform is resting motionless, his skin breathing with subsurface scattering, causing a static drape of his uniform. Simultaneously, the central background destroyed tank hull of burning metal remains inertially, revealing oxidized patina and surface memory of impact, while the background orange and yellow fire flames are streaming fluidly, showing turbulent swirl, and the background upper grey and black smoke plumes are churning surgingly, revealing streaming particle trails, amidst subtle dust motes drifting laterally, enhanced by cinematic silhouette, low-key contrast, deep shadow falloff, high contrast, gritty texture, and cold color grading, captured with anamorphic Lens, Deep Focus, 9:16 Portrait Cinema, Full/Medium Wide, Rack Focus steadily the foreground left infantry soldier in an olive drab uniform, rendered in Authentic raw textures with fine cinematic film grain in 4k fidelity and deep focus, while the initial structural integrity of the soldier and the environmental geometry are consistently preserved with absolute precision.

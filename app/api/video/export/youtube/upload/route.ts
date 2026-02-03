@@ -1,5 +1,5 @@
 // app/api/youtube/upload/route.ts
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { createSupabaseServiceRoleClient } from '@/lib/supabaseServiceRole';
 import { getNextBaseResponse } from '@/utils/getNextBaseResponse';
 import {

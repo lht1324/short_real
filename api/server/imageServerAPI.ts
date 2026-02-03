@@ -1,84 +1,105 @@
-import {GenerateImagesResponse, GoogleGenAI, PersonGeneration} from "@google/genai";
 import {createSupabaseServiceRoleClient} from "@/lib/supabaseServiceRole";
+import {fal} from "@fal-ai/client";
+import {FluxPrompt} from "@/api/types/open-ai/FluxPrompt";
+import {ImageFile} from "@fal-ai/client/endpoints";
+import {FalAiErrorDetail} from "@/api/types/fal-ai/FalAIResponse";
 
 export const imageServerAPI = {
     async postImage(
-        imageGenPrompt: string,
-        generationTaskId: string,
+        imageGenPrompt: FluxPrompt,
+        imageGenPromptSentence: string,
+        taskId: string,
         sceneNumber: number,
-        negativePrompt?: string
     ): Promise<{ success: boolean; error?: { message: string; code: string } }> {
         const supabase = createSupabaseServiceRoleClient();
 
         try {
-            // 환경 변수 GOOGLE_APPLICATION_CREDENTIALS를 설정했기 때문에 API 키는 필요 없습니다.
-            const project = process.env.GCP_PROJECT_ID; // 환경 변수
-            const location = 'us-central1'; // 사용하려는 리전
-
-            if (!project) {
-                return {
-                    success: false,
-                    error: {
-                        message: 'Google Cloud Project ID is not configured.',
-                        code: 'MISSING_PROJECT_ID'
-                    }
-                };
-            }
-
-            // Dev ONLY!!!!!!
-
-            const isDev = process.env.NODE_ENV === 'development';
-            const credentials = isDev ? JSON.parse(process.env.GCP_CREDENTIALS_JSON!) : undefined;
-
-            // 1. GoogleGenAI 클라이언트 초기화
-            const ai = new GoogleGenAI(({
-                vertexai: true,
-                project: project,
-                location: location,
-                // DEV ONLY!!!!!
-                ...(isDev && credentials && {
-                    googleAuthOptions: {
-                        credentials: {
-                            ...credentials,
-                            private_key: credentials.private_key.replace(/\\n/g, '\n'),
-                        },
-                    }
-                })
-            }))
-
-            // 3. 이미지 생성 요청
-            const response: GenerateImagesResponse = await ai.models.generateImages({
-                model: "imagen-4.0-generate-001",
-                prompt: imageGenPrompt,
-                config: {
-                    numberOfImages: 1,
-                    aspectRatio: "9:16",
-                    negativePrompt: negativePrompt,
-                    personGeneration: PersonGeneration.ALLOW_ALL,
-                    enhancePrompt: false,
-                }
+            const falAIClient = fal;
+            falAIClient.config({
+                credentials: process.env.FAL_AI_API_KEY!
             });
 
-            if (!response || !response?.generatedImages || response?.generatedImages?.length === 0) {
-                throw Error("No image generated from Imagen 4");
+            // Fallback 시 flux-2, 기본 바나나 조합 추가
+            // subscribe 시 Response부터 확인
+            let resultImageUrlList: Array<ImageFile>;
+            let imageUrl: string;
+
+            try {
+                // const output = await falAIClient.subscribe('fal-ai/nano-banana', {
+                //     input: {
+                //         prompt: ` --MUST NOT letterbox ${imageGenPromptSentence}`,
+                //         num_images: 1,
+                //         aspect_ratio: "9:16",
+                //         output_format: "jpeg",
+                //         sync_mode: false,
+                //         limit_generations: false,
+                //     }
+                // });
+
+                const output = await falAIClient.subscribe('xai/grok-imagine-image', {
+                    input: {
+                        prompt: `${imageGenPromptSentence} --MUST NOT letterbox`,
+                        num_images: 1,
+                        aspect_ratio: "9:16",
+                        output_format: "jpeg",
+                        sync_mode: false,
+                    }
+                })
+
+                resultImageUrlList = output.data.images;
+            } catch (error) {
+                console.error(`Scene #${sceneNumber} Nano Banana Image generation Error: `, error);
+                const output = await falAIClient.subscribe('fal-ai/flux-2', {
+                    input: {
+                        prompt: JSON.stringify({
+                            ...imageGenPrompt,
+                            subjects: imageGenPrompt.subjects.map((subject) => {
+                                return {
+                                    type: subject.type,
+                                    description: subject.description,
+                                    pose: subject.pose,
+                                    position: subject.position,
+                                }
+                            })
+                        }, null, 1)
+                            .replace(/\n\s*/g, ' ')
+                            .replace("fNumber", "f-number"),
+                        guidance_scale: 20,
+                        num_inference_steps: 50,
+                        image_size: "portrait_16_9",
+                        num_images: 1,
+                        acceleration: "none",
+                        enable_prompt_expansion: false,
+                        enable_safety_checker: false,
+                        output_format: "jpeg"
+                    }
+                });
+                resultImageUrlList = output.data.images;
             }
 
-            // 4. 응답에서 이미지 데이터 추출
-            const generatedImageList = response.generatedImages;
-
-            const imageBase64 = generatedImageList[0]?.image?.imageBytes;
-
-            if (!imageBase64) {
-                throw Error("Generated image is invalid.");
+            if (resultImageUrlList.length !== 0) {
+                imageUrl = resultImageUrlList[0].url;
+            } else {
+                console.log("resultImageUrlList: ", JSON.stringify(resultImageUrlList));
+                throw Error("Image generation failed.")
             }
 
-            // Base64 문자열을 Node.js의 Buffer 객체로 디코딩합니다.
-            const imageBuffer = Buffer.from(imageBase64, 'base64');
+            if (!imageUrl) {
+                throw new Error("No image generated from Fal-AI");
+            }
+
+            const imageResponse = await fetch(imageUrl);
+            if (!imageResponse.ok) {
+                 throw new Error(`Failed to fetch image from Fal-AI: ${imageResponse.statusText}`);
+            }
+            
+            const arrayBuffer = await imageResponse.arrayBuffer();
+            const imageBuffer = Buffer.from(arrayBuffer);
 
             // Supabase Storage에 이미지 업로드
             const { error: uploadError } = await supabase.storage
                 .from('scene_image_temp_storage') // 버킷 이름
-                .upload(`${generationTaskId}/${sceneNumber}.jpeg`, imageBuffer, {
+                .upload(`${taskId}/${sceneNumber}.jpeg`, imageBuffer, {
                     contentType: 'image/jpeg', // 파일 포맷 지정
                     upsert: true // 덮어쓰기 허용
                 });
