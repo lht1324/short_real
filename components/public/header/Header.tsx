@@ -63,7 +63,7 @@ function Header() {
                             />
                         </div>
                         <span className="font-black text-3xl bg-gradient-to-r from-pink-400 to-purple-500 bg-clip-text text-transparent tracking-tight">
-                            ShortReal
+                            ShortReal AI
                         </span>
                     </div>
 

@@ -37,6 +37,7 @@ function VideoCard({
                 ref={videoRef}
                 className="w-full h-full object-cover rounded-lg"
                 src={src}
+                preload="auto"
                 autoPlay
                 muted={isMuted} // 상태에 따라 뮤트 토글
                 loop

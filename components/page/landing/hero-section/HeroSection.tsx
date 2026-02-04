@@ -37,7 +37,7 @@ function HeroSection() {
 
                     <p className="text-xl sm:text-2xl font-medium text-gray-400 tracking-wide max-w-lg">
                         Finally, <span className="text-white font-bold border-b-2 border-pink-500">True Motion</span> Generation.<br/>
-                        Don't settle for zooming images.
+                        Don&#39;t settle for zooming images.
                     </p>
 
                     {/* CTA Buttons */}

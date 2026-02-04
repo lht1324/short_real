@@ -41,7 +41,7 @@ function PricingSection({
                         Choose Your <span className="bg-gradient-to-r from-pink-500 to-purple-600 bg-clip-text text-transparent">Power</span>
                     </h2>
                     <p className="text-xl text-gray-400 max-w-2xl mx-auto">
-                        Unlock the full potential of the ShortReal engine.
+                        Unlock the full potential of the ShortReal AI engine.
                     </p>
                 </div>
 

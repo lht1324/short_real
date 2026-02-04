@@ -445,7 +445,7 @@ function WorkspaceDashboardPageClient() {
                     />
                     <div className="flex flex-col ml-4">
                         <span className="text-4xl font-bold bg-gradient-to-r from-pink-400 to-purple-500 bg-clip-text text-transparent">
-                            Video Task Manager
+                            Dashboard
                         </span>
                         <p className="text-gray-400 text-base pl-0.5">
                             Your tasks&#39; progresses here.

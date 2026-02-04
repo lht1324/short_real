@@ -62,7 +62,7 @@ function SignInPageClient() {
             {/* Content */}
             <div className="relative z-10 flex items-start justify-center min-h-screen py-12 px-4 sm:px-6 lg:px-8" style={{paddingTop: 'calc(40vh - 16rem)'}}>
                 <AuthForm
-                    title="Welcome to ShortReal"
+                    title="Welcome to ShortReal AI"
                     subtitle="Sign in. Create short. Keep it real."
                     footerText="New here? No problem - just pick any option above!"
                     loading={isLoading}
