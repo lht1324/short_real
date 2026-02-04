@@ -29,6 +29,7 @@ const nextConfig: NextConfig = {
         return config;
     },
     turbopack: {},
+
     async headers() {
         return [
             {
@@ -40,6 +41,15 @@ const nextConfig: NextConfig = {
                     { key: "Access-Control-Allow-Methods", value: "GET,DELETE,PATCH,POST,PUT" },
                     { key: "Access-Control-Allow-Headers", value: "X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, ngrok-skip-browser-warning" },
                 ]
+            }
+        ]
+    },
+
+    async rewrites() {
+        return [
+            {
+                source: '/assets/demo/:path*',
+                destination: 'https://tbgymsmwuljvewatnvqg.supabase.co/storage/v1/object/public/demo_assets/:path*'
             }
         ]
     }

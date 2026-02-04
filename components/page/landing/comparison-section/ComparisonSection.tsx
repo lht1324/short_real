@@ -186,7 +186,7 @@ function ComparisonSection() {
                         )}
                         <video
                             ref={badVideoRef}
-                            src="/demo/bad_example.mp4"
+                            src="/assets/demo/demo_bad_example.mp4"
                             className="w-full h-full object-cover transition-all duration-500"
                             muted
                             loop
@@ -261,7 +261,7 @@ function ComparisonSection() {
                         )}
                         <video
                             ref={goodVideoRef}
-                            src="/demo/good_example.mp4"
+                            src={`${process.env.NEXT_PUBLIC_DEMO_ASSETS_URL}/demo_good_example.mp4`}
                             className="w-full h-full object-cover"
                             muted={isMuted}
                             loop
