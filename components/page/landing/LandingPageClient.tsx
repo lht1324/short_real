@@ -12,6 +12,7 @@ import FeaturesSection from "@/components/page/landing/features-section/Features
 import ComparisonSection from "@/components/page/landing/comparison-section/ComparisonSection";
 import HowItWorksSection from "@/components/page/landing/how-it-works-section/HowItWorksSection";
 import PricingSection from "@/components/page/landing/pricing-section/PricingSection";
+import FAQSection from "@/components/page/landing/faq-section/FAQSection";
 
 function LandingPageClient() {
     const router = useRouter();
@@ -56,7 +57,12 @@ function LandingPageClient() {
 
     return (
         // 1. [Global Base] 전체 페이지 배경색 (#0b0b15) 및 기본 설정
-        <main className="relative min-h-screen pt-16 bg-[#0b0b15] text-white selection:bg-pink-500/30 overflow-hidden">
+        <main
+            className="relative min-h-screen pt-16 bg-[#0b0b15] text-white selection:bg-pink-500/30 overflow-x-hidden"
+            style={{
+                overflowAnchor: "none"
+            }}
+        >
 
             {/* 2. [Global Texture] 고정된 그리드 패턴 (Fixed Position)
                 - 스크롤을 내려도 그리드는 배경에 박제되어 있어 고급스러운 깊이감을 줍니다.
@@ -95,6 +101,8 @@ function LandingPageClient() {
                     isLoggedIn={!!user}
                     onClickPurchasePlan={onClickPurchasePlan}
                 />
+
+                <FAQSection />
 
                 {/* Footer */}
                 <footer className="py-12 px-4 sm:px-6 lg:px-8 border-t border-white/5 bg-[#0b0b15]/50 backdrop-blur-md">
