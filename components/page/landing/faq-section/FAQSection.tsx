@@ -10,24 +10,39 @@ export interface FAQItemData {
 
 const FAQ_LIST: FAQItemData[] = [
     {
-        question: "Can I use the videos for commercial purposes?",
-        answer: "Yes! All paid plans include a full commercial license. You own 100% of the rights to the videos you create, including monetization on YouTube, TikTok, and Instagram."
+        question: "How does the credit system work?",
+        answer: `100 credits = 1 basic video (≤ 30 seconds, ≤ 6 scenes)
++5 credits per additional 2 seconds over 30s
++5 credits per additional scene over 6 scenes
+Credits are cumulative and added to your balance each month.`
     },
     {
-        question: "How does the credit system work?",
-        answer: "1 Credit = 1 Second of video generation. For example, a 30-second Short costs 30 credits. Credits refresh every month for subscription plans."
+        question: "What counts as a 'scene'?",
+        answer: "Each sentence in your script creates one scene. For example, a script with 8 sentences will generate an 8-scene video."
+    },
+    {
+        question: "Can I use the videos for commercial purposes?",
+        answer: "Yes! All paid plans include a full commercial license. You own 100% of the rights to the videos you create and can use them for YouTube, TikTok, and Instagram content."
+    },
+    {
+        question: "Can I edit the video after it's generated?",
+        answer: "Yes. After generation, you can open the editor to select AI music, trim the clip, and configure captions. However, since video scenes are timed to the voiceover, full regeneration is required to change the scene content itself."
+    },
+    {
+        question: "What formats and resolutions do you support?",
+        answer: "Videos are generated in MP4 format in 9:16 (vertical) at 720p. We plan to support 1080p and additional formats in the future."
+    },
+    {
+        question: "Do unused credits roll over?",
+        answer: "Yes. Unused credits roll over and accumulate in your account indefinitely. You keep what you pay for."
     },
     {
         question: "Can I cancel my subscription anytime?",
-        answer: "Absolutely. You can cancel your subscription instantly from your dashboard. Your credits will remain active until the end of your current billing period."
+        answer: "Absolutely. You can cancel instantly from your dashboard. Your credits will remain active, and you won't be charged for the next cycle."
     },
     {
-        question: "Do you support multiple languages?",
-        answer: "Yes, ShortReal supports over 29 languages including English, Korean, Japanese, Spanish, and French with native-sounding AI voiceovers."
-    },
-    {
-        question: "Is there a watermark on the videos?",
-        answer: "Watermarks are removed on all paid plans. Only the free trial generation includes a small ShortReal watermark."
+        question: "What is your refund policy?",
+        answer: "If you haven't used any credits yet, contact support for a refund. Once credits are used, we cannot offer refunds due to the high GPU costs incurred during generation."
     },
 ];
 

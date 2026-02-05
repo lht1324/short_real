@@ -79,7 +79,7 @@ function FAQItem({ data, isOpen, onToggle }: FAQItemProps) {
                 <div ref={innerRef}>
                     <div className="px-6 pb-6 pt-0">
                         <div className="border-t border-white/5 pt-4">
-                            <p className="text-gray-400 leading-relaxed text-base">
+                            <p className="text-gray-400 leading-relaxed text-base whitespace-pre-line">
                                 {data.answer}
                             </p>
                         </div>
