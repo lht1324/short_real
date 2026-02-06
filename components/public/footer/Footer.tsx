@@ -22,8 +22,8 @@ function Footer() {
 
                     {/* Links */}
                     <div className="flex space-x-8 text-sm">
-                        <a href={`http://localhost:3000/legal?legalDataType=${LegalDataType.PRIVACY}`} className="text-gray-400 hover:text-white transition-colors">Privacy Policy</a>
-                        <a href={`http://localhost:3000/legal?legalDataType=${LegalDataType.TERMS}`} className="text-gray-400 hover:text-white transition-colors">Terms of Service</a>
+                        <a href={`/legal/privacy`} className="text-gray-400 hover:text-white transition-colors">Privacy Policy</a>
+                        <a href={`/legal/terms`} className="text-gray-400 hover:text-white transition-colors">Terms of Service</a>
                     </div>
 
                     {/* Social Links */}
