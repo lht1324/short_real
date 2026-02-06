@@ -14,6 +14,7 @@ import HowItWorksSection from "@/components/page/landing/how-it-works-section/Ho
 import PricingSection from "@/components/page/landing/pricing-section/PricingSection";
 import FAQSection from "@/components/page/landing/faq-section/FAQSection";
 import Footer from "@/components/public/footer/Footer";
+import FloatingRoadmap from "@/components/page/landing/FloatingRoadmap";
 
 function LandingPageClient() {
     const router = useRouter();
@@ -108,6 +109,7 @@ function LandingPageClient() {
                 {/* Footer */}
                 <Footer/>
             </div>
+            <FloatingRoadmap/>
         </main>
     );
 }
