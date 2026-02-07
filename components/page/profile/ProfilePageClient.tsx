@@ -12,6 +12,7 @@ import ChangePlanModal from "@/components/page/profile/ChangePlanModal";
 import {useRouter} from "next/navigation";
 import {ProductData} from "@/api/types/api/polar/products/ProductData";
 import Image from "next/image";
+import DefaultModal from "@/components/public/DefaultModal";
 
 function ProfilePageClient() {
     const router = useRouter();
@@ -21,6 +22,7 @@ function ProfilePageClient() {
     const [isLoading, setIsLoading] = useState(true);
 
     const [showChangePlanModal, setShowChangePlanModal] = useState(false);
+    const [showCancelSubscriptionModal, setShowCancelSubscriptionModal] = useState(false);
 
     const [orderList, setOrderList] = useState<OrderData[]>([]);
     const [subscriptionData, setSubscriptionData] = useState<SubscriptionData | null>(null);
@@ -137,6 +139,12 @@ function ProfilePageClient() {
         setShowChangePlanModal(true);
     }, []);
 
+    const onClickCancelSubscription = useCallback(() => {
+        // subscriptionData?.cancelAtPeriodEnd
+        // 종료 예정이면 이미 예약 걸렸다는 메시지 추가?
+        setShowCancelSubscriptionModal(true);
+    }, []);
+
     const onConfirmChangePlan = useCallback(async (newProductId: string) => {
         setIsLoading(true);
 
@@ -188,8 +196,20 @@ function ProfilePageClient() {
         }
     }, [user?.id, user?.email, subscriptionData?.id, subscriptionData?.productId]);
 
-    const onClickCancelPlan = useCallback(() => {
+    const onConfirmCancelSubscription = useCallback(() => {
+        // IN_PROGRESS
 
+        if (!subscriptionData?.id) {
+            alert("Your subscription is invalid. Try again.");
+            return;
+        }
+
+        if (subscriptionData?.cancelAtPeriodEnd === true) {
+            alert("Your subscription was already canceled and is waiting the end of month.");
+            return;
+        }
+
+        polarClientAPI.deletePolarSubscriptionsCancel(subscriptionData?.id)
     }, []);
 
     useEffect(() => {
@@ -457,7 +477,7 @@ function ProfilePageClient() {
                                         Change Plan
                                     </button>
                                     <button
-                                        onClick={() => {}}
+                                        onClick={onClickCancelSubscription}
                                         className="w-full py-3 px-4 rounded-lg border border-red-500/50 text-red-400 font-semibold hover:bg-red-500/10 hover:border-red-400 transition-all duration-300"
                                     >
                                         Cancel Subscription
@@ -508,6 +528,14 @@ function ProfilePageClient() {
                     setShowChangePlanModal(false);
                 }}
             />}
+            {showCancelSubscriptionModal && <DefaultModal
+                title="Cancel Subscription"
+                message="Are you sure you want to cancel your subscription? Your plan will remain active until the end of the current billing period, and you will not be charged again."
+                confirmText="Yes"
+                cancelText="No"
+                onClickConfirm={onConfirmCancelSubscription}
+                onClickCancel={() => setShowCancelSubscriptionModal(false)}
+            />}c
 
             {/* Loading Overlay */}
             {isLoading && (

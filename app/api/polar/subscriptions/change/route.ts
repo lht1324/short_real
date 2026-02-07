@@ -8,6 +8,7 @@ import {processProducts} from "@/utils/polarUtils";
 import {
     PostPolarSubscriptionsChangeRequest
 } from "@/api/types/api/polar/subscriptions/change/PostPolarSubscriptionsChangeRequest";
+import {getIsValidRequestC2S} from "@/utils/getIsValidRequest";
 
 const isProd = process.env.NODE_ENV === 'production';
 const polar = new Polar({
@@ -30,6 +31,18 @@ const productCache = new LRUCache<string, ProductData[]>({
  * 다운그레이드: (TODO) 다음 결제 주기에 변경되도록 스케줄링
  */
 export async function POST(request: NextRequest) {
+    const {
+        isValidRequest,
+    } = await getIsValidRequestC2S();
+
+    if (!isValidRequest) {
+        return getNextBaseResponse({
+            success: false,
+            status: 401,
+            error: "Unauthorized request."
+        });
+    }
+
     try {
         // Request body 파싱
         const {

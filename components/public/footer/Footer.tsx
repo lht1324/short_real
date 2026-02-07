@@ -1,5 +1,4 @@
 import { memo, useMemo } from "react";
-import { LegalDataType } from "@/components/page/legal/LegalDataType";
 
 function Footer() {
     const year = useMemo(() => {
