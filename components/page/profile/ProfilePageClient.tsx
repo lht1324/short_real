@@ -11,6 +11,7 @@ import {SubscriptionData} from "@/api/types/api/polar/subscriptions/Subscription
 import ChangePlanModal from "@/components/page/profile/ChangePlanModal";
 import {useRouter} from "next/navigation";
 import {ProductData} from "@/api/types/api/polar/products/ProductData";
+import Image from "next/image";
 
 function ProfilePageClient() {
     const router = useRouter();
@@ -187,87 +188,19 @@ function ProfilePageClient() {
         }
     }, [user?.id, user?.email, subscriptionData?.id, subscriptionData?.productId]);
 
+    const onClickCancelPlan = useCallback(() => {
+
+    }, []);
+
     useEffect(() => {
         if (user?.email) {
             const loadData = async () => {
-                const mockOrderDataList: OrderData[] = [
-                    {
-                        "productName": "Daily × 2",
-                        "totalAmount": 8900,
-                        "currency": "usd",
-                        "status": "paid",
-                        "createdAt": "2025-11-17T17:44:00.166Z"
-                    },
-                    {
-                        "productName": "Pro Plan",
-                        "totalAmount": 29900,
-                        "currency": "usd",
-                        "status": "paid",
-                        "createdAt": "2025-10-15T09:23:11.442Z"
-                    },
-                    {
-                        "productName": "Starter Pack",
-                        "totalAmount": 4900,
-                        "currency": "usd",
-                        "status": "refunded",
-                        "createdAt": "2025-09-03T14:12:33.789Z"
-                    },
-                    {
-                        "productName": "Enterprise License",
-                        "totalAmount": 99900,
-                        "currency": "usd",
-                        "status": "paid",
-                        "createdAt": "2025-08-20T11:05:47.221Z"
-                    },
-                    {
-                        "productName": "Monthly Subscription",
-                        "totalAmount": 19900,
-                        "currency": "usd",
-                        "status": "partially_refunded",
-                        "createdAt": "2025-07-28T16:38:22.556Z"
-                    },
-                    {
-                        "productName": "Basic × 5",
-                        "totalAmount": 12500,
-                        "currency": "usd",
-                        "status": "paid",
-                        "createdAt": "2025-06-14T08:41:09.334Z"
-                    },
-                    {
-                        "productName": "Premium Annual",
-                        "totalAmount": 199900,
-                        "currency": "usd",
-                        "status": "pending",
-                        "createdAt": "2025-11-19T03:15:44.892Z"
-                    },
-                    {
-                        "productName": "Team Plan × 3",
-                        "totalAmount": 79900,
-                        "currency": "usd",
-                        "status": "paid",
-                        "createdAt": "2025-05-02T12:29:58.113Z"
-                    },
-                    {
-                        "productName": "Add-on Bundle",
-                        "totalAmount": 15900,
-                        "currency": "usd",
-                        "status": "paid",
-                        "createdAt": "2025-11-10T19:56:21.667Z"
-                    }
-                ];
-
                 const orderList = await polarClientAPI.getPolarOrders(user.email);
-                const testOrderList = [
-                    ...mockOrderDataList,
-                    ...(orderList ?? []),
-                ]
-
                 const subscriptionData = await polarClientAPI.getPolarSubscriptionByEmail(user.email);
 
-                // setOrderList(orderList ?? []);
-                setOrderList(testOrderList.sort((a, b) => {
+                setOrderList(orderList?.sort((a, b) => {
                     return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-                }));
+                }) ?? []);
                 setSubscriptionData(subscriptionData);
             }
 
@@ -334,9 +267,11 @@ function ProfilePageClient() {
                         {/* Avatar */}
                         <div className="relative">
                             {user?.avatar_url ? (
-                                <img
+                                <Image
                                     src={user.avatar_url}
                                     alt={user.name}
+                                    width={96}
+                                    height={96}
                                     className="w-24 h-24 rounded-full border-2 border-purple-500/50"
                                 />
                             ) : (
