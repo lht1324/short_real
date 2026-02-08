@@ -30,12 +30,12 @@ function ProfilePageClient() {
     const [scheduledDowngradeProductData, setScheduledDowngradeProductData] = useState<ProductData | null>(null);
 
     const planDisplayName = useMemo(() => {
-        return subscriptionData?.productName ?? "-";
+        return subscriptionData?.productName ?? "No Subscription";
     }, [subscriptionData]);
 
     const isPremiumPlan = useMemo(() => {
-        return user?.plan && user.plan !== SubscriptionPlan.NONE;
-    }, [user?.plan]);
+        return orderList.length !== 0 && !!subscriptionData;
+    }, [orderList.length, subscriptionData]);
 
     const isDowngradeScheduled = useMemo(() => {
         return !!user?.scheduled_downgrade_at && !!user?.downgrade_target_plan_id;
@@ -156,11 +156,13 @@ function ProfilePageClient() {
             // 필수 값 체크
             if (!userId) {
                 alert("User information is missing. Please try logging in again.");
+                setIsLoading(false);
                 return;
             }
 
             if (!subscriptionId || !prevProductId) {
                 alert("Subscription information is missing. Please refresh the page and try again.");
+                setIsLoading(false);
                 return;
             }
 
@@ -174,6 +176,7 @@ function ProfilePageClient() {
 
             if (!postPolarSubscriptionsChangeResult) {
                 alert("Failed to change subscription plan. Please try again later.");
+                setIsLoading(false);
                 return;
             }
 
@@ -196,8 +199,8 @@ function ProfilePageClient() {
         }
     }, [user?.id, user?.email, subscriptionData?.id, subscriptionData?.productId]);
 
-    const onConfirmCancelSubscription = useCallback(() => {
-        // IN_PROGRESS
+    const onConfirmCancelSubscription = useCallback(async () => {
+        setShowCancelSubscriptionModal(false);
 
         if (!subscriptionData?.id) {
             alert("Your subscription is invalid. Try again.");
@@ -209,8 +212,18 @@ function ProfilePageClient() {
             return;
         }
 
-        polarClientAPI.deletePolarSubscriptionsCancel(subscriptionData?.id)
-    }, []);
+        setIsLoading(true);
+
+        const deletePolarSubscriptionsCancelResult = await polarClientAPI.deletePolarSubscriptionsCancel(subscriptionData?.id);
+
+        setIsLoading(false);
+
+        if (deletePolarSubscriptionsCancelResult) {
+            alert("Your subscription has been canceled successfully. It will remain active until the end of the current billing period.");
+        } else {
+            alert("Failed to cancel subscription. Please try again later.");
+        }
+    }, [subscriptionData?.id, subscriptionData?.cancelAtPeriodEnd]);
 
     useEffect(() => {
         if (user?.email) {
@@ -345,7 +358,7 @@ function ProfilePageClient() {
                             {planDisplayName}
                         </div>
                         <p className="text-sm text-gray-400 mt-2">
-                            {subscriptionData?.productDescription ?? "-"}
+                            {subscriptionData?.productDescription ?? "No active subscription."}
                         </p>
                     </div>
 
@@ -476,12 +489,21 @@ function ProfilePageClient() {
                                     >
                                         Change Plan
                                     </button>
-                                    <button
-                                        onClick={onClickCancelSubscription}
-                                        className="w-full py-3 px-4 rounded-lg border border-red-500/50 text-red-400 font-semibold hover:bg-red-500/10 hover:border-red-400 transition-all duration-300"
-                                    >
-                                        Cancel Subscription
-                                    </button>
+                                    {subscriptionData?.cancelAtPeriodEnd ? (
+                                        <button
+                                            disabled
+                                            className="w-full py-3 px-4 rounded-lg border border-gray-500/30 text-gray-400 font-semibold cursor-not-allowed bg-gray-500/10"
+                                        >
+                                            Cancellation Scheduled
+                                        </button>
+                                    ) : (
+                                        <button
+                                            onClick={onClickCancelSubscription}
+                                            className="w-full py-3 px-4 rounded-lg border border-red-500/50 text-red-400 font-semibold hover:bg-red-500/10 hover:border-red-400 transition-all duration-300"
+                                        >
+                                            Cancel Subscription
+                                        </button>
+                                    )}
                                 </div>
                             </div>
                         )}
@@ -489,15 +511,16 @@ function ProfilePageClient() {
                         {/* Upgrade CTA for Free Users */}
                         {!isPremiumPlan && (
                             <div className="p-8 rounded-xl border border-purple-500/30 bg-gradient-to-r from-pink-500/10 to-purple-600/10 backdrop-blur-sm text-center">
-                                <h3 className="text-2xl font-bold text-white mb-2">Upgrade Your Plan</h3>
+                                <h3 className="text-2xl font-bold text-white mb-2">Make it real</h3>
                                 <p className="text-gray-300 mb-6">
-                                    Unlock premium features and create more videos every day
+                                    Create <b>true-motion</b> faceless shorts
+                                    with no effort.
                                 </p>
                                 <button
                                     onClick={() => window.location.href = '/#pricing'}
                                     className="bg-gradient-to-r from-pink-500 to-purple-600 text-white px-8 py-3 rounded-xl font-semibold hover:from-pink-600 hover:to-purple-700 transition-all duration-300 transform hover:scale-105"
                                 >
-                                    View Plans
+                                    See Pricing
                                 </button>
                             </div>
                         )}
@@ -535,7 +558,7 @@ function ProfilePageClient() {
                 cancelText="No"
                 onClickConfirm={onConfirmCancelSubscription}
                 onClickCancel={() => setShowCancelSubscriptionModal(false)}
-            />}c
+            />}
 
             {/* Loading Overlay */}
             {isLoading && (
