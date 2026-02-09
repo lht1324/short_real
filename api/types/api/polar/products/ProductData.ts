@@ -12,7 +12,6 @@ export interface ProductData {
     currency: string;
     interval: "month" | "year";
     description: string;
-    benefits: string[];
     planData: { creditCount: number, planId: SubscriptionPlan };
     isPopular: boolean;
     videosPerDay: number;

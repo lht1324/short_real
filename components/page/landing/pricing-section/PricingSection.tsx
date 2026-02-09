@@ -3,6 +3,7 @@
 import {memo, useCallback, useMemo} from "react";
 import PricingSectionItem from "./PricingSectionItem";
 import {ProductData} from "@/api/types/api/polar/products/ProductData";
+import {PRICING_BENEFIT_LIST} from "@/components/page/landing/pricing-section/PRICING_BENEFIT_LIST";
 
 export interface PricingSectionProps {
     productDataList: ProductData[];
@@ -55,7 +56,14 @@ function PricingSection({
                             currency={productData.currency}
                             interval={productData.interval}
                             description={productData.description}
-                            benefits={productData.benefits}
+                            benefits={PRICING_BENEFIT_LIST.filter((benefit) => {
+                                return benefit.includedPlanList.includes(productData.planData.planId);
+                            }).map((benefit) => {
+                                return {
+                                    description: benefit.description,
+                                    icon: benefit.icon,
+                                };
+                            })}
                             isPopular={productData.isPopular}
                             videosPerDay={productData.videosPerDay}
                             minimumPrice={minimumPrice}

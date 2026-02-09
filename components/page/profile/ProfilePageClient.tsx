@@ -545,6 +545,7 @@ function ProfilePageClient() {
                 </div>
             </div>
             {showChangePlanModal && <ChangePlanModal
+                userCurrentProductId={subscriptionData?.productId ?? null}
                 userCurrentProductName={subscriptionData?.productName ?? null}
                 onConfirmChangePlan={onConfirmChangePlan}
                 onClickClose={() => {

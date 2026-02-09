@@ -16,8 +16,8 @@ export interface User {
 
 export enum SubscriptionPlan {
     NONE = "none",
-    DAILY_1 = "daily_1",
-    DAILY_2 = "daily_2",
-    DAILY_3 = "daily_3",
-    DAILY_4 = "daily_4",
+    PLAN_1 = "plan-1",
+    PLAN_2 = "plan-2",
+    PLAN_3 = "plan-3",
+    PLAN_4 = "plan-4",
 }

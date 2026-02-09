@@ -1,13 +1,16 @@
 'use client'
 
-import {memo, useCallback, useMemo} from "react";
+import {memo, ReactNode, useCallback, useMemo} from "react";
 
 interface ChangePlanModalPricingItem {
     productId: string;
     productName: string;
     productDescription: string;
     price: number;
-    videosPerDay: number;
+    benefits: {
+        description: ReactNode;
+        icon: ReactNode;
+    }[];
     selectedProductId: string | null;
     onSelectPlan: (productId: string) => void;
 }
@@ -17,7 +20,7 @@ function ChangePlanModalPricingItem({
     productName,
     productDescription,
     price,
-    videosPerDay,
+    benefits,
     selectedProductId,
     onSelectPlan,
 }: ChangePlanModalPricingItem) {
@@ -41,7 +44,7 @@ function ChangePlanModalPricingItem({
         <button
             onClick={onClickItem}
             className={`
-                w-full p-6 rounded-2xl border backdrop-blur-sm transition-all duration-300 text-left
+                w-full px-4 py-6 rounded-2xl border backdrop-blur-sm transition-all duration-300 text-left
                 ${isSelected
                     ? 'border-purple-400/50 bg-gray-800/50 shadow-2xl shadow-purple-500/25 scale-105'
                     : 'border-purple-500/20 bg-gray-900/30 hover:border-purple-400/50 hover:bg-gray-800/50 hover:scale-105'
@@ -66,9 +69,23 @@ function ChangePlanModalPricingItem({
             </div>
 
             <div className="mt-4 pt-4 border-t border-purple-500/20">
-                <p className="text-sm text-gray-300">
-                    {videosPerDay} videos per day
-                </p>
+                <ul className="space-y-4 flex-1 relative z-10">
+                    {benefits.map((benefit, index) => {
+                        const {
+                            description,
+                            icon,
+                        } = benefit;
+
+                        return <li key={index} className="flex items-start gap-3 text-sm">
+                            <div
+                                className={`${isSelected ? 'text-purple-400' : 'text-gray-500'}`}
+                            >
+                                {icon}
+                            </div>
+                            {description}
+                        </li>
+                    })}
+                </ul>
             </div>
         </button>
     )

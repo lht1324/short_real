@@ -4,9 +4,9 @@ import { useState, useRef, useEffect, memo, useCallback } from "react";
 import { Sparkles, X, ChevronRight } from "lucide-react";
 
 enum RoadmapStatus {
-    SKETCH = "SKETCH",
-    IN_PROGRESS = "IN_PROGRESS",
-    COMING_SOON = "COMING_SOON",
+    IN_PROGRESS = 1,
+    COMING_SOON = 2,
+    SKETCH = 3,
 }
 
 // ✨ Updates List (Copywriting Optimized)
@@ -15,6 +15,16 @@ const ROADMAP_ITEM_LIST = [
         title: "Auto-Pilot Mode",
         status: RoadmapStatus.SKETCH,
         desc: "Set a schedule, and we'll generate & upload videos to your channel automatically.",
+    },
+    {
+        title: "Quality Selection (720p/1080p)", // 720p/1080p choice -> Updated
+        status: RoadmapStatus.SKETCH,
+        desc: "Flexibility to choose between standard 720p or premium 1080p resolution.",
+    },
+    {
+        title: "Custom Visual Styles", // Style Selection -> Updated
+        status: RoadmapStatus.SKETCH,
+        desc: "Pick the perfect visual tone for your videos, from Cinematic to Animation.",
     },
     {
         title: "TikTok Direct Export",
@@ -88,7 +98,18 @@ function FloatingRoadmap() {
                 </div>
 
                 <div className="p-2 space-y-1">
-                    {ROADMAP_ITEM_LIST.map((item, i) => (
+                    {ROADMAP_ITEM_LIST.sort((a, b) => {
+                        // 1차 정렬: 상태 우선순위
+                        const priorityA = a.status
+                        const priorityB = b.status;
+
+                        if (priorityA !== priorityB) {
+                            return priorityA - priorityB;
+                        }
+
+                        // 2차 정렬: 알파벳순 (Title 기준)
+                        return a.title.localeCompare(b.title);
+                    }).map((item, i) => (
                         <div key={i} className="group flex gap-3 rounded-xl p-3 hover:bg-white/5 transition-colors">
                             <div className="flex-1 space-y-1">
                                 <div className="flex items-center justify-between">
