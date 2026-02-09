@@ -1,12 +1,10 @@
 import OpenAI from 'openai';
-import {
-    ScriptGenerationResponse
-} from "@/api/types/open-ai/ScriptGeneration";
-import {StyleGenerationParams} from "@/api/types/supabase/Styles";
-import {SceneData, SubtitleSegment} from "@/api/types/supabase/VideoGenerationTasks";
-import {MasterStyleInfo} from "@/api/types/supabase/MasterStyleInfo";
-import {VIDEO_ASPECT_RATIOS, VideoAspectRatio} from "@/lib/ReplicateData";
-import {StoryboardData} from "@/api/types/api/open-ai/scene/PostOpenAISceneResponse";
+import { ScriptGenerationResponse } from "@/api/types/open-ai/ScriptGeneration";
+import { StyleGenerationParams } from "@/api/types/supabase/Styles";
+import { SceneData, SubtitleSegment } from "@/api/types/supabase/VideoGenerationTasks";
+import { MasterStyleInfo } from "@/api/types/supabase/MasterStyleInfo";
+import { VIDEO_ASPECT_RATIOS, VideoAspectRatio } from "@/lib/ReplicateData";
+import { StoryboardData } from "@/api/types/api/open-ai/scene/PostOpenAISceneResponse";
 import {
     POST_SCRIPT_PROMPT,
     POST_SCENE_SEGMENTATION_PROMPT,
@@ -32,6 +30,7 @@ import {GoogleGenAI, SchemaUnion} from "@google/genai";
 import {cleanAndParseJSON} from "@/utils/jsonUtils";
 import {addArticleToWord} from "@/utils/stringUtils";
 import { logger } from "@trigger.dev/sdk";
+import { OpenRouter } from "@openrouter/sdk";
 
 enum DeepSeekModel {
     DEEPSEEK_NON_THINKING = "deepseek-chat",
@@ -40,6 +39,11 @@ enum DeepSeekModel {
 
 enum GeminiModel {
     GEMINI_2_5_FLASH_PREVIEW = "gemini-2.5-flash-preview-09-2025"
+}
+
+enum OpenRouterModel {
+    DEEPSEEK_V_3_2 = "deepseek/deepseek-v3.2",
+    GEMINI_3_0_FLASH_PREVIEW = "google/gemini-3-flash-preview" // 3.0 Flash 출시 안 됨
 }
 
 const videoGenResponseFormat: SchemaUnion = {
@@ -142,17 +146,18 @@ const videoGenResponseFormat: SchemaUnion = {
 };
 
 const DEEPSEEK_BASE_URL = "https://api.deepseek.com";
+const OPEN_ROUTER_BASE_URL = "https://openrouter.ai/api/v1";
 
 export const llmServerAPI = {
     async postScript(userPrompt: string): Promise<ScriptGenerationResponse> {
         try {
             // OpenAI API 키 확인
-            const apiKey = process.env.DEEPSEEK_API_KEY;
+            const apiKey = process.env.OPENROUTER_API_KEY;
             if (!apiKey) {
                 return {
                     success: false,
                     status: 400,
-                    error: 'DeepSeek API Key is not configured',
+                    error: 'OpenRouter API Key is not configured',
                 };
             }
 
@@ -161,13 +166,12 @@ export const llmServerAPI = {
 
             // OpenAI SDK 클라이언트 초기화
             const client = new OpenAI({
-                baseURL: DEEPSEEK_BASE_URL,
+                baseURL: OPEN_ROUTER_BASE_URL,
                 apiKey: apiKey,
             });
 
-            // OpenAI API 호출
             const completion = await client.chat.completions.create({
-                model: DeepSeekModel.DEEPSEEK_NON_THINKING,
+                model: OpenRouterModel.DEEPSEEK_V_3_2,
                 messages: [
                     { role: 'system', content: systemMessage },
                     { role: 'user', content: userPrompt }
@@ -186,7 +190,7 @@ export const llmServerAPI = {
                 return {
                     success: false,
                     status: 500,
-                    error: 'No script generated from OpenAI'
+                    error: 'No script generated from OpenRouter'
                 };
             }
 
