@@ -30,7 +30,6 @@ import {GoogleGenAI, SchemaUnion} from "@google/genai";
 import {cleanAndParseJSON} from "@/utils/jsonUtils";
 import {addArticleToWord} from "@/utils/stringUtils";
 import { logger } from "@trigger.dev/sdk";
-import { OpenRouter } from "@openrouter/sdk";
 
 enum DeepSeekModel {
     DEEPSEEK_NON_THINKING = "deepseek-chat",
@@ -42,6 +41,7 @@ enum GeminiModel {
 }
 
 enum OpenRouterModel {
+    GPT_4O_MINI = "openai/gpt-4o-mini",
     DEEPSEEK_V_3_2 = "deepseek/deepseek-v3.2",
     GEMINI_3_0_FLASH_PREVIEW = "google/gemini-3-flash-preview" // 3.0 Flash 출시 안 됨
 }
@@ -149,7 +149,7 @@ const DEEPSEEK_BASE_URL = "https://api.deepseek.com";
 const OPEN_ROUTER_BASE_URL = "https://openrouter.ai/api/v1";
 
 export const llmServerAPI = {
-    async postScript(userPrompt: string): Promise<ScriptGenerationResponse> {
+    async postScript(userPrompt: string): Promise<ScriptGenerationResponse | null> {
         try {
             // OpenAI API 키 확인
             const apiKey = process.env.OPENROUTER_API_KEY;
@@ -172,6 +172,7 @@ export const llmServerAPI = {
 
             const completion = await client.chat.completions.create({
                 model: OpenRouterModel.DEEPSEEK_V_3_2,
+                // model: OpenRouterModel.GPT_4O_MINI,
                 messages: [
                     { role: 'system', content: systemMessage },
                     { role: 'user', content: userPrompt }
@@ -184,9 +185,9 @@ export const llmServerAPI = {
                 max_completion_tokens: 3072,
             });
 
-            const generatedScript = completion.choices[0]?.message?.content;
+            const generatedContent = completion.choices[0]?.message?.content;
 
-            if (!generatedScript) {
+            if (!generatedContent) {
                 return {
                     success: false,
                     status: 500,
@@ -194,21 +195,42 @@ export const llmServerAPI = {
                 };
             }
 
-            // 스크립트 분석
-            const wordCount = generatedScript.split(' ').length;
-            const estimatedDuration = Math.round(wordCount / 2.5); // 약 2.5 단어/초
+            try {
+                const parsedData: {
+                    scene_number: number;
+                    narration: string;
+                }[] = cleanAndParseJSON(generatedContent);
 
-            return {
-                success: true,
-                status: 200,
-                data: {
-                    script: generatedScript,
-                    wordCount: wordCount,
-                    estimatedDuration: estimatedDuration,
-                    prompt: userPrompt
-                }
-            };
+                // 1. 순서 보장 (AI가 가끔 순서를 섞어 줄 때를 대비해 오름차순 정렬)
+                const sortedScenes = parsedData.sort((a, b) => a.scene_number - b.scene_number);
 
+                // 2. 하나의 문자열로 결합 (double new line으로 구분)
+                const generatedScript = sortedScenes.map(item => item.narration).join('\n\n');
+
+                // 3. 스크립트 분석 (단어 수 및 예상 시간 계산)
+                // 정규식으로 공백(스페이스, 탭, 개행)을 기준으로 split 하여 정확도 향상
+                const wordCount = generatedScript.trim().split(/\s+/).length;
+                const estimatedDuration = Math.round(wordCount / 2.5); // 약 2.5 단어/초
+
+                return {
+                    success: true,
+                    status: 200,
+                    data: {
+                        script: generatedScript,
+                        wordCount: wordCount,
+                        estimatedDuration: estimatedDuration,
+                        prompt: userPrompt
+                    }
+                };
+            } catch (error) {
+                console.error(`Parsing generated contents failed: `, error);
+
+                return {
+                    success: false,
+                    status: 500,
+                    error: error instanceof Error ? error.message : 'Unknown error occurred'
+                };
+            }
         } catch (error) {
             console.error("Error occurred in postScript(): ", error)
             return {

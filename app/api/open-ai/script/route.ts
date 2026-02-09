@@ -22,6 +22,10 @@ export async function POST(request: NextRequest) {
         // OpenAI API를 통해 스크립트 생성
         const result = await llmServerAPI.postScript(userPrompt);
 
+        if (!result) {
+            throw new Error("Script generation failed.");
+        }
+
         // 결과 반환
         return getNextBaseResponse(result);
     } catch (error) {
