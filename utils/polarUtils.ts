@@ -19,7 +19,6 @@ export function processProducts(items: Product[]): ProductData[] {
             }
         }
 
-        const benefits: string[] = JSON.parse(product.metadata.benefits.toString());
         const planData: { creditCount: number, planId: SubscriptionPlan } = JSON.parse(product.metadata.planData.toString());
         const isPopular = product.metadata?.isPopular === true || product.metadata?.isPopular === "true";
         const videosPerDay = typeof product.metadata?.videosPerDay === "number"
@@ -33,7 +32,6 @@ export function processProducts(items: Product[]): ProductData[] {
             currency: currency,
             interval: product.recurringInterval as "month" | "year",
             description: product.description ?? "",
-            benefits: benefits,
             planData: planData,
             isPopular: isPopular,
             videosPerDay: videosPerDay,

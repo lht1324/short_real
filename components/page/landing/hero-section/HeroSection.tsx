@@ -37,7 +37,7 @@ function HeroSection() {
 
                     <p className="text-xl sm:text-2xl font-medium text-gray-400 tracking-wide max-w-lg">
                         Finally, <span className="text-white font-bold border-b-2 border-pink-500">True Motion</span> Generation.<br/>
-                        Don't settle for zooming images.
+                        Don&#39;t settle for zooming images.
                     </p>
 
                     {/* CTA Buttons */}
@@ -59,16 +59,16 @@ function HeroSection() {
                 {/* 3. Right: Video Deck */}
                 <div className="relative h-[600px] w-full flex items-center justify-center perspective-1000 mt-10 lg:mt-0">
                     <VideoCard
-                        src="/demo/demo_1.mp4"
+                        src={`${process.env.NEXT_PUBLIC_DEMO_ASSETS_URL}/demo_main_left.mp4`}
                         className="w-[220px] sm:w-[260px] -translate-x-[110%] sm:-translate-x-[120%] -rotate-12 hover:rotate-0 hover:scale-[1.15] border-purple-500/30 bg-[#1f2937] z-20 hover:border-purple-500"
                         isRightSideCovered={true}
                     />
                     <VideoCard
-                        src="/demo/demo_2.mp4"
+                        src={`${process.env.NEXT_PUBLIC_DEMO_ASSETS_URL}/demo_main_right.mp4`}
                         className="w-[220px] sm:w-[260px] translate-x-[10%] sm:translate-x-[20%] rotate-12 hover:rotate-0 hover:scale-[1.15] border-pink-500/30 bg-[#1f2937] z-20 hover:border-pink-500"
                     />
                     <VideoCard
-                        src="/demo/demo_main.mp4"
+                        src={`${process.env.NEXT_PUBLIC_DEMO_ASSETS_URL}/demo_main_center.mp4`}
                         className="w-[240px] sm:w-[300px] -translate-x-1/2 rotate-0 hover:scale-105 border-white/20 bg-[#1f2937] z-30 shadow-[0_0_60px_-15px_rgba(236,72,153,0.3)] hover:border-white"
                     />
                 </div>

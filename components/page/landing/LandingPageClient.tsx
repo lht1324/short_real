@@ -12,6 +12,9 @@ import FeaturesSection from "@/components/page/landing/features-section/Features
 import ComparisonSection from "@/components/page/landing/comparison-section/ComparisonSection";
 import HowItWorksSection from "@/components/page/landing/how-it-works-section/HowItWorksSection";
 import PricingSection from "@/components/page/landing/pricing-section/PricingSection";
+import FAQSection from "@/components/page/landing/faq-section/FAQSection";
+import Footer from "@/components/public/footer/Footer";
+import FloatingRoadmap from "@/components/page/landing/FloatingRoadmap";
 
 function LandingPageClient() {
     const router = useRouter();
@@ -56,7 +59,12 @@ function LandingPageClient() {
 
     return (
         // 1. [Global Base] 전체 페이지 배경색 (#0b0b15) 및 기본 설정
-        <div className="relative min-h-screen pt-16 bg-[#0b0b15] text-white selection:bg-pink-500/30 overflow-hidden">
+        <main
+            className="relative min-h-screen pt-16 bg-[#0b0b15] text-white selection:bg-pink-500/30 overflow-x-hidden"
+            style={{
+                overflowAnchor: "none"
+            }}
+        >
 
             {/* 2. [Global Texture] 고정된 그리드 패턴 (Fixed Position)
                 - 스크롤을 내려도 그리드는 배경에 박제되어 있어 고급스러운 깊이감을 줍니다.
@@ -96,44 +104,13 @@ function LandingPageClient() {
                     onClickPurchasePlan={onClickPurchasePlan}
                 />
 
+                <FAQSection />
+
                 {/* Footer */}
-                <footer className="py-12 px-4 sm:px-6 lg:px-8 border-t border-white/5 bg-[#0b0b15]/50 backdrop-blur-md">
-                    <div className="max-w-7xl mx-auto">
-                        <div className="flex flex-col md:flex-row justify-between items-center space-y-6 md:space-y-0">
-                            {/* Logo & Copyright */}
-                            <div className="text-center md:text-left">
-                                <div className="text-2xl font-bold bg-gradient-to-r from-pink-400 to-purple-500 bg-clip-text text-transparent mb-2">
-                                    ShortReal
-                                </div>
-                                <p className="text-gray-500 text-sm">
-                                    &copy; 2025 ShortReal. All rights reserved.
-                                </p>
-                            </div>
-
-                            {/* Links */}
-                            <div className="flex space-x-8 text-sm">
-                                <a href="#" className="text-gray-400 hover:text-white transition-colors">Privacy</a>
-                                <a href="#" className="text-gray-400 hover:text-white transition-colors">Terms</a>
-                                <a href="#" className="text-gray-400 hover:text-white transition-colors">Contact</a>
-                            </div>
-
-                            {/* Social Links */}
-                            <div className="flex space-x-4">
-                                {['𝕏', 'in', 'YT'].map((icon) => (
-                                    <a
-                                        key={icon}
-                                        href="#"
-                                        className="w-10 h-10 bg-white/5 border border-white/10 rounded-lg flex items-center justify-center hover:bg-white/10 hover:border-white/20 transition-all text-gray-400 hover:text-white"
-                                    >
-                                        <span className="text-lg">{icon}</span>
-                                    </a>
-                                ))}
-                            </div>
-                        </div>
-                    </div>
-                </footer>
+                <Footer/>
             </div>
-        </div>
+            <FloatingRoadmap/>
+        </main>
     );
 }
 

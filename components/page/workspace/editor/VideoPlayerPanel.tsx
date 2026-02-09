@@ -616,6 +616,7 @@ const VideoPlayerPanel = forwardRef<VideoPlayerHandle, VideoPlayerPanelProps>(({
                                 <video
                                     ref={videoRef}
                                     src={videoUrl}
+                                    preload="auto"
                                     className="w-full h-full object-contain"
                                     style={{ willChange: 'transform' }}
                                     onLoadedMetadata={onLoadedMetadata}

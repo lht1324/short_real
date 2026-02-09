@@ -11,6 +11,8 @@ import {SubscriptionData} from "@/api/types/api/polar/subscriptions/Subscription
 import ChangePlanModal from "@/components/page/profile/ChangePlanModal";
 import {useRouter} from "next/navigation";
 import {ProductData} from "@/api/types/api/polar/products/ProductData";
+import Image from "next/image";
+import DefaultModal from "@/components/public/DefaultModal";
 
 function ProfilePageClient() {
     const router = useRouter();
@@ -20,6 +22,7 @@ function ProfilePageClient() {
     const [isLoading, setIsLoading] = useState(true);
 
     const [showChangePlanModal, setShowChangePlanModal] = useState(false);
+    const [showCancelSubscriptionModal, setShowCancelSubscriptionModal] = useState(false);
 
     const [orderList, setOrderList] = useState<OrderData[]>([]);
     const [subscriptionData, setSubscriptionData] = useState<SubscriptionData | null>(null);
@@ -27,12 +30,12 @@ function ProfilePageClient() {
     const [scheduledDowngradeProductData, setScheduledDowngradeProductData] = useState<ProductData | null>(null);
 
     const planDisplayName = useMemo(() => {
-        return subscriptionData?.productName ?? "-";
+        return subscriptionData?.productName ?? "No Subscription";
     }, [subscriptionData]);
 
     const isPremiumPlan = useMemo(() => {
-        return user?.plan && user.plan !== SubscriptionPlan.NONE;
-    }, [user?.plan]);
+        return orderList.length !== 0 && !!subscriptionData;
+    }, [orderList.length, subscriptionData]);
 
     const isDowngradeScheduled = useMemo(() => {
         return !!user?.scheduled_downgrade_at && !!user?.downgrade_target_plan_id;
@@ -136,6 +139,12 @@ function ProfilePageClient() {
         setShowChangePlanModal(true);
     }, []);
 
+    const onClickCancelSubscription = useCallback(() => {
+        // subscriptionData?.cancelAtPeriodEnd
+        // 종료 예정이면 이미 예약 걸렸다는 메시지 추가?
+        setShowCancelSubscriptionModal(true);
+    }, []);
+
     const onConfirmChangePlan = useCallback(async (newProductId: string) => {
         setIsLoading(true);
 
@@ -147,11 +156,13 @@ function ProfilePageClient() {
             // 필수 값 체크
             if (!userId) {
                 alert("User information is missing. Please try logging in again.");
+                setIsLoading(false);
                 return;
             }
 
             if (!subscriptionId || !prevProductId) {
                 alert("Subscription information is missing. Please refresh the page and try again.");
+                setIsLoading(false);
                 return;
             }
 
@@ -165,6 +176,7 @@ function ProfilePageClient() {
 
             if (!postPolarSubscriptionsChangeResult) {
                 alert("Failed to change subscription plan. Please try again later.");
+                setIsLoading(false);
                 return;
             }
 
@@ -187,87 +199,41 @@ function ProfilePageClient() {
         }
     }, [user?.id, user?.email, subscriptionData?.id, subscriptionData?.productId]);
 
+    const onConfirmCancelSubscription = useCallback(async () => {
+        setShowCancelSubscriptionModal(false);
+
+        if (!subscriptionData?.id) {
+            alert("Your subscription is invalid. Try again.");
+            return;
+        }
+
+        if (subscriptionData?.cancelAtPeriodEnd === true) {
+            alert("Your subscription was already canceled and is waiting the end of month.");
+            return;
+        }
+
+        setIsLoading(true);
+
+        const deletePolarSubscriptionsCancelResult = await polarClientAPI.deletePolarSubscriptionsCancel(subscriptionData?.id);
+
+        setIsLoading(false);
+
+        if (deletePolarSubscriptionsCancelResult) {
+            alert("Your subscription has been canceled successfully. It will remain active until the end of the current billing period.");
+        } else {
+            alert("Failed to cancel subscription. Please try again later.");
+        }
+    }, [subscriptionData?.id, subscriptionData?.cancelAtPeriodEnd]);
+
     useEffect(() => {
         if (user?.email) {
             const loadData = async () => {
-                const mockOrderDataList: OrderData[] = [
-                    {
-                        "productName": "Daily × 2",
-                        "totalAmount": 8900,
-                        "currency": "usd",
-                        "status": "paid",
-                        "createdAt": "2025-11-17T17:44:00.166Z"
-                    },
-                    {
-                        "productName": "Pro Plan",
-                        "totalAmount": 29900,
-                        "currency": "usd",
-                        "status": "paid",
-                        "createdAt": "2025-10-15T09:23:11.442Z"
-                    },
-                    {
-                        "productName": "Starter Pack",
-                        "totalAmount": 4900,
-                        "currency": "usd",
-                        "status": "refunded",
-                        "createdAt": "2025-09-03T14:12:33.789Z"
-                    },
-                    {
-                        "productName": "Enterprise License",
-                        "totalAmount": 99900,
-                        "currency": "usd",
-                        "status": "paid",
-                        "createdAt": "2025-08-20T11:05:47.221Z"
-                    },
-                    {
-                        "productName": "Monthly Subscription",
-                        "totalAmount": 19900,
-                        "currency": "usd",
-                        "status": "partially_refunded",
-                        "createdAt": "2025-07-28T16:38:22.556Z"
-                    },
-                    {
-                        "productName": "Basic × 5",
-                        "totalAmount": 12500,
-                        "currency": "usd",
-                        "status": "paid",
-                        "createdAt": "2025-06-14T08:41:09.334Z"
-                    },
-                    {
-                        "productName": "Premium Annual",
-                        "totalAmount": 199900,
-                        "currency": "usd",
-                        "status": "pending",
-                        "createdAt": "2025-11-19T03:15:44.892Z"
-                    },
-                    {
-                        "productName": "Team Plan × 3",
-                        "totalAmount": 79900,
-                        "currency": "usd",
-                        "status": "paid",
-                        "createdAt": "2025-05-02T12:29:58.113Z"
-                    },
-                    {
-                        "productName": "Add-on Bundle",
-                        "totalAmount": 15900,
-                        "currency": "usd",
-                        "status": "paid",
-                        "createdAt": "2025-11-10T19:56:21.667Z"
-                    }
-                ];
-
                 const orderList = await polarClientAPI.getPolarOrders(user.email);
-                const testOrderList = [
-                    ...mockOrderDataList,
-                    ...(orderList ?? []),
-                ]
-
                 const subscriptionData = await polarClientAPI.getPolarSubscriptionByEmail(user.email);
 
-                // setOrderList(orderList ?? []);
-                setOrderList(testOrderList.sort((a, b) => {
+                setOrderList(orderList?.sort((a, b) => {
                     return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-                }));
+                }) ?? []);
                 setSubscriptionData(subscriptionData);
             }
 
@@ -334,9 +300,11 @@ function ProfilePageClient() {
                         {/* Avatar */}
                         <div className="relative">
                             {user?.avatar_url ? (
-                                <img
+                                <Image
                                     src={user.avatar_url}
                                     alt={user.name}
+                                    width={96}
+                                    height={96}
                                     className="w-24 h-24 rounded-full border-2 border-purple-500/50"
                                 />
                             ) : (
@@ -390,7 +358,7 @@ function ProfilePageClient() {
                             {planDisplayName}
                         </div>
                         <p className="text-sm text-gray-400 mt-2">
-                            {subscriptionData?.productDescription ?? "-"}
+                            {subscriptionData?.productDescription ?? "No active subscription."}
                         </p>
                     </div>
 
@@ -521,12 +489,21 @@ function ProfilePageClient() {
                                     >
                                         Change Plan
                                     </button>
-                                    <button
-                                        onClick={() => {}}
-                                        className="w-full py-3 px-4 rounded-lg border border-red-500/50 text-red-400 font-semibold hover:bg-red-500/10 hover:border-red-400 transition-all duration-300"
-                                    >
-                                        Cancel Subscription
-                                    </button>
+                                    {subscriptionData?.cancelAtPeriodEnd ? (
+                                        <button
+                                            disabled
+                                            className="w-full py-3 px-4 rounded-lg border border-gray-500/30 text-gray-400 font-semibold cursor-not-allowed bg-gray-500/10"
+                                        >
+                                            Cancellation Scheduled
+                                        </button>
+                                    ) : (
+                                        <button
+                                            onClick={onClickCancelSubscription}
+                                            className="w-full py-3 px-4 rounded-lg border border-red-500/50 text-red-400 font-semibold hover:bg-red-500/10 hover:border-red-400 transition-all duration-300"
+                                        >
+                                            Cancel Subscription
+                                        </button>
+                                    )}
                                 </div>
                             </div>
                         )}
@@ -534,15 +511,16 @@ function ProfilePageClient() {
                         {/* Upgrade CTA for Free Users */}
                         {!isPremiumPlan && (
                             <div className="p-8 rounded-xl border border-purple-500/30 bg-gradient-to-r from-pink-500/10 to-purple-600/10 backdrop-blur-sm text-center">
-                                <h3 className="text-2xl font-bold text-white mb-2">Upgrade Your Plan</h3>
+                                <h3 className="text-2xl font-bold text-white mb-2">Make it real</h3>
                                 <p className="text-gray-300 mb-6">
-                                    Unlock premium features and create more videos every day
+                                    Create <b>true-motion</b> faceless shorts
+                                    with no effort.
                                 </p>
                                 <button
                                     onClick={() => window.location.href = '/#pricing'}
                                     className="bg-gradient-to-r from-pink-500 to-purple-600 text-white px-8 py-3 rounded-xl font-semibold hover:from-pink-600 hover:to-purple-700 transition-all duration-300 transform hover:scale-105"
                                 >
-                                    View Plans
+                                    See Pricing
                                 </button>
                             </div>
                         )}
@@ -567,11 +545,20 @@ function ProfilePageClient() {
                 </div>
             </div>
             {showChangePlanModal && <ChangePlanModal
+                userCurrentProductId={subscriptionData?.productId ?? null}
                 userCurrentProductName={subscriptionData?.productName ?? null}
                 onConfirmChangePlan={onConfirmChangePlan}
                 onClickClose={() => {
                     setShowChangePlanModal(false);
                 }}
+            />}
+            {showCancelSubscriptionModal && <DefaultModal
+                title="Cancel Subscription"
+                message="Are you sure you want to cancel your subscription? Your plan will remain active until the end of the current billing period, and you will not be charged again."
+                confirmText="Yes"
+                cancelText="No"
+                onClickConfirm={onConfirmCancelSubscription}
+                onClickCancel={() => setShowCancelSubscriptionModal(false)}
             />}
 
             {/* Loading Overlay */}

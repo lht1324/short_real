@@ -50,6 +50,7 @@ function FeatureCard({ feature, index }: { feature: Feature, index: number }) {
                 ref={videoRef}
                 className="absolute inset-0 w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity duration-500"
                 src={feature.videoSrc}
+                preload="auto"
                 autoPlay
                 muted={isMuted} // 상태 연결
                 loop

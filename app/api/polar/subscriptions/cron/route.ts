@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
         .from('users')
         .select('*')
         .not('scheduled_downgrade_at', 'is', null)
-        // .lte('scheduled_downgrade_at', targetDate.toISOString()) // 3시간 이내 만료 예정
+        .lte('scheduled_downgrade_at', targetDate.toISOString()) // 3시간 이내 만료 예정
         .not('downgrade_target_plan_id', 'is', null);
 
     if (targetUsers && targetUsers.length > 0) {

@@ -6,14 +6,17 @@ import {ProductData} from "@/api/types/api/polar/products/ProductData";
 import {X} from "lucide-react";
 import ChangePlanModalPricingItem from "@/components/page/profile/ChangePlanModalPricingItem";
 import ChangePlanConfirmModal from "@/components/page/profile/ChangePlanConfirmModal";
+import {PRICING_BENEFIT_LIST} from "@/components/page/landing/pricing-section/PRICING_BENEFIT_LIST";
 
 interface ChangePlanModalProps {
+    userCurrentProductId: string | null;
     userCurrentProductName: string | null;
     onConfirmChangePlan: (productId: string) => void;
     onClickClose: () => void;
 }
 
 function ChangePlanModal({
+    userCurrentProductId,
     userCurrentProductName,
     onConfirmChangePlan,
     onClickClose,
@@ -23,13 +26,13 @@ function ChangePlanModal({
 
     const [productList, setProductList] = useState<ProductData[]>([]);
 
-    const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
+    const [selectedProductId, setSelectedProductId] = useState<string | null>(userCurrentProductId);
 
     const currentProductData = useMemo(() => {
         return productList.find((productData) => {
-            return productData.name === userCurrentProductName;
+            return productData.id === userCurrentProductId;
         }) ?? null;
-    }, [userCurrentProductName, productList]);
+    }, [userCurrentProductId, productList]);
 
     const selectedProductData = useMemo(() => {
         return productList.find((productData) => {
@@ -96,10 +99,11 @@ function ChangePlanModal({
     useEffect(() => {
         const loadProductList = async () => {
             const productList = await polarClientAPI.getPolarProducts();
-
-            setProductList(productList?.sort((a, b) => {
+            const sortedProductList = productList?.sort((a, b) => {
                 return a.price - b.price;
-            }) ?? []);
+            }) ?? [];
+
+            setProductList(sortedProductList);
         }
 
         loadProductList().then(() => {
@@ -164,7 +168,14 @@ function ChangePlanModal({
                                     productName={productData.name}
                                     productDescription={productData.description}
                                     price={productData.price}
-                                    videosPerDay={productData.videosPerDay}
+                                    benefits={PRICING_BENEFIT_LIST.filter((benefit) => {
+                                        return benefit.includedPlanList.includes(productData.planData.planId);
+                                    }).map((benefit) => {
+                                        return {
+                                            description: benefit.description,
+                                            icon: benefit.icon,
+                                        };
+                                    })}
                                     selectedProductId={selectedProductId}
                                     onSelectPlan={onSelectPlan}
                                 />

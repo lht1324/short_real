@@ -1,5 +1,5 @@
 import { ProductData } from "@/api/types/api/polar/products/ProductData";
-import { getFetch, postFetch } from "@/api/client/baseFetch";
+import {deleteFetch, getFetch, postFetch} from "@/api/client/baseFetch";
 import {OrderData} from "@/api/types/api/polar/orders/GetPolarOrdersResponse";
 import {SubscriptionData} from "@/api/types/api/polar/subscriptions/SubscriptionData";
 
@@ -91,6 +91,22 @@ export const polarClientAPI = {
                 prevProductId,
                 newProductId,
             });
+            const postPolarSubscriptionsChangeResult = await response.json();
+
+            if (!postPolarSubscriptionsChangeResult.success) {
+                throw Error(postPolarSubscriptionsChangeResult.error ?? "Unknown error occurred while changing subscription plan.");
+            }
+
+            return true;
+        } catch (error) {
+            console.error("Error requesting Polar subscription change:", error);
+            return false;
+        }
+    },
+
+    async deletePolarSubscriptionsCancel(subscriptionId: string) {
+        try {
+            const response = await deleteFetch(`/api/polar/subscriptions/cancel?subscriptionId=${subscriptionId}`);
             const postPolarSubscriptionsChangeResult = await response.json();
 
             if (!postPolarSubscriptionsChangeResult.success) {

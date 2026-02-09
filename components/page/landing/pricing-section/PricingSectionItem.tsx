@@ -1,4 +1,4 @@
-import {memo, useMemo} from "react";
+import {memo, ReactNode, useMemo} from "react";
 import { Check, Sparkles, Zap, LogIn } from "lucide-react";
 
 interface PricingSectionItemProps {
@@ -7,7 +7,10 @@ interface PricingSectionItemProps {
     currency: string;
     interval: "month" | "year";
     description: string;
-    benefits: string[];
+    benefits: {
+        description: ReactNode;
+        icon: ReactNode;
+    }[];
     isPopular?: boolean;
     videosPerDay: number;
     minimumPrice: number;
@@ -133,14 +136,21 @@ function PricingSectionItem({
 
             {/* 기능 리스트 */}
             <ul className="space-y-4 flex-1 relative z-10">
-                {benefits.map((benefit, index) => (
-                    <li key={index} className="flex items-start gap-3 text-sm">
-                        <div className={`mt-0.5 p-0.5 rounded-full ${isPopular ? 'bg-purple-500/20 text-purple-400' : 'bg-gray-800 text-gray-500'}`}>
-                            <Check size={10} strokeWidth={3} />
+                {benefits.map((benefit, index) => {
+                    const {
+                        description,
+                        icon,
+                    } = benefit;
+
+                    return <li key={index} className="flex items-start gap-3 text-sm">
+                        <div
+                            className={`${isPopular ? 'text-purple-400' : 'text-gray-500'}`}
+                        >
+                            {icon}
                         </div>
-                        <span className="text-gray-300">{benefit}</span>
+                        {description}
                     </li>
-                ))}
+                })}
             </ul>
         </div>
     );

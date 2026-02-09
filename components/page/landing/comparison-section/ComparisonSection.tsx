@@ -42,9 +42,6 @@ function ComparisonSection() {
         }
     }, []);
 
-    useVideoCleanup(badVideoRef);
-    useVideoCleanup(goodVideoRef);
-
     // [최적화] 탭 비활성화(백그라운드) 감지하여 재생/루프 중단 (메모리 누수 방지 핵심)
     useEffect(() => {
         const handleVisibilityChange = () => {
@@ -170,7 +167,7 @@ function ComparisonSection() {
                     </span>
                 </h2>
                 <p className="text-gray-400 text-lg">
-                    See how ShortReal interprets your story compared to others.
+                    See how ShortReal AI interprets your story compared to others.
                 </p>
             </div>
 
@@ -189,7 +186,7 @@ function ComparisonSection() {
                         )}
                         <video
                             ref={badVideoRef}
-                            src="/demo/bad_example.mp4"
+                            src="/assets/demo/demo_bad_example.mp4"
                             className="w-full h-full object-cover transition-all duration-500"
                             muted
                             loop
@@ -264,7 +261,7 @@ function ComparisonSection() {
                         )}
                         <video
                             ref={goodVideoRef}
-                            src="/demo/good_example.mp4"
+                            src={`${process.env.NEXT_PUBLIC_DEMO_ASSETS_URL}/demo_good_example.mp4`}
                             className="w-full h-full object-cover"
                             muted={isMuted}
                             loop
