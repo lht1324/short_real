@@ -71,57 +71,56 @@ export const postImage = task({
 
             const sceneDataWithImageGenPromptList = await Promise.all(sceneDataWithImageGenPromptPromiseList);
 
-            // // TEST!!
-            // await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
-            //
-            // return {
-            //   success: true,
-            //   message: "Generating ImageGenPrompt Test finished."
-            // };
-
-            // 4. 실제 이미지 생성
-            logger.info("Generating images...");
-            for (const sceneData of sceneDataWithImageGenPromptList) {
-                logger.info(`Scene #${sceneData.sceneNumber} postImage() is executed.`);
-
-                if (!sceneData.imageGenPrompt || !sceneData.imageGenPromptSentence) {
-                    await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
-                    throw new Error(`Scene #${sceneData.sceneNumber} imageGenPrompt is not exist.`);
-                }
-
-                const postImageResult = await imageServerAPI.postImage(
-                    sceneData.imageGenPrompt,
-                    sceneData.imageGenPromptSentence,
-                    taskId,
-                    sceneData.sceneNumber,
-                );
-
-                if (!postImageResult.success) {
-                    await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
-                    throw new Error('Failed to generate image.');
-                }
-            }
-
-            // 5. 상태 업데이트
-            const patchVideoGenerationTaskStatusResult = await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, {
-                status: VideoGenerationTaskStatus.GENERATING_VIDEO_PROMPT,
-                scene_breakdown_list: sceneDataWithImageGenPromptList as SceneData[],
-            });
-
-            const checkFinalResult = await taskCheckAndCleanupIfCancelled(patchVideoGenerationTaskStatusResult);
-            if (checkFinalResult) return { status: 'cancelled' };
-
-            // 6. 다음 단계 실행 (Video Prompt 생성) - Fire and Forget
-            const baseUrl = process.env.BASE_URL || "http://localhost:3000";
-            internalFireAndForgetFetch(`${baseUrl}/api/video/process/video?taskId=${taskId}`, {
-                method: 'POST',
-            });
+            // TEST!!
+            await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
 
             return {
-                success: true,
-                message: "Video base images are successfully generated."
+              success: true,
+              message: "Generating ImageGenPrompt Test finished."
             };
 
+            // // 4. 실제 이미지 생성
+            // logger.info("Generating images...");
+            // for (const sceneData of sceneDataWithImageGenPromptList) {
+            //     logger.info(`Scene #${sceneData.sceneNumber} postImage() is executed.`);
+            //
+            //     if (!sceneData.imageGenPrompt || !sceneData.imageGenPromptSentence) {
+            //         await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
+            //         throw new Error(`Scene #${sceneData.sceneNumber} imageGenPrompt is not exist.`);
+            //     }
+            //
+            //     const postImageResult = await imageServerAPI.postImage(
+            //         sceneData.imageGenPrompt,
+            //         sceneData.imageGenPromptSentence,
+            //         taskId,
+            //         sceneData.sceneNumber,
+            //     );
+            //
+            //     if (!postImageResult.success) {
+            //         await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
+            //         throw new Error('Failed to generate image.');
+            //     }
+            // }
+            //
+            // // 5. 상태 업데이트
+            // const patchVideoGenerationTaskStatusResult = await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, {
+            //     status: VideoGenerationTaskStatus.GENERATING_VIDEO_PROMPT,
+            //     scene_breakdown_list: sceneDataWithImageGenPromptList as SceneData[],
+            // });
+            //
+            // const checkFinalResult = await taskCheckAndCleanupIfCancelled(patchVideoGenerationTaskStatusResult);
+            // if (checkFinalResult) return { status: 'cancelled' };
+            //
+            // // 6. 다음 단계 실행 (Video Prompt 생성) - Fire and Forget
+            // const baseUrl = process.env.BASE_URL || "http://localhost:3000";
+            // internalFireAndForgetFetch(`${baseUrl}/api/video/process/video?taskId=${taskId}`, {
+            //     method: 'POST',
+            // });
+            //
+            // return {
+            //     success: true,
+            //     message: "Video base images are successfully generated."
+            // };
         } catch (error) {
             console.error(error);
             await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);

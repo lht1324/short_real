@@ -88,61 +88,61 @@ export const postMasterStyle = task({
                 throw new Error(postMasterStyleInfoResult?.error?.message || 'Failed to generate master style with OpenAI');
             }
 
-            // TEST!!
-            await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
-
-            return {
-                success: true,
-                message: "Generating MasterStyle Test finished."
-            };
-
-            // // 결과 저장 및 상태 업데이트
-            // const masterStylePositivePromptInfo = postMasterStyleInfoResult.masterStyleInfo;
-            // const entityManifestList = postEntityCastingResult.entityManifestList;
-            // const sceneCastingDataList = postEntityCastingResult.sceneCastingDataList;
-            //
-            // const patchVideoGenerationTaskStatusFinalResult = await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, {
-            //     status: VideoGenerationTaskStatus.GENERATING_IMAGE_PROMPT,
-            //     master_style_info: masterStylePositivePromptInfo,
-            //     entity_manifest_list: entityManifestList,
-            //     scene_breakdown_list: sceneDataList.map((sceneData) => {
-            //         const sceneCastingData = sceneCastingDataList?.find((cd) => cd.sceneNumber === sceneData.sceneNumber);
-            //         return {
-            //             ...sceneData,
-            //             sceneVisualDescription: sceneCastingData?.sceneVisualDescription,
-            //             sceneCastingEntityIdList: sceneCastingData?.castIdList,
-            //         };
-            //     })
-            // });
-            //
-            // // 크레딧 차감 로직
-            // const sceneCount = sceneDataList.length;
-            // const totalDuration = sceneDataList.reduce((acc, sceneData) => acc + sceneData.sceneDuration, 0);
-            // const additionalTotalDurationUsage = totalDuration > 30 ? Math.ceil((totalDuration - 30) / 2) * 5 : 0;
-            // const additionalSceneCountUsage = sceneCount > 6 ? (sceneCount - 6) * 5 : 0;
-            // const creditUsage = 100 + additionalTotalDurationUsage + additionalSceneCountUsage;
-            //
-            // const patchUserCreditCountResult = await usersServerAPI.patchUserCreditCountByUserId(videoGenerationTask.user_id, -creditUsage);
-            //
-            // if (!patchUserCreditCountResult) {
-            //     // 크레딧 차감 실패 시에도 일단 진행? 혹은 에러? (기존 로직 따름)
-            //     throw new Error('Failed to patch user credit count.');
-            // }
-            //
-            // const checkFinalResult = await taskCheckAndCleanupIfCancelled(patchVideoGenerationTaskStatusFinalResult);
-            // if (checkFinalResult) return { status: 'cancelled' };
-            //
-            // // 다음 단계 실행 (이미지 생성) - 기존처럼 Fire and Forget 호출
-            // // 주의: 로컬 환경에서는 localhost URL이 필요할 수 있음
-            // const baseUrl = process.env.BASE_URL || "http://localhost:3000";
-            // internalFireAndForgetFetch(`${baseUrl}/api/video/process/image?taskId=${taskId}`, {
-            //     method: 'POST',
-            // });
+            // // TEST!!
+            // await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
             //
             // return {
             //     success: true,
-            //     message: "Master Style Prompt generated successfully"
+            //     message: "Generating MasterStyle Test finished."
             // };
+
+            // 결과 저장 및 상태 업데이트
+            const masterStylePositivePromptInfo = postMasterStyleInfoResult.masterStyleInfo;
+            const entityManifestList = postEntityCastingResult.entityManifestList;
+            const sceneCastingDataList = postEntityCastingResult.sceneCastingDataList;
+
+            const patchVideoGenerationTaskStatusFinalResult = await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, {
+                status: VideoGenerationTaskStatus.GENERATING_IMAGE_PROMPT,
+                master_style_info: masterStylePositivePromptInfo,
+                entity_manifest_list: entityManifestList,
+                scene_breakdown_list: sceneDataList.map((sceneData) => {
+                    const sceneCastingData = sceneCastingDataList?.find((cd) => cd.sceneNumber === sceneData.sceneNumber);
+                    return {
+                        ...sceneData,
+                        sceneVisualDescription: sceneCastingData?.sceneVisualDescription,
+                        sceneCastingEntityIdList: sceneCastingData?.castIdList,
+                    };
+                })
+            });
+
+            // 크레딧 차감 로직
+            const sceneCount = sceneDataList.length;
+            const totalDuration = sceneDataList.reduce((acc, sceneData) => acc + sceneData.sceneDuration, 0);
+            const additionalTotalDurationUsage = totalDuration > 30 ? Math.ceil((totalDuration - 30) / 2) * 5 : 0;
+            const additionalSceneCountUsage = sceneCount > 6 ? (sceneCount - 6) * 5 : 0;
+            const creditUsage = 100 + additionalTotalDurationUsage + additionalSceneCountUsage;
+
+            const patchUserCreditCountResult = await usersServerAPI.patchUserCreditCountByUserId(videoGenerationTask.user_id, -creditUsage);
+
+            if (!patchUserCreditCountResult) {
+                // 크레딧 차감 실패 시에도 일단 진행? 혹은 에러? (기존 로직 따름)
+                throw new Error('Failed to patch user credit count.');
+            }
+
+            const checkFinalResult = await taskCheckAndCleanupIfCancelled(patchVideoGenerationTaskStatusFinalResult);
+            if (checkFinalResult) return { status: 'cancelled' };
+
+            // 다음 단계 실행 (이미지 생성) - 기존처럼 Fire and Forget 호출
+            // 주의: 로컬 환경에서는 localhost URL이 필요할 수 있음
+            const baseUrl = process.env.BASE_URL || "http://localhost:3000";
+            internalFireAndForgetFetch(`${baseUrl}/api/video/process/image?taskId=${taskId}`, {
+                method: 'POST',
+            });
+
+            return {
+                success: true,
+                message: "Master Style Prompt generated successfully"
+            };
         } catch (error) {
             console.error("Task failed:", error);
             // 에러 발생 시 DB에 실패 상태 기록 (중복 호출 방지 위해 catch 블록에서도 처리)

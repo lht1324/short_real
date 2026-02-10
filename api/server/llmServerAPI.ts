@@ -366,7 +366,9 @@ Instruction: Analyze <video_metadata>, <target_aspect_ratio>, <style_guidelines>
                     scene_casting_list_empty_reason: string;
                 } = cleanAndParseJSON(generatedContent);
 
-                console.log(`postEntityCasting() raw content: ${generatedContent}`);
+                logger.info(`postEntityCasting() raw content`, {
+                    rawContent: generatedContent
+                });
 
                 const {
                     entity_manifest_list: entityManifestList,
@@ -385,7 +387,7 @@ Instruction: Analyze <video_metadata>, <target_aspect_ratio>, <style_guidelines>
                             scene_empty_reasoning: sceneEmptyReasoning,
                         } = sceneCastingData;
 
-                        logger.info('Scene #${sceneNumber} Analysis', {
+                        logger.info(`Scene #${sceneNumber} Analysis`, {
                             visualDescription: sceneVisualDescription,
                             castingLogic: castingLogic,
                         })
@@ -514,7 +516,7 @@ Instruction: Analyze <video_metadata>, <target_aspect_ratio>, <style_guidelines>
 Instruction: Analyze <video_metadata>, <target_aspect_ratio>, <style_guidelines>, <full_script_context> and <entity_manifest_list> to generate the \`master_style_info\` JSON output.
 `;
 
-            console.log(`postMasterStyleInfo()`);
+            logger.info(`postMasterStyleInfo()`);
 
             const client = new OpenRouterClient();
 
@@ -543,13 +545,18 @@ Instruction: Analyze <video_metadata>, <target_aspect_ratio>, <style_guidelines>
                     master_style_info: MasterStyleInfo;
                 } = cleanAndParseJSON(generatedContent);
 
-                console.log(`postMasterStyleInfo() raw content: ${generatedContent}`);
+                logger.info(`postMasterStyleInfo() raw content`, {
+                    rawContent: generatedContent
+                });
 
                 const {
                     master_style_info: masterStyleInfo,
                 } = parsedData;
 
-                console.log(`MasterStyleInfo: ${JSON.stringify(masterStyleInfo)}`);
+
+                logger.info(`MasterStyleInfo`, {
+                    masterStyleInfo: masterStyleInfo,
+                });
 
                 return {
                     success: true,
@@ -557,7 +564,9 @@ Instruction: Analyze <video_metadata>, <target_aspect_ratio>, <style_guidelines>
                     masterStyleInfo: masterStyleInfo,
                 };
             } catch (parseError) {
-                console.error('Failed to parse pre-production JSON response:', parseError);
+                logger.error('Failed to parse pre-production JSON response:', {
+                    parseError: parseError,
+                });
                 return {
                     success: false,
                     error: {
@@ -599,19 +608,8 @@ Instruction: Analyze <video_metadata>, <target_aspect_ratio>, <style_guidelines>
         }
     }> {
         try {
-            const apiKey = process.env.DEEPSEEK_API_KEY;
-            if (!apiKey) {
-                return {
-                    success: false,
-                    error: {
-                        message: 'DeepSeek API Key is not configured',
-                        code: 'MISSING_API_KEY'
-                    }
-                };
-            }
-
             const isEntityListNotEmpty = sceneEntityManifestList.length !== 0;
-            const developerMessage = isEntityListNotEmpty
+            const systemMessage = isEntityListNotEmpty
                 ? POST_IMAGE_GEN_PROMPT_PROMPT
                 : POST_IMAGE_GEN_PROMPT_NO_ENTITIES_PROMPT;
 
@@ -654,28 +652,18 @@ Instruction: Generate the scene instruction JSON.
 `}
 `;
 
-            const client = new OpenAI({
-                baseURL: DEEPSEEK_BASE_URL,
-                apiKey: apiKey,
-                timeout: 600 * 1000,
-                maxRetries: 3,
-            });
-            const completion = await client.chat.completions.create({
-                model: DeepSeekModel.DEEPSEEK_THINKING,
-                messages: [
-                    { role: 'system', content: developerMessage },
-                    { role: 'user', content: userMessage }
-                ],
-                response_format: { type: "json_object" },
-                max_completion_tokens: 20480,
+            const client = new OpenRouterClient();
+
+            const generatedContent = await client.createCompletion({
+                model: OpenRouterModel.DEEPSEEK_V_3_2,
+                systemMessage: systemMessage,
+                userMessage: userMessage,
+                reasoning: true,
+                maxCompletionTokens: 20480,
                 temperature: 0.7,
-            });
+            }, "postImageGenPrompt()");
 
-            console.log(`Scene #${sceneNumber} postImageGenPrompt() usage: `, JSON.stringify(completion.usage))
-
-            const generatedContent = completion.choices[0]?.message?.content;
             if (!generatedContent) {
-                console.log("Failed completion: ", JSON.stringify(completion));
                 return {
                     success: false,
                     error: {
@@ -701,7 +689,9 @@ Instruction: Generate the scene instruction JSON.
                     updated_entity_manifest_list: updatedEntityManifestList,
                 } = instructionJSON;
 
-                console.log(`Scene #${sceneNumber} imageGenPrompt: ${JSON.stringify(imageGenPrompt, null, 2)}`);
+                logger.info(`Scene #${sceneNumber} imageGenPrompt`, {
+                    imageGenPrompt: imageGenPrompt,
+                })
 
                 const newEntityManifestList = updatedEntityManifestList ? updatedEntityManifestList.map(instruction => {
                     const originalEntity = sceneEntityManifestList.find((entityManifest) => {
@@ -709,7 +699,7 @@ Instruction: Generate the scene instruction JSON.
                     });
 
                     if (!originalEntity) {
-                        console.warn(`Warning: LLM generated unknown ID '${instruction.id}'`);
+                        logger.warn(`Warning: LLM generated unknown ID '${instruction.id}'`);
                         throw Error("LLM generated unknown ID '${instruction.id}'.")
                     }
 
@@ -734,7 +724,9 @@ Instruction: Generate the scene instruction JSON.
                     styleId as (keyof typeof STYLE_PROMPT_LIBRARY),
                 );
 
-                console.log(`Scene #${sceneNumber} OpticalAndTechnicalOption: ${JSON.stringify(opticalAndTechnicalOption)}`);
+                logger.info(`Scene #${sceneNumber} OpticalAndTechnicalOption`, {
+                    opticalAndTechnicalOption: opticalAndTechnicalOption,
+                })
 
                 const fullImageGenPrompt: FluxPrompt = {
                     ...imageGenPrompt,
@@ -763,8 +755,12 @@ Instruction: Generate the scene instruction JSON.
                 const assembledImageGenPromptSentence = `${cameraPhrases} ${lowerCaseFirst(imageGenPromptSentence)}. ${environmentalAndAtmosphereSentence}. ${opticalAndTechnicalSentence}.`
                     .replaceAll("..", ".");
 
-                console.log(`Scene #${sceneNumber} ImageGenPromptSentence: ${imageGenPromptSentence}`);
-                console.log(`Scene #${sceneNumber} AssembledImageGenPromptSentence: ${assembledImageGenPromptSentence}`);
+                logger.info(`Scene #${sceneNumber} ImageGenPromptSentence`, {
+                    imageGenPromptSentence: imageGenPromptSentence,
+                });
+                logger.info(`Scene #${sceneNumber} AssembledImageGenPromptSentence`, {
+                    assembledImageGenPromptSentence: assembledImageGenPromptSentence,
+                });
 
                 return {
                     success: true,
@@ -773,9 +769,13 @@ Instruction: Generate the scene instruction JSON.
                     sceneEntityManifestList: newEntityManifestList,
                 };
             } catch (jsonError) {
-                console.error('Failed to parse generated JSON:', jsonError);
+                logger.error('Failed to parse generated JSON:', {
+                    jsonError: jsonError,
+                });
 
-                console.log(`Scene #${sceneNumber} raw generated content: ${generatedContent.replace(/[\r\n]+/g, "")}`)
+                logger.info(`Scene #${sceneNumber} raw generated content`, {
+                    rawContent: generatedContent.replace(/[\r\n]+/g, ""),
+                });
                 return {
                     success: false,
                     error: {
@@ -785,7 +785,9 @@ Instruction: Generate the scene instruction JSON.
                 };
             }
         } catch (error) {
-            console.error('OpenAI image generation prompt error:', error);
+            logger.error('OpenAI image generation prompt error:', {
+                error: error
+            });
             return {
                 success: false,
                 error: {

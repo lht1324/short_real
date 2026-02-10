@@ -49,7 +49,7 @@ export class OpenRouterClient {
             apiKey: this.apiKey,
             defaultHeaders: {
                 'HTTP-Referer': process.env.BASE_URL,
-                'X-Title': location,
+                'X-Title': location ?? 'Unknown',
             }
         });
         const messages = [{ role: 'user' as const, content: userMessage }];
