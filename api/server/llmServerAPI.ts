@@ -158,7 +158,7 @@ export const llmServerAPI = {
                 presencePenalty: 0.2,
                 frequencyPenalty: 0.2,
                 maxCompletionTokens: 3072,
-            })
+            }, "postScript()");
 
             if (!generatedContent) {
                 return {
@@ -250,7 +250,7 @@ Instruction: Process the input data and return the JSON output according to the 
                 userMessage: userMessage,
                 reasoning: true,
                 maxCompletionTokens: 8192,
-            });
+            }, "postSceneSegmentation()");
             console.log("Scene segmentation result:", generatedContent);
 
             if (!generatedContent) {
@@ -332,7 +332,7 @@ Instruction: Analyze <video_metadata>, <target_aspect_ratio>, <style_guidelines>
                 userMessage: userMessage,
                 reasoning: true,
                 maxCompletionTokens: 20480,
-            });
+            }, "postEntityCasting()");
 
             if (!generatedContent) {
                 return {
@@ -524,7 +524,7 @@ Instruction: Analyze <video_metadata>, <target_aspect_ratio>, <style_guidelines>
                 userMessage: userMessage,
                 reasoning: true,
                 maxCompletionTokens: 10240,
-            });
+            }, "postMasterStyleInfo()");
 
             if (!generatedContent) {
                 return {

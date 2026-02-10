@@ -32,7 +32,7 @@ export class OpenRouterClient {
         }
     }
 
-    async createCompletion(input: CompletionBaseInput): Promise<string | null> {
+    async createCompletion(input: CompletionBaseInput, location?: string): Promise<string | null> {
         const {
             model,
             systemMessage,
@@ -47,6 +47,10 @@ export class OpenRouterClient {
         const client = new OpenAI({
             baseURL: this.OPEN_ROUTER_BASE_URL,
             apiKey: this.apiKey,
+            defaultHeaders: {
+                'HTTP-Referer': process.env.BASE_URL,
+                'X-Title': location,
+            }
         });
         const messages = [{ role: 'user' as const, content: userMessage }];
 
