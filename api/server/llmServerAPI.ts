@@ -30,6 +30,7 @@ import {GoogleGenAI, SchemaUnion} from "@google/genai";
 import {cleanAndParseJSON} from "@/utils/jsonUtils";
 import {addArticleToWord} from "@/utils/stringUtils";
 import { logger } from "@trigger.dev/sdk";
+import {OpenRouterClient, OpenRouterModel} from "@/lib/OpenRouterClient";
 
 enum DeepSeekModel {
     DEEPSEEK_NON_THINKING = "deepseek-chat",
@@ -38,12 +39,6 @@ enum DeepSeekModel {
 
 enum GeminiModel {
     GEMINI_2_5_FLASH_PREVIEW = "gemini-2.5-flash-preview-09-2025"
-}
-
-enum OpenRouterModel {
-    GPT_4O_MINI = "openai/gpt-4o-mini",
-    DEEPSEEK_V_3_2 = "deepseek/deepseek-v3.2",
-    GEMINI_3_0_FLASH_PREVIEW = "google/gemini-3-flash-preview" // 3.0 Flash 출시 안 됨
 }
 
 const videoGenResponseFormat: SchemaUnion = {
@@ -146,46 +141,24 @@ const videoGenResponseFormat: SchemaUnion = {
 };
 
 const DEEPSEEK_BASE_URL = "https://api.deepseek.com";
-const OPEN_ROUTER_BASE_URL = "https://openrouter.ai/api/v1";
 
 export const llmServerAPI = {
     async postScript(userPrompt: string): Promise<ScriptGenerationResponse | null> {
         try {
-            // OpenAI API 키 확인
-            const apiKey = process.env.OPENROUTER_API_KEY;
-            if (!apiKey) {
-                return {
-                    success: false,
-                    status: 400,
-                    error: 'OpenRouter API Key is not configured',
-                };
-            }
+            const client = new OpenRouterClient();
 
-            // 프롬프트를 OpenAI 형식으로 매핑
-            const systemMessage = POST_SCRIPT_PROMPT;
-
-            // OpenAI SDK 클라이언트 초기화
-            const client = new OpenAI({
-                baseURL: OPEN_ROUTER_BASE_URL,
-                apiKey: apiKey,
-            });
-
-            const completion = await client.chat.completions.create({
+            const generatedContent = await client.createCompletion({
                 model: OpenRouterModel.DEEPSEEK_V_3_2,
-                // model: OpenRouterModel.GPT_4O_MINI,
-                messages: [
-                    { role: 'system', content: systemMessage },
-                    { role: 'user', content: userPrompt }
-                ],
+                systemMessage: POST_SCRIPT_PROMPT,
+                userMessage: userPrompt,
+
                 // [핵심 1] 창의적 글쓰기: 0.7 ~ 0.9 권장 (리포트 4.1)
                 temperature: 0.8,
                 // [핵심 2] 반복 억제: 0.0 ~ 0.5 (리포트 4.3)
-                presence_penalty: 0.2,
-                frequency_penalty: 0.2,
-                max_completion_tokens: 3072,
-            });
-
-            const generatedContent = completion.choices[0]?.message?.content;
+                presencePenalty: 0.2,
+                frequencyPenalty: 0.2,
+                maxCompletionTokens: 3072,
+            })
 
             if (!generatedContent) {
                 return {
@@ -248,13 +221,7 @@ export const llmServerAPI = {
         subtitleSegments: SubtitleSegment[]
     ): Promise<StoryboardData | null> {
         try {
-            // OpenAI API 키 확인
-            const apiKey = process.env.DEEPSEEK_API_KEY;
-            if (!apiKey) {
-                return null;
-            }
-
-            const developerMessage = POST_SCENE_SEGMENTATION_PROMPT;
+            const systemMessage = POST_SCENE_SEGMENTATION_PROMPT;
 
             const currentDate = new Date().toLocaleDateString('en-US', {
                 weekday: 'long',
@@ -275,29 +242,15 @@ export const llmServerAPI = {
 Instruction: Process the input data and return the JSON output according to the schema.
 `;
 
-            // OpenAI SDK 클라이언트 초기화
-            const client = new OpenAI({
-                baseURL: DEEPSEEK_BASE_URL,
-                apiKey: apiKey,
-            });
+            const client = new OpenRouterClient();
 
-            // OpenAI API 호출
-            const completion = await client.chat.completions.create({
-                model: DeepSeekModel.DEEPSEEK_THINKING,
-                messages: [
-                    { role: 'system', content: developerMessage },
-                    {
-                        role: 'user',
-                        content: userMessage,
-                    }
-                ],
-                // [핵심 1] JSON 모드 활성화 (o-series 지원)
-                response_format: { type: "json_object" },
-                // [핵심 2] 복합 추론(타이밍 계산 + 창작)이므로 medium 유지
-                max_completion_tokens: 8192,
+            const generatedContent = await client.createCompletion({
+                model: OpenRouterModel.DEEPSEEK_V_3_2,
+                systemMessage: systemMessage,
+                userMessage: userMessage,
+                reasoning: true,
+                maxCompletionTokens: 8192,
             });
-
-            const generatedContent = completion.choices[0]?.message?.content;
             console.log("Scene segmentation result:", generatedContent);
 
             if (!generatedContent) {
@@ -310,7 +263,7 @@ Instruction: Process the input data and return the JSON output according to the 
                     sceneDataList,
                     videoTitle,
                     videoDescription,
-                } = JSON.parse(generatedContent);
+                } = cleanAndParseJSON(generatedContent);
 
                 return {
                     taskId: taskId,
@@ -351,19 +304,8 @@ Instruction: Process the input data and return the JSON output according to the 
         }
     }> {
         try {
-            const apiKey = process.env.DEEPSEEK_API_KEY;
-            if (!apiKey) {
-                return {
-                    success: false,
-                    error: {
-                        message: 'DeepSeek API Key is not configured',
-                        code: 'MISSING_API_KEY'
-                    }
-                };
-            }
-
             // 수정한 프롬프트 (Pre-Production 역할)
-            const developerMessage = POST_ENTITY_CASTING_PROMPT;
+            const systemMessage = POST_ENTITY_CASTING_PROMPT;
 
             // [수정 3] scriptDataList를 JSON 문자열로 변환하여 컨텍스트 제공
             const userMessage = `
@@ -381,29 +323,18 @@ Instruction: Process the input data and return the JSON output according to the 
 
 Instruction: Analyze <video_metadata>, <target_aspect_ratio>, <style_guidelines> and <full_script_context> to generate the \`scene_casting_list\` and \`entity_manifest_list\` JSON output.
 `;
-            console.log(`postEntityCasting()`);
-            const client = new OpenAI({
-                baseURL: DEEPSEEK_BASE_URL,
-                apiKey: apiKey,
-                timeout: 600 * 1000,
-                maxRetries: 3,
+
+            const client = new OpenRouterClient();
+
+            const generatedContent = await client.createCompletion({
+                model: OpenRouterModel.DEEPSEEK_V_3_2,
+                systemMessage: systemMessage,
+                userMessage: userMessage,
+                reasoning: true,
+                maxCompletionTokens: 20480,
             });
 
-            const completion = await client.chat.completions.create({
-                model: DeepSeekModel.DEEPSEEK_THINKING,
-                messages: [
-                    { role: 'system', content: developerMessage },
-                    { role: 'user', content: userMessage }
-                ],
-                response_format: { type: "json_object" },
-                max_completion_tokens: 20480, // [팁] Entity Manifest가 길어질 수 있으므로 토큰 한도를 넉넉히 늘렸습니다.
-            });
-
-            console.log(`postEntityCasting() usage: `, JSON.stringify(completion.usage))
-
-            const generatedResult = completion.choices[0]?.message?.content;
-
-            if (!generatedResult) {
+            if (!generatedContent) {
                 return {
                     success: false,
                     error: {
@@ -433,9 +364,9 @@ Instruction: Analyze <video_metadata>, <target_aspect_ratio>, <style_guidelines>
                         scene_empty_reasoning: string;
                     }[],
                     scene_casting_list_empty_reason: string;
-                } = cleanAndParseJSON(generatedResult);
+                } = cleanAndParseJSON(generatedContent);
 
-                console.log(`postEntityCasting() raw content: ${generatedResult}`);
+                console.log(`postEntityCasting() raw content: ${generatedContent}`);
 
                 const {
                     entity_manifest_list: entityManifestList,
@@ -554,19 +485,8 @@ Instruction: Analyze <video_metadata>, <target_aspect_ratio>, <style_guidelines>
         }
     }> {
         try {
-            const apiKey = process.env.DEEPSEEK_API_KEY;
-            if (!apiKey) {
-                return {
-                    success: false,
-                    error: {
-                        message: 'DeepSeek API Key is not configured',
-                        code: 'MISSING_API_KEY'
-                    }
-                };
-            }
-
             // 수정한 프롬프트 (Pre-Production 역할)
-            const developerMessage = POST_MASTER_STYLE_INFO_PROMPT;
+            const systemMessage = POST_MASTER_STYLE_INFO_PROMPT;
 
             // [수정 3] scriptDataList를 JSON 문자열로 변환하여 컨텍스트 제공
             const userMessage = `
@@ -595,29 +515,18 @@ Instruction: Analyze <video_metadata>, <target_aspect_ratio>, <style_guidelines>
 `;
 
             console.log(`postMasterStyleInfo()`);
-            const client = new OpenAI({
-                baseURL: DEEPSEEK_BASE_URL,
-                apiKey: apiKey,
-                timeout: 600 * 1000,
-                maxRetries: 3,
+
+            const client = new OpenRouterClient();
+
+            const generatedContent = await client.createCompletion({
+                model: OpenRouterModel.DEEPSEEK_V_3_2,
+                systemMessage: systemMessage,
+                userMessage: userMessage,
+                reasoning: true,
+                maxCompletionTokens: 10240,
             });
 
-            const completion = await client.chat.completions.create({
-                model: DeepSeekModel.DEEPSEEK_THINKING,
-                messages: [
-                    { role: 'system', content: developerMessage },
-                    { role: 'user', content: userMessage }
-                ],
-                response_format: { type: "json_object" },
-                max_completion_tokens: 10240, // [팁] Entity Manifest가 길어질 수 있으므로 토큰 한도를 넉넉히 늘렸습니다.
-            });
-
-            console.log(`postMasterStyleInfo() raw completion: ${JSON.stringify(completion)}`);
-            console.log(`postMasterStylePrompt() usage: `, JSON.stringify(completion.usage))
-
-            const generatedResult = completion.choices[0]?.message?.content;
-
-            if (!generatedResult) {
+            if (!generatedContent) {
                 return {
                     success: false,
                     error: {
@@ -632,9 +541,9 @@ Instruction: Analyze <video_metadata>, <target_aspect_ratio>, <style_guidelines>
                 // 프롬프트의 output_schema와 일치해야 함
                 const parsedData: {
                     master_style_info: MasterStyleInfo;
-                } = cleanAndParseJSON(generatedResult);
+                } = cleanAndParseJSON(generatedContent);
 
-                console.log(`postMasterStyleInfo() raw content: ${generatedResult}`);
+                console.log(`postMasterStyleInfo() raw content: ${generatedContent}`);
 
                 const {
                     master_style_info: masterStyleInfo,
