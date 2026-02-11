@@ -128,82 +128,82 @@ export async function POST(request: NextRequest) {
         });
         const sceneDataWithVideoGenPromptList = await Promise.all(sceneDataWithVideoGenPromptPromiseList);
 
-        // // TEST!!
-        // await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
-        //
-        // return getNextBaseResponse({
-        //     success: true,
-        //     status: 200,
-        //     message: "Generating VideoGenPrompt Test finished."
-        // });
-
-        const patchVideoGenerationTaskResult = await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, {
-            status: VideoGenerationTaskStatus.GENERATING_VIDEO,
-            scene_breakdown_list: sceneDataWithVideoGenPromptList,
-        })
-
-        const checkResultFirst = await taskCheckAndCleanupIfCancelled(patchVideoGenerationTaskResult);
-
-        if (checkResultFirst) {
-            return checkResultFirst;
-        }
-
-        const finalSceneDataList: SceneData[] = [];
-
-        for (const sceneData of sceneDataWithVideoGenPromptList) {
-            const requestId = await videoServerAPI.postVideo(
-                sceneData,
-                taskId,
-            );
-
-            const { error } = await supabase.rpc('update_scene_request_id', {
-                target_task_id: taskId,
-                target_scene_number: sceneData.sceneNumber,
-                new_request_id: requestId,
-            })
-
-            if (error) {
-                console.error(`Scene #${sceneData.sceneNumber} requestId update error: `, error);
-                throw Error(`Updating requestId of Scene #${sceneData.sceneNumber} is failed.`)
-            }
-
-            finalSceneDataList.push({
-                ...sceneData,
-                requestId: requestId,
-            })
-
-            await delay(200);
-            // Replicate 잔고 부족으로 오는 429니 의미가 없음 (분 당 6회 제한)
-            // await delay(1000);
-        }
-
-        // const patchVideoGenerationTaskResult = await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, {
-        //     scene_breakdown_list: finalSceneDataList,
-        // });
-
-        const patchedVideoGenerationTaskResult = await videoGenerationTasksServerAPI.getVideoGenerationTaskById(taskId);
-
-        if (!patchedVideoGenerationTaskResult) {
-            await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
-
-            return getNextBaseResponse({
-                success: false,
-                status: 404,
-                error: 'Video Generation Task not found.'
-            });
-        }
-
-        const checkResultSecond = await taskCheckAndCleanupIfCancelled(patchedVideoGenerationTaskResult);
-
-        if (checkResultSecond) {
-            return checkResultSecond;
-        }
+        // TEST!!
+        await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
 
         return getNextBaseResponse({
             success: true,
             status: 200,
-            message: `${finalSceneDataList.length} scene's video generation requests completed. Task ID: ${patchedVideoGenerationTaskResult.id}`
+            message: "Generating VideoGenPrompt Test finished."
         });
+
+        // const patchVideoGenerationTaskResult = await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, {
+        //     status: VideoGenerationTaskStatus.GENERATING_VIDEO,
+        //     scene_breakdown_list: sceneDataWithVideoGenPromptList,
+        // })
+        //
+        // const checkResultFirst = await taskCheckAndCleanupIfCancelled(patchVideoGenerationTaskResult);
+        //
+        // if (checkResultFirst) {
+        //     return checkResultFirst;
+        // }
+        //
+        // const finalSceneDataList: SceneData[] = [];
+        //
+        // for (const sceneData of sceneDataWithVideoGenPromptList) {
+        //     const requestId = await videoServerAPI.postVideo(
+        //         sceneData,
+        //         taskId,
+        //     );
+        //
+        //     const { error } = await supabase.rpc('update_scene_request_id', {
+        //         target_task_id: taskId,
+        //         target_scene_number: sceneData.sceneNumber,
+        //         new_request_id: requestId,
+        //     })
+        //
+        //     if (error) {
+        //         console.error(`Scene #${sceneData.sceneNumber} requestId update error: `, error);
+        //         throw Error(`Updating requestId of Scene #${sceneData.sceneNumber} is failed.`)
+        //     }
+        //
+        //     finalSceneDataList.push({
+        //         ...sceneData,
+        //         requestId: requestId,
+        //     })
+        //
+        //     await delay(200);
+        //     // Replicate 잔고 부족으로 오는 429니 의미가 없음 (분 당 6회 제한)
+        //     // await delay(1000);
+        // }
+        //
+        // // const patchVideoGenerationTaskResult = await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, {
+        // //     scene_breakdown_list: finalSceneDataList,
+        // // });
+        //
+        // const patchedVideoGenerationTaskResult = await videoGenerationTasksServerAPI.getVideoGenerationTaskById(taskId);
+        //
+        // if (!patchedVideoGenerationTaskResult) {
+        //     await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
+        //
+        //     return getNextBaseResponse({
+        //         success: false,
+        //         status: 404,
+        //         error: 'Video Generation Task not found.'
+        //     });
+        // }
+        //
+        // const checkResultSecond = await taskCheckAndCleanupIfCancelled(patchedVideoGenerationTaskResult);
+        //
+        // if (checkResultSecond) {
+        //     return checkResultSecond;
+        // }
+        //
+        // return getNextBaseResponse({
+        //     success: true,
+        //     status: 200,
+        //     message: `${finalSceneDataList.length} scene's video generation requests completed. Task ID: ${patchedVideoGenerationTaskResult.id}`
+        // });
     } catch (error) {
         console.error(error);
 

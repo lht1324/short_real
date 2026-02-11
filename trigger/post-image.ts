@@ -74,35 +74,7 @@ export const postImage = task({
 
             logger.info(`[Scene #${sceneData.sceneNumber}] Prompt generated successfully.`);
 
-            // TEST !!
-            return {
-                success: true,
-                sceneNumber: sceneData.sceneNumber,
-                // LLM 결과
-                imageGenPrompt: postImageGenPromptResult.imageGenPrompt,
-                imageGenPromptSentence: postImageGenPromptResult.imageGenPromptSentence,
-                sceneEntityManifestList: postImageGenPromptResult.sceneEntityManifestList,
-            };
-            // // ----------------------------------------------------------------
-            // // 2. 실제 이미지 생성 (기존 테스트 코드 복원 및 적용)
-            // // ----------------------------------------------------------------
-            // logger.info(`[Scene #${sceneData.sceneNumber}] Generating actual image...`);
-            //
-            // const postImageResult = await imageServerAPI.postImage(
-            //     postImageGenPromptResult.imageGenPrompt,
-            //     postImageGenPromptResult.imageGenPromptSentence,
-            //     taskId,
-            //     sceneData.sceneNumber,
-            // );
-            //
-            // if (!postImageResult.success) {
-            //     // 이미지 생성 실패 시 에러 던짐 -> 재시도 트리거
-            //     throw new Error(`Image Generation Failed: ${postImageResult.error?.message ?? "Unknown error"}`);
-            // }
-            //
-            // logger.info(`[Scene #${sceneData.sceneNumber}] All steps completed successfully.`);
-            //
-            // // Orchestrator에게 반환할 최종 결과
+            // // TEST !!
             // return {
             //     success: true,
             //     sceneNumber: sceneData.sceneNumber,
@@ -111,6 +83,35 @@ export const postImage = task({
             //     imageGenPromptSentence: postImageGenPromptResult.imageGenPromptSentence,
             //     sceneEntityManifestList: postImageGenPromptResult.sceneEntityManifestList,
             // };
+
+            // ----------------------------------------------------------------
+            // 2. 실제 이미지 생성 (기존 테스트 코드 복원 및 적용)
+            // ----------------------------------------------------------------
+            logger.info(`[Scene #${sceneData.sceneNumber}] Generating actual image...`);
+
+            const postImageResult = await imageServerAPI.postImage(
+                postImageGenPromptResult.imageGenPrompt,
+                postImageGenPromptResult.imageGenPromptSentence,
+                taskId,
+                sceneData.sceneNumber,
+            );
+
+            if (!postImageResult.success) {
+                // 이미지 생성 실패 시 에러 던짐 -> 재시도 트리거
+                throw new Error(`Image Generation Failed: ${postImageResult.error?.message ?? "Unknown error"}`);
+            }
+
+            logger.info(`[Scene #${sceneData.sceneNumber}] All steps completed successfully.`);
+
+            // Orchestrator에게 반환할 최종 결과
+            return {
+                success: true,
+                sceneNumber: sceneData.sceneNumber,
+                // LLM 결과
+                imageGenPrompt: postImageGenPromptResult.imageGenPrompt,
+                imageGenPromptSentence: postImageGenPromptResult.imageGenPromptSentence,
+                sceneEntityManifestList: postImageGenPromptResult.sceneEntityManifestList,
+            };
         } catch (error) {
             logger.error(`[Scene #${sceneData.sceneNumber}] Process Failed:`, {
                 error

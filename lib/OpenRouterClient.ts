@@ -14,6 +14,8 @@ export interface CompletionBaseInput {
     maxCompletionTokens: number;
 
     // Optional
+    imageBase64List?: string[];
+    imageDetail?: "auto" | "low" | "high";
     reasoning?: boolean;
     temperature?: number;
     presencePenalty?: number;
@@ -38,6 +40,8 @@ export class OpenRouterClient {
             systemMessage,
             userMessage,
             maxCompletionTokens,
+            imageBase64List,
+            imageDetail,
             reasoning,
             temperature,
             presencePenalty,
@@ -53,19 +57,44 @@ export class OpenRouterClient {
                 'Connection': 'close',
             }
         });
-        const messages = [{ role: 'user' as const, content: userMessage }];
+
+        const userContent: OpenAI.Chat.Completions.ChatCompletionContentPart[] = [
+            { type: "text", text: userMessage }
+        ];
+
+        if (imageBase64List && imageBase64List.length > 0) {
+            // 변환 성공한 이미지만 Payload에 추가
+            imageBase64List.forEach((base64Str, index) => {
+                if (base64Str) {
+                    userContent.push({
+                        type: "image_url",
+                        image_url: {
+                            url: `data:image/png;base64,${base64Str}`, // [!code highlight] 이제 URL이 아닌 Base64 Data URI가 들어갑니다
+                            detail: imageDetail ?? "auto",
+                        }
+                    });
+                } else {
+                    console.warn(`Skipping failed image: ${imageBase64List[index]}`);
+                }
+            });
+        }
+
+        const messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [
+            ...(!!systemMessage ? [{ role: 'system' as const, content: systemMessage }] : []),
+            {
+                role: 'user' as const,
+                content: userContent
+            }
+        ];
 
         const completion = await client.chat.completions.create({
             model: model,
-            messages: [
-                ...(!!systemMessage ? [{ role: 'system' as const, content: systemMessage }] : []),
-                ...messages,
-            ],
+            messages: messages,
             response_format: { type: "json_object" },
             max_completion_tokens: maxCompletionTokens,
 
             // @ts-expect-error: OpenRouter specific parameter not in OpenAI SDK types
-            reasoning: { enabled: !!reasoning },
+            reasoning: { enabled: reasoning === true },
             provider: {
                 sort: {
                     by: 'throughput',

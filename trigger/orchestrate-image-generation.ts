@@ -73,68 +73,68 @@ export const orchestrateImageGeneration = task({
             // 3-2. 전부 성공 시 -> 다음 단계 진행
             logger.info(`[Orchestrator] All ${successfulRuns.length} scenes completed successfully.`);
 
-            // TEST !!
-            await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
-            return {
-                success: true,
-                message: "Image generation test completed and next step triggered.",
-                completedScenes: successfulRuns.length
-            };
-
-            // const imageGenPromptDataList = successfulRuns.map((run) => {
-            //     const {
-            //         sceneNumber,
-            //         imageGenPrompt,
-            //         imageGenPromptSentence,
-            //         sceneEntityManifestList,
-            //     } = run.output;
-            //
-            //     return {
-            //         sceneNumber,
-            //         imageGenPrompt,
-            //         imageGenPromptSentence,
-            //         sceneEntityManifestList,
-            //     };
-            // })
-            // await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, {
-            //     status: VideoGenerationTaskStatus.GENERATING_VIDEO_PROMPT,
-            //     scene_breakdown_list: sceneDataList.map((sceneData) => {
-            //         const imageGenPromptData = imageGenPromptDataList.find((imageGenPromptData) => {
-            //             return imageGenPromptData.sceneNumber === sceneData.sceneNumber;
-            //         });
-            //
-            //         if (!imageGenPromptData) {
-            //             throw Error("ImageGenPromptDataList is invalid.");
-            //         }
-            //
-            //         const {
-            //             imageGenPrompt,
-            //             imageGenPromptSentence,
-            //             sceneEntityManifestList,
-            //         } = imageGenPromptData;
-            //
-            //         return {
-            //             ...sceneData,
-            //             imageGenPrompt: imageGenPrompt,
-            //             imageGenPromptSentence: imageGenPromptSentence,
-            //             sceneEntityManifestList: sceneEntityManifestList,
-            //         };
-            //     })
-            // });
-            //
-            // // 4. 다음 단계(비디오 프롬프트 생성) 호출 (Fire-and-Forget)
-            // const baseUrl = process.env.BASE_URL || "http://localhost:3000";
-            // logger.info(`[Orchestrator] Triggering next step: ${baseUrl}/api/video/process/video`);
-            //
-            // internalFireAndForgetFetch(`${baseUrl}/api/video/process/video?taskId=${taskId}`, {
-            //     method: 'POST',
-            // });
-            //
+            // // TEST !!
+            // await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
             // return {
             //     success: true,
-            //     message: "Image generation completed and next step triggered.",
+            //     message: "Image generation test completed and next step triggered.",
             //     completedScenes: successfulRuns.length
             // };
+
+            const imageGenPromptDataList = successfulRuns.map((run) => {
+                const {
+                    sceneNumber,
+                    imageGenPrompt,
+                    imageGenPromptSentence,
+                    sceneEntityManifestList,
+                } = run.output;
+
+                return {
+                    sceneNumber,
+                    imageGenPrompt,
+                    imageGenPromptSentence,
+                    sceneEntityManifestList,
+                };
+            })
+            await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, {
+                status: VideoGenerationTaskStatus.GENERATING_VIDEO_PROMPT,
+                scene_breakdown_list: sceneDataList.map((sceneData) => {
+                    const imageGenPromptData = imageGenPromptDataList.find((imageGenPromptData) => {
+                        return imageGenPromptData.sceneNumber === sceneData.sceneNumber;
+                    });
+
+                    if (!imageGenPromptData) {
+                        throw Error("ImageGenPromptDataList is invalid.");
+                    }
+
+                    const {
+                        imageGenPrompt,
+                        imageGenPromptSentence,
+                        sceneEntityManifestList,
+                    } = imageGenPromptData;
+
+                    return {
+                        ...sceneData,
+                        imageGenPrompt: imageGenPrompt,
+                        imageGenPromptSentence: imageGenPromptSentence,
+                        sceneEntityManifestList: sceneEntityManifestList,
+                    };
+                })
+            });
+
+            // 4. 다음 단계(비디오 프롬프트 생성) 호출 (Fire-and-Forget)
+            const baseUrl = process.env.BASE_URL;
+            logger.info(`[Orchestrator] Triggering next step: ${baseUrl}/api/video/process/video`);
+
+            internalFireAndForgetFetch(`${baseUrl}/api/video/process/video?taskId=${taskId}`, {
+                method: 'POST',
+            });
+
+            return {
+                success: true,
+                message: "Image generation completed and next step triggered.",
+                completedScenes: successfulRuns.length
+            };
         } catch (error) {
             logger.error("[Orchestrator] Fatal error:", {
                 error

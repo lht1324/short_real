@@ -814,20 +814,8 @@ Instruction: Generate the scene instruction JSON.
         error?: { message: string; code: string }
     }> {
         try {
-            // OpenAI API 키 확인
-            const apiKey = process.env.GEMINI_API_KEY;
-            if (!apiKey) {
-                return {
-                    success: false,
-                    error: {
-                        message: 'Gemini API Key is not configured',
-                        code: 'MISSING_API_KEY'
-                    }
-                };
-            }
-
             const isEntityListNotEmpty = entityManifestList.length !== 0;
-            const developerMessage = POST_VIDEO_GEN_PROMPT_PROMPT;
+            const systemMessage = POST_VIDEO_GEN_PROMPT_PROMPT;
 
             // [핵심] Physics Profile을 기반으로 물리 법칙 텍스트 생성 (Code Level Injection)
             // 메인 히어로 또는 씬에 등장하는 주요 엔티티들의 물리 속성을 추출하여 문자열로 변환
@@ -991,38 +979,16 @@ Instruction: Generate the scene instruction JSON.
 </input_context>
 `;
 
-            const client = new GoogleGenAI({ apiKey });
-            const response = await client.models.generateContent({
-                model: GeminiModel.GEMINI_2_5_FLASH_PREVIEW,
-                contents: [
-                    {
-                        role: 'user',
-                        parts: [
-                            {
-                                text: `
-${developerMessage}
+            const client = new OpenRouterClient();
 
-${userMessage}
-`
-                            },
-                            {
-                                inlineData: {
-                                    mimeType: 'image/jpeg',
-                                    data: imageBase64,
-                                }
-                            }
-                        ]
-                    }
-                ],
-                config: {
-                    responseMimeType: 'application/json',
-                    responseSchema: videoGenResponseFormat,
-                    temperature: 0.7,
-                }
-            })
-
-            console.log(`Scene #${sceneNumber} postVideoGenPrompt() usage: `, JSON.stringify(response))
-            const generatedContent = response.text;
+            const generatedContent = await client.createCompletion({
+                model: OpenRouterModel.GEMINI_3_0_FLASH_PREVIEW,
+                systemMessage: systemMessage,
+                userMessage: userMessage,
+                imageBase64List: [imageBase64],
+                imageDetail: "high",
+                maxCompletionTokens: 16384,
+            }, `Scene #${sceneNumber} postVideoGenPrompt()`);
 
             if (!generatedContent) {
                 return {
@@ -1084,7 +1050,8 @@ ${userMessage}
                         style: string;
                     };
                     video_gen_prompt: string;
-                } = JSON.parse(generatedContent);
+                } = cleanAndParseJSON(generatedContent);
+
                 const {
                     scene_fundamental_data: {
                         scene_summary: sceneSummary,
