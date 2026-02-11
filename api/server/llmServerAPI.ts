@@ -661,7 +661,7 @@ Instruction: Generate the scene instruction JSON.
                 reasoning: true,
                 maxCompletionTokens: 20480,
                 temperature: 0.7,
-            }, "postImageGenPrompt()");
+            }, `Scene #${sceneNumber} postImageGenPrompt()`);
 
             if (!generatedContent) {
                 return {

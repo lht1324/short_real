@@ -48,8 +48,9 @@ export class OpenRouterClient {
             baseURL: this.OPEN_ROUTER_BASE_URL,
             apiKey: this.apiKey,
             defaultHeaders: {
-                'HTTP-Referer': process.env.BASE_URL,
+                'HTTP-Referer': `${process.env.BASE_URL}${location ? `?location=${location?.replaceAll(' ', '_')}` : ""}`,
                 'X-Title': location ?? 'Unknown',
+                'Connection': 'close',
             }
         });
         const messages = [{ role: 'user' as const, content: userMessage }];
@@ -65,56 +66,17 @@ export class OpenRouterClient {
 
             // @ts-expect-error: OpenRouter specific parameter not in OpenAI SDK types
             reasoning: { enabled: !!reasoning },
+            provider: {
+                sort: {
+                    by: 'throughput',
+                    partition: 'none',
+                },
+            },
             temperature: temperature,
             presence_penalty: presencePenalty,
             frequency_penalty: frequencyPenalty,
         });
 
         return completion.choices[0]?.message?.content;
-    }
-
-    async createCompletions(input: CompletionBaseInput): Promise<{
-        completionIndex: number;
-        completion: string | null;
-    }[]> {
-        const {
-            model,
-            systemMessage,
-            userMessage,
-            maxCompletionTokens,
-            reasoning,
-            temperature,
-            presencePenalty,
-            frequencyPenalty,
-        } = input;
-
-        const client = new OpenAI({
-            baseURL: this.OPEN_ROUTER_BASE_URL,
-            apiKey: this.apiKey,
-        });
-        const messages = [{ role: 'user' as const, content: userMessage }];
-
-        const completion = await client.chat.completions.create({
-            model: model,
-            messages: [
-                ...(!!systemMessage ? [{ role: 'system' as const, content: systemMessage }] : []),
-                ...messages,
-            ],
-            response_format: { type: "json_object" },
-            max_completion_tokens: maxCompletionTokens,
-
-            // @ts-expect-error: OpenRouter specific parameter not in OpenAI SDK types
-            reasoning: { enabled: !!reasoning },
-            temperature: temperature,
-            presence_penalty: presencePenalty,
-            frequency_penalty: frequencyPenalty,
-        });
-
-        return completion.choices.map((choice, index) => {
-            return {
-                completionIndex: index,
-                completion: choice.message.content,
-            };
-        });
     }
 }
