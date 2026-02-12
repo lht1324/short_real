@@ -1,146 +1,39 @@
-import OpenAI from 'openai';
-import { ScriptGenerationResponse } from "@/api/types/open-ai/ScriptGeneration";
-import { StyleGenerationParams } from "@/api/types/supabase/Styles";
-import { SceneData, SubtitleSegment } from "@/api/types/supabase/VideoGenerationTasks";
-import { MasterStyleInfo } from "@/api/types/supabase/MasterStyleInfo";
-import { VIDEO_ASPECT_RATIOS, VideoAspectRatio } from "@/lib/ReplicateData";
-import { StoryboardData } from "@/api/types/api/open-ai/scene/PostOpenAISceneResponse";
 import {
     POST_SCRIPT_PROMPT,
     POST_SCENE_SEGMENTATION_PROMPT,
-    POST_ENTITY_CASTING_PROMPT,
+    POST_SCENE_CASTING_DATA_LIST_PROMPT,
+    POST_ENTITY_MANIFEST_LIST,
     POST_MASTER_STYLE_INFO_PROMPT,
     POST_IMAGE_GEN_PROMPT_PROMPT,
     POST_IMAGE_GEN_PROMPT_NO_ENTITIES_PROMPT,
     POST_VIDEO_GEN_PROMPT_PROMPT,
     POST_MUSIC_GENERATION_DATA_PROMPT,
 } from "@/api/types/open-ai/LLMPrompts";
-import {MusicGenerationData} from "@/api/types/suno-api/MusicGenerationData";
-import {Entity, InitialEntityManifestItem} from "@/api/types/open-ai/Entity";
-import {PHYSICS_LIBRARY} from "@/api/types/open-ai/PhysicsPromptLibrary";
-import {FluxPrompt, FluxPromptSubject} from "@/api/types/open-ai/FluxPrompt";
+import { PHYSICS_LIBRARY } from "@/api/types/open-ai/PhysicsPromptLibrary";
+import { STYLE_PROMPT_LIBRARY } from "@/api/types/open-ai/StylePromptLibrary";
+import { VIDEO_ASPECT_RATIOS, VideoAspectRatio } from "@/lib/ReplicateData";
+import { ScriptGenerationResponse } from "@/api/types/open-ai/ScriptGeneration";
+import { StyleGenerationParams } from "@/api/types/supabase/Styles";
+import { SceneData, SubtitleSegment } from "@/api/types/supabase/VideoGenerationTasks";
+import { StoryboardData } from "@/api/types/api/open-ai/scene/PostOpenAISceneResponse";
+import { Entity, InitialEntityManifestItem } from "@/api/types/open-ai/Entity";
+import { MasterStyleInfo } from "@/api/types/supabase/MasterStyleInfo";
+import { FluxPrompt, FluxPromptSubject } from "@/api/types/open-ai/FluxPrompt";
+import { MusicGenerationData } from "@/api/types/suno-api/MusicGenerationData";
 import {
+    composeOpticalAndTechnicalOption,
     assembleEnvironmentalAndAtmosphereSentence,
-    assembleFullVideoGenPromptSentence, assembleOpticalAndTechnicalSentence,
-    composeOpticalAndTechnicalOption, generateTechnicalLensString, subjectVectorsToCameraVectorString,
-    surgicallyReplaceVideoGenPromptByCameraKey, TechnicalIntent
+    assembleOpticalAndTechnicalSentence,
+    subjectVectorsToCameraVectorString,
+    generateTechnicalLensString,
+    assembleFullVideoGenPromptSentence,
+    surgicallyReplaceVideoGenPromptByCameraKey,
+    TechnicalIntent,
 } from "@/utils/promptUtils";
-import {STYLE_PROMPT_LIBRARY} from "@/api/types/open-ai/StylePromptLibrary";
-import {GoogleGenAI, SchemaUnion} from "@google/genai";
-import {cleanAndParseJSON} from "@/utils/jsonUtils";
-import {addArticleToWord} from "@/utils/stringUtils";
+import { cleanAndParseJSON } from "@/utils/jsonUtils";
+import { addArticleToWord } from "@/utils/stringUtils";
 import { logger } from "@trigger.dev/sdk";
-import {OpenRouterClient, OpenRouterModel} from "@/lib/OpenRouterClient";
-
-enum DeepSeekModel {
-    DEEPSEEK_NON_THINKING = "deepseek-chat",
-    DEEPSEEK_THINKING = "deepseek-reasoner",
-}
-
-enum GeminiModel {
-    GEMINI_2_5_FLASH_PREVIEW = "gemini-2.5-flash-preview-09-2025"
-}
-
-const videoGenResponseFormat: SchemaUnion = {
-    type: "OBJECT",
-    properties: {
-        logical_bridge: {
-            type: "OBJECT",
-            properties: {
-                scene_fundamental_data: {
-                    type: "OBJECT",
-                    properties: {
-                        scene_summary: { type: "STRING" },
-                        scene_summary_reason: { type: "STRING" },
-                        primary_movement: { type: "STRING" },
-                        primary_movement_reason: { type: "STRING" },
-                        narrative_vibe: { type: "STRING", enum: ["NORMAL", "CHAOTIC", "COMBAT", "ANXIOUS", "CATASTROPHIC", "VERTIGO", "SHOCK", "DREAMY", "SURREAL", "EMOTIONAL", "FOCUS"] },
-                        narrative_vibe_reason: { type: "STRING" },
-                        intensity_tier: { type: "STRING", enum: ["VERY_LOW", "LOW", "HIGH", "VERY_HIGH"] },
-                        intensity_tier_selected_reason: { type: "STRING" },
-                    },
-                    required: ["scene_summary", "scene_summary_reason", "primary_movement", "primary_movement_reason", "narrative_vibe", "narrative_vibe_reason", "intensity_tier", "intensity_tier_selected_reason"],
-                },
-                identity_logic: { type: "STRING" },
-                action_focus: { type: "STRING" },
-                primary_narrative_block: {
-                    type: "ARRAY",
-                    items: {
-                        type: "OBJECT",
-                        properties: {
-                            entity_id: { type: "STRING" },
-                            raw_sentence: { type: "STRING" },
-                            action_type: { type: "STRING" },
-                            action_type_reason: { type: "STRING" },
-                            verb_reason: { type: "STRING" },
-                            adverb_reason: { type: "STRING" },
-                        },
-                        required: ["entity_id", "raw_sentence", "action_type", "action_type_reason", "verb_reason", "adverb_reason"],
-                    }
-                },
-                atmospheric_lighting_delta: {
-                    type: "ARRAY",
-                    items: {
-                        type: "OBJECT",
-                        properties: {
-                            selected_atmospheric_or_lighting_layer: { type: "STRING" },
-                            selected_reason: { type: "STRING" },
-                        },
-                        required: ["selected_atmospheric_or_lighting_layer", "selected_reason"],
-                    }
-                },
-                cinematic_camera_vectors: {
-                    type: "OBJECT",
-                    properties: {
-                        // Subject & Camera Axis Ref: [X: Screen Left <-> Screen Right], [Y: Screen Bottom <-> Screen Top], [Z: Deep Background <-> Screen Surface]
-                        subject_vectors: {
-                            type: "OBJECT",
-                            properties: {
-                                sx: { type: "STRING", enum: ["$-X$", "$0X$", "$+X$"] },
-                                sy: { type: "STRING", enum: ["$-Y$", "$0Y$", "$+Y$"] },
-                                sz: { type: "STRING", enum: ["$-Z$", "$0Z$", "$+Z$"] },
-                            },
-                            required: ["sx", "sy", "sz"],
-                        },
-                        subject_vectors_reasoning: { type: "STRING" },
-                    },
-                    required: ["subject_vectors", "subject_vectors_reasoning"],
-                },
-                style: {
-                    type: "OBJECT",
-                    properties: {
-                        slot_1: { type: "STRING" },
-                        slot_2: { type: "STRING" },
-                        slot_1_reason: { type: "STRING" },
-                        slot_2_reason: { type: "STRING" },
-                    },
-                    required: ["slot_1", "slot_2", "slot_1_reason", "slot_2_reason"],
-                }
-            },
-            required: ["scene_fundamental_data", "identity_logic", "action_focus", "primary_narrative_block", "atmospheric_lighting_delta", "cinematic_camera_vectors", "style"],
-        },
-        reasoning: { type: "STRING" },
-        final_output_structure: {
-            type: "OBJECT",
-            properties: {
-                primary_narrative_block: { type: "STRING" },
-                atmospheric_lighting_delta: { type: "STRING" },
-                cinematic_camera_vector: { type: "STRING" },
-                style: { type: "STRING" },
-            },
-            required: ["primary_narrative_block", "atmospheric_lighting_delta", "cinematic_camera_vector", "style"],
-        },
-        video_gen_prompt: { type: "STRING" },
-    },
-    required: [
-        "logical_bridge",
-        "reasoning",
-        "final_output_structure",
-        "video_gen_prompt",
-    ],
-};
-
-const DEEPSEEK_BASE_URL = "https://api.deepseek.com";
+import { OpenRouterClient, OpenRouterModel } from "@/lib/OpenRouterClient";
 
 export const llmServerAPI = {
     async postScript(userPrompt: string): Promise<ScriptGenerationResponse | null> {
@@ -281,7 +174,7 @@ Instruction: Process the input data and return the JSON output according to the 
         }
     },
 
-    async postEntityCasting(
+    async postSceneCastingDataList(
         scriptDataList: {
             sceneNumber: number;
             sceneNarration: string;
@@ -292,7 +185,6 @@ Instruction: Process the input data and return the JSON output according to the 
         aspectRatio: VideoAspectRatio = VIDEO_ASPECT_RATIOS.PORTRAIT_9_16
     ): Promise<{
         success: boolean;
-        entityManifestList?: InitialEntityManifestItem[];
         sceneCastingDataList?: {
             sceneNumber: number;
             castIdList: string[];
@@ -305,7 +197,7 @@ Instruction: Process the input data and return the JSON output according to the 
     }> {
         try {
             // 수정한 프롬프트 (Pre-Production 역할)
-            const systemMessage = POST_ENTITY_CASTING_PROMPT;
+            const systemMessage = POST_SCENE_CASTING_DATA_LIST_PROMPT;
 
             // [수정 3] scriptDataList를 JSON 문자열로 변환하여 컨텍스트 제공
             const userMessage = `
@@ -332,7 +224,7 @@ Instruction: Analyze <video_metadata>, <target_aspect_ratio>, <style_guidelines>
                 userMessage: userMessage,
                 reasoning: true,
                 maxCompletionTokens: 20480,
-            }, "postEntityCasting()");
+            }, "postSceneCastingDataList()");
 
             if (!generatedContent) {
                 return {
@@ -348,7 +240,6 @@ Instruction: Analyze <video_metadata>, <target_aspect_ratio>, <style_guidelines>
                 // [수정 4] 변경된 JSON 구조에 맞춰 파싱 (masterStyle + entityManifest)
                 // 프롬프트의 output_schema와 일치해야 함
                 const parsedData: {
-                    entity_manifest_list: InitialEntityManifestItem[];
                     scene_casting_list: {
                         scene_number: number;
                         scene_visual_description: string;
@@ -371,7 +262,6 @@ Instruction: Analyze <video_metadata>, <target_aspect_ratio>, <style_guidelines>
                 });
 
                 const {
-                    entity_manifest_list: entityManifestList,
                     scene_casting_list: sceneCastingList,
                     scene_casting_list_empty_reason: sceneCastingListEmptyReason,
                 } = parsedData;
@@ -423,15 +313,9 @@ Instruction: Analyze <video_metadata>, <target_aspect_ratio>, <style_guidelines>
                         reason: sceneCastingListEmptyReason
                     });
                 }
-                logger.info(`Final Entity Manifest`, {
-                    entityIds: entityManifestList.map((entity) => entity.id),
-                    totalCount: entityManifestList.length
-                });
 
                 return {
                     success: true,
-                    // 구조 분해 할당
-                    entityManifestList: entityManifestList, // 추출된 캐릭터 시트 반환
                     sceneCastingDataList: sceneCastingList.map((sceneCasting) => {
                         const {
                             scene_number: sceneNumber,
@@ -445,6 +329,118 @@ Instruction: Analyze <video_metadata>, <target_aspect_ratio>, <style_guidelines>
                             sceneVisualDescription: sceneVisualDescription,
                         }
                     })
+                };
+            } catch (parseError) {
+                console.error('Failed to parse pre-production JSON response:', parseError);
+                return {
+                    success: false,
+                    error: {
+                        message: 'Failed to parse JSON response',
+                        code: 'PARSE_ERROR'
+                    }
+                };
+            }
+        } catch (error) {
+            return {
+                success: false,
+                error: {
+                    message: error instanceof Error ? error.message : 'Unknown error occurred',
+                    code: 'INTERNAL_ERROR'
+                }
+            };
+        }
+    },
+
+    async postEntityManifestList(
+        scriptDataList: {
+            sceneNumber: number;
+            sceneNarration: string;
+        }[],
+        videoTitle: string,
+        videoDescription: string,
+        videoDuration: number,
+        sceneCastingDataList: {
+            sceneNumber: number;
+            castIdList: string[];
+            sceneVisualDescription: string;
+        }[],
+        aspectRatio: VideoAspectRatio = VIDEO_ASPECT_RATIOS.PORTRAIT_9_16
+    ): Promise<{
+        success: boolean;
+        entityManifestList?: InitialEntityManifestItem[];
+        error?: {
+            message: string;
+            code: string
+        }
+    }> {
+        try {
+            // 수정한 프롬프트 (Pre-Production 역할)
+            const systemMessage = POST_ENTITY_MANIFEST_LIST;
+
+            // [수정 3] scriptDataList를 JSON 문자열로 변환하여 컨텍스트 제공
+            const userMessage = `
+<input_data>
+  <video_metadata>
+    <video_title>${videoTitle}</video_title>
+    <video_description>${videoDescription}</video_description>
+    <video_duration>${videoDuration} secs</video_duration>
+    <target_aspect_ratio>${aspectRatio}</target_aspect_ratio>
+  </video_metadata>
+  <full_script_context>
+    ${JSON.stringify(scriptDataList, null, 2)}
+  </full_script_context>
+  <scene_casting_list>
+    ${JSON.stringify(sceneCastingDataList, null, 2)}
+  </scene_casting_list>
+</input_data>
+
+Instruction: Analyze <video_metadata>, <target_aspect_ratio>, <style_guidelines> and <full_script_context> to generate the \`scene_casting_list\` and \`entity_manifest_list\` JSON output.
+`;
+
+            const client = new OpenRouterClient();
+
+            const generatedContent = await client.createCompletion({
+                model: OpenRouterModel.DEEPSEEK_V_3_2,
+                systemMessage: systemMessage,
+                userMessage: userMessage,
+                reasoning: true,
+                maxCompletionTokens: 20480,
+            }, "postEntityManifestList()");
+
+            if (!generatedContent) {
+                return {
+                    success: false,
+                    error: {
+                        message: 'No response generated from OpenAI',
+                        code: 'EMPTY_RESPONSE'
+                    }
+                };
+            }
+
+            try {
+                // [수정 4] 변경된 JSON 구조에 맞춰 파싱 (masterStyle + entityManifest)
+                // 프롬프트의 output_schema와 일치해야 함
+                const parsedData: {
+                    entity_manifest_list: InitialEntityManifestItem[];
+                } = cleanAndParseJSON(generatedContent);
+
+                logger.info(`postEntityCasting() raw content`, {
+                    rawContent: generatedContent
+                });
+
+                const {
+                    entity_manifest_list: entityManifestList,
+                } = parsedData;
+
+                logger.info(`Final Entity Manifest List`, {
+                    entityIds: entityManifestList.map((entity) => entity.id),
+                    totalCount: entityManifestList.length
+                });
+
+                return {
+                    success: true,
+                    // 구조 분해 할당
+                    entityManifestList: entityManifestList, // 추출된 캐릭터 시트 반환
                 };
             } catch (parseError) {
                 console.error('Failed to parse pre-production JSON response:', parseError);
@@ -1224,16 +1220,7 @@ Instruction: Generate the scene instruction JSON.
         error?: string
     }> {
         try {
-            const apiKey = process.env.DEEPSEEK_API_KEY;
-            if (!apiKey) {
-                return {
-                    success: false,
-                    status: 400,
-                    error: 'DeepSeek API Key is not configured',
-                };
-            }
-
-            const developerMessage = POST_MUSIC_GENERATION_DATA_PROMPT;
+            const systemMessage = POST_MUSIC_GENERATION_DATA_PROMPT;
 
 
             // AI에 전달할 데이터를 명확한 구조로 재구성
@@ -1283,22 +1270,14 @@ Instruction: Generate the scene instruction JSON.
 </input_data>
 `;
 
-            const client = new OpenAI({
-                baseURL: DEEPSEEK_BASE_URL,
-                apiKey: apiKey,
-            });
+            const client = new OpenRouterClient();
 
-            const completion = await client.chat.completions.create({
-                model: DeepSeekModel.DEEPSEEK_THINKING,
-                messages: [
-                    { role: 'system', content: developerMessage },
-                    { role: 'user', content: userMessage }
-                ],
-                response_format: { type: 'json_object' },
-                max_completion_tokens: 4096,
-            });
-
-            const generatedContent = completion.choices[0]?.message?.content;
+            const generatedContent = await client.createCompletion({
+                model: OpenRouterModel.DEEPSEEK_V_3_2,
+                systemMessage: systemMessage,
+                userMessage: userMessage,
+                maxCompletionTokens: 8192,
+            }, `postMusicGenerationData()`);
 
             if (!generatedContent) {
                 return {
@@ -1309,7 +1288,7 @@ Instruction: Generate the scene instruction JSON.
             }
 
             try {
-                const parsedData: Omit<MusicGenerationData, 'audioWeight'> = JSON.parse(generatedContent);
+                const parsedData: Omit<MusicGenerationData, 'audioWeight'> = cleanAndParseJSON(generatedContent);
 
                 if (!parsedData.prompt || !parsedData.style || !parsedData.title) {
                     throw new Error("Missing one or more required fields: prompt, style, title");

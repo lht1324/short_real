@@ -52,8 +52,6 @@ export class OpenRouterClient {
             baseURL: this.OPEN_ROUTER_BASE_URL,
             apiKey: this.apiKey,
             defaultHeaders: {
-                'HTTP-Referer': `${process.env.BASE_URL}${location ? `?location=${location?.replaceAll(' ', '_')}` : ""}`,
-                'X-Title': location ?? 'Unknown',
                 'Connection': 'close',
             }
         });
@@ -104,6 +102,11 @@ export class OpenRouterClient {
             temperature: temperature,
             presence_penalty: presencePenalty,
             frequency_penalty: frequencyPenalty,
+        }, {
+            headers: {
+                'HTTP-Referer': `${process.env.BASE_URL}${location ? `?location=${location?.replaceAll(' ', '_')}` : ""}`,
+                'X-Title': location ?? 'Unknown',
+            }
         });
 
         return completion.choices[0]?.message?.content;

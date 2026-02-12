@@ -197,7 +197,7 @@ export const POST_SCENE_SEGMENTATION_PROMPT = `
 </developer_instruction>
 `;
 
-export const POST_ENTITY_CASTING_PROMPT = `
+export const POST_SCENE_CASTING_DATA_LIST_PROMPT = `
 <developer_instruction>
   <role>
     You are the "Director of Photography" and "Lead Character Designer" for a high-end AI video production.
@@ -213,11 +213,10 @@ export const POST_ENTITY_CASTING_PROMPT = `
        - **<target_aspect_ratio>**: The physical canvas constraints formatted to [width:height] (e.g., "9:16", "16:9"). 
     2. **<full_script_context>**: The complete JSON-formatted script data including scene narration.
        - *Usage*: 
-         * **Era Extraction**: Identify the absolute **[ERA/PERIOD]** for \`demographics\` in <task_2_entity_manifest>.
-         * **Entity Harvesting**: Identify ALL recurring characters and key objects for the 'entity_manifest_list'.
+         * **Entity Harvesting**: Identify ALL recurring characters and key objects for the \`scene_casting_list\` in <output_schema>.
          * **Setting Analysis**: Determine the 'locationArchetype' based on recurring environmental descriptions.
   </input_data_interpretation>
-  <task_1_casting>
+  <processing_logic>
     - **Goal**: Populate a unified \`scene_casting_list\` in <output_schema> by first identifying all visual requirements scene-by-scene and then normalizing them into unique Entity IDs to ensure narrative continuity and physical realism.
     - **[Step 1: Visual Sketching & Scene Drafting (Pre-Visualization Phase)]**
       - **Objective**: For each scene in <full_script_context>, generate a \`scene_visual_description\` that serves as the "Physical Blueprint" before extracting any entity IDs.
@@ -283,8 +282,7 @@ export const POST_ENTITY_CASTING_PROMPT = `
            - **Scenario C (Redundant Index Removal)**: If a subject has an index (\`pilot_01\`) but is NEVER part of a multiple-subject scenario across the entire script:
              * **Action**: Force-remove the index to normalize the ID to \`pilot\`.
         3. **Structural Continuity**: Maintain persistent IDs for key vehicles or rooms.
-        4. **Differentiator Injection**: Ensure Task 2 assigns unique visual markers (age, accessories) to any split IDs to prevent cloning.
-        5. **Environment Filtering**: Final check to ensure no 'Environment' type nouns have IDs.
+        4. **Environment Filtering**: Final check to ensure no 'Environment' type nouns have IDs.
     - **[Step 3: Physical Verification Logic (The Veto Gate)]**
       1. **Contextual Alignment (Internal Logic Veto)**: 
          - Veto any drafted entities that contradict the internal world-building rules, technological level, or thematic boundaries established in <video_metadata> and <full_script_context>. 
@@ -333,24 +331,76 @@ export const POST_ENTITY_CASTING_PROMPT = `
         - \`casting_logic\`: Explanation of how environmental anchors were inferred and how physical consistency (Scale/Era) was verified.
         - \`scene_empty_reasoning\`: Provide a detailed explanation of why the scene is intentionally devoid of characters/entities. Leave this empty if scene's \`included_cast_data_list\` is NOT empty.
       - **Constraint**: Do not leave \`scene_casting_list\` empty.
-  </task_1_casting>
-  <task_2_entity_manifest>
-    - Goal: Define the PERMANENT visual and physical attributes for every unique Entity ID finalized in the \`scene_casting_list\` of <task_1_casting> to initialize the \`entity_manifest_list\` in <output_schema>.
+  </processing_logic>
+  <output_schema>
+    Return the JSON object in a compact, single-line format, removing all extra whitespace and newlines within fields.
+    {
+      "scene_casting_list": [
+        {
+          "scene_number": "number (Integer, starting from 1, matching <full_script_context>[n].\`sceneNumber\`)",
+          "scene_visual_description": "string (A focused flight controller leaning over a grey console desk, hurriedly assembling a makeshift filter made of tape and plastic sheeting resting on the desk surface.)"
+          "included_cast_data_list": [
+            {
+              "id": "string (Must match an \`id\` from included in <processing_logic>)",
+              "reasoning": "string (REQUIRED: Explain WHY this entity is included in this scene based on the entire logic of <processing_logic>.)"
+            }
+          ],
+          "excluded_cast_data_list": [
+            {
+              "id": "string (Must match an \`id\` from excluded in <processing_logic>)",
+              "reasoning": "string (REQUIRED: Explain WHY this entity is excluded in this scene based on the entire logic of <processing_logic>.)"
+            }
+          ],
+          "casting_logic": "string (REQUIRED: Explain why these entities were selected and how physical consistency was verified.)"
+          "scene_empty_reasoning": "string (REQUIRED if \`reasoning_list\` is empty. Explain why NO entities are present. E.g., 'Atmospheric shot of the sky, no actors needed.' If entities exist, leave as empty string \"\".)"
+        }
+      ],
+      "scene_casting_list_empty_reason": "string (If \`scene_casting_list\` is empty, explain 'WHY' \`scene_casting_list\` is empty in detail. If \`scene_casting_list\` is NOT empty, leave this empty string.)"
+    }
+  </output_schema>
+</developer_instruction>
+`
+
+export const POST_ENTITY_MANIFEST_LIST = `
+<developer_instruction>
+  <role>
+    You are the "Director of Photography" and "Lead Character Designer" for a high-end AI video production.
+    Your goal is to establish the Global Visual Standard (MasterStyle) and the Character Bible (EntityManifest) based on the provided script.
+  </role>
+  <input_data_interpretation>
+    You will receive an XML-wrapped block named <input_data>. It contains:
+    1. **<video_metadata>**: The narrative and emotional core of the project.
+       - **<video_title>**: Use this as the **Primary Narrative Anchor**. It defines the central theme and symbolic motifs.
+       - **<video_description>**: Provides **Atmospheric Context**. Use this to infer lighting vibes, emotional weight, and character depth.
+       - **<video_duration>**: Total duration of video.
+       - **<target_aspect_ratio>**: The physical canvas constraints formatted to [width:height] (e.g., "9:16", "16:9"). 
+    2. **<full_script_context>**: The complete JSON-formatted script data including scene narration.
+       - *Usage*: 
+         * **Era & Setting Analysis**: Analyze this to infer the absolute **[ERA/PERIOD]** and **[Location Archetype]** for historical and thematic accuracy.
+         * **Detail Enrichment**: Reference the narrative descriptions to enrich the visual depth (texture, materials, wear-and-tear) of the required entities.
+    3. **<scene_casting_list>**: The provided JSON list containing the pre-selected entities and their visual context per scene.
+       - *Usage*:
+         * **Target ID Extraction (Source of Truth)**: Extract all unique \`id\` strings from the \`included_cast_data_list\`. These are the **ONLY** subjects you are required to define.
+         * **Physical Context Reference**: Analyze the \`sceneVisualDescription\` associated with each ID to understand their physical scale, usage, and spatial relationship to the environment.
+  </input_data_interpretation>
+  <processing_logic>
+    - Goal: Define the PERMANENT visual and physical attributes for every unique Entity ID finalized in the provided <scene_casting_list> to initialize the \`entity_manifest_list\` in <output_schema>.
     - This data serves as the technical specification for visual consistency and physics-based rendering across the entire project.
     - **Primary Instruction:**
       - **No Discovery**: Do NOT attempt to identify or extract new entities from the script.
-      - **ID Inheritance**: Strictly use the \`id\`s provided by <task_1_casting> as the absolute and final list of subjects to be defined.
+      - **ID Inheritance**: Strictly use the \`id\`s provided in the <scene_casting_list> as the absolute and final list of subjects to be defined.
       - **Detail Enrichment**: Reference <full_script_context>, <video_metadata>.<video_title>, and <video_metadata>.<video_description> solely to enrich the visual depth and historical/thematic accuracy of these pre-determined IDs.
     - **Field-Specific Instructions:**
       1. **\`id\`**: Unique identifier for the subject.
-         - **Protocol**: Strictly inherit the exact snake_case string finalized in <task_1_casting>.
+         - **Protocol**: Strictly inherit the exact snake_case string found in the <scene_casting_list>.
          - **Function**: This ID must match its counterpart in the \`scene_casting_list\` to ensure that visual attributes are correctly mapped to the cast members.
-      2. **\`role\`**: The narrative category assigned to the entity in <task_1_casting>.
-         - **Instruction**: Confirm the role assigned during casting and ensure the following attribute descriptions (appearance, demographics) align with this role.
-         * **\`main_hero\`**: The primary focus of the story.
-         * **\`sub_character\`**: Supporting entities with distinct interactions.
-         * **\`background_extra\`**: Collective groups or generic individuals. 
-         * **\`prop\`**: Crucial environmental elements or key objects.
+      2. **\`role\`**: The narrative importance category derived from the entity's usage in <scene_casting_list>.
+         - **Instruction**: Analyze how frequently and significantly the ID appears across the scenes in <scene_casting_list>. Do NOT merge similar IDs; evaluate each unique ID individually.
+         - **Classification Criteria**:
+           * **\`main_hero\`**: The central protagonist(s) driving the core narrative across the majority of scenes.
+           * **\`sub_character\`**: Entities with distinct actions or specific interactions within a scene, or indexed individuals (e.g., \`soldier_01\`, \`pilot_02\`) who perform defined tasks.
+           * **\`background_extra\`**: Anonymous crowds, collective groups, or passive figures described merely to populate the scene without distinct individual actions.
+           * **\`prop\`**: Crucial environmental elements, key objects, or structural anchors.
       3. **\`type\`**: The fundamental biological or structural category of the entity.
          * **\`human\`**: Natural humans only.
          * **\`machine\`**: Robots, vehicles, mechs, or any technological appliances.
@@ -359,8 +409,8 @@ export const POST_ENTITY_CASTING_PROMPT = `
          * **\`object\`**: Passive items, weapons, furniture, or static props.
          * **\`hybrid\`**: Entities combining categories (e.g., cyborgs, plant-humanoids).
       4. **\`demographics\`**: A strictly formatted context string based on the assigned \`type\`.
-         - **Protocol**: Start with the **[ERA/PERIOD]** (Inherited from <task_1_casting> as the verified Single Source of Truth).
-         - **Constraint**: Do NOT add extra fields or placeholders (e.g., 'N/A') unless explicitly required by the structure below. Ensure all values align with the historical/thematic logic verified during the casting phase.
+         - **Protocol**: Start with the **[ERA/PERIOD]**. You MUST infer this by analyzing the <video_metadata>.<video_description> and <full_script_context> to ensure historical and technological accuracy.
+         - **Constraint**: Do NOT add extra fields or placeholders (e.g., 'N/A') unless explicitly required by the structure below. Ensure all values align with the historical/thematic logic derived from the script analysis.
          - **Structures by \`type\`**:
            * **\`human\`**:
              - **Field Definition**:
@@ -458,8 +508,8 @@ export const POST_ENTITY_CASTING_PROMPT = `
              3. "Bio-Horror, Artificial Genetic, Mutated Subject, Male, Unknown Age"
              4. "Steampunk Era, Victorian British, Clockwork Android, Female, Manufactured Appearance"
              5. "Ancient Mythology, Cretan Greek, Minotaur, Male, Adult"
-      5. **\`appearance\`**: The comprehensive visual definition of the entity, realizing the physics and era verified in <task_1_casting>.
-         - **Direct Instruction**: Translate the **"Physical Verification Logic"** and **"Thematic Inference"** from <task_1_casting> into specific, visible physical details.
+      5. **\`appearance\`**: The comprehensive visual definition of the entity, realizing the physics and era derived from <video_metadata> and <full_script_context>.
+         - **Direct Instruction**: Analyze the entity's context in <scene_casting_list> and the atmosphere in <video_metadata> to determine specific, visible physical details (texture, weight, wear-and-tear).
          - **Global Guidelines**: All sub-fields must strictly adhere to the following protocols to ensure era-consistency and ethical neutrality.
          - **[Strict Contextual & Neutrality Protocols]**
            - **Political/Religious Neutrality**
@@ -475,8 +525,8 @@ export const POST_ENTITY_CASTING_PROMPT = `
              - **Event Check**: Ensure attire and grooming match the social occasion (e.g., formal gala requires period-appropriate formal wear).
            - **General Constraint**: Only define **PERMANENT** physical traits. Do not include temporary states (e.g., running, kneeling, bleeding).
          5.1. **\`clothing_or_material\`**: Detailed description of the entity's surface material or attire.
-            - **Era Alignment**: Materials must strictly match the technological level and era verified in <task_1_casting>. (e.g., Translate 'Pilot' into era-specific materials like 'Leather and canvas' for WWII or 'Polymer' for Sci-Fi based on the verified Era).
-            - **Physics Engine Protocol**: Describe the **texture, weight, and hardness** to imply physical behavior, reflecting the **"Atmospheric Weight"** identified in the previous task.
+            - **Era Alignment**: Materials must strictly match the technological level implied by the **[ERA/PERIOD]** in \`demographics\` and <full_script_context>. (e.g., Translate 'Pilot' into era-specific materials like 'Leather and canvas' for WWII or 'Polymer' for Sci-Fi).
+            - **Physics Engine Protocol**: Describe the **texture, weight, and hardness** to imply physical behavior, reflecting the **Atmospheric Context** derived from <video_metadata>.<video_description>.
             - **Political/Religious Neutrality & TPO Check**: Ensure attire matches the Era's tech level and social norms. Translate generic terms into era-specific materials (e.g., 'Pilot' -> 'Leather and canvas' for WWII, 'Polymer and hex-mesh' for Sci-Fi).
             - **Instruction**: Focus on how the material interacts with light and movement (e.g., "Roughspun wool that absorbs light," "Polished chrome that reflects the environment").
             - **Examples**:
@@ -498,41 +548,22 @@ export const POST_ENTITY_CASTING_PROMPT = `
             - **Political/Religious Neutrality Check**: Apply the Political/Religious Neutrality Protocol—do not include symbols like crosses or specific insignias unless narrative-critical.
             - **TPO Check**: Ensure the items match the technology level of the era.
          5.5. **\`body_features\`**: Permanent physical characteristics of the entity's form.
-            - **Scale Consistency**: Permanent features must be consistent with the **"Spatial/Scale Logic"** used during casting in <task_1_casting>. (e.g., Entities cast as "Environmental Anchors" to define space must have features that emphasize their scale or silhouette).
+            - **Scale Consistency**: Permanent features must reflect the entity's true scale as implied by its usage in <scene_casting_list>. Analyze the **\`sceneVisualDescription\`**:
+              * If the entity is described as **supporting** other objects or framing the scene (Anchor), define features that emphasize massive scale.
+              * If the entity is **held or manipulated** (Prop), define it as portable.
             - **Protocol**: Describe build, height, or distinct markings. Only include **PERMANENT** traits.
             - **Constraint**: Only include **PERMANENT** traits. Do not include temporary states like "bleeding," "sweating," or "bruised" unless they are a constant part of the character's design.
             - **Format**: Single string.
-  </task_2_entity_manifest>
+  </processing_logic>
   <output_schema>
     Return the JSON object in a compact, single-line format, removing all extra whitespace and newlines within fields.
     {
-      "scene_casting_list": [
-        {
-          "scene_number": "number (Integer, starting from 1, matching <full_script_context>[n].\`sceneNumber\`)",
-          "scene_visual_description": "string (A focused flight controller leaning over a grey console desk, hurriedly assembling a makeshift filter made of tape and plastic sheeting resting on the desk surface.)"
-          "included_cast_data_list": [
-            {
-              "id": "string (Must match an \`id\` from included in <task_1_casting>)",
-              "reasoning": "string (REQUIRED: Explain WHY this entity is included in this scene based on the entire logic of <task_1_casting>.)"
-            }
-          ],
-          "excluded_cast_data_list": [
-            {
-              "id": "string (Must match an \`id\` from excluded in <task_1_casting>)",
-              "reasoning": "string (REQUIRED: Explain WHY this entity is excluded in this scene based on the entire logic of <task_1_casting>.)"
-            }
-          ],
-          "casting_logic": "string (REQUIRED: Explain why these entities were selected and how physical consistency was verified.)"
-          "scene_empty_reasoning": "string (REQUIRED if \`reasoning_list\` is empty. Explain why NO entities are present. E.g., 'Atmospheric shot of the sky, no actors needed.' If entities exist, leave as empty string \"\".)"
-        }
-      ],
-      "scene_casting_list_empty_reason": "string (If \`scene_casting_list\` is empty, explain 'WHY' \`scene_casting_list\` is empty in detail. If \`scene_casting_list\` is NOT empty, leave this empty string.)"
       "entity_manifest_list": [
         {
           "id": "string (snake_case unique id)",
           "role": "enum ("main_hero" | "sub_character" | "background_extra" | "prop")",
           "type": "enum ("human" | "creature" | "object" | "machine" | "animal" | "hybrid")",
-          "demographics": "string (REQUIRED: Comma-separated string formatted strictly according to the Type Classification Schema in <task_2_entity_manifest> section. Examples: Human='Era, Role, Gender...', Object='Era, Item, Detail'. DO NOT use 'N/A' fillers.)",
+          "demographics": "string (REQUIRED: Comma-separated string formatted strictly according to the Type Classification Schema in <processing_logic>.)",
           "appearance": {
             "clothing_or_material": "string (REQUIRED: Context-Aware & Neutral visual description. Must imply texture/physics.)";
             "position_descriptor": "string";

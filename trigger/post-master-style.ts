@@ -55,7 +55,7 @@ export const postMasterStyle = task({
 
             // --- DeepSeek 호출 1: Entity Casting ---
             // (여기서 시간이 오래 걸려도 안전함)
-            const postEntityCastingResult = await llmServerAPI.postEntityCasting(
+            const postSceneCastingListResult = await llmServerAPI.postSceneCastingDataList(
                 sceneDataList.map((sceneData) => ({
                     sceneNumber: sceneData.sceneNumber,
                     sceneNarration: sceneData.narration,
@@ -65,9 +65,9 @@ export const postMasterStyle = task({
                 videoDuration,
             );
 
-            if (!postEntityCastingResult.success || !postEntityCastingResult.sceneCastingDataList || !postEntityCastingResult.entityManifestList) {
+            if (!postSceneCastingListResult.success || !postSceneCastingListResult.sceneCastingDataList) {
                 await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
-                throw new Error(postEntityCastingResult?.error?.message || 'Failed to generate casting data with OpenAI');
+                throw new Error(postSceneCastingListResult?.error?.message || 'Failed to generate casting data with OpenAI');
             }
 
             // --- DeepSeek 호출 2: Master Style Info ---
@@ -80,7 +80,7 @@ export const postMasterStyle = task({
                 videoTitle,
                 videoDescription,
                 videoDuration,
-                postEntityCastingResult.entityManifestList
+                postSceneCastingListResult.entityManifestList
             );
 
             if (!postMasterStyleInfoResult.success || !postMasterStyleInfoResult.masterStyleInfo) {
@@ -98,8 +98,8 @@ export const postMasterStyle = task({
 
             // 결과 저장 및 상태 업데이트
             const masterStylePositivePromptInfo = postMasterStyleInfoResult.masterStyleInfo;
-            const entityManifestList = postEntityCastingResult.entityManifestList;
-            const sceneCastingDataList = postEntityCastingResult.sceneCastingDataList;
+            const entityManifestList = postSceneCastingListResult.entityManifestList;
+            const sceneCastingDataList = postSceneCastingListResult.sceneCastingDataList;
 
             const patchVideoGenerationTaskStatusFinalResult = await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, {
                 status: VideoGenerationTaskStatus.GENERATING_IMAGE_PROMPT,
