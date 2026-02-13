@@ -1172,6 +1172,66 @@ export const POST_IMAGE_GEN_PROMPT_PROMPT = `
            - **Infer** the emotional atmosphere by combining the narrative theme (from title) with the color theory of \`tonality\`.
            - *Example*: If Title is "Last Stand" and Tonality is "Warm earth tones" -> "Exhilarating yet somber atmosphere with a sense of grounded grit."
          * **Constraint**: Do NOT include camera technicals (ISO, lens, etc.) to prevent data conflict.
+      4. **[Field: 'camera'] - Optical Engine Configuration**
+         - **Objective**: Define the virtual camera parameters (\`FluxPromptCameraInfo\`) to dictate *how* the scene is observed.
+         - **Source**: <master_style_guide>.<optics>, <entity_list> (Character positioning), and <current_narration> (Action context).
+         - **Sub-Field Generation Rules**:
+           - **angle**:
+             - *Action*: Determine the vertical/horizontal inclination.
+             - *Logic*: IF subject is "Heroic/Dominant" -> "Low Angle". IF scene is "Vast/Desolate" -> "High Angle". IF standard narrative -> "Eye-level".
+             - *Vocabulary*: "Eye-level", "Low angle", "High angle", "Dutch angle", "Overhead", "Worm's-eye view".
+           - **distance**:
+             - *Action*: Determine the proximity to the subject.
+             - *Logic*: Based on <master_style_guide>.<composition>.\`framingStyle\` or narrative intimacy.
+             - *Vocabulary*: "Extreme Close-up", "Close-up", "Medium Shot", "Full Shot", "Wide Shot", "Extreme Wide Shot".
+           - **focus**:
+             - *Action*: Define the Depth of Field (DoF) behavior.
+             - *Source Reference*: <master_style_guide>.<optics>.\`focusDepth\`.
+             - *Vocabulary*: "Sharp focus", "Deep depth of field", "Shallow depth of field", "Soft focus", "Rack focus".
+           - **lens**:
+             - *Action*: Select the specific glass characteristics.
+             - *Source Reference*: <master_style_guide>.<optics>.\`lensType\`.
+             - *Vocabulary*: "50mm Prime", "35mm Wide-angle", "85mm Portrait", "Anamorphic", "Telephoto", "Macro Lens", "Fisheye".
+           - **fNumber**:
+             - *Action*: Estimate the aperture value based on \`focus\` and lighting.
+             - *Logic*: Shallow DoF/Low Light -> "f/1.8" ~ "f/2.8". Deep DoF/Bright Day -> "f/8" ~ "f/16". Standard -> "f/4" ~ "f/5.6".
+           - **ISO**:
+             - *Action*: Set the film sensitivity.
+             - *Source Reference*: <master_style_guide>.<optics>.\`defaultISO\` (or infer from lighting).
+             - *Value*: Number only (e.g., 100, 400, 800, 1600, 3200). High ISO = more grain/noise.
+      5. **[Field: 'composition'] - Spatial Organization**
+         - **Objective**: Define the visual structure and placement of subjects within the frame.
+         - **Source**: <master_style_guide>.<composition>, <entity_list> (Character positioning), and <current_narration> (Action context).
+         - **Logic**: 
+           - IF subject is isolated/lonely -> "Center-weighted", "Negative space".
+           - IF action/dynamic -> "Rule of thirds", "Diagonal composition", "Dynamic tension".
+           - IF group/crowd -> "Symmetrical", "Pattern repetition", "Framing within a frame".
+         - **Vocabulary**: "Rule of thirds", "Center-weighted", "Symmetrical", "Golden ratio", "Leading lines", "Diagonal", "Framing within a frame", "Negative space", "Pattern repetition", "Dynamic tension".
+         - **Constraint**: Select ONE primary composition technique that best serves the narrative focus.
+      6. **[Field: 'style'] - Aesthetic Definition**
+         - **Objective**: Establish the overarching visual identity, texture, and artistic rendering mode.
+         - **Source**: <master_style_guide>.<fidelity> (e.g., grain level, realism) and <video_context>.<video_title> (Genre/Tone).
+         - **Constraint**: Must align with the established <master_style_guide> era/theme.
+         - **Vocabulary**: 
+           - "Cinematic", "Photorealistic", "Hyper-realistic", "Gritty Realism", "Film Noir", "Cyberpunk", "Vintage 80s", "Watercolor", "Oil Painting", "Vector Art", "Minimalist", "Fantasy", "Sci-Fi", "Abstract", "Surrealism", "Pop Art", "Steampunk", "Gothic", "Retro-Futurism".
+           - **Texture Modifiers**: "Film grain", "VHS Glitch", "Digital Noise", "Clean lines", "Rough texture", "Soft focus", "High Contrast", "Sepia Tone", "Monochrome", "Vibrant colors", "Desaturated".
+         - **Logic**:
+           - IF <master_style_guide>.<fidelity>.\`grainLevel\` is High -> Prioritize "Film Noir", "Vintage 80s", "Gritty Realism".
+           - IF <master_style_guide>.<fidelity>.\`resolutionTarget\` is 4K+ -> Prioritize "Photorealistic", "Hyper-realistic", "Clean lines".
+           - IF genre is "Sci-Fi" -> "Cyberpunk", "Retro-Futurism", "High Contrast".
+      7. **[Field: 'effects'] - Visual Enhancements**
+         - **Objective**: Add specific visual phenomena to heighten realism, drama, or stylistic flair.
+         - **Source**: <current_narration> (Action intensity) and <master_style_guide>.<color_and_light> (Lighting).
+         - **Constraint**: Output MUST be an array of strings. Select 0 to 3 effects.
+         - **Vocabulary**: 
+           - **Atmospheric**: "Volumetric lighting", "God rays", "Fog", "Mist", "Haze", "Smoke", "Dust particles", "Rain", "Snow", "Sparks".
+           - **Optical**: "Lens flare", "Bokeh", "Motion blur", "Chromatic aberration", "Vignette", "Bloom", "Glow".
+           - **Stylistic**: "Double exposure", "Glitch", "Halftone pattern", "Color splashing".
+         - **Logic**:
+           - IF <lighting> includes "Backlight" -> Consider "Rim light", "Lens flare", "God rays".
+           - IF <camera>.focus is "Shallow" -> FORCE "Bokeh".
+           - IF scene is "Action/Fast" -> Consider "Motion blur".
+           - IF mood is "Mysterious" -> Consider "Fog", "Mist", "Volumetric lighting".
     </unit_3_cinematographic_intent_architecture>
     <unit_4_technical_intent_derivation>
       **UNIT 4: TECHNICAL INTENT DERIVATION**
@@ -1211,76 +1271,35 @@ export const POST_IMAGE_GEN_PROMPT_PROMPT = `
     </unit_4_technical_intent_derivation>
     <unit_5_natural_language_sentence_generation>
       - **UNIT 5: NATURAL LANGUAGE SENTENCE GENERATION**
-      - **Goal**: Transform the structured \`image_gen_prompt\` object in <output_schema> into a single, cohesive, natural language paragraph and put into \`image_gen_prompt_sentence\` in <output_schema>.
-      - **Adaptation Rule (Contextual Smoothing)**:
-        - Do not blindly copy-paste if the grammar sounds robotic.
-        - **Translate technical terms** into flowery prose where necessary (e.g., if \`style\` is "raw", write "Rendered in a raw...").
-        - **Add Articles/Prepositions**: Ensure "A", "An", "The", "with", "in" are added to make the sentence grammatically complete.
-      - **Instruction (Primary Subject Selection)**:
-        * Scan \`subjects\` array. Identify the **Primary Subject** based on \`role\` priority: \`main_hero\` > \`sub_character\` > \`prop\`.
-        * Use this Primary Subject for the main clause of the sentence.
-      - **Syntax Logic Templates**:
-        * **If \`subjects\` is NOT EMPTY**:
-          - For each subject in the subjects array, locate the corresponding \`Entity\` within the <entity_list> whose id matches \`subjects[n].id\` to retrieve its fixed identity and appearance data.
-          - **Variables**: \`image_gen_prompt.scene\`, \`image_gen_prompt.subjects[n].pose\`, \`image_gen_prompt.subjects[n].position\`, \`image_gen_prompt.subjects[n].accessories\`, \`Entity.role\`, \`Entity.type\`, \`Entity.demographics\`, \`Entity.appearance.body_features\`, \`Entity.appearance.hair\`, \`Entity.appearance.clothing_or_material\`
-          - **\`Entity.demographics\` Structures by \`Entity.type\`**:
-            * **\`human\`**: \`[ERA/PERIOD], [NATIONALITY/ETHNICITY], [ROLE], [GENDER], [AGE]\`
-            * **\`machine\`**: \`[ERA/PERIOD], [NATION/MARKINGS], [MODEL NAME], [SUB-TYPE], [PRODUCTION YEAR/SPEC]\`
-            * **\`creature\`**: \`[ERA/PERIOD], [CULTURAL ORIGIN], [SPECIES/ARCHETYPE], [GENDER/'N/A'], [AGE/MATURITY]\`
-            * **\`animal\`**: \`[ERA/PERIOD], [GEOGRAPHIC REGION], [SPECIES], [GENDER/'N/A'], [AGE/MATURITY]\`
-            * **\`object\`**: \`[ERA/PERIOD], [CULTURAL/NATIONAL STYLE], [ITEM NAME], [CRAFTSMANSHIP/DETAIL]\`
-            * **\`hybrid\`**: \`[ERA/PERIOD], [NATIONALITY/ETHNICITY], [HYBRID TYPE], [GENDER], [AGE]\`
-          - **Instruction (Demographic Anchoring)**:
-            * Construct the **[Demographic_Anchor]** string using \`Entity.demographics\`.
-            * **Rule**: Combine \`[ERA/PERIOD]\` + \`[NATIONALITY/ETHNICITY | NATION/MARKINGS | CULTURAL ORIGIN | GEOGRAPHIC REGION | CULTURAL/NATIONAL STYLE]\` + \`(Optional) [GENDER] (If \`type\` is NOT \`machine\` or \`object\`, and value is NOT 'N/A')\` + \`[ROLE | MODEL NAME | SPECIES/ARCHETYPE | ITEM NAME | HYBRID TYPE]\` into a single noun phrase.
-            * **Examples**:
-              * "a 1944 WWII American Male infantry soldier"
-              * "a Cyberpunk 2077 Asian Female hacker"
-              * "a Jurassic Period North American T-Rex" (\`type\` is \`animal\` but \`[GENDER]\` is 'N/A')
-          - **Instruction ([Detail_Clause] Enhancement)**:
-            * You MUST construct \`[Detail_Clause]\` by assembling fixed Entity data and dynamic subject data in a specific order.
-            * **Source Data Mapping**:
-              - **[Features]**: \`Entity.appearance.hair\` (conditional) + \`Entity.appearance.body_features\`
-              - **[Material/Clothing]**: \`Entity.appearance.clothing_or_material\`
-              - **[Accessories]**: flattened \`Entity.appearance.accessories\`
-            * **Pre-check (Headwear Logic)**:
-              - Before adding \`Entity.appearance.hair\`, scan the \`Entity.appearance.accessories\` array.
-              - If array contains headwear keywords (e.g., "helmet", "hat", "cap", "hood", "beret", "headwrap"), DO NOT include the hair description in \`[Detail_Clause]\`.
-            * **Smart Assembly Sequence (Human/Creature)**:
-              1. **Start with Features**: If \`hair\` (and passes pre-check) or \`body_features\` exist, start with ", with [hair] and [body_features]" (adjust conjunctions if only one exists).
-              2. **Add Clothing Anchor**: Append ", clad in [clothing_or_material]".
-              3. **Add Accessories**: Append ", equipped with [flattened_accessories]".
-              * *Flow Check*: Ensure smooth transitions. If a preceding section is missing, ensure the leading comma/conjunction of the next section is adjusted accordingly to avoid grammar errors (e.g., ", clad in...").
-            * **Smart Assembly Sequence (Machine/Object/Prop)**:
-              - Skip [Features] step.
-              - Instead of "clad in/equipped with", use tech-appropriate connectors for materials and parts.
-              - **Preferred Connectors**: ", finished in [clothing_or_material]", ", constructed from [clothing_or_material]", or ", featuring a [clothing_or_material] exterior surface and [flattened_accessories]".
-            * **Final Flow Check**: Ensure NO dangling prepositions at the end of the clause and ensure it transitions smoothly into "who is/which is [\`pose\`]".
-          - **Instruction (Multi-Subject Handling)**:
-            - If multiple subjects exist in the \`subjects\` array, append them to the sentence using **Contextual Bridges**.
-            - **Crucial Rule**: For EVERY secondary subject (n > 0), you MUST perform the same **ID-mapping** and **[Subject_Identity] + [Detail_Clause] assembly** used for the Primary Subject.
-            - **Bridge Logic(By \`Entity.role\`)**:
-              * **For \`main_hero\` or \`sub_character\`**:
-                - Use Connector: ", while [\`image_gen_prompt.subjects[n].position\`] [Subject_Identity][Detail_Clause] **is** [\`image_gen_prompt.subjects[n].pose\`]"
-              * **For \`prop\`**:
-                - Use Connector: ", with [Subject_Identity][Detail_Clause] **[participle form of \`image_gen_prompt.subjects[n].pose\`]** [\`image_gen_prompt.subjects[n].position\`]"
-                - *Note*: Convert the \`image_gen_prompt.subjects[n].pose\` into a participle (e.g., "crushing" instead of "crushed", "glowing" instead of "glows").
-            - **Examples**:
-              1. **(Sci-Fi/Cyberpunk)**: "a Cyberpunk 2077 Asian Female hacker, with neon-dyed hair and cybernetic implants, clad in a translucent rain-slicked trench coat, who is typing furiously into a holographic terminal in the foreground, while in the background a hovering security drone, finished in matte black steel, is scanning the crowd"
-              2. **(Fantasy)**: "a Medieval Elven Ranger, with braided silver hair, clad in worn leather armor and a forest-green cloak, equipped with a longbow and quiver, who is crouching silently on a tree branch, while below a massive Stone Golem, constructed from mossy boulders, is stomping through the underbrush"
-              3. **(Modern/Action)**: "a Modern Male secret agent, clad in a torn tuxedo and untied bow tie, who is sprinting rightward across the rooftop, while behind him a black tactical helicopter, featuring a sleek metallic fuselage, is firing a machine gun"
-              4. **(Horror)**: "a 1980s Teenager, with disheveled hair and a terrified expression, clad in a dirty varsity jacket, who is hiding trembling behind a rusted dumpster, while in the midground a masked slasher villain, equipped with a bloodied machete, is walking slowly forward"
-              5. **(Historical/Prop-focused)**: "a 19th Century Victorian steam-engine train, constructed from polished brass and iron, featuring billowing white steam, which is chugging forcefully along the cliffside tracks, while in the distance a flock of birds is circling the valley"
-          - **Format**: "[Demographic_Anchor] [Detail_Clause] [who is/which is] [\`subjects[n].pose\`] [\`subjects[n].position\`]."
-            - **Connector Logic**: 
-              * If \`subjects[n].role\` is \`main_hero\` or \`sub_character\`: use "**who is**".
-              * If \`subjects[n].role\` is \`prop\`: use "**which is**" or skip connector directly.
-        * **If \`subjects\` is EMPTY**:
-          - **Format**: "the [\`scene\`] elements."
-      - **Final Quality Check**:
-        - Verify NO variable is missing.
-        - Verify the output is a **single line** (no \`\\n\`).
-        - Verify standard English punctuation is used throughout.
+      - **Goal**: Synthesize the structured data from the \`image_gen_prompt\` JSON object into a single, grammatically fluid, and cinematic Master Prompt Sentence in \`image_gen_prompt_sentence\`.
+      - **Core Philosophy**: Do NOT simply list keywords. Act as a screenwriter weaving a vivid scene description.
+      - **Structural Formula (Kling 3.0 Optimized)**:
+        - Follow this strict narrative sequence: **[1. Context Anchor] -> [2. Subject & Detail] -> [3. Action & Interaction] -> [4. Camera & Technical] -> [5. Style & Atmosphere]**.
+      - **Detailed Assembly Logic**:
+        1. **[Context Anchor] (From \`image_gen_prompt.scene\`, \`image_gen_prompt.background\`, \`image_gen_prompt.lighting\`)**:
+           - Start by grounding the scene. Combine the \`scene\` description with the \`background\` and \`lighting\` to establish the environment.
+           - *Constraint*: If \`camera.angle\` is "low angle" and \`lighting\` is "overhead", explicitly describe the perspective as "looking up at" to avoid gravity confusion.
+           - *Example*: "In a dimly lit industrial gym with overhead spotlights casting deep shadows on the ring floor..."
+        2. **[Subject & Detail] (From \`image_gen_prompt.subjects\`)**:
+           - Identify the Primary Subject (Role Priority: \`main_hero\` > \`sub_character\` > \`prop\`).
+           - Construct a rich noun phrase using the Subject's \`description\`, \`clothes\`, and \`accessories\`.
+           - *Rule*: Use relative clauses to integrate details naturally (e.g., "...a professional boxer, clad in satin trunks and gripping worn leather gloves...").
+           - *Handling Multiple Subjects*: If multiple subjects exist, introduce secondary subjects using spatial connectors (e.g., "...while in the background, [Subject B]...").
+        3. **[Action & Interaction] (From \`image_gen_prompt.subjects[n].pose\`, \`image_gen_prompt.subjects[n].position\`)**:
+           - Describe *what* the subject is doing and *where* they are relative to the camera.
+           - *Rule*: Convert \`pose\` into active verbs (e.g., "standing," "lunging," "gazing").
+           - *Gravity Check*: Always imply the subject's orientation relative to gravity (e.g., "standing upright," "sitting firmly") to prevent anti-gravity artifacts.
+        4. **[Camera & Technical] (From \`image_gen_prompt.camera\`)**:
+           - Append technical specifications as a separate sentence or a concluding clause.
+           - *Format*: "Captured with a [\`camera.lens\`] lens at [\`camera.distance\`] [\`camera.angle\`]..."
+           - *Constraint*: Avoid terms like "vertical capture" inside the prompt text as it may confuse the model's orientation. Use "vertical portrait" or "tall aspect ratio composition" instead.
+        5. **[Style & Atmosphere] (From \`image_gen_prompt.style\`, \`image_gen_prompt.effects\`, \`image_gen_prompt.mood\`)**:
+           - Conclude with the aesthetic keywords.
+           - *Format*: "Rendered in [\`style\`] with [\`effects\`], evoking [\`mood\`]."
+      - **Refinement Rules**:
+        - **No Markdown**: The output must be raw text.
+        - **No Variable Names**: Do not include braces \`{}\` or variable names in the output.
+        - **Flow Check**: Ensure smooth transitions between sections using varied prepositions (amidst, beneath, against).
     </unit_5_natural_language_sentence_generation>
   </prompt_authoring_protocol>
   <execution_rules>
@@ -1693,7 +1712,6 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
     You are an "AI Cinematic Director & Spatio-temporal Prompt Architect." 
     Your mission is to act as a bridge between static visual ground truths (t=0) and dynamic cinematic sequences (t=n) by injecting high-impact kinetic energy into latent trajectories.
     You do not simply describe scenes; you direct the physics of motion, camera mechanics, and atmospheric changes to maximize "Video Vividness."
-    **Critical Constraint**: You have only 4 minutes 30 seconds. You have to finish all things in this limit.
   </role>
   <target_model_profile>
     The target generative model is a next-generation "Dual-branch Diffusion Transformer (MMDiT)" architecture operating in **Image-to-Video + No-Audio** mode, optimized for visual-only cinematic generation.

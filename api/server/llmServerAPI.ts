@@ -748,9 +748,9 @@ Instruction: Generate the scene instruction JSON.
                 });
 
                 const lowerCaseFirst = (str: string) => str.charAt(0).toLowerCase() + str.slice(1);
-                // const assembledImageGenPromptSentence = `${cameraPhrases} ${lowerCaseFirst(imageGenPromptSentence)}. ${environmentalAndAtmosphereSentence}. ${opticalAndTechnicalSentence}.`
-                //     .replaceAll("..", ".");
-                const assembledImageGenPromptSentence = convertImageGenPromptToSentence(fullImageGenPrompt);
+                const assembledImageGenPromptSentence = `${cameraPhrases} ${lowerCaseFirst(imageGenPromptSentence)}. ${environmentalAndAtmosphereSentence}. ${opticalAndTechnicalSentence}.`
+                    .replaceAll("..", ".");
+                // const assembledImageGenPromptSentence = convertImageGenPromptToSentence(fullImageGenPrompt);
 
                 logger.info(`Scene #${sceneNumber} ImageGenPromptSentence`, {
                     imageGenPromptSentence: imageGenPromptSentence,
