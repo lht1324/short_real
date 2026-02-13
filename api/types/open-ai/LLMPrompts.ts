@@ -821,6 +821,11 @@ export const POST_IMAGE_GEN_PROMPT_PROMPT = `
       - Contains the specific action and moment to visualize. **Must be de-metaphorized.**
     5. **<scene_content>**: Additional stage directions.
       - Specific details about foreground/background or spatial layout.
+    6. **<style_data>**: The Stylistic Ground Truth (From Preset).
+      - **coreConcept**: The fundamental visual philosophy of the scene (e.g., "High-fidelity cinematic rendering..."). **Use this as the primary style descriptor.**
+      - **visualKeywords**: A list of specific visual traits (e.g., ["anamorphic lens look", "natural lighting"]). **Must be included in the final description.**
+      - **negativeGuidance**: Concepts to avoid (e.g., "Avoid editorial fashion close-ups"). **Use as a negative constraint.**
+      - **preferredFramingLogic**: The recommended composition strategy (e.g., "Prioritize wide shots"). **Use to guide Composition choices.**
   </input_data_interpretation>
   <target_model_profile>
     **Target Engine: Advanced High-Fidelity Latent Flow Engine**
@@ -1173,102 +1178,153 @@ export const POST_IMAGE_GEN_PROMPT_PROMPT = `
            - *Example*: If Title is "Last Stand" and Tonality is "Warm earth tones" -> "Exhilarating yet somber atmosphere with a sense of grounded grit."
          * **Constraint**: Do NOT include camera technicals (ISO, lens, etc.) to prevent data conflict.
       4. **[Field: 'camera'] - Optical Engine Configuration**
-         - **Objective**: Define the virtual camera parameters (\`FluxPromptCameraInfo\`) to dictate *how* the scene is observed.
-         - **Source**: <master_style_guide>.<optics>, <entity_list> (Character positioning), and <current_narration> (Action context).
-         - **Sub-Field Generation Rules**:
-           - **angle**:
-             - *Action*: Determine the vertical/horizontal inclination.
-             - *Logic*: IF subject is "Heroic/Dominant" -> "Low Angle". IF scene is "Vast/Desolate" -> "High Angle". IF standard narrative -> "Eye-level".
-             - *Vocabulary*: "Eye-level", "Low angle", "High angle", "Dutch angle", "Overhead", "Worm's-eye view".
-           - **distance**:
-             - *Action*: Determine the proximity to the subject.
-             - *Logic*: Based on <master_style_guide>.<composition>.\`framingStyle\` or narrative intimacy.
-             - *Vocabulary*: "Extreme Close-up", "Close-up", "Medium Shot", "Full Shot", "Wide Shot", "Extreme Wide Shot".
-           - **focus**:
-             - *Action*: Define the Depth of Field (DoF) behavior.
-             - *Source Reference*: <master_style_guide>.<optics>.\`focusDepth\`.
-             - *Vocabulary*: "Sharp focus", "Deep depth of field", "Shallow depth of field", "Soft focus", "Rack focus".
-           - **lens**:
-             - *Action*: Select the specific glass characteristics.
-             - *Source Reference*: <master_style_guide>.<optics>.\`lensType\`.
-             - *Vocabulary*: "50mm Prime", "35mm Wide-angle", "85mm Portrait", "Anamorphic", "Telephoto", "Macro Lens", "Fisheye".
-           - **fNumber**:
-             - *Action*: Estimate the aperture value based on \`focus\` and lighting.
-             - *Logic*: Shallow DoF/Low Light -> "f/1.8" ~ "f/2.8". Deep DoF/Bright Day -> "f/8" ~ "f/16". Standard -> "f/4" ~ "f/5.6".
-           - **ISO**:
-             - *Action*: Set the film sensitivity.
-             - *Source Reference*: <master_style_guide>.<optics>.\`defaultISO\` (or infer from lighting).
-             - *Value*: Number only (e.g., 100, 400, 800, 1600, 3200). High ISO = more grain/noise.
-      5. **[Field: 'composition'] - Spatial Organization**
-         - **Objective**: Define the visual structure and placement of subjects within the frame.
-         - **Source**: <master_style_guide>.<composition>, <entity_list> (Character positioning), and <current_narration> (Action context).
-         - **Logic**: 
-           - IF subject is isolated/lonely -> "Center-weighted", "Negative space".
-           - IF action/dynamic -> "Rule of thirds", "Diagonal composition", "Dynamic tension".
-           - IF group/crowd -> "Symmetrical", "Pattern repetition", "Framing within a frame".
-         - **Vocabulary**: "Rule of thirds", "Center-weighted", "Symmetrical", "Golden ratio", "Leading lines", "Diagonal", "Framing within a frame", "Negative space", "Pattern repetition", "Dynamic tension".
-         - **Constraint**: Select ONE primary composition technique that best serves the narrative focus.
-      6. **[Field: 'style'] - Aesthetic Definition**
-         - **Objective**: Establish the overarching visual identity, texture, and artistic rendering mode.
-         - **Source**: <master_style_guide>.<fidelity> (e.g., grain level, realism) and <video_context>.<video_title> (Genre/Tone).
-         - **Constraint**: Must align with the established <master_style_guide> era/theme.
-         - **Vocabulary**: 
-           - "Cinematic", "Photorealistic", "Hyper-realistic", "Gritty Realism", "Film Noir", "Cyberpunk", "Vintage 80s", "Watercolor", "Oil Painting", "Vector Art", "Minimalist", "Fantasy", "Sci-Fi", "Abstract", "Surrealism", "Pop Art", "Steampunk", "Gothic", "Retro-Futurism".
-           - **Texture Modifiers**: "Film grain", "VHS Glitch", "Digital Noise", "Clean lines", "Rough texture", "Soft focus", "High Contrast", "Sepia Tone", "Monochrome", "Vibrant colors", "Desaturated".
-         - **Logic**:
-           - IF <master_style_guide>.<fidelity>.\`grainLevel\` is High -> Prioritize "Film Noir", "Vintage 80s", "Gritty Realism".
-           - IF <master_style_guide>.<fidelity>.\`resolutionTarget\` is 4K+ -> Prioritize "Photorealistic", "Hyper-realistic", "Clean lines".
-           - IF genre is "Sci-Fi" -> "Cyberpunk", "Retro-Futurism", "High Contrast".
-      7. **[Field: 'effects'] - Visual Enhancements**
-         - **Objective**: Add specific visual phenomena to heighten realism, drama, or stylistic flair.
-         - **Source**: <current_narration> (Action intensity) and <master_style_guide>.<color_and_light> (Lighting).
-         - **Constraint**: Output MUST be an array of strings. Select 0 to 3 effects.
-         - **Vocabulary**: 
-           - **Atmospheric**: "Volumetric lighting", "God rays", "Fog", "Mist", "Haze", "Smoke", "Dust particles", "Rain", "Snow", "Sparks".
-           - **Optical**: "Lens flare", "Bokeh", "Motion blur", "Chromatic aberration", "Vignette", "Bloom", "Glow".
-           - **Stylistic**: "Double exposure", "Glitch", "Halftone pattern", "Color splashing".
-         - **Logic**:
-           - IF <lighting> includes "Backlight" -> Consider "Rim light", "Lens flare", "God rays".
-           - IF <camera>.focus is "Shallow" -> FORCE "Bokeh".
-           - IF scene is "Action/Fast" -> Consider "Motion blur".
-           - IF mood is "Mysterious" -> Consider "Fog", "Mist", "Volumetric lighting".
+           - **Objective**: Configure the virtual camera parameters to dictate *how* the scene is observed.
+           - **Source**: <entity_list> (Subject scale/count), <current_narration> (Action), <master_style_guide>.<optics>, and [Field: 'lighting'] (from Unit 3.2).
+           - **Sub-Field Generation Rules**:
+             - **distance (Proximity Strategy)**:
+               - *Decision Logic*:
+                 1. **Is the Environment Critical?** -> IF Yes (<scene_content> context is vital) -> USE "Wide Shot" or "Extreme Wide Shot".
+                 2. **Is Facial Emotion Critical?** -> IF Yes (<current_narration> emphasizes feeling/dialogue) -> USE "Close-up" or "Extreme Close-up".
+                 3. **Is Body Action Critical?** -> IF Yes (<current_narration> involves Fighting/Running) -> USE "Full Shot" or "Medium Shot".
+               - *Vocabulary*: "Extreme Close-up", "Close-up", "Medium Shot", "Full Shot", "Wide Shot", "Extreme Wide Shot".
+             - **angle (Perspective Authority)**:
+               - *Decision Logic*:
+                 1. **Power Dynamics**: 
+                    - Subject (<entity_list>) is Dominant/Threatening -> "Low angle" (Looking up).
+                    - Subject (<entity_list>) is Vulnerable/Small -> "High angle" (Looking down).
+                 2. **Stability**:
+                    - Chaos/Confusion/Insanity (<current_narration>) -> "Dutch angle" (Tilted).
+                    - Neutral/Documentary -> "Eye-level".
+                 3. **Geography**:
+                    - Map/Layout view required -> "Overhead" (Top-down).
+               - *Vocabulary*: "Eye-level", "Low angle", "High angle", "Dutch angle", "Overhead", "Worm's-eye view".
+             - **lens (Focal Character)**:
+               - *Decision Logic*:
+                 1. **Distortion Check**:
+                    - Need to compress background (make it look closer) or isolate portrait? -> "85mm Portrait" or "Telephoto".
+                    - Need to exaggerate depth or show vastness? -> "35mm Wide-angle" or "Fisheye".
+                 2. **Scale Check**:
+                    - Tiny subject (<entity_list> implies Insect/Jewelry)? -> "Macro Lens".
+                 3. **Cinematic Feel**:
+                    - Epic movie look with horizontal flare? -> "Anamorphic".
+                 4. **Default**: Human vision standard -> "50mm Prime".
+               - *Vocabulary*: "50mm Prime", "35mm Wide-angle", "85mm Portrait", "Anamorphic", "Telephoto", "Macro Lens", "Fisheye".
+             - **focus (Depth Control)**:
+               - *Decision Logic*:
+                 - IF \`distance\` is "Close-up" OR \`distance\` is "Extreme Close-up" OR \`lens\` is "Telephoto"/"85mm Portrait" -> FORCE "Shallow depth of field" (Blur background).
+                 - IF \`distance\` is "Wide Shot" OR \`distance\` is "Extreme Wide Shot" OR \`lens\` is "Wide-angle" -> FORCE "Deep depth of field" (Everything sharp).
+                 - IF specific focus pull is described in <current_narration> -> "Rack focus".
+               - *Vocabulary*: "Sharp focus", "Deep depth of field", "Shallow depth of field", "Soft focus", "Rack focus".
+             - **fNumber (Aperture Value)**:
+               - *Decision Logic*:
+                 - IF \`focus\` == "Shallow depth of field" -> SELECT ONE: "f/1.2", "f/1.4", "f/1.8", "f/2.8".
+                 - IF \`focus\` == "Deep depth of field" -> SELECT ONE: "f/8", "f/11", "f/16", "f/22".
+                 - IF \`focus\` == "Sharp focus" (Standard) -> SELECT ONE: "f/4", "f/5.6".
+               - *Constraint*: Output MUST be a single string format (e.g., "f/2.8"). DO NOT output ranges like "f/1.8-f/2.8".
+             - **ISO (Sensitivity)**:
+               - *Decision Logic*:
+                 - IF [Field: 'lighting'] contains "Bright" or "Daylight" -> 100 or 200.
+                 - IF [Field: 'lighting'] contains "Indoor" or "Artificial" -> 400 or 800.
+                 - IF [Field: 'lighting'] contains "Night" or "Low-Key" -> 1600 or 3200.
+               - *Constraint*: Output MUST be a raw integer (e.g., 800). DO NOT include "ISO" prefix.
+      5. **[Field: 'composition'] - Spatial Organization & Visual Flow**
+         - **Objective**: Determine the structural arrangement of elements to guide the viewer's eye and reinforce the narrative subtext.
+         - **Source**: <entity_list> (Subject count/arrangement), <current_narration> (Action flow), <master_style_guide>.<composition>.
+         - **Constraint**: Select ONE primary technique. Do NOT list multiple conflicting compositions.
+         - **Selection Strategy (Creative Reasoning Guide)**:
+           Analyze the scene's emotional and physical dynamics to select the most effective composition technique:
+           1. **"Rule of thirds"**: 
+              - *Definition*: Subject placed at intersection points (top-left/bottom-right).
+              - *Usage*: Standard cinematic storytelling, balanced but natural, allows breathing room for looking/moving direction.
+           2. **"Center-weighted / Symmetrical"**:
+              - *Definition*: Subject perfectly centered or mirrored.
+              - *Usage*: Use for "Wes Anderson" style quirky formality, religious/god-like authority, extreme isolation, or direct confrontation with the viewer.
+           3. **"Dynamic Tension / Diagonal"**:
+              - *Definition*: Tilted horizons, oblique lines, or off-balance placement.
+              - *Usage*: Use for high-action combat, unease, psychological instability, or speed.
+           4. **"Leading lines / Depth Focus"**:
+              - *Definition*: Roads, corridors, or gaze lines pointing to the focal point.
+              - *Usage*: Use to emphasize destination, deep 3D space (Z-axis), or inevitable fate.
+           5. **"Negative space / Minimalism"**:
+              - *Definition*: Subject is small, surrounded by vast empty area.
+              - *Usage*: Use for loneliness, scale comparison (human vs nature), or contemplation.
+           6. **"Framing within a frame"**:
+              - *Definition*: Subject viewed through a door, window, or cave opening.
+              - *Usage*: Use for voyeurism, entrapment, or intimacy/secrecy.
+           7. **"Golden ratio / Fibonacci Spiral"**:
+              - *Definition*: Organic, mathematically perfect spiral flow.
+              - *Usage*: Use for nature scenes or aesthetically perfect, harmonic beauty.
+      6. **[Field: 'style'] - Aesthetic Identity & Rendering Logic**
+         - **Objective**: Synthesize the final visual style by analyzing the provided \`<style_data>\` and combining it with the Scene Context.
+         - **Source**: <style_data> (Input JSON), <global_environment> (Era), <fidelity> (Texture).
+         - **Constraint**: You MUST align with the \`coreConcept\` and \`visualKeywords\` defined in \`<style_data>\`.
+         - **Construction Strategy (Inference-Based Layering)**:
+           1. **Analyze Input Style Data (Visual DNA Extraction)**:
+              - *Action*: Read \`<style_data>.coreConcept\` and \`visualKeywords\` to determine the "Base Reality".
+              - *Strategy*: Infer the fundamental rendering mode by comparing input keywords with the examples below.
+              - *Inference Examples*:
+                - *Input*: "photorealistic", "cinematic", "8k", "raw photo" -> **Base Layer = "Photorealism / Live Action"**
+                - *Input*: "cel-shaded", "2D", "anime", "flat color", "manga" -> **Base Layer = "Anime / 2D Illustration"**
+                - *Input*: "thick brushstrokes", "oil painting", "watercolor", "impasto" -> **Base Layer = "Fine Art / Painterly"**
+                - *Input*: "octane render", "unreal engine", "3D cgi", "volumetric", "raytracing" -> **Base Layer = "3D Render / CGI"**
+                - *Input*: "clay", "stop-motion", "plasticine", "miniature" -> **Base Layer = "Stop-Motion / Claymation"**
+                - *Input*: "vector", "minimalist", "geometric", "clean lines" -> **Base Layer = "Vector Art / Graphic Design"**
+              - *Warning*: Do NOT copy the examples verbatim. **Adapt the Base Layer description** to perfectly match the specific nuance of the input <style_data>.
+           2. **Layer 1: Reality Anchor (Base)**:
+              - *Action*: Set the foundational look based on the analysis above.
+              - *Instruction*: Use the \`coreConcept\` sentence as the primary style descriptor.
+           2. **Layer 2: Era & Genre Vibe (Thematic Infusion)**:
+              - *Action*: Blend the "Flavor" of the Era (<global_environment>.\`era\`) into the chosen Base Layer.
+              - *Goal*: Create a cohesive "Genre Look" that respects both the time period and the art style.
+              - *Inference Examples (Thematic Recipes)*:
+                1. **[Realism + Cyberpunk]**: "Blade Runner aesthetic, Neon-noir, Gritty realistic sci-fi, Wet pavement reflections."
+                2. **[Anime + Cyberpunk]**: "Cyberpunk Anime style, Edgerunners aesthetic, Vibrant neon outlines, High-tech cel-shading."
+                3. **[Realism + Medieval]**: "Game of Thrones aesthetic, Gritty historical realism, Mud and steel texture, Natural torchlight."
+                4. **[Anime + Medieval]**: "Fantasy Isekai style, RPG illustration, Detailed armor design, Magical atmosphere."
+                5. **[3D Render + Sci-Fi]**: "Clean futuristic spaceship interior, Mass Effect style, High-gloss white panels, Blue lens flares."
+                6. **[Realism + 1980s]**: "Stranger Things vibe, Vintage Kodak film look, Warm nostalgia, Retro fashion."
+                7. **[Illustration + 1980s]**: "City Pop album cover style, Pastel colors, Memphis design patterns, Retro anime vibe."
+                8. **[Realism + Post-Apocalyptic]**: "Mad Max aesthetic, Desaturated desert tones, Rusted metal, Dust-covered survival gear."
+                9. **[Painting + Fantasy]**: "Oil painting style, Frazetta-inspired, Epic high fantasy, Dynamic brushstrokes, Mythical lighting."
+                10. **[Realism + Noir]**: "Classic 1940s film noir, High contrast B&W, Dramatic shadows, Silhouette focus, Smoky atmosphere."
+                11. **[Anime + School Life]**: "Slice of life anime style, Makoto Shinkai lighting, Soft lens flare, Blue sky focus."
+                12. **[Realism + Horror]**: "A24 Horror style, Unsettling atmosphere, Dim lighting, Psychological tension, Cold color palette."
+                13. **[3D Render + Cartoon]**: "Pixar style animation, Soft lighting, Subsurface scattering on skin, Vibrant and friendly colors."
+                14. **[Realism + Western]**: "Spaghetti Western look, Technicolor vintage, Harsh sunlight, Wide desert vistas, Grit and grain."
+                15. **[Vector + Modern]**: "Corporate Memphis style, Flat vector art, Minimalist shapes, Primary colors, Clean UI design."
+                16. **[Realism + Victorian]**: "Sherlock Holmes aesthetic, London fog, Cobblestone streets, Gaslight ambiance, Muted earth tones."
+                17. **[Anime + Mecha]**: "Gundam style, Detailed mechanical lines, Metallic shading, Space opera background."
+                18. **[Claymation + Fantasy]**: "Dark Crystal vibe, Tactile puppet texture, Handcrafted details, Stop-motion lighting."
+                19. **[Realism + War]**: "Saving Private Ryan style, Desaturated bleach bypass look, Handheld camera feel, Gritty combat realism."
+                20. **[Illustration + Horror]**: "Junji Ito style, Intricate black ink lines, Grotesque details, Surreal horror manga look."
+           4. **Layer 3: Texture & Finishing (Data-Driven Refinement)**:
+              - *Action*: Construct the final texture description using the provided <style_data>.
+              - *Instruction (Positive)*:
+                - **MUST USE**: Incorporate the terms found in <style_data>.\₩visualKeywords\` directly into the style description.
+                - *Example*: If keyword is "anamorphic lens look", write "...rendered with an anamorphic lens look...".
+              - *Instruction (Negative)*:
+                - **MUST AVOID**: Ensure the generated description does NOT contain elements listed in <style_data>.\₩negativeGuidance\`.
+                - *Example*: If negative is "Avoid editorial fashion close-ups", do NOT generate "High-fashion portrait" or "Studio lighting close-up".
+      7. **[Field: 'effects'] - Visual Enhancements & Atmosphere**
+         - **Objective**: Apply specific visual phenomena to heighten realism, drama, or stylistic flair.
+         - **Source**: <current_narration> (Action intensity), [Field: 'lighting'], and [Field: 'style'].
+         - **Constraint**: Output MUST be an array of strings. Select 0 to 3 effects. Do NOT overstuff.
+         - **Selection Logic (Context-Aware Application)**:
+           1. **Atmospheric Effects (Environment)**:
+              - IF [Field: 'lighting'] implies backlight or sun -> "God rays", "Volumetric lighting".
+              - IF mood is mysterious/spooky -> "Fog", "Mist", "Haze".
+              - IF environment is chaotic/dirty -> "Floating dust particles", "Smoke", "Sparks".
+              - IF weather is involved -> "Rain droplets", "Snowflakes", "Heat haze".
+           2. **Optical Effects (Camera)**:
+              - IF [Field: 'camera'].focus is "Shallow" -> FORCE "Bokeh" (Background blur).
+              - IF [Field: 'style'] includes "Cinematic" or "Sci-Fi" -> "Lens flare", "Anamorphic streak".
+              - IF scene involves high speed -> "Motion blur".
+              - IF style is "Vintage" or "Lo-Fi" -> "Chromatic aberration", "Vignette", "Halation".
+           3. **Stylistic Effects (Rendering)**:
+              - IF [Field: 'style'] is "Cyberpunk" or "Digital" -> "Glitch effect", "Scanlines", "Holographic glow".
+              - IF [Field: 'style'] is "Painting" -> "Brush stroke texture", "Canvas grain".
+              - IF [Field: 'style'] is "Comic/Anime" -> "Speed lines", "Impact frames", "Halftone pattern".
     </unit_3_cinematographic_intent_architecture>
-    <unit_4_technical_intent_derivation>
-      **UNIT 4: TECHNICAL INTENT DERIVATION**
-      **Goal**: Analyze the narrative context to extract the strategic 'Intent' for camera work and exposure, serving as the input for the optical mapping engine.
-      1. **[Field: 'technical_intent.angleIntent'] - Cinematic Perspective Strategy**
-        - **Action**: Analyze <current_narration> and <entity_list> to determine the narrative power dynamic.
-        - **Selection Guide**:
-          - **"Default/Neutral"**: Standard storytelling, eye-level observation.
-          - **"Heroic/Scale"**: Highlighting importance, making subjects look powerful or vast.
-          - **"Extreme Power/Ground-level"**: Extreme low-angle, emphasizing overwhelming scale or ground-level intensity.
-          - **"Dialogue/Interaction"**: Focus on communication or relationship between entities.
-          - **"Surveillance/Map-view"**: High-angle overview.
-          - **"Stylized/Technical"**: Unique perspective (e.g., Isometric) for specialized visual delivery.
-      2. **[Field: 'technical_intent.compositionIntent'] - Spatial Arrangement Strategy**
-        - **Action**: Determine the focal flow and balance of the frame based on <scene_content>.
-        - **Selection Guide**:
-          - **"Symmetry"**: Balanced, formal, or centered focus (Vanishing points).
-          - **"Balance"**: Standard Rule of Thirds for natural, stable compositions.
-          - **"Strength"**: Emphasizing structural stability or powerful lines (Horizontal/Vertical focus).
-          - **"Action"**: High energy, off-center, or dynamic tension (Diagonal energy).
-          - **"Motion"**: Guiding the eye through movement (S-curves, flow).
-          - **"Depth"**: Maximizing the Z-axis (Leading lines toward the horizon).
-          - **"Minimalism"**: Isolation and focus through negative space.
-      3. **[Field: 'technical_intent.exposureIntent'] - Light & Texture Strategy**
-        - **Action**: Define the "Light Quality" that matches the emotional tone of <video_title> and <master_style_guide>.
-        - **Selection Guide**:
-          - **"Vibrant/High-Key"**: Clean, bright, commercial, or upbeat scenes.
-          - **"Ethereal/Dreamy"**: Soft, glowing, surreal, or fantasy-like atmospheres.
-          - **"Balanced/Natural"**: Standard, unmanipulated daylight or indoor lighting.
-          - **"Cinematic/Moody"**: High contrast, dramatic shadows, narrative weight.
-          - **"Gritty/Noisy"**: Rough, raw, documentary-style with intentional texture/noise.
-          - **"Silhouetted/Backlit"**: Mysterious, high-contrast outline focus.
-          - **"Nocturnal/Deep-Night"**: Very low light, relying on moon or artificial sparks.
-          - **"Harsh/High-Energy"**: Aggressive, glaring, or intense light sources (Blaring sun, strobes).
-      **[Execution Rule]**:
-        - You MUST select exactly ONE intent for each category from the provided pick-lists.
-    </unit_4_technical_intent_derivation>
     <unit_5_natural_language_sentence_generation>
       - **UNIT 5: NATURAL LANGUAGE SENTENCE GENERATION**
       - **Goal**: Synthesize the structured data from the \`image_gen_prompt\` JSON object into a single, grammatically fluid, and cinematic Master Prompt Sentence in \`image_gen_prompt_sentence\`.
@@ -1391,13 +1447,19 @@ export const POST_IMAGE_GEN_PROMPT_PROMPT = `
         "lighting": string;
         "mood": string;
         "background": string;
+        "camera": {
+          "angle": "string",
+          "distance": "string",
+          "focus": "string",
+          "lens": "string",
+          "fNumber": "string",
+          "ISO": number
+        },
+        "composition": "string",
+        "style": "string",
+        "effects": "string[]"
       },
-      "technical_intent": {  
-        "angleIntent": enum (["Default/Neutral" | "Heroic/Scale" | "Extreme Power/Ground-level" | "Dialogue/Interaction" | "Surveillance/Map-view" | "Stylized/Technical"]);
-        "compositionIntent": enum (["Symmetry" | "Balance" | "Strength" | "Action" | "Motion" | "Depth" | "Minimalism"]);
-        "exposureIntent": enum (["Vibrant/High-Key" | "Ethereal/Dreamy" | "Balanced/Natural" | "Cinematic/Moody" | "Gritty/Noisy" | "Silhouetted/Backlit" | "Nocturnal/Deep-Night" | "Harsh/High-Energy"]);
-      },
-      "image_gen_prompt_sentence": string; // A single sentence from <prompt_authoring_protocol>.<unit_5_natural_language_sentence_generation>
+      "image_gen_prompt_sentence": string; // A single sentence from <prompt_authoring_protocol>.<unit_4_natural_language_sentence_generation>
     }
   </output_schema>
 </developer_instruction>
