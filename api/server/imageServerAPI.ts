@@ -1,8 +1,7 @@
-import {createSupabaseServiceRoleClient} from "@/lib/supabaseServiceRole";
-import {fal} from "@fal-ai/client";
-import {FluxPrompt} from "@/api/types/open-ai/FluxPrompt";
-import {ImageFile} from "@fal-ai/client/endpoints";
-import {FalAiErrorDetail} from "@/api/types/fal-ai/FalAIResponse";
+import { createSupabaseServiceRoleClient } from "@/lib/supabaseServiceRole";
+import { fal } from "@fal-ai/client";
+import { FluxPrompt } from "@/api/types/open-ai/FluxPrompt";
+import { ImageFile } from "@fal-ai/client/endpoints";
 
 export const imageServerAPI = {
     async postImage(
@@ -23,13 +22,14 @@ export const imageServerAPI = {
             let imageUrl: string;
 
             try {
-                const output = await fal.subscribe("fal-ai/kling-image/v3/text-to-image", {
+                const output = await fal.subscribe("fal-ai/kling-image/o3/text-to-image", {
                     input: {
                         prompt: `${imageGenPromptSentence} --MUST NOT letterbox`,
                         elements: [{
                             reference_image_urls: []
                         }],
                         resolution: "1K",
+                        result_type: "single",
                         num_images: 1,
                         aspect_ratio: "9:16",
                         output_format: "jpeg",
