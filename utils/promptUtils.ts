@@ -780,3 +780,56 @@ export function assembleOpticalAndTechnicalSentence(
         .replaceAll(".,", ",")
         .replaceAll("  ", " ");
 }
+
+export function convertImageGenPromptToSentence(data: FluxPrompt): string {
+    const segments: string[] = [];
+
+    // 1. Core Style & Scene (가장 중요)
+    segments.push(`Style: ${data.style}.`);
+    segments.push(`Scene: ${data.scene}`); // scene은 보통 문장형이라 마침표 생략 가능성 고려
+
+    // 2. Mood & Atmosphere
+    segments.push(`Mood: ${data.mood}`);
+    segments.push(`Lighting: ${data.lighting}`);
+    segments.push(`Background: ${data.background}`);
+
+    // 3. Subjects (가장 용량 많이 차지함 -> 효율적 압축)
+    if (data.subjects && data.subjects.length > 0) {
+        const subjectDescriptions = data.subjects.map((subj) => {
+            // Description에 이미 외형 묘사가 풍부하므로, 중복되는 clothes/type은 제외하고
+            // 포즈와 위치정보만 보강해줍니다.
+            let desc = `${subj.description}`;
+
+            // 포즈가 비어있지 않으면 추가
+            if (subj.pose) desc += `, acting: ${subj.pose}`;
+            // 위치가 비어있지 않으면 추가
+            if (subj.position) desc += `, placed at ${subj.position}`;
+
+            return desc;
+        });
+        segments.push(subjectDescriptions.join(" / "));
+    }
+
+    // 4. Technical Details (Camera, Effects)
+    const cameraDetails = [
+        data.camera.lens,
+        data.camera.angle,
+        data.camera.distance,
+        data.camera.focus,
+        `f/${data.camera.fNumber}`,
+        `ISO ${data.camera.ISO}`
+    ].filter(Boolean).join(", ");
+
+    segments.push(`Camera settings: ${cameraDetails}.`);
+    segments.push(`Effects: ${data.effects.join(", ")}.`);
+    segments.push(`Composition: ${data.composition}.`);
+
+    // 5. Color Palette (16진수 코드는 이미지 생성기가 잘 못 알아먹을 때가 많아 텍스트화하면 좋지만, 일단 그대로 둠)
+    // (Hex 코드는 글자수를 적게 차지하므로 유지)
+    if (data.color_palette && data.color_palette.length > 0) {
+        segments.push(`Palette: ${data.color_palette.join(", ")}.`);
+    }
+
+    // 전체 조립 (공백 하나로 연결)
+    return segments.join(" ");
+}

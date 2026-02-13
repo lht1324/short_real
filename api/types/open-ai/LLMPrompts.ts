@@ -2328,18 +2328,22 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
         "narrative_vibe": "enum: (["NORMAL", "CHAOTIC", "COMBAT", "ANXIOUS", "CATASTROPHIC", "VERTIGO", "SHOCK", "DREAMY", "SURREAL", "EMOTIONAL", "FOCUS"])"
         "identity_logic": "string (Define how the subject's era, role, and physical essence from the <entity_list> and metadata are preserved during motion.)",
         "action_focus": "string (Explain the conceptual shift from the raw narration to the high-impact kinetic verb used in the prompt.)",
-        "primary_narrative_block": {
-          "entity_id": "string (The \`id\` of each **[ACTIVE_AGENT]** <entity_list>[n] from <step_3_0_kinetic_authority_check>.)"
-          "raw_sentence": "string (The extracted each <entity_list>[n]'s sentence from <step_4_kinetic_sentence_fabrication>.**The Assembly Line**.)",
-          "action_type": "enum ["Continuous" | "Temporary-Single" | "Temporary-Sequential" | "Temporary-Simultaneous"] (\`sentence\`'s **Action Type** from <step_3_1_action_type_decision>.)",
-          "action_type_reason": "string (Explain why you chose \`sentence\`'s **Action Type** based on what.)",
-          "verb_reason": "string ("The reason why you chose ([(\`action_context\`) Verb] by using \`INTENSITY_TIER\` and \`action_context\`.)",
-          "adverb_reason": "string ("The reason why you chose [(\`action_context\`) Verb] by using \`INTENSITY_TIER\` and \`action_context\` if **Action Type** is \`[Continuous]\` or \`[Temporary-Single]\`. If **Action Type** is not \`[Continuous]\` or \`[Temporary-Single]\`, leave this empty.)"
-        }[],
-        "atmospheric_lighting_delta": {
-          "selected_atmospheric_or_lighting_layer": "string (Selected **[Slot_n]** from <step_5_atmospheric_delta_refinement>.)",
-          "selected_reason": "string (Explain why you chose \`selected_atmospheric_or_lighting_layer\` from <step_5_atmospheric_delta_refinement> based on what.)"
-        }[],
+        "primary_narrative_block": [
+          {
+            "entity_id": "string (The \`id\` of each **[ACTIVE_AGENT]** <entity_list>[n] from <step_3_0_kinetic_authority_check>.)"
+            "raw_sentence": "string (The extracted each <entity_list>[n]'s sentence from <step_4_kinetic_sentence_fabrication>.**The Assembly Line**.)",
+            "action_type": "enum ["Continuous" | "Temporary-Single" | "Temporary-Sequential" | "Temporary-Simultaneous"] (\`sentence\`'s **Action Type** from <step_3_1_action_type_decision>.)",
+            "action_type_reason": "string (Explain why you chose \`sentence\`'s **Action Type** based on what.)",
+            "verb_reason": "string ("The reason why you chose ([(\`action_context\`) Verb] by using \`INTENSITY_TIER\` and \`action_context\`.)",
+            "adverb_reason": "string ("The reason why you chose [(\`action_context\`) Verb] by using \`INTENSITY_TIER\` and \`action_context\` if **Action Type** is \`[Continuous]\` or \`[Temporary-Single]\`. If **Action Type** is not \`[Continuous]\` or \`[Temporary-Single]\`, leave this empty.)"
+          }
+        ],
+        "atmospheric_lighting_delta": [
+          {
+            "selected_atmospheric_or_lighting_layer": "string (Selected **[Slot_n]** from <step_5_atmospheric_delta_refinement>.)",
+            "selected_reason": "string (Explain why you chose \`selected_atmospheric_or_lighting_layer\` from <step_5_atmospheric_delta_refinement> based on what.)"
+          }
+        ],
         "cinematic_camera_vectors": {
           "subject_vectors": {
             // $S_x$, $S_y$, $S_z$ from <step_7_1_subject_vector_inference>

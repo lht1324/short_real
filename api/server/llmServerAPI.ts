@@ -28,7 +28,7 @@ import {
     generateTechnicalLensString,
     assembleFullVideoGenPromptSentence,
     surgicallyReplaceVideoGenPromptByCameraKey,
-    TechnicalIntent,
+    TechnicalIntent, convertImageGenPromptToSentence,
 } from "@/utils/promptUtils";
 import { cleanAndParseJSON } from "@/utils/jsonUtils";
 import { addArticleToWord } from "@/utils/stringUtils";
@@ -748,8 +748,9 @@ Instruction: Generate the scene instruction JSON.
                 });
 
                 const lowerCaseFirst = (str: string) => str.charAt(0).toLowerCase() + str.slice(1);
-                const assembledImageGenPromptSentence = `${cameraPhrases} ${lowerCaseFirst(imageGenPromptSentence)}. ${environmentalAndAtmosphereSentence}. ${opticalAndTechnicalSentence}.`
-                    .replaceAll("..", ".");
+                // const assembledImageGenPromptSentence = `${cameraPhrases} ${lowerCaseFirst(imageGenPromptSentence)}. ${environmentalAndAtmosphereSentence}. ${opticalAndTechnicalSentence}.`
+                //     .replaceAll("..", ".");
+                const assembledImageGenPromptSentence = convertImageGenPromptToSentence(fullImageGenPrompt);
 
                 logger.info(`Scene #${sceneNumber} ImageGenPromptSentence`, {
                     imageGenPromptSentence: imageGenPromptSentence,
@@ -1186,6 +1187,7 @@ Instruction: Generate the scene instruction JSON.
                 }
             } catch (parseError) {
                 console.error('JSON Parse Failed:', parseError);
+                console.log(`Scene #${sceneNumber} raw content: ${generatedContent}`);
                 return {
                     success: false,
                     error: {
