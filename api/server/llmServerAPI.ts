@@ -5,7 +5,6 @@ import {
     POST_ENTITY_MANIFEST_LIST,
     POST_MASTER_STYLE_INFO_PROMPT,
     POST_IMAGE_GEN_PROMPT_PROMPT,
-    POST_IMAGE_GEN_PROMPT_NO_ENTITIES_PROMPT,
     POST_VIDEO_GEN_PROMPT_PROMPT,
     POST_MUSIC_GENERATION_DATA_PROMPT,
 } from "@/api/types/open-ai/LLMPrompts";
@@ -21,19 +20,15 @@ import { MasterStyleInfo } from "@/api/types/supabase/MasterStyleInfo";
 import { FluxPrompt, FluxPromptSubject } from "@/api/types/open-ai/FluxPrompt";
 import { MusicGenerationData } from "@/api/types/suno-api/MusicGenerationData";
 import {
-    composeOpticalAndTechnicalOption,
-    assembleEnvironmentalAndAtmosphereSentence,
-    assembleOpticalAndTechnicalSentence,
     subjectVectorsToCameraVectorString,
     generateTechnicalLensString,
     assembleFullVideoGenPromptSentence,
     surgicallyReplaceVideoGenPromptByCameraKey,
-    TechnicalIntent, convertImageGenPromptToSentence,
 } from "@/utils/promptUtils";
 import { cleanAndParseJSON } from "@/utils/jsonUtils";
-import { addArticleToWord } from "@/utils/stringUtils";
 import { logger } from "@trigger.dev/sdk";
 import { OpenRouterClient, OpenRouterModel } from "@/lib/OpenRouterClient";
+import {STYLE_DATA_LIST} from "@/lib/styles";
 
 export const llmServerAPI = {
     async postScript(userPrompt: string): Promise<ScriptGenerationResponse | null> {
@@ -604,10 +599,15 @@ Instruction: Analyze <video_metadata>, <target_aspect_ratio>, <style_guidelines>
         }
     }> {
         try {
-            const isEntityListNotEmpty = sceneEntityManifestList.length !== 0;
-            const systemMessage = isEntityListNotEmpty
-                ? POST_IMAGE_GEN_PROMPT_PROMPT
-                : POST_IMAGE_GEN_PROMPT_NO_ENTITIES_PROMPT;
+            const styleData = STYLE_DATA_LIST.find((style) => {
+                return style.uiMetadata.id === styleId;
+            });
+
+            if (!styleData) {
+                throw Error("StyleId is invalid.");
+            }
+
+            const systemMessage = POST_IMAGE_GEN_PROMPT_PROMPT;
 
             const userMessage = `
 <input_data>
@@ -623,7 +623,7 @@ Instruction: Analyze <video_metadata>, <target_aspect_ratio>, <style_guidelines>
     <global_environment>${JSON.stringify(masterStylePromptInfo.globalEnvironment, null, 2)}</global_environment>
     <composition>${JSON.stringify(masterStylePromptInfo.composition, null, 2)}</composition>
   </master_style_guide>
-  ${isEntityListNotEmpty ? `<entity_list>${JSON.stringify(sceneEntityManifestList, null, 2)}</entity_list>` : ""}
+  <entity_list>${JSON.stringify(sceneEntityManifestList, null, 2)}</entity_list>
   <current_narration>
     ${sceneNarration}
   </current_narration>
@@ -631,21 +631,14 @@ Instruction: Analyze <video_metadata>, <target_aspect_ratio>, <style_guidelines>
     ${imageGenPromptDirective}
   </scene_content>
   <scene_visual_description>${sceneVisualDescription}</scene_visual_description>
+  <style_data>${JSON.stringify(styleData, null, 2)}</style_data>
 </input_data>
 
-${isEntityListNotEmpty ? `
 Instruction: Generate the scene instruction JSON.
 **CRITICAL**: You are the Physics Architect.
 1. Populate 'physics_profile' based on the 3-Layer Logic.
 2. Enrich 'appearance' with visual cues that imply that physics (e.g., textures, damage).
-3. Define 'state' with a physically accurate pose.\`
-` : `
-Instruction: Generate the scene instruction JSON.
-**CRITICAL**: You are the Atmospheric Architect.
-1. Analyze the <scene_content> to identify the Dominant Anchor.
-2. Focus strictly on Environmental Textures, Lighting, and Scale.
-3. Output the single 'image_gen_prompt' string. Do NOT invent characters.
-`}
+3. Define 'state' with a physically accurate pose.
 `;
 
             const client = new OpenRouterClient();
@@ -672,16 +665,14 @@ Instruction: Generate the scene instruction JSON.
             // JSON 유효성 검증
             try {
                 const instructionJSON: {
-                    image_gen_prompt: Omit<FluxPrompt, 'style' | 'camera' | 'composition' | 'effects'>;
+                    image_gen_prompt: FluxPrompt;
                     image_gen_prompt_sentence: string;
-                    technical_intent: TechnicalIntent;
                     updated_entity_manifest_list?: Omit<Entity, 'role' | 'type' | 'demographics'>[] | null
                 } = cleanAndParseJSON(generatedContent);
 
                 const {
                     image_gen_prompt: imageGenPrompt,
                     image_gen_prompt_sentence: imageGenPromptSentence,
-                    technical_intent: technicalIntent,
                     updated_entity_manifest_list: updatedEntityManifestList,
                 } = instructionJSON;
 
@@ -711,58 +702,16 @@ Instruction: Generate the scene instruction JSON.
                         },
                         role: originalEntity.role,
                     };
-                }) : []
-
-                const opticalAndTechnicalOption = composeOpticalAndTechnicalOption(
-                    technicalIntent,
-                    masterStylePromptInfo,
-                    newEntityManifestList,
-                    styleId as (keyof typeof STYLE_PROMPT_LIBRARY),
-                );
-
-                logger.info(`Scene #${sceneNumber} OpticalAndTechnicalOption`, {
-                    opticalAndTechnicalOption: opticalAndTechnicalOption,
-                })
-
-                const fullImageGenPrompt: FluxPrompt = {
-                    ...imageGenPrompt,
-                    ...opticalAndTechnicalOption,
-                }
-
-                const cameraPhrases = `${addArticleToWord(fullImageGenPrompt.camera.angle, true)} ${fullImageGenPrompt.camera.distance} ${fullImageGenPrompt.subjects.length !== 0 ? "captures" : "focuses entirely on"}`;
-
-                const environmentalAndAtmosphereSentence = assembleEnvironmentalAndAtmosphereSentence({
-                    scene: fullImageGenPrompt.scene,
-                    subjects: fullImageGenPrompt.subjects,
-                    color_palette: fullImageGenPrompt.color_palette,
-                    lighting: fullImageGenPrompt.lighting,
-                    mood: fullImageGenPrompt.mood,
-                    background: fullImageGenPrompt.background,
-                    composition: fullImageGenPrompt.composition,
-                });
-
-                const opticalAndTechnicalSentence = assembleOpticalAndTechnicalSentence({
-                    camera: fullImageGenPrompt.camera,
-                    style: fullImageGenPrompt.style,
-                    effects: fullImageGenPrompt.effects,
-                });
-
-                const lowerCaseFirst = (str: string) => str.charAt(0).toLowerCase() + str.slice(1);
-                const assembledImageGenPromptSentence = `${cameraPhrases} ${lowerCaseFirst(imageGenPromptSentence)}. ${environmentalAndAtmosphereSentence}. ${opticalAndTechnicalSentence}.`
-                    .replaceAll("..", ".");
-                // const assembledImageGenPromptSentence = convertImageGenPromptToSentence(fullImageGenPrompt);
+                }) : [];
 
                 logger.info(`Scene #${sceneNumber} ImageGenPromptSentence`, {
                     imageGenPromptSentence: imageGenPromptSentence,
                 });
-                logger.info(`Scene #${sceneNumber} AssembledImageGenPromptSentence`, {
-                    assembledImageGenPromptSentence: assembledImageGenPromptSentence,
-                });
 
                 return {
                     success: true,
-                    imageGenPrompt: fullImageGenPrompt,
-                    imageGenPromptSentence: assembledImageGenPromptSentence,
+                    imageGenPrompt: imageGenPrompt,
+                    imageGenPromptSentence: imageGenPromptSentence,
                     sceneEntityManifestList: newEntityManifestList,
                 };
             } catch (jsonError) {
@@ -796,185 +745,23 @@ Instruction: Generate the scene instruction JSON.
     },
 
     async postVideoGenPrompt(
-        sceneNarration: string,
         sceneNumber: number,
         imageBase64: string,
-        targetDuration: number,
-        masterStyleInfo: MasterStyleInfo,
-        videoTitle: string,
-        videoDescription: string,
-        imageGenPrompt: FluxPrompt,
-        entityManifestList: Entity[],
     ): Promise<{
         success: boolean;
         videoGenPrompt?: string;
         error?: { message: string; code: string }
     }> {
         try {
-            const isEntityListNotEmpty = entityManifestList.length !== 0;
             const systemMessage = POST_VIDEO_GEN_PROMPT_PROMPT;
 
-            // [핵심] Physics Profile을 기반으로 물리 법칙 텍스트 생성 (Code Level Injection)
-            // 메인 히어로 또는 씬에 등장하는 주요 엔티티들의 물리 속성을 추출하여 문자열로 변환
-
-            const uniqueMaterialKeys = new Set<'rigid' | 'viscoelastic' | 'brittle' | 'cloth' | 'fluid' | 'elastoplastic' | 'granular'>();
-            const uniqueActionContextKeys = new Set<'locomotion' | 'combat' | 'interaction' | 'aerodynamics' | 'passive' | 'velocity_max'>();
-
-            entityManifestList.forEach(entity => {
-                entity.physics_profile?.material.forEach(m => uniqueMaterialKeys.add(m));
-                entity.physics_profile?.action_context.forEach(a => uniqueActionContextKeys.add(a));
-            });
-
-            const uniqueMaterialVocabularyList = Array.from(uniqueMaterialKeys).map((key) => {
-                const {
-                    very_low_intensity,
-                    low_intensity,
-                    high_intensity,
-                    very_high_intensity,
-                } = PHYSICS_LIBRARY.material[key]
-
-                return `
-[physics_profile Field: material]
-[physics_profile Value: ${key}]
-**INTENSITY_TIER: VERY_LOW (Micro-Stasis / Latent Flux / Absolute Stillness)**
-- **Visual Effect Candidates**: ${very_low_intensity.effect_tag} OR ${very_low_intensity.alt_tag}
-- **Main Verbs**: ${very_low_intensity.vocabulary.verbs.join(', ')}
-- **Adjectives**: ${very_low_intensity.vocabulary.adjectives.join(', ')}
-- **Nouns**: ${very_low_intensity.vocabulary.nouns.join(', ')}
-
-**INTENSITY_TIER: LOW (Fluid Motion / Rhythmic Drift / Subtle Flow)**
-- **Visual Effect Candidates**: ${low_intensity.effect_tag} OR ${low_intensity.alt_tag}
-- **Main Verbs**: ${low_intensity.vocabulary.verbs.join(', ')}
-- **Adjectives**: ${low_intensity.vocabulary.adjectives.join(', ')}
-- **Nouns**: ${low_intensity.vocabulary.nouns.join(', ')}
-
-**INTENSITY_TIER: HIGH (Decisive Kinetic / Structural Strain / High Momentum)**
-- **Visual Effect Candidates**: ${high_intensity.effect_tag} OR ${high_intensity.alt_tag}
-- **Main Verbs**: ${high_intensity.vocabulary.verbs.join(', ')}
-- **Adjectives**: ${high_intensity.vocabulary.adjectives.join(', ')}
-- **Nouns**: ${high_intensity.vocabulary.nouns.join(', ')}
-
-**INTENSITY_TIER: VERY_HIGH (Explosive Chaos / Hyper-Velocity / Kinetic Failure)**
-- **Visual Effect Candidates**: ${very_high_intensity.effect_tag} OR ${very_high_intensity.alt_tag}
-- **Main Verbs**: ${very_high_intensity.vocabulary.verbs.join(', ')}
-- **Adjectives**: ${very_high_intensity.vocabulary.adjectives.join(', ')}
-- **Nouns**: ${very_high_intensity.vocabulary.nouns.join(', ')}
-`
-            });
-
-            const uniqueActionContextVocabularyList = Array.from(uniqueActionContextKeys).map((key) => {
-                const {
-                    very_low_intensity,
-                    low_intensity,
-                    high_intensity,
-                    very_high_intensity,
-                } = PHYSICS_LIBRARY.action_context[key]
-
-                return `
-[physics_profile Field: action_context]
-[physics_profile Value: ${key}]
-**INTENSITY_TIER: VERY_LOW (Micro-Stasis / Latent Flux / Absolute Stillness)**
-- **Velocity Options**: ${very_low_intensity.speed_term}
-- **Main Verbs**: ${very_low_intensity.vocabulary.verbs.join(', ')}
-- **Adjectives**: ${very_low_intensity.vocabulary.adjectives.join(', ')}
-- **Nouns**: ${very_low_intensity.vocabulary.nouns.join(', ')}
-
-**INTENSITY_TIER: LOW (Fluid Motion / Rhythmic Drift / Subtle Flow)**
-- **Velocity Options**: ${low_intensity.speed_term}
-- **Main Verbs**: ${low_intensity.vocabulary.verbs.join(', ')}
-- **Adjectives**: ${low_intensity.vocabulary.adjectives.join(', ')}
-- **Nouns**: ${low_intensity.vocabulary.nouns.join(', ')}
-
-**INTENSITY_TIER: HIGH (Decisive Kinetic / Structural Strain / High Momentum)**
-- **Velocity Options**: ${high_intensity.speed_term}
-- **Main Verbs**: ${high_intensity.vocabulary.verbs.join(', ')}
-- **Adjectives**: ${high_intensity.vocabulary.adjectives.join(', ')}
-- **Nouns**: ${high_intensity.vocabulary.nouns.join(', ')}
-
-**INTENSITY_TIER: VERY_HIGH (Explosive Chaos / Hyper-Velocity / Kinetic Failure)**
-- **Velocity Options**: ${very_high_intensity.speed_term}
-- **Main Verbs**: ${very_high_intensity.vocabulary.verbs.join(', ')}
-- **Adjectives**: ${very_high_intensity.vocabulary.adjectives.join(', ')}
-- **Nouns**: ${very_high_intensity.vocabulary.nouns.join(', ')}
-`
-            });
-
-            // 2. 고유 키에 대해서만 라이브러리 데이터 추출 (id 대신 타입 표기)
-            const globalVocabularyDepot = [
-                ...uniqueMaterialVocabularyList,
-                ...uniqueActionContextVocabularyList
-            ].join('\n');
-
-            const imageGenPromptSubjectList: FluxPromptSubject[] = imageGenPrompt.subjects ?? [];
-            const mappedEntityList = isEntityListNotEmpty
-                ? entityManifestList.map((entity) => {
-                    // 1. Flux 2 베이스 이미지 생성 시 사용된 상세 시각 데이터 매칭 (id 기준)
-                    const visualAnchor = imageGenPromptSubjectList.find(subject => subject.id === entity.id);
-
-                    return {
-                        role: entity.role,
-                        type: entity.type,
-                        demographics: entity.demographics,
-
-                        // 2. 공간적 고정점 (Composition Anchor)
-                        position_descriptor: entity.appearance.position_descriptor ?? "",
-
-                        // 3. 물리적 고정점 (Visual Ground Truth)
-                        // 베이스 이미지의 포즈를 주입하여 Toward/Away 벡터 오판단 방지
-                        visual_anchor_initial_pose: visualAnchor?.pose ?? "",
-                        physics_profile: entity.physics_profile,
-
-                        description: visualAnchor?.description ?? "",
-
-                        // 4. 보조 식별 정보
-                        hair: entity.appearance.hair,
-                        clothing: entity.appearance.clothing_or_material,
-                    };
-                })
-                : [];
-
-            const mappedMasterStyleInfo = {
-                ...masterStyleInfo,
-                optics: {
-                    ...masterStyleInfo.optics,
-                    defaultISO: imageGenPrompt.camera.ISO,
-                }
-            }
             // 4. User Message 구성 (physics_instruction_set 주입)
             const userMessage = `
-<input_context>
-  <video_metadata>
-    <video_title>${videoTitle}</video_title>
-    <video_description>${videoDescription}</video_description>
-    <target_duration>${targetDuration}seconds</target_duration>
-  </video_metadata>
-  <vocabulary_depot>
-    **GLOBAL PHYSICS RESOURCE POOL**: 
-    This pool contains technical vocabulary mapped to physics_profile keys.
-    Refer to <entity_list>.[n].\`physics_profile\` and match the 'Field' and 'Value' to select descriptors from the locked INTENSITY_TIER.
-    
-    ${globalVocabularyDepot}
-  </vocabulary_depot>
-  <scene_narration>${sceneNarration}</scene_narration>
-  <master_style_guide>
-    ${JSON.stringify(mappedMasterStyleInfo, null, 2)}
-  </master_style_guide>
-  <entity_list>
-    ${JSON.stringify(mappedEntityList, null, 2)}
-  </entity_list>
-  <image_context>
-    **START FRAME TRUTH**:
-    The input image is the absolute visual ground truth (t=0).
-    **INSTRUCTIONS**:
-    - **Zero Redundancy**: Do NOT restate static visual details already visible (clothing, hair, structures, props).
-    - **Delta-Only Focus**: ONLY describe the **Delta (change)** across four dimensions:
-      1) **Primary Action**: Physical movement, inertia, and micro-expressions of subjects.
-      2) **Cinematic Camera**: Dynamic 3D movement and optical shifts (focus, zoom).
-      3) **Atmospheric Delta**: Fluid changes in lighting, weather, and air particles.
-    - **Entity Interaction**: Describe how subjects interact with their environment based on the RESOURCE POOL.
-  </image_context>
-</input_context>
-`;
+The attached image is the base frame for I2V video generation.
+Analyze its visual context and latent kinetic energy to architect a professional cinematic prompt.
+Focus strictly on the motion delta and kinematic progression as defined in the system logic.
+Proceed with the prompt generation.
+            `;
 
             const client = new OpenRouterClient();
 
@@ -999,191 +786,14 @@ Instruction: Generate the scene instruction JSON.
 
             try {
                 const parsedJson: {
-                    logical_bridge: {
-                        scene_fundamental_data: {
-                            scene_summary: string;
-                            scene_summary_reason: string;
-                            primary_movement: string;
-                            primary_movement_reason: string;
-                            narrative_vibe: "NORMAL" | "CHAOTIC" | "COMBAT" | "ANXIOUS" | "CATASTROPHIC" | "VERTIGO" | "SHOCK" | "DREAMY" | "SURREAL" | "EMOTIONAL" | "FOCUS";
-                            narrative_vibe_reason: string;
-                            intensity_tier: "VERY_LOW" | "LOW" | "HIGH" | "VERY_HIGH";
-                            intensity_tier_selected_reason: string;
-                        };
-                        identity_logic: string;
-                        action_focus: string;
-                        primary_narrative_block: {
-                            entity_id: string;
-                            raw_sentence: string;
-                            action_type: string;
-                            action_type_reason: string;
-                            verb_reason: string;
-                            adverb_reason: string;
-                        }[];
-                        atmospheric_lighting_delta: {
-                            selected_atmospheric_or_lighting_layer: string;
-                            selected_reason: string;
-                        }[];
-                        cinematic_camera_vectors: {
-                            subject_vectors: {
-                                sx: "$-X$"| "$0X$" | "$+X$";
-                                sy: "$-Y$"| "$0Y$" | "$+Y$";
-                                sz: "$-Z$"| "$0Z$" | "$+Z$";
-                            };
-                            subject_vectors_reasoning: string;
-                        };
-                        style: {
-                            slot_1: string;
-                            slot_2: string;
-                            slot_1_reason: string;
-                            slot_2_reason: string;
-                        }
-                    },
-                    reasoning: string;
-                    final_output_structure: {
-                        primary_narrative_block: string;
-                        atmospheric_lighting_delta: string;
-                        cinematic_camera_vector: string;
-                        style: string;
-                    };
                     video_gen_prompt: string;
                 } = cleanAndParseJSON(generatedContent);
 
-                const {
-                    scene_fundamental_data: {
-                        scene_summary: sceneSummary,
-                        scene_summary_reason: sceneSummaryReason,
-                        primary_movement: primaryMovement,
-                        primary_movement_reason: primaryMovementReason,
-                        narrative_vibe: narrativeVibe,
-                        narrative_vibe_reason: narrativeVibeReason,
-                        intensity_tier: intensityTier,
-                        intensity_tier_selected_reason: intensityTierSelectedReason,
-                    },
-                    identity_logic: identityLogic,
-                    action_focus: actionFocus,
-                    primary_narrative_block: primaryNarrativeBlock,
-                    atmospheric_lighting_delta: atmosphericLightingDelta,
-                    cinematic_camera_vectors: {
-                        subject_vectors: subjectVectors,
-                        subject_vectors_reasoning: subjectVectorsReasoning,
-                    },
-                    style: {
-                        slot_1: slot1,
-                        slot_2: slot2,
-                        slot_1_reason: slot1Reason,
-                        slot_2_reason: slot2Reason,
-                    }
-                } = parsedJson.logical_bridge;
-
-                const {
-                    primary_narrative_block: outputPrimaryNarrativeBlock,
-                    atmospheric_lighting_delta: outputAtmosphericLightingDelta,
-                    cinematic_camera_vector: outputCinematicCameraVector,
-                    style: outputStyle,
-                } = parsedJson.final_output_structure;
-
-                const basePrompt = parsedJson.video_gen_prompt;
-                const cameraVectorString = subjectVectorsToCameraVectorString(subjectVectors.sx, subjectVectors.sy, subjectVectors.sz, intensityTier, narrativeVibe);
-
-                // 1. AI가 필드에 미리 발라놓은 'captured with' `등을 먼저 싹 닦아냅니다.
-                const bridgePhrasesRegex = /\b(captured with|filmed with|captured with a|filmed using)\s+CINEMATIC_CAMERA_VECTORS/gi;
-                // 필드 자체를 미리 세척 (이게 핵심입니다)
-                const cleanedCameraField = outputCinematicCameraVector.replace(bridgePhrasesRegex, "CINEMATIC_CAMERA_VECTORS");
-                const technicalLensString = generateTechnicalLensString(masterStyleInfo);
-                const finalCinematicCameraVectorsBlock = `${technicalLensString}, ${cleanedCameraField}`;
-
-                // 조립 함수 및 메인 로직 내 적용 예시
-                const finalResultPrompt = outputCinematicCameraVector.includes("CINEMATIC_CAMERA_VECTORS")
-                    ? isEntityListNotEmpty
-                        ? assembleFullVideoGenPromptSentence(
-                            outputPrimaryNarrativeBlock,
-                            outputAtmosphericLightingDelta,
-                            finalCinematicCameraVectorsBlock,
-                            cameraVectorString,
-                            outputStyle
-                        )
-                        : surgicallyReplaceVideoGenPromptByCameraKey(
-                            basePrompt,
-                            outputCinematicCameraVector,
-                            cameraVectorString,
-                            outputStyle,
-                        )
-                    : basePrompt.includes("CINEMATIC_CAMERA_VECTORS")
-                        ? basePrompt.replace("CINEMATIC_CAMERA_VECTORS", `${cameraVectorString} ${outputCinematicCameraVector}`)
-                        : basePrompt;
-
-
-                console.log(`Scene #${sceneNumber} postVideoGenPrompt() Result`);
-                console.log(`Scene Summary: ${sceneSummary}`);
-                console.log(`Scene Summary Reason: ${sceneSummaryReason}`);
-                console.log(`Primary Movement: ${primaryMovement}`);
-                console.log(`Primary Movement Reason: ${primaryMovementReason}`);
-                console.log(`Narrative Vibe: ${narrativeVibe}`);
-                console.log(`Narrative Vibe Reason: ${narrativeVibeReason}`);
-                console.log(`Selected INTENSITY_TIER: ${intensityTier}`);
-                console.log(`INTENSITY_TIER Selected Reason: ${intensityTierSelectedReason}`);
-                console.log(`Identity Logic: ${identityLogic}`);
-                console.log(`Action Focus: ${actionFocus}`);
-
-                if (primaryNarrativeBlock.length !== 0) {
-                    console.log("- - - Primary Narrative Block - - -");
-                    primaryNarrativeBlock.forEach((primaryNarrativeData) => {
-                        const {
-                            entity_id: entityId,
-                            raw_sentence: rawSentence,
-                            action_type: actionType,
-                            action_type_reason: actionTypeReason,
-                            verb_reason: verbReason,
-                            adverb_reason: adverbReason,
-                        } = primaryNarrativeData;
-
-                        console.log(`Entity[${entityId}]`);
-                        console.log(`Raw Sentence: ${rawSentence}`);
-                        console.log(`Action Type: ${actionType}`);
-                        console.log(`Action Type Reason: ${actionTypeReason}`);
-                        console.log(`Verb Reason: ${verbReason}`);
-                        console.log(`Adverb Reason: ${adverbReason}`);
-                    })
-                }
-
-                if (atmosphericLightingDelta.length !== 0) {
-                    console.log("- - - Atmospheric Lighting Delta - - -");
-                    atmosphericLightingDelta.forEach((lightingDelta) => {
-                        const {
-                            selected_atmospheric_or_lighting_layer: selectedAtmosphericOrLightingLayer,
-                            selected_reason: selectedReason,
-                        } = lightingDelta;
-
-                        console.log(`Delta: ${selectedAtmosphericOrLightingLayer}`);
-                        console.log(`Delta Reason: ${selectedReason}`);
-                    })
-                }
-
-                console.log("- - - Cinematic Camera Vectors - - -");
-
-                console.log(`Camera Action: ${cameraVectorString}`);
-                console.log(`Subject Vectors: [${subjectVectors.sx}, ${subjectVectors.sy}, ${subjectVectors.sz}]`);
-                console.log(`Subject Vectors Reasoning: ${subjectVectorsReasoning}`);
-
-                console.log("- - - Style - - -");
-                console.log(`Style Slot 1: ${slot1}`);
-                console.log(`Style Slot 2: ${slot2}`);
-                console.log(`Style Slot 1 Reason: ${slot1Reason}`);
-                console.log(`Style Slot 2 Reason: ${slot2Reason}`);
-
-                console.log(`Reasoning: ${parsedJson.reasoning}`);
-                console.log("- - - Final Output Structure - - -");
-                console.log(`Primary Narrative Block: ${outputPrimaryNarrativeBlock}`);
-                console.log(`Atmospheric/Lighting Delta: ${outputAtmosphericLightingDelta}`);
-                console.log(`Cinematic Camera Vector: ${outputCinematicCameraVector}`);
-                console.log(`Style: ${outputStyle}`);
                 console.log(`videoGenPrompt: ${parsedJson.video_gen_prompt}`);
-                console.log(`assembledVideoGenPrompt: ${finalResultPrompt}`);
 
                 return {
                     success: true,
-                    videoGenPrompt: finalResultPrompt.replaceAll("**", ""),
+                    videoGenPrompt: parsedJson.video_gen_prompt,
                 }
             } catch (parseError) {
                 console.error('JSON Parse Failed:', parseError);
