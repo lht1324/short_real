@@ -798,34 +798,36 @@ export const POST_IMAGE_GEN_PROMPT_PROMPT = `
   <input_data_interpretation>
     You will receive an XML-wrapped block named <input_data>. Understand the schema as follows:
     1. **<video_context>**: Contains global metadata.
-      - <video_title>: Video title - Use as **high-level narrative theme** and emotional anchor.
-      - <video_description>: Video description - Provides **creative direction** and key visual motifs.
-      - <aspect_ratio>: The physical canvas constraints (e.g., "9:16", "16:9", "1:1"). **Crucial for composition safety.**
+       - <video_title>: Video title - Use as **high-level narrative theme** and emotional anchor.
+       - <video_description>: Video description - Provides **creative direction** and key visual motifs.
+       - <aspect_ratio>: The physical canvas constraints (e.g., "9:16", "16:9", "1:1"). **Crucial for composition safety.**
     2. **<master_style_guide>**: The Technical Visual Standard.
-      - **<optics>**: Contains \`lensType\`, \`focusDepth\`, \`exposureVibe\`, and \`defaultISO\`. Use these to set the physical camera parameters in Unit 3.
-      - **<color_and_light>**: Contains \`tonality\`, \`lightingSetup\`, and \`globalHexPalette\` (exactly 5 codes). Use these for chromatic and atmospheric consistency.
-      - **<fidelity>**: Contains \`textureDetail\`, \`grainLevel\`, and \`resolutionTarget\`. Use these to determine the density of visual description in Unit 1.
-      - **<global_environment>**: Contains \`era\` (Primary Filter) and \`locationArchetype\`. Use these for strict era-synchronization in Unit 1 & 2.
-      - **<composition>**: Contains \`framingStyle\` and \`preferredAspectRatio\`. Use these as the default framing logic.
+       - **<optics>**: Contains \`lensType\`, \`focusDepth\`, \`exposureVibe\`, and \`defaultISO\`. Use these to set the physical camera parameters in Unit 3.
+       - **<color_and_light>**: Contains \`tonality\`, \`lightingSetup\`, and \`globalHexPalette\` (exactly 5 codes). Use these for chromatic and atmospheric consistency.
+       - **<fidelity>**: Contains \`textureDetail\`, \`grainLevel\`, and \`resolutionTarget\`. Use these to determine the density of visual description in Unit 1.
+       - **<global_environment>**: Contains \`era\` (Primary Filter) and \`locationArchetype\`. Use these for strict era-synchronization in Unit 1 & 2.
+       - **<composition>**: Contains \`framingStyle\` and \`preferredAspectRatio\`. Use these as the default framing logic.
     3. **<entity_list>**: The Cast Information List.
-      - Each item contains:
-        - **id**: Unique identifier for tracking.
-        - **role**: Character importance ('main_hero' | 'sub_character' | 'background_extra' | 'prop').
-        - **type**: Biological/Mechanical category ('human' | 'creature' | 'object' | 'machine' | 'animal' | 'hybrid').
-        - **demographics**: Core identity string.
-        - **appearance**: Specific visual traits.
-          - \`clothing_or_material\`: Textures that imply physics (e.g., "Glossy chrome", "Sweat-drenched cotton").
-          - \`position_descriptor\`: The spatial anchor for the entity.
-          - \`hair\`, \`accessories\`, \`body_features\`: Micro-details for visual fidelity.
+       - Each item contains:
+         - **id**: Unique identifier for tracking.
+         - **role**: Character importance ('main_hero' | 'sub_character' | 'background_extra' | 'prop').
+         - **type**: Biological/Mechanical category ('human' | 'creature' | 'object' | 'machine' | 'animal' | 'hybrid').
+         - **demographics**: Core identity string.
+         - **appearance**: Specific visual traits.
+           - \`clothing_or_material\`: Textures that imply physics (e.g., "Glossy chrome", "Sweat-drenched cotton").
+           - \`position_descriptor\`: The spatial anchor for the entity.
+           - \`hair\`, \`accessories\`, \`body_features\`: Micro-details for visual fidelity.
     4. **<current_narration>**: The Script.
-      - Contains the specific action and moment to visualize. **Must be de-metaphorized.**
+       - Contains the specific action and moment to visualize. **Must be de-metaphorized.**
     5. **<scene_content>**: Additional stage directions.
-      - Specific details about foreground/background or spatial layout.
-    6. **<style_data>**: The Stylistic Ground Truth (From Preset).
-      - **coreConcept**: The fundamental visual philosophy of the scene (e.g., "High-fidelity cinematic rendering..."). **Use this as the primary style descriptor.**
-      - **visualKeywords**: A list of specific visual traits (e.g., ["anamorphic lens look", "natural lighting"]). **Must be included in the final description.**
-      - **negativeGuidance**: Concepts to avoid (e.g., "Avoid editorial fashion close-ups"). **Use as a negative constraint.**
-      - **preferredFramingLogic**: The recommended composition strategy (e.g., "Prioritize wide shots"). **Use to guide Composition choices.**
+       - Specific details about foreground/background or spatial layout.
+    6. **<scene_visual_description>**: The **Authorized Visual Blueprint** (Pre-Generated Ground Truth).
+       - Contains the definitive physical description of the scene's composition, lighting, and entity placement.
+    7. **<style_data>**: The Stylistic Ground Truth (From Preset).
+       - **coreConcept**: The fundamental visual philosophy of the scene (e.g., "High-fidelity cinematic rendering..."). **Use this as the primary style descriptor.**
+       - **visualKeywords**: A list of specific visual traits (e.g., ["anamorphic lens look", "natural lighting"]). **Must be included in the final description.**
+       - **negativeGuidance**: Concepts to avoid (e.g., "Avoid editorial fashion close-ups"). **Use as a negative constraint.**
+       - **preferredFramingLogic**: The recommended composition strategy (e.g., "Prioritize wide shots"). **Use to guide Composition choices.**
   </input_data_interpretation>
   <target_model_profile>
     **Target Engine: Advanced High-Fidelity Latent Flow Engine**
@@ -957,9 +959,23 @@ export const POST_IMAGE_GEN_PROMPT_PROMPT = `
            * **Output**: This value IS outputted to JSON (\`updated_entity_manifest_list\`) and serves as the core logic for **[Phase: \`image_gen_prompt.subjects\` Mapping]**.
            * **Constraint**: NEVER use 'Suspended in ~' UNLESS every <entity_list>[n].\`physics_profile.action_context\` is \`aerodynamics\`. It makes Entity 'fly'.
       2. **[Phase: \`image_gen_prompt.subjects\` Mapping]**
-        - **Selection Protocol**:
-          * **INCLUDE**: Any entity with role \`main_hero\`, \`sub_character\`, or \`prop\`.
-          * **EXCLUDE**: Any entity with role \`background_extra\` (Handle these in <unit_2_context_and_environment>).
+        - **Selection Protocol (Context-Aware Entity Selection)**:
+          - **Objective**: Select the **Optimal Entity Set (0-2)** for the current scene based on narrative focus and visual composition.
+          - **Reference Data**: Analyze <current_narration> (for Action Focus) and <scene_visual_description> (for Visual Context).
+          - **Step 1: Focus Analysis**:
+            - Determine the **"Primary Action Center"** of the scene. Who or what is the camera focused on?
+            - **Scenario A (Landscape/Atmosphere)**: No specific entity is the focus.
+              - **Action**: Mark as **0 Subjects**. **IMMEDIATELY SKIP to Step 3**.
+            - **Scenario B (Character/Object Focus)**: Specific entities are performing actions or being highlighted.
+              - **Action**: Identify these entities from <entity_list>.
+          - **Step 2: Candidate Filtering**:
+            - From the identified entities in Step 1, select the **Top 2** based on:
+              1. **Narrative Role**: \`main_hero\` > \`sub_character\`.
+              2. **Visual Dominance**: Large/Interacting \`prop\` (e.g., Car, Tank, Fighter jet, Spaceship) > Small \`prop\`.
+            - **Constraint**: If an entity is NOT physically present in \`scene_visual_description\` OR \`current_narration\`, **DO NOT FORCE IT** into the list. Better to have 0 or 1 strong subject than 2 weak/hallucinated ones.
+          - **Step 3: Final Gate**:
+            - **Output**: A strictly filtered list of 0, 1, or 2 entities.
+            - **Excluded Entities**: Any entity not selected here MUST be handled in <unit_2_context_and_environment> or <unit_4_natural_language_sentence_generation> (as accessory/context), NOT as a structured Subject.
         - **Iteration Rule**: You must generate a subject object for **ALL** included entities.
         - **Field: 'id'**: Carry over the exact \`id\` from <entity_list> (e.g., 'wingsuit_01'). **Strict Requirement for Subject-to-Physics tracking.**
         - **Field: 'type'**: Execute **Subject Extraction Guide** below.
@@ -1325,38 +1341,170 @@ export const POST_IMAGE_GEN_PROMPT_PROMPT = `
               - IF [Field: 'style'] is "Painting" -> "Brush stroke texture", "Canvas grain".
               - IF [Field: 'style'] is "Comic/Anime" -> "Speed lines", "Impact frames", "Halftone pattern".
     </unit_3_cinematographic_intent_architecture>
-    <unit_5_natural_language_sentence_generation>
-      - **UNIT 5: NATURAL LANGUAGE SENTENCE GENERATION**
-      - **Goal**: Synthesize the structured data from the \`image_gen_prompt\` JSON object into a single, grammatically fluid, and cinematic Master Prompt Sentence in \`image_gen_prompt_sentence\`.
-      - **Core Philosophy**: Do NOT simply list keywords. Act as a screenwriter weaving a vivid scene description.
-      - **Structural Formula (Kling 3.0 Optimized)**:
-        - Follow this strict narrative sequence: **[1. Context Anchor] -> [2. Subject & Detail] -> [3. Action & Interaction] -> [4. Camera & Technical] -> [5. Style & Atmosphere]**.
-      - **Detailed Assembly Logic**:
-        1. **[Context Anchor] (From \`image_gen_prompt.scene\`, \`image_gen_prompt.background\`, \`image_gen_prompt.lighting\`)**:
-           - Start by grounding the scene. Combine the \`scene\` description with the \`background\` and \`lighting\` to establish the environment.
-           - *Constraint*: If \`camera.angle\` is "low angle" and \`lighting\` is "overhead", explicitly describe the perspective as "looking up at" to avoid gravity confusion.
-           - *Example*: "In a dimly lit industrial gym with overhead spotlights casting deep shadows on the ring floor..."
-        2. **[Subject & Detail] (From \`image_gen_prompt.subjects\`)**:
-           - Identify the Primary Subject (Role Priority: \`main_hero\` > \`sub_character\` > \`prop\`).
-           - Construct a rich noun phrase using the Subject's \`description\`, \`clothes\`, and \`accessories\`.
-           - *Rule*: Use relative clauses to integrate details naturally (e.g., "...a professional boxer, clad in satin trunks and gripping worn leather gloves...").
-           - *Handling Multiple Subjects*: If multiple subjects exist, introduce secondary subjects using spatial connectors (e.g., "...while in the background, [Subject B]...").
-        3. **[Action & Interaction] (From \`image_gen_prompt.subjects[n].pose\`, \`image_gen_prompt.subjects[n].position\`)**:
-           - Describe *what* the subject is doing and *where* they are relative to the camera.
-           - *Rule*: Convert \`pose\` into active verbs (e.g., "standing," "lunging," "gazing").
-           - *Gravity Check*: Always imply the subject's orientation relative to gravity (e.g., "standing upright," "sitting firmly") to prevent anti-gravity artifacts.
-        4. **[Camera & Technical] (From \`image_gen_prompt.camera\`)**:
-           - Append technical specifications as a separate sentence or a concluding clause.
-           - *Format*: "Captured with a [\`camera.lens\`] lens at [\`camera.distance\`] [\`camera.angle\`]..."
-           - *Constraint*: Avoid terms like "vertical capture" inside the prompt text as it may confuse the model's orientation. Use "vertical portrait" or "tall aspect ratio composition" instead.
-        5. **[Style & Atmosphere] (From \`image_gen_prompt.style\`, \`image_gen_prompt.effects\`, \`image_gen_prompt.mood\`)**:
-           - Conclude with the aesthetic keywords.
-           - *Format*: "Rendered in [\`style\`] with [\`effects\`], evoking [\`mood\`]."
-      - **Refinement Rules**:
-        - **No Markdown**: The output must be raw text.
-        - **No Variable Names**: Do not include braces \`{}\` or variable names in the output.
-        - **Flow Check**: Ensure smooth transitions between sections using varied prepositions (amidst, beneath, against).
-    </unit_5_natural_language_sentence_generation>
+    <unit_4_natural_language_sentence_generation>
+      - **UNIT 4: NATURAL LANGUAGE TRANSLATION (Final Output Generation)**
+      - **Target Model Strategy**: **Context-First Layering Structure**.
+      - **Goal**: Synthesize structured data into a highly descriptive, single-sentence cinematic prompt that ensures spatial stability.
+      - **[Phase 1: The Blueprint Assembly (Mental Draft)]**
+        - Review Source of Truth.
+        - **Review Sequence**:
+          1. **WHERE (Context Anchor)**: \`scene\`, \`background\`, \`mood\`.
+          2. **WHO (Core Focus)**: \`subjects\` (Appearance, Action, Clothes).
+          3. **HOW (Technical Polish)**: \`camera\`, \`lighting\`, \`style\`, \`effects\`.
+      - **[Phase 2: The Sentence Construction Protocol]**
+        - Construct the sentence in this EXACT order to maximize spatial adherence.
+        - **Construction Segments**:
+          1. **Segment A: The Scene Anchor (Context First)**
+             - *Objective*: Ground the generation in the environment BEFORE placing subjects.
+             - *Source*: \`scene\` + \`background\` + \`mood\`.
+             - *Drafting Rule*: Start with the location and atmosphere to set the stage.
+             - *Template*: "Set within a [Mood] [Background], where [Environmental Details]..."
+             - *Example*: "Set within a neon-drenched cyber-slum where steam rises from the pavement..."
+          2. **Segment B: The Subject & Action**
+             - *Objective*: Construct precise subject descriptions and actions to prevent attribute bleeding.
+             - *Source*: \`subjects\` array (Mapped via ID to <entity_list>).
+             - *Assembly Protocol*: Execute the following logic for EACH subject in the \`subjects\` array.
+               - **Step 1: Construct the [Complete_Subject_Handle]**
+                 - **Goal**: Create an unbreakable noun phrase that fully defines "WHO" before describing "WHAT".
+                 - **Logic**:
+                   1. **Demographic Anchor**:
+                      - Extract \`Entity.demographics\`.
+                      - **\`Entity.demographics\` Structures by \`Entity.type\`**:
+                        * **\`human\`**: \`[ERA/PERIOD], [NATIONALITY/ETHNICITY], [ROLE], [GENDER], [AGE]\`
+                        * **\`machine\`**: \`[ERA/PERIOD], [NATION/MARKINGS], [MODEL NAME], [SUB - TYPE], [PRODUCTION YEAR/SPEC]\`
+                        * **\`creature\`**: \`[ERA/PERIOD], [CULTURAL ORIGIN], [SPECIES/ARCHETYPE], [GENDER/'N/A'], [AGE/MATURITY]\`
+                        * **\`animal\`**: \`[ERA/PERIOD], [GEOGRAPHIC REGION], [SPECIES], [GENDER/'N/A'], [AGE/MATURITY]\`
+                        * **\`object\`**: \`[ERA/PERIOD], [CULTURAL/NATIONAL STYLE], [ITEM NAME], [CRAFTSMANSHIP/DETAIL]\`
+                        * **\`hybrid\`**: \`[ERA/PERIOD], [NATIONALITY/ETHNICITY], [HYBRID TYPE], [GENDER], [AGE]\`
+                      - **Instruction (Demographic Anchoring)**:
+                        * Construct the **[Demographic_Anchor]** string using \`Entity.demographics\`.
+                        * **Rule**:
+                          - 1st handle: \`[ERA/PERIOD]\`
+                          - 2nd handle: \`[NATIONALITY/ETHNICITY]\` | \`[NATION/MARKINGS]\` | \`[CULTURAL ORIGIN]\` | \`[GEOGRAPHIC REGION]\` | \`[CULTURAL/NATIONAL STYLE]\`
+                          - 3rd handle: \`(Optional) [GENDER](If \`type\` is NOT \`machine\` or \`object\`, and value is NOT 'N/A')\` + \`[ROLE | MODEL NAME | SPECIES / ARCHETYPE | ITEM NAME | HYBRID TYPE]\`
+                          - Output: \`1st handle\` + \`2nd handle\` + \`3rd handle\` into a single noun phrase. 
+                        * **Examples (Complete Coverage)**:
+                          * IF \`Entity.type\` is \`human\`: "a 1944 WWII American Male infantry soldier"
+                          * IF \`Entity.type\` is \`hybrid\`: "a Cyberpunk 2077 Asian Female cyborg assassin"
+                          * IF \`Entity.type\` is \`machine\`: "a 2150 Federation Mark-V combat droid" (No Gender)
+                          * IF \`Entity.type\` is \`object\`: "a Victorian Era British steam-powered pocket watch" (No Gender)
+                          * IF \`Entity.type\` is \`creature\` (\`[GENDER]\` is 'Male'): "a Medieval Nordic Male frost giant"
+                          * IF \`Entity.type\` is \`creature\` (\`[GENDER]\` is 'N/A'): "a Lovecraftian Cosmic shapeless horror"
+                          * IF \`Entity.type\` is \`animal\` (\`[GENDER]\` is 'Female'): "a Serengeti Plains Female lioness"
+                          * IF \`Entity.type\` is \`animal\` (\`[GENDER]\` is 'N/A'): "a Jurassic Period North American T-Rex"
+                   2. **Visual Features (Face & Body)**:
+                      - **Objective**: Describe physical traits ONLY if visible.
+                      - **Headwear Logic**: Scan \`Entity.appearance.accessories\`. IF it contains head-covering items (helmet, hood, hat), SKIP \`Entity.appearance.hair\`.
+                      - **Assembly Rule**:
+                        - *Condition*: IF \`hair\` (and visible) OR \`body_features\` exist:
+                        - *Format*: Append ", with [hair description] and [body_features]" (adjust if only one exists).
+                        - *Example*: ", with scarred skin" (if hair is hidden).
+                   3. **Attire & Gear (Materiality)**:
+                      - **Objective**: Describe the surface texture and equipment using Type-appropriate verbs.
+                      - **Logic by Type**:
+                        - **Human / Creature**: 
+                          - Use organic connectors: ", clad in [clothing_or_material]", ", wearing [clothing_or_material]", ", equipped with [accessories]".
+                        - **Machine / Object**: 
+                          - Use industrial connectors: ", finished in [clothing_or_material]", ", constructed from [clothing_or_material]", ", featuring [accessories]".
+                      - **Constraint**: Ensure the material description (e.g., "matte black steel") precedes the item name for better flow.
+                 - **Result Examples (Complete Integration Scenarios)**:
+                   * IF \`Entity.type\` is \`human\` AND \`Headwear\` is None: 
+                     "a Cyberpunk 2077 Asian Female hacker with neon-blue dreadlocks and cybernetic scars, clad in a translucent rain-slicked trench coat, equipped with a holographic deck"
+                   * IF \`Entity.type\` is \`human\` AND \`Headwear\` exists: 
+                     "a 1944 WWII American Male infantry soldier, clad in a muddy olive-drab uniform, equipped with an M1 Garand rifle" (Hair skipped due to helmet)
+                   * IF \`Entity.type\` is \`machine\`: 
+                     "a 2150 Federation Mark-V combat droid, finished in matte black composite armor, featuring a glowing red optical sensor"
+                   * IF \`Entity.type\` is \`object\`: 
+                     "a Victorian Era British steam-powered pocket watch, constructed from polished brass and gears, featuring an intricate engraved casing"
+                   * IF \`Entity.type\` is \`creature\` AND \`Gender\` is 'Male': 
+                     "a Medieval Nordic Male frost giant with a braided icy beard, wearing rough animal furs, equipped with a massive stone club"
+                   * IF \`Entity.type\` is \`animal\` AND \`Gender\` is 'N/A': 
+                     "a Jurassic Period North American T-Rex with rough scaled skin, clad in nothing, featuring razor-sharp teeth and powerful jaws"
+                   * IF \`Entity.type\` is \`hybrid\`: 
+                     "a Sci-Fi Alien Female hybrid scout with bioluminescent skin, clad in a sleek skin-tight flight suit, equipped with a plasma pistol"
+               - **Step 2: Construct the [Action_Clause]**
+                 - **Goal**: Attach dynamic movement to the subject.
+                 - **Logic**:
+                   1. **Action Verb**: Convert \`pose\` to present participle (e.g., "run" -> "sprinting").
+                   2. **Direction**: Add \`position\` or directional vector (e.g., "forward", "leftward").
+                   3. **Interaction**: If interacting with an object, add "manipulating [Object]".
+                 - **Result Example**: "is sprinting forward across the wet pavement"
+               - **Step 3: Multi-Subject Bridging (The Glue)**
+                 - **Goal**: Connect multiple subjects without mixing them up.
+                 - **Logic**:
+                   - **Primary Subject (Hero)**: Place at the start of the sentence.
+                   - **Secondary Subject (Interaction)**:
+                     - IF interacting directly: Connect with "facing [Secondary Subject Handle] who [Secondary Action Clause]".
+                     - IF separate action: Connect with ", while in the [Position], [Secondary Subject Handle] [Secondary Action Clause]".
+                 - **Final Sentence Structure**:
+                   "[Primary Subject Handle] [Primary Action Clause], while in the background [Secondary Subject Handle] [Secondary Action Clause]."
+          3. **Segment C: The Cinematic Lens (Technical Style & Atmosphere)**
+             - *Objective*: Apply camera mechanics, lighting, composition, color grading, and visual effects as the final polish.
+             - *Source*: \`camera\` (Lens, Angle), \`lighting\`, \`style\`, \`composition\`, \`color_palette\`, \`effects\`.
+             - *Drafting Protocols*:
+               1. **Camera & Composition Integration**:
+                  - **Action**: Combine \`camera\` specs with \`composition\` intent into a single descriptive clause.
+                  - **Constraint**: DO NOT output the raw \`composition\` string (e.g., "Rule of Thirds"). Transform it into a natural descriptor modifying the shot.
+                  - *Good Example*: "...captured from a low angle with a 35mm lens emphasizing a balanced rule-of-thirds composition..."
+               2. **Lighting & Color Integration**:
+                  - **Action**: Describe the \`lighting\` condition, then immediately integrate the \`color_palette\` as the dominant atmospheric tone.
+                  - **Constraint**: DO NOT use raw Hex Codes. Convert the 3 \`color_palette\` Hex values into descriptive color names (e.g., "Deep Teal", "Crimson", "Gold").
+                  - *Template*: "...bathed in [Lighting], dominated by a palette of [Color 1], [Color 2], and [Color 3] hues..."
+               3. **Style & Effects Integration**:
+                  - **Action**: Define the rendering style using \`style\`, then append any active \`effects\` as visual enhancements.
+                  - **Constraint**: IF \`effects\` array is NOT empty, combine items into a grammatically correct noun phrase using connectors like "enhanced by", "featuring", or "accentuated with". IF empty, skip the effects clause.
+                  - *Template*: "...rendered in a [Style] aesthetic [Optional: enhanced by Effect 1, Effect 2, and Effect 3]."
+             - *Final Assembly Template*:
+               "...captured from a [Angle] with a [Lens] [Composition Descriptor], bathed in [Lighting], dominated by [Color 1], [Color 2], and [Color 3] hues, rendered in a [Style] aesthetic [Effects Clause]."
+      - **[Phase 3: The Refinement Constraints]**
+        - **Constraint 1 (Concrete Terms)**:
+          Remove empty fluff words like "Best quality", "Masterpiece". Use concrete visual descriptors (e.g., "8k texture", "anamorphic flare").
+        - **Constraint 2 (One Sentence Flow)**:
+          Ensure the segments flow as **one continuous, grammatically correct sentence** (or two closely linked sentences).
+        - **Constraint 3 (Safety)**:
+          Ensure no NSFW/banned content.
+      - **[Output Examples]**
+        * *Input*: Subject ([Boxer_01, Boxer_02]), Action (Punching), Scene (Arena), Style (Noir/B&W), Composition (Dynamic Diagonal), Color ([Charcoal, White, Grey]), Effects ([Film Grain, Motion Blur]).
+          *Output*: "Set within a smoke-filled boxing arena under harsh spotlights, a 1940s American Male heavyweight boxer with a scarred face, clad in sweat-stained satin shorts, equipped with worn leather gloves, is lunging forward to deliver a hook, while his opponent, a 1940s Irish Male challenger with a bruised eye, clad in white trunks, is recoiling violently from the impact, captured from a low angle with a 35mm lens emphasizing a dynamic diagonal composition, bathed in high-contrast chiaroscuro lighting, and dominated by a palette of deep charcoal, stark white, and grey hues, rendered in a gritty film noir aesthetic enhanced by heavy film grain and motion blur."
+        * *Input*: Subject ([Hacker]), Action (Typing), Scene (Cyber-slum), Style (Cyberpunk Anime), Composition (Chaotic Symmetrical), Color ([Cyan, Magenta, Purple]), Effects ([Chromatic Aberration, Scanlines]).
+          *Output*: "Set within a neon-drenched cyber-slum where holographic ads flicker in the rain, a 2077 Asian Female netrunner with neon-blue dreadlocks and cybernetic implants, clad in a translucent rain-slicked trench coat, equipped with a holographic deck, is frantically typing on a virtual keyboard, captured in a vibrant cyberpunk anime style with glowing outlines and intense digital glare, featuring a chaotic symmetrical composition, bathed in neon blue and pink backlighting, and dominated by a palette of electric cyan, magenta, and deep purple hues, rendered in a cel-shaded anime aesthetic enhanced by chromatic aberration and scanlines."
+        * *Input*: Subject (EMPTY - Landscape), Action (None), Scene (Mountain Range), Style (National Geographic), Composition (Vast Panoramic), Color ([Emerald Green, Slate Grey, Azure Blue]), Effects ([Atmospheric Haze]).
+          *Output*: "Set amidst a vast, verdant mountain range stretching across the horizon, the scene depicts a serene alpine landscape shrouded in morning mist under soft natural light, captured with a wide-angle lens emphasizing a vast panoramic composition, bathed in warm golden hour sunlight, and dominated by a palette of emerald green, slate grey, and azure blue hues, rendered in a high-fidelity RAW photography aesthetic enhanced by subtle atmospheric haze."
+        * *Input*: Subject ([Knight, Dragon]), Action (Confronting), Scene (Bridge), Style (Dark Fantasy Painting), Composition (Compressed Depth), Color ([Obsidian Black, Rusty Iron, Blood Red]), Effects ([Canvas Texture, Vignette]).
+          *Output*: "Set upon a crumbling stone bridge amidst a swirling mist, a Medieval European Male knight with a grizzled beard, clad in dented plate armor and a tattered surcoat, equipped with a gleaming greatsword, stands resolutely, while a Mythical Ancient obsidian dragon with glowing red eyes, covered in impenetrable scales, is breathing smoke in the background, captured with a telephoto lens emphasizing a compressed depth composition, bathed in gloomy ambient moonlight, and dominated by a palette of obsidian black, rusty iron, and blood red hues, rendered in a thick-brushstroke dark fantasy oil painting style enhanced by canvas texture and dramatic vignetting."
+        * *Input*: Subject ([Astronaut]), Action (Floating), Scene (Space Station), Style (Photorealistic Sci-Fi), Composition (Central One-Point Perspective), Color ([Stark White, Metallic Silver, Cool Blue]), Effects ([Lens Flares, Chromatic Aberration]).
+          *Output*: "Set within the pristine white corridor of a futuristic space station, a 2150 International Female astronaut with short cropped hair, clad in a bulky white EVA suit with mission patches, equipped with a life-support backpack, is floating gracefully in zero-gravity, captured with an anamorphic lens emphasizing a central one-point perspective composition, bathed in sterile clinical lighting, and dominated by a palette of stark white, metallic silver, and cool blue hues, rendered in a hyper-realistic 8k sci-fi cinematic aesthetic enhanced by lens flares and chromatic aberration."
+        * *Input*: Subject ([Detective]), Action (Smoking), Scene (Office), Style (Vintage 1970s), Composition (Claustrophobic Framing), Color ([Sepia, Tobacco Brown, Faded Olive]), Effects ([16mm Film Grain, Smoke Haze]).
+          *Output*: "Set inside a cluttered, smoke-filled private investigator's office, a 1970s American Male detective with a five-o'clock shadow, clad in a wrinkled beige trench coat and fedora, equipped with a revolver holster, sits slumped in a chair while lighting a cigarette, captured with a 50mm lens emphasizing a claustrophobic framing, bathed in warm tungsten lamp light, and dominated by a palette of sepia, tobacco brown, and faded olive hues, rendered in a gritty 1970s thriller aesthetic enhanced by heavy 16mm film grain and cigarette smoke haze."
+        * *Input*: Subject ([Elf Archer]), Action (Aiming), Scene (Forest), Style (Ethereal Fantasy), Composition (Shallow Depth/Eye Focus), Color ([Midnight Blue, Phosphorescent Cyan, Silver]), Effects ([Sparkling Dust, Magical Bloom]).
+          *Output*: "Set deep within an ancient bioluminescent forest, a High Fantasy Elven Female archer with long braided silver hair and pointed ears, wearing an intricate leaf-patterned tunic and leather bracers, equipped with a glowing yew longbow, is drawing the bowstring aimed at an unseen target, captured with a shallow depth of field emphasizing a focus on the eyes, bathed in soft dappled moonlight, and dominated by a palette of midnight blue, phosphorescent cyan, and silver hues, rendered in a soft-focus ethereal fantasy style enhanced by sparkling dust particles and magical bloom."
+        * *Input*: Subject ([Racer, Drift_Car]), Action (Drifting), Scene (Mountain Pass), Style (High-Octane Action), Composition (Dynamic Dutch Angle), Color ([Asphalt Grey, Burning Orange, Tire Smoke White]), Effects ([Extreme Motion Blur, Lens Dirt]).
+          *Output*: "Set on a winding mountain pass at sunset, a Modern Japanese Male professional racer with focused eyes, clad in a fireproof racing suit and helmet, equipped with driving gloves, is gripping the steering wheel intensely, while his customized Drift Car, finished in matte black carbon fiber with neon decals, featuring a wide-body kit, slides sideways around a hairpin turn kicking up smoke, captured with a dynamic dutch angle emphasizing speed and tension, bathed in dramatic side-lighting, and dominated by a palette of asphalt grey, burning orange, and tire smoke white hues, rendered in a high-octane action photography style enhanced by extreme motion blur and lens dirt."
+        * *Input*: Subject ([Chef]), Action (Cooking), Scene (Kitchen), Style (Commercial/Advertising), Composition (Macro/Detail), Color ([Sterile White, Stainless Steel Silver, Vibrant Food Colors]), Effects ([Sharp Focus, Clean Bokeh]).
+          *Output*: "Set in a gleaming stainless-steel professional kitchen, a focused chef in a pristine white uniform is garnishing a colorful gourmet dish with tweezers, captured with a macro lens emphasizing intricate detail and texture, bathed in perfectly balanced studio softbox lighting, and dominated by a palette of sterile white, stainless steel silver, and vibrant food colors, rendered in a crisp high-fidelity commercial photography style enhanced by sharp focus and clean background bokeh."
+        * *Input*: Subject ([Kaiju]), Action (Roaring), Scene (City Ruins), Style (Kaiju Movie), Composition (Worm's-Eye/Scale), Color ([Smoke Grey, Fire Orange, Monster Green]), Effects ([Film Grain, Dust Clouds, Desaturated Grading]).
+          *Output*: "Set amidst the burning ruins of a destroyed metropolis, a Prehistoric Mutant reptilian kaiju with glowing dorsal fins and scarred hide, covered in rough scales, featuring massive claws, is roaring skyward while crushing a skyscraper debris, captured from a worm's-eye view emphasizing overwhelming scale, bathed in flickering firelight and lightning, and dominated by a palette of smoke grey, fire orange, and monster green hues, rendered in a classic monster movie aesthetic enhanced by film grain, dust clouds, and desaturated color grading."
+        * *Input*: Subject ([Ballerina]), Action (Leaping), Scene (Stage), Style (Impressionist Art), Composition (Soft-Focus/Fluid Motion), Color ([Pale Pink, Stage Gold, Shadow Black]), Effects ([Visible Brushstrokes]).
+          *Output*: "Set on a grand theater stage illuminated by a single spotlight, a 19th Century Russian Female prima ballerina with a bun hairstyle, clad in a delicate white tutu and satin pointe shoes, is frozen in mid-leap, captured with a soft-focus lens emphasizing fluid motion and grace, bathed in dramatic stage spotlighting, and dominated by a palette of pale pink, stage gold, and shadow black hues, rendered in a soft impressionist painting style enhanced by visible brushstrokes and a dreamy romantic atmosphere."
+        * *Input*: Subject ([Soldier_01, Soldier_02]), Action (Crawling), Scene (Trenches), Style (Gritty War Film), Composition (Handheld/Chaos), Color ([Mud Brown, Steel Grey, Blood Red]), Effects ([Bleach Bypass, Rain Droplets, Mud Splatter]).
+          *Output*: "Set in a muddy, rain-soaked trench under a gray sky, a 1917 WWI British Male soldier with a dirt-smeared face, clad in a wool uniform and webbing, equipped with a Lee-Enfield rifle, is crawling through barbed wire, while a second WWI British Male soldier, clad in a similar muddy uniform, is shouting orders behind him, captured with a handheld camera shake emphasizing raw intensity and panic, bathed in flat overcast daylight, and dominated by a palette of mud brown, steel grey, and blood red hues, rendered in a visceral war movie aesthetic enhanced by bleach bypass color grading, rain droplets on the lens, and mud splatter."
+        * *Input*: Subject ([Robot]), Action (Repairing), Scene (Workshop), Style (3D Pixar Animation), Composition (Wide Aperture/Warmth), Color ([Copper Orange, Brass Gold, Workshop Brown]), Effects ([Subsurface Scattering, Soft Shadows]).
+          *Output*: "Set in a cozy, clutter-filled inventor's workshop, a Retro-Futuristic Rusty service robot with large expressive eyes, constructed from weathered copper and brass, featuring telescopic arms, is carefully welding a small gear, captured with a wide aperture emphasizing a warm inviting composition, bathed in soft window light and welding sparks, and dominated by a palette of copper orange, brass gold, and workshop wood brown hues, rendered in a 3D Pixar-style animation aesthetic enhanced by subsurface scattering, soft shadows, and vibrant friendly colors."
+        * *Input*: Subject ([Model]), Action (Posing), Scene (Desert), Style (High Fashion), Composition (Minimalist/Bold), Color ([Sand White, Deep Sky Blue, Metallic Silver]), Effects ([Sharp Shadows, Wind-blown Fabric]).
+          *Output*: "Set against the vast, rippled dunes of a white sand desert at noon, a Modern Avant-Garde Female fashion model with slicked-back hair and bold makeup, clad in a geometric haute couture dress made of reflective mylar, equipped with oversized sunglasses, stands powerfully against the wind, captured with a wide-angle lens emphasizing a bold minimalist composition, bathed in harsh high-noon sunlight, and dominated by a palette of sand white, deep sky blue, and metallic silver hues, rendered in a high-contrast editorial fashion style enhanced by sharp shadows and wind-blown fabric effects."
+        * *Input*: Subject ([Wizard]), Action (Casting), Scene (Tower), Style (Retro Pixel Art), Composition (Orthographic/RPG Layout), Color ([Midnight Blue, Electric Yellow, Stone Grey]), Effects ([Dithering, Limited Palette]).
+          *Output*: "Set atop a crumbling wizard's tower under a starry night sky, a Classic Fantasy Human Male wizard with a long white beard, clad in starry blue robes and a pointed hat, equipped with a gnarled oak staff, is raising the staff to cast a lightning bolt, captured with an orthographic projection emphasizing a classic RPG layout, bathed in magical starlight and lightning flashes, and dominated by a palette of midnight blue, electric yellow, and stone grey hues, rendered in a detailed 16-bit pixel art style enhanced by dithering patterns and a limited retro color palette."
+        * *Input*: Subject ([Couple]), Action (Dancing), Scene (Ballroom), Style (Victorian Romance), Composition (Vintage Portrait/Center Focus), Color ([Velvet Red, Gold Leaf, Deep Shadow]), Effects ([Soft Focus Bloom, Vignette, Film Grain]).
+          *Output*: "Set within a lavish, candlelit Victorian ballroom, a Victorian Era British Male aristocrat with sideburns, clad in a black tailcoat and white cravat, is waltzing in the center of the floor, facing a Victorian Era British Female noblewoman with an updo hairstyle, clad in a voluminous silk ballgown and gloves, captured with a vintage portrait lens emphasizing a romantic central focus, bathed in warm golden candlelight, and dominated by a palette of velvet red, gold leaf, and deep shadow hues, rendered in a classic period romance aesthetic enhanced by soft focus bloom, vignette, and film grain."
+        * *Input*: Subject ([Sniper]), Action (Waiting), Scene (Rooftop), Style (Cyberpunk/Rain), Composition (Telephoto/Isolation), Color ([Steel Blue, Neon Cyan, Shadow Black]), Effects ([Rain Streaks, Chromatic Aberration]).
+          *Output*: "Set on a rain-slicked skyscraper rooftop overlooking a neon city, a 2077 Cyberpunk Male mercenary with a cyber-eye implant, clad in a hooded tactical stealth suit, equipped with a high-tech sniper rifle, lies prone behind a vent, captured with a telephoto lens emphasizing isolation and distance, bathed in cold blue city glow and rain reflections, and dominated by a palette of steel blue, neon cyan, and shadow black hues, rendered in a moody cyberpunk aesthetic enhanced by heavy rain streaks, chromatic aberration, and lens distortion."
+        * *Input*: Subject ([Child]), Action (Reading), Scene (Library), Style (Storybook Illustration), Composition (Illustrative Framing/Intimacy), Color ([Parchment Beige, Ink Black, Magical Gold]), Effects ([Ink Outlines, Watercolor Washes]).
+          *Output*: "Set in a cozy nook of a magical library filled with floating books, a Victorian Era Human Female child with curly red hair, clad in a frilly pinafore dress, is reading a glowing ancient tome, captured with an illustrative framing emphasizing wonder and intimacy, bathed in warm lantern light and magical book glow, and dominated by a palette of parchment beige, ink black, and magical gold hues, rendered in a whimsical storybook illustration style enhanced by ink outlines, watercolor washes, and floating dust motes."
+        * *Input*: Subject ([Samurai]), Action (Drawing Sword), Scene (Snowy Field), Style (Kurosawa Film), Composition (Wide Static/Tension), Color ([Snow White, Ink Black, Blood Red]), Effects ([Film Grain, Letterbox]).
+          *Output*: "Set in a vast, silent field covered in fresh snow, a Feudal Japan Male samurai with a topknot hairstyle, clad in lacquered O-yoroi armor and a hakama, equipped with a katana and wakizashi, is slowly drawing his blade, captured with a wide static shot emphasizing stillness and tension, bathed in flat winter daylight, and dominated by a palette of snow white, ink black, and blood red hues, rendered in a stark high-contrast black and white cinematic style enhanced by film grain and a dramatic letterbox aspect ratio."
+        * *Input*: Subject (EMPTY - Atmosphere), Action (None), Scene (Nightclub), Style (Vaporwave), Composition (Surreal Floating/Geometry), Color ([Vaporwave Pink, Cyan, Deep Purple]), Effects ([Scanlines, Grid Patterns, VHS Distortion]).
+          *Output*: "Set inside a hazy, retro-futuristic nightclub, the scene depicts a geometric synthesizer deck floating amidst purple and teal gradients, captured with a surreal floating camera angle emphasizing abstract geometry, bathed in soft neon diffusion, and dominated by a palette of vaporwave pink, cyan, and deep purple hues, rendered in a retro 3D aesthetic enhanced by scanlines, grid patterns, and VHS distortion."
+    </unit_4_natural_language_sentence_generation>
   </prompt_authoring_protocol>
   <execution_rules>
     1. **Positive Exclusion Protocol (CRITICAL)**:
