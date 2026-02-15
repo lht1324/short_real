@@ -81,7 +81,7 @@ function DashboardItem({
                 // 의도됨
                 case VideoGenerationTaskStatus.DRAFTING:
                 case VideoGenerationTaskStatus.GENERATING_VOICE: return {
-                    tailWindGradient: 'from-purple-500 to-pink-500',
+                    tailWindGradient: 'from-slate-500 to-zinc-400',
                     description: 'Drafting script...',
                     emoji: '📝'
                 };
@@ -101,7 +101,7 @@ function DashboardItem({
                     emoji: '🎬'
                 };
                 case VideoGenerationTaskStatus.GENERATING_VIDEO: return {
-                    tailWindGradient: 'from-sky-500 to-cyan-500',
+                    tailWindGradient: 'from-amber-400 to-yellow-500',
                     description: `Director is shooting scenes (${processedSceneCount}/${sceneCount})`,
                     emoji: '🎥'
                 };
