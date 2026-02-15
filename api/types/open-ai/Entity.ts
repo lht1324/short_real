@@ -49,9 +49,6 @@ export interface Entity {
         pose: string;
         expression?: string;
     };
-
-    // [New] 물리 엔진 라우팅을 위한 핵심 프로필. 영상 생성 프롬프트 조립 시 Key로 사용됨.
-    physics_profile?: PhysicsProfile;
 }
 
-export type InitialEntityManifestItem = Omit<Entity, 'physics_profile' | 'state'>;
+export type InitialEntityManifestItem = Omit<Entity, 'state'>;

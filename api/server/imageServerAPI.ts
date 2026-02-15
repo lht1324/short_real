@@ -24,7 +24,8 @@ export const imageServerAPI = {
             try {
                 const output = await fal.subscribe("fal-ai/kling-image/o3/text-to-image", {
                     input: {
-                        prompt: `${JSON.stringify(imageGenPrompt, null, 2).replaceAll(' ', '')}`,
+                        // prompt: `${JSON.stringify(imageGenPrompt, null, 2).replaceAll(' ', '')}`,
+                        prompt: imageGenPromptSentence,
                         elements: [{
                             reference_image_urls: []
                         }],

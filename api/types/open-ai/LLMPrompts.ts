@@ -838,126 +838,24 @@ export const POST_IMAGE_GEN_PROMPT_PROMPT = `
       - **Physical Integrity**: Deconstruct subjects into explicit material descriptions and static pose snapshots.
       - **Color Fidelity**: Define the visual mood through precise RGB Hex codes.
   </target_model_profile>
-  <visual_texture_layer>
-    **Apply this logic to populate 'physics_profile' and enrich [Subject] \`description\` with 'Visual Detail'**:
-    **Core Principle: Context-Aware Dynamic Injection**
-    Instead of static mapping, you must dynamically synthesize visual descriptions by combining **Material Rules** and **Pose Rules** with **Scene Context**.
-    **Step 1: Material Behavior Logic & Tag Selection**
-      **Apply these rules to select vocabulary AND determine the 'material' tags for \`physics_profile\`.**
-      * **[MATERIAL: CLOTH / FABRIC] -> Tag: 'cloth'**
-        - **Rule (Wind/Motion)**: High velocity/wind -> *Billowing, Taut, Sheared, Fluttering*.
-        - **Rule (Wet/Liquid)**: Rain/Sweat -> *Clinging, Translucent, Weighted, Heavy-drape*.
-        - **Rule (Impact)**: Hit/Compressed -> *Ripple, Shock-wrinkled, Compressing*.
-        - **Vocabulary**: "Coarse weave", "Finely-stitched", "Plush", "Matte finish", "Satin sheen", "Billowing", "Clinging", "Taut against skin", "Rippling", "Heavy-set".
-      * **[MATERIAL: VISCOELASTIC / SKIN] -> Tag: 'viscoelastic'**
-        - **Rule (Exertion/Heat)**: Active -> *Sweat-beaded, Glistening, Flushed*.
-        - **Rule (Impact/Pressure)**: Contact -> *Compressed, Indented, Bulging*.
-        - **Vocabulary**: "Porous", "Calloused", "Subsurface scattering", "Oily sheen", "Sweat-beaded", "Flushed", "Stretched", "Sagging", "Bulging veins", "Muscle definition".
-      * **[MATERIAL: RIGID / METAL] -> Tag: 'rigid'**
-        - **Rule (Damage/Wear)**: Combat/Old -> *Scratched, Dented, Patina*.
-        - **Rule (Light)**: Reflection -> *Specular highlight, Glint*.
-        - **Vocabulary**: "Brushed grain", "Pitted", "Rusted", "Polished", "Specular highlight", "Chrome glint", "Dented", "Scratched", "Warped".
-      * **[MATERIAL: FLUID / LIQUID] -> Tag: 'fluid'**
-        - **Rule (Motion)**: Chaotic -> *Spray, Droplets, Foam*.
-        - **Rule (Light)**: Refractive -> *Caustics, Crystal clear*.
-        - **Vocabulary**: "Droplets", "Spray", "Mist", "Foam", "Ripples", "Caustics", "Refractive", "High-contrast reflection".
-      * **[MATERIAL: BRITTLE / GLASS] -> Tag: 'brittle'**
-        - **Rule (Impact)**: Shatter -> *Shards, Faceted*.
-        - **Vocabulary**: "Sharp faceted edges", "Cracks", "Shards", "Internal refraction", "Prismatic glint".
-      * **[MATERIAL: ELASTOPLASTIC / MUD & RUBBER] -> Tag: 'elastoplastic'**
-        - **Rule (Impact)**: Deforms without breaking -> *Indent, Splat, Stretch*.
-        - **Vocabulary**: "Deep surface indentation", "Sticky glossy texture", "Impact splash pattern", "Stretching material", "Viscous splat".
-      * **[MATERIAL: GRANULAR / SAND & DUST] -> Tag: 'granular'**
-        - **Rule (Motion)**: Disperses -> *Cloud, Haze, Trail*.
-        - **Rule (Surface)**: Roughness -> *Coarse, Piled, Gritty*.
-        - **Vocabulary**: "Volumetric dust cloud", "Streaming particle trails", "Coarse grains", "Airborne density", "Rough surface shadow".
-    **Step 2: Action/Pose Logic & Tag Selection**
-      *Apply these rules to select vocabulary for the 'Frozen Pose' AND determine the 'action_context' tags for physics_profile.*
-      * **[ACTION: LOCOMOTION] -> Tag: 'locomotion'**
-        - **Context**: Running, Walking, Jumping (Human speed).
-        - **Shutter Default**: ALWAYS "Fast Shutter" (Crisp subject priority for i2v).
-        - **Vocabulary**: "Mid-stride frozen sharply", "Legs captured at peak extension", "Weight shifted forward with crisp motion clarity".
-      * **[ACTION: COMBAT] -> Tag: 'combat'**
-        - **Context**: Punching, Kicking, Getting hit.
-        - **Vocabulary**: "Fist extended", "Impact tremor", "Muscle coiled", "Recoiling from blow", "Guard raised", "Face contorted", "Torque in torso".
-      * **[ACTION: AERODYNAMICS] -> Tag: 'aerodynamics'**
-        - **Context**: Flying, Falling, Gliding.
-        - **Vocabulary**: "Streamlined posture", "Arms swept back", "Body arched", "Free-falling orientation", "Wind-resistance tuck".
-      * **[ACTION: INTERACTION] -> Tag: 'interaction'**
-        - **Context**: Holding, Touching, Pushing.
-        - **Vocabulary**: "Firm grip", "Knuckles white", "Fingertips grazing", "Interlocked fingers", "Palm pressed flat", "Precise handling".
-      * **[ACTION: PASSIVE] -> Tag: 'passive'**
-        - **Context**: Standing, Sitting, Lying down.
-        - **Vocabulary**: "Slouched posture", "Resting weight", "Stationary stance", "Relaxed limbs", "Grounded footing".
-      * **[ACTION: VELOCITY_MAX] -> Tag: 'velocity_max'**
-        - **Context**: Extremely high speed (Over 160km/h, Vehicles, Superheroes, Falling bombs).
-        - **CRITICAL DECISION TREE (Shutter Speed Logic)**:
-          **Branch A: FAST SHUTTER (Default - i2v Optimized)** 
-          - *Trigger*: Whenever visual clarity of the Subject is the priority. (Standard for Action/Sci-Fi/Documentary styles).
-          - *Vocabulary*: "Frozen in motion", "High shutter speed capture", "Crisp edges despite speed", "Sharp subject with streaking background"
-          **Branch B: SLOW SHUTTER (Artistic/Atmospheric)**
-          - *Trigger*: ONLY when the \`master_style_guide\` explicitly suggests **abstract, surreal, or disorienting** qualities (e.g., Tone implies 'Dreamlike', 'Chaotic', 'Ethereal', 'Hazy').
-          - *Vocabulary*: "Motion-blurred edges", "Speed lines trailing", "Background streaking", "Silhouette distorted by velocity"
-        - **Synthesis Rule**: NEVER combine Fast + Slow shutter effects. Choose ONE based on the \`master_style_guide\` vibe.
-    **Step 3: Synthesis Instruction**
-    - **Route to JSON (\`physics_profile\`)**:
-      Collect ALL selected \`material\` and \`action_context\` Tags triggered by the scene.
-    - **Route to Prompt (Creative Synthesis)**: 
-      - **Action**: Weave the selected **Action Vocabulary** (Pose) with the **Material Vocabulary** (Texture) into a coherent sentence.
-      - **Constraint (CRITICAL)**: Do NOT simply list the keywords. You must conjugate verbs and blend adjectives to fit the grammar. 
-      - **Anti-Pattern**: "Cloth is billowing. Skin is sweat-beaded." (Robotic/Bad)
-      - **Correct Pattern**: "The billowing cloth whips around the sweat-beaded skin." (Organic/Good)
-    - **Reference Examples (DO NOT COPY, ADAPT LOGIC)**: 
-      **Ex 1: High-Speed Action (Rain)**
-      - *Input*: "Samurai slashing in a storm."
-      - *Tags*: material=["cloth", "rigid", "fluid"], action_context=["combat", "locomotion"]
-      - *Synthesized Output*: "...mid-stride with a **rain-slicked** kimono **billowing** violently, the **polished** katana blade cutting through **micro-droplets** of water..."
-      **Ex 2: Static Portrait (Intense)**
-      - *Input*: "Tired mechanic resting after work."
-      - *Tags*: material=["viscoelastic", "cloth"], action_context=["passive"]
-      - *Synthesized Output*: "...sitting in a **slouched posture**, his **calloused** hands resting heavily on **grease-stained** denim that holds a **matte** finish under the workshop light..."
-      **Ex 3: Aerodynamic Flight (Sci-Fi)**
-      - *Input*: "Cyborg falling from the sky."
-      - *Tags*: material=["rigid", "viscoelastic"], action_context=["aerodynamics", "velocity_max"]
-      - *Synthesized Output*: "...plummeting in a **streamlined posture**, the **chrome glint** of the cybernetic arm streaking with **motion-blurred edges** against the wind..."
-      **Ex 4: Close-Up Interaction (Delicate)**
-      - *Input*: "Jeweler inspecting a diamond."
-      - *Tags*: material=["viscoelastic", "brittle"], action_context=["interaction"]
-      - *Synthesized Output*: "...fingers positioned with a **precise handling** grip, the **sharp faceted edges** of the gem catching an **internal refraction** of light..."
-      **Ex 5: Impact Moment (Sport)**
-      - *Input*: "Soccer player kicking the ball."
-      - *Tags*: material=["viscoelastic", "cloth", "elastoplastic"], action_context=["locomotion", "combat"]
-      - *Synthesized Output*: "...leg extended with **muscle definition** clearly visible, the **taut** jersey **rippling** from the sudden force, boot making contact..."
-  </visual_texture_layer>
   <prompt_authoring_protocol>
     <unit_1_subject_and_physics>
       **UNIT 1: SUBJECT & PHYSICS ENGINEERING**
       **Goal**: Iterate through **EVERY** valid entry in <entity_list> and transform them into \`image_gen_prompt.subjects\` by synchronizing with <master_style_guide>.<global_environment>.\`era\` and <master_style_guide>.<fidelity> standards. Do NOT omit any valid entity.
       1. **[Phase: \`updated_entity_manifest_list\` Mapping]**
-         - **Goal**: Update the every \`updated_entity_manifest_list[n].physics_profile\` and \`updated_entity_manifest_list[n].appearance\` for each entity based on the new narration.
+         - **Goal**: Update the every \`updated_entity_manifest_list[n].appearance\` for each entity based on the new narration.
          - **Iteration**: Process ALL entities in <entity_list>.
          - **Field: 'id'**: 
            * **Rule**: Preserve exact input <entity_list>[n].\`id\`.
-         - **Field: 'physics_profile'**: 
-           * **Source**: <current_narration>, <visual_texture_layer>.
-           * **Sub-Field 'material'**:
-             - **Logic**: Extract material keywords compatible with <master_style_guide>.<global_environment>.\`era\`.
-           * **Sub-Field 'action_context'**:
-             - **Logic**: Analyze <current_narration>'s verbs and context. Map to ALL applicable categories:
-               * **\`locomotion\`**: Linear movement (running, walking, driving).
-               * **\`combat\`**: Offensive/Defensive action (shooting, punching, guarding).
-               * **\`aerodynamics\`**: Air-based state (flying, falling, hovering).
-               * **\`interaction\`**: Object manipulation (holding, pulling, operating).
-               * **\`passive\`**: Low energy state (standing, sitting, sleeping).
-               * **\`velocity_max\`**: Extreme speed/blur (racing, explosions).
          - **Field: 'appearance'**:
-           * **Source**: Input <entity_list>[n].\`appearance\` and above Sub Field \`physics_profile\` impact.
-           * **Logic**: Do NOT change the core design (e.g., don't change "Wool" to "Silk"). ONLY add context-aware modifiers if necessary (e.g., "muddy", "wet", "torn").
+           * **Source**: Input <entity_list>[n].\`appearance\` and the physical impact of environmental factors in <current_narration> and <scene_visual_description>.
+           * **Logic**: Do NOT change the core design (e.g., don't change "Wool" to "Silk"). ONLY add context-aware modifiers inferred from the scene (e.g., "muddy", "wet", "scorched", "wind-swept") based on <current_narration> and <scene_visual_description>.
            * **Constraint**: Keep it concise. This is the source of truth, not the final poetic prompt.
          - **Field: 'state'**:
-           * **Logic**: Derive the **Abstract Physical State** (Gravity relationship, Momentum).
-           * **Output**: This value IS outputted to JSON (\`updated_entity_manifest_list\`) and serves as the core logic for **[Phase: \`image_gen_prompt.subjects\` Mapping]**.
-           * **Constraint**: NEVER use 'Suspended in ~' UNLESS every <entity_list>[n].\`physics_profile.action_context\` is \`aerodynamics\`. It makes Entity 'fly'.
+           * **Logic**: Analyze <current_narration> and <scene_visual_description> to establish the **Mental Physics Model**. Explicitly determine the relationship between the subject and gravity, current momentum vector, and muscular/mechanical tension.
+           * **Goal**: This serves as a "Reasoning Bridge" to ensure the subsequent 'pose' and 'description' fields are physically coherent.
+           * **Content**: Brief summary of (1) Gravity status, (2) Momentum direction, (3) Kinetic tension level.
+           * **Constraint**: Do not hallucinate movement not present in source data.
       2. **[Phase: \`image_gen_prompt.subjects\` Mapping]**
         - **Selection Protocol (Context-Aware Entity Selection)**:
           - **Objective**: Select the **Optimal Entity Set (0-2)** for the current scene based on narrative focus and visual composition.
@@ -1056,49 +954,30 @@ export const POST_IMAGE_GEN_PROMPT_PROMPT = `
             * **Refine & Stylize**: Enhance the raw item names with material or Era-specific adjectives based on <entity_list>[n].\`demographics\` and <master_style_guide>.\`globalEnvironment.era\`.
             * **Consistency**: Ensure every item listed here is implied or mentioned in the above \`description\`'s broad categories.
           - **Example**: \`["Aerodynamic composite helmet with camera mount", "Tinted anti-glare polycarbonate goggles"]\`
-        - **Field: 'pose'**: Synthesize \`state.pose\` into a **High-Tension Snapshot** using the **Context-Aware Pose Protocol**:
+        - **Field: 'pose'**: Synthesize the narrative verbs into a **High-Tension Snapshot** using the **Context-Aware Pose Protocol**:
           - **Directional Vocabulary Definition (Camera-Relative)**:
             * **"Forward"**: Moves towards the camera/lens (increases depth).
             * **"Backward"**: Moves away from the camera/lens (decreases depth).
             * **"Leftward" / "Rightward"**: Moves across the screen (profile view).
             * **"Upward" / "Downward"**: Moves to the top or bottom of the frame.
-          - **Context Check**: Reference \`physics_profile.action_context\` (from **[Phase: \`updated_entity_manifest_list\` Mapping]**) and <current_narration>.
+          - **Context Check**: Analyze the primary verbs and kinetic energy within <current_narration>. 
           - **Constraint (Directional Alignment)**:
             * You MUST use the **Directional Vocabulary** defined above to describe all spatial orientations.
-            * To prevent physical clipping with [Functional Anchors] or "camera-staring" artifacts, ensure the subject's movement vector is consistent with the scene's lateral/depth axis.
-            * Use **"Leftward/Rightward"** for lateral motion across the frame to maintain profile consistency. Use **"Forward/Backward"** strictly for depth-specific leaning relative to the lens.
-          - **Action Mode Selection**
-            * **Mode A: Dynamic Action (\`locomotion\`, \`combat\`, \`velocity_max\`)**:
+            * Ensure the subject's movement vector is consistent with the scene's lateral/depth axis to prevent spatial artifacts.
+          - **Action Mode Selection (Inferred from <current_narration> and <scene_visual_description>)**
+            * **Mode A: Dynamic Action (High velocity, impact, or forceful movement)**:
               - **Goal**: Capture the *Peak Moment* of movement.
-              - **Rule**: Do NOT use static verbs like "Standing" or "Positioned". Use **Momentum Verbs** (e.g., *Sprinting, Charging, Recoiling, Lunging*).
+              - **Rule**: Do NOT use static verbs. Use **Momentum Verbs** (e.g., *Sprinting, Charging, Recoiling, Lunging*).
               - **Synthesis**: "**[Dynamic Verb]** + **[Directional Vocabulary]** + **[Body Tension/Anchor Interaction]**."
-              - **Examples**:
-                1. **(Cyberpunk, \`locomotion\`)**: "Sprinting **rightward** across the frame, muscles coiled in mid-stride, boots pounding against the **neon-lit metal catwalk**."
-                2. **(Modern Action, \`velocity_max\`, \`interaction\`)**: "**The two drivers** leaning **forward** with intense speed, hands clamped onto their **leather steering wheels** as the chassis vibrates."
-                3. **(Fantasy, \`combat\`)**: "**The squad of knights** lunging **forward** toward the lens, shields raised high, bodies braced against the **stone fortress gate**."
-                4. **(Sci-Fi, \`locomotion\`)**: "Charging **upward** toward the ceiling, legs coiled for the leap, feet pushing off a **metallic bulkhead**."
-                5. **(Steampunk, \`combat\`, \`interaction\`)**: "Recoiling **backward** away from the blast, hands desperately pulling a **heavy brass lever** while feet brace against the **grated floor**."
-            * **Mode B: Aerial/Impact (\`aerodynamics\`)**:
-              - **Goal**: Depict active flight, free-fall, or high G-force states.
-              - **Rule**: Use "-ing" form to follow "who is". Focus on wind resistance or G-force tension.
+            * **Mode B: Aerial/Impact (Flight, falling, or high G-force)**:
+              - **Goal**: Depict active flight, free-fall, or suspended states.
+              - **Rule**: Use "-ing" form. Focus on wind resistance, G-force tension, or weightlessness.
               - **Synthesis**: "**[Movement Verb-ing]** + **[Directional Vocabulary]** + **[Body Tension/Anchor Interaction]**."
-              - **Examples**:
-                1. **(Historical, \`aerodynamics\`)**: "**The twin pilots** banking hard **leftward** in formation, bodies **pressed against** the inside of the cockpit canopies while **suspended** against the clouds."
-                2. **(Sci-Fi, \`aerodynamics\`)**: "Floating **upward** in zero-gravity, limbs **suspended mid-air**, with the torso **braced against** the padded interior of the escape pod."
-                3. **(Modern Action, \`aerodynamics\`)**: "**The paratroopers** free-falling **backward** away from the hatch, limbs splayed in the wind, **suspended mid-air** against the vast blue sky."
-                4. **(Fantasy, \`aerodynamics\`)**: "Diving **downward** at terminal velocity, arms tucked tight for speed, **suspended mid-air** while aiming at a target below."
-                5. **(Extreme Sports, \`aerodynamics\`)**: "Gliding **rightward** in a wingsuit, torso rigid against the wind resistance, **fused within** the aerodynamic silhouette of the suit."
-            * **Mode C: Static/Passive (\`passive\`, \`interaction\`)**:
+            * **Mode C: Static/Passive (Stationary, seated, or low energy)**:
               - **Goal**: Maintain a stable, grounded, or seated presence.
-              - **Rule**: Use "-ed" form to follow "who is". Focus on weight distribution and physical anchoring.
+              - **Rule**: Use "-ed" form. Focus on weight distribution and physical anchoring.
               - **Synthesis**: "**[Anchoring Verb-ed]** + **[Directional Orientation]** + **[Physical Anchor Point]**."
-              - **Examples**:
-                1. **(Noir, \`passive\`)**: "**The two detectives** seated firmly **backward** against the worn leather booth, torsos **pressed into** the padding within the dim bar interior."
-                2. **(Space, \`interaction\`)**: "Grounded **leftward** within the cockpit, shoulders **pressed into** the high-back commander seat while hands rest on the console."
-                3. **(Cyberpunk, \`passive\`)**: "Slumped **backward** deep inside the haptic rig, body **fused within** the mechanical support frame in a relaxed profile."
-                4. **(Medieval, \`passive\`)**: "**The royal guards** planted **rightward** atop the stone battlements, backs **straight against** the castle pillars with spears held vertically."
-                5. **(Modern, \`interaction\`)**: "Positioned **forward** toward the camera, torso **leaning** slightly over the steering wheel with hands gripped at the ten-and-two position."
-          * **Anti-Blur Constraint**: Describe the *action* (e.g., "mid-air"), NOT the *time* (e.g., "starting to jump"). Freeze the frame at the most dramatic point.
+          * **Anti-Blur Constraint**: Describe the *frozen physical state* (e.g., "mid-air"), NOT the duration of time. Freeze the frame at the most dramatic point.
         - **Field: 'position'**: Determine the optimal depth placement based on <video_context>.<aspect_ratio> and <master_style_guide>.<composition>.'s \`framingStyle\`. You MUST select exactly one from: **['foreground', 'midground', 'background']**.
       **[Execution Rule]**:
       - Treat every included subject (\`main_hero\`, \`sub_character\` and \`prop\` \`role\` alike) with equal visual fidelity. Do not prioritize the hero at the expense of missing props.
@@ -1508,30 +1387,30 @@ export const POST_IMAGE_GEN_PROMPT_PROMPT = `
   </prompt_authoring_protocol>
   <execution_rules>
     1. **Positive Exclusion Protocol (CRITICAL)**:
-      - **Concept**: Do not describe what is *absent*. Describe the *ideal quality* of what is *present*.
-      - **Instruction**: Instead of saying "no [defect]", describe the "[perfect state]" of that feature.
+       - **Concept**: Do not describe what is *absent*. Describe the *ideal quality* of what is *present*.
+       - **Instruction**: Instead of saying "no [defect]", describe the "[perfect state]" of that feature.
     2. **Visual Snapshot Translation (De-metaphorization)**:
-      - **The Logic**: Generative models cannot render "time passing". You must freeze time into a single frame.
-      - **The Instruction**: Replace abstract verbs ("attacks", "travels", "explodes") with **Visible Physical States**.
-      - **Integration Strategy**: Use the **Action Vocabulary** selected in <visual_texture_layer> as the core description.
-      - **Conversion Formula**:
-        * *Input (Abstract)*: "Subject punches the enemy."
-        * *Output (Frozen)*: "Fist **extended** in impact (Action), glove **compressing** against the target (Physics)."
-      - **Constraint**: Strictly PROHIBIT words implying duration ("starting to", "trying to", "in the middle of"). Use words implying a **static snapshot** ("suspended", "contacting", "positioned").
+       - **The Logic**: Generative models cannot render "time passing". You must freeze time into a single frame.
+       - **The Instruction**: Replace abstract verbs ("attacks", "travels", "explodes") with **Visible Physical States**.
+       - **Integration Strategy**: Use the **Momentum Verbs** and **Action Mode Vocabulary** inferred directly from <current_narration> and <scene_visual_description> as the core description.
+       - **Conversion Formula**:
+         * *Input (Abstract)*: "Subject punches the enemy."
+         * *Output (Frozen)*: "Fist **extended** in impact (Action), glove **compressing** against the target (Physical State)."
+       - **Constraint**: Strictly PROHIBIT words implying duration ("starting to", "trying to", "in the middle of"). Use words implying a **static snapshot** ("suspended", "contacting", "positioned").
     3. **Visibility Priority (Subject Hierarchy)**:
-      - **Rule**: Before describing micro-details (pores, sweat), you MUST describe the **Macro-Subject** first.
-      - **Order**: 1. Body/Pose -> 2. Clothing/Gear (Gloves, Helmets) -> 3. Texture/Sweat.
-      - *Constraint*: Do not let sweat drops obscure the fact that he is wearing boxing gloves.
+       - **Rule**: Before describing micro-details (pores, sweat), you MUST describe the **Macro-Subject** first.
+       - **Order**: 1. Body/Pose -> 2. Clothing/Gear (Gloves, Helmets) -> 3. Texture/Sweat.
+       - *Constraint*: Do not let sweat drops obscure the fact that he is wearing boxing gloves.
     4. **Typography Protocol (i2v Defensive Strategy)**:
-      - **DEADLY RISK**: Text morphing artifacts destroy i2v temporal stability.
-      - **Passive Mode (Default)**: 
-        - *When*: No explicit text in <current_narration> OR <scene_content>.
-        - *Output*: "Glowing neon shapes", "Indistinct signage", "Abstract lettering", "Faded billboard silhouettes".
-      - **Active Mode (Explicit Only)**:
-        - *When*: SPECIFIC quoted text requested (e.g., "sign reading 'BAR'").
-        - *Syntax*: **"The text 'EXACT WORDS' is written explicitly"** OR **"Typography reading 'EXACT WORDS'"**.
-      - **Forbidden**: Brand names, random words, taxi roof text, storefront signs unless explicitly input.
-      - **Integration**: Apply AFTER all other rules. Override generic signage descriptions.
+       - **DEADLY RISK**: Text morphing artifacts destroy i2v temporal stability.
+       - **Passive Mode (Default)**: 
+         - *When*: No explicit text in <current_narration> OR <scene_content> OR <scene_visual_description>.
+         - *Output*: "Glowing neon shapes", "Indistinct signage", "Abstract lettering", "Faded billboard silhouettes".
+       - **Active Mode (Explicit Only)**:
+         - *When*: SPECIFIC quoted text requested (e.g., "sign reading 'BAR'").
+         - *Syntax*: **"The text 'EXACT WORDS' is written explicitly"** OR **"Typography reading 'EXACT WORDS'"**.
+       - **Forbidden**: Brand names, random words, taxi roof text, storefront signs unless explicitly input.
+       - **Integration**: Apply AFTER all other rules. Override generic signage descriptions.
   </execution_rules>
   <entity_positioning_rules>
     **Apply this logic to populate 'updated_entity_manifest_list' in <output_schema>**:
@@ -1564,12 +1443,6 @@ export const POST_IMAGE_GEN_PROMPT_PROMPT = `
     {
       "updated_entity_manifest_list": {
         "id": "string", // Must match input <entity_list>[n].\`id\`
-        "physics_profile": {
-          // Derived from <visual_texture_layer> Step 1 (Collect ALL applicable)
-          "material": ("cloth" | "viscoelastic" | "rigid" | "fluid" | "brittle" | "granular" | "elastoplastic")[],
-          // Derived from <visual_texture_layer> Step 2 (Collect ALL applicable)
-          "action_context": ("locomotion" | "combat" | "aerodynamics" | "interaction" | "passive" | "velocity_max")[]
-        },
         "appearance": { 
           "clothing_or_material": "string", 
           "body_features": "string",

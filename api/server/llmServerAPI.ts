@@ -8,8 +8,6 @@ import {
     POST_VIDEO_GEN_PROMPT_PROMPT,
     POST_MUSIC_GENERATION_DATA_PROMPT,
 } from "@/api/types/open-ai/LLMPrompts";
-import { PHYSICS_LIBRARY } from "@/api/types/open-ai/PhysicsPromptLibrary";
-import { STYLE_PROMPT_LIBRARY } from "@/api/types/open-ai/StylePromptLibrary";
 import { VIDEO_ASPECT_RATIOS, VideoAspectRatio } from "@/lib/ReplicateData";
 import { ScriptGenerationResponse } from "@/api/types/open-ai/ScriptGeneration";
 import { StyleGenerationParams } from "@/api/types/supabase/Styles";
@@ -17,14 +15,8 @@ import { SceneData, SubtitleSegment } from "@/api/types/supabase/VideoGeneration
 import { StoryboardData } from "@/api/types/api/open-ai/scene/PostOpenAISceneResponse";
 import { Entity, InitialEntityManifestItem } from "@/api/types/open-ai/Entity";
 import { MasterStyleInfo } from "@/api/types/supabase/MasterStyleInfo";
-import { FluxPrompt, FluxPromptSubject } from "@/api/types/open-ai/FluxPrompt";
+import { FluxPrompt } from "@/api/types/open-ai/FluxPrompt";
 import { MusicGenerationData } from "@/api/types/suno-api/MusicGenerationData";
-import {
-    subjectVectorsToCameraVectorString,
-    generateTechnicalLensString,
-    assembleFullVideoGenPromptSentence,
-    surgicallyReplaceVideoGenPromptByCameraKey,
-} from "@/utils/promptUtils";
 import { cleanAndParseJSON } from "@/utils/jsonUtils";
 import { logger } from "@trigger.dev/sdk";
 import { OpenRouterClient, OpenRouterModel } from "@/lib/OpenRouterClient";
@@ -693,7 +685,6 @@ Instruction: Generate the scene instruction JSON.
                     return {
                         // LLM이 생성한 핵심 물리/시각 데이터로 덮어쓰기
                         id: instruction.id,
-                        physics_profile: instruction.physics_profile,
                         type: originalEntity.type,
                         demographics: originalEntity.demographics,
                         appearance: {
