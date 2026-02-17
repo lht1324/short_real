@@ -1,8 +1,10 @@
+export const SCENE_SEGMENTATION_STANDARD = 2;
+
 export const BASE_VIDEO_DURATION_STANDARD = 30;
 export const BASE_SCENE_COUNT_STANDARD = 6
 ;
-export const BASE_CREDIT_PER_SCENE = 4;
 export const BASE_CREDIT_PER_VIDEO_DURATION = 4;
+export const BASE_CREDIT_PER_SCENE = 4;
 
 export const RETRY_CREDIT_PER_SCENE = 2;
 export const RETRY_CREDIT_PER_VIDEO_DURATION = 2;

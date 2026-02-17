@@ -6,6 +6,11 @@ import { llmServerAPI } from "@/api/server/llmServerAPI";
 import { STYLE_DATA_LIST } from "@/lib/styles";
 import { usersServerAPI } from "@/api/server/usersServerAPI";
 import { internalFireAndForgetFetch } from "@/utils/internalFetch";
+import {
+    BASE_CREDIT_PER_SCENE, BASE_CREDIT_PER_VIDEO_DURATION,
+    BASE_SCENE_COUNT_STANDARD,
+    BASE_VIDEO_DURATION_STANDARD
+} from "@/lib/ADDITIONAL_CREDIT_AMOUNT";
 
 export const postMasterStyle = task({
     id: "post-master-style",
@@ -136,9 +141,15 @@ export const postMasterStyle = task({
 
             // 크레딧 차감 로직
             const sceneCount = sceneDataList.length;
-            const totalDuration = sceneDataList.reduce((acc, sceneData) => acc + sceneData.sceneDuration, 0);
-            const additionalTotalDurationUsage = totalDuration > 30 ? Math.ceil((totalDuration - 30) / 2) * 5 : 0;
-            const additionalSceneCountUsage = sceneCount > 6 ? (sceneCount - 6) * 5 : 0;
+            const totalDuration = sceneDataList.reduce((acc, sceneData) => {
+                return acc + sceneData.sceneDuration;
+            }, 0);
+            const additionalTotalDurationUsage = totalDuration > BASE_VIDEO_DURATION_STANDARD
+                ? Math.ceil(totalDuration - BASE_VIDEO_DURATION_STANDARD) * BASE_CREDIT_PER_VIDEO_DURATION
+                : 0;
+            const additionalSceneCountUsage = sceneCount > BASE_SCENE_COUNT_STANDARD
+                ? (sceneCount - BASE_SCENE_COUNT_STANDARD) * BASE_CREDIT_PER_SCENE
+                : 0;
             const creditUsage = 100 + additionalTotalDurationUsage + additionalSceneCountUsage;
 
             const patchUserCreditCountResult = await usersServerAPI.patchUserCreditCountByUserId(videoGenerationTask.user_id, -creditUsage);
