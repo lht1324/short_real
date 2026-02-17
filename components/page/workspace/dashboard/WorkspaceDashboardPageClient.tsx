@@ -26,8 +26,9 @@ export interface TaskData {
     id: string;
     title?: string;
     status: VideoGenerationTaskStatus;
-    sceneCount?: number;
+    sceneCount: number;
     processedSceneCount?: number;
+    videoDuration: number;
     progress?: number; // 0-100
     currentStep: number;
     totalStep: number;
@@ -246,6 +247,9 @@ function WorkspaceDashboardPageClient() {
             id: task.id,
             title: task.video_title,
             status: status,
+            videoDuration: task.scene_breakdown_list.reduce((acc, sceneData) => {
+                return acc + sceneData.sceneDuration;
+            }, 0),
             sceneCount: task.scene_breakdown_list.length,
             processedSceneCount: task.processed_scene_count,
             progress: progress,
@@ -526,10 +530,11 @@ function WorkspaceDashboardPageClient() {
                             </div>
                         ) : (
                             <div className="space-y-4 max-w-4xl">
-                                {taskDataList.map((taskData) => {
+                                {taskDataList.map((taskData, index) => {
                                     return <DashboardItem
                                         key={taskData.id}
                                         taskData={taskData}
+                                        index={index}
                                         onClickDownload={onClickDownload}
                                         onClickExport={onClickExport}
                                         onClickRetry={onClickRetry}
