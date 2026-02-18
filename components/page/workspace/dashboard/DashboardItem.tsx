@@ -1,15 +1,16 @@
 'use client'
 
-import {memo, useCallback, useMemo, useState} from "react";
+import {memo, ReactNode, useCallback, useMemo, useState} from "react";
 import {ExportPlatform, TaskData} from "@/components/page/workspace/dashboard/WorkspaceDashboardPageClient";
 import {VideoGenerationTaskStatus} from "@/api/types/supabase/VideoGenerationTasks";
 import {
     AlertCircle,
     Calendar,
-    Clock,
+    Clock, Coins,
     Download,
     Edit,
     FileVideo,
+    Image as ImageIcon,
     Loader2,
     Share2,
     Wrench,
@@ -17,6 +18,11 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
+import {
+    RETRY_CREDIT_MUSIC_GENERATION,
+    RETRY_CREDIT_PER_SCENE,
+    RETRY_CREDIT_PER_VIDEO_DURATION
+} from "@/lib/ADDITIONAL_CREDIT_AMOUNT";
 
 enum StatusGroup {
     CREATING = 'creating',
@@ -29,6 +35,7 @@ enum StatusGroup {
 
 interface DashboardItemProps {
     taskData: TaskData;
+    index: number;
     onClickExport: (taskId: string, platform: ExportPlatform) => void;
     onClickDownload: (taskId: string) => void;
     onClickRetry: (taskId: string) => void;
@@ -37,6 +44,7 @@ interface DashboardItemProps {
 
 function DashboardItem({
     taskData,
+    index,
     onClickExport,
     onClickDownload,
     onClickRetry,
@@ -81,7 +89,7 @@ function DashboardItem({
                 // 의도됨
                 case VideoGenerationTaskStatus.DRAFTING:
                 case VideoGenerationTaskStatus.GENERATING_VOICE: return {
-                    tailWindGradient: 'from-purple-500 to-pink-500',
+                    tailWindGradient: 'from-slate-500 to-zinc-400',
                     description: 'Drafting script...',
                     emoji: '📝'
                 };
@@ -101,7 +109,7 @@ function DashboardItem({
                     emoji: '🎬'
                 };
                 case VideoGenerationTaskStatus.GENERATING_VIDEO: return {
-                    tailWindGradient: 'from-sky-500 to-cyan-500',
+                    tailWindGradient: 'from-amber-400 to-yellow-500',
                     description: `Director is shooting scenes (${processedSceneCount}/${sceneCount})`,
                     emoji: '🎥'
                 };
@@ -146,6 +154,126 @@ function DashboardItem({
         }
     }, [taskData]);
 
+    const retryPrice = useMemo(() => {
+        const {
+            status,
+            sceneCount,
+            videoDuration,
+        } = taskData;
+
+        if (taskData.isGenerationFailed) {
+            switch (status) {
+                case VideoGenerationTaskStatus.GENERATING_IMAGE_PROMPT: return RETRY_CREDIT_PER_SCENE * sceneCount;
+                case VideoGenerationTaskStatus.GENERATING_VIDEO_PROMPT:
+                case VideoGenerationTaskStatus.GENERATING_VIDEO: return RETRY_CREDIT_PER_VIDEO_DURATION * Math.ceil(videoDuration);
+                case VideoGenerationTaskStatus.COMPOSING_MUSIC: return RETRY_CREDIT_MUSIC_GENERATION;
+                default: return null;
+            }
+        } else {
+            return null;
+        }
+    }, [taskData]);
+
+    const retryTooltipContent = useMemo(() => {
+        const {
+            status,
+            sceneCount,
+            videoDuration,
+        } = taskData;
+
+        if (!taskData.isGenerationFailed) return null;
+
+        const containerClasses = "bg-gray-900/95 border border-white/10 rounded-lg shadow-xl p-3 min-w-[180px] backdrop-blur-md";
+        const headerClasses = "flex items-center gap-2 mb-2 pb-2 border-b border-white/10 text-base font-semibold";
+        const rowClasses = "flex justify-between items-center text-sm text-white/90 mb-1";
+        const totalRowClasses = "flex justify-between items-center pt-2 mt-2 border-t border-white/10 text-sm font-bold text-white";
+
+        const renderReceipt = (title: string, colorClass: string, icon: ReactNode, details: { label: ReactNode; value: ReactNode }[], total: number | null) => (
+            <div className={containerClasses}>
+                <div className={`${headerClasses} ${colorClass}`}>
+                    {icon}
+                    <span>{title}</span>
+                </div>
+                {details.map((detail, index) => (
+                    <div key={index} className={rowClasses}>
+                        <span>{detail.label}</span>
+                        <span className="text-gray-200 flex items-center gap-1">{detail.value}</span>
+                    </div>
+                ))}
+                <div className={totalRowClasses}>
+                    <span>Total Cost</span>
+                    <div className="flex items-center text-yellow-400">
+                        <Coins size={12} className="mr-1" />
+                        {total}
+                    </div>
+                </div>
+            </div>
+        );
+
+        const CostLabel = ({ suffix }: { suffix: string }) => (
+            <div className="flex items-center gap-1 text-white/90">
+                <Coins size={12} className="text-yellow-300/90" />
+                <span>per {suffix}</span>
+            </div>
+        );
+
+        const CreditValue = ({ value }: { value: number | string }) => (
+            <div className="flex items-center gap-1">
+                <Coins size={12} className="text-yellow-300/90" />
+                <span>{value}</span>
+            </div>
+        );
+
+        switch (status) {
+            case VideoGenerationTaskStatus.GENERATING_IMAGE_PROMPT:
+                return renderReceipt(
+                    "Image Generation",
+                    "text-amber-400",
+                    <ImageIcon size={14} />,
+                    [
+                        { label: "Scenes", value: sceneCount },
+                        { label: <CostLabel suffix="scene" />, value: <CreditValue value={RETRY_CREDIT_PER_SCENE} /> },
+                    ],
+                    retryPrice
+                );
+            case VideoGenerationTaskStatus.GENERATING_VIDEO_PROMPT:
+            case VideoGenerationTaskStatus.GENERATING_VIDEO:
+                const duration = Math.ceil(videoDuration || 0);
+                return renderReceipt(
+                    "Video Generation",
+                    "text-blue-400",
+                    <FileVideo size={14} />,
+                    [
+                        { label: "Duration", value: `${duration}s` },
+                        { label: <CostLabel suffix="sec" />, value: <CreditValue value={RETRY_CREDIT_PER_VIDEO_DURATION} /> },
+                    ],
+                    retryPrice
+                );
+            case VideoGenerationTaskStatus.COMPOSING_MUSIC:
+                return renderReceipt(
+                    "Music Composition",
+                    "text-rose-400",
+                    <Clock size={14} />,
+                    [
+                        { label: "Type", value: "Fixed Cost" },
+                        { label: "Cost", value: <CreditValue value={RETRY_CREDIT_MUSIC_GENERATION} /> },
+                    ],
+                    RETRY_CREDIT_MUSIC_GENERATION
+                );
+            default:
+                return renderReceipt(
+                    "Regeneration",
+                    "text-gray-300",
+                    <Loader2 size={14} />,
+                    [
+                        { label: "Type", value: "Estimated" },
+                        { label: "Cost", value: <CreditValue value={retryPrice ?? '-'} /> },
+                    ],
+                    retryPrice
+                );
+        }
+    }, [taskData, retryPrice]);
+
     // ==================== 시간 포맷 ====================
     const formatDate = useCallback((date: Date) => {
         return date.toLocaleDateString('en-US', {
@@ -170,6 +298,7 @@ function DashboardItem({
 
     // ==================== 팝오버 상태 ====================
     const [showExportPopover, setShowExportPopover] = useState(false);
+    const [showRetryTooltip, setShowRetryTooltip] = useState(false);
 
     // ==================== 이벤트 핸들러 ====================
     const handleCancel = useCallback(() => {
@@ -195,11 +324,11 @@ function DashboardItem({
                     </h3>
 
                     {/* 메타 정보 행 1: 날짜, 씬 개수 */}
-                    {(taskData.createdAt || taskData.sceneCount) && <div className="flex items-center space-x-6 text-gray-300 mb-2">
-                        {taskData.createdAt && <span className="flex items-center space-x-2">
+                    {(taskData.sceneCount) && <div className="flex items-center space-x-6 text-gray-300 mb-2">
+                        <span className="flex items-center space-x-2">
                             <Calendar size={16} className="text-purple-400" />
                             <span>Started: {formatDate(taskData.createdAt)}</span>
-                        </span>}
+                        </span>
                         {taskData.sceneCount && <span className="flex items-center space-x-2">
                             <FileVideo size={16} className="text-cyan-400" />
                             <span>{taskData.sceneCount} scenes</span>
@@ -207,10 +336,10 @@ function DashboardItem({
                     </div>}
 
                     {/* 메타 정보 행 2: 업데이트 시간 */}
-                    {taskData.updatedAt && <div className="flex items-center space-x-2 text-gray-400 text-sm mb-3">
+                    <div className="flex items-center space-x-2 text-gray-400 text-sm mb-3">
                         <Clock size={14} className="text-gray-500" />
                         <span>Last updated: {formatRelativeTime(taskData.updatedAt)}</span>
-                    </div>}
+                    </div>
 
                     {/* 상태 텍스트 */}
                     <div className="flex items-center space-x-2">
@@ -387,13 +516,28 @@ function DashboardItem({
                     {/* Failed 상태: Retry 버튼 */}
                     {/*{statusGroup === StatusGroup.FAILED && (*/}
                     {taskData.isGenerationFailed && (
-                        <button
-                            onClick={handleRetry}
-                            className="group bg-gradient-to-r from-orange-500 to-yellow-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:from-orange-600 hover:to-yellow-700 transition-all duration-300 transform hover:scale-105 shadow-lg shadow-orange-500/25 flex items-center space-x-2"
+                        <div
+                            className="relative"
+                            onMouseEnter={() => setShowRetryTooltip(true)}
+                            onMouseLeave={() => setShowRetryTooltip(false)}
                         >
-                            <Loader2 size={14} />
-                            <span>Retry</span>
-                        </button>
+                            <button
+                                onClick={handleRetry}
+                                className="group bg-gradient-to-r from-orange-500 to-yellow-600 text-white px-3 py-2 rounded-lg text-sm font-semibold hover:from-orange-600 hover:to-yellow-700 transition-all duration-300 transform hover:scale-105 shadow-lg shadow-orange-500/25 flex items-center gap-1.5"
+                            >
+                                <Loader2 size={16} />
+                                <span>Retry</span>
+                                <span className="flex items-center text-xs opacity-90 border-l border-white/30 pl-1.5 ml-0.5">
+                                    <Coins size={12} className="mr-0.5 text-yellow-200" />
+                                    {retryPrice}
+                                </span>
+                            </button>
+                            {showRetryTooltip && retryTooltipContent && (
+                                <div className={`absolute right-0 ${index !== 0 ? "bottom-full mb-2" : "top-full mt-2"} z-50`}>
+                                    {retryTooltipContent}
+                                </div>
+                            )}
+                        </div>
                     )}
 
                     {/* Processing/Editing 상태: Cancel 버튼 */}

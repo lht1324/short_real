@@ -1,235 +1,194 @@
 Scene #1 postVideoGenPrompt() Result
-Scene Summary: Camera flies rapidly through a misty, mountainous valley, simulating the trajectory of a high-speed wingsuit jumper.
-Scene Summary Reason: The video description implies an extremely fast dive ("breakneck speed") through the mountain range, requiring the camera to simulate that kinetic trajectory since no subject is visible.
-Primary Movement: Extreme, rapid Z-axis movement (plunge/dive) through the environment.
-Primary Movement Reason: The narrative demands a high-speed dive, which translates into aggressive camera movement through the depth of the scene.
-Narrative Vibe: FOCUS
-Narrative Vibe Reason: The focus is entirely on the high-velocity trajectory and the physics of air displacement rather than emotional content or combat.
-Selected INTENSITY_TIER: VERY_HIGH
-INTENSITY_TIER Selected Reason: The phrase "breakneck speed" mandates the highest kinetic tier to convey maximal velocity and resulting atmospheric turbulence and distortion.
-Identity Logic: Since there are no entities, identity logic applies to the environment. The Natural Mountainous Terrain and the thick mist are preserved as the central visual anchors, allowing the atmosphere to become the kinetic actor.
-Action Focus: The conceptual shift is from an implied human action (wingsuit diving) to environmental reaction. The action focus is on simulating Hyper-Velocity Air Displacement within the foggy mountain scene, using volumetric effects and motion blur to convey speed.
+Scene Summary: The video captures the serene, expansive atmosphere of an alpine mountain range engulfed in clouds before the wingsuit sequence begins.
+Scene Summary Reason: The provided image and narration both focus on the thin air, altitude, and absolute silence of the range high above the clouds.
+Primary Movement: Static / Micro-movement only
+Primary Movement Reason: The only entity is a mountain range, which is geologically static; any movement is atmospheric.
+Narrative Vibe: Tense but serene focus
+Narrative Vibe Reason: The text mentions 'absolute silence' and 'thin air', suggesting a calm before the extreme action.
+Selected INTENSITY_TIER: VERY_LOW
+INTENSITY_TIER Selected Reason: The mountain range is a rigid object mark as [PASSIVE_REACTOR], and the current narration precedes the 'breakneck' action phase.
+Identity Logic: The identity of the mountain range is maintained as a distant, monumental anchor by preserving the jagged rock formations and lush green slopes as visual constants.
+Action Focus: The conceptual focus is on absolute stillness and atmospheric weight, shifting the priority from kinetic action to environmental stasis.
+- - - Primary Narrative Block - - -
+Entity[prop_mountain_range]
+Raw Sentence: The distant background mountain range in rugged green vegetation is resting grounded in inertial stasis.
+Action Type: Continuous
+Action Type Reason: Passive geographical features occupy a continuous state of being.
+Verb Reason: The verb 'resting' from the passive action context pool aligns with the very low intensity of a geological subject.
+Adverb Reason: The adverb 'grounded' from the very low intensity focus category reinforces the state of absolute rest.
 - - - Atmospheric Lighting Delta - - -
-Delta: Dense mist violently shredding and air warping due to hyper-velocity
-Delta Reason: Simulates the passage of the wingsuit jumper at 'breakneck speed' using very high kinetic energy on the visible mist.
-Delta: Chaotic environmental shockwaves streaking blindingly past the lens
-Delta Reason: Reinforces the feeling of extreme speed relative to the camera frame, consistent with VERY_HIGH tier particle effects.
-Delta: Volumetric lighting and Dynamic refraction
-Delta Reason: Provides spatial depth (volumetric) and enhances the dynamic light interaction (refraction) necessary for a high-speed scene.
-Delta: Heavy motion blur, shockwave distortion, and intense chromatic aberration
-Delta Reason: Maximalist tags required for the VERY_HIGH intensity tier to convey physical stress and speed.
+Delta: Subtle dust motes floating in the air while light particles drift slowly, all enhanced by atmospheric haze and muted tonal depth.
+Delta Reason: Very low intensity tier restricts particles to pre-existing passive dust, while the emotional vibe demands muted depth.
+- - - Cinematic Camera Vectors - - -
+Camera Action: Dolly-In steadily
+Subject Vectors: [$0X$, $0Y$, $+Z$]
+Subject Vectors Reasoning: The subject is a range converging toward a central vanishing point in the depth of the frame, establishing a vector along the Z-axis toward the background.
+- - - Style - - -
+Style Slot 1: Authentic raw textures in 4k fidelity with crystal clear clarity
+Style Slot 2: the subject's identity and environmental geometry are consistently preserved with absolute precision
+Style Slot 1 Reason: Derived from Raw texture detail and 4K resolution target in MasterStyleInfo.
+Style Slot 2 Reason: To ensure the complex ridge geometry from the start frame does not morph during the sequence.
+Reasoning: The prompt is built on a VERY_LOW intensity tier because the mountain range is geologically inert. I utilized the Action Context 'passive' verbs to emphasize stasis. Atmospheric tags were restricted to passive Brownian motion to prevent 'background freezing' without violating the physics of a solid mountain. The camera handle CINEMATIC_CAMERA_VECTORS is anchored to the mountain range to facilitate a slow, majestic pull-in or tracking move that emphasizes the scale ahead of the wingsuit jump.
+- - - Final Output Structure - - -
+Primary Narrative Block: The distant background mountain range in rugged green vegetation is resting grounded in inertial stasis.
+Atmospheric/Lighting Delta: enhanced by atmospheric haze and muted tonal depth.
+Cinematic Camera Vector: CINEMATIC_CAMERA_VECTORS the distant background mountain range
+Style: Authentic raw textures in 4k fidelity with crystal clear clarity, while the subject's identity and environmental geometry are consistently preserved with absolute precision.
+videoGenPrompt: The distant background mountain range in rugged green vegetation is resting grounded in inertial stasis, enhanced by atmospheric haze and muted tonal depth, captured with CINEMATIC_CAMERA_VECTORS the distant background mountain range, presented with authentic raw textures in 4k fidelity with crystal clear clarity, while the subject's identity and environmental geometry are consistently preserved with absolute precision.
+assembledVideoGenPrompt: The distant background mountain range in rugged green vegetation is resting grounded in inertial stasis, enhanced by atmospheric haze and muted tonal depth, captured with anamorphic Lens, Deep Focus, 9:16 Portrait Cinema, Long/Wide, Dolly-In steadily the distant background mountain range, rendered in authentic raw textures in 4k fidelity with crystal clear clarity, while the subject's identity and environmental geometry are consistently preserved with absolute precision.
+
+Scene #2 postVideoGenPrompt() Result
+Scene Summary: The wingsuit athlete initiates a plunge into a sheer mountain void, transitioning from a horizontal glide to a near-vertical terminal velocity dive over the alpine landscape.
+Scene Summary Reason: Based on the metadata 'dive off a cliff at breakneck speed' and the image showing a mid-air transition away from the mountain ridge.
+Primary Movement: Hyper-velocity descent with aerodynamic structural snapping.
+Primary Movement Reason: The 'breakneck speed' and 'diving' narration requires a tier that supports terminal velocity and high-frequency vibro-acoustic effects.
+Narrative Vibe: Intensity-focused extreme focus with a sense of vertigo.
+Narrative Vibe Reason: The narrow framing and high-altitude composition evoke a sense of urgent concentration and physical peril.
+Selected INTENSITY_TIER: VERY_HIGH
+INTENSITY_TIER Selected Reason: The metadata describes 'breakneck speed', 'diving', and 'plunging', which necessitates the maximum intensity tier for realistic aerodynamic distortion.
+Identity Logic: The athlete's identity as a modern extreme sports professional is maintained through the consistency of his sleek, high-tech white nylon suit and matte black safety helmet during the high-G transition.
+Action Focus: Transitioning from a static frame to 'plummeting' and 'distorting' to represent terminal velocity.
+- - - Primary Narrative Block - - -
+Entity[main_hero]
+Raw Sentence: The center foreground wingsuit jumper in a sleek white technical suit plummets violently, his nylon membranes vibrated by aerodynamic turbulence while the background is distorted by hyperlapse speed lines.
+Action Type: Temporary-Simultaneous
+Action Type Reason: The subject initiates a new dive (Temporary) while the environment reacts simultaneously with speed streaks.
+Verb Reason: 'Plummets' and 'Vibrated' are selected from action_context:aerodynamics and material:cloth for the VERY_HIGH tier.
+Adverb Reason: 
+- - - Atmospheric Lighting Delta - - -
+Delta: High-velocity air particles erupting radially from the helmet's path while anamorphic light streaks flare laterally, all enhanced by dynamic refraction and specular highlights.
+Delta Reason: Matches the VERY_HIGH intensity tier and the Anamorphic lens spec in the master style guide.
 - - - Cinematic Camera Vectors - - -
 Camera Action: Dolly-In and Pedestal Down violently
 Subject Vectors: [$0X$, $-Y$, $+Z$]
-Subject Vectors Reasoning: The implied subject (wingsuit jumper) trajectory is aimed centrally down the valley (0X), diving downward (-Y), and moving rapidly into the scene's depth (+Z), following the vanishing point of the mountain range.
-- - - Style - - -
-Style Slot 1: Authentic raw textures in stunning 4k resolution with crystal clear clarity
-Style Slot 2: the initial structural integrity of the environment remains perfectly intact and consistent throughout the motion
-Style Slot 1 Reason: Directly translates the fidelity requirements (Raw, 4K, Clean) into high-impact descriptive language suitable for the model.
-Style Slot 2 Reason: Commands the model to maintain the specific geometry and identity of the mountains and mist, preventing visual drift or distortion, which is crucial for environment-only shots.
-Reasoning: The scene requires maximum kinetic energy (VERY_HIGH) to convey "breakneck speed" despite the lack of a visible subject. Since the entity list is empty, the environment itself becomes the kinetic actor, and the atmosphere becomes the medium of action. Vocabulary was selected based on the VERY_HIGH tier to describe chaotic, high-velocity interactions (e.g., "shredding," "hyper-velocity," "shockwaves"). The camera vector (+Z, -Y) simulates the rapid plunge into the valley, and the atmospheric delta (motion blur, shockwave distortion) is maximized to prevent the background from freezing and emphasize the speed. The primary narrative block was constructed by coupling the environment anchor with the atmospheric delta, as per the entity-less protocol.
-- - - Final Output Structure - - -
-Primary Narrative Block: The surging Natural Mountainous Terrain with Rivers and Cliffs environment, framed as a Long/Wide shot, is violently shredding dense mist and warping the air due to hyper-velocity, while chaotic environmental shockwaves streak blindingly past the lens, enhanced by volumetric lighting, dynamic refraction, heavy motion blur, shockwave distortion, and intense chromatic aberration.
-Atmospheric/Lighting Delta:
-Cinematic Camera Vector: captured with CINEMATIC_CAMERA_VECTORS the surging Natural Mountainous Terrain with Rivers and Cliffs environment
-Style: presented with Authentic raw textures in stunning 4k resolution with crystal clear clarity, while the initial structural integrity of the environment remains perfectly intact and consistent throughout the motion.
-videoGenPrompt: The surging Natural Mountainous Terrain with Rivers and Cliffs environment, framed as a Long/Wide shot, is violently shredding dense mist and warping the air due to hyper-velocity, while chaotic environmental shockwaves streak blindingly past the lens, enhanced by volumetric lighting, dynamic refraction, heavy motion blur, shockwave distortion, and intense chromatic aberration, captured with CINEMATIC_CAMERA_VECTORS the surging Natural Mountainous Terrain with Rivers and Cliffs environment, presented with Authentic raw textures in stunning 4k resolution with crystal clear clarity, while the initial structural integrity of the environment remains perfectly intact and consistent throughout the motion.
-assembledVideoGenPrompt: The surging Natural Mountainous Terrain with Rivers and Cliffs environment, framed as a Long/Wide shot is violently shredding dense mist and warping the air due to hyper-velocity, while chaotic environmental shockwaves streak blindingly past the lens, enhanced by volumetric lighting, dynamic refraction, heavy motion blur, shockwave distortion, and intense chromatic aberration, Dolly-In and Pedestal Down violently the surging Natural Mountainous Terrain with Rivers and Cliffs environment, rendered in presented with Authentic raw textures in stunning 4k resolution with crystal clear clarity, while the initial structural integrity of the environment remains perfectly intact and consistent throughout the motion.
-
-Scene #2 postVideoGenPrompt() Result
-Scene Summary: A wingsuit jumper executes a high-speed, steep dive over a mountain range, maintaining an aerodynamic posture and achieving hyper-velocity.
-Scene Summary Reason: The video description explicitly states the jumper dives off a cliff at 'breakneck speed' and skims a river, indicating sustained, high-velocity aerial movement.
-Primary Movement: Extreme vertical and horizontal translation (falling/flying) at maximum speed, requiring continuous aerodynamic adjustments.
-Primary Movement Reason: The core action is free-fall and sustained high-speed flight, which involves rapid displacement across all three axes of motion.
-Narrative Vibe: CHAOTIC
-Narrative Vibe Reason: The action involves free-falling and flying at near-terminal velocity, creating a sense of hyper-speed, disorientation, and high-stakes intensity, which aligns with the CHAOTIC/VERTIGO description.
-Selected INTENSITY_TIER: VERY_HIGH
-INTENSITY_TIER Selected Reason: The subject is performing high-velocity, near-terminal flight, causing extreme aerodynamic stress on the suit and requiring maximum kinetic output, fitting the criteria for Explosive Chaos/Hyper-Velocity.
-Identity Logic: The subject's role as a Modern Day Wingsuit Jumper is locked by anchoring the identity to the 'center foreground Wingsuit Jumper in an aerodynamic suit,' ensuring the streamlined profile and material physics (cloth, viscoelastic) are preserved during high-speed motion.
-Action Focus: The core action is translated from 'diving off a cliff at breakneck speed' into the physics-based action of 'soaring and streaking' using the 'blindingly' adverb to maximize the visual impact of hyper-velocity motion blur and g-force effects.
-- - - Primary Narrative Block - - -
-Entity[wingsuit_jumper_01]
-Raw Sentence: The center foreground Wingsuit Jumper in an aerodynamic suit is soaring and streaking blindingly, causing violent fabric whipping and aerosolized sweat spray.
-Action Type: Continuous
-Action Type Reason: The jumper is maintaining a state of continuous, high-speed flight and body adjustments, which is a sustained state of motion rather than a single, temporary event.
-Verb Reason: Selected 'soar' and 'streak' from the VERY_HIGH tier of the 'aerodynamics' and 'velocity_max' action contexts, as the subject is in high-velocity, sustained free-fall/flight.
-Adverb Reason: Selected 'blindingly' from the VERY_HIGH Velocity focus list to emphasize the extreme, disorienting speed of the descent, matching the 'breakneck speed' narration.
-- - - Atmospheric Lighting Delta - - -
-Delta: Extreme air turbulence distorting the background environment
-Delta Reason: Required by the VERY_HIGH intensity tier to show the physical reaction of the medium (air) to the subject's hyper-velocity movement.
-Delta: Environmental blur speed lines rushing past the lens
-Delta Reason: Used to reinforce the camera's tracking movement and the high speed of the subject, creating a visual counter-flow effect that emphasizes velocity.
-Delta: Dynamic refraction with hard rim lighting and specular highlights
-Delta Reason: Selected to enhance the sharp reality and action focus, using hard lighting to define the subject's edge against the volumetric atmosphere.
-Delta: Extreme motion blur and shockwave distortion
-Delta Reason: Maximalist tags required by the VERY_HIGH tier to convey the extreme kinetic energy and physics deformation inherent in hyper-velocity flight.
-- - - Cinematic Camera Vectors - - -
-Camera Action: Crash Zoom In with Handheld Shaky violently
-Subject Vectors: [$0X$, $0Y$, $+Z$]
-Subject Vectors Reasoning: The subject's streamlined, dorsal-oriented body is aligned with the scene's vanishing point in the distant mountains, indicating strong movement into the background depth (+Z). Lateral (0X) and vertical (0Y) frame positions are relatively maintained as the camera tracks the dive.
-- - - Style - - -
-Style Slot 1: Authentic raw textures with crystal clear clarity in 4k fidelity
-Style Slot 2: the initial structural integrity of the wingsuit's geometry and the mountainous environment remains perfectly intact and consistent throughout the motion
-Style Slot 1 Reason: Based on fidelity settings (Raw textureDetail, Clean grainLevel, 4K resolutionTarget) to maximize detail and sharpness appropriate for extreme sports and the high-speed environment.
-Style Slot 2 Reason: To ensure spatio-temporal consistency, especially the complex shape of the wingsuit and the detailed mountain terrain, preventing identity drift during hyper-velocity translation.
-Reasoning: 1) Vocabulary Selection: The VERY_HIGH tier was mandatory due to the 'breakneck speed' narration. Verbs 'soar' and 'streak' combined with the adverb 'blindingly' maximize the visual speed. Material reactions like 'violent fabric whipping' and 'aerosolized sweat spray' ensure the extreme physical stress is visually represented, strictly adhering to the vocabulary usage protocol. 2) Camera Tech: The subject vector is $S_z: +Z$ (moving into depth). The camera is instructed to track this high-speed movement using the 'CINEMATIC_CAMERA_VECTORS' handle, maintaining a deep focus and Anamorphic look as specified in the style guide. 3) Atmospheric Strategy: The strategy is maximalist (Physics Unbound) to prevent the background from 'freezing.' Tags like 'extreme air turbulence,' 'environmental blur speed lines,' and 'shockwave distortion' ensure the entire frame participates in the kinetic energy transfer, reinforcing the CHAOTIC intensity.
-- - - Final Output Structure - - -
-Primary Narrative Block: The center foreground Wingsuit Jumper in an aerodynamic suit is soaring and streaking blindingly, causing violent fabric whipping and aerosolized sweat spray.
-Atmospheric/Lighting Delta: extreme air turbulence distorting the background environment, while environmental blur speed lines rushing past the lens, all enhanced by dynamic refraction with hard rim lighting and specular highlights and extreme motion blur and shockwave distortion
-Cinematic Camera Vector: captured with CINEMATIC_CAMERA_VECTORS tracking the center foreground Wingsuit Jumper in an aerodynamic suit
-Style: rendered in Authentic raw textures with crystal clear clarity in 4k fidelity, while the initial structural integrity of the wingsuit's geometry and the mountainous environment remains perfectly intact and consistent throughout the motion.
-videoGenPrompt: The center foreground Wingsuit Jumper in an aerodynamic suit is soaring and streaking blindingly, causing violent fabric whipping and aerosolized sweat spray, amidst extreme air turbulence distorting the background environment, while environmental blur speed lines rushing past the lens, all enhanced by dynamic refraction with hard rim lighting and specular highlights and extreme motion blur and shockwave distortion, captured with CINEMATIC_CAMERA_VECTORS tracking the center foreground Wingsuit Jumper in an aerodynamic suit, rendered in Authentic raw textures with crystal clear clarity in 4k fidelity, while the initial structural integrity of the wingsuit's geometry and the mountainous environment remains perfectly intact and consistent throughout the motion.
-assembledVideoGenPrompt: The center foreground Wingsuit Jumper in an aerodynamic suit is soaring and streaking blindingly, causing violent fabric whipping and aerosolized sweat spray, amidst extreme air turbulence distorting the background environment, while environmental blur speed lines rushing past the lens, all enhanced by dynamic refraction with hard rim lighting and specular highlights and extreme motion blur and shockwave distortion, captured with anamorphic Lens, Deep Focus, 9:16 Portrait Cinema, Long/Wide, Crash Zoom In with Handheld Shaky violently tracking the center foreground Wingsuit Jumper in an aerodynamic suit, rendered in Authentic raw textures with crystal clear clarity in 4k fidelity, while the initial structural integrity of the wingsuit's geometry and the mountainous environment remains perfectly intact and consistent throughout the motion.
-
-Scene #3 postVideoGenPrompt() Result
-Scene Summary: The wingsuit jumper executes a high-speed dive off a massive cliff face, maintaining a streamlined, high-velocity trajectory toward the viewer.
-Scene Summary Reason: Based on the video description and the image's motion blur, the core action is an extreme, sustained, high-speed dive.
-Primary Movement: Extreme, sustained downward and forward velocity (Plummeting/Diving/Streaking).
-Primary Movement Reason: The narrative explicitly states 'breakneck speed' and 'diving off a cliff,' which are actions categorized by maximal velocity.
-Narrative Vibe: CHAOTIC
-Narrative Vibe Reason: The combination of high-risk extreme sports, breakneck speed, and proximity to a cliff face creates a high-stakes, chaotic sense of urgency and danger.
-Selected INTENSITY_TIER: VERY_HIGH
-INTENSITY_TIER Selected Reason: The scene involves terminal velocity and rapid, high-g-force movement, necessitating the maximum kinetic energy transfer defined by the VERY_HIGH tier.
-Identity Logic: The subject's identity as a 'Wingsuit Jumper' is preserved by focusing on the aerodynamic performance of his suit and the physiological stress (viscoelastic) caused by the extreme speed. The 'Cliff Face' serves as a static, inertial anchor to emphasize the jumper's relative velocity.
-Action Focus: The conceptual shift translates the narrative 'diving off a cliff at breakneck speed' into the high-impact kinetic phrase 'plummets blindingly,' utilizing maximum velocity tags from the VERY_HIGH tier.
-- - - Primary Narrative Block - - -
-Entity[main_hero]
-Raw Sentence: The center foreground Wingsuit Jumper in an aerodynamic black wingsuit plummets blindingly, his wingsuit fabric flapping violently, causing aerosolized sweat spray.
-Action Type: Temporary-Single
-Action Type Reason: The action describes a single, decisive, high-velocity movement (plummeting) that initiates a major change in trajectory, fitting the Temporary-Single classification.
-Verb Reason: The verb 'plummets' was selected from the 'aerodynamics' action context, under the 'VERY_HIGH' intensity tier, to convey maximal free-falling velocity and kinetic energy transfer, aligning with the narrative of 'breakneck speed'.
-Adverb Reason: The adverb 'blindingly' was chosen from the 'VERY_HIGH' Velocity focus category to emphasize the extreme, disorienting speed described in the source narration.
-Entity[prop]
-Raw Sentence: The left background Cliff Face with rugged rock texture remains inertial, its surface texture subtly distorted by the intense speed of the subject.
-Action Type: Continuous
-Action Type Reason: The cliff is a static element in continuous rest, but its visual state is continuously affected by the jumper's high-speed movement, thus classified as Continuous state.
-Verb Reason: The verb 'remains' (inertial) was used, derived from the 'passive' action context under the 'VERY_LOW' tier (as it is static), emphasizing its constant, grounded state despite the chaos around it.
-Adverb Reason:
-- - - Atmospheric Lighting Delta - - -
-Delta: Extreme motion blur surrounds the subject, causing shockwave distortion in the air
-Delta Reason: This describes the intense wake effect (Slot 1), required due to the VERY_HIGH intensity tier, where the subject interaction with the air must be maximized.
-Delta: Environmental blur streaks violently past the lens
-Delta Reason: This describes the Counter-Flow (Slot 2), where the environment must streak opposite to the $C_z$ camera vector to emphasize relative speed and depth.
-Delta: Dynamic refraction, hard rim lighting, and specular highlights
-Delta Reason: Chosen as the Volumetric Lighting Anchor (Slot 3) to support the Action/Sharp Reality vibe and enhance the sense of speed and G-force effects.
-Delta: Heavy motion blur with chromatic aberration
-Delta Reason: Selected as Technical Tags (Slot 4) from the VERY_HIGH tier to reinforce chaotic speed and optical distortion.
-- - - Cinematic Camera Vectors - - -
-Camera Action: Zoom Out and Truck Right with Handheld Shaky violently
-Subject Vectors: [$+X$, $-Y$, $-Z$]
-Subject Vectors Reasoning: The jumper is oriented frontally, descending rapidly (-Y), and angled slightly to the right (+X), moving from the background toward the camera/foreground (-Z), suggesting a high-speed track-in.
-- - - Style - - -
-Style Slot 1: Authentic raw textures in stunning 4k resolution with crystal clear clarity
-Style Slot 2: the initial structural integrity of the subject and environment remains perfectly intact and consistent throughout the motion
-Style Slot 1 Reason: Combines 'Raw' texture detail and '4K' resolution target, ensuring high definition and clean output as per the 'Clean' grain level.
-Style Slot 2 Reason: A positive command to the model to preserve the identity, pose, and environmental geometry of the static image anchor (t=0) throughout the dynamic sequence.
-Reasoning: The logical bridge maximizes the sense of hyper-velocity required by the narrative ('breakneck speed'). Tags like 'violent fabric flapping,' 'aerosolized sweat spray,' and 'shockwave distortion' were strictly derived from the VERY_HIGH tier of the relevant physics profiles to ensure maximal kinetic expressiveness. The camera vector ($+X, -Y, -Z$) tracks the jumper's descent, and the atmospheric strategy employs environmental blur streaking (counter-flow) and heavy motion blur to prevent the background from freezing and amplify the perceived speed, consistent with the VERY_HIGH intensity tier. The style locks in raw, 4K fidelity to enhance the cinematic realism of the extreme action.
-- - - Final Output Structure - - -
-Primary Narrative Block: The center foreground Wingsuit Jumper in an aerodynamic black wingsuit plummets blindingly, his wingsuit fabric flapping violently, causing aerosolized sweat spray. The left background Cliff Face with rugged rock texture remains inertial, its surface texture subtly distorted by the intense speed of the subject.
-Atmospheric/Lighting Delta: extreme motion blur surrounds the subject, causing shockwave distortion in the air, while environmental blur streaks violently past the lens, all enhanced by dynamic refraction, hard rim lighting, and heavy motion blur with chromatic aberration
-Cinematic Camera Vector: captured with CINEMATIC_CAMERA_VECTORS the center foreground Wingsuit Jumper in an aerodynamic black wingsuit
-Style: presented with Authentic raw textures in stunning 4k resolution with crystal clear clarity, while the initial structural integrity of the subject and environment remains perfectly intact and consistent throughout the motion
-videoGenPrompt: The center foreground Wingsuit Jumper in an aerodynamic black wingsuit plummets blindingly, his wingsuit fabric flapping violently, causing aerosolized sweat spray. The left background Cliff Face with rugged rock texture remains inertial, its surface texture subtly distorted by the intense speed of the subject, amidst extreme motion blur surrounds the subject, causing shockwave distortion in the air, while environmental blur streaks violently past the lens, all enhanced by dynamic refraction, hard rim lighting, and heavy motion blur with chromatic aberration, captured with CINEMATIC_CAMERA_VECTORS the center foreground Wingsuit Jumper in an aerodynamic black wingsuit, presented with Authentic raw textures in stunning 4k resolution with crystal clear clarity, while the initial structural integrity of the subject and environment remains perfectly intact and consistent throughout the motion.
-assembledVideoGenPrompt: The center foreground Wingsuit Jumper in an aerodynamic black wingsuit plummets blindingly, his wingsuit fabric flapping violently, causing aerosolized sweat spray. The left background Cliff Face with rugged rock texture remains inertial, its surface texture subtly distorted by the intense speed of the subject, amidst extreme motion blur surrounds the subject, causing shockwave distortion in the air, while environmental blur streaks violently past the lens, all enhanced by dynamic refraction, hard rim lighting, and heavy motion blur with chromatic aberration, captured with anamorphic Lens, Deep Focus, 9:16 Portrait Cinema, Long/Wide, Zoom Out and Truck Right with Handheld Shaky violently the center foreground Wingsuit Jumper in an aerodynamic black wingsuit, rendered in presented with Authentic raw textures in stunning 4k resolution with crystal clear clarity, while the initial structural integrity of the subject and environment remains perfectly intact and consistent throughout the motion.
-
-Scene #4 postVideoGenPrompt() Result
-Scene Summary: A wingsuit jumper navigates a narrow, high-speed flight path between rugged mountain walls.
-Scene Summary Reason: Derived from the video description and image context showing the jumper flying at extreme speed through a gorge.
-Primary Movement: Extreme velocity aerodynamic flight, requiring continuous physical adjustments.
-Primary Movement Reason: The subject is performing an intense wingsuit dive requiring constant high-speed control, evidenced by the motion blur in the image.
-Narrative Vibe: FOCUS
-Narrative Vibe Reason: The action involves high risk and extreme speed within a narrow space, demanding absolute focus and precision from the subject.
-Selected INTENSITY_TIER: VERY_HIGH
-INTENSITY_TIER Selected Reason: The description mentions "breakneck speed" and the image shows high relative velocity motion blur, requiring the maximum kinetic tier to simulate terminal velocity effects.
-Identity Logic: The core identity of the wingsuit jumper (Modern Day, Male, 30s) and the surrounding natural mountain terrain must be preserved. Motion focuses on the subject's aerodynamic stance and the extreme velocity effect on the fabric and surrounding air, ensuring the physics profile remains consistent with a high-speed dive.
-Action Focus: The raw narration of "soars... diving off a cliff at breakneck speed" is translated into a focus on Hyper-Velocity and Aerodynamic Failure simulations, using verbs like 'falling' and environmental effects like 'streaking blindingly' and 'violent fabric whipping'.
-- - - Primary Narrative Block - - -
-Entity[E1]
-Raw Sentence: The center midground wingsuit jumper with a helmet and goggles is falling instantly, causing violent fabric whipping and violent tissue deformation.
-Action Type: Continuous
-Action Type Reason: The subject is maintaining a sustained state of high-speed flight and descent, requiring continuous motion rather than an atomic or sequential event.
-Verb Reason: The verb 'fall' was selected from 'aerodynamics' (VERY_HIGH tier) to capture the high rate of descent and continuous motion inherent in the dive.
-Adverb Reason: The adverb 'instantly' was chosen from the 'Velocity' focus archetype (VERY_HIGH tier) to emphasize the extreme, almost instantaneous perceived speed of the subject's descent.
-Entity[E2]
-Raw Sentence: The foreground rugged rock walls with black and brown surfaces are streaking blindingly, with incandescent sparks and white-hot friction.
-Action Type: Continuous
-Action Type Reason: The environmental elements are in a sustained state of rapid motion blur relative to the camera, representing continuous high velocity flow.
-Verb Reason: The verb 'streak' was selected from 'velocity_max' (VERY_HIGH tier) to describe the visual effect of the background rushing past at extreme speed.
-Adverb Reason: The adverb 'blindingly' was chosen from the 'Velocity' focus archetype (VERY_HIGH tier) to emphasize the overwhelming visual effect of the high-speed motion blur.
-- - - Atmospheric Lighting Delta - - -
-Delta: Turbulent air displacement violently distorts the space around him
-Delta Reason: Selected as the Subject-Atmosphere Interaction [Slot_1]. At VERY_HIGH speed, air resistance must cause visible turbulent wake effects around the body.
-Delta: environmental speed lines streak past the anamorphic lens
-Delta Reason: Selected as the Camera-Atmosphere Flow [Slot_2]. This reinforces the Hyper-Velocity effect and the Z+ subject vector by showing environmental elements streaking past the lens.
-Delta: dynamic refraction, hard rim lighting, specular highlights
-Delta Reason: Selected as the Volumetric Lighting Anchor [Slot_3]. This setup enhances the sense of sharpness, danger, and speed required by the FOCUS/Action vibe.
-Delta: heavy motion blur, shockwave distortion, and chromatic aberration
-Delta Reason: Selected as Technical Tags [Slot_4]. These maximalist tags support the VERY_HIGH intensity tier, emphasizing speed and physical strain on the optical system.
-- - - Cinematic Camera Vectors - - -
-Camera Action: Dolly-In and Truck Right violently
-Subject Vectors: [$+X$, $-Y$, $+Z$]
-Subject Vectors Reasoning: The jumper is visually moving/leaning towards the screen right (+X) and diving downward (-Y), while simultaneously heading deeper into the gorge, away from the camera's foreground (+Z), as implied by the vanishing point perspective.
+Subject Vectors Reasoning: The jumper is positioned facing away from camera (facing the valley), moving downward into the frame's depth toward the vanishing point.
 - - - Style - - -
 Style Slot 1: Authentic raw textures in 4k fidelity with crystal clear clarity
-Style Slot 2: the initial structural integrity of the subject and environment remains perfectly intact and consistent throughout the motion
-Style Slot 1 Reason: Derived from the <master_style_guide> (Raw texture, Clean grain, 4K resolution) to ensure maximum visual quality and fidelity.
-Style Slot 2 Reason: Mandatory structural preservation command to prevent subject distortion or drift common in complex, high-speed image-to-video diffusion.
-Reasoning: The scene's kinetic profile was locked to VERY_HIGH intensity due to the "breakneck speed" and visible extreme motion blur. This tier mandated the use of extreme physical jargon, such as 'falling instantly' and 'violent fabric whipping' for the subject, and 'streaking blindingly' with 'incandescent sparks' for the closely passing environment, adhering strictly to the vocabulary usage protocol to avoid semantic contamination. The atmospheric strategy focuses on turbulent air displacement and speed lines to reinforce the hyper-velocity ($S_x=+X, S_y=-Y, S_z=+Z$) and prevent 'background freezing.' The camera vector uses the tracking handle 'CINEMATIC_CAMERA_VECTORS' to command the autonomous scheduler to maintain focus on the subject while executing the high-speed lateral and receding movement. The final prompt integrates these four components (Action, Atmosphere, Camera, Style) into a single, cohesive cinematic directive.
+Style Slot 2: the initial structural integrity of the subject and environmental geometry remains perfectly intact and consistent throughout the motion.
+Style Slot 1 Reason: Derived from master_style_guide fidelity settings (Raw/4K/Clean).
+Style Slot 2 Reason: Standard directorial instruction to prevent subject morphing during the high-speed generating phase.
+Reasoning: The prompt uses the VERY_HIGH intensity tier to capture the 'breakneck speed' described in the metadata. It avoids hallucinating ground contact by focusing on air turbulence and background liquefaction (velocity_max). The camera vector follows the subject's dorsal-view dive into the distance, using the 'CINEMATIC_CAMERA_VECTORS' handle to anchor the optical flow to the athlete's torso.
 - - - Final Output Structure - - -
-Primary Narrative Block: The foreground rugged rock walls with black and brown surfaces are streaking blindingly, with incandescent sparks and white-hot friction, while the center midground wingsuit jumper with a helmet and goggles is falling instantly, causing violent fabric whipping and violent tissue deformation.
-Atmospheric/Lighting Delta: amidst turbulent air displacement violently distorts the space around him, while environmental speed lines streak past the anamorphic lens, all enhanced by dynamic refraction, hard rim lighting, specular highlights, heavy motion blur, shockwave distortion, and chromatic aberration.
-Cinematic Camera Vector: captured with CINEMATIC_CAMERA_VECTORS tracking the center midground wingsuit jumper with a helmet and goggles
-Style: rendered in Authentic raw textures in 4k fidelity with crystal clear clarity, while the initial structural integrity of the subject and environment remains perfectly intact and consistent throughout the motion.
-videoGenPrompt: The foreground rugged rock walls with black and brown surfaces are streaking blindingly, with incandescent sparks and white-hot friction, while the center midground wingsuit jumper with a helmet and goggles is falling instantly, causing violent fabric whipping and violent tissue deformation, amidst turbulent air displacement violently distorts the space around him, while environmental speed lines streak past the anamorphic lens, all enhanced by dynamic refraction, hard rim lighting, specular highlights, heavy motion blur, shockwave distortion, and chromatic aberration, captured with CINEMATIC_CAMERA_VECTORS tracking the center midground wingsuit jumper with a helmet and goggles, rendered in Authentic raw textures in 4k fidelity with crystal clear clarity, while the initial structural integrity of the subject and environment remains perfectly intact and consistent throughout the motion.
-assembledVideoGenPrompt: The foreground rugged rock walls with black and brown surfaces are streaking blindingly, with incandescent sparks and white-hot friction, while the center midground wingsuit jumper with a helmet and goggles is falling instantly, causing violent fabric whipping and violent tissue deformation, amidst turbulent air displacement violently distorts the space around him, while environmental speed lines streak past the anamorphic lens, all enhanced by dynamic refraction, hard rim lighting, specular highlights, heavy motion blur, shockwave distortion, and chromatic aberration, captured with anamorphic Lens, Deep Focus, 9:16 Portrait Cinema, Long/Wide, Dolly-In and Truck Right violently tracking the center midground wingsuit jumper with a helmet and goggles, rendered in Authentic raw textures in 4k fidelity with crystal clear clarity, while the initial structural integrity of the subject and environment remains perfectly intact and consistent throughout the motion.
+Primary Narrative Block: The center foreground wingsuit jumper in a sleek white technical suit plummets violently, his nylon membranes vibrated by aerodynamic turbulence while the background is distorted by hyperlapse speed lines.
+Atmospheric/Lighting Delta: High-velocity air particles erupting radially from the helmet's path while anamorphic light streaks flare laterally, all enhanced by dynamic refraction and specular highlights.
+Cinematic Camera Vector: CINEMATIC_CAMERA_VECTORS the center foreground wingsuit jumper in a sleek white technical suit
+Style: Authentic raw textures in 4k fidelity with crystal clear clarity, while the initial structural integrity of the subject and environmental geometry remains perfectly intact and consistent throughout the motion.
+videoGenPrompt: The center foreground wingsuit jumper in a sleek white technical suit plummets violently, his nylon membranes vibrated by aerodynamic turbulence while the background is distorted by hyperlapse speed lines, amidst high-velocity air particles erupting radially from the helmet's path while anamorphic light streaks flare laterally, all enhanced by dynamic refraction and specular highlights, captured with CINEMATIC_CAMERA_VECTORS the center foreground wingsuit jumper in a sleek white technical suit, rendered in authentic raw textures in 4k fidelity with crystal clear clarity, while the initial structural integrity of the subject and environmental geometry remains perfectly intact and consistent throughout the motion.
+assembledVideoGenPrompt: The center foreground wingsuit jumper in a sleek white technical suit plummets violently, his nylon membranes vibrated by aerodynamic turbulence while the background is distorted by hyperlapse speed lines, amidst high-velocity air particles erupting radially from the helmet's path while anamorphic light streaks flare laterally, all enhanced by dynamic refraction and specular highlights, captured with anamorphic Lens, Deep Focus, 9:16 Portrait Cinema, Long/Wide, Dolly-In and Pedestal Down violently the center foreground wingsuit jumper in a sleek white technical suit, rendered in authentic raw textures in 4k fidelity with crystal clear clarity, while the initial structural integrity of the subject and environmental geometry remains perfectly intact and consistent throughout the motion.
+
+Scene #3 postVideoGenPrompt() Result
+Scene Summary: The wingsuit jumper initiates a terminal velocity plunge alongside a sharp mountain precipice, transitioning from a glide into a high-speed dive towards the canyon floor.
+Scene Summary Reason: Based on the video_metadata description of diving off a cliff at breakneck speed and the image context showing a vertical orientation relative to the cliff.
+Primary Movement: Vertical plummet and terminal velocity acceleration.
+Primary Movement Reason: The starting t=0 pose is a streamlined dive parallel to a vertical cliff, implying gravity-driven acceleration.
+Narrative Vibe: Extreme adrenaline and vertigo-inducing speed.
+Narrative Vibe Reason: The 'Breakneck Speed' title and precipitous drop-off context dictate a high-intensity kinetic atmosphere.
+Selected INTENSITY_TIER: VERY_HIGH
+INTENSITY_TIER Selected Reason: The narration specifies 'breakneck speed' and 'plunge,' which aligns with terminal velocity and aerodynamic structural strain.
+Identity Logic: The athlete's ergonomic wingsuit seams and helmet geometry are fixed anchors, with tension derived from high-frequency material vibration during the plunge.
+Action Focus: The transition from 'flying' to 'plunging' is realized through background liquefaction and the distortion of the subject's silhouette due to extreme G-force.
+- - - Primary Narrative Block - - -
+Entity[main_hero]
+Raw Sentence: The center midground wingsuit jumper in a form-fitting grey suit plummets blindingly, his gear exhibiting high-frequency vibration and aerodynamic turbulence.
+Action Type: Continuous
+Action Type Reason: The subject is already mid-air in a state of sustained terminal velocity momentum.
+Verb Reason: 'Fall' or 'Plummet' selected from aerodynamics at VERY_HIGH tier to reflect terminal descent.
+Adverb Reason: 'Blindingly' selected from Velocity at VERY_HIGH tier to match the 'breakneck' descriptor.
+- - - Atmospheric Lighting Delta - - -
+Delta: Chaotic air cavitation while environment particles streak past the lens in a radial flow, all enhanced by dynamic refraction and hard rim lighting.
+Delta Reason: At VERY_HIGH intensity, air flow becomes visible through distortion (cavitation) and light streaks to emphasize speed.
+- - - Cinematic Camera Vectors - - -
+Camera Action: Dolly-In and Pedestal Down violently
+Subject Vectors: [$0X$, $-Y$, $+Z$]
+Subject Vectors Reasoning: The jumper is plunges downward (-Y) while converging toward the depth of the valley floor (+Z) as the cliff recedes.
+- - - Style - - -
+Style Slot 1: Authentic raw textures with crystal clear clarity in 4k fidelity
+Style Slot 2: the subject's identity and environmental geometry are consistently preserved with absolute precision
+Style Slot 1 Reason: Derived from master_style_guide fidelity settings for Raw/Clean/4K.
+Style Slot 2 Reason: Standard stability directive to prevent wingsuit morphing during high-speed descent.
+Reasoning: The prompt uses VERY_HIGH intensity tags ('plummet,' 'blindingly') to bridge the gap between the static image and the 'breakneck' description. Atmospheric layers focus on air cavitation and radial streaks to sell the sense of speed in a no-audio environment. The camera handle is locked to the jumper to maintain a 'chase' sensation.
+- - - Final Output Structure - - -
+Primary Narrative Block: The center midground wingsuit jumper in a form-fitting grey suit plummets blindingly, his gear exhibiting high-frequency vibration and aerodynamic turbulence.
+Atmospheric/Lighting Delta: amidst chaotic air cavitation while environment particles streak past the lens in a radial flow, all enhanced by dynamic refraction and hard rim lighting
+Cinematic Camera Vector: CINEMATIC_CAMERA_VECTORS the center midground wingsuit jumper in a form-fitting grey suit
+Style: rendered in authentic raw textures with crystal clear clarity in 4k fidelity, while the subject's identity and environmental geometry are consistently preserved with absolute precision.
+videoGenPrompt: The center midground wingsuit jumper in a form-fitting grey suit plummets blindingly, his gear exhibiting high-frequency vibration and aerodynamic turbulence, amidst chaotic air cavitation while environment particles streak past the lens in a radial flow, all enhanced by dynamic refraction and hard rim lighting, captured with CINEMATIC_CAMERA_VECTORS the center midground wingsuit jumper in a form-fitting grey suit, rendered in authentic raw textures with crystal clear clarity in 4k fidelity, while the subject's identity and environmental geometry are consistently preserved with absolute precision.
+assembledVideoGenPrompt: The center midground wingsuit jumper in a form-fitting grey suit plummets blindingly, his gear exhibiting high-frequency vibration and aerodynamic turbulence, amidst chaotic air cavitation while environment particles streak past the lens in a radial flow, all enhanced by dynamic refraction and hard rim lighting, captured with anamorphic Lens, Deep Focus, 9:16 Portrait Cinema, Long/Wide, Dolly-In and Pedestal Down violently the center midground wingsuit jumper in a form-fitting grey suit, rendered in authentic raw textures with crystal clear clarity in 4k fidelity, while the subject's identity and environmental geometry are consistently preserved with absolute precision.
+
+Scene #4 postVideoGenPrompt() Result
+Scene Summary: The point-of-view of a wingsuit jumper dives through a narrow rock crevice at extreme speed.
+Scene Summary Reason: The image shows a POV/close-up of a canyon gap with extreme motion blur on the side walls, indicating high-velocity forward movement.
+Primary Movement: Hyper-velocity forward rush through a narrow rock corridor.
+Primary Movement Reason: The blur lines converge at a central vanishing point, suggesting the viewer is moving into the scene at high speed.
+Narrative Vibe: Extreme adrenaline and vertigo.
+Narrative Vibe Reason: The narrowness of the rocks combined with the visual speed creates a sense of high risk.
+Selected INTENSITY_TIER: VERY_HIGH
+INTENSITY_TIER Selected Reason: The narration specifies 'breakneck speed' and the image shows total background liquefaction, justifying VERY_HIGH.
+Identity Logic: The geological structures are treated as static anchors that undergo extreme optical distortion (liquefaction) to simulate the speed of a modern extreme sports flight.
+Action Focus: The stagnant rocks are transformed into kinetic vectors that 'distort' and 'warp' according to the POV camera's momentum.
+- - - Primary Narrative Block - - -
+Entity[rock_formations]
+Raw Sentence: The Alpine Wilderness and Rugged River Canyon is enhanced by dynamic refraction and hard rim lighting, while the initial structural integrity of the subject remains perfectly intact and consistent throughout the motion.
+Action Type: Continuous
+Action Type Reason: The environment is fixed, but the viewer's movement causes a continuous state of visual distortion for the rocks.
+Verb Reason: Verbs selected from the hyper-velocity tier to reflect the extreme G-force implied.
+Adverb Reason: Used to describe the state of constant visual flux.
+- - - Atmospheric Lighting Delta - - -
+Delta: Structural debris erupting radially from the impact point while chaotic shockwave shatter the surrounding air, all enhanced by volumetric lighting and ejecta flow disintegration.
+Delta Reason: The extreme speed through a narrow gap would logically disturb loose particles and create optical shockwaves.
+- - - Cinematic Camera Vectors - - -
+Camera Action: Crash Zoom In violently
+Subject Vectors: [$0X$, $0Y$, $+Z$]
+Subject Vectors Reasoning: The POV moves directly into the vanishing point, representing a forward depth-axis shift (+Z).
+- - - Style - - -
+Style Slot 1: Authentic raw textures in 4k fidelity
+Style Slot 2: the subject's identity and environmental geometry are consistently preserved with absolute precision
+Style Slot 1 Reason: Matches the 'Raw' and '4K' metadata requirements for realistic nature footage.
+Style Slot 2 Reason: Critical to ensure the narrow canyon walls don't morph or melt unnaturally despite the speed blur.
+Reasoning: The prompt focuses on the 'Delta' of motion. Since the camera is the 'Active Agent' in this POV shot, the rocks (Passive) undergo 'liquefaction' and 'distortion' to sell the speed. Vocabulary from the VERY_HIGH tier ensures the motion blur feels physical and intense rather than a slow drift.
+- - - Final Output Structure - - -
+Primary Narrative Block: The Alpine Wilderness and Rugged River Canyon environment is enhanced by dynamic refraction and hard rim lighting.
+Atmospheric/Lighting Delta: Chaotic air eddies and radial light streaks erupt from the center, enhanced by volumetric lighting and high-velocity particle ejecta.
+Cinematic Camera Vector: CINEMATIC_CAMERA_VECTORS the rugged mountain gap canyon
+Style: Authentic raw textures in 4k fidelity, while the initial structural integrity of the environment remains perfectly intact and consistent throughout the motion.
+videoGenPrompt: The Alpine Wilderness and Rugged River Canyon environment is distorted and warped by hyper-velocity, causing background liquefaction through the gap, amidst chaotic air eddies and radial light streaks erupting from the center, enhanced by volumetric lighting and high-velocity particle ejecta, filmed using CINEMATIC_CAMERA_VECTORS the rugged mountain gap canyon, presented with authentic raw textures in 4k fidelity, while the initial structural integrity of the environment remains perfectly intact and consistent throughout the motion.
+assembledVideoGenPrompt: The Alpine Wilderness and Rugged River Canyon environment is enhanced by dynamic refraction and hard rim lighting, amidst chaotic air eddies and radial light streaks erupt from the center, enhanced by volumetric lighting and high-velocity particle ejecta, captured with anamorphic Lens, Deep Focus, 9:16 Portrait Cinema, Long/Wide, Crash Zoom In violently the rugged mountain gap canyon, rendered in authentic raw textures in 4k fidelity, while the initial structural integrity of the environment remains perfectly intact and consistent throughout the motion.
 
 Scene #5 postVideoGenPrompt() Result
-Scene Summary: A wingsuit jumper is executing a critical, high-speed pull-up maneuver just above a turbulent, rushing river surface to avoid impact and gain altitude.
-Scene Summary Reason: The video description explicitly states the jumper 'pulls up hard last second and skims a rushing river,' defining a high-stakes, rapid action sequence.
-Primary Movement: Rapid, decisive vertical acceleration (pulling up) combined with extreme horizontal velocity (skimming the river).
-Primary Movement Reason: The core action is the 'pull up hard,' which signifies a major change in the subject's Z and Y vectors, driven by intentional force against high velocity.
-Narrative Vibe: FOCUS
-Narrative Vibe Reason: The scene is defined by a critical, high-stakes maneuver requiring absolute concentration and precision (pulling up 'last second'), making FOCUS the dominant narrative mood over general anxiety.
-Selected INTENSITY_TIER: HIGH
-INTENSITY_TIER Selected Reason: The action involves 'breakneck speed' and a 'hard pull-up,' requiring decisive kinetic force, structural strain, and turbulent displacement of the water, aligning perfectly with the HIGH intensity tier definition.
-Identity Logic: Preserving the subject's identity as a 'Modern Day Wingsuit Jumper' by anchoring his unique aerodynamic suit and the high-speed environment (mountain river) as the core visual elements. The motion focuses on the aerodynamic strain of the suit and the physical tension in the body during the pull-up.
-Action Focus: The conceptual shift is from the narrative 'pulls up hard' to physics-based 'arches powerfully' (aerodynamic action) and the resulting material stress ('billowing folds', 'muscle torque'). The focus is on translating narrative intent into quantifiable aerodynamic and viscoelastic physics.
+Scene Summary: The wingsuit jumper initiates a forceful pull-up while skimming the river, transitioning from low-altitude flight to a steep ascent toward the horizon.
+Scene Summary Reason: The narration specifies a 'pull up hard' action from a skimming position, indicating a significant change in trajectory and kinetic energy over the 5.9-second duration.
+Primary Movement: The jumper arches his body and sweeps his arms back to gain lift, while the river generates a massive splash burst from the interaction.
+Primary Movement Reason: The image shows the subject already at the lowest point of flight with high spray; the next physical step in a 'pull up' is the activation of aerodynamic lift surfaces.
+Narrative Vibe: High-Velocity Focus
+Narrative Vibe Reason: The 'breakneck speed' and 'pull up hard' narration combined with the mountainous canyon setting create a sense of extreme precision and aerodynamic intensity.
+Selected INTENSITY_TIER: VERY_HIGH
+INTENSITY_TIER Selected Reason: The speed is described as 'breakneck' with hyper-velocity characteristics like air distortion and terminal velocity physics required for such a maneuver.
+Identity Logic: The jumper's athletic male form and technical nylon wingsuit are preserved as the primary kinetic anchors, emphasizing the modern extreme sports archetype.
+Action Focus: The transition from 'skimming' to 'soaring' is translated into hyper-velocity aerodynamic physics, focusing on material vibration and terminal momentum.
 - - - Primary Narrative Block - - -
-Entity[wingsuit_jumper_1]
-Raw Sentence: The center midground Wingsuit Jumper wearing an aerodynamic nylon suit arches powerfully, his torso tenses, causing billowing folds and showing muscle torque.
-Action Type: Temporary-Single
-Action Type Reason: The pull-up is a singular, decisive, high-G maneuver initiated at a specific moment ('last second') to change trajectory.
-Verb Reason: The verb 'arches' (aerodynamics action context, HIGH tier) accurately describes the kinetic action of the body during a high-speed vertical ascent maneuver.
-Adverb Reason: The adverb 'powerfully' (Impact kinetic focus, HIGH tier) is selected to emphasize the intense force and structural strain required for the high-G pull-up.
-Entity[rushing_river_1]
-Raw Sentence: The center background Rushing River with turbulent whitewater is rushing rapidly, while the surface churns, creating aerosolized mist and droplet trails.
-Action Type: Continuous
-Action Type Reason: The river is in a sustained state of rapid flow and is continuously churned by the subject's proximity and speed.
-Verb Reason: The verb 'rushing' (velocity_max action context, HIGH tier) captures the relentless, high-speed flow of the river.
-Adverb Reason: The adverb 'rapidly' (Velocity kinetic focus, HIGH tier) is selected to reinforce the extreme speed of the watercourse, matching the jumper's breakneck velocity.
+Entity[main_hero]
+Raw Sentence: The center midground wingsuit jumper in a sleek form-fitting suit arches then sweeps blindingly, triggering violent fabric whipping and aerosolized sweat spray.
+Action Type: Temporary-Sequential
+Action Type Reason: The maneuver 'pulls up hard' requires a sequence of initial body arching followed by the sweeping of limbs to control flight path.
+Verb Reason: 'Arches' and 'sweeps' are selected from aerodynamic and locomotion pools to reflect the structural strain of a high-speed pull-up.
+Adverb Reason:
 - - - Atmospheric Lighting Delta - - -
-Delta: Aerosolized mist streams violently from the water surface
-Delta Reason: Based on the HIGH intensity tier and the Fluid Material Feasibility, the interaction between the high-speed subject and the water must create a violent wake effect (aerosolized mist/streaming).
-Delta: wet particles and reflective spray streak past the lens toward the foreground
-Delta Reason: Applies the Counter-Flow Rule. Since the camera is tracking the subject moving away (+Z, +Y), environmental particles (spray) must streak toward the foreground/bottom (-Z, -Y) to emphasize relative speed.
-Delta: dynamic refraction, hard rim lighting, specular highlights
-Delta Reason: Selected as the Volumetric Lighting Anchor to match the Action/Sharp Reality Vibe. Hard lighting and specular highlights amplify the wet, high-contrast environment.
-Delta: jagged motion blur, harsh specular highlights, and high-contrast water spray
-Delta Reason: Technical tags selected for the HIGH intensity tier and FOCUS vibe to maximize visual kinetic impact and fidelity.
+Delta: Structural debris erupting radially from the impact point while chaotic shockwave shatter the surrounding air, all enhanced by volumetric lighting and ejecta flow disintegration.
+Delta Reason: At VERY_HIGH intensity, the interaction with the river and the air requires explosive visual feedback to match the 'breakneck' speed.
 - - - Cinematic Camera Vectors - - -
-Camera Action: Dolly-In and Pedestal Up aggressively
-Subject Vectors: [$0X$, $+Y$, $+Z$]
-Subject Vectors Reasoning: The subject is pulling up (+Y) and moving away from the camera toward the horizon (+Z). The lateral movement is stabilized/minimal relative to the camera frame (0X).
+Camera Action: Zoom Out and Pedestal Up violently
+Subject Vectors: [$0X$, $+Y$, $-Z$]
+Subject Vectors Reasoning: The jumper faces the camera (Anterior) and is positioned in the lower frame, indicating a trajectory toward the foreground and upward during the pull-up.
 - - - Style - - -
-Style Slot 1: Authentic raw textures with crystal clear clarity in stunning 4K resolution, captured with deep focus anamorphic optics and a long wide framing style.
-Style Slot 2: the initial structural integrity of the subject and environmental geometry remains perfectly intact and consistent throughout the high-velocity motion.
-Style Slot 1 Reason: Integrates Raw texture detail, Clean grain, 4K resolution, Deep focus, Anamorphic lens, and Long/Wide framing to maximize fidelity and cinematic scope per the Master Style Guide.
-Style Slot 2 Reason: Ensures spatio-temporal coherence and identity preservation for the main subject and the environment during rapid movement, crucial for the MMDiT model.
-Reasoning: The prompt is designed to maximize Video Vividness by translating the 'breakneck speed' narrative into HIGH tier physical stress. The core action is defined by 'arches powerfully' (aerodynamics) and material reactions like 'billowing folds' and 'muscle torque'. The atmospheric strategy uses 'aerosolized mist streams violently' and particle counter-flow relative to the camera's tracking vector ($0X, +Y, +Z$) to enhance the feeling of speed. The camera is directed to track the subject, and the style tags (Anamorphic, Hard Rim Lighting, Jagged Motion Blur) are chosen to reinforce the high-contrast, action-oriented aesthetic, fulfilling the model's cinematic reward optimization criteria.
+Style Slot 1: Authentic raw textures with crystal clear clarity in 4k fidelity
+Style Slot 2: the subject's identity and environmental geometry are consistently preserved with absolute precision
+Style Slot 1 Reason: Matches the MasterStyleGuide's 'Raw' detail and 'Clean' grain settings.
+Style Slot 2 Reason: Ensures the MMDiT model maintains the high-fidelity rendering of the specific jumper and canyon.
+Reasoning: The prompt uses VERY_HIGH intensity tags to reflect the 'breakneck' speed described. Material tags emphasize 'violent fabric whipping' and 'aerosolized spray' to prevent the scene from appearing like a slow-motion glide. The camera vector is locked to the pull-up trajectory to capture the sudden ascent toward the lens.
 - - - Final Output Structure - - -
-Primary Narrative Block: The center midground Wingsuit Jumper wearing an aerodynamic nylon suit arches powerfully, his torso tenses, causing billowing folds and showing muscle torque, while the center background Rushing River with turbulent whitewater is rushing rapidly, and the surface churns, creating aerosolized mist and droplet trails.
-Atmospheric/Lighting Delta: amidst Aerosolized mist streams violently from the water surface, while wet particles and reflective spray streak past the lens toward the foreground, all enhanced by dynamic refraction, hard rim lighting, specular highlights and jagged motion blur, harsh specular highlights, and high-contrast water spray.
-Cinematic Camera Vector: filmed using CINEMATIC_CAMERA_VECTORS the center midground Wingsuit Jumper wearing an aerodynamic nylon suit
-Style: rendered with Authentic raw textures with crystal clear clarity in stunning 4K resolution, captured with deep focus anamorphic optics and a long wide framing style, while the initial structural integrity of the subject and environmental geometry remains perfectly intact and consistent throughout the high-velocity motion.
-videoGenPrompt: The center midground Wingsuit Jumper wearing an aerodynamic nylon suit arches powerfully, his torso tenses, causing billowing folds and showing muscle torque, while the center background Rushing River with turbulent whitewater is rushing rapidly, and the surface churns, creating aerosolized mist and droplet trails, amidst Aerosolized mist streams violently from the water surface, while wet particles and reflective spray streak past the lens toward the foreground, all enhanced by dynamic refraction, hard rim lighting, specular highlights and jagged motion blur, harsh specular highlights, and high-contrast water spray, filmed using CINEMATIC_CAMERA_VECTORS the center midground Wingsuit Jumper wearing an aerodynamic nylon suit, rendered with Authentic raw textures with crystal clear clarity in stunning 4K resolution, captured with deep focus anamorphic optics and a long wide framing style, while the initial structural integrity of the subject and environmental geometry remains perfectly intact and consistent throughout the high-velocity motion.
-assembledVideoGenPrompt: The center midground Wingsuit Jumper wearing an aerodynamic nylon suit arches powerfully, his torso tenses, causing billowing folds and showing muscle torque, while the center background Rushing River with turbulent whitewater is rushing rapidly, and the surface churns, creating aerosolized mist and droplet trails, amidst Aerosolized mist streams violently from the water surface, while wet particles and reflective spray streak past the lens toward the foreground, all enhanced by dynamic refraction, hard rim lighting, specular highlights and jagged motion blur, harsh specular highlights, and high-contrast water spray, captured with anamorphic Lens, Deep Focus, 9:16 Portrait Cinema, Long/Wide, Dolly-In and Pedestal Up aggressively the center midground Wingsuit Jumper wearing an aerodynamic nylon suit, rendered with Authentic raw textures with crystal clear clarity in stunning 4K resolution, captured with deep focus anamorphic optics and a long wide framing style, while the initial structural integrity of the subject and environmental geometry remains perfectly intact and consistent throughout the high-velocity motion.
+Primary Narrative Block: The center midground wingsuit jumper in a sleek form-fitting suit arches then sweeps blindingly, triggering violent fabric whipping and aerosolized sweat spray.
+Atmospheric/Lighting Delta: amidst structural debris erupting radially from the impact point while chaotic shockwave shatter the surrounding air, all enhanced by volumetric lighting and ejecta flow disintegration
+Cinematic Camera Vector: captured using CINEMATIC_CAMERA_VECTORS the center midground wingsuit jumper in a sleek form-fitting suit
+Style: presented with authentic raw textures with crystal clear clarity in 4k fidelity, while the subject's identity and environmental geometry are consistently preserved with absolute precision.
+videoGenPrompt: The center midground wingsuit jumper in a sleek form-fitting suit arches then sweeps blindingly, triggering violent fabric whipping and aerosolized sweat spray, amidst structural debris erupting radially from the impact point while chaotic shockwave shatter the surrounding air, all enhanced by volumetric lighting and ejecta flow disintegration, captured using CINEMATIC_CAMERA_VECTORS the center midground wingsuit jumper in a sleek form-fitting suit, presented with authentic raw textures with crystal clear clarity in 4k fidelity, while the subject's identity and environmental geometry are consistently preserved with absolute precision.
+assembledVideoGenPrompt: The center midground wingsuit jumper in a sleek form-fitting suit arches then sweeps blindingly, triggering violent fabric whipping and aerosolized sweat spray, amidst structural debris erupting radially from the impact point while chaotic shockwave shatter the surrounding air, all enhanced by volumetric lighting and ejecta flow disintegration, anamorphic Lens, Deep Focus, 9:16 Portrait Cinema, Long/Wide, captured using Zoom Out and Pedestal Up violently the center midground wingsuit jumper in a sleek form-fitting suit, rendered in presented with authentic raw textures with crystal clear clarity in 4k fidelity, while the subject's identity and environmental geometry are consistently preserved with absolute precision.

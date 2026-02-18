@@ -1,8 +1,7 @@
-import {createSupabaseServiceRoleClient} from "@/lib/supabaseServiceRole";
-import {fal} from "@fal-ai/client";
-import {FluxPrompt} from "@/api/types/open-ai/FluxPrompt";
-import {ImageFile} from "@fal-ai/client/endpoints";
-import {FalAiErrorDetail} from "@/api/types/fal-ai/FalAIResponse";
+import { createSupabaseServiceRoleClient } from "@/lib/supabaseServiceRole";
+import { fal } from "@fal-ai/client";
+import { FluxPrompt } from "@/api/types/open-ai/FluxPrompt";
+import { ImageFile } from "@fal-ai/client/endpoints";
 
 export const imageServerAPI = {
     async postImage(
@@ -19,26 +18,19 @@ export const imageServerAPI = {
                 credentials: process.env.FAL_AI_API_KEY!
             });
 
-            // Fallback 시 flux-2, 기본 바나나 조합 추가
-            // subscribe 시 Response부터 확인
             let resultImageUrlList: Array<ImageFile>;
             let imageUrl: string;
 
             try {
-                // const output = await falAIClient.subscribe('fal-ai/nano-banana', {
-                //     input: {
-                //         prompt: ` --MUST NOT letterbox ${imageGenPromptSentence}`,
-                //         num_images: 1,
-                //         aspect_ratio: "9:16",
-                //         output_format: "jpeg",
-                //         sync_mode: false,
-                //         limit_generations: false,
-                //     }
-                // });
-
-                const output = await falAIClient.subscribe('xai/grok-imagine-image', {
+                const output = await fal.subscribe("fal-ai/kling-image/o3/text-to-image", {
                     input: {
-                        prompt: `${imageGenPromptSentence} --MUST NOT letterbox`,
+                        // prompt: `${JSON.stringify(imageGenPrompt, null, 2).replaceAll(' ', '')}`,
+                        prompt: imageGenPromptSentence,
+                        elements: [{
+                            reference_image_urls: []
+                        }],
+                        resolution: "1K",
+                        result_type: "single",
                         num_images: 1,
                         aspect_ratio: "9:16",
                         output_format: "jpeg",

@@ -78,11 +78,16 @@ function ScriptGenerationModal({
                         <div>
                             <label className="block text-sm font-medium text-white mb-2">What do you want to create?</label>
                             <textarea
-                                placeholder="Tell me about Elon Musk's early SpaceX struggles"
+                                // placeholder="Tell me about Elon Musk's early SpaceX struggles"
+                                placeholder={`- Tell me about Elon Musk's early SpaceX struggles
+- Air Jordan, 30 secs, 5 scenes, for Youtube Shorts
+- George Washington's story, 8 scenes
+- Tell me about NWA, 1 minute 
+`}
                                 value={aiPrompt}
                                 onChange={onChangeAiPrompt}
                                 rows={4}
-                                className="w-full bg-gray-800/50 border border-purple-500/30 rounded-lg px-3 py-2 text-white text-sm focus:border-purple-400 focus:outline-none resize-none placeholder-gray-400 transition-all"
+                                className="w-full min-w-[120px] bg-gray-800/50 border border-purple-500/30 rounded-lg px-3 py-2 text-white text-sm focus:border-purple-400 focus:outline-none resize-none placeholder-gray-400 transition-all"
                             />
                         </div>
 

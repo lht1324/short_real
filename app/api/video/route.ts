@@ -5,6 +5,12 @@ import {BaseResponse} from "@/api/types/api/BaseResponse";
 import {usersServerAPI} from "@/api/server/usersServerAPI";
 import {internalFireAndForgetFetch} from "@/utils/internalFetch";
 import {getIsValidRequestC2S} from "@/utils/getIsValidRequest";
+import {
+    BASE_CREDIT_PER_SCENE,
+    BASE_CREDIT_PER_VIDEO_DURATION,
+    BASE_SCENE_COUNT_STANDARD,
+    BASE_VIDEO_DURATION_STANDARD
+} from "@/lib/ADDITIONAL_CREDIT_AMOUNT";
 
 export async function POST(request: NextRequest): Promise<NextResponse<BaseResponse>> {
     const {
@@ -65,11 +71,11 @@ export async function POST(request: NextRequest): Promise<NextResponse<BaseRespo
         const totalDuration = sceneDataList.reduce((acc, sceneData) => {
             return acc + sceneData.sceneDuration;
         }, 0);
-        const additionalTotalDurationUsage = totalDuration > 30
-            ? Math.ceil((totalDuration - 30) / 2) * 5
+        const additionalTotalDurationUsage = totalDuration > BASE_VIDEO_DURATION_STANDARD
+            ? Math.ceil(totalDuration - BASE_VIDEO_DURATION_STANDARD) * BASE_CREDIT_PER_VIDEO_DURATION
             : 0;
-        const additionalSceneCountUsage = sceneCount > 6
-            ? (sceneCount - 6) * 5
+        const additionalSceneCountUsage = sceneCount > BASE_SCENE_COUNT_STANDARD
+            ? (sceneCount - BASE_SCENE_COUNT_STANDARD) * BASE_CREDIT_PER_SCENE
             : 0;
         const creditUsage = 100 + additionalTotalDurationUsage + additionalSceneCountUsage;
 

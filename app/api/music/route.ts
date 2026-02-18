@@ -112,7 +112,7 @@ export async function POST(request: NextRequest) {
             negativeTags: negativeTags,
             customMode: true,
             instrumental: true,
-            model: SunoModelType.V5,
+            model: SunoModelType.V4_5PLUS,
             styleWeight: styleWeight,
             weirdnessConstraint: weirdnessConstraint,
             audioWeight: audioWeight,

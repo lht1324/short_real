@@ -13,6 +13,7 @@ import {
 import {getNextBaseResponse} from "@/utils/getNextBaseResponse";
 import {usersServerAPI} from "@/api/server/usersServerAPI";
 import {createSupabaseServer} from "@/lib/supabaseServer";
+import {SCENE_SEGMENTATION_STANDARD} from "@/lib/ADDITIONAL_CREDIT_AMOUNT";
 
 export async function POST(request: NextRequest): Promise<NextResponse<PostOpenAISceneResponse>> {
     try {
@@ -99,7 +100,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<PostOpenA
                 });
             }
 
-            if (!user.credit_count || user.credit_count < 2) {
+            if (!user.credit_count || user.credit_count < SCENE_SEGMENTATION_STANDARD) {
                 return getNextBaseResponse({
                     success: false,
                     status: 402,
@@ -107,7 +108,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<PostOpenA
                 });
             }
 
-            const patchUserCreditCountResult = await usersServerAPI.patchUserCreditCountByUserId(userId, -2);
+            const patchUserCreditCountResult = await usersServerAPI.patchUserCreditCountByUserId(userId, -SCENE_SEGMENTATION_STANDARD);
 
             if (!patchUserCreditCountResult) {
                 return getNextBaseResponse({

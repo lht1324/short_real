@@ -53,29 +53,6 @@ export async function POST(request: NextRequest) {
 
 
         const sceneDataList = videoGenerationTask.scene_breakdown_list;
-        const masterStyleInfo = videoGenerationTask.master_style_info;
-        const videoTitle = videoGenerationTask.video_title;
-        const videoDescription = videoGenerationTask.video_description;
-
-        if (!masterStyleInfo) {
-            await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
-
-            return getNextBaseResponse({
-                success: false,
-                status: 404,
-                error: 'Video visual data not found.'
-            });
-        }
-
-        if (!videoTitle || !videoDescription) {
-            await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
-
-            return getNextBaseResponse({
-                success: false,
-                status: 404,
-                error: 'Video metadata not found.'
-            });
-        }
 
         const sceneDataWithVideoGenPromptPromiseList: Promise<SceneData>[] = sceneDataList.map(async (sceneData) => {
             const { data: imageData, error: imageError } = await supabase.storage
@@ -96,25 +73,9 @@ export async function POST(request: NextRequest) {
             // ArrayBuffer를 Base64로 인코딩
             const imageBase64 = Buffer.from(imageArrayBuffer).toString('base64');
 
-            const imageGenPrompt = sceneData.imageGenPrompt;
-            const sceneEntityManifestList = sceneData.sceneEntityManifestList ?? [];
-
-            if (!imageGenPrompt) {
-                throw new Error('Image metadata is invalid.');
-            }
-
             const postVideoGenPromptResult = await llmServerAPI.postVideoGenPrompt(
-                sceneData.narration,
                 sceneData.sceneNumber,
                 imageBase64,
-                sceneData.sceneDuration,
-                masterStyleInfo,
-                videoTitle,
-                videoDescription,
-                imageGenPrompt,
-                sceneEntityManifestList.filter((entity) => {
-                    return sceneData.sceneCastingEntityIdList?.includes(entity.id) === true;
-                }),
             );
 
             if (!postVideoGenPromptResult.success || !postVideoGenPromptResult.videoGenPrompt) {
@@ -173,8 +134,6 @@ export async function POST(request: NextRequest) {
             })
 
             await delay(200);
-            // Replicate 잔고 부족으로 오는 429니 의미가 없음 (분 당 6회 제한)
-            // await delay(1000);
         }
 
         // const patchVideoGenerationTaskResult = await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, {
