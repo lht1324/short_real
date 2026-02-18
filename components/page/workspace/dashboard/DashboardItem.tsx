@@ -161,7 +161,7 @@ function DashboardItem({
             videoDuration,
         } = taskData;
 
-        if (!taskData.isGenerationFailed) {
+        if (taskData.isGenerationFailed) {
             switch (status) {
                 case VideoGenerationTaskStatus.GENERATING_IMAGE_PROMPT: return RETRY_CREDIT_PER_SCENE * sceneCount;
                 case VideoGenerationTaskStatus.GENERATING_VIDEO_PROMPT:
@@ -324,11 +324,11 @@ function DashboardItem({
                     </h3>
 
                     {/* 메타 정보 행 1: 날짜, 씬 개수 */}
-                    {(taskData.createdAt || taskData.sceneCount) && <div className="flex items-center space-x-6 text-gray-300 mb-2">
-                        {taskData.createdAt && <span className="flex items-center space-x-2">
+                    {(taskData.sceneCount) && <div className="flex items-center space-x-6 text-gray-300 mb-2">
+                        <span className="flex items-center space-x-2">
                             <Calendar size={16} className="text-purple-400" />
                             <span>Started: {formatDate(taskData.createdAt)}</span>
-                        </span>}
+                        </span>
                         {taskData.sceneCount && <span className="flex items-center space-x-2">
                             <FileVideo size={16} className="text-cyan-400" />
                             <span>{taskData.sceneCount} scenes</span>
@@ -336,10 +336,10 @@ function DashboardItem({
                     </div>}
 
                     {/* 메타 정보 행 2: 업데이트 시간 */}
-                    {taskData.updatedAt && <div className="flex items-center space-x-2 text-gray-400 text-sm mb-3">
+                    <div className="flex items-center space-x-2 text-gray-400 text-sm mb-3">
                         <Clock size={14} className="text-gray-500" />
                         <span>Last updated: {formatRelativeTime(taskData.updatedAt)}</span>
-                    </div>}
+                    </div>
 
                     {/* 상태 텍스트 */}
                     <div className="flex items-center space-x-2">

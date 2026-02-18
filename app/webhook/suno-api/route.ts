@@ -7,6 +7,7 @@ import {
 import {videoGenerationTasksServerAPI} from "@/api/server/videoGenerationTasksServerAPI";
 import {getNextBaseResponse} from "@/utils/getNextBaseResponse";
 import {internalFireAndForgetFetch} from "@/utils/internalFetch";
+import {cleanAndParseJSON} from "@/utils/jsonUtils";
 
 export async function POST(request: NextRequest) {
     // URL에서 파라미터 추출
@@ -26,7 +27,7 @@ export async function POST(request: NextRequest) {
         let webhookData: PostGenerateWebhookPayload;
 
         try {
-            const parsedBody: BaseSunoAPIResponse<PostGenerateWebhookPayload> = JSON.parse(rawBody);
+            const parsedBody: BaseSunoAPIResponse<PostGenerateWebhookPayload> = cleanAndParseJSON(rawBody);
             console.log("Suno Webhook Result: ", JSON.stringify(parsedBody));
 
             webhookData = parsedBody.data;

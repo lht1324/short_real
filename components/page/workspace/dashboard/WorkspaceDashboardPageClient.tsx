@@ -32,8 +32,8 @@ export interface TaskData {
     progress?: number; // 0-100
     currentStep: number;
     totalStep: number;
-    createdAt?: Date;
-    updatedAt?: Date;
+    createdAt: Date;
+    updatedAt: Date;
     selectedVoiceId?: string;
     selectedStyleId?: string;
     isGenerationFailed: boolean;
@@ -530,7 +530,9 @@ function WorkspaceDashboardPageClient() {
                             </div>
                         ) : (
                             <div className="space-y-4 max-w-4xl">
-                                {taskDataList.map((taskData, index) => {
+                                {taskDataList.sort((a, b) => {
+                                    return b.updatedAt.getTime() - a.updatedAt.getTime();
+                                }).map((taskData, index) => {
                                     return <DashboardItem
                                         key={taskData.id}
                                         taskData={taskData}
