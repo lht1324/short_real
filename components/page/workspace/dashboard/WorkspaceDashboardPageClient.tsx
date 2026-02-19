@@ -82,23 +82,20 @@ function WorkspaceDashboardPageClient() {
                 throw Error("User is invalid.");
             }
 
-            const getPostExportByPlatformPromise = (exportPlatform: ExportPlatform) => {
-                switch (exportPlatform) {
-                    case ExportPlatform.YOUTUBE: return videoClientAPI.postVideoExportYoutube(taskId);
-                    case ExportPlatform.INSTAGRAM: return videoClientAPI.postVideoExportInstagram(user?.id, taskId);
-                    case ExportPlatform.TIKTOK: return videoClientAPI.postVideoExportTikTok(user?.id, taskId);
+            switch (exportPlatform) {
+                case ExportPlatform.YOUTUBE: {
+                    window.location.href = `/api/video/export/youtube/oauth?taskId=${taskId}`;
+                    return;
+                }
+                case ExportPlatform.TIKTOK: {
+                    window.location.href = `/api/video/export/tiktok/oauth?taskId=${taskId}`;
+                    return;
+                }
+                case ExportPlatform.INSTAGRAM: {
+                    // To-Do
+                    return;
                 }
             }
-
-            const postExportByPlatformResult = await getPostExportByPlatformPromise(exportPlatform);
-
-            if (!postExportByPlatformResult) {
-                throw Error(`Failed to start exporting onto platform '${exportPlatform.toUpperCase()}'`);
-            }
-
-            // Temp logic (Maybe switch case)
-
-            window.location.href = postExportByPlatformResult;
         } catch (error) {
             console.error(error);
         }
