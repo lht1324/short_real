@@ -1,6 +1,5 @@
 // app/api/callback/youtube/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { waitUntil } from '@vercel/functions'
 import {createSupabaseServiceRoleClient} from "@/lib/supabaseServiceRole";
 import {getNextBaseResponse} from "@/utils/getNextBaseResponse";
 import {ExportResult} from "@/components/page/workspace/dashboard/ExportResult";

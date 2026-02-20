@@ -6,9 +6,10 @@ import { getNextBaseResponse } from '@/utils/getNextBaseResponse';
 import { PostgrestSingleResponse } from '@supabase/supabase-js';
 import { DownloadResult } from '@supabase/storage-js';
 import { videoGenerationTasksServerAPI } from '@/api/server/videoGenerationTasksServerAPI';
-import {UserTikTokToken} from "@/api/types/supabase/UserTikTokToken";
+import { UserTikTokToken } from '@/api/types/supabase/UserTikTokToken';
 
-const CHUNK_SIZE = 10 * 1024 * 1024; // 10MB
+const MIN_CHUNK = 5 * 1024 * 1024;  // 5MB
+const MAX_CHUNK = 64 * 1024 * 1024; // 64MB
 
 export async function POST(request: NextRequest) {
     const supabase = createSupabaseServiceRoleClient();
@@ -62,7 +63,7 @@ export async function POST(request: NextRequest) {
             });
         }
 
-        // 2. refresh_token 만료 확인 (만료 시 재인증 필요)
+        // 2. refresh_token 만료 확인
         if (Date.now() >= new Date(tokenData.refresh_expires_at).getTime()) {
             console.error('[TikTok Upload] Refresh token expired');
             return getNextBaseResponse({
@@ -107,7 +108,7 @@ export async function POST(request: NextRequest) {
                     access_token: newTokens.access_token,
                     expires_at: new Date(Date.now() + newTokens.expires_in * 1000).toISOString(),
                     updated_at: new Date().toISOString(),
-                    last_used_at: new Date().toISOString(), // ← 추가
+                    last_used_at: new Date().toISOString(),
                 })
                 .eq('user_id', userId);
 
@@ -132,6 +133,11 @@ export async function POST(request: NextRequest) {
         const buffer = await fileData.arrayBuffer();
         const videoSize = buffer.byteLength;
 
+        const chunkSize = videoSize < MIN_CHUNK
+            ? videoSize
+            : Math.min(videoSize, MAX_CHUNK);
+        const totalChunkCount = Math.ceil(videoSize / chunkSize);
+
         // 5. 업로드 세션 초기화
         console.log('[TikTok Upload] Initializing upload session...');
         const initResponse = await fetch('https://open.tiktokapis.com/v2/post/publish/video/init/', {
@@ -143,7 +149,7 @@ export async function POST(request: NextRequest) {
             body: JSON.stringify({
                 post_info: {
                     title: videoGenerationTask.video_title ?? 'ShortReal AI',
-                    privacy_level: 'PUBLIC_TO_EVERYONE',
+                    privacy_level: process.env.NODE_ENV === 'production' ? 'PUBLIC_TO_EVERYONE' : 'SELF_ONLY',
                     disable_duet: false,
                     disable_comment: false,
                     disable_stitch: false,
@@ -151,8 +157,8 @@ export async function POST(request: NextRequest) {
                 source_info: {
                     source: 'FILE_UPLOAD',
                     video_size: videoSize,
-                    chunk_size: CHUNK_SIZE,
-                    total_chunk_count: Math.ceil(videoSize / CHUNK_SIZE),
+                    chunk_size: chunkSize,
+                    total_chunk_count: totalChunkCount,
                 },
             }),
         });
@@ -173,11 +179,10 @@ export async function POST(request: NextRequest) {
         // 6. 청크 업로드
         console.log('[TikTok Upload] Uploading chunks...');
         const uint8 = new Uint8Array(buffer);
-        const totalChunks = Math.ceil(videoSize / CHUNK_SIZE);
 
-        for (let i = 0; i < totalChunks; i++) {
-            const start = i * CHUNK_SIZE;
-            const end = Math.min(start + CHUNK_SIZE, videoSize);
+        for (let i = 0; i < totalChunkCount; i++) {
+            const start = i * chunkSize;
+            const end = Math.min(start + chunkSize, videoSize);
             const chunk = uint8.slice(start, end);
 
             const chunkResponse = await fetch(upload_url, {
@@ -190,7 +195,7 @@ export async function POST(request: NextRequest) {
             });
 
             if (!chunkResponse.ok) {
-                console.error(`[TikTok Upload] Chunk ${i + 1}/${totalChunks} failed`);
+                console.error(`[TikTok Upload] Chunk ${i + 1}/${totalChunkCount} failed`);
                 return getNextBaseResponse({
                     success: false,
                     status: 500,
@@ -198,7 +203,7 @@ export async function POST(request: NextRequest) {
                 });
             }
 
-            console.log(`[TikTok Upload] Chunk ${i + 1}/${totalChunks} uploaded`);
+            console.log(`[TikTok Upload] Chunk ${i + 1}/${totalChunkCount} uploaded`);
         }
 
         // 7. 게시 상태 폴링
@@ -212,6 +217,7 @@ export async function POST(request: NextRequest) {
                 error: 'TikTok publish failed or timed out',
             });
         }
+
         await supabase
             .from('user_tiktok_tokens')
             .update({ last_used_at: new Date().toISOString() })
@@ -224,6 +230,7 @@ export async function POST(request: NextRequest) {
             data: { url: videoUrl },
             message: 'Video uploaded successfully',
         });
+
     } catch (error) {
         console.error('[TikTok Upload] Error:', error);
         return getNextBaseResponse({
@@ -234,28 +241,24 @@ export async function POST(request: NextRequest) {
     }
 }
 
-// 게시 상태 폴링 (최대 2분)
 async function pollPublishStatus(
     accessToken: string,
     publishId: string
 ): Promise<string | null> {
     const MAX_ATTEMPTS = 24;
-    const INTERVAL_MS = 5000; // 5초
+    const INTERVAL_MS = 5000;
 
     for (let i = 0; i < MAX_ATTEMPTS; i++) {
         await new Promise((resolve) => setTimeout(resolve, INTERVAL_MS));
 
-        const res = await fetch(
-            'https://open.tiktokapis.com/v2/post/publish/status/fetch/',
-            {
-                method: 'POST',
-                headers: {
-                    Authorization: `Bearer ${accessToken}`,
-                    'Content-Type': 'application/json; charset=UTF-8',
-                },
-                body: JSON.stringify({ publish_id: publishId }),
-            }
-        );
+        const res = await fetch('https://open.tiktokapis.com/v2/post/publish/status/fetch/', {
+            method: 'POST',
+            headers: {
+                Authorization: `Bearer ${accessToken}`,
+                'Content-Type': 'application/json; charset=UTF-8',
+            },
+            body: JSON.stringify({ publish_id: publishId }),
+        });
 
         const data = await res.json();
         const status = data.data?.status;

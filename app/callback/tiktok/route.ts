@@ -1,12 +1,13 @@
-// app/api/callback/tiktok/route.ts
-
 import { NextRequest, NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
-import { createSupabaseServer } from '@/lib/supabaseServer';
 import { ExportResult } from '@/components/page/workspace/dashboard/ExportResult';
 import { internalFireAndForgetFetch } from '@/utils/internalFetch';
+import { createSupabaseServiceRoleClient } from "@/lib/supabaseServiceRole";
 
 export async function GET(request: NextRequest) {
+    const originUrl = process.env.NODE_ENV === 'production' || !request.nextUrl.origin.includes("localhost")
+            ? request.nextUrl.origin
+            : request.nextUrl.origin.replaceAll("https", "http");
+    
     try {
         const searchParams = request.nextUrl.searchParams;
         const code = searchParams.get('code');
@@ -17,7 +18,7 @@ export async function GET(request: NextRequest) {
         if (error) {
             console.error('TikTok OAuth error:', error);
             return NextResponse.redirect(
-                `${request.nextUrl.origin}/workspace/dashboard?export-result=${ExportResult.ERROR}`
+                `${originUrl}/workspace/dashboard?export-result=${ExportResult.ERROR}`
             );
         }
 
@@ -25,28 +26,17 @@ export async function GET(request: NextRequest) {
             if (!code) console.error('Missing required query param: code');
             if (!state) console.error('Missing required query param: state');
             return NextResponse.redirect(
-                `${request.nextUrl.origin}/workspace/dashboard?export-result=${ExportResult.ERROR}`
+                `${originUrl}/workspace/dashboard?export-result=${ExportResult.ERROR}`
             );
         }
 
         // 2. 쿠키에서 state, taskId, userId 추출 및 검증
-        const cookieStore = await cookies();
-        const raw = cookieStore.get('tiktok_oauth')?.value;
+        const { taskId, userId } = JSON.parse(state);
 
-        if (!raw) {
-            console.error('Missing tiktok_oauth cookie');
+        if (!taskId || !userId) {
+            console.error('Invalid token or missing taskId/userId');
             return NextResponse.redirect(
-                `${request.nextUrl.origin}/workspace/dashboard?export-result=${ExportResult.ERROR}`
-            );
-        }
-
-        const { state: savedState, taskId, userId } = JSON.parse(raw);
-        cookieStore.delete('tiktok_oauth');
-
-        if (state !== savedState || !taskId || !userId) {
-            console.error('Invalid state or missing taskId/userId');
-            return NextResponse.redirect(
-                `${request.nextUrl.origin}/workspace/dashboard?export-result=${ExportResult.ERROR}`
+                `${originUrl}/workspace/dashboard?export-result=${ExportResult.ERROR}`
             );
         }
 
@@ -59,7 +49,7 @@ export async function GET(request: NextRequest) {
                 client_secret: process.env.TIKTOK_CLIENT_SECRET!,
                 code,
                 grant_type: 'authorization_code',
-                redirect_uri: `${process.env.BASE_URL}/api/callback/tiktok`,
+                redirect_uri: `${process.env.BASE_URL}/callback/tiktok`,
             }).toString(),
         });
 
@@ -68,12 +58,12 @@ export async function GET(request: NextRequest) {
         if (!tokens.access_token) {
             console.error('TikTok token exchange error:', tokens);
             return NextResponse.redirect(
-                `${request.nextUrl.origin}/workspace/dashboard?export-result=${ExportResult.ERROR}`
+                `${originUrl}/workspace/dashboard?export-result=${ExportResult.ERROR}`
             );
         }
 
         // 4. Supabase에 토큰 저장
-        const supabase = await createSupabaseServer();
+        const supabase = createSupabaseServiceRoleClient();
         const { error: dbError } = await supabase
             .from('user_tiktok_tokens')
             .upsert({
@@ -90,7 +80,7 @@ export async function GET(request: NextRequest) {
         if (dbError) {
             console.error('Database error:', dbError);
             return NextResponse.redirect(
-                `${request.nextUrl.origin}/workspace/dashboard?export-result=${ExportResult.ERROR}`
+                `${originUrl}/workspace/dashboard?export-result=${ExportResult.ERROR}`
             );
         }
 
@@ -103,13 +93,13 @@ export async function GET(request: NextRequest) {
 
         // 6. 성공 리다이렉트
         return NextResponse.redirect(
-            `${request.nextUrl.origin}/workspace/dashboard?export-result=${ExportResult.SUCCESS}`
+            `${originUrl}/workspace/dashboard?export-result=${ExportResult.SUCCESS}`
         );
 
     } catch (error) {
         console.error('TikTok callback error:', error);
         return NextResponse.redirect(
-            `${request.nextUrl.origin}/workspace/dashboard?export-result=${ExportResult.ERROR}`
+            `${originUrl}/workspace/dashboard?export-result=${ExportResult.ERROR}`
         );
     }
 }
