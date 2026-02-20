@@ -3,6 +3,7 @@ import {MasterStyleInfo} from "@/api/types/supabase/MasterStyleInfo";
 import {CaptionConfigState, CaptionData} from "@/components/page/workspace/editor/WorkspaceEditorPageClient";
 import {Entity, InitialEntityManifestItem} from "@/api/types/open-ai/Entity";
 import {FluxPrompt} from "@/api/types/open-ai/FluxPrompt";
+import {ExportPlatform} from "@/components/page/workspace/dashboard/WorkspaceDashboardPageClient";
 
 export interface VideoGenerationTask {
     id?: string; // uuid
@@ -26,6 +27,8 @@ export interface VideoGenerationTask {
     merge_started?: boolean; // boolean, default false - 최종 병합 시작 여부
     is_user_cancelled_task?: boolean; // boolean, default false - 유저 도중 취소 여부 (status와 더불어 판단함)
     is_generation_failed?: boolean; // boolean, default false - 실패 여부 (Retry 시 기존 status 조회하기)
+    export_status?: ExportStatus;
+    export_platform?: ExportPlatform;
     created_at?: string; // timestamp with time zone, default CURRENT_TIMESTAMP
     updated_at?: string;
 }
@@ -117,4 +120,10 @@ export interface FinalVideoMergeData {
     cuttingAreaStartSec: number;
     cuttingAreaEndSec: number;
     volumePercentage: number;
+}
+
+export enum ExportStatus {
+    UPLOADING = "UPLOADING",
+    SUCCESS = "SUCCESS",
+    FAILED = "FAILED",
 }

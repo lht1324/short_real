@@ -7,11 +7,20 @@ import { PostgrestSingleResponse } from '@supabase/supabase-js';
 import { DownloadResult } from '@supabase/storage-js';
 import { videoGenerationTasksServerAPI } from '@/api/server/videoGenerationTasksServerAPI';
 import { UserTikTokToken } from '@/api/types/supabase/UserTikTokToken';
+import {getIsValidRequestS2S} from "@/utils/getIsValidRequest";
 
 const MIN_CHUNK = 5 * 1024 * 1024;  // 5MB
 const MAX_CHUNK = 64 * 1024 * 1024; // 64MB
 
 export async function POST(request: NextRequest) {
+    if (!getIsValidRequestS2S(request)) {
+        return getNextBaseResponse({
+            success: false,
+            status: 401,
+            error: 'Unauthorized internal request',
+        });
+    }
+
     const supabase = createSupabaseServiceRoleClient();
 
     const { searchParams } = new URL(request.url);

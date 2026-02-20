@@ -4,9 +4,13 @@ import {createSupabaseServiceRoleClient} from "@/lib/supabaseServiceRole";
 import {getNextBaseResponse} from "@/utils/getNextBaseResponse";
 import {ExportResult} from "@/components/page/workspace/dashboard/ExportResult";
 import {internalFireAndForgetFetch} from "@/utils/internalFetch";
+import {videoGenerationTasksServerAPI} from "@/api/server/videoGenerationTasksServerAPI";
 
 export async function GET(request: NextRequest) {
     const supabase = createSupabaseServiceRoleClient();
+    const originUrl = process.env.NODE_ENV === 'production' || !request.nextUrl.origin.includes("localhost")
+        ? request.nextUrl.origin
+        : request.nextUrl.origin.replaceAll("https", "http");
 
     try {
         const searchParams = request.nextUrl.searchParams;
@@ -18,9 +22,7 @@ export async function GET(request: NextRequest) {
         if (error) {
             console.log("1")
             console.error(error);
-            return NextResponse.redirect(
-                `${request.nextUrl.origin}/workspace/dashboard?export-result=${ExportResult.ERROR}`
-            );
+            return NextResponse.redirect(`${originUrl}/workspace/dashboard`);
         }
 
         if (!code || !state) {
@@ -28,9 +30,7 @@ export async function GET(request: NextRequest) {
             if (!code) console.error("Missing required query param: code");
             if (!state) console.error("Missing required query param: state");
 
-            return NextResponse.redirect(
-                `${request.nextUrl.origin}/workspace/dashboard?export-result=${ExportResult.ERROR}`
-            );
+            return NextResponse.redirect(`${originUrl}/workspace/dashboard`);
         }
 
         // 2. State에서 userId 추출
@@ -63,7 +63,7 @@ export async function GET(request: NextRequest) {
             console.log("3")
             console.error('Token exchange error:', tokens.error);
             return NextResponse.redirect(
-                `${request.nextUrl.origin}/workspace/dashboard?export-result=${ExportResult.ERROR}`
+                `${originUrl}/workspace/dashboard?export-result=${ExportResult.ERROR}`
             );
         }
 
@@ -85,7 +85,7 @@ export async function GET(request: NextRequest) {
         if (dbError) {
             console.error('Database error:', dbError);
             return NextResponse.redirect(
-                `${request.nextUrl.origin}/workspace/dashboard?export-result=${ExportResult.ERROR}`
+                `${originUrl}/workspace/dashboard?export-result=${ExportResult.ERROR}`
             );
         }
 
@@ -97,15 +97,14 @@ export async function GET(request: NextRequest) {
 
         // 5. 성공 리다이렉트
         return NextResponse.redirect(
-            // `${request.nextUrl.origin}/workspace/dashboard?export-result=${ExportResult.SUCCESS}`
+            // `${originUrl}/workspace/dashboard?export-result=${ExportResult.SUCCESS}`
             `http://localhost:3000/workspace/dashboard?export-result=${ExportResult.SUCCESS}`
         );
 
     } catch (error) {
-        console.log("4")
         console.error('YouTube callback error:', error);
         return NextResponse.redirect(
-            `${request.nextUrl.origin}/workspace/dashboard?export-result=${ExportResult.ERROR}`
+            `${originUrl}/workspace/dashboard?export-result=${ExportResult.ERROR}`
         );
     }
 }
