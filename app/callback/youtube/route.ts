@@ -3,8 +3,8 @@ import {NextRequest, NextResponse} from 'next/server';
 import {createSupabaseServiceRoleClient} from "@/lib/supabaseServiceRole";
 import {internalFireAndForgetFetch} from "@/utils/internalFetch";
 import {videoGenerationTasksServerAPI} from "@/api/server/videoGenerationTasksServerAPI";
-import {ExportStatus} from "@/api/types/supabase/VideoGenerationTasks";
-import {ExportPlatform} from "@/components/page/workspace/dashboard/WorkspaceDashboardPageClient";
+import {ExportPlatform, ExportStatus} from "@/api/types/supabase/VideoGenerationTasks";
+
 
 export async function GET(request: NextRequest) {
     const supabase = createSupabaseServiceRoleClient();

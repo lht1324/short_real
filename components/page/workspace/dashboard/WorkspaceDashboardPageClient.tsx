@@ -2,8 +2,13 @@
 
 import {memo, useCallback, useEffect, useMemo, useState} from "react";
 import Link from "next/link";
-import {Coins, ListTodo, Plus} from 'lucide-react';
-import {ExportStatus, VideoGenerationTask, VideoGenerationTaskStatus} from "@/api/types/supabase/VideoGenerationTasks";
+import {Coins, ListTodo, Plus, Loader2} from 'lucide-react';
+import {
+    ExportPlatform,
+    ExportStatus,
+    VideoGenerationTask,
+    VideoGenerationTaskStatus
+} from "@/api/types/supabase/VideoGenerationTasks";
 import Image from "next/image";
 import {videoClientAPI} from "@/api/client/videoClientAPI";
 import {useAuth} from "@/context/AuthContext";
@@ -18,19 +23,7 @@ import CheckoutResultDialog, {
     CheckoutResultDialogData
 } from "@/components/page/workspace/dashboard/CheckoutResultDialog";
 import ExportResultModal from "@/components/page/workspace/dashboard/export-result-modal/ExportResultModal";
-
-export enum ExportPlatform {
-    YOUTUBE = "youtube",
-    INSTAGRAM = "instagram",
-    TIKTOK = "tiktok",
-}
-
-export interface ExportResult {
-    taskId: string;
-    title?: string;
-    platform: ExportPlatform;
-    status: Omit<ExportStatus, 'UPLOADING'>;
-}
+import {ExportResult} from "@/components/page/workspace/dashboard/export-result-modal/ExportResult";
 
 export interface TaskData {
     id: string;
@@ -81,6 +74,9 @@ function WorkspaceDashboardPageClient() {
     const [showCancelLoadingModal, setShowCancelLoadingModal] = useState(false);
 
     const [showRetryLoadingModal, setShowRetryLoadingModal] = useState(false);
+
+    const [isExportingVideo, setIsExportingVideo] = useState(false);
+    const [isInitializingExportState, setIsInitializingExportState] = useState(false);
 
     const onClickCancel = useCallback((taskId: string, status: VideoGenerationTaskStatus) => {
         setPendingCancelTaskId(taskId);
@@ -198,15 +194,18 @@ function WorkspaceDashboardPageClient() {
     }, [pendingCancelTaskId]);
 
     const onCloseExportResultModal = useCallback(async () => {
+        setIsInitializingExportState(true);
+
         await Promise.all(
             exportResults.map((result) => {
                 return videoClientAPI.patchVideoTaskByTaskId(result.taskId, {
-                    export_status: undefined,
-                    export_platform: undefined,
+                    export_status: null,
+                    export_platform: null,
                 });
             })
         );
 
+        setIsInitializingExportState(false);
         setExportResults([]);
     }, [exportResults]);
 
@@ -309,14 +308,17 @@ function WorkspaceDashboardPageClient() {
                     });
 
                     setTaskDataList(taskList);
+                    setIsExportingVideo(videoGenerationTaskList.some((videoGenerationTask) => {
+                        return videoGenerationTask.export_status === ExportStatus.UPLOADING;
+                    }));
 
-                    const pendingExportResults = videoGenerationTaskList
-                        .filter((task) => !!task.export_status && task.export_status !== 'UPLOADING')
+                    const pendingExportResults: ExportResult[] = videoGenerationTaskList
+                        .filter((task) => !!task.export_status && task.export_status !== ExportStatus.UPLOADING)
                         .map((task) => ({
                             taskId: task.id,
                             title: task.video_title,
                             platform: task.export_platform as ExportPlatform,
-                            status: task.export_status as ExportStatus,
+                            status: task.export_status as (ExportStatus.SUCCESS | ExportStatus.FAILED),
                         }));
 
                     if (pendingExportResults.length > 0) {
@@ -369,6 +371,8 @@ function WorkspaceDashboardPageClient() {
                             case 'UPDATE': {
                                 // 기존 task 업데이트
                                 const updatedTask = payload.new as VideoGenerationTask;
+
+                                setIsExportingVideo(updatedTask.export_status === ExportStatus.UPLOADING);
 
                                 if (!!updatedTask.export_status && updatedTask.export_status !== ExportStatus.UPLOADING) {
                                     setExportResults((prev) => {
@@ -640,8 +644,23 @@ function WorkspaceDashboardPageClient() {
             {exportResults.length > 0 && (
                 <ExportResultModal
                     exportResultList={exportResults}
+                    isInitializingExportState={isInitializingExportState}
                     onClose={onCloseExportResultModal}
                 />
+            )}
+
+            {/* Video Exporting Floating Indicator */}
+            {isExportingVideo && (
+                <div className="fixed bottom-8 right-8 z-50 flex items-center gap-4 bg-gray-900/90 backdrop-blur-md border border-purple-500/30 rounded-2xl p-4 shadow-2xl shadow-purple-500/10 animate-in fade-in slide-in-from-bottom-4 duration-300">
+                    <div className="relative flex items-center justify-center w-10 h-10 bg-purple-500/10 rounded-full">
+                        <Loader2 className="w-5 h-5 text-purple-400 animate-spin" />
+                        <span className="absolute top-0.5 right-0.5 w-2.5 h-2.5 bg-green-500 border-2 border-gray-900 rounded-full animate-pulse"></span>
+                    </div>
+                    <div className="flex flex-col">
+                        <span className="text-base font-bold text-white">Exporting Video...</span>
+                        <span className="text-sm text-purple-200/70">Sending to platform</span>
+                    </div>
+                </div>
             )}
         </div>
     )

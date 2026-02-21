@@ -8,8 +8,8 @@ import { DownloadResult } from '@supabase/storage-js';
 import { videoGenerationTasksServerAPI } from '@/api/server/videoGenerationTasksServerAPI';
 import { UserTikTokToken } from '@/api/types/supabase/UserTikTokToken';
 import {getIsValidRequestS2S} from "@/utils/getIsValidRequest";
-import {ExportStatus} from "@/api/types/supabase/VideoGenerationTasks";
-import {ExportPlatform} from "@/components/page/workspace/dashboard/WorkspaceDashboardPageClient";
+import {ExportPlatform, ExportStatus} from "@/api/types/supabase/VideoGenerationTasks";
+
 
 const MIN_CHUNK = 5 * 1024 * 1024;  // 5MB
 const MAX_CHUNK = 64 * 1024 * 1024; // 64MB

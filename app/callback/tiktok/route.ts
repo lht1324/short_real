@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { internalFireAndForgetFetch } from '@/utils/internalFetch';
 import { createSupabaseServiceRoleClient } from "@/lib/supabaseServiceRole";
 import {videoGenerationTasksServerAPI} from "@/api/server/videoGenerationTasksServerAPI";
-import {ExportStatus} from "@/api/types/supabase/VideoGenerationTasks";
-import {ExportPlatform} from "@/components/page/workspace/dashboard/WorkspaceDashboardPageClient";
+import {ExportPlatform, ExportStatus} from "@/api/types/supabase/VideoGenerationTasks";
+
 
 export async function GET(request: NextRequest) {
     const originUrl = process.env.NODE_ENV === 'production' || !request.nextUrl.origin.includes("localhost")

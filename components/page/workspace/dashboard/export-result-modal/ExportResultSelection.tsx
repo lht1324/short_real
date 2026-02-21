@@ -1,6 +1,7 @@
-import {ExportPlatform, ExportResult} from "@/components/page/workspace/dashboard/WorkspaceDashboardPageClient";
 import Image from "next/image";
 import {memo} from "react";
+import {ExportResult} from "@/components/page/workspace/dashboard/export-result-modal/ExportResult";
+import {ExportPlatform} from "@/api/types/supabase/VideoGenerationTasks";
 
 const PLATFORM_META: Record<ExportPlatform, { label: string; src: string; width: number; height: number }> = {
     [ExportPlatform.YOUTUBE]:   { label: 'YouTube Shorts', src: '/icons/youtube-logo.png',   width: 36, height: 32 },

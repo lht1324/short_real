@@ -1,8 +1,8 @@
 'use client'
 
 import {memo, ReactNode, useCallback, useMemo, useState} from "react";
-import {ExportPlatform, TaskData} from "@/components/page/workspace/dashboard/WorkspaceDashboardPageClient";
-import {VideoGenerationTaskStatus} from "@/api/types/supabase/VideoGenerationTasks";
+import {TaskData} from "@/components/page/workspace/dashboard/WorkspaceDashboardPageClient";
+import {ExportPlatform, VideoGenerationTaskStatus} from "@/api/types/supabase/VideoGenerationTasks";
 import {
     AlertCircle,
     Calendar,

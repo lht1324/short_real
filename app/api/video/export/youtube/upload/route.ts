@@ -9,8 +9,8 @@ import {UserYoutubeToken} from "@/api/types/supabase/UserYoutubeToken";
 import {PostgrestSingleResponse} from "@supabase/supabase-js";
 import {DownloadResult} from "@supabase/storage-js";
 import {videoGenerationTasksServerAPI} from "@/api/server/videoGenerationTasksServerAPI";
-import {ExportStatus} from "@/api/types/supabase/VideoGenerationTasks";
-import {ExportPlatform} from "@/components/page/workspace/dashboard/WorkspaceDashboardPageClient";
+import {ExportPlatform, ExportStatus} from "@/api/types/supabase/VideoGenerationTasks";
+
 
 export async function POST(request: NextRequest) {
     const supabase = createSupabaseServiceRoleClient();

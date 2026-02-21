@@ -1,15 +1,22 @@
 'use client'
 
 import { memo, useMemo } from "react";
-import { ExportPlatform, ExportResult } from "@/components/page/workspace/dashboard/WorkspaceDashboardPageClient";
 import ExportResultSection from "@/components/page/workspace/dashboard/export-result-modal/ExportResultSelection";
+import {ExportResult} from "@/components/page/workspace/dashboard/export-result-modal/ExportResult";
+import {ExportPlatform} from "@/api/types/supabase/VideoGenerationTasks";
+import { Loader2 } from "lucide-react";
 
 interface ExportResultModalProps {
     exportResultList: ExportResult[];
+    isInitializingExportState: boolean;
     onClose: () => void;
 }
 
-function ExportResultModal({ exportResultList, onClose }: ExportResultModalProps) {
+function ExportResultModal({
+    exportResultList,
+    isInitializingExportState,
+    onClose
+}: ExportResultModalProps) {
     const exportResultYoutubeList = useMemo(() => {
         return exportResultList.filter((r) => r.platform === ExportPlatform.YOUTUBE);
     }, [exportResultList]);
@@ -50,9 +57,19 @@ function ExportResultModal({ exportResultList, onClose }: ExportResultModalProps
 
                 <button
                     onClick={onClose}
-                    className="mt-6 w-full bg-gradient-to-r from-pink-500 to-purple-600 text-white py-3 rounded-xl font-semibold hover:from-pink-600 hover:to-purple-700 transition-all"
+                    disabled={isInitializingExportState}
+                    className={`mt-6 w-full bg-gradient-to-r from-pink-500 to-purple-600 text-white py-3 rounded-xl font-semibold hover:from-pink-600 hover:to-purple-700 transition-all flex items-center justify-center gap-2 ${
+                        isInitializingExportState ? 'opacity-70 cursor-not-allowed' : ''
+                    }`}
                 >
-                    OK
+                    {isInitializingExportState ? (
+                        <>
+                            <Loader2 className="animate-spin w-5 h-5" />
+                            <span>Processing...</span>
+                        </>
+                    ) : (
+                        "OK"
+                    )}
                 </button>
             </div>
         </div>
