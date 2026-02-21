@@ -4,6 +4,7 @@ import { useState, useRef, useEffect, memo, useCallback } from "react";
 import { Sparkles, X, ChevronRight } from "lucide-react";
 
 enum RoadmapStatus {
+    LIVE = 0,
     IN_PROGRESS = 1,
     COMING_SOON = 2,
     SKETCH = 3,
@@ -65,6 +66,8 @@ function FloatingRoadmap() {
             case RoadmapStatus.COMING_SOON:
                 // 노란색/주황색 (곧 나옴! 기대감, 주목도 높음)
                 return "bg-amber-500/10 text-amber-400 border-amber-500/20";
+            case RoadmapStatus.LIVE:
+                return "bg-emerald-500/10 text-emerald-400 border-emerald-500/20";
         }
     }, []);
 
@@ -73,6 +76,7 @@ function FloatingRoadmap() {
             case RoadmapStatus.SKETCH: return "Sketching";
             case RoadmapStatus.IN_PROGRESS: return "In Progress";
             case RoadmapStatus.COMING_SOON: return "Coming Soon";
+            case RoadmapStatus.LIVE: return "Live";
         }
     }, []);
 
