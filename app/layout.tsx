@@ -8,23 +8,24 @@ import "./globals.css";
 
 export const metadata: Metadata = {
     metadataBase: new URL('https://shortreal.ai'), // 실제 도메인으로 변경 필수
+    applicationName: "ShortReal AI",
     title: {
         template: '%s | ShortReal AI', // 서비스명으로 변경
-        default: 'ShortReal AI - AI Faceless Shortform Generator',
+        default: 'ShortReal AI - AI Faceless Shorts Generator',
     },
     description: 'Turn text scripts into viral faceless YouTube Shorts, TikTok & Reels instantly. Best AI Faceless Video Generator with Storyboard, Voiceover, Songwriting & Captions.',
     openGraph: {
         type: 'website',
         locale: 'en_US',
         url: 'https://shortreal.ai',
-        title: 'ShortReal AI - AI Faceless Shortform Generator',
-        description: 'Create AI faceless shortforms from scripts. No editing, composing skills needed.',
+        title: 'ShortReal AI - AI Faceless Shorts Generator',
+        description: 'Create AI faceless shorts from scripts. No editing, composing skills needed.',
         siteName: 'ShortReal AI',
     },
     twitter: {
         card: 'summary_large_image',
-        title: 'ShortReal AI - AI Faceless Shortform Generator',
-        description: 'Turn scripts into true motion faceless shortforms instantly. No more AI slideshows.',
+        title: 'ShortReal AI - AI Faceless Shorts Generator',
+        description: 'Turn scripts into true motion faceless shorts instantly. No more AI slideshows.',
     },
     robots: {
         index: true,

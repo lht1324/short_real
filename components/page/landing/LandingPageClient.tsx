@@ -15,11 +15,16 @@ import PricingSection from "@/components/page/landing/pricing-section/PricingSec
 import FAQSection from "@/components/page/landing/faq-section/FAQSection";
 import Footer from "@/components/public/footer/Footer";
 import FloatingRoadmap from "@/components/page/landing/FloatingRoadmap";
+import {RoadmapItem} from "@/api/types/supabase/RoadmapItem";
+import {roadmapItemClientAPI} from "@/api/client/roadmapItemClientAPI";
 
 function LandingPageClient() {
     const router = useRouter();
     const { user } = useAuth();
     const [productDataList, setProductDataList] = useState<ProductData[]>([]);
+    const [roadmapItemList, setRoadmapItemList] = useState<RoadmapItem[]>([]);
+
+    const [isLoadingRoadmapItemList, setIsLoadingRoadmapItemList] = useState(false);
 
     // 결제 로직 (기존 유지)
     const onClickPurchasePlan = useCallback(async (productId: string) => {
@@ -47,14 +52,26 @@ function LandingPageClient() {
 
     // 상품 데이터 로드 (기존 유지)
     useEffect(() => {
-        const loadData = async () => {
+        const loadProductDataList = async () => {
             const productDataList = await polarClientAPI.getPolarProducts();
             if (!productDataList) {
                 throw Error("No polarProducts found");
             }
             setProductDataList(productDataList.sort((a, b) => a.price - b.price));
         }
-        loadData().then();
+        const loadRoadmapItemList = async () => {
+            setIsLoadingRoadmapItemList(true);
+
+            const roadmapItemList = await roadmapItemClientAPI.getRoadmaps();
+            if (!roadmapItemList) {
+                throw Error("No roadmap items found");
+            }
+            setRoadmapItemList(roadmapItemList);
+        }
+        loadProductDataList().then();
+        loadRoadmapItemList().then(() => {
+            setIsLoadingRoadmapItemList(false);
+        });
     }, []);
 
     return (
@@ -109,7 +126,10 @@ function LandingPageClient() {
                 {/* Footer */}
                 <Footer/>
             </div>
-            <FloatingRoadmap/>
+            <FloatingRoadmap
+                roadmapItemList={roadmapItemList}
+                isLoading={isLoadingRoadmapItemList}
+            />
         </main>
     );
 }

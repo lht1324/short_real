@@ -382,7 +382,7 @@ function WorkspaceDashboardPageClient() {
                                             taskId: updatedTask.id,
                                             title: updatedTask.video_title,
                                             platform: updatedTask.export_platform as ExportPlatform,
-                                            status: updatedTask.export_status as ExportStatus,
+                                            status: updatedTask.export_status as ExportStatus.SUCCESS | ExportStatus.FAILED,
                                         };
                                         return exists
                                             ? prev.map((r) => r.taskId === updatedTask.id ? next : r)
