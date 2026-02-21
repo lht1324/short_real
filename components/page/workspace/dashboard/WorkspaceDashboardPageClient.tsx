@@ -3,7 +3,7 @@
 import {memo, useCallback, useEffect, useMemo, useState} from "react";
 import Link from "next/link";
 import {Coins, ListTodo, Plus} from 'lucide-react';
-import {VideoGenerationTask, VideoGenerationTaskStatus} from "@/api/types/supabase/VideoGenerationTasks";
+import {ExportStatus, VideoGenerationTask, VideoGenerationTaskStatus} from "@/api/types/supabase/VideoGenerationTasks";
 import Image from "next/image";
 import {videoClientAPI} from "@/api/client/videoClientAPI";
 import {useAuth} from "@/context/AuthContext";
@@ -14,12 +14,22 @@ import {createBrowserClient} from "@supabase/ssr";
 import TaskDeleteLoadingModal from "@/components/page/workspace/dashboard/TaskDeleteLoadingModal";
 import {Polar} from "@polar-sh/sdk";
 import {polarClientAPI} from "@/api/client/polarClientAPI";
-import CheckoutResultDialog, {CheckoutResultDialogData} from "@/components/page/workspace/dashboard/CheckoutResultDialog";
+import CheckoutResultDialog, {
+    CheckoutResultDialogData
+} from "@/components/page/workspace/dashboard/CheckoutResultDialog";
+import ExportResultModal from "@/components/page/workspace/dashboard/export-result-modal/ExportResultModal";
 
 export enum ExportPlatform {
     YOUTUBE = "youtube",
     INSTAGRAM = "instagram",
     TIKTOK = "tiktok",
+}
+
+export interface ExportResult {
+    taskId: string;
+    title?: string;
+    platform: ExportPlatform;
+    status: Omit<ExportStatus, 'UPLOADING'>;
 }
 
 export interface TaskData {
@@ -46,6 +56,7 @@ function WorkspaceDashboardPageClient() {
 
     const { user } = useAuth();
     const [taskDataList, setTaskDataList] = useState<TaskData[]>([]);
+    const [exportResults, setExportResults] = useState<ExportResult[]>([]);
     const [isLoading, setIsLoading] = useState(true);
 
     const customerSessionToken = useMemo(() => {
@@ -186,6 +197,19 @@ function WorkspaceDashboardPageClient() {
         }
     }, [pendingCancelTaskId]);
 
+    const onCloseExportResultModal = useCallback(async () => {
+        await Promise.all(
+            exportResults.map((result) => {
+                return videoClientAPI.patchVideoTaskByTaskId(result.taskId, {
+                    export_status: undefined,
+                    export_platform: undefined,
+                });
+            })
+        );
+
+        setExportResults([]);
+    }, [exportResults]);
+
     // VideoGenerationTaskStatus 기반 진행률 계산
     const calculateProgress = useCallback((status: VideoGenerationTaskStatus): {
         progress: number;
@@ -285,6 +309,19 @@ function WorkspaceDashboardPageClient() {
                     });
 
                     setTaskDataList(taskList);
+
+                    const pendingExportResults = videoGenerationTaskList
+                        .filter((task) => !!task.export_status && task.export_status !== 'UPLOADING')
+                        .map((task) => ({
+                            taskId: task.id,
+                            title: task.video_title,
+                            platform: task.export_platform as ExportPlatform,
+                            status: task.export_status as ExportStatus,
+                        }));
+
+                    if (pendingExportResults.length > 0) {
+                        setExportResults(pendingExportResults);
+                    }
                 } catch (error) {
                     console.error("WorkspaceDashboardPage: ", error);
                     setIsLoading(false);
@@ -332,6 +369,23 @@ function WorkspaceDashboardPageClient() {
                             case 'UPDATE': {
                                 // 기존 task 업데이트
                                 const updatedTask = payload.new as VideoGenerationTask;
+
+                                if (!!updatedTask.export_status && updatedTask.export_status !== ExportStatus.UPLOADING) {
+                                    setExportResults((prev) => {
+                                        // 같은 taskId가 이미 있으면 덮어쓰기, 없으면 추가
+                                        const exists = prev.some((r) => r.taskId === updatedTask.id);
+                                        const next = {
+                                            taskId: updatedTask.id,
+                                            title: updatedTask.video_title,
+                                            platform: updatedTask.export_platform as ExportPlatform,
+                                            status: updatedTask.export_status as ExportStatus,
+                                        };
+                                        return exists
+                                            ? prev.map((r) => r.taskId === updatedTask.id ? next : r)
+                                            : [...prev, next];
+                                    });
+                                }
+                                
                                 const newTaskData = convertToTaskData(updatedTask);
                                 if (newTaskData) {
                                     setTaskDataList((prevTaskDataList) =>
@@ -582,6 +636,13 @@ function WorkspaceDashboardPageClient() {
                     // url param에서 새로고침 없이 customer_session_token 제거
                 }}
             />)}
+
+            {exportResults.length > 0 && (
+                <ExportResultModal
+                    exportResultList={exportResults}
+                    onClose={onCloseExportResultModal}
+                />
+            )}
         </div>
     )
 }

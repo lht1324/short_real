@@ -8,6 +8,8 @@ import { DownloadResult } from '@supabase/storage-js';
 import { videoGenerationTasksServerAPI } from '@/api/server/videoGenerationTasksServerAPI';
 import { UserTikTokToken } from '@/api/types/supabase/UserTikTokToken';
 import {getIsValidRequestS2S} from "@/utils/getIsValidRequest";
+import {ExportStatus} from "@/api/types/supabase/VideoGenerationTasks";
+import {ExportPlatform} from "@/components/page/workspace/dashboard/WorkspaceDashboardPageClient";
 
 const MIN_CHUNK = 5 * 1024 * 1024;  // 5MB
 const MAX_CHUNK = 64 * 1024 * 1024; // 64MB
@@ -38,6 +40,11 @@ export async function POST(request: NextRequest) {
         const { userId } = await request.json();
 
         if (!userId) {
+            await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, {
+                export_status: ExportStatus.FAILED,
+                export_platform: ExportPlatform.TIKTOK,
+            });
+
             return getNextBaseResponse({
                 success: false,
                 status: 400,
@@ -47,6 +54,11 @@ export async function POST(request: NextRequest) {
 
         const videoGenerationTask = await videoGenerationTasksServerAPI.getVideoGenerationTaskById(taskId);
         if (!videoGenerationTask) {
+            await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, {
+                export_status: ExportStatus.FAILED,
+                export_platform: ExportPlatform.TIKTOK,
+            });
+
             return getNextBaseResponse({
                 success: false,
                 status: 404,
@@ -65,6 +77,11 @@ export async function POST(request: NextRequest) {
 
         if (tokenError || !tokenData) {
             console.error('[TikTok Upload] Token not found:', tokenError);
+            await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, {
+                export_status: ExportStatus.FAILED,
+                export_platform: ExportPlatform.TIKTOK,
+            });
+
             return getNextBaseResponse({
                 success: false,
                 status: 401,
@@ -75,6 +92,11 @@ export async function POST(request: NextRequest) {
         // 2. refresh_token 만료 확인
         if (Date.now() >= new Date(tokenData.refresh_expires_at).getTime()) {
             console.error('[TikTok Upload] Refresh token expired');
+            await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, {
+                export_status: ExportStatus.FAILED,
+                export_platform: ExportPlatform.TIKTOK,
+            });
+
             return getNextBaseResponse({
                 success: false,
                 status: 401,
@@ -101,6 +123,11 @@ export async function POST(request: NextRequest) {
 
             if (!refreshResponse.ok) {
                 console.error('[TikTok Upload] Token refresh failed');
+                await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, {
+                    export_status: ExportStatus.FAILED,
+                    export_platform: ExportPlatform.TIKTOK,
+                });
+
                 return getNextBaseResponse({
                     success: false,
                     status: 401,
@@ -132,6 +159,11 @@ export async function POST(request: NextRequest) {
 
         if (downloadError || !fileData) {
             console.error('[TikTok Upload] Video download failed:', downloadError);
+            await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, {
+                export_status: ExportStatus.FAILED,
+                export_platform: ExportPlatform.TIKTOK,
+            });
+
             return getNextBaseResponse({
                 success: false,
                 status: 404,
@@ -176,6 +208,11 @@ export async function POST(request: NextRequest) {
 
         if (!initData.data?.upload_url || !initData.data?.publish_id) {
             console.error('[TikTok Upload] Init failed:', initData);
+            await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, {
+                export_status: ExportStatus.FAILED,
+                export_platform: ExportPlatform.TIKTOK,
+            });
+
             return getNextBaseResponse({
                 success: false,
                 status: 500,
@@ -205,6 +242,11 @@ export async function POST(request: NextRequest) {
 
             if (!chunkResponse.ok) {
                 console.error(`[TikTok Upload] Chunk ${i + 1}/${totalChunkCount} failed`);
+                await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, {
+                    export_status: ExportStatus.FAILED,
+                    export_platform: ExportPlatform.TIKTOK,
+                });
+
                 return getNextBaseResponse({
                     success: false,
                     status: 500,
@@ -220,6 +262,11 @@ export async function POST(request: NextRequest) {
         const videoUrl = await pollPublishStatus(accessToken, publish_id);
 
         if (!videoUrl) {
+            await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, {
+                export_status: ExportStatus.FAILED,
+                export_platform: ExportPlatform.TIKTOK,
+            });
+
             return getNextBaseResponse({
                 success: false,
                 status: 500,
@@ -233,6 +280,10 @@ export async function POST(request: NextRequest) {
             .eq('user_id', userId);
 
         console.log('[TikTok Upload] Success! URL:', videoUrl);
+        await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, {
+            export_status: ExportStatus.SUCCESS,
+        });
+
         return getNextBaseResponse({
             success: true,
             status: 200,
@@ -242,6 +293,11 @@ export async function POST(request: NextRequest) {
 
     } catch (error) {
         console.error('[TikTok Upload] Error:', error);
+        await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, {
+            export_status: ExportStatus.FAILED,
+            export_platform: ExportPlatform.TIKTOK,
+        });
+
         return getNextBaseResponse({
             success: false,
             status: 500,

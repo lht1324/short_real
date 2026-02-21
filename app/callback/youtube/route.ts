@@ -1,10 +1,10 @@
 // app/api/callback/youtube/route.ts
-import { NextRequest, NextResponse } from 'next/server';
+import {NextRequest, NextResponse} from 'next/server';
 import {createSupabaseServiceRoleClient} from "@/lib/supabaseServiceRole";
-import {getNextBaseResponse} from "@/utils/getNextBaseResponse";
-import {ExportResult} from "@/components/page/workspace/dashboard/ExportResult";
 import {internalFireAndForgetFetch} from "@/utils/internalFetch";
 import {videoGenerationTasksServerAPI} from "@/api/server/videoGenerationTasksServerAPI";
+import {ExportStatus} from "@/api/types/supabase/VideoGenerationTasks";
+import {ExportPlatform} from "@/components/page/workspace/dashboard/WorkspaceDashboardPageClient";
 
 export async function GET(request: NextRequest) {
     const supabase = createSupabaseServiceRoleClient();
@@ -20,14 +20,33 @@ export async function GET(request: NextRequest) {
 
         // 1. 에러 확인
         if (error) {
-            console.log("1")
             console.error(error);
+
+            const taskId = state ? JSON.parse(state)?.taskId : null;
+            if (taskId) {
+                await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, {
+                    export_status: ExportStatus.FAILED,
+                    export_platform: ExportPlatform.YOUTUBE,
+                });
+            }
+
             return NextResponse.redirect(`${originUrl}/workspace/dashboard`);
         }
 
         if (!code || !state) {
-            console.log("2")
-            if (!code) console.error("Missing required query param: code");
+            if (!code) {
+                console.error("Missing required query param: code");
+
+                if (state) {
+                    const taskId = state ? JSON.parse(state)?.taskId : null;
+                    if (taskId) {
+                        await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, {
+                            export_status: ExportStatus.FAILED,
+                            export_platform: ExportPlatform.YOUTUBE,
+                        });
+                    }
+                }
+            }
             if (!state) console.error("Missing required query param: state");
 
             return NextResponse.redirect(`${originUrl}/workspace/dashboard`);
@@ -37,11 +56,14 @@ export async function GET(request: NextRequest) {
         const { userId, taskId } = JSON.parse(decodeURIComponent(state));
 
         if (!userId || !taskId) {
-            return getNextBaseResponse({
-                success: false,
-                status: 400,
-                error: 'Missing required query param: userId, taskId'
-            });
+            console.error('Missing required query param: userId, taskId');
+            if (taskId) {
+                await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, {
+                    export_status: ExportStatus.FAILED,
+                    export_platform: ExportPlatform.TIKTOK,
+                });
+            }
+            return NextResponse.redirect(`${originUrl}/workspace/dashboard`);
         }
 
         // 3. Authorization code를 access_token + refresh_token으로 교환
@@ -60,11 +82,14 @@ export async function GET(request: NextRequest) {
         const tokens = await tokenResponse.json();
 
         if (tokens.error) {
-            console.log("3")
             console.error('Token exchange error:', tokens.error);
-            return NextResponse.redirect(
-                `${originUrl}/workspace/dashboard?export-result=${ExportResult.ERROR}`
-            );
+
+            await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, {
+                export_status: ExportStatus.FAILED,
+                export_platform: ExportPlatform.YOUTUBE,
+            });
+
+            return NextResponse.redirect(`${originUrl}/workspace/dashboard`);
         }
 
         // 4. Supabase에 토큰 저장 (Service Role 사용)
@@ -84,9 +109,13 @@ export async function GET(request: NextRequest) {
 
         if (dbError) {
             console.error('Database error:', dbError);
-            return NextResponse.redirect(
-                `${originUrl}/workspace/dashboard?export-result=${ExportResult.ERROR}`
-            );
+
+            await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, {
+                export_status: ExportStatus.FAILED,
+                export_platform: ExportPlatform.YOUTUBE,
+            });
+
+            return NextResponse.redirect(`${originUrl}/workspace/dashboard`);
         }
 
         internalFireAndForgetFetch(`${process.env.BASE_URL}/api/video/export/youtube/upload?taskId=${taskId}`, {
@@ -95,16 +124,16 @@ export async function GET(request: NextRequest) {
             userId: userId,
         });
 
-        // 5. 성공 리다이렉트
-        return NextResponse.redirect(
-            // `${originUrl}/workspace/dashboard?export-result=${ExportResult.SUCCESS}`
-            `http://localhost:3000/workspace/dashboard?export-result=${ExportResult.SUCCESS}`
-        );
+        await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, {
+            export_status: ExportStatus.UPLOADING,
+            export_platform: ExportPlatform.YOUTUBE,
+        });
+
+        return NextResponse.redirect(`${originUrl}/workspace/dashboard`);
 
     } catch (error) {
         console.error('YouTube callback error:', error);
-        return NextResponse.redirect(
-            `${originUrl}/workspace/dashboard?export-result=${ExportResult.ERROR}`
-        );
+
+        return NextResponse.redirect(`${originUrl}/workspace/dashboard`);
     }
 }

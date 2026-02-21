@@ -6,7 +6,7 @@ import {FluxPrompt} from "@/api/types/open-ai/FluxPrompt";
 import {ExportPlatform} from "@/components/page/workspace/dashboard/WorkspaceDashboardPageClient";
 
 export interface VideoGenerationTask {
-    id?: string; // uuid
+    id: string; // uuid
     user_id: string; // uuid
     status?: VideoGenerationTaskStatus; // varchar(50), default 'pending'
     video_prompt?: string; // text, nullable
