@@ -678,7 +678,7 @@ function WorkspaceDashboardPageClient() {
             {showTikTokExportConsentModal && <DefaultModal
                 title="Export to TikTok"
                 message={
-                    "By continuing, you authorize StoryShort to upload this video to your TikTok account on your behalf.\n\n" +
+                    "By continuing, you authorize ShortReal AI to upload this video to your TikTok account on your behalf.\n\n" +
                     "• Only this video will be uploaded — no other actions will be taken.\n" +
                     "• Processing may take a few minutes after upload.\n" +
                     "• You can remove access at any time from your TikTok settings."
