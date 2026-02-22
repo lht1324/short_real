@@ -69,11 +69,15 @@ function WorkspaceDashboardPageClient() {
     ], []);
 
     const [pendingCancelTaskId, setPendingCancelTaskId] = useState<string | null>(null);
+    const [pendingExportTaskId, setPendingExportTaskId] = useState<string | null>(null);
+    const [pendingExportPlatform, setPendingExportPlatform] = useState<ExportPlatform | null>(null);
 
     const [showCancelConfirmModal, setShowCancelConfirmModal] = useState(false);
     const [showCancelLoadingModal, setShowCancelLoadingModal] = useState(false);
 
     const [showRetryLoadingModal, setShowRetryLoadingModal] = useState(false);
+
+    const [showTikTokExportConsentModal, setShowTikTokExportConsentModal] = useState(false);
 
     const [isExportingVideo, setIsExportingVideo] = useState(false);
     const [isInitializingExportState, setIsInitializingExportState] = useState(false);
@@ -83,19 +87,23 @@ function WorkspaceDashboardPageClient() {
         setShowCancelConfirmModal(true);
     }, []);
 
-    const onClickExport = useCallback(async (taskId: string, exportPlatform: ExportPlatform) => {
+    const onClickExport = useCallback(async () => {
         try {
             if (!user?.id) {
                 throw Error("User is invalid.");
             }
 
-            switch (exportPlatform) {
+            if (!pendingExportTaskId || !pendingExportPlatform) {
+                throw Error("Export data is not invalid.");
+            }
+
+            switch (pendingExportPlatform) {
                 case ExportPlatform.YOUTUBE: {
-                    window.location.href = `/api/video/export/youtube/oauth?taskId=${taskId}`;
+                    window.location.href = `/api/video/export/youtube/oauth?taskId=${pendingExportTaskId}`;
                     return;
                 }
                 case ExportPlatform.TIKTOK: {
-                    window.location.href = `/api/video/export/tiktok/oauth?taskId=${taskId}`;
+                    window.location.href = `/api/video/export/tiktok/oauth?taskId=${pendingExportTaskId}`;
                     return;
                 }
                 case ExportPlatform.INSTAGRAM: {
@@ -106,7 +114,7 @@ function WorkspaceDashboardPageClient() {
         } catch (error) {
             console.error(error);
         }
-    }, [user?.id]);
+    }, [user?.id, pendingExportTaskId, pendingExportPlatform]);
 
     const onClickDownload = useCallback(async (taskId: string) => {
         try {
@@ -593,7 +601,11 @@ function WorkspaceDashboardPageClient() {
                                         taskData={taskData}
                                         index={index}
                                         onClickDownload={onClickDownload}
-                                        onClickExport={onClickExport}
+                                        onClickExport={(taskId, platform) => {
+                                            setPendingExportTaskId(taskId);
+                                            setPendingExportPlatform(platform);
+                                            setShowTikTokExportConsentModal(true);
+                                        }}
                                         onClickRetry={onClickRetry}
                                         onClickCancel={onClickCancel}
                                     />
@@ -662,6 +674,27 @@ function WorkspaceDashboardPageClient() {
                     </div>
                 </div>
             )}
+
+            {showTikTokExportConsentModal && <DefaultModal
+                title="Export to TikTok"
+                message={
+                    "By continuing, you authorize StoryShort to upload this video to your TikTok account on your behalf.\n\n" +
+                    "• Only this video will be uploaded — no other actions will be taken.\n" +
+                    "• Processing may take a few minutes after upload.\n" +
+                    "• You can remove access at any time from your TikTok settings."
+                }
+                confirmText="Authorize & Continue"
+                cancelText="Cancel"
+                onClickConfirm={async () => {
+                    setShowTikTokExportConsentModal(false);
+                    await onClickExport();
+                }}
+                onClickCancel={() => {
+                    setShowTikTokExportConsentModal(false);
+                    setPendingExportTaskId(null);
+                    setPendingExportPlatform(null);
+                }}
+            />}
         </div>
     )
 }
