@@ -54,7 +54,7 @@ function FloatingRoadmap({
     }, []);
 
     return (
-        <div ref={widgetRef} className="fixed bottom-6 right-6 z-50 flex flex-col items-end">
+        <div ref={widgetRef} className="fixed bottom-6 right-6 z-50 flex flex-col items-end pointer-events-none">
 
             {/* 팝업 패널 */}
             <div

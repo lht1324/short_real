@@ -1,4 +1,5 @@
 import { memo, useMemo } from "react";
+import Image from "next/image";
 
 function Footer() {
     const year = useMemo(() => {
@@ -27,15 +28,34 @@ function Footer() {
 
                     {/* Social Links */}
                     <div className="flex space-x-4">
-                        {['𝕏', 'YT'].map((icon) => (
-                            <a
-                                key={icon}
-                                href="#"
-                                className="w-10 h-10 bg-white/5 border border-white/10 rounded-lg flex items-center justify-center hover:bg-white/10 hover:border-white/20 transition-all text-gray-400 hover:text-white"
-                            >
-                                <span className="text-lg">{icon}</span>
-                            </a>
-                        ))}
+                        <a
+                            href="https://www.youtube.com/@ShortRealAI"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="w-12 h-12 bg-white/5 border border-white/10 rounded-lg flex items-center justify-center hover:bg-white/10 hover:border-white/20 transition-all"
+                        >
+                            <Image
+                                src="/icons/youtube-logo.png"
+                                alt="ShortReal AI YouTube"
+                                width={45}
+                                height={40}
+                                className="object-contain"
+                            />
+                        </a>
+                        <a
+                            href="https://x.com/shortrealAI"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="w-12 h-12 bg-white/5 border border-white/10 rounded-lg flex items-center justify-center hover:bg-white/10 hover:border-white/20 transition-all"
+                        >
+                            <Image
+                                src="/icons/x-logo.svg"
+                                alt="ShortReal AI X"
+                                width={30}
+                                height={30}
+                                className="object-contain"
+                            />
+                        </a>
                     </div>
                 </div>
             </div>
