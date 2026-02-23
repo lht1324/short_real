@@ -11,7 +11,7 @@ function HeroSection() {
 
     return (
         // [수정] bg-[#0b0b15] 제거 -> 부모 배경 투과
-        <section className="relative min-h-[100vh] flex items-center overflow-hidden px-4 sm:px-6 lg:px-8 py-16">
+        <section className="relative min-h-[100vh] flex justify-center items-center overflow-hidden px-4 sm:px-6 lg:px-8 py-16">
 
             {/* [삭제] 여기에 있던 'Background Atmosphere' (그리드, 조명)와 '하단 마스크'를 모두 지웠습니다.
                 이제 LandingPageClient의 배경이 그대로 보입니다. */}
