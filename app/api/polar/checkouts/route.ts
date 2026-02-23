@@ -1,12 +1,6 @@
 import { NextRequest } from "next/server";
 import { getNextBaseResponse } from "@/utils/getNextBaseResponse";
-import { Polar } from "@polar-sh/sdk";
-
-const isProd = process.env.NODE_ENV === 'production';
-const polar = new Polar({
-    server: isProd ? 'production' : 'sandbox',
-    accessToken: process.env.POLAR_API_KEY,
-});
+import { PolarClient } from "@/lib/PolarClient";
 
 /**
  * POST /api/polar/checkouts
@@ -15,6 +9,8 @@ const polar = new Polar({
  */
 export async function POST(request: NextRequest) {
     try {
+        const polar = new PolarClient().getClient();
+
         // Request body 파싱
         const body = await request.json();
         const {

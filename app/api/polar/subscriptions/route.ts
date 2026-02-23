@@ -1,14 +1,8 @@
 import { NextRequest } from "next/server";
 import { getNextBaseResponse } from "@/utils/getNextBaseResponse";
-import { Polar } from "@polar-sh/sdk";
-import {SubscriptionData} from "@/api/types/api/polar/subscriptions/SubscriptionData";
-import {LRUCache} from "lru-cache";
-
-const isProd = process.env.NODE_ENV === 'production';
-const polar = new Polar({
-    server: isProd ? 'production' : 'sandbox',
-    accessToken: process.env.POLAR_API_KEY,
-});
+import { SubscriptionData } from "@/api/types/api/polar/subscriptions/SubscriptionData";
+import { LRUCache } from "lru-cache";
+import { PolarClient } from "@/lib/PolarClient";
 
 // 캐싱 (2분)
 const subscriptionCache = new LRUCache<string, SubscriptionData>({
@@ -22,6 +16,8 @@ const subscriptionCache = new LRUCache<string, SubscriptionData>({
  */
 export async function GET(request: NextRequest) {
     try {
+        const polar = new PolarClient().getClient();
+
         // Query parameter에서 email 추출
         const { searchParams } = new URL(request.url);
         const email = searchParams.get("email");

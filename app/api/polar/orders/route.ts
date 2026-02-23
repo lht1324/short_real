@@ -1,12 +1,6 @@
 import { NextRequest } from "next/server";
 import { getNextBaseResponse } from "@/utils/getNextBaseResponse";
-import { Polar } from "@polar-sh/sdk";
-
-const isProd = process.env.NODE_ENV === 'production';
-const polar = new Polar({
-    server: isProd ? 'production' : 'sandbox',
-    accessToken: process.env.POLAR_API_KEY,
-});
+import { PolarClient } from "@/lib/PolarClient";
 
 /**
  * GET /api/polar/orders
@@ -15,6 +9,8 @@ const polar = new Polar({
  */
 export async function GET(request: NextRequest) {
     try {
+        const polar = new PolarClient().getClient();
+
         // Query parameter에서 email 추출
         const { searchParams } = new URL(request.url);
         const email = searchParams.get("email");
