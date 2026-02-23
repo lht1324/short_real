@@ -16,7 +16,7 @@ function HeroSection() {
             {/* [삭제] 여기에 있던 'Background Atmosphere' (그리드, 조명)와 '하단 마스크'를 모두 지웠습니다.
                 이제 LandingPageClient의 배경이 그대로 보입니다. */}
 
-            <div className="relative z-10 w-full max-w-[1400px] mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12">
+            <div className="relative z-10 w-full max-w-[1400px] mx-48 grid grid-cols-1 lg:grid-cols-2 gap-12">
 
                 {/* 2. Left: Typography */}
                 <div className="flex flex-col items-center lg:items-start text-center lg:text-left space-y-8">
@@ -57,19 +57,21 @@ function HeroSection() {
                 </div>
 
                 {/* 3. Right: Video Deck */}
-                <div className="relative h-[600px] w-full flex items-center justify-center perspective-1000 mt-10 lg:mt-0">
+                <div className="relative w-full h-[600px] flex items-center justify-center perspective-1000 mt-10 lg:mt-0">
                     <VideoCard
                         src={`${process.env.NEXT_PUBLIC_DEMO_ASSETS_URL}/demo_main_left.mp4`}
-                        className="w-[220px] sm:w-[260px] -translate-x-[110%] sm:-translate-x-[120%] -rotate-12 hover:rotate-0 hover:scale-[1.15] border-purple-500/30 bg-[#1f2937] z-20 hover:border-purple-500"
+                        className="w-[220px] sm:w-[260px] -rotate-12 hover:rotate-0 hover:scale-[1.15] border-purple-500/30 bg-[#1f2937] z-20 hover:border-purple-500"
                         isRightSideCovered={true}
-                    />
-                    <VideoCard
-                        src={`${process.env.NEXT_PUBLIC_DEMO_ASSETS_URL}/demo_main_right.mp4`}
-                        className="w-[220px] sm:w-[260px] translate-x-[10%] sm:translate-x-[20%] rotate-12 hover:rotate-0 hover:scale-[1.15] border-pink-500/30 bg-[#1f2937] z-20 hover:border-pink-500"
+                        style={{ left: "10%" }}
                     />
                     <VideoCard
                         src={`${process.env.NEXT_PUBLIC_DEMO_ASSETS_URL}/demo_main_center.mp4`}
                         className="w-[240px] sm:w-[300px] -translate-x-1/2 rotate-0 hover:scale-105 border-white/20 bg-[#1f2937] z-30 shadow-[0_0_60px_-15px_rgba(236,72,153,0.3)] hover:border-white"
+                    />
+                    <VideoCard
+                        src={`${process.env.NEXT_PUBLIC_DEMO_ASSETS_URL}/demo_main_right.mp4`}
+                        className="w-[220px] sm:w-[260px] rotate-12 hover:rotate-0 hover:scale-[1.15] border-pink-500/30 bg-[#1f2937] z-20 hover:border-pink-500"
+                        style={{ right: "10%" }}
                     />
                 </div>
 
