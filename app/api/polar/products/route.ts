@@ -8,9 +8,7 @@ import {processProducts} from "@/utils/polarUtils";
 const isProd = process.env.NODE_ENV === 'production';
 const polar = new Polar({
     server: isProd ? 'production' : 'sandbox',
-    accessToken: isProd
-        ? process.env.POLAR_API_KEY
-        : process.env.POLAR_DEV_API_KEY,
+    accessToken: process.env.POLAR_API_KEY,
 });
 
 const productCache = new LRUCache<string, ProductData[]>({

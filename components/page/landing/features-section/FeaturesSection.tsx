@@ -54,7 +54,7 @@ const features: Feature[] = [
         description:
             "Rain, fog, and neon when your story needs it.\nWeather and light follow your script's tone.",
         prompt:
-            "A continuous atmospheric sequence of a storm-drenched city: heavy rain lashing against high-rise glass with chaotic droplet trails, headlights cutting sharply through thick rolling ground fog, wet asphalt distorting vibrant neon signs into colorful ripples, steam from vents mixing visibly with the cold downpour, and the entire skyline glowing in high-contrast cinematic blue as the storm settles.",
+            "A cinematic journey through 1980s Tokyo at the height of the Bubble Economy: aerial cranes descend over a glittering neon skyline as luxury cars trace streaks of light on rain-slicked asphalt, street-level dolly shots glide through fog-choked avenues flanked by kanji neon signs bleeding magenta into wet pavement, and a showroom red Italian exotic catches anamorphic lens flares on polished marble — before the mood shifts, the rain grows heavier, the lights grow cold, and a lone figure slumps on a curb as the city falls silent around him.",
         videoSrc: `${process.env.NEXT_PUBLIC_DEMO_ASSETS_URL}/demo_atmosphere.mp4`,
         icon: CloudFog,
         color: "border-yellow-500/50 shadow-yellow-500/20",

@@ -1,13 +1,16 @@
 // app/api/callback/youtube/route.ts
-import { NextRequest, NextResponse } from 'next/server';
-import { waitUntil } from '@vercel/functions'
+import {NextRequest, NextResponse} from 'next/server';
 import {createSupabaseServiceRoleClient} from "@/lib/supabaseServiceRole";
-import {getNextBaseResponse} from "@/utils/getNextBaseResponse";
-import {ExportResult} from "@/components/page/workspace/dashboard/ExportResult";
 import {internalFireAndForgetFetch} from "@/utils/internalFetch";
+import {videoGenerationTasksServerAPI} from "@/api/server/videoGenerationTasksServerAPI";
+import {ExportPlatform, ExportStatus} from "@/api/types/supabase/VideoGenerationTasks";
+
 
 export async function GET(request: NextRequest) {
     const supabase = createSupabaseServiceRoleClient();
+    const originUrl = process.env.NODE_ENV === 'production' || !request.nextUrl.origin.includes("localhost")
+        ? request.nextUrl.origin
+        : request.nextUrl.origin.replaceAll("https", "http");
 
     try {
         const searchParams = request.nextUrl.searchParams;
@@ -17,32 +20,50 @@ export async function GET(request: NextRequest) {
 
         // 1. 에러 확인
         if (error) {
-            console.log("1")
             console.error(error);
-            return NextResponse.redirect(
-                `${request.nextUrl.origin}/workspace/dashboard?export-result=${ExportResult.ERROR}`
-            );
+
+            const taskId = state ? JSON.parse(state)?.taskId : null;
+            if (taskId) {
+                await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, {
+                    export_status: ExportStatus.FAILED,
+                    export_platform: ExportPlatform.YOUTUBE,
+                });
+            }
+
+            return NextResponse.redirect(`${originUrl}/workspace/dashboard`);
         }
 
         if (!code || !state) {
-            console.log("2")
-            if (!code) console.error("Missing required query param: code");
+            if (!code) {
+                console.error("Missing required query param: code");
+
+                if (state) {
+                    const taskId = state ? JSON.parse(state)?.taskId : null;
+                    if (taskId) {
+                        await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, {
+                            export_status: ExportStatus.FAILED,
+                            export_platform: ExportPlatform.YOUTUBE,
+                        });
+                    }
+                }
+            }
             if (!state) console.error("Missing required query param: state");
 
-            return NextResponse.redirect(
-                `${request.nextUrl.origin}/workspace/dashboard?export-result=${ExportResult.ERROR}`
-            );
+            return NextResponse.redirect(`${originUrl}/workspace/dashboard`);
         }
 
         // 2. State에서 userId 추출
         const { userId, taskId } = JSON.parse(decodeURIComponent(state));
 
         if (!userId || !taskId) {
-            return getNextBaseResponse({
-                success: false,
-                status: 400,
-                error: 'Missing required query param: userId, taskId'
-            });
+            console.error('Missing required query param: userId, taskId');
+            if (taskId) {
+                await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, {
+                    export_status: ExportStatus.FAILED,
+                    export_platform: ExportPlatform.TIKTOK,
+                });
+            }
+            return NextResponse.redirect(`${originUrl}/workspace/dashboard`);
         }
 
         // 3. Authorization code를 access_token + refresh_token으로 교환
@@ -61,11 +82,14 @@ export async function GET(request: NextRequest) {
         const tokens = await tokenResponse.json();
 
         if (tokens.error) {
-            console.log("3")
             console.error('Token exchange error:', tokens.error);
-            return NextResponse.redirect(
-                `${request.nextUrl.origin}/workspace/dashboard?export-result=${ExportResult.ERROR}`
-            );
+
+            await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, {
+                export_status: ExportStatus.FAILED,
+                export_platform: ExportPlatform.YOUTUBE,
+            });
+
+            return NextResponse.redirect(`${originUrl}/workspace/dashboard`);
         }
 
         // 4. Supabase에 토큰 저장 (Service Role 사용)
@@ -85,9 +109,13 @@ export async function GET(request: NextRequest) {
 
         if (dbError) {
             console.error('Database error:', dbError);
-            return NextResponse.redirect(
-                `${request.nextUrl.origin}/workspace/dashboard?export-result=${ExportResult.ERROR}`
-            );
+
+            await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, {
+                export_status: ExportStatus.FAILED,
+                export_platform: ExportPlatform.YOUTUBE,
+            });
+
+            return NextResponse.redirect(`${originUrl}/workspace/dashboard`);
         }
 
         internalFireAndForgetFetch(`${process.env.BASE_URL}/api/video/export/youtube/upload?taskId=${taskId}`, {
@@ -96,17 +124,16 @@ export async function GET(request: NextRequest) {
             userId: userId,
         });
 
-        // 5. 성공 리다이렉트
-        return NextResponse.redirect(
-            // `${request.nextUrl.origin}/workspace/dashboard?export-result=${ExportResult.SUCCESS}`
-            `http://localhost:3000/workspace/dashboard?export-result=${ExportResult.SUCCESS}`
-        );
+        await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, {
+            export_status: ExportStatus.UPLOADING,
+            export_platform: ExportPlatform.YOUTUBE,
+        });
+
+        return NextResponse.redirect(`${originUrl}/workspace/dashboard`);
 
     } catch (error) {
-        console.log("4")
         console.error('YouTube callback error:', error);
-        return NextResponse.redirect(
-            `${request.nextUrl.origin}/workspace/dashboard?export-result=${ExportResult.ERROR}`
-        );
+
+        return NextResponse.redirect(`${originUrl}/workspace/dashboard`);
     }
 }

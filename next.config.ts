@@ -37,7 +37,7 @@ const nextConfig: NextConfig = {
                 source: "/api/:path*",
                 headers: [
                     { key: "Access-Control-Allow-Credentials", value: "true" },
-                    { key: "Access-Control-Allow-Origin", value: "http://localhost:3000" }, // 보안상 특정 도메인을 넣는 게 좋지만, 개발 중이니 일단 * (모두 허용)
+                    { key: "Access-Control-Allow-Origin", value: process.env.NODE_ENV === 'production' ? "https://shortreal.ai" : "http://localhost:3000" }, // 보안상 특정 도메인을 넣는 게 좋지만, 개발 중이니 일단 * (모두 허용)
                     { key: "Access-Control-Allow-Methods", value: "GET,DELETE,PATCH,POST,PUT" },
                     { key: "Access-Control-Allow-Headers", value: "X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, ngrok-skip-browser-warning" },
                 ]

@@ -5,13 +5,11 @@ import {Entity, InitialEntityManifestItem} from "@/api/types/open-ai/Entity";
 import {FluxPrompt} from "@/api/types/open-ai/FluxPrompt";
 
 export interface VideoGenerationTask {
-    id?: string; // uuid
+    id: string; // uuid
     user_id: string; // uuid
     status?: VideoGenerationTaskStatus; // varchar(50), default 'pending'
-    video_prompt?: string; // text, nullable
     narration_script: string; // text, not null
     scene_breakdown_list: SceneData[]; // jsonb, not null
-    subtitle_segment_list: SubtitleSegment[]; // jsonb, not null
     master_style_info?: MasterStyleInfo;
     entity_manifest_list?: InitialEntityManifestItem[];
     video_title?: string;
@@ -26,6 +24,8 @@ export interface VideoGenerationTask {
     merge_started?: boolean; // boolean, default false - 최종 병합 시작 여부
     is_user_cancelled_task?: boolean; // boolean, default false - 유저 도중 취소 여부 (status와 더불어 판단함)
     is_generation_failed?: boolean; // boolean, default false - 실패 여부 (Retry 시 기존 status 조회하기)
+    export_status?: ExportStatus | null;
+    export_platform?: ExportPlatform | null;
     created_at?: string; // timestamp with time zone, default CURRENT_TIMESTAMP
     updated_at?: string;
 }
@@ -117,4 +117,16 @@ export interface FinalVideoMergeData {
     cuttingAreaStartSec: number;
     cuttingAreaEndSec: number;
     volumePercentage: number;
+}
+
+export enum ExportStatus {
+    UPLOADING = "UPLOADING",
+    SUCCESS = "SUCCESS",
+    FAILED = "FAILED",
+}
+
+export enum ExportPlatform {
+    YOUTUBE = "youtube",
+    INSTAGRAM = "instagram",
+    TIKTOK = "tiktok",
 }

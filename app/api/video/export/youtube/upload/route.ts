@@ -9,6 +9,8 @@ import {UserYoutubeToken} from "@/api/types/supabase/UserYoutubeToken";
 import {PostgrestSingleResponse} from "@supabase/supabase-js";
 import {DownloadResult} from "@supabase/storage-js";
 import {videoGenerationTasksServerAPI} from "@/api/server/videoGenerationTasksServerAPI";
+import {ExportPlatform, ExportStatus} from "@/api/types/supabase/VideoGenerationTasks";
+
 
 export async function POST(request: NextRequest) {
     const supabase = createSupabaseServiceRoleClient();
@@ -18,6 +20,7 @@ export async function POST(request: NextRequest) {
     const taskId = searchParams.get('taskId');
 
     if (!taskId) {
+        // 찝찝하지만 비정상 요청으로 간주하고 넘기자
         return getNextBaseResponse({
             success: false,
             status: 400,
@@ -29,6 +32,11 @@ export async function POST(request: NextRequest) {
         const { userId }: PostVideoExportYoutubeUploadRequest = await request.json();
 
         if (!userId) {
+            await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, {
+                export_status: ExportStatus.FAILED,
+                export_platform: ExportPlatform.YOUTUBE,
+            });
+
             return getNextBaseResponse({
                 success: false,
                 status: 400,
@@ -39,6 +47,11 @@ export async function POST(request: NextRequest) {
         const videoGenerationTask = await videoGenerationTasksServerAPI.getVideoGenerationTaskById(taskId);
 
         if (!videoGenerationTask) {
+            await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, {
+                export_status: ExportStatus.FAILED,
+                export_platform: ExportPlatform.YOUTUBE,
+            });
+
             return getNextBaseResponse({
                 success: false,
                 status: 404,
@@ -57,6 +70,12 @@ export async function POST(request: NextRequest) {
 
         if (tokenError || !tokenData) {
             console.error('[YouTube Upload] Token not found:', tokenError);
+
+            await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, {
+                export_status: ExportStatus.FAILED,
+                export_platform: ExportPlatform.YOUTUBE,
+            });
+
             return getNextBaseResponse({
                 success: false,
                 status: 401,
@@ -85,6 +104,12 @@ export async function POST(request: NextRequest) {
 
             if (!refreshResponse.ok) {
                 console.error('[YouTube Upload] Token refresh failed');
+
+                await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, {
+                    export_status: ExportStatus.FAILED,
+                    export_platform: ExportPlatform.YOUTUBE,
+                });
+
                 return getNextBaseResponse({
                     success: false,
                     status: 401,
@@ -118,6 +143,12 @@ export async function POST(request: NextRequest) {
 
         if (downloadError || !fileData) {
             console.error('[YouTube Upload] Video download failed:', downloadError);
+
+            await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, {
+                export_status: ExportStatus.FAILED,
+                export_platform: ExportPlatform.YOUTUBE,
+            });
+
             return getNextBaseResponse({
                 success: false,
                 status: 404,
@@ -152,6 +183,12 @@ export async function POST(request: NextRequest) {
         if (!uploadResponse.ok) {
             const errorData = await uploadResponse.json();
             console.error('[YouTube Upload] YouTube API error:', JSON.stringify(errorData));
+
+            await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, {
+                export_status: ExportStatus.FAILED,
+                export_platform: ExportPlatform.YOUTUBE,
+            });
+
             return getNextBaseResponse({
                 success: false,
                 status: uploadResponse.status,
@@ -162,6 +199,10 @@ export async function POST(request: NextRequest) {
         const uploadedVideo = await uploadResponse.json();
 
         console.log('[YouTube Upload] Success! Video ID:', uploadedVideo.id);
+
+        await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, {
+            export_status: ExportStatus.SUCCESS,
+        });
 
         return getNextBaseResponse({
             success: true,
@@ -176,6 +217,12 @@ export async function POST(request: NextRequest) {
 
     } catch (error) {
         console.error('[YouTube Upload] Error:', error);
+
+        await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, {
+            export_status: ExportStatus.FAILED,
+            export_platform: ExportPlatform.YOUTUBE,
+        });
+
         return getNextBaseResponse({
             success: false,
             status: 500,

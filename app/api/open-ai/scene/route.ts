@@ -203,7 +203,6 @@ export async function POST(request: NextRequest): Promise<NextResponse<PostOpenA
 
         const patchVideoGenerationTaskRequest: Partial<VideoGenerationTask> = {
             scene_breakdown_list: sceneDataListWithSceneDuration,
-            subtitle_segment_list: voiceGenerationResult.subtitleSegmentList,
             video_title: postSceneSegmentationResult.videoTitle,
             video_description: postSceneSegmentationResult.videoDescription,
         }
