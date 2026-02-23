@@ -122,9 +122,6 @@ function LandingPageClient() {
                 />
 
                 <FAQSection />
-
-                {/* Footer */}
-                <Footer/>
             </div>
             <FloatingRoadmap
                 roadmapItemList={roadmapItemList}
