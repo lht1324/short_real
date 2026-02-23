@@ -1,4 +1,3 @@
-import {PostVideoResponse} from "@/api/types/api/video/PostVideoResponse";
 import {deleteFetch, getFetch, patchFetch, postFetch} from '@/api/client/baseFetch';
 import {VideoGenerationTask} from "@/api/types/supabase/VideoGenerationTasks";
 import {PostVideoMergeFinalResponse} from "@/api/types/api/video/merge/final/PostVideoMergeFinalResponse";
@@ -8,18 +7,27 @@ export const videoClientAPI = {
      * 영상 생성 요청을 서버에 전송합니다.
      * 음성 생성 → OpenAI 분석 → Scene별 영상 생성 → DB 저장의 전체 플로우를 실행합니다.
      */
-    async postVideo(taskId: string): Promise<PostVideoResponse | null> {
+    async postVideo(taskId: string, userId: string, selectedStyleId: string): Promise<boolean> {
         try {
-            const response = await postFetch(`/api/video?taskId=${taskId}`);
+            const response = await postFetch(`/api/video?taskId=${taskId}`, {
+                userId: userId,
+                selectedStyleId: selectedStyleId,
+            });
 
             if (!response.ok) {
                 throw Error(`HTTP error! status: ${response.status}`);
             }
 
-            return await response.json();
+            const postVideoResult = await response.json();
+
+            if (!postVideoResult.success) {
+                throw Error(postVideoResult.error ?? "Unknown error occurred while generating video.");
+            }
+
+            return true;
         } catch (error) {
             console.error('Video generation API call failed:', error);
-            return null;
+            return false;
         }
     },
 
@@ -37,7 +45,11 @@ export const videoClientAPI = {
 
             const postVideoTaskResponse = await response.json();
 
-            return postVideoTaskResponse.data;
+            if (!postVideoTaskResponse.success || !postVideoTaskResponse.data) {
+                throw Error(postVideoTaskResponse.error ?? "Unknown error while creating task data.");
+            }
+
+            return postVideoTaskResponse.data.videoGenerationTask;
         } catch (error) {
             console.error('Failed to get video task:', error);
             return null;
@@ -56,7 +68,13 @@ export const videoClientAPI = {
                 throw Error(`HTTP error! status: ${response.status}`);
             }
 
-            return await response.json();
+            const getVideoTasksByUserIdResult = await response.json();
+
+            if (!getVideoTasksByUserIdResult.success || !getVideoTasksByUserIdResult.data) {
+                throw Error(getVideoTasksByUserIdResult.error ?? "Unknown error while fetching task data list.");
+            }
+
+            return getVideoTasksByUserIdResult.data.videoGenerationTaskList;
         } catch (error) {
             console.error('Failed to get user video tasks:', error);
             return null;
@@ -157,9 +175,9 @@ export const videoClientAPI = {
         }
     },
 
-    async getVideoFinalUrl(taskId: string): Promise<string | null> {
+    async getVideoFinalUrl(taskId: string, fileName: string): Promise<string | null> {
         try {
-            const response = await getFetch(`/api/video/url/final?taskId=${taskId}`);
+            const response = await getFetch(`/api/video/url/final?taskId=${taskId}&fileName=${fileName}`);
 
             if (!response.ok) {
                 if (response.status === 404) {
@@ -218,5 +236,47 @@ export const videoClientAPI = {
             console.error('Failed to get video URL:', error);
             throw error;
         }
-    }
+    },
+
+    async postVideoExportYoutube(taskId: string): Promise<string | null> {
+        try {
+            const response = await postFetch(`/api/video/export/youtube?taskId=${taskId}`);
+
+            if (!response.ok) {
+                throw Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const postVideoExportYoutubeResult = await response.json();
+
+            if (!postVideoExportYoutubeResult.success || !postVideoExportYoutubeResult.data) {
+                throw Error(postVideoExportYoutubeResult.error ?? "Unknown error occurred while fetching video upload.");
+            }
+
+            return postVideoExportYoutubeResult.data.authUrl;
+        } catch (error) {
+            console.error("Failed to start uploading video onto Youtube: ", error);
+
+            return null;
+        }
+    },
+
+    async postVideoExportInstagram(userId: string, taskId: string): Promise<string | null> {
+        try {
+            return ""
+        } catch (error) {
+            console.error("Failed to start uploading video onto Instagram: ", error);
+
+            return null;
+        }
+    },
+
+    async postVideoExportTikTok(userId: string, taskId: string): Promise<string | null> {
+        try {
+            return "";
+        } catch (error) {
+            console.error("Failed to start uploading video onto TikTok: ", error);
+
+            return null;
+        }
+    },
 }

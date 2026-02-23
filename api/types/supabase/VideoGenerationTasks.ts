@@ -1,18 +1,19 @@
 // video_generation_tasks 테이블 타입 정의
 import {MasterStyleInfo} from "@/api/types/supabase/MasterStyleInfo";
 import {CaptionConfigState, CaptionData} from "@/components/page/workspace/editor/WorkspaceEditorPageClient";
+import {Entity, InitialEntityManifestItem} from "@/api/types/open-ai/Entity";
+import {FluxPrompt} from "@/api/types/open-ai/FluxPrompt";
 
 export interface VideoGenerationTask {
-    id?: string; // uuid
+    id: string; // uuid
     user_id: string; // uuid
     status?: VideoGenerationTaskStatus; // varchar(50), default 'pending'
-    video_prompt?: string; // text, nullable
     narration_script: string; // text, not null
     scene_breakdown_list: SceneData[]; // jsonb, not null
-    subtitle_segment_list: SubtitleSegment[]; // jsonb, not null
-    master_style_positive_prompt?: MasterStyleInfo;
-    master_style_negative_prompt?: string;
-    video_main_subject?: string;
+    master_style_info?: MasterStyleInfo;
+    entity_manifest_list?: InitialEntityManifestItem[];
+    video_title?: string;
+    video_description?: string;
     processed_scene_count?: number;
     music_data_list?: MusicData[];
     final_video_merge_data?: FinalVideoMergeData;
@@ -23,6 +24,8 @@ export interface VideoGenerationTask {
     merge_started?: boolean; // boolean, default false - 최종 병합 시작 여부
     is_user_cancelled_task?: boolean; // boolean, default false - 유저 도중 취소 여부 (status와 더불어 판단함)
     is_generation_failed?: boolean; // boolean, default false - 실패 여부 (Retry 시 기존 status 조회하기)
+    export_status?: ExportStatus | null;
+    export_platform?: ExportPlatform | null;
     created_at?: string; // timestamp with time zone, default CURRENT_TIMESTAMP
     updated_at?: string;
 }
@@ -65,10 +68,15 @@ export interface SceneData {
     narration: string; // 각 Scene에 보여질 자막
     sceneDuration: number;
     imageGenPromptDirective: string;
-    imageGenPrompt?: string; // 각 Scene 이미지 생성에 넣을 프롬프트
+    imageGenPrompt?: FluxPrompt; // 각 Scene 이미지 생성에 넣을 프롬프트
+    imageGenPromptSentence?: string;
     videoGenPrompt?: string; // 각 Scene 영상 생성에 넣을 프롬프트
+    videoGenPromptShort?: string;
+    sceneEntityManifestList?: Entity[];
     requestId?: string;
     sceneSubtitleSegments?: SubtitleSegment[];
+    sceneCastingEntityIdList?: string[];
+    sceneVisualDescription?: string;
     status: SceneGenerationStatus;
 }
 
@@ -95,6 +103,7 @@ export interface MusicData {
 
 export interface FinalVideoMergeData {
     // Caption 병합용
+    isCaptionEnabled: boolean;
     captionDataList: CaptionData[];
     captionConfigState: CaptionConfigState;
     videoWidth: number;
@@ -108,4 +117,16 @@ export interface FinalVideoMergeData {
     cuttingAreaStartSec: number;
     cuttingAreaEndSec: number;
     volumePercentage: number;
+}
+
+export enum ExportStatus {
+    UPLOADING = "UPLOADING",
+    SUCCESS = "SUCCESS",
+    FAILED = "FAILED",
+}
+
+export enum ExportPlatform {
+    YOUTUBE = "youtube",
+    INSTAGRAM = "instagram",
+    TIKTOK = "tiktok",
 }

@@ -4,7 +4,7 @@ import {memo, useCallback, useEffect, useMemo, useRef, useState} from "react";
 import Link from "next/link";
 import Image from "next/image";
 import {useRouter, useSearchParams} from 'next/navigation';
-import { RotateCcw, ChevronLeft } from 'lucide-react';
+import { ChevronLeft } from 'lucide-react';
 import { fontMap, type FontName } from "@/lib/fonts";
 import FONT_FAMILY_LIST, {FontFamily} from "@/lib/FontFamilyList";
 import {videoClientAPI} from "@/api/client/videoClientAPI";
@@ -15,11 +15,21 @@ import {
     VideoGenerationTaskStatus
 } from "@/api/types/supabase/VideoGenerationTasks";
 import SceneSequencePanel from "@/components/page/workspace/editor/SceneSequencePanel";
-import CaptionConfigPanel from "@/components/page/workspace/editor/CaptionConfigPanel";
+import CaptionConfigPanel, {ColorPickerType} from "@/components/page/workspace/editor/CaptionConfigPanel";
 import VideoPlayerPanel, {VideoPlayerHandle} from "@/components/page/workspace/editor/VideoPlayerPanel";
 import MusicPanel from "@/components/page/workspace/editor/MusicPanel";
-import MusicEditPanel from "@/components/page/workspace/editor/MusicEditPanel";
+// import MusicEditPanel from "@/components/page/workspace/editor/MusicEditPanel";
 import {musicClientAPI} from "@/api/client/musicClientAPI";
+import ColorPickerPopover from "@/components/page/workspace/editor/ColorPickerPopover";
+import dynamic from "next/dynamic";
+import {useAuth} from "@/context/AuthContext";
+const MusicEditPanel = dynamic(
+    () => import('@/components/page/workspace/editor/MusicEditPanel'), // 컴포넌트 경로
+    {
+        ssr: false, // [핵심] 서버 사이드 렌더링을 끕니다.
+        loading: () => <div className="w-full h-40 bg-gray-900 animate-pulse" /> // (선택) 로딩 중 보여줄 UI
+    }
+)
 
 interface VideoData {
     title: string;
@@ -77,42 +87,22 @@ export interface MusicPlayConfig {
     volume: number
 }
 
+interface ColorPickerState {
+    isOpen: boolean;
+    type: ColorPickerType | null;
+    position: { top: number; left: number };
+    color: string;
+}
+
 enum ConfigPanelType {
     Caption = 'caption',
     Music = 'music'
 }
 
-// const INITIAL_CAPTION_CONFIG_STATE: CaptionConfigState = {
-//     // Font settings state
-//     fontFamilyName: "Montserrat",
-//     fontSize: 60,
-//     fontWeight: 900,
-//
-//     // Caption settings state
-//     captionPosition: 80,
-//     captionHeight: 0,
-//     showCaptionLine: true,
-//
-//     // Shadow settings state
-//     // isShadowEnabled: true,
-//     // shadowIntensity: 80,
-//     // shadowThickness: 50,
-//
-//     // Color settings state
-//     activeColor:'#FF0000',
-//     inactiveColor:'#BB0000',
-//     isActiveOutlineEnabled: true,
-//     activeOutlineColor:'#FFFFFF',
-//     activeOutlineThickness: 100,
-//     isInactiveOutlineEnabled: true,
-//     inactiveOutlineColor:'#BBBBBB',
-//     inactiveOutlineThickness: 70,
-// }
-
 const INITIAL_CAPTION_CONFIG_STATE: CaptionConfigState = {
     // Font settings state
-    fontFamilyName: "Roboto",
-    fontSize: 60,
+    fontFamilyName: "Poppins",
+    fontSize: 48,
     fontWeight: 900,
 
     // Caption settings state
@@ -127,12 +117,12 @@ const INITIAL_CAPTION_CONFIG_STATE: CaptionConfigState = {
 
     // Color settings state
     activeColor:'#FFFFFF',
-    inactiveColor:'#A0A0A0',
-    isActiveOutlineEnabled: false,
+    inactiveColor:'#AAAAAA',
+    isActiveOutlineEnabled: true,
     activeOutlineColor:'#000000',
     activeOutlineThickness: 50,
-    isInactiveOutlineEnabled: false,
-    inactiveOutlineColor:'#404040',
+    isInactiveOutlineEnabled: true,
+    inactiveOutlineColor:'#000000',
     inactiveOutlineThickness: 50,
 }
 
@@ -140,6 +130,8 @@ function WorkspaceEditorPageClient() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const taskId = searchParams.get('taskId');
+
+    const { user } = useAuth();
 
     const headerRef = useRef<HTMLDivElement>(null);
     const videoPlayerRef = useRef<VideoPlayerHandle>(null);
@@ -158,11 +150,15 @@ function WorkspaceEditorPageClient() {
             : 0;
     }, [headerHeight, videoPanelHeight]);
 
-    const isLoading = useMemo(() => {
+    const isInitialLoading = useMemo(() => {
         return isPublicDataLoading || isSceneSequencePanelLoading || isVideoPlayerPanelLoading;
     }, [isPublicDataLoading, isSceneSequencePanelLoading, isVideoPlayerPanelLoading]);
 
+    const [isFinishLoading, setIsFinishLoading] = useState(false);
+
     const [videoData, setVideoData] = useState<VideoData | null>(null);
+
+    const [isCaptionEnabled, setIsCaptionEnabled] = useState(true);
 
     const captionDataList = useMemo(() => {
         return videoData?.captionDataList ?? []
@@ -211,19 +207,22 @@ function WorkspaceEditorPageClient() {
     }, [musicDataList, editingMusicIndex]);
 
     const [musicStartSec, setMusicStartSec] = useState<number>(0);
-    const [musicVolume, setMusicVolume] = useState<number>(0);
+    const [musicVolume, setMusicVolume] = useState<number>(1.0);
+    const [isMusicMuted, setIsMusicMuted] = useState(false);
+
     const musicPlayConfig: MusicPlayConfig | null = useMemo(() => {
         return editingMusicData ? {
             audioUrl: editingMusicData.audioUrl,
             startSec: musicStartSec,
             duration: videoDuration,
-            volume: musicVolume,
+            volume: isMusicMuted ? 0 : musicVolume,
         } : null;
-    }, [editingMusicData, musicStartSec, videoDuration, musicVolume]);
+    }, [editingMusicData, musicStartSec, videoDuration, musicVolume, isMusicMuted]);
 
     const finalVideoMergeData: FinalVideoMergeData | null = useMemo(() => {
         if (captionDataList.length !== 0 && taskId && videoPlayerUIData && videoDuration > 0) {
             return {
+                isCaptionEnabled: isCaptionEnabled,
                 captionDataList: captionDataList,
                 captionConfigState: captionConfigState,
                 videoWidth: videoPlayerUIData.videoWidth,
@@ -231,7 +230,7 @@ function WorkspaceEditorPageClient() {
                 captionAreaTop: videoPlayerUIData.captionAreaTop,
                 captionAreaVerticalPadding: videoPlayerUIData.captionAreaVerticalPadding,
                 captionOneLineHeight: videoPlayerUIData.captionOneLineHeight,
-                
+
                 musicIndex: editingMusicIndex,
                 cuttingAreaStartSec: musicStartSec,
                 cuttingAreaEndSec: musicStartSec + videoDuration,
@@ -240,9 +239,11 @@ function WorkspaceEditorPageClient() {
         } else {
             return null;
         }
-    }, [captionDataList, taskId, videoPlayerUIData, videoDuration, captionConfigState, editingMusicIndex, musicStartSec, musicVolume]);
+    }, [isCaptionEnabled, captionDataList, taskId, videoPlayerUIData, videoDuration, captionConfigState, editingMusicIndex, musicStartSec, musicVolume]);
 
     const onClickFinish = useCallback(async () => {
+        setIsFinishLoading(true);
+
         try {
             if (finalVideoMergeData) {
                 if (!taskId) {
@@ -261,14 +262,23 @@ function WorkspaceEditorPageClient() {
                     console.error('최종 병합 요청 실패:', result?.error);
                 }
 
+                setIsFinishLoading(false);
+
                 return;
             } else {
+                setIsFinishLoading(false);
+                alert('Failed to prepare video data. Please try again.');
                 return;
             }
         } catch (error) {
             console.error(error);
+            setIsFinishLoading(false);
         }
     }, [taskId, finalVideoMergeData]);
+
+    const onToggleIsCaptionEnabled = useCallback(() => {
+        setIsCaptionEnabled(prev => !prev)
+    }, []);
 
     const onClickSceneSequence = useCallback((sceneStartSec: number) => {
         videoPlayerRef.current?.seekTo(sceneStartSec);
@@ -311,9 +321,92 @@ function WorkspaceEditorPageClient() {
         setMusicVolume(newVolume);
     }, []);
 
+    const onChangeIsMusicMuted = useCallback((newIsMuted: boolean) => {
+        setIsMusicMuted(newIsMuted);
+    }, []);
+
     const onSelectMusic = useCallback((musicIndex: number) => {
         setEditingMusicIndex(musicIndex);
     }, []);
+
+    // Color Picker Logic
+    const [colorPickerState, setColorPickerState] = useState<ColorPickerState>({
+        isOpen: false,
+        type: null,
+        position: { top: 0, left: 0 },
+        color: '#FFFFFF'
+    });
+
+    const onOpenColorPicker = useCallback((type: ColorPickerType, anchor: HTMLElement) => {
+        const rect = anchor.getBoundingClientRect();
+
+        // 현재 선택된 색상 가져오기
+        let currentColor = '#FFFFFF';
+
+        switch (type) {
+            case 'activeColor': {
+                currentColor = captionConfigState.activeColor;
+                break;
+            }
+            case 'inactiveColor': {
+                currentColor = captionConfigState.inactiveColor;
+                break;
+            }
+            case 'activeOutlineColor': {
+                currentColor = captionConfigState.activeOutlineColor;
+                break;
+            }
+            case 'inactiveOutlineColor': {
+                currentColor = captionConfigState.inactiveOutlineColor;
+                break;
+            }
+        }
+
+        setColorPickerState({
+            isOpen: true,
+            type: type,
+            position: {
+                top: rect.bottom + 8,
+                left: rect.left
+            },
+            color: currentColor
+        });
+    }, [captionConfigState]);
+
+    const onCloseColorPicker = useCallback(() => {
+        setColorPickerState(prev => ({ ...prev, isOpen: false }));
+    }, []);
+
+    const onChangeColorPickerColor = useCallback((newColor: string) => {
+        setColorPickerState(prev => ({ ...prev, color: newColor }));
+
+        if (!colorPickerState.type) return;
+
+        setCaptionConfigState(prev => {
+            const newState = { ...prev };
+
+            switch (colorPickerState.type) {
+                case 'activeColor': {
+                    newState.activeColor = newColor.toUpperCase();
+                    break;
+                }
+                case 'inactiveColor': {
+                    newState.inactiveColor = newColor.toUpperCase();
+                    break;
+                }
+                case 'activeOutlineColor': {
+                    newState.activeOutlineColor = newColor.toUpperCase();
+                    break;
+                }
+                case 'inactiveOutlineColor': {
+                    newState.inactiveOutlineColor = newColor.toUpperCase();
+                    break;
+                }
+            }
+
+            return newState;
+        });
+    }, [colorPickerState.type]);
 
     useEffect(() => {
         if (taskId) {
@@ -359,11 +452,10 @@ function WorkspaceEditorPageClient() {
                 });
 
                 setVideoData({
-                    title: videoGenerationTask.video_main_subject ?? "",
+                    title: videoGenerationTask.video_title ?? "",
                     videoUrl: taskVideoUrl,
                     captionDataList: captionDataList,
                 });
-
 
                 const musicDataList = await musicClientAPI.getMusicData(taskId);
 
@@ -404,14 +496,28 @@ function WorkspaceEditorPageClient() {
         }
     }, []);
 
+    useEffect(() => {
+        let timeout: NodeJS.Timeout;
+
+        if (!user) {
+            timeout = setTimeout(() => {
+                router.push('/');
+            }, 10000);
+        }
+
+        return () => {
+            clearTimeout(timeout);
+        };
+    }, [user, router]);
+
     return (
         <div className="min-h-screen bg-black text-white">
             {/* Top Header */}
             <div
                 ref={headerRef}
-                className="flex items-center justify-between py-4 border-b border-purple-500/20 bg-gray-900/50 backdrop-blur-sm"
+                className="flex items-center justify-between pl-3 pr-6 py-4 border-b border-purple-500/20 bg-gray-900/50 backdrop-blur-sm"
             >
-                <div className="flex items-center pl-3">
+                <div className="flex items-center">
                     <Link 
                         href="/workspace/dashboard"
                         className="text-gray-400 hover:text-pink-400 transition-colors"
@@ -424,7 +530,10 @@ function WorkspaceEditorPageClient() {
                         alt="Short Real"
                         width={64}
                         height={64}
-                        className="w-16 h-16"
+                        className="w-16 h-16 cursor-pointer"
+                        onClick={() => {
+                            router.push('/');
+                        }}
                     />
                     <div className="flex flex-col ml-4">
                         <span className="text-4xl font-bold bg-gradient-to-r from-pink-400 to-purple-500 bg-clip-text text-transparent">
@@ -435,28 +544,12 @@ function WorkspaceEditorPageClient() {
                         </p>
                     </div>
                 </div>
-                <div className="flex items-center space-x-4 px-6">
-                    <button className="text-gray-400 hover:text-pink-400 transition-colors">
-                        <RotateCcw size={20} />
-                    </button>
-                    <button className="text-gray-400 hover:text-pink-400 transition-colors">
-                        <RotateCcw size={20} className="transform scale-x-[-1]" />
-                    </button>
-                    <div className="flex items-center space-x-2 text-gray-400">
-                        <span className="text-sm">Watermark</span>
-                        <button className="w-10 h-6 bg-gray-800 rounded-full relative border border-purple-500/30">
-                            <div className="w-4 h-4 bg-gradient-to-r from-pink-500 to-purple-600 rounded-full absolute top-1 right-1"></div>
-                        </button>
-                    </div>
-                    <button
-                        onClick={onClickFinish}
-                        // onClick={onClickMergeCaptionTest}
-                        // onClick={onClickMusicModifying}
-                        className="bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all"
-                    >
-                        Finish
-                    </button>
-                </div>
+                <button
+                    onClick={onClickFinish}
+                    className="bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all"
+                >
+                    Finish
+                </button>
             </div>
 
             <div
@@ -513,11 +606,14 @@ function WorkspaceEditorPageClient() {
                             <div className="flex-1 px-3 overflow-y-auto">
                                 {activeConfigPanel === ConfigPanelType.Caption && (
                                     <CaptionConfigPanel
+                                        isCaptionEnabled={isCaptionEnabled}
                                         captionConfigState={captionConfigState}
                                         fontFamilyList={fontFamilyList}
                                         selectedFontFamilyWeightList={selectedFontFamilyWeightList}
                                         selectedFontFamilyFullShape={selectedFontFamilyFullShape}
+                                        onToggleIsCaptionEnabled={onToggleIsCaptionEnabled}
                                         onChangeCaptionConfigState={onChangeCaptionConfigState}
+                                        onOpenColorPicker={onOpenColorPicker}
                                     />
                                 )}
                                 {activeConfigPanel === ConfigPanelType.Music && (
@@ -537,6 +633,7 @@ function WorkspaceEditorPageClient() {
                                 ref={videoPlayerRef}
                                 videoUrl={videoData.videoUrl}
                                 currentTime={videoCurrentTime}
+                                isCaptionEnabled={isCaptionEnabled}
                                 captionDataList={captionDataList}
                                 captionConfigState={captionConfigState}
                                 musicPlayConfig={musicPlayConfig}
@@ -561,17 +658,35 @@ function WorkspaceEditorPageClient() {
                             panelHeight={musicEditPanelHeight}
                             onChangeMusicStartSec={onChangeMusicStartSec}
                             onChangeMusicVolume={onChangeMusicVolume}
+                            onChangeIsMuted={onChangeIsMusicMuted}
                         />
                     </div>}
                 </div>
             </div>
-            {/* Loading Overlay */}
-            {isLoading && (<div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50">
+            {/* Initial Loading Overlay */}
+            {isInitialLoading && (<div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50">
                 <div className="text-center">
                     <div className="w-8 h-8 border-2 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"/>
                     <p className="text-gray-400">Loading your pure video...</p>
                 </div>
             </div>)}
+            {/* Final Loading Overlay */}
+            {isFinishLoading && (<div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50">
+                <div className="text-center">
+                    <div className="w-8 h-8 border-2 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"/>
+                    <p className="text-gray-400">Sending your video to the producer...</p>
+                </div>
+            </div>)}
+
+            {/* Color Picker Popover */}
+            {colorPickerState.isOpen && (
+                <ColorPickerPopover
+                    color={colorPickerState.color}
+                    onChange={onChangeColorPickerColor}
+                    position={colorPickerState.position}
+                    onClose={onCloseColorPicker}
+                />
+            )}
         </div>
     )
 }

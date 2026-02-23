@@ -69,8 +69,8 @@ export interface ReplicatePrediction {
 
 export const VIDEO_RESOLUTIONS = {
     RES_480P: "480p",
-    RES_580P: "576p",
     RES_720P: "720p",
+    RES_1080P: "1080p",
 } as const;
 
 export const VIDEO_ASPECT_RATIOS = {

@@ -1,7 +1,17 @@
 export interface Style {
-    id: string,
-    name: string,
-    description: string,
-    stylePrompt: string,
-    thumbnailUrl: string,
+    uiMetadata: StyleUIMetadata;
+    generationParams: StyleGenerationParams;
+}
+
+export interface StyleUIMetadata {
+    id: string;
+    label: string;
+    thumbnailUrl: string;
+}
+
+export interface StyleGenerationParams {
+    coreConcept: string;
+    visualKeywords: string[];
+    negativeGuidance: string;
+    preferredFramingLogic: string;
 }

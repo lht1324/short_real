@@ -1,0 +1,1125 @@
+Scene #1 raw generated content: {
+  "image_gen_prompt": {
+    "scene": "Medieval warship veering off-course on choppy seas under dark, stormy skies",
+    "subjects": [
+      {
+        "id": "1",
+        "type": "warship",
+        "description": "A battered, weathered medieval warship with torn banners and choppy waves crashing against its hull",
+        "clothes": "",
+        "accessories": [],
+        "pose": "sailing on turbulent waters",
+        "position": "midground"
+      }
+    ],
+    "color_palette": [
+      "#A0A0A0",
+      "#FFD17A",
+      "#4D5D5D"
+    ],
+    "lighting": "Soft diffused natural daylight key with minimal fill bounce maintaining architectural shadow depth",
+    "mood": "Dramatic atmosphere with a sense of confusion and chaos"
+ ,
+    "background": "Dark, stormy skies over a Byzantine coastal harbor, with turbulent seas reflecting the ominous weather"
+  },
+  "technical_intent": {
+    "angleIntent": "Heroic/Scale",
+    "compositionIntent": "Strength",
+    "exposureIntent": "Cinematic/Moody"
+  }
+short-real-server  |
+short-real-server  |
+  ,
+  "updated_entity_manifest_list": null
+}
+Scene #1 OpticalAndTechnicalOption: {"style":"High-fidelity RAW photography with Raw surface detail and Filmic organic texture.","camera":{"angle":"low angle","distance":"full-length vertical capture","focus":"sharp focus throughout the vertical frame","lens":"35mm","fNumber":"f/11.0","ISO":800},"composition":"strong verticals","effects":["subtle film grain","highly defined textures","hyper-detailed rendering","extreme visual fidelity","photorealistic textures","physically based rendering"]}
+Scene #1 Test sentence: A battered, weathered medieval warship with torn banners and choppy waves crashing against its hull, the scene is set in Dark, stormy skies over a Byzantine coastal harbor, with turbulent seas reflecting the ominous weather, depicting Medieval warship veering off-course on choppy seas under dark, stormy skies with a strong verticals composition, where the atmosphere is Dramatic atmosphere with a sense of confusion and chaos, illuminated by Soft diffused natural daylight key with minimal fill bounce maintaining architectural shadow depth and a color palette of (#A0A0A0, #FFD17A, #4D5D5D), rendered in High-fidelity RAW photography with Raw surface detail and Filmic organic texture, captured with a 35mm lens at f/11.0 for sharp focus throughout the vertical frame and ISO 800, featuring subtle film grain, highly defined textures, hyper-detailed rendering, extreme visual fidelity, photorealistic textures, and physically based rendering.
+
+Scene #2 raw generated content: {
+  "image_gen_prompt": {
+    "scene": "Medieval knights engaged in a transaction at a bustling harbor, illuminated by golden-hour light.",
+    "subjects": [
+      {
+        "id": "knight_01",
+        "type": "human",
+        "description": "A French knight with short dark brown hair, wearing a polished steel chainmail hauberk under a roughspun woolen surcoat with a red cross emblem, athletic build and a confident stance.",
+        "clothes": "Polished steel chainmail hauberk under a roughspun woolen surcoat with a matte finish.",
+        "accessories": [
+          "White linen surcoat with red cross emblem",
+          "Leather sword belt",
+          "Steel longsword in leather scabbard"
+        ],
+        "pose": "Standing firmly with an assertive posture, one hand extended to present a pouch of coins, while the other hand rests at his side.",
+        "position": "foreground"
+      },
+      {
+        "id": "knight_02",
+        "type": "human",
+        "description": "A Norman knight with short blonde hair peeking from a chainmail coif, standing just right of the main hero, wearing interlinked steel chainmail and a lightly scuffed woolen tunic.",
+        "clothes": "Interlinked steel chainmail hauberk with a woolen tunic.",
+        "accessories": [
+          "Blue woolen surcoat with regional heraldry",
+          "Leather sword belt",
+          "Iron arming sword in leather scabbard"
+        ],
+        "pose": "Positioned slightly behind the main hero, arms crossed, observing the transaction with a watchful eye.",
+        "position": "midground"
+      },
+      {
+        "id": "pouch_of_coins",
+        "type": "object",
+        "description": "A soft tawny leather pouch with iron-studded seams, worn from use, held prominently in the knight's hand.",
+        "clothes": "Soft tawny leather pouch with iron-studded seams.",
+        "accessories": [],
+        "pose": "Held in the foreground near the knight's hands, indicating a transaction.",
+        "position": "foreground"
+      },
+      {
+        "id": "venetian_galley",
+        "type": "machine",
+        "description": "A Venetian war galley with oak hull planks bound by iron straps, displaying a weathered saltwater patina, looming in the background.",
+        "clothes": "Oak hull planks bound by iron straps.",
+        "accessories": [],
+        "pose": "Positioned in the background, providing a sense of scale and context to the harbor setting.",
+        "position": "background"
+      },
+      {
+        "id": "wooden_crate",
+        "type": "object",
+        "description": "A roughhewn wooden crate with splintered edges, serving as a background element near the quay edge.",
+        "clothes": "Roughhewn pine boards with splintered edges.",
+        "accessories": [],
+        "pose": "Anchoring the background, adding to the atmosphere of a busy harbor.",
+        "position": "background"
+      }
+    ],
+    "color_palette": [
+      "#A0A0A0",
+      "#FFD17A",
+      "#D8E0E5"
+    ],
+    "lighting": "Soft diffused natural daylight key with minimal fill bounce maintaining architectural shadow depth.",
+    "mood": "Exhilarating atmosphere filled with a sense of historical significance and impending transactions.",
+    "background": "A bustling harbor scene with Venetian galleys docked, armored knights handing over sacks of coins to richly dressed Venetian merchants against a backdrop of carved stone warehouses."
+  },
+  "technical_intent": {
+    "angleIntent": "Default/Neutral",
+    "compositionIntent": "Balance",
+    "exposureIntent": "Balanced/Natural"
+  },
+  "updated_entity_manifest_list": [
+    {
+      "id": "knight_01",
+      "physics_profile": {
+        "material": [
+          "cloth",
+          "viscoelastic",
+          "rigid"
+        ],
+        "action_context": [
+          "interaction",
+          "passive"
+        ]
+      },
+      "appearance": {
+        "clothing_or_material": "Polished steel chainmail hauberk under a roughspun woolen surcoat with a matte finish.",
+        "hair": "Short dark brown hair, slightly tousled.",
+        "accessories": [
+          "White linen surcoat with red cross emblem",
+          "Leather sword belt",
+          "Steel longsword in leather scabbard"
+        ],
+        "body_features": "Athletic build, approximately 6ft tall.",
+        "position_descriptor": "Usually center-weighted with a slight left offset."
+      },
+      "state": {
+        "pose": "Standing firmly with an assertive posture, one hand extended to present a pouch of coins, while the other hand rests at his side.",
+        "expression": null
+      }
+    },
+    {
+      "id": "knight_02",
+      "physics_profile": {
+        "material": [
+          "cloth",
+          "rigid"
+        ],
+        "action_context": [
+          "passive"
+        ]
+      },
+      "appearance": {
+        "clothing_or_material": "Interlinked steel chainmail hauberk with a woolen tunic.",
+        "hair": "Short blonde hair peeking from a chainmail coif.",
+        "accessories": [
+          "Blue woolen surcoat with regional heraldry",
+          "Leather sword belt",
+          "Iron arming sword in leather scabbard"
+        ],
+        "body_features": "Broad-shouldered with a medium-height frame.",
+        "position_descriptor": "Typically stands just right of the main hero as a supporting figure."
+      },
+      "state": {
+        "pose": "Positioned slightly behind the main hero, arms crossed, observing the transaction with a watchful eye.",
+        "expression": null
+      }
+    },
+    {
+      "id": "pouch_of_coins",
+      "physics_profile": {
+        "material": [
+          "elastoplastic"
+        ],
+        "action_context": [
+          "interaction"
+        ]
+      },
+      "appearance": {
+        "clothing_or_material": "Soft tawny leather pouch with iron-studded seams.",
+        "hair": null,
+        "accessories": [],
+        "body_features": null,
+        "position_descriptor": "Often held in foreground near main hero’s hands."
+      },
+      "state": {
+        "pose": "Held in the foreground near the knight's hands, indicating a transaction.",
+        "expression": null
+      }
+    },
+    {
+      "id": "venetian_galley",
+      "physics_profile": {
+        "material": [
+          "rigid"
+        ],
+        "action_context": [
+          "passive"
+        ]
+      },
+      "appearance": {
+        "clothing_or_material": "Oak hull planks bound by iron straps with weathered saltwater patina.",
+        "hair": null,
+        "accessories": [],
+        "body_features": null,
+        "position_descriptor": "Looming background presence at the lower edge of the frame."
+      },
+      "state": {
+        "pose": "Positioned in the background, providing a sense of scale and context to the harbor setting.",
+        "expression": null
+      }
+    },
+    {
+      "id": "wooden_crate",
+      "physics_profile": {
+        "material": [
+          "rigid"
+        ],
+        "action_context": [
+          "passive"
+        ]
+      },
+      "appearance": {
+        "clothing_or_material": "Roughhewn pine boards with splintered edges.",
+        "hair": null,
+        "accessories": [],
+        "body_features": null,
+        "position_descriptor": "Background anchor near the quay edge."
+      },
+      "state": {
+        "pose": "Anchoring the background, adding to the atmosphere of a busy harbor.",
+        "expression": null
+      }
+    }
+  ]
+}
+Scene #2 OpticalAndTechnicalOption: {"style":"High-fidelity RAW photography with Raw surface detail and Filmic organic texture.","camera":{"angle":"eye level","distance":"full-length vertical capture","focus":"sharp focus throughout the vertical frame","lens":"35mm","fNumber":"f/11.0","ISO":800},"composition":"vertical rule of thirds","effects":["subtle film grain","highly defined textures","hyper-detailed rendering","extreme visual fidelity","photorealistic textures","physically based rendering"]}
+Scene #2 Test sentence: An eye level full-length vertical capture captures 1202 Medieval French Knight Early 30s Male, with Short dark brown hair, slightly tousled, Athletic build, approximately 6ft tall, clad in Polished steel chainmail hauberk under a roughspun woolen surcoat with a matte finish, equipped with White linen surcoat with red cross emblem, Leather sword belt, and Steel longsword in leather scabbard who is Standing firmly with an assertive posture, one hand extended to present a pouch of coins, while the other hand rests at his side. in the foreground, while in the midground a 1202 Medieval Norman Knight Late 20s Male, with Short blonde hair peeking from a chainmail coif, Broad-shouldered with a medium-height frame, clad in Interlinked steel chainmail hauberk with a woolen tunic, equipped with Blue woolen surcoat with regional heraldry, Leather sword belt, and Iron arming sword in leather scabbard is Positioned slightly behind the main hero, arms crossed, observing the transaction with a watchful eye, while in the foreground a 1202 Medieval French Leatherwork Coin Pouch, clad in Soft tawny leather pouch with iron-studded seams, equipped with   Held in the foreground near the knight's hands, indicating a transaction, while in the background a 1202 Medieval Venetian Republic War Galley, clad in Oak hull planks bound by iron straps with weathered saltwater patina, equipped with   Positioned in the background, providing a sense of scale and context to the harbor setting, while in the background a 1202 Medieval Venetian Harbor Woodcraft Wooden Crate, clad in Roughhewn pine boards with splintered edges, equipped with   Anchoring the background, adding to the atmosphere of a busy harbor, the scene is set in A bustling harbor scene with Venetian galleys docked, armored knights handing over sacks of coins to richly dressed Venetian merchants against a backdrop of carved stone warehouses, depicting Medieval knights engaged in a transaction at a bustling harbor, illuminated by golden-hour light. with a vertical rule of thirds composition, where the atmosphere is Exhilarating atmosphere filled with a sense of historical significance and impending transactions, illuminated by Soft diffused natural daylight key with minimal fill bounce maintaining architectural shadow depth. and a color palette of (#A0A0A0, #FFD17A, #D8E0E5), rendered in High-fidelity RAW photography with Raw surface detail and Filmic organic texture, captured with a 35mm lens at f/11.0 for sharp focus throughout the vertical frame and ISO 800, featuring subtle film grain, highly defined textures, hyper-detailed rendering, extreme visual fidelity, photorealistic textures, and physically based rendering.
+
+Scene #3 raw generated content: {
+  "image_gen_prompt": {
+    "scene": "Medieval knights amid a chaotic cathedral interior, shattering stained glass and looting gold chalices.",
+    "subjects": [
+      {
+        "id": "knight_01",
+        "type": "human",
+        "description": "A robust French knight in a polished steel chainmail hauberk and a roughspun woolen surcoat, wielding a longsword.",
+        "clothes": "Polished steel chainmail hauberk under a roughspun woolen surcoat with a matte finish, absorbing light.",
+        "accessories": [
+          "White linen surcoat with red cross emblem",
+          "Leather sword belt",
+          "Steel longsword in leather scabbard"
+        ],
+        "pose": "Charging aggressively forward, sword raised high with muscles tensed, ready to strike.",
+        "position": "foreground"
+      },
+      {
+        "id": "knight_02",
+        "type": "human",
+        "description": "A broad-shouldered Norman knight in interlinked steel chainmail and a scuffed woolen tunic, assisting in the chaos.",
+        "clothes": "Interlinked steel chainmail hauberk with a woolen tunic, lightly scuffed.",
+        "accessories": [
+          "Blue woolen surcoat with regional heraldry",
+          "Leather sword belt",
+          "Iron arming sword in leather scabbard"
+        ],
+        "pose": "Lunging forward, sword drawn, body coiled for action amidst the disorder.",
+        "position": "midground"
+      },
+      {
+        "id": "gilded_chalice",
+        "type": "object",
+        "description": "A gilded chalice held tightly in a knight's hand, symbolizing the plunder.",
+        "clothes": "Bronze chalice overlaid with gold filigree, polished to a dull sheen.",
+        "accessories": [],
+        "pose": "Clutched tightly in a knight's grasp, reflecting the chaotic light.",
+        "position": "foreground"
+      }
+    ],
+    "color_palette": [
+      "#A0A0A0",
+      "#FFD17A",
+      "#D8E0E5"
+    ],
+    "lighting": "Soft diffused natural daylight key with minimal fill bounce maintaining architectural shadow depth.",
+    "mood": "A chaotic yet exhilarating atmosphere filled with the tension of betrayal and treasure.",
+    "background": "A chaotic cathedral interior marked by shattered stained-glass windows, marble pillars, and scattered gold icons."
+  },
+  "technical_intent": {
+    "angleIntent": "Heroic/Scale",
+    "compositionIntent": "Action",
+    "exposureIntent": "Cinematic/Moody"
+  },
+  "updated_entity_manifest_list": [
+    {
+      "id": "knight_01",
+      "physics_profile": {
+        "material": [
+          "rigid",
+          "viscoelastic"
+        ],
+        "action_context": [
+          "combat",
+          "locomotion"
+        ]
+      },
+      "appearance": {
+        "clothing_or_material": "Polished steel chainmail hauberk under a roughspun woolen surcoat with a matte finish, absorbing light.",
+        "hair": "Short dark brown hair, slightly tousled.",
+        "accessories": [
+          "White linen surcoat with red cross emblem",
+          "Leather sword belt",
+          "Steel longsword in leather scabbard"
+        ],
+        "body_features": "Athletic build, approximately 6ft tall.",
+        "position_descriptor": "Usually center-weighted with a slight left offset."
+      },
+      "state": {
+        "pose": "Charging aggressively forward, sword raised high with muscles tensed, ready to strike.",
+        "expression": null
+      }
+    },
+    {
+      "id": "knight_02",
+      "physics_profile": {
+        "material": [
+          "rigid",
+          "viscoelastic"
+        ],
+        "action_context": [
+          "combat",
+          "locomotion"
+        ]
+      },
+      "appearance": {
+        "clothing_or_material": "Interlinked steel chainmail hauberk with a woolen tunic, lightly scuffed.",
+        "hair": "Short blonde hair peeking from a chainmail coif.",
+        "accessories": [
+          "Blue woolen surcoat with regional heraldry",
+          "Leather sword belt",
+          "Iron arming sword in leather scabbard"
+        ],
+        "body_features": "Broad-shouldered with a medium-height frame.",
+        "position_descriptor": "Typically stands just right of the main hero as a supporting figure."
+      },
+      "state": {
+        "pose": "Lunging forward, sword drawn, body coiled for action amidst the disorder.",
+        "expression": null
+      }
+    },
+    {
+      "id": "gilded_chalice",
+      "physics_profile": {
+        "material": [
+          "rigid"
+        ],
+        "action_context": [
+          "interaction"
+        ]
+      },
+      "appearance": {
+        "clothing_or_material": "Bronze chalice overlaid with gold filigree, polished to a dull sheen.",
+        "hair": null,
+        "accessories": [],
+        "body_features": null,
+        "position_descriptor": "Held close to subjects at midframe."
+      },
+      "state": {
+        "pose": "Clutched tightly in a knight's grasp, reflecting the chaotic light.",
+        "expression": null
+      }
+    }
+  ]
+}
+Scene #3 OpticalAndTechnicalOption: {"style":"High-fidelity RAW photography with Raw surface detail and Filmic organic texture.","camera":{"angle":"low angle","distance":"full-length vertical capture","focus":"sharp focus throughout the vertical frame","lens":"35mm","fNumber":"f/11.0","ISO":800},"composition":"steep diagonal tension","effects":["subtle film grain","highly defined textures","hyper-detailed rendering","extreme visual fidelity","photorealistic textures","physically based rendering"]}
+Scene #3 Test sentence: A low angle full-length vertical capture captures 1202 Medieval French Knight Early 30s Male, with Short dark brown hair, slightly tousled, Athletic build, approximately 6ft tall, clad in Polished steel chainmail hauberk under a roughspun woolen surcoat with a matte finish, absorbing light, equipped with White linen surcoat with red cross emblem, Leather sword belt, and Steel longsword in leather scabbard who is Charging aggressively forward, sword raised high with muscles tensed, ready to strike. in the foreground, while in the midground a 1202 Medieval Norman Knight Late 20s Male, with Short blonde hair peeking from a chainmail coif, Broad-shouldered with a medium-height frame, clad in Interlinked steel chainmail hauberk with a woolen tunic, lightly scuffed, equipped with Blue woolen surcoat with regional heraldry, Leather sword belt, and Iron arming sword in leather scabbard is Lunging forward, sword drawn, body coiled for action amidst the disorder, while in the foreground a 1202 Medieval Byzantine Religious Metalwork Gilded Chalice, clad in Bronze chalice overlaid with gold filigree, polished to a dull sheen, equipped with   Clutched tightly in a knight's grasp, reflecting the chaotic light, the scene is set in A chaotic cathedral interior marked by shattered stained-glass windows, marble pillars, and scattered gold icons, depicting Medieval knights amid a chaotic cathedral interior, shattering stained glass and looting gold chalices. with a steep diagonal tension composition, where the atmosphere is A chaotic yet exhilarating atmosphere filled with the tension of betrayal and treasure, illuminated by Soft diffused natural daylight key with minimal fill bounce maintaining architectural shadow depth. and a color palette of (#A0A0A0, #FFD17A, #D8E0E5), rendered in High-fidelity RAW photography with Raw surface detail and Filmic organic texture, captured with a 35mm lens at f/11.0 for sharp focus throughout the vertical frame and ISO 800, featuring subtle film grain, highly defined textures, hyper-detailed rendering, extreme visual fidelity, photorealistic textures, and physically based rendering.
+
+Scene #4 raw generated content: {
+  "image_gen_prompt": {
+    "scene": "Medieval knights greedily scooping gold in a dimly lit treasury, neglecting holy relics and scrolls in the shadows.",
+    "subjects": [
+      {
+        "id": "knight_01",
+        "type": "human",
+        "description": "A French knight with short dark brown hair, wearing a polished steel chainmail hauberk under a roughspun woolen surcoat, athletic build, and a slight left offset position.",
+        "clothes": "Polished steel chainmail hauberk under a roughspun woolen surcoat, matte finish to absorb light.",
+        "accessories": [
+          "White linen surcoat with red cross emblem",
+          "Leather sword belt",
+          "Steel longsword in leather scabbard"
+        ],
+        "pose": "Kneeling with one hand extended, fingers curled around a handful of gold coins, eyes wide with avarice.",
+        "position": "foreground"
+      },
+      {
+        "id": "knight_02",
+        "type": "human",
+        "description": "A Norman knight with short blonde hair peeking from a chainmail coif, broad-shouldered and lightly scuffed chainmail, standing just to the right of the main hero.",
+        "clothes": "Interlinked steel chainmail hauberk with a woolen tunic, lightly scuffed.",
+        "accessories": [
+          "Blue woolen surcoat with regional heraldry",
+          "Leather sword belt",
+          "Iron arming sword in leather scabbard"
+        ],
+        "pose": "Standing with fists clenched and body tense, ready to defend their ill-gotten gains.",
+        "position": "midground"
+      },
+      {
+        "id": "wooden_treasure_chest",
+        "type": "object",
+        "description": "A heavy oak chest bound with blackened iron hoops, weathered by use, positioned at the subjects’ feet.",
+        "clothes": "Heavy oak chest bound with blackened iron hoops.",
+        "accessories": [],
+        "pose": "N/A",
+        "position": "foreground"
+      },
+      {
+        "id": "gold_ingot",
+        "type": "object",
+        "description": "A solid gold bar with smooth surface and slight rounded edges, held tightly in the knight's hand.",
+        "clothes": "Solid gold bar.",
+        "accessories": [],
+        "pose": "N/A",
+        "position": "midground"
+      },
+      {
+        "id": "faded_tapestry",
+        "type": "object",
+        "description": "A woolen tapestry with muted pigments and frayed edges, hanging in the background.",
+        "clothes": "Woolen tapestry with muted pigments.",
+        "accessories": [],
+        "pose": "N/A",
+        "position": "background"
+      }
+    ],
+    "color_palette": [
+      "#A0A0A0",
+      "#FFD17A",
+      "#4D5D5D"
+    ],
+    "lighting": "Soft diffused natural daylight key with minimal fill bounce maintaining architectural shadow depth",
+    "mood": "Tense atmosphere filled with greed and betrayal as knights forget their holy mission.",
+    "background": "Dimly lit treasury filled with gold coins and neglected religious artifacts."
+  },
+  "technical_intent": {
+    "angleIntent": "Default/Neutral",
+    "compositionIntent": "Depth",
+    "exposureIntent": "Cinematic/Moody"
+  },
+  "updated_entity_manifest_list": [
+    {
+      "id": "knight_01",
+      "physics_profile": {
+        "material": ["cloth", "rigid", "viscoelastic"],
+        "action_context": ["interaction", "combat"]
+      },
+      "appearance": {
+        "clothing_or_material": "Polished steel chainmail hauberk under a roughspun woolen surcoat with a matte finish.",
+        "hair": "Short dark brown hair, slightly tousled.",
+        "accessories": [
+          "White linen surcoat with red cross emblem",
+          "Leather sword belt",
+          "Steel longsword in leather scabbard"
+        ],
+        "body_features": "Athletic build, approximately 6ft tall.",
+        "position_descriptor": "Center-weighted with a slight left offset."
+      },
+      "state": {
+        "pose": "Kneeling with one hand extended, fingers curled around a handful of gold coins.",
+        "expression": "Eyes wide with avarice."
+      }
+    },
+    {
+      "id": "knight_02",
+      "physics_profile": {
+        "material": ["cloth", "rigid", "viscoelastic"],
+        "action_context": ["interaction", "combat"]
+      },
+      "appearance": {
+        "clothing_or_material": "Interlinked steel chainmail hauberk with a woolen tunic, lightly scuffed.",
+        "hair": "Short blonde hair peeking from a chainmail coif.",
+        "accessories": [
+          "Blue woolen surcoat with regional heraldry",
+          "Leather sword belt",
+          "Iron arming sword in leather scabbard"
+        ],
+        "body_features": "Broad-shouldered with a medium-height frame.",
+        "position_descriptor": "Typically stands just right of the main hero as a supporting figure."
+      },
+      "state": {
+        "pose": "Standing with fists clenched and body tense.",
+        "expression": "Ready to defend their ill-gotten gains."
+      }
+    },
+    {
+      "id": "wooden_treasure_chest",
+      "physics_profile": {
+        "material": ["rigid"],
+        "action_context": []
+      },
+      "appearance": {
+        "clothing_or_material": "Heavy oak chest bound with blackened iron hoops, weathered by use.",
+        "hair": "",
+        "accessories": [],
+        "body_features": "",
+        "position_descriptor": "Foreground anchor at subjects’ feet."
+      },
+      "state": {
+        "pose": "",
+        "expression": ""
+      }
+    },
+    {
+      "id": "gold_ingot",
+      "physics_profile": {
+        "material": ["rigid"],
+        "action_context": ["interaction"]
+      },
+      "appearance": {
+        "clothing_or_material": "Solid gold bar with smooth surface and slight rounded edges.",
+        "hair": "",
+        "accessories": [],
+        "body_features": "",
+        "position_descriptor": "Held in subject’s hand at midframe."
+      },
+      "state": {
+        "pose": "",
+        "expression": ""
+      }
+    },
+    {
+      "id": "faded_tapestry",
+      "physics_profile": {
+        "material": ["cloth"],
+        "action_context": []
+      },
+      "appearance": {
+        "clothing_or_material": "Woolen tapestry with muted pigments and frayed edges.",
+        "hair": "",
+        "accessories": [],
+        "body_features": "",
+        "position_descriptor": "Background anchor on side walls."
+      },
+      "state": {
+        "pose": "",
+        "expression": ""
+      }
+    }
+  ]
+}
+Scene #4 OpticalAndTechnicalOption: {"style":"High-fidelity RAW photography with Raw surface detail and Filmic organic texture.","camera":{"angle":"eye level","distance":"full-length vertical capture","focus":"sharp focus throughout the vertical frame","lens":"35mm","fNumber":"f/11.0","ISO":800},"composition":"low-to-high leading lines","effects":["subtle film grain","highly defined textures","hyper-detailed rendering","extreme visual fidelity","photorealistic textures","physically based rendering"]}
+Scene #4 Test sentence: An eye level full-length vertical capture captures 1202 Medieval French Knight Early 30s Male, with Short dark brown hair, slightly tousled, Athletic build, approximately 6ft tall, clad in Polished steel chainmail hauberk under a roughspun woolen surcoat with a matte finish, equipped with White linen surcoat with red cross emblem, Leather sword belt, and Steel longsword in leather scabbard who is Kneeling with one hand extended, fingers curled around a handful of gold coins, eyes wide with avarice. in the foreground, while in the midground a 1202 Medieval Norman Knight Late 20s Male, with Short blonde hair peeking from a chainmail coif, Broad-shouldered with a medium-height frame, clad in Interlinked steel chainmail hauberk with a woolen tunic, lightly scuffed, equipped with Blue woolen surcoat with regional heraldry, Leather sword belt, and Iron arming sword in leather scabbard is Standing with fists clenched and body tense, ready to defend their ill-gotten gains, while in the foreground a 1202 Medieval French Woodcraft Treasure Chest, clad in Heavy oak chest bound with blackened iron hoops, weathered by use, equipped with   N/A, while in the midground a 1202 Medieval Frankish Metalwork Gold Ingot, clad in Solid gold bar with smooth surface and slight rounded edges, equipped with   N/A, while in the background a 1202 Medieval Byzantine Textile Faded Tapestry, clad in Woolen tapestry with muted pigments and frayed edges, equipped with   N/A, the scene is set in Dimly lit treasury filled with gold coins and neglected religious artifacts, depicting Medieval knights greedily scooping gold in a dimly lit treasury, neglecting holy relics and scrolls in the shadows. with a low-to-high leading lines composition, where the atmosphere is Tense atmosphere filled with greed and betrayal as knights forget their holy mission, illuminated by Soft diffused natural daylight key with minimal fill bounce maintaining architectural shadow depth and a color palette of (#A0A0A0, #FFD17A, #4D5D5D), rendered in High-fidelity RAW photography with Raw surface detail and Filmic organic texture, captured with a 35mm lens at f/11.0 for sharp focus throughout the vertical frame and ISO 800, featuring subtle film grain, highly defined textures, hyper-detailed rendering, extreme visual fidelity, photorealistic textures, and physically based rendering.
+
+Scene #5 raw generated content: {
+  "image_gen_prompt": {
+    "scene": "Medieval Venetian doge overseeing a lively market scene filled with looted church artifacts under colorful banners.",
+    "subjects": [
+      {
+        "id": "doge_01",
+        "type": "human",
+        "description": "A stocky Venetian merchant wearing a richly brocaded velvet doublet with a silk hood, adorned with a gold chain of office and a pouch of silver coins.",
+        "clothes": "Brocaded velvet doublet with silk hood and gold trim, heavy drape.",
+        "accessories": [
+          "Gold chain of office",
+          "Pouch of silver coins"
+        ],
+        "pose": "Standing firmly, chest slightly puffed, surveying the market with a confident demeanor.",
+        "position": "midground"
+      },
+      {
+        "id": "doge_02",
+        "type": "human",
+        "description": "A tall, lean Venetian merchant clad in an ornate silk robe with intricate embroidery, accompanied by a silver signet ring and a leather coin pouch.",
+        "clothes": "Rich silk robe with ornate embroidery and weighted folds.",
+        "accessories": [
+          "Silver signet ring",
+          "Leather coin pouch"
+        ],
+        "pose": "Positioned slightly behind doge_01, leaning slightly forward with interest in the market.",
+        "position": "midground"
+      },
+      {
+        "id": "gilded_chalice",
+        "type": "object",
+        "description": "A stunning bronze chalice overlaid with intricate gold filigree, held close to the merchants as a symbol of wealth.",
+        "clothes": "Bronze chalice overlaid with gold filigree, polished to a dull sheen.",
+        "accessories": [],
+        "pose": "Held close at midframe as merchants display their spoils.",
+        "position": "midground"
+      },
+      {
+        "id": "marble_column",
+        "type": "object",
+        "description": "A majestic white marble column, a testament to Byzantine architecture, standing tall in the background.",
+        "clothes": "White marble with fluted detailing and a carved capital showing wear.",
+        "accessories": [],
+        "pose": "Anchoring the background with vertical prominence.",
+        "position": "background"
+      },
+      {
+        "id": "stained_glass_panel",
+        "type": "object",
+        "description": "A beautifully crafted stained glass panel, displaying muted colors, leaning against the architectural backdrop.",
+        "clothes": "Multicolored glass pieces held by lead cames with chipped edges.",
+        "accessories": [],
+        "pose": "Leaning against structural elements in the background.",
+        "position": "background"
+      },
+      {
+        "id": "altar_railing",
+        "type": "object",
+        "description": "A carved stone altar railing, showcasing vestigial fresco remnants, situated to the right.",
+        "clothes": "Carved stone railing with vestigial fresco remnants.",
+        "accessories": [],
+        "pose": "Midground anchor at the right side of the frame.",
+        "position": "midground"
+      },
+      {
+        "id": "fresco_fragment",
+        "type": "object",
+        "description": "A fragment of a fresco with muted pigments and frayed edges, narrating the past.",
+        "clothes": "Plaster fragment with muted pigment and chipped edges.",
+        "accessories": [],
+        "pose": "Background detail near altar areas.",
+        "position": "background"
+      }
+    ],
+    "color_palette": [
+      "#A0A0A0",
+      "#FFD17A",
+      "#A8B0B5"
+    ],
+    "lighting": "Soft diffused natural daylight key with minimal fill bounce maintaining architectural shadow depth",
+    "mood": "Exhilarating atmosphere of commerce mixed with the tension of betrayal.",
+    "background": "A bustling market filled with looted church artifacts, colorful banners fluttering in the air, and merchants cheering."
+  },
+  "technical_intent": {
+    "angleIntent": "Heroic/Scale",
+    "compositionIntent": "Balance",
+    "exposureIntent": "Cinematic/Moody"
+  },
+  "updated_entity_manifest_list": [
+    {
+      "id": "gilded_chalice",
+      "physics_profile": {
+        "material": ["rigid"],
+        "action_context": ["interaction"]
+      },
+      "appearance": {
+        "clothing_or_material": "Bronze chalice overlaid with gold filigree, polished to a dull sheen.",
+        "hair": null,
+        "accessories": [],
+        "body_features": null,
+        "position_descriptor": "Held close to subjects at midframe."
+      },
+      "state": {
+        "pose": "Suspended in an upright position, reflecting the market's wealth.",
+        "expression": null
+      }
+    },
+    {
+      "id": "doge_01",
+      "physics_profile": {
+        "material": ["cloth", "viscoelastic"],
+        "action_context": ["passive", "interaction"]
+      },
+      "appearance": {
+        "clothing_or_material": "Brocaded velvet doublet with silk hood and gold trim, heavy drape.",
+        "hair": "Short grey hair and trimmed beard.",
+        "accessories": [
+          "Gold chain of office",
+          "Pouch of silver coins"
+        ],
+        "body_features": "Stocky build with a slightly hunched posture.",
+        "position_descriptor": "Center-weighted with slight right offset."
+      },
+      "state": {
+        "pose": "Standing firmly, chest slightly puffed, surveying the market with a confident demeanor.",
+        "expression": null
+      }
+    },
+    {
+      "id": "doge_02",
+      "physics_profile": {
+        "material": ["cloth", "viscoelastic"],
+        "action_context": ["passive", "interaction"]
+      },
+      "appearance": {
+        "clothing_or_material": "Rich silk robe with ornate embroidery and weighted folds.",
+        "hair": "Slicked-back silver hair.",
+        "accessories": [
+          "Silver signet ring",
+          "Leather coin pouch"
+        ],
+        "body_features": "Tall and lean frame.",
+        "position_descriptor": "Typically adjacent to doge_01 at the left third of the frame."
+      },
+      "state": {
+        "pose": "Positioned slightly behind doge_01, leaning slightly forward with interest in the market.",
+        "expression": null
+      }
+    },
+    {
+      "id": "marble_column",
+      "physics_profile": {
+        "material": ["rigid"],
+        "action_context": []
+      },
+      "appearance": {
+        "clothing_or_material": "White marble with fluted detailing and a carved capital showing wear.",
+        "hair": null,
+        "accessories": [],
+        "body_features": null,
+        "position_descriptor": "Background anchor with vertical prominence."
+      },
+      "state": {
+        "pose": "Standing tall and unyielding in the background.",
+        "expression": null
+      }
+    },
+    {
+      "id": "stained_glass_panel",
+      "physics_profile": {
+        "material": ["brittle"],
+        "action_context": []
+      },
+      "appearance": {
+        "clothing_or_material": "Multicolored glass pieces held by lead cames with chipped edges.",
+        "hair": null,
+        "accessories": [],
+        "body_features": null,
+        "position_descriptor": "Background anchor leaning against structural elements."
+      },
+      "state": {
+        "pose": "Leaning against structural elements in the background.",
+        "expression": null
+      }
+    },
+    {
+      "id": "altar_railing",
+      "physics_profile": {
+        "material": ["rigid"],
+        "action_context": []
+      },
+      "appearance": {
+        "clothing_or_material": "Carved stone railing with vestigial fresco remnants.",
+        "hair": null,
+        "accessories": [],
+        "body_features": null,
+        "position_descriptor": "Midground anchor at the right side of the frame."
+      },
+      "state": {
+        "pose": "Anchoring the scene with its carved details.",
+        "expression": null
+      }
+    },
+    {
+      "id": "fresco_fragment",
+      "physics_profile": {
+        "material": ["brittle"],
+        "action_context": []
+      },
+      "appearance": {
+        "clothing_or_material": "Plaster fragment with muted pigment and chipped edges.",
+        "hair": null,
+        "accessories": [],
+        "body_features": null,
+        "position_descriptor": "Background detail near altar areas."
+      },
+      "state": {
+        "pose": "Background detail, hinting at past artistry.",
+        "expression": null
+      }
+    }
+  ]
+}
+Scene #5 OpticalAndTechnicalOption: {"style":"High-fidelity RAW photography with Raw surface detail and Filmic organic texture.","camera":{"angle":"low angle","distance":"full-length vertical capture","focus":"sharp focus throughout the vertical frame","lens":"35mm","fNumber":"f/11.0","ISO":800},"composition":"vertical rule of thirds","effects":["subtle film grain","highly defined textures","hyper-detailed rendering","extreme visual fidelity","photorealistic textures","physically based rendering"]}
+Scene #5 Test sentence: A low angle full-length vertical capture captures 1202 Medieval Venetian Merchant Late 40s Male, with Short grey hair and trimmed beard, Stocky build with a slightly hunched posture, clad in Brocaded velvet doublet with silk hood and gold trim, heavy drape, equipped with Gold chain of office, and Pouch of silver coins who is Standing firmly, chest slightly puffed, surveying the market with a confident demeanor. in the midground, while in the midground a 1202 Medieval Venetian Merchant Early 50s Male, with Slicked-back silver hair, Tall and lean frame, clad in Rich silk robe with ornate embroidery and weighted folds, equipped with Silver signet ring, and Leather coin pouch is Positioned slightly behind doge_01, leaning slightly forward with interest in the market, while in the midground a 1202 Medieval Byzantine Religious Metalwork Gilded Chalice, clad in Bronze chalice overlaid with gold filigree, polished to a dull sheen, equipped with   Held close at midframe as merchants display their spoils, while in the background a 1202 Medieval Byzantine Architecture Marble Column, clad in White marble with fluted detailing and a carved capital showing wear, equipped with   Anchoring the background with vertical prominence, while in the background a 1202 Medieval Byzantine Glasswork Stained Glass Panel, clad in Multicolored glass pieces held by lead cames with chipped edges, equipped with   Leaning against structural elements in the background, while in the midground a 1202 Medieval Byzantine Church Stonework Altar Railing, clad in Carved stone railing with vestigial fresco remnants, equipped with   Midground anchor at the right side of the frame, while in the background a 1202 Medieval Byzantine Wall Painting Fresco Fragment, clad in Plaster fragment with muted pigment and chipped edges, equipped with   Background detail near altar areas, the scene is set in A bustling market filled with looted church artifacts, colorful banners fluttering in the air, and merchants cheering, depicting Medieval Venetian doge overseeing a lively market scene filled with looted church artifacts under colorful banners. with a vertical rule of thirds composition, where the atmosphere is Exhilarating atmosphere of commerce mixed with the tension of betrayal, illuminated by Soft diffused natural daylight key with minimal fill bounce maintaining architectural shadow depth and a color palette of (#A0A0A0, #FFD17A, #A8B0B5), rendered in High-fidelity RAW photography with Raw surface detail and Filmic organic texture, captured with a 35mm lens at f/11.0 for sharp focus throughout the vertical frame and ISO 800, featuring subtle film grain, highly defined textures, hyper-detailed rendering, extreme visual fidelity, photorealistic textures, and physically based rendering.
+
+Scene #6 raw generated content: {
+  "image_gen_prompt": {
+    "scene": "Medieval knights parading in a ruined palace courtyard, smugly displaying their stolen Byzantine jewelry.",
+    "subjects": [
+      {
+        "id": "knight_01",
+        "type": "human",
+        "description": "A French knight with an athletic build, wearing a polished steel chainmail hauberk beneath a roughspun woolen surcoat emblazoned with a red cross, stands center-weighted, displaying a slight left offset.",
+        "clothes": "Polished steel chainmail hauberk under a roughspun woolen surcoat with a matte finish to absorb light.",
+        "accessories": [
+          "White linen surcoat with red cross emblem",
+          "Leather sword belt",
+          "Steel longsword in leather scabbard"
+        ],
+        "pose": "Standing proudly with a slight leftward lean, chest out and sword at side, displaying stolen jewelry.",
+        "position": "foreground"
+      },
+      {
+        "id": "knight_02",
+        "type": "human",
+        "description": "A Norman knight with a broad-shouldered frame and short blonde hair peeking from a chainmail coif, stands just right of the main hero, showcasing his blue woolen surcoat with regional heraldry.",
+        "clothes": "Interlinked steel chainmail hauberk with a woolen tunic, lightly scuffed.",
+        "accessories": [
+          "Blue woolen surcoat with regional heraldry",
+          "Leather sword belt",
+          "Iron arming sword in leather scabbard"
+        ],
+        "pose": "Standing confidently, arms crossed, with a smug grin, displaying his spoils.",
+        "position": "midground"
+      },
+      {
+        "id": "emperor_01",
+        "type": "human",
+        "description": "A middle-aged Byzantine emperor with curly black hair threaded with grey, exhibits a regal posture, wearing a purple silk tunic with gold embroidery.",
+        "clothes": "Purple silk tunic with gold embroidery and a subtle sheen.",
+        "accessories": [
+          "Gold diadem",
+          "Gem-encrusted sceptre"
+        ],
+        "pose": "Pacing anxiously with a distressed expression, hands wringing together as he observes the knights.",
+        "position": "background"
+      }
+    ],
+    "color_palette": [
+      "#A0A0A0",
+      "#FFD17A",
+      "#4D5D5D"
+    ],
+    "lighting": "Soft diffused natural daylight key with minimal fill bounce maintaining architectural shadow depth.",
+    "mood": "Tense atmosphere with a sense of chaotic pride and betrayal.",
+    "background": "Ruined palace courtyard with polished white marble tiles, a toppled throne nearby, and scattered jewelry reflecting the chaos."
+  },
+  "technical_intent": {
+    "angleIntent": "Surveillance/Map-view",
+    "compositionIntent": "Action",
+    "exposureIntent": "Cinematic/Moody"
+  },
+  "updated_entity_manifest_list": [
+    {
+      "id": "knight_01",
+      "physics_profile": {
+        "material": ["cloth", "viscoelastic", "rigid"],
+        "action_context": ["locomotion", "combat"]
+      },
+      "appearance": {
+        "clothing_or_material": "Polished steel chainmail hauberk under a roughspun woolen surcoat with a matte finish to absorb light.",
+        "hair": "Short dark brown hair, slightly tousled.",
+        "accessories": [
+          "White linen surcoat with red cross emblem",
+          "Leather sword belt",
+          "Steel longsword in leather scabbard"
+        ],
+        "body_features": "Athletic build, approximately 6ft tall.",
+        "position_descriptor": "Usually center-weighted with a slight left offset."
+      },
+      "state": {
+        "pose": "Standing proudly with a slight leftward lean, chest out and sword at side.",
+        "expression": "Smug pride mixed with tension."
+      }
+    },
+    {
+      "id": "knight_02",
+      "physics_profile": {
+        "material": ["cloth", "viscoelastic", "rigid"],
+        "action_context": ["locomotion", "combat"]
+      },
+      "appearance": {
+        "clothing_or_material": "Interlinked steel chainmail hauberk with a woolen tunic, lightly scuffed.",
+        "hair": "Short blonde hair peeking from a chainmail coif.",
+        "accessories": [
+          "Blue woolen surcoat with regional heraldry",
+          "Leather sword belt",
+          "Iron arming sword in leather scabbard"
+        ],
+        "body_features": "Broad-shouldered with a medium-height frame.",
+        "position_descriptor": "Typically stands just right of the main hero as a supporting figure."
+      },
+      "state": {
+        "pose": "Standing confidently, arms crossed.",
+        "expression": "Smug grin."
+      }
+    },
+    {
+      "id": "emperor_01",
+      "physics_profile": {
+        "material": ["cloth", "viscoelastic"],
+        "action_context": ["passive"]
+      },
+      "appearance": {
+        "clothing_or_material": "Purple silk tunic with gold embroidery and a subtle sheen.",
+        "hair": "Curly black hair threaded with grey.",
+        "accessories": [
+          "Gold diadem",
+          "Gem-encrusted sceptre"
+        ],
+        "body_features": "Middle-aged build with regal posture.",
+        "position_descriptor": "Center-weighted with a slight upper-frame placement."
+      },
+      "state": {
+        "pose": "Pacing anxiously.",
+        "expression": "Distressed."
+      }
+    },
+    {
+      "id": "jeweled_necklace",
+      "physics_profile": {
+        "material": ["brittle"],
+        "action_context": []
+      },
+      "appearance": {
+        "clothing_or_material": "Delicate gold chain set with alternating sapphires and garnets.",
+        "hair": "",
+        "accessories": [],
+        "body_features": "",
+        "position_descriptor": "Foreground prop held at chest height."
+      },
+      "state": {
+        "pose": "",
+        "expression": ""
+      }
+    },
+    {
+      "id": "jeweled_brooch",
+      "physics_profile": {
+        "material": ["brittle"],
+        "action_context": []
+      },
+      "appearance": {
+        "clothing_or_material": "Brass brooch studded with polished emerald cabochons.",
+        "hair": "",
+        "accessories": [],
+        "body_features": "",
+        "position_descriptor": "Small foreground detail near belt line."
+      },
+      "state": {
+        "pose": "",
+        "expression": ""
+      }
+    },
+    {
+      "id": "marble_dais",
+      "physics_profile": {
+        "material": ["rigid"],
+        "action_context": []
+      },
+      "appearance": {
+        "clothing_or_material": "Polished white marble tiles with subtle veining.",
+        "hair": "",
+        "accessories": [],
+        "body_features": "",
+        "position_descriptor": "Center-frame platform anchor."
+      },
+      "state": {
+        "pose": "",
+        "expression": ""
+      }
+    },
+    {
+      "id": "toppled_throne",
+      "physics_profile": {
+        "material": ["rigid"],
+        "action_context": []
+      },
+      "appearance": {
+        "clothing_or_material": "Ornate wooden throne fallen on its side with torn velvet cushion.",
+        "hair": "",
+        "accessories": [],
+        "body_features": "",
+        "position_descriptor": "Foreground debris near the dais."
+      },
+      "state": {
+        "pose": "",
+        "expression": ""
+      }
+    },
+    {
+      "id": "gemstone_chalice",
+      "physics_profile": {
+        "material": ["brittle"],
+        "action_context": []
+      },
+      "appearance": {
+        "clothing_or_material": "Silver chalice studded with rubies and sapphires, reflective surface.",
+        "hair": "",
+        "accessories": [],
+        "body_features": "",
+        "position_descriptor": "Placed near the toppled throne."
+      },
+      "state": {
+        "pose": "",
+        "expression": ""
+      }
+    }
+  ]
+}
+Scene #6 OpticalAndTechnicalOption: {"style":"High-fidelity RAW photography with Raw surface detail and Filmic organic texture.","camera":{"angle":"high angle shot looking down","distance":"full-length vertical capture","focus":"sharp focus throughout the vertical frame","lens":"35mm","fNumber":"f/11.0","ISO":800},"composition":"steep diagonal tension","effects":["subtle film grain","highly defined textures","hyper-detailed rendering","extreme visual fidelity","photorealistic textures","physically based rendering"]}
+Scene #6 Test sentence: A high angle shot looking down full-length vertical capture captures 1202 Medieval French Knight Early 30s Male, with Short dark brown hair, slightly tousled, Athletic build, approximately 6ft tall, clad in Polished steel chainmail hauberk under a roughspun woolen surcoat with a matte finish to absorb light, equipped with White linen surcoat with red cross emblem, Leather sword belt, and Steel longsword in leather scabbard who is Standing proudly with a slight leftward lean, chest out and sword at side, displaying stolen jewelry. in the foreground, while in the midground a 1202 Medieval Norman Knight Late 20s Male, with Short blonde hair peeking from a chainmail coif, Broad-shouldered with a medium-height frame, clad in Interlinked steel chainmail hauberk with a woolen tunic, lightly scuffed, equipped with Blue woolen surcoat with regional heraldry, Leather sword belt, and Iron arming sword in leather scabbard is Standing confidently, arms crossed, with a smug grin, displaying his spoils, while in the background a 1202 Medieval Byzantine Emperor 40s Male, with Curly black hair threaded with grey, Middle-aged build with regal posture, clad in Purple silk tunic with gold embroidery and a subtle sheen, equipped with Gold diadem, and Gem-encrusted sceptre is Pacing anxiously with a distressed expression, hands wringing together as he observes the knights, the scene is set in Ruined palace courtyard with polished white marble tiles, a toppled throne nearby, and scattered jewelry reflecting the chaos, depicting Medieval knights parading in a ruined palace courtyard, smugly displaying their stolen Byzantine jewelry. with a steep diagonal tension composition, where the atmosphere is Tense atmosphere with a sense of chaotic pride and betrayal, illuminated by Soft diffused natural daylight key with minimal fill bounce maintaining architectural shadow depth. and a color palette of (#A0A0A0, #FFD17A, #4D5D5D), rendered in High-fidelity RAW photography with Raw surface detail and Filmic organic texture, captured with a 35mm lens at f/11.0 for sharp focus throughout the vertical frame and ISO 800, featuring subtle film grain, highly defined textures, hyper-detailed rendering, extreme visual fidelity, photorealistic textures, and physically based rendering.
+
+Scene #7 raw generated content: {
+  "image_gen_prompt": {
+    "scene": "Medieval Pope passionately expressing betrayal at an ornate pulpit under colored light filtering through stained glass",
+    "subjects": [
+      {
+        "id": "pope_gregory",
+        "type": "human",
+        "description": "A lean Italian Pope wearing a crimson woolen cassock with gold thread trim, arms raised in frustration.",
+        "clothes": "Rich crimson woolen cassock with broad sleeves and intricate gold thread detailing, presenting a raw texture under natural lighting.",
+        "accessories": [
+          "Silver pectoral cross",
+          "Wooden rosary beads"
+        ],
+        "pose": "Arms raised in anger, facepalming in despair, reflecting a moment of deep frustration.",
+        "position": "foreground"
+      },
+      {
+        "id": "wooden_pulpit",
+        "type": "object",
+        "description": "A dark oak pulpit carved with biblical reliefs, serving as the focal point of the scene.",
+        "clothes": "Dark oak pulpit with a polished finish, showcasing intricate carved reliefs that highlight craftsmanship.",
+        "accessories": [],
+        "pose": "Stationary, anchoring the scene at chest height.",
+        "position": "foreground"
+      }
+    ],
+    "color_palette": [
+      "#A0A0A0",
+      "#FFD17A",
+      "#D8E0E5"
+    ],
+    "lighting": "Soft diffused natural daylight key with architectural shadows enhancing the dramatic effect of the pulpit and Pope.",
+    "mood": "Intense and dramatic atmosphere filled with a sense of betrayal and urgency.",
+    "background": "Dramatic church interior with stained glass windows casting colored light across the ornate marble architecture."
+  },
+  "technical_intent": {
+    "angleIntent": "Heroic/Scale",
+    "compositionIntent": "Balance",
+    "exposureIntent": "Cinematic/Moody"
+  },
+  "updated_entity_manifest_list": [
+    {
+      "id": "pope_gregory",
+      "physics_profile": {
+        "material": [
+          "cloth",
+          "rigid"
+        ],
+        "action_context": [
+          "interaction"
+        ]
+      },
+      "appearance": {
+        "clothing_or_material": "Crimson woolen cassock with broad sleeves and gold thread trim",
+        "hair": "Short white hair with shaved crown (tonsure)",
+        "accessories": [
+          "Silver pectoral cross",
+          "Wooden rosary beads"
+        ],
+        "body_features": "Lean build with stooped shoulders",
+        "position_descriptor": "Center-weighted with a direct gaze at the camera"
+      },
+      "state": {
+        "pose": "Arms raised in anger, facepalming in despair",
+        "expression": "Frustration and betrayal visible on his face"
+      }
+    },
+    {
+      "id": "wooden_pulpit",
+      "physics_profile": {
+        "material": [
+          "rigid"
+        ],
+        "action_context": [
+          "passive"
+        ]
+      },
+      "appearance": {
+        "clothing_or_material": "Dark oak pulpit carved with biblical reliefs and polished finish",
+        "hair": null,
+        "accessories": [],
+        "body_features": null,
+        "position_descriptor": "Foreground anchor at the speaker’s chest height"
+      },
+      "state": {
+        "pose": "Stationary and anchored in the scene",
+        "expression": null
+      }
+    }
+  ]
+}
+Scene #7 OpticalAndTechnicalOption: {"style":"High-fidelity RAW photography with Raw surface detail and Filmic organic texture.","camera":{"angle":"low angle","distance":"full-length vertical capture","focus":"sharp focus throughout the vertical frame","lens":"35mm","fNumber":"f/11.0","ISO":800},"composition":"vertical rule of thirds","effects":["subtle film grain","highly defined textures","hyper-detailed rendering","extreme visual fidelity","photorealistic textures","physically based rendering"]}
+Scene #7 Test sentence: A low angle full-length vertical capture captures 1202 Medieval Italian Clergy (Pope) 60s Male, with Short white hair with shaved crown (tonsure), Lean build with stooped shoulders, clad in Crimson woolen cassock with broad sleeves and gold thread trim, equipped with Silver pectoral cross, and Wooden rosary beads who is Arms raised in anger, facepalming in despair, reflecting a moment of deep frustration. in the foreground, while in the foreground a 1202 Medieval Western European Woodwork Wooden Pulpit, clad in Dark oak pulpit carved with biblical reliefs and polished finish, equipped with   Stationary, anchoring the scene at chest height, the scene is set in Dramatic church interior with stained glass windows casting colored light across the ornate marble architecture, depicting Medieval Pope passionately expressing betrayal at an ornate pulpit under colored light filtering through stained glass with a vertical rule of thirds composition, where the atmosphere is Intense and dramatic atmosphere filled with a sense of betrayal and urgency, illuminated by Soft diffused natural daylight key with architectural shadows enhancing the dramatic effect of the pulpit and Pope. and a color palette of (#A0A0A0, #FFD17A, #D8E0E5), rendered in High-fidelity RAW photography with Raw surface detail and Filmic organic texture, captured with a 35mm lens at f/11.0 for sharp focus throughout the vertical frame and ISO 800, featuring subtle film grain, highly defined textures, hyper-detailed rendering, extreme visual fidelity, photorealistic textures, and physically based rendering.
+
+Scene #8 raw generated content: {
+  "image_gen_prompt": {
+    "scene": "Medieval Byzantine coastal harbor with a ruined urban silhouette at dusk, featuring crumbling edifices and weathered stone structures bathed in soft diffused natural daylight.",
+    "subjects": [
+      {
+        "id": "anchor_1",
+        "type": "urban_ruins",
+        "description": "A silent, weathered Byzantine ruin with intricate stone carvings and faded frescoes, enveloped in shadows.",
+        "clothes": "",
+        "accessories": [],
+        "pose": "standing resolutely against the dusk sky",
+        "position": "midground"
+      }
+    ],
+    "color_palette": [
+      "#A0A0A0",
+      "#C28B5B",
+      "#D8E0E5"
+    ],
+    "lighting": "Soft diffused natural daylight key with minimal fill bounce maintaining architectural shadow depth.",
+    "mood": "Saturated earthy warm-tones with subtle desaturation and deep contrast, evoking a sense of historical weight and solemnity."
+ ,
+  "background": "Faded illustrations of sacked cities on a weathered history tome, with the dusk sky casting a muted glow over the scene."
+  }
+  ,
+  "technical_intent": {
+    "angleIntent": "Surveillance/Map-view",
+    "compositionIntent": "Balance",
+    "exposureIntent": "Cinematic/Moody"
+  }
+short-real-server  |
+  ,
+  "updated_entity_manifest_list": []
+}
+Scene #8 OpticalAndTechnicalOption: {"style":"High-fidelity RAW photography with Raw surface detail and Filmic organic texture.","camera":{"angle":"high angle shot looking down","distance":"full-length vertical capture","focus":"sharp focus throughout the vertical frame","lens":"35mm","fNumber":"f/11.0","ISO":800},"composition":"vertical rule of thirds","effects":["subtle film grain","highly defined textures","hyper-detailed rendering","extreme visual fidelity","photorealistic textures","physically based rendering"]}
+Scene #8 Test sentence: A silent, weathered Byzantine ruin with intricate stone carvings and faded frescoes, enveloped in shadows, the scene is set in Faded illustrations of sacked cities on a weathered history tome, with the dusk sky casting a muted glow over the scene, depicting Medieval Byzantine coastal harbor with a ruined urban silhouette at dusk, featuring crumbling edifices and weathered stone structures bathed in soft diffused natural daylight. with a vertical rule of thirds composition, where the atmosphere is Saturated earthy warm-tones with subtle desaturation and deep contrast, evoking a sense of historical weight and solemnity, illuminated by Soft diffused natural daylight key with minimal fill bounce maintaining architectural shadow depth. and a color palette of (#A0A0A0, #C28B5B, #D8E0E5), rendered in High-fidelity RAW photography with Raw surface detail and Filmic organic texture, captured with a 35mm lens at f/11.0 for sharp focus throughout the vertical frame and ISO 800, featuring subtle film grain, highly defined textures, hyper-detailed rendering, extreme visual fidelity, photorealistic textures, and physically based rendering.

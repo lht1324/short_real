@@ -80,10 +80,14 @@ export const videoGenerationTasksServerAPI = {
     // PATCH - 작업 데이터 업데이트
     async patchVideoGenerationTask(taskId: string, videoGenerationTask: Partial<VideoGenerationTask>): Promise<VideoGenerationTask> {
         const supabase = createSupabaseServiceRoleClient();
+        const currentDateString = new Date().toISOString();
 
         const { data, error } = await supabase
             .from('video_generation_tasks')
-            .update(videoGenerationTask)
+            .update({
+                ...videoGenerationTask,
+                updated_at: currentDateString,
+            })
             .eq('id', taskId)
             .select()
             .single();
@@ -187,27 +191,4 @@ export const videoGenerationTasksServerAPI = {
             return false;
         }
     },
-
-    // GET - 진행중인 작업 목록 조회
-    async getActiveTasks(userId?: string): Promise<VideoGenerationTask[]> {
-        const supabase = await createSupabaseServer("readOnly");
-        
-        let query = supabase
-            .from('video_generation_tasks')
-            .select('*')
-            .in('status', ['pending', 'in_progress'])
-            .order('created_at', { ascending: false });
-
-        if (userId) {
-            query = query.eq('user_id', userId);
-        }
-
-        const { data, error } = await query;
-
-        if (error) {
-            throw new Error(`Failed to get active tasks: ${error.message}`);
-        }
-
-        return data || [];
-    }
 }

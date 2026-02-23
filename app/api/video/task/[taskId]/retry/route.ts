@@ -1,7 +1,15 @@
-import {NextRequest, NextResponse} from "next/server";
+import {NextRequest} from "next/server";
 import {videoGenerationTasksServerAPI} from "@/api/server/videoGenerationTasksServerAPI";
 import {VideoGenerationTaskStatus} from "@/api/types/supabase/VideoGenerationTasks";
 import {getNextBaseResponse} from "@/utils/getNextBaseResponse";
+import {getIsValidRequestC2S} from "@/utils/getIsValidRequest";
+import {internalFireAndForgetFetch} from "@/utils/internalFetch";
+import {usersServerAPI} from "@/api/server/usersServerAPI";
+import {
+    RETRY_CREDIT_MUSIC_GENERATION,
+    RETRY_CREDIT_PER_SCENE,
+    RETRY_CREDIT_PER_VIDEO_DURATION
+} from "@/lib/ADDITIONAL_CREDIT_AMOUNT";
 
 interface RetryPathData {
     path: string;
@@ -13,6 +21,19 @@ export async function POST(
     request: NextRequest,
     { params }: { params: Promise<{ taskId: string }> }
 ) {
+    const {
+        user,
+        isValidRequest,
+    } = await getIsValidRequestC2S();
+
+    if (!isValidRequest || !user) {
+        return getNextBaseResponse({
+            success: false,
+            status: 401,
+            error: "Unauthorized request."
+        });
+    }
+
     try {
         const { taskId } = await params;
 
@@ -37,6 +58,53 @@ export async function POST(
             });
         }
 
+        // 크레딧 차감 로직
+        let requiredCredits = 0;
+
+        switch (taskStatus) {
+            case VideoGenerationTaskStatus.GENERATING_IMAGE_PROMPT: {
+                const sceneCount = videoGenerationTask.scene_breakdown_list.length;
+
+                // 이미지 재생성 비용: 씬 개수 * 씬당 비용
+                requiredCredits = sceneCount * RETRY_CREDIT_PER_SCENE;
+                break;
+            }
+            case VideoGenerationTaskStatus.GENERATING_VIDEO_PROMPT:
+            case VideoGenerationTaskStatus.GENERATING_VIDEO: {
+                const videoDuration = videoGenerationTask.scene_breakdown_list.reduce((acc, sceneData) => {
+                    return acc + sceneData.sceneDuration;
+                }, 0);
+
+                // 비디오 재생성 비용: 영상 길이(초, 올림) * 초당 비용
+                requiredCredits = Math.ceil(videoDuration) * RETRY_CREDIT_PER_VIDEO_DURATION;
+                break;
+            }
+            case VideoGenerationTaskStatus.COMPOSING_MUSIC:
+                // 음악 재생성 비용: 고정 비용
+                requiredCredits = RETRY_CREDIT_MUSIC_GENERATION;
+                break;
+            default:
+                // 그 외 상태는 무료 재시도 (또는 정책에 따라 추가)
+                break;
+        }
+
+        if (requiredCredits > 0) {
+            // 인증으로 넘어오는 user 객체가 users 테이블 객체과 같은 값 갖는지 확인
+            const currentUser = await usersServerAPI.getUserByUserId(user.id);
+            const currentCredits = currentUser?.credit_count ?? 0;
+
+            if (currentCredits < requiredCredits) {
+                return getNextBaseResponse({
+                    status: 402, // Payment Required
+                    success: false,
+                    message: `Insufficient credits. Required: ${requiredCredits}, Available: ${currentCredits}`
+                });
+            }
+
+            // 크레딧 차감 (음수 값 전달)
+            await usersServerAPI.patchUserCreditCountByUserId(user.id, -requiredCredits);
+        }
+
         const getRetryPathAndRestType = (): RetryPathData | null => {
             switch (taskStatus) {
                 case VideoGenerationTaskStatus.GENERATING_MASTER_STYLE_PROMPT: {
@@ -53,6 +121,7 @@ export async function POST(
                         body: undefined,
                     }
                 }
+                // 보통 프롬프트가 잘못 돼서 모델이 이상해지니 프롬프트 생성부터 다시 시작
                 case VideoGenerationTaskStatus.GENERATING_VIDEO_PROMPT:
                 case VideoGenerationTaskStatus.GENERATING_VIDEO: {
                     return {
@@ -63,14 +132,14 @@ export async function POST(
                 }
                 case VideoGenerationTaskStatus.STITCHING_VIDEOS: {
                     return {
-                        path: `/api/video/merge?taskId=${taskId}`,
+                        path: `/api/video/merge`,
                         restType: 'POST',
                         body: undefined,
                     };
                 }
                 case VideoGenerationTaskStatus.COMPOSING_MUSIC: {
                     return {
-                        path: `/api/music?taskId=${taskId}`,
+                        path: `/api/music`,
                         restType: 'POST',
                         body: undefined,
                     };
@@ -82,7 +151,7 @@ export async function POST(
                     }
 
                     return {
-                        path: `/api/video/merge/final?taskId=${taskId}`,
+                        path: `/api/video/merge/final`,
                         restType: 'POST',
                         body: undefined
                     };
@@ -99,7 +168,7 @@ export async function POST(
             return getNextBaseResponse({
                 status: 500,
                 success: false,
-                message: `Cannot retry from status: ${taskStatus}`
+                error: `Cannot retry from status: ${taskStatus}`
             });
         }
 
@@ -123,16 +192,13 @@ export async function POST(
         });
 
         // Fire and Forget으로 재시작 엔드포인트 호출
-        const baseUrl = process.env.BASE_URL || 'http://localhost:3000';
-        fetch(`${baseUrl}${retryPathData.path}`, {
-            method: retryPathData.restType,
-            headers: {
-                'Content-Type': 'application/json',
+        internalFireAndForgetFetch(
+            `${process.env.BASE_URL}${retryPathData.path}?taskId=${taskId}&isRetry=true`,
+            {
+                method: 'POST',
             },
-            body: retryPathData.body ? JSON.stringify(retryPathData.body) : undefined
-        }).catch(error => {
-            console.error('Fire and forget fetch error:', error);
-        });
+            retryPathData.body ?? undefined,
+        )
 
         // 즉시 응답
         return getNextBaseResponse({

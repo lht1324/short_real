@@ -1,14 +1,23 @@
-import {NextRequest, NextResponse} from "next/server";
+import {NextRequest} from "next/server";
 import {createSupabaseServiceRoleClient} from "@/lib/supabaseServiceRole";
 import {videoGenerationTasksServerAPI} from "@/api/server/videoGenerationTasksServerAPI";
 import {taskCheckAndCleanupIfCancelled} from "@/utils/taskCheckAndCleanupIfCancelled";
 import {SceneData, VideoGenerationTaskStatus} from "@/api/types/supabase/VideoGenerationTasks";
-import {findOptimalVideoParameters} from "@/utils/videoUtils";
-import {openAIServerAPI} from "@/api/server/openAIServerAPI";
+import {llmServerAPI} from "@/api/server/llmServerAPI";
 import {videoServerAPI} from "@/api/server/videoServerAPI";
 import {getNextBaseResponse} from "@/utils/getNextBaseResponse";
+import {delay} from "@/utils/asyncUtils";
+import {getIsValidRequestS2S} from "@/utils/getIsValidRequest";
 
 export async function POST(request: NextRequest) {
+    if (!getIsValidRequestS2S(request)) {
+        return getNextBaseResponse({
+            success: false,
+            status: 401,
+            error: 'Unauthorized internal request',
+        });
+    }
+
     const supabase = createSupabaseServiceRoleClient();
 
     // URL에서 파라미터 추출
@@ -64,20 +73,9 @@ export async function POST(request: NextRequest) {
             // ArrayBuffer를 Base64로 인코딩
             const imageBase64 = Buffer.from(imageArrayBuffer).toString('base64');
 
-            const {
-                num_frames: numFrames,
-                frames_per_second: framesPerSeconds,
-                resulting_duration: videoActualDuration,
-            } = findOptimalVideoParameters(sceneData.sceneDuration);
-
-            const postVideoGenPromptResult = await openAIServerAPI.postVideoGenPrompt(
-                sceneData.imageGenPrompt as string,
-                sceneData.narration,
+            const postVideoGenPromptResult = await llmServerAPI.postVideoGenPrompt(
+                sceneData.sceneNumber,
                 imageBase64,
-                numFrames,
-                framesPerSeconds,
-                videoActualDuration,
-                sceneData.sceneDuration,
             );
 
             if (!postVideoGenPromptResult.success || !postVideoGenPromptResult.videoGenPrompt) {
@@ -91,35 +89,70 @@ export async function POST(request: NextRequest) {
         });
         const sceneDataWithVideoGenPromptList = await Promise.all(sceneDataWithVideoGenPromptPromiseList);
 
+        // // TEST!!
+        // await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
+        //
+        // return getNextBaseResponse({
+        //     success: true,
+        //     status: 200,
+        //     message: "Generating VideoGenPrompt Test finished."
+        // });
 
-        const patchVideoGenerationTaskStatusResult = await videoGenerationTasksServerAPI.patchVideoGenerationTaskStatus(taskId, VideoGenerationTaskStatus.GENERATING_VIDEO);
+        const patchVideoGenerationTaskResult = await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, {
+            status: VideoGenerationTaskStatus.GENERATING_VIDEO,
+            scene_breakdown_list: sceneDataWithVideoGenPromptList,
+        })
 
-        const checkResultFirst = await taskCheckAndCleanupIfCancelled(patchVideoGenerationTaskStatusResult);
+        const checkResultFirst = await taskCheckAndCleanupIfCancelled(patchVideoGenerationTaskResult);
 
         if (checkResultFirst) {
             return checkResultFirst;
         }
 
+        const finalSceneDataList: SceneData[] = [];
 
-        const finalSceneDataList: SceneData[] = await Promise.all(
-            sceneDataWithVideoGenPromptList.map(async (sceneData): Promise<SceneData> => {
-                const requestId = await videoServerAPI.postVideo(
-                    sceneData,
-                    taskId,
-                );
+        for (const sceneData of sceneDataWithVideoGenPromptList) {
+            const requestId = await videoServerAPI.postVideo(
+                sceneData,
+                taskId,
+            );
 
-                return {
-                    ...sceneData,
-                    requestId: requestId,
-                }
+            const { error } = await supabase.rpc('update_scene_request_id', {
+                target_task_id: taskId,
+                target_scene_number: sceneData.sceneNumber,
+                new_request_id: requestId,
             })
-        );
 
-        const patchVideoGenerationTaskResult = await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, {
-            scene_breakdown_list: finalSceneDataList,
-        });
+            if (error) {
+                console.error(`Scene #${sceneData.sceneNumber} requestId update error: `, error);
+                throw Error(`Updating requestId of Scene #${sceneData.sceneNumber} is failed.`)
+            }
 
-        const checkResultSecond = await taskCheckAndCleanupIfCancelled(patchVideoGenerationTaskResult);
+            finalSceneDataList.push({
+                ...sceneData,
+                requestId: requestId,
+            })
+
+            await delay(200);
+        }
+
+        // const patchVideoGenerationTaskResult = await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, {
+        //     scene_breakdown_list: finalSceneDataList,
+        // });
+
+        const patchedVideoGenerationTaskResult = await videoGenerationTasksServerAPI.getVideoGenerationTaskById(taskId);
+
+        if (!patchedVideoGenerationTaskResult) {
+            await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
+
+            return getNextBaseResponse({
+                success: false,
+                status: 404,
+                error: 'Video Generation Task not found.'
+            });
+        }
+
+        const checkResultSecond = await taskCheckAndCleanupIfCancelled(patchedVideoGenerationTaskResult);
 
         if (checkResultSecond) {
             return checkResultSecond;
@@ -128,7 +161,7 @@ export async function POST(request: NextRequest) {
         return getNextBaseResponse({
             success: true,
             status: 200,
-            message: `${finalSceneDataList.length} scene's video generation requests completed. Task ID: ${patchVideoGenerationTaskResult.id}`
+            message: `${finalSceneDataList.length} scene's video generation requests completed. Task ID: ${patchedVideoGenerationTaskResult.id}`
         });
     } catch (error) {
         console.error(error);

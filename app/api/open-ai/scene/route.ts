@@ -1,10 +1,9 @@
 import {NextRequest, NextResponse} from 'next/server';
-import {openAIServerAPI} from '@/api/server/openAIServerAPI';
+import {llmServerAPI} from '@/api/server/llmServerAPI';
 import {PostOpenAISceneRequest} from '@/api/types/api/open-ai/scene/PostOpenAISceneRequest';
 import {PostOpenAISceneResponse} from '@/api/types/api/open-ai/scene/PostOpenAISceneResponse';
 import {voiceServerAPI} from "@/api/server/voiceServerAPI";
 import {videoGenerationTasksServerAPI} from "@/api/server/videoGenerationTasksServerAPI";
-import {randomUUID} from "crypto";
 import {
     SceneData, SceneGenerationStatus,
     SubtitleSegment,
@@ -12,11 +11,27 @@ import {
     VideoGenerationTaskStatus
 } from "@/api/types/supabase/VideoGenerationTasks";
 import {getNextBaseResponse} from "@/utils/getNextBaseResponse";
+import {usersServerAPI} from "@/api/server/usersServerAPI";
+import {createSupabaseServer} from "@/lib/supabaseServer";
+import {SCENE_SEGMENTATION_STANDARD} from "@/lib/ADDITIONAL_CREDIT_AMOUNT";
 
 export async function POST(request: NextRequest): Promise<NextResponse<PostOpenAISceneResponse>> {
     try {
+        const supabase = await createSupabaseServer();
+        const {data: {user: authUser}, error: authError} = await supabase.auth.getUser();
+
+        if (authError || !authUser) {
+            console.error("/api/open-ai/scene authError: ", authError);
+            return getNextBaseResponse({
+                success: false,
+                status: 401,
+                error: 'Unauthorized request.',
+            });
+        }
+
+        const userId = authUser.id;
+
         const {
-            // userId 추가
             taskId,
             narrationScript,
             voiceId,
@@ -24,7 +39,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<PostOpenA
         }: PostOpenAISceneRequest = await request.json();
 
         // 필수 필드 검증
-        if (!narrationScript || !voiceId) {
+        if (!userId || !narrationScript || !voiceId) {
             return getNextBaseResponse({
                 success: false,
                 status: 400,
@@ -32,20 +47,18 @@ export async function POST(request: NextRequest): Promise<NextResponse<PostOpenA
             });
         }
 
-        const testUserId = randomUUID(); // OAuth 없이 테스트용 UUID 생성
         const videoGenerationTaskRequest: Partial<VideoGenerationTask> = {
-            user_id: testUserId,
+            user_id: userId,
             status: VideoGenerationTaskStatus.GENERATING_VOICE,
             narration_script: narrationScript,
             selected_style_id: styleId,
             selected_voice_id: voiceId,
         }
-        console.log(`taskId = ${taskId}`);
+
         const videoGenerationTask: VideoGenerationTask | null = !taskId
             ? await videoGenerationTasksServerAPI.postVideoGenerationTask(videoGenerationTaskRequest)
             : await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, videoGenerationTaskRequest);
 
-        console.log(`newTaskId = ${videoGenerationTask.id}`);
         if (!videoGenerationTask || !videoGenerationTask.id) {
             return getNextBaseResponse({
                 success: false,
@@ -62,7 +75,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<PostOpenA
         await videoGenerationTasksServerAPI.patchVideoGenerationTaskStatus(taskId ?? videoGenerationTask.id, VideoGenerationTaskStatus.DRAFTING);
 
         // OpenAI API를 통해 Scene 분리 처리
-        const postSceneSegmentationResult = await openAIServerAPI.postSceneSegmentation(
+        const postSceneSegmentationResult = await llmServerAPI.postSceneSegmentation(
             taskId ?? videoGenerationTask.id,
             narrationScript,
             voiceGenerationResult.subtitleSegmentList
@@ -76,11 +89,41 @@ export async function POST(request: NextRequest): Promise<NextResponse<PostOpenA
             });
         }
 
+        if (videoGenerationTask.scene_breakdown_list) {
+            const user = await usersServerAPI.getUserByUserId(userId);
+
+            if (!user) {
+                return getNextBaseResponse({
+                    success: false,
+                    status: 404,
+                    error: 'User not found.'
+                });
+            }
+
+            if (!user.credit_count || user.credit_count < SCENE_SEGMENTATION_STANDARD) {
+                return getNextBaseResponse({
+                    success: false,
+                    status: 402,
+                    error: "Insufficient credits."
+                });
+            }
+
+            const patchUserCreditCountResult = await usersServerAPI.patchUserCreditCountByUserId(userId, -SCENE_SEGMENTATION_STANDARD);
+
+            if (!patchUserCreditCountResult) {
+                return getNextBaseResponse({
+                    success: false,
+                    status: 500,
+                    error: 'Failed to patch user\'s credit count.'
+                });
+            }
+        }
+
         // 3. 각 Scene의 자막 데이터 분리
         const normalizeWord = (text: string) => {
             return text
-                .replace(/\W/g, "") // 알파벳과 숫자만 남기고 모든 구두점/공백 제거
-                .toLowerCase()
+                .toLowerCase()          // 소문자 통일
+                .replace(/[^\w\s]/g, "") // 알파벳/숫자/공백 외 제거 (콤마, 마침표 등 제거)
                 .trim();
         };
 
@@ -139,10 +182,29 @@ export async function POST(request: NextRequest): Promise<NextResponse<PostOpenA
             };
         });
 
+        const sceneDataListWithSceneDuration = sceneDataList.map((sceneData, index) => {
+            const isLastScene = index === sceneDataList.length - 1;
+            const currentSceneSegmentList = sceneData.sceneSubtitleSegments ?? [];
+            let actualSceneDuration: number;
+
+            if (isLastScene) {
+                actualSceneDuration = currentSceneSegmentList[currentSceneSegmentList.length - 1].endSec - currentSceneSegmentList[0].startSec + 0.75; // 여운
+            } else {
+                const nextSceneSegmentList = sceneDataList[index + 1].sceneSubtitleSegments ?? [];
+
+                actualSceneDuration = nextSceneSegmentList[0].startSec - currentSceneSegmentList[0].startSec;
+            }
+
+            return {
+                ...sceneData,
+                sceneDuration: actualSceneDuration,
+            }
+        });
+
         const patchVideoGenerationTaskRequest: Partial<VideoGenerationTask> = {
-            scene_breakdown_list: sceneDataList,
-            subtitle_segment_list: voiceGenerationResult.subtitleSegmentList,
-            video_main_subject: postSceneSegmentationResult.videoMainSubject,
+            scene_breakdown_list: sceneDataListWithSceneDuration,
+            video_title: postSceneSegmentationResult.videoTitle,
+            video_description: postSceneSegmentationResult.videoDescription,
         }
         const patchVideoGenerationTaskResult: VideoGenerationTask | null = await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId ?? videoGenerationTask.id, patchVideoGenerationTaskRequest);
 
@@ -164,13 +226,16 @@ export async function POST(request: NextRequest): Promise<NextResponse<PostOpenA
             throw Error(`Failed to upload audio file to Supabase Storage: ${fileUploadResult.message}`);
         }
 
+        console.log("newSceneDataList: ", JSON.stringify(postSceneSegmentationResult.sceneDataList))
+
         return getNextBaseResponse({
             success: true,
             status: 200,
             data: {
                 taskId: videoGenerationTask.id,
-                sceneDataList: postSceneSegmentationResult.sceneDataList || [],
-                videoMainSubject: postSceneSegmentationResult.videoMainSubject || ''
+                sceneDataList: sceneDataListWithSceneDuration,
+                videoTitle: postSceneSegmentationResult.videoTitle,
+                videoDescription: postSceneSegmentationResult.videoDescription,
             }
         });
 

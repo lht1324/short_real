@@ -1,16 +1,24 @@
-import {NextRequest, NextResponse} from "next/server";
-import {videoGenerationTasksServerAPI} from "@/api/server/videoGenerationTasksServerAPI";
-import {taskCheckAndCleanupIfCancelled} from "@/utils/taskCheckAndCleanupIfCancelled";
-import {SceneData, VideoGenerationTaskStatus} from "@/api/types/supabase/VideoGenerationTasks";
-import {openAIServerAPI} from "@/api/server/openAIServerAPI";
-import {imageServerAPI} from "@/api/server/imageServerAPI";
-import {getNextBaseResponse} from "@/utils/getNextBaseResponse";
+import { NextRequest } from "next/server";
+import { tasks } from "@trigger.dev/sdk/v3";
+import { orchestrateImageGeneration } from "@/trigger/orchestrate-image-generation";
+import { getNextBaseResponse } from "@/utils/getNextBaseResponse";
+import { getIsValidRequestS2S } from "@/utils/getIsValidRequest";
+import { videoGenerationTasksServerAPI } from "@/api/server/videoGenerationTasksServerAPI";
+import { taskCheckAndCleanupIfCancelled } from "@/utils/taskCheckAndCleanupIfCancelled";
 
 export async function POST(request: NextRequest) {
-    // URL에서 파라미터 추출
+    // 1. 보안 검사
+    if (!getIsValidRequestS2S(request)) {
+        return getNextBaseResponse({
+            success: false,
+            status: 401,
+            error: 'Unauthorized internal request',
+        });
+    }
+
+    // 2. 파라미터 추출
     const { searchParams } = new URL(request.url);
     const taskId = searchParams.get('taskId');
-
     if (!taskId) {
         return getNextBaseResponse({
             success: false,
@@ -20,118 +28,61 @@ export async function POST(request: NextRequest) {
     }
 
     try {
+        // Task 정보 가져오기 및 유효성 검사
         const videoGenerationTask = await videoGenerationTasksServerAPI.getVideoGenerationTaskById(taskId);
-
         if (!videoGenerationTask) {
             await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
-
-            return getNextBaseResponse({
-                success: false,
-                status: 404,
-                error: 'Video Generation Task not found.'
-            });
+            throw new Error('Video Generation Task not found.');
         }
 
         const checkResultInitialResult = await taskCheckAndCleanupIfCancelled(videoGenerationTask);
-
         if (checkResultInitialResult) {
-            return checkResultInitialResult;
+            return getNextBaseResponse({ success: false, status: 400, error: 'Task was cancelled' });
         }
 
         const sceneDataList = videoGenerationTask.scene_breakdown_list;
-        const videoMainSubject = videoGenerationTask.video_main_subject;
-        const masterStylePositivePromptInfo = videoGenerationTask.master_style_positive_prompt;
-        const masterStyleNegativePrompt = videoGenerationTask.master_style_negative_prompt;
+        const videoTitle = videoGenerationTask.video_title;
+        const videoDescription = videoGenerationTask.video_description;
+        const masterStyleInfo = videoGenerationTask.master_style_info;
+        const entityManifestList = videoGenerationTask.entity_manifest_list;
+        const styleId = videoGenerationTask.selected_style_id;
 
-        if (!sceneDataList || !videoMainSubject || !masterStylePositivePromptInfo || !masterStyleNegativePrompt) {
+        if (!sceneDataList || !videoTitle || !videoDescription || !masterStyleInfo || !entityManifestList || !styleId) {
             await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
-
-            return getNextBaseResponse({
-                success: false,
-                status: 500,
-                error: 'Scene data is invalid.'
-            });
+            throw new Error('Scene data is invalid.');
         }
 
-        const sceneDataWithImageGenPromptPromiseList: Promise<SceneData>[] = sceneDataList.map(async (sceneData) => {
-            const postImageGenPromptResult = await openAIServerAPI.postImageGenPrompt(
-                sceneData.imageGenPromptDirective,
-                // masterStylePositivePrompt,
-                masterStylePositivePromptInfo,
-                sceneData.narration,
-                videoMainSubject,
-            );
-
-            if (!postImageGenPromptResult.success || !postImageGenPromptResult.imageGenPrompt) {
-                throw new Error("Failed to generate image gen prompt");
-            }
-
-            return {
-                ...sceneData,
-                imageGenPrompt: postImageGenPromptResult.imageGenPrompt,
-            };
-        });
-        const sceneDataWithImageGenPromptList = await Promise.all(sceneDataWithImageGenPromptPromiseList);
-
-        for (let index = 0; index < sceneDataWithImageGenPromptList.length; index++) {
-            const sceneData = sceneDataWithImageGenPromptList[index];
-            const combinedMasterNegativeKeywords = `${masterStyleNegativePrompt}`.split(/\s*,\s*/);
-            const uniqueMasterNegativeKeywordSet = new Set(combinedMasterNegativeKeywords);
-            const uniqueMasterNegativePrompt = Array.from(uniqueMasterNegativeKeywordSet).join(", ");
-
-            const postImageResult = await imageServerAPI.postImage(
-                sceneData.imageGenPrompt as string,
+        // 3. 감독관(Orchestrator) 태스크 호출 (Fire-and-Forget)
+        const handle = await tasks.trigger<typeof orchestrateImageGeneration>(
+            "orchestrate-image-generation",
+            {
                 taskId,
-                sceneData.sceneNumber,
-                uniqueMasterNegativePrompt,
-            );
-
-            if (!postImageResult.success) {
-                await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
-
-                return getNextBaseResponse({
-                    success: false,
-                    status: 500,
-                    error: 'Failed to generate image with Imagen 4.'
-                });
+                videoTitle,
+                videoDescription,
+                masterStyleInfo,
+                entityManifestList,
+                sceneDataList,
+                styleId,
             }
-        }
+        );
 
-        const patchVideoGenerationTaskStatusResult = await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, {
-            status: VideoGenerationTaskStatus.GENERATING_VIDEO_PROMPT,
-            scene_breakdown_list: sceneDataWithImageGenPromptList,
-        });
-
-        const checkFinalResult = await taskCheckAndCleanupIfCancelled(patchVideoGenerationTaskStatusResult);
-
-        if (checkFinalResult) {
-            return checkFinalResult;
-        }
-
-        // fire and forget
-        fetch(`${process.env.BASE_URL}/api/video/process/video?taskId=${taskId}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-        }).catch(error => {
-            console.error('[/api/video/process/image] Fire and forget fetch error:', error);
-        });
-
+        // 4. 즉시 응답 반환
         return getNextBaseResponse({
             success: true,
             status: 200,
-            message: "Video base images are successfully generated."
-        })
+            message: "Image generation orchestration has been queued.",
+            data: {
+                orchestrationHandleId: handle.id,
+                taskId: taskId
+            }
+        });
+
     } catch (error) {
-        console.error(error);
-
-        await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
-
+        console.error("Failed to trigger image generation orchestration:", error);
         return getNextBaseResponse({
             success: false,
             status: 500,
-            error: error instanceof Error ? error.message : "Failed to generate video base image.",
-        })
+            error: error instanceof Error ? error.message : "Failed to queue image generation.",
+        });
     }
 }

@@ -1,0 +1,219 @@
+Scene #1 postVideoGenPrompt() Result
+Scene Summary: Banknotes and corporate papers cascade from the sky in a spiraling vortex over a Tokyo business district.
+Scene Summary Reason: Derived from the visual evidence of a dense paper tornado and the narration describing money as falling confetti.
+Primary Movement: Chaotic aerodynamic descent of paper sheets.
+Primary Movement Reason: The image captures multiple paper entities mid-air, indicating gravity and wind-driven flux.
+Narrative Vibe: Surreal and catastrophic financial collapse.
+Narrative Vibe Reason: The 'money as confetti' narration combined with the cold, desaturated urban background creates a sense of lost value.
+Selected INTENSITY_TIER: LOW
+INTENSITY_TIER Selected Reason: Paper flutter is visually dense but physically low-velocity and laminar in air resistance.
+Identity Logic: The 1980s Japanese Yen banknotes and corporate ledgers are preserved as the primary kinetic agents representing the economic burst.
+Action Focus: Transitioning from static suspended states to rhythmic, tumbling aerodynamic descent.
+- - - Atmospheric Lighting Delta - - -
+Delta: Subtle mist drifting through the urban canyons while paper particles drift rhythmically, all enhanced by atmospheric haze and soft diffusion.
+Delta Reason: Matches the 'LOW' intensity tier and the melancholic tone of the bubble burst.
+- - - Cinematic Camera Vectors - - -
+Camera Action: Zoom Out and Tilt Down smoothly
+Subject Vectors: [$0X$, $-Y$, $-Z$]
+Subject Vectors Reasoning: The paper vortex is centered ($0X$), falling downward ($-Y$), and scaling larger as it approaches the foreground ($-Z$).
+- - - Style - - -
+Style Slot 1: Authentic raw textures with fine cinematic film grain in 4k fidelity
+Style Slot 2: the initial structural integrity of the environment remains perfectly intact and consistent throughout the motion.
+Style Slot 1 Reason: Matches the master style guide's fidelity requirements.
+Style Slot 2 Reason: Ensures the buildings and paper shapes do not morph during the sequence.
+Reasoning: The prompt utilizes technical physics jargon (laminar, aerodynamic) to describe the weightless tumble of currency. The camera vector is designed to mimic a slow retreat to emphasize the scale of the falling wealth, while atmospheric haze prevents the background from appearing frozen.
+- - - Final Output Structure - - -
+Primary Narrative Block: The Tokyo Urban Opulence environment is framed as a medium wide shot.
+Atmospheric/Lighting Delta: enhanced by atmospheric haze and soft diffusion featuring subtle mist drifting through the urban canyons while paper particles drift rhythmically.
+Cinematic Camera Vector: captured with CINEMATIC_CAMERA_VECTORS the surging canyon environment
+Style: rendered in authentic raw textures with fine cinematic film grain in 4k fidelity, while the initial structural integrity of the environment remains perfectly intact and consistent throughout the motion.
+videoGenPrompt: The Tokyo Urban Opulence environment is framed as a medium wide shot, enhanced by atmospheric haze and soft diffusion featuring subtle mist drifting through the urban canyons while paper particles drift rhythmically, captured with CINEMATIC_CAMERA_VECTORS the surging canyon environment, rendered in authentic raw textures with fine cinematic film grain in 4k fidelity, while the initial structural integrity of the environment remains perfectly intact and consistent throughout the motion.
+assembledVideoGenPrompt: The Tokyo Urban Opulence environment is framed as a medium wide shot enhanced by atmospheric haze and soft diffusion featuring subtle mist drifting through the urban canyons while paper particles drift rhythmically, Zoom Out and Tilt Down smoothly the surging canyon environment, rendered in rendered in authentic raw textures with fine cinematic film grain in 4k fidelity, while the initial structural integrity of the environment remains perfectly intact and consistent throughout the motion.
+
+Scene #2 postVideoGenPrompt() Result
+Scene Summary: The salaryman signs a luxury golf membership contract while casually holding a cognac bottle, embodying the height of bubble-era excess.
+Scene Summary Reason: The image and narration define a moment of high-status consumption and legal validation of wealth.
+Primary Movement: The salaryman's hand articulates to sign the document while the other arm maintains a steady grip on the bottle.
+Primary Movement Reason: The pose is largely static but the signing action is the critical kinetic delta described in narration.
+Narrative Vibe: Sophisticated focus and corporate confidence.
+Narrative Vibe Reason: The subject's expression and environment suggest a controlled, prestigious interaction.
+Selected INTENSITY_TIER: LOW
+INTENSITY_TIER Selected Reason: The movement consists of precise manual articulation and rhythmic breathing rather than explosive kinetic energy.
+Identity Logic: The corporate salaryman's 1980s identity is preserved through the focus on high-quality material reactions of wool and crystal during gentle movement.
+Action Focus: Transitioning from a static pose to the deliberate, precise signing of a prestige document.
+- - - Primary Narrative Block - - -
+Entity[main_hero]
+Raw Sentence: The center foreground corporate salaryman in a navy blue suit handles the pen with real-time precision while sign-dating the paper, his silk tie gently swaying.
+Action Type: Temporary-Simultaneous
+Action Type Reason: Signing requires the simultaneous execution of writing while maintaining a steady physical posture.
+Verb Reason: Handles selected from LOW interaction to match the precision of signing.
+Adverb Reason: 
+- - - Atmospheric Lighting Delta - - -
+Delta: Subtle mist drifting along the path while light rain falls vertically, all enhanced by atmospheric haze and laminar wet surface refraction.
+Delta Reason: Re-calibrated to interior: subtle dust motes drift in the volumetric window light, emphasizing depth.
+- - - Cinematic Camera Vectors - - -
+Camera Action: Zoom Out smoothly
+Subject Vectors: [$0X$, $0Y$, $-Z$]
+Subject Vectors Reasoning: The salaryman is facing the camera directly in the lower third, suggesting a vector moving toward the foreground.
+- - - Style - - -
+Style Slot 1: Authentic raw textures with fine cinematic film grain in 4k fidelity
+Style Slot 2: the initial structural integrity of the subject remains perfectly intact and consistent throughout the motion.
+Style Slot 1 Reason: Matches the Filmic/Raw requirements of the master style guide.
+Style Slot 2 Reason: Ensures the subject's face and suit do not warp during the signing action.
+Reasoning: The prompt uses LOW intensity tags (handles, swaying, glinting) to maintain the sophisticated mood. The camera vector is locked on the salaryman to emphasize his centrality to the narrative. Atmospheric haze is added to bridge the indoor lighting with the window views of skyscrapers.
+- - - Final Output Structure - - -
+Primary Narrative Block: The center foreground corporate salaryman in a navy blue suit handles the pen with real-time precision while sign-dating the paper, his silk tie gently swaying.
+Atmospheric/Lighting Delta: enhanced by volumetric lighting and specular highlights.
+Cinematic Camera Vector: CINEMATIC_CAMERA_VECTORS the center foreground corporate salaryman in a navy blue suit
+Style: Authentic raw textures with fine cinematic film grain in 4k fidelity, while the initial structural integrity of the subject remains perfectly intact and consistent throughout the motion.
+videoGenPrompt: The center foreground corporate salaryman in a navy blue suit handles the pen with real-time precision while sign-dating the paper, his silk tie gently swaying, enhanced by volumetric lighting and specular highlights, captured with CINEMATIC_CAMERA_VECTORS the center foreground corporate salaryman in a navy blue suit, rendered in authentic raw textures with fine cinematic film grain in 4k fidelity, while the initial structural integrity of the subject remains perfectly intact and consistent throughout the motion.
+assembledVideoGenPrompt: The center foreground corporate salaryman in a navy blue suit handles the pen with real-time precision while sign-dating the paper, his silk tie gently swaying, enhanced by volumetric lighting and specular highlights, captured with anamorphic Lens, Deep Focus, 9:16 Portrait Cinema, Full/Medium Wide, Zoom Out smoothly the center foreground corporate salaryman in a navy blue suit, rendered in authentic raw textures with fine cinematic film grain in 4k fidelity, while the initial structural integrity of the subject remains perfectly intact and consistent throughout the motion.
+
+Scene #3 postVideoGenPrompt() Result
+Scene Summary: A slow-motion exploration of Tokyo's economic peak where financial documents and architectural models are caught in a phantom wind amidst towering glass structures.
+Scene Summary Reason: The narrative 'Money flows like confetti' combined with the 'Sold' graphic indicates a state of flux, but the visual context shows a static, eerie dawn.
+Primary Movement: Financial papers skitter and drift across the asphalt.
+Primary Movement Reason: The papers are light and 'passive', making them the primary indicators of movement through aerodynamic drift.
+Narrative Vibe: DREAMY
+Narrative Vibe Reason: The desaturated cool tones and atmospheric haze coupled with the metaphoric 'Sold' graphic create a surreal, dreamlike quality.
+Selected INTENSITY_TIER: LOW
+INTENSITY_TIER Selected Reason: The scene suggests a quiet, rhythmic drift rather than chaotic action; papers and scale models reflect subtle flow.
+Identity Logic: The 1980s corporate identity is preserved through the specific rendering of kanji-filled A4 documents and Tokyo's 'Modern International Style' curtain walls, maintaining crisp structural facets.
+Action Focus: The transition from 'Scattered' (t=0) to 'Skittering' (t=n) emphasizes the eolian transport of financial debris.
+- - - Primary Narrative Block - - -
+Entity[3]
+Raw Sentence: The center midground financial data sheets in printed kanji are skittering steadily, rhythmic hem-drifting across the road.
+Action Type: Continuous
+Action Type Reason: The papers are caught in a sustained wind flow, fitting a rhythmic drift.
+Verb Reason: 'Skitter' matches' material: granular/cloth' for low-intensity ground movement.
+Adverb Reason: 'Steadily' reflects the 'LOW' velocity profile.
+- - - Atmospheric Lighting Delta - - -
+Delta: Subtle mist drifting along the path while light rain falls vertically, all enhanced by atmospheric haze and muted tonal depth.
+Delta Reason: Matches the 'Desaturated cool-tones' and 'office scenes haze' in the style guide.
+- - - Cinematic Camera Vectors - - -
+Camera Action: Dolly-In smoothly
+Subject Vectors: [$0X$, $0Y$, $+Z$]
+Subject Vectors Reasoning: The camera pushes toward the background vanishing point where the skyscraper and 'Sold' graphic are situated.
+- - - Style - - -
+Style Slot 1: Authentic raw textures with fine cinematic film grain in 4k fidelity.
+Style Slot 2: the initial structural integrity of the subject and environment remains perfectly intact and consistent throughout the motion.
+Style Slot 1 Reason: Derived from master style guide fidelity settings.
+Style Slot 2 Reason: Directorial command to prevent image-to-video morphing artifacts.
+Reasoning: The prompt uses 'LOW' intensity physics to ensure financial papers skitter rather than fly chaotically, preserving the melancholic 80s 'Dreamy' atmosphere. The camera is locked to a forward 'Away' vector (sz: +Z) to follow the street's vanishing point toward the glowing California graphic. Volumetric haze prevents ‘background freezing’ by adding micro-flux particles.
+- - - Final Output Structure - - -
+Primary Narrative Block: The center midground financial data sheets in printed kanji are skittering steadily, rhythmic hem-drifting across the road.
+Atmospheric/Lighting Delta: Subtle mist drifting along the path while light rain falls vertically, all enhanced by atmospheric haze and muted tonal depth.
+Cinematic Camera Vector: CINEMATIC_CAMERA_VECTORS the center midground financial data sheets in printed kanji
+Style: Authentic raw textures with fine cinematic film grain in 4k fidelity, while the initial structural integrity of the subject and environment remains perfectly intact and consistent throughout the motion.
+videoGenPrompt: The center midground financial data sheets in printed kanji are skittering steadily, rhythmic hem-drifting across the road, amidst subtle mist drifting along the path while light rain falls vertically, all enhanced by atmospheric haze and muted tonal depth, captured with CINEMATIC_CAMERA_VECTORS the center midground financial data sheets in printed kanji, rendered in authentic raw textures with fine cinematic film grain in 4k fidelity, while the initial structural integrity of the subject and environment remains perfectly intact and consistent throughout the motion.
+assembledVideoGenPrompt: The center midground financial data sheets in printed kanji are skittering steadily, rhythmic hem-drifting across the road, amidst subtle mist drifting along the path while light rain falls vertically, all enhanced by atmospheric haze and muted tonal depth, captured with anamorphic Lens, Deep Focus, 9:16 Portrait Cinema, Full/Medium Wide, Dolly-In smoothly the center midground financial data sheets in printed kanji, rendered in authentic raw textures with fine cinematic film grain in 4k fidelity, while the initial structural integrity of the subject and environment remains perfectly intact and consistent throughout the motion.
+
+Scene #4 postVideoGenPrompt() Result
+Scene Summary: The abandoned trading floor remains largely static following a collapse, with micro-movements of air and light suggesting the passage of time over wreckage.
+Scene Summary Reason: The image shows a post-event state with overturned furniture and broken equipment, indicating the 'crash' has already occurred; the target duration and context require atmospheric lingering.
+Primary Movement: Static / Micro-movement only
+Primary Movement Reason: The entities are props and objects in a state of rest (overturned or stationary), with only light and air currents providing motion.
+Narrative Vibe: Anxious and melancholic post-collapse stillness.
+Narrative Vibe Reason: The desaturated tones and wreckage evoke a 'monument to lost wealth' after a devastating burst.
+Selected INTENSITY_TIER: VERY_LOW
+INTENSITY_TIER Selected Reason: All entities are in a settled, resting state post-financial-impact; physics focuses on textures and light behavior rather than kinetic force.
+Identity Logic: The 1980s era is preserved through the specific mechanical patina of the ticker and the molded textures of period-accurate office furniture, maintaining structural stasis.
+Action Focus: Transitioned from a narrative 'crash' to the physical 'latent flux' of the aftermath, focusing on the stillness of remnants.
+- - - Primary Narrative Block - - -
+Entity[prop_machine_0]
+Raw Sentence: The center foreground Stock Ticker Tape Machine with a cracked glass window is resting motionless.
+Action Type: Continuous
+Action Type Reason: The machine is seized and inactive.
+Verb Reason: Rest is selected for a passive agent in absolute stasis.
+Adverb Reason: Motionless reflects the very_low intensity of the scene.
+- - - Atmospheric Lighting Delta - - -
+Delta: Subtle dust motes floating in the air while light particles drift slowly, all enhanced by atmospheric haze and muted tonal depth.
+Delta Reason: Matches VERY_LOW intensity and the melancholic/anxious vibe of an empty office.
+- - - Cinematic Camera Vectors - - -
+Camera Action: Dolly-In steadily
+Subject Vectors: [$0X$, $0Y$, $+Z$]
+Subject Vectors Reasoning: The camera slowly dollies into the scene's vanishing point toward the shattered board, while the subjects appear in profile or dorsal view.
+- - - Style - - -
+Style Slot 1: Authentic raw textures with fine cinematic film grain in 4k fidelity
+Style Slot 2: the initial structural integrity of the objects and environmental geometry remains perfectly intact throughout the motion
+Style Slot 1 Reason: Matches the MasterStyleGuide fidelity requirements.
+Style Slot 2 Reason: Ensures the subjects don't morph or flicker during the subtle move.
+Reasoning: The prompt focuses on 'Video Vividness' by emphasizing the delta of light and microscopic air movement in a static scene. Using VERY_LOW intensity tags from the depot, Verbs like 'rest' and 'drift' are used to prevent unnatural movement. The camera vector is derived from the strong perspective lines leading into the back of the office.
+- - - Final Output Structure - - -
+Primary Narrative Block: The center foreground Stock Ticker Tape Machine with a cracked glass window is resting motionless.
+Atmospheric/Lighting Delta: amidst subtle dust motes floating in the air while light particles drift slowly, all enhanced by atmospheric haze and muted tonal depth.
+Cinematic Camera Vector: captured with CINEMATIC_CAMERA_VECTORS the center foreground Stock Ticker Tape Machine
+Style: featuring authentic raw textures with fine cinematic film grain in 4k fidelity, while the initial structural integrity of the objects and environmental geometry remains perfectly intact throughout the motion.
+videoGenPrompt: The center foreground Stock Ticker Tape Machine with a cracked glass window is resting motionless, amidst subtle dust motes floating in the air while light particles drift slowly, all enhanced by atmospheric haze and muted tonal depth, captured with CINEMATIC_CAMERA_VECTORS the center foreground Stock Ticker Tape Machine, featuring authentic raw textures with fine cinematic film grain in 4k fidelity, while the initial structural integrity of the objects and environmental geometry remains perfectly intact throughout the motion.
+assembledVideoGenPrompt: The center foreground Stock Ticker Tape Machine with a cracked glass window is resting motionless, amidst subtle dust motes floating in the air while light particles drift slowly, all enhanced by atmospheric haze and muted tonal depth, captured with anamorphic Lens, Deep Focus, 9:16 Portrait Cinema, Full/Medium Wide, Dolly-In steadily the center foreground Stock Ticker Tape Machine, rendered in featuring authentic raw textures with fine cinematic film grain in 4k fidelity, while the initial structural integrity of the objects and environmental geometry remains perfectly intact throughout the motion.
+
+Scene #5 postVideoGenPrompt() Result
+Scene Summary: The video captures a haunting scene of economic stagnation, where abandoned construction machinery and structures remain in a state of atmospheric decay.
+Scene Summary Reason: Based on the narration's focus on 'ghosts' and 'haunted' skyscrapers, implying a lack of human activity and a focus on environmental passage of time.
+Primary Movement: Static / Micro-movement only
+Primary Movement Reason: The entities are all props or machines in a parked, abandoned state; physics is limited to environmental drift.
+Narrative Vibe: DREAMY
+Narrative Vibe Reason: The presence of translucent 'ghost' figures and the stillness of the abandoned site creates a surreal, liminal quality.
+Selected INTENSITY_TIER: VERY_LOW
+INTENSITY_TIER Selected Reason: Physical subjects are marked as 'passive' and 'stopped'; movement is limited to latent flux and Brownian motion.
+Identity Logic: Objects are modeled as relics of the late 80s Japanese bubble, maintaining their stalled structural state while environmental physics (oxidized patina, settled dust) implies the passage of time.
+Action Focus: The shift moves from 'standing skyscrapers' to the micro-stasis of 'gleaming' and 'accumulating' textures, emphasizing the frozen nature of the collapse.
+- - - Primary Narrative Block - - -
+Entity[prop_skyscraper]
+Raw Sentence: The background skyscraper steel frame gleams subtly, its matte metallic finish holding an oxidized patina.
+Action Type: Continuous
+Action Type Reason: Passive rigid objects in a state of micro-stasis require continuous present tense for light interaction.
+Verb Reason: 'Gleams' and 'holds' selected from rigid VERY_LOW to describe subtle light behavior on the frame.
+Adverb Reason: 'subtly' selected from Velocity VERY_LOW to match the latent energy of the static scene.
+- - - Atmospheric Lighting Delta - - -
+Delta: Subtle dust motes floating in the air while light particles drift slowly, all enhanced by atmospheric haze and muted tonal depth.
+Delta Reason: Matches the VERY_LOW intensity tier rule for extreme strictness, allowing only passive particles already suggested by the twilight setting.
+- - - Cinematic Camera Vectors - - -
+Camera Action: Static Frame steadily
+Subject Vectors: [$0X$, $0Y$, $0Z$]
+Subject Vectors Reasoning: The subjects are architectural and mechanical props at absolute rest; Lens 1 (Inertia) shows zero force translation.
+- - - Style - - -
+Style Slot 1: Authentic raw textures with fine cinematic film grain in 4k fidelity
+Style Slot 2: the initial structural integrity of the subject and environment remains perfectly intact and consistent throughout the motion.
+Style Slot 1 Reason: Selected based on master_style_guide fidelity settings for filmic 4k detail.
+Style Slot 2 Reason: Standard cinematic directive to ensure no temporal warping during the slow drift.
+Reasoning: The prompt uses VERY_LOW intensity tags ('gleam', 'accumulate') to prevent unrealistic camera/subject motion that would break the 'haunted' narrative. Cinematic_camera_vectors focus on the environment core to maintain the depth of the anamorphic lens. Counter-flow rule is applied to dust motes to sell the 3D volume of the abandoned site.
+- - - Final Output Structure - - -
+Primary Narrative Block: The background skyscraper steel frame gleams subtly, its matte metallic finish holding an oxidized patina.
+Atmospheric/Lighting Delta: amidst subtle dust motes floating in the air while light particles drift slowly, all enhanced by atmospheric haze and muted tonal depth.
+Cinematic Camera Vector: captured using CINEMATIC_CAMERA_VECTORS the towering skyscraper's skeletal frame
+Style: presented with authentic raw textures with fine cinematic film grain in 4k fidelity, while the initial structural integrity of the subject and environment remains perfectly intact and consistent throughout the motion.
+videoGenPrompt: The background skyscraper steel frame gleams subtly, its matte metallic finish holding an oxidized patina, amidst subtle dust motes floating in the air while light particles drift slowly, all enhanced by atmospheric haze and muted tonal depth, captured using CINEMATIC_CAMERA_VECTORS the towering skyscraper's skeletal frame, presented with authentic raw textures with fine cinematic film grain in 4k fidelity, while the initial structural integrity of the subject and environment remains perfectly intact and consistent throughout the motion.
+assembledVideoGenPrompt: The background skyscraper steel frame gleams subtly, its matte metallic finish holding an oxidized patina, amidst subtle dust motes floating in the air while light particles drift slowly, all enhanced by atmospheric haze and muted tonal depth, anamorphic Lens, Deep Focus, 9:16 Portrait Cinema, Full/Medium Wide, captured using Static Frame steadily the towering skyscraper's skeletal frame, rendered in presented with authentic raw textures with fine cinematic film grain in 4k fidelity, while the initial structural integrity of the subject and environment remains perfectly intact and consistent throughout the motion.
+
+Scene #6 postVideoGenPrompt() Result
+Scene Summary: The iridescent bubble floating in the center of the frame gradually loses its internal tension and explodes into microscopic droplets, mirroring the collapse of the city reflected within.
+Scene Summary Reason: The narrative 'bubbles must pop' and the visual of a lone bubble in a city suggest a metaphor for financial collapse.
+Primary Movement: The central bubble shatters into fine mist while the background neon lights begin to flicker and dim.
+Primary Movement Reason: Physics of soap film dictates a high-velocity rupture when the surface tension fails.
+Narrative Vibe: Melancholy and tragic, emphasizing the fragility of the economic era.
+Narrative Vibe Reason: Desaturated tones and the prompt narration about lost wealth drive an emotional, somber atmosphere.
+Selected INTENSITY_TIER: HIGH
+INTENSITY_TIER Selected Reason: The sudden popping of a bubble is a high-kinetic incident involving rapid surface displacement and mist spray.
+Identity Logic: The 1980s Tokyo urban setting and iridescent soap material are maintained as grounding physical constants that undergo entropic change.
+Action Focus: The transition from a floating status to a sudden kinetic rupture (popping) to satisfy the narrative blueprint.
+- - - Atmospheric Lighting Delta - - -
+Delta: Microscopic iridescent mists erupting from the bubble's center while cold city fog drifts laterally
+Delta Reason: Matches the HIGH intensity tier for material failure and the desaturated cool-tone style guide.
+- - - Cinematic Camera Vectors - - -
+Camera Action: Dolly-In aggressively
+Subject Vectors: [$0X$, $0Y$, $+Z$]
+Subject Vectors Reasoning: The city moves away toward the vanishing point in the bubble's reflection, and the camera pushes toward the central object.
+- - - Style - - -
+Style Slot 1: Authentic raw textures with fine cinematic film grain in 4k fidelity
+Style Slot 2: the initial structural integrity of the city environment remains perfectly intact and consistent throughout the motion
+Style Slot 1 Reason: Directly mapped from master_style_guide.fidelity metadata.
+Style Slot 2 Reason: Standard stability modifier to ensure the background buildings don't morph during the bubble popping.
+Reasoning: The bubble popping is treated as a high-velocity event (HIGH tier) despite the calm background. Atmospheric mists are triggered because the medium (soap water) is reactive. The camera uses a Z-axis push to increase the tension before the pop.
+- - - Final Output Structure - - -
+Primary Narrative Block: The Tokyo Urban Opulence environment is enhanced by desaturated cool-tones with pops of muted amber.
+Atmospheric/Lighting Delta: iridescent mists erupting from the bubble's center while cold city fog drifts laterally, all enhanced by atmospheric haze and muted tonal depth while featuring cold color grading and chaotic dust.
+Cinematic Camera Vector: CINEMATIC_CAMERA_VECTORS the iridescent bubble floating in the center of the frame
+Style: Authentic raw textures with fine cinematic film grain in 4k fidelity, while the initial structural integrity of the city environment remains perfectly intact and consistent throughout the motion.
+videoGenPrompt: The Tokyo Urban Opulence environment is enhanced by desaturated cool-tones with pops of muted amber, amidst iridescent mists erupting from the bubble's center while cold city fog drifts laterally, all enhanced by atmospheric haze and muted tonal depth while featuring cold color grading and chaotic dust, filmed using CINEMATIC_CAMERA_VECTORS the iridescent bubble floating in the center of the frame, rendered in Authentic raw textures with fine cinematic film grain in 4k fidelity, while the initial structural integrity of the city environment remains perfectly intact and consistent throughout the motion.
+assembledVideoGenPrompt: The Tokyo Urban Opulence environment is enhanced by desaturated cool-tones with pops of muted amber, amidst iridescent mists erupting from the bubble's center while cold city fog drifts laterally, all enhanced by atmospheric haze and muted tonal depth while featuring cold color grading and chaotic dust, filmed using, Dolly-In aggressively the iridescent bubble floating in the center of the frame, rendered in Authentic raw textures with fine cinematic film grain in 4k fidelity, while the initial structural integrity of the city environment remains perfectly intact and consistent throughout the motion.

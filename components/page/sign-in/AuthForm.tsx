@@ -22,7 +22,6 @@ function AuthForm({
     error = null,
     oAuthSignIn,
 }: AuthFormProps) {
-
     return (
         <div className="w-full h-fit max-w-md mx-auto bg-gray-800/30 backdrop-blur-sm rounded-2xl border border-purple-500/30 shadow-2xl p-8">
             <div className="text-center mb-8">
@@ -60,6 +59,24 @@ function AuthForm({
             <div className="mt-6 text-center">
                 <p className="text-sm text-gray-400">
                     {footerText}
+                </p>
+            </div>
+
+            {/* Legal Disclaimer (Click-wrap) - 가장 중요한 부분 */}
+            <div className="pt-4 text-center space-y-2">
+                <p className="text-[14px] text-gray-500 leading-tight">
+                    By continuing, you agree to our{' '}
+                    <a href="/legal/terms" target="_blank" className="text-gray-400 hover:text-white underline decoration-gray-600 underline-offset-2 transition-colors">
+                        Terms of Service
+                    </a>{' '}
+                    and{' '}
+                    <a href="/legal/privacy" target="_blank" className="text-gray-400 hover:text-white underline decoration-gray-600 underline-offset-2 transition-colors">
+                        Privacy Policy
+                    </a>.
+                </p>
+                {/* EU 환불 방어용 문구 (작지만 명확하게) */}
+                <p className="text-[12px] text-gray-600">
+                    * You acknowledge that the service begins immediately and waive the right of withdrawal.
                 </p>
             </div>
         </div>

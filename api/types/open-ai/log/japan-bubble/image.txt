@@ -1,0 +1,294 @@
+Scene #1 imageGenPrompt: {
+  "scene": "1980s Japan urban economic graph displayed against a golden haze",
+  "subjects": [
+    {
+      "id": "rising_economic_graph",
+      "type": "The Economic Graph Display",
+      "description": "A digital economic graph display with a glowing silhouette, showing rising data.",
+      "clothes": "Digital screen material with a faint glowing silhouette and lightweight texture, refined for raw visual fidelity.",
+      "accessories": [],
+      "pose": "Displayed centrally with an ascending graph line, oriented vertically to show upward trend.",
+      "position": "background"
+    }
+  ],
+  "color_palette": [
+    "#808080",
+    "#FF0000",
+    "#4A4A4A"
+  ],
+  "lighting": "Low-key natural and artificial neon lighting with deep shadows",
+  "mood": "Exhilarating yet somber atmosphere with high contrast and neon vibrancy",
+  "background": "Tokyo's 1980s skyline with skyscrapers silhouetted against a golden sunrise haze, conveying ambition through static grandeur."
+}
+Scene #1 OpticalAndTechnicalOption: {"style":"High-fidelity RAW photography with Raw surface detail and Filmic organic texture.","camera":{"angle":"high angle shot looking down","distance":"vertical full-body action shot","focus":"sharp focus throughout the vertical frame","lens":"35mm","fNumber":"f/8.0","ISO":1600},"composition":"low-to-high leading lines","effects":["subtle film grain","highly defined textures","hyper-detailed rendering","extreme visual fidelity","photorealistic textures","physically based rendering"]}
+Scene #1 ImageGenPromptSentence: A 1980s Japan Japanese Corporate Economic Graph Display, finished in a digital screen with a glowing silhouette texture, which is displayed centrally with an ascending graph line in the background.
+Scene #1 AssembledImageGenPromptSentence: A high angle shot looking down vertical full-body action shot captures a 1980s Japan Japanese Corporate Economic Graph Display, finished in a digital screen with a glowing silhouette texture, which is displayed centrally with an ascending graph line in the background. the scene is set in Tokyo's 1980s skyline with skyscrapers silhouetted against a golden sunrise haze, conveying ambition through static grandeur, depicting 1980s Japan urban economic graph displayed against a golden haze with a low-to-high leading lines composition, where the atmosphere is Exhilarating yet somber atmosphere with high contrast and neon vibrancy, illuminated by Low-key natural and artificial neon lighting with deep shadows and a color palette of (#808080, #FF0000, #4A4A4A). rendered in High-fidelity RAW photography with Raw surface detail and Filmic organic texture, captured with a 35mm lens at f/8.0 for sharp focus throughout the vertical frame and ISO 1600, featuring subtle film grain, highly defined textures, hyper-detailed rendering, extreme visual fidelity, photorealistic textures, and physically based rendering.
+
+Scene #2 imageGenPrompt: {
+  "scene": "1980s Japan skyscraper piercing low clouds with reflective dawn glow",
+  "subjects": [
+    {
+      "id": "skyscraper",
+      "type": "Skyscraper",
+      "description": "A towering skyscraper with reflective glass and steel exterior.",
+      "clothes": "Streamlined steel and glass facade with high-reflectivity surfaces and sharp angular joints.",
+      "accessories": [],
+      "pose": "Positioned upward against the sky, anchored deeply into the city foundation.",
+      "position": "background"
+    }
+  ],
+  "color_palette": [
+    "#808080",
+    "#FF0000",
+    "#1C1C1C"
+  ],
+  "lighting": "Low-key natural and artificial neon lighting with deep shadows",
+  "mood": "Awe-inspiring yet somber atmosphere with a sense of economic promise and looming collapse",
+  "background": "Towering glass-and-steel skyscrapers with reflective surfaces capturing the dawn's golden light, set against a misty sky with piercing low clouds, in an urban Japanese landscape."
+}
+Scene #2 OpticalAndTechnicalOption: {"style":"High-fidelity RAW photography with Raw surface detail and Filmic organic texture.","camera":{"angle":"low angle","distance":"vertical full-body action shot","focus":"sharp focus throughout the vertical frame","lens":"35mm","fNumber":"f/8.0","ISO":1600},"composition":"strong verticals","effects":["subtle film grain","highly defined textures","hyper-detailed rendering","extreme visual fidelity","photorealistic textures","physically based rendering"]}
+Scene #2 ImageGenPromptSentence: A 1980s Japan Japanese architectural skyscraper, constructed from sleek steel and glass with reflective surfaces, is positioned upward against the sky in the background.
+Scene #2 AssembledImageGenPromptSentence: A low angle vertical full-body action shot captures a 1980s Japan Japanese architectural skyscraper, constructed from sleek steel and glass with reflective surfaces, is positioned upward against the sky in the background. the scene is set in Towering glass-and-steel skyscrapers with reflective surfaces capturing the dawn's golden light, set against a misty sky with piercing low clouds, in an urban Japanese landscape, depicting 1980s Japan skyscraper piercing low clouds with reflective dawn glow with a strong verticals composition, where the atmosphere is Awe-inspiring yet somber atmosphere with a sense of economic promise and looming collapse, illuminated by Low-key natural and artificial neon lighting with deep shadows and a color palette of (#808080, #FF0000, #1C1C1C). rendered in High-fidelity RAW photography with Raw surface detail and Filmic organic texture, captured with a 35mm lens at f/8.0 for sharp focus throughout the vertical frame and ISO 1600, featuring subtle film grain, highly defined textures, hyper-detailed rendering, extreme visual fidelity, photorealistic textures, and physically based rendering.
+
+Scene #3 imageGenPrompt: {
+  "scene": "1980s Japanese urban scene with young people dancing under neon lights.",
+  "subjects": [
+    {
+      "id": "young_woman_01",
+      "type": "Young Woman",
+      "description": "A Japanese young woman with a slender build, wearing a bright-colored synthetic dress and large hoop earrings.",
+      "clothes": "Bright-colored synthetic dress with ruffled details, billowing from dynamic movement.",
+      "accessories": [
+        "Large hoop earrings",
+        "Wristwatch"
+      ],
+      "pose": "Swaying dynamically with arms extended, captured mid-dance.",
+      "position": "foreground"
+    },
+    {
+      "id": "young_man_01",
+      "type": "Young Man",
+      "description": "A Japanese young man with an average height, wearing a denim jacket over a graphic t-shirt and sunglasses.",
+      "clothes": "Denim jacket over a graphic t-shirt, with durable texture and slight movement creases.",
+      "accessories": [
+        "Sunglasses",
+        "Leather belt"
+      ],
+      "pose": "Swaying with one arm raised, body leaning slightly.",
+      "position": "midground"
+    },
+    {
+      "id": "glowing_neon_signs",
+      "type": "Neon Sign Array",
+      "description": "An array of glowing neon signs with varied sizes and shapes, emitting vibrant light.",
+      "clothes": "Plastic and glass tubes filled with neon gas, with bright, luminous texture.",
+      "accessories": [],
+      "pose": "Static installation on building walls, glowing steadily.",
+      "position": "background"
+    },
+    {
+      "id": "confetti",
+      "type": "Confetti Scraps",
+      "description": "Colorful paper confetti scattered in the air, catching light as it flutters.",
+      "clothes": "Thin, colorful paper pieces with lightweight texture.",
+      "accessories": [],
+      "pose": "Fluttering mid-air in various orientations.",
+      "position": "foreground"
+    }
+  ],
+  "color_palette": [
+    "#808080",
+    "#0000FF",
+    "#FFD700"
+  ],
+  "lighting": "Low-key lighting with natural and artificial neon sources, creating high contrast and deep shadows.",
+  "mood": "Exhilarating yet somber atmosphere with vibrant energy and underlying tension, reflecting economic cycles.",
+  "background": "Neon-lit urban street in 1980s Japan, with static glowing signs lining buildings and suspended confetti particles in the air."
+}
+Scene #3 OpticalAndTechnicalOption: {"style":"High-fidelity RAW photography with Raw surface detail and Filmic organic texture.","camera":{"angle":"eye level","distance":"vertical full-body action shot","focus":"sharp focus throughout the vertical frame","lens":"35mm","fNumber":"f/8.0","ISO":1600},"composition":"steep diagonal tension","effects":["subtle film grain","highly defined textures","hyper-detailed rendering","extreme visual fidelity","photorealistic textures","physically based rendering"]}
+Scene #3 ImageGenPromptSentence: A 1980s Japanese Female Young Woman, with stylish permed black hair and a slender build, clad in a bright-colored synthetic dress with ruffled details, equipped with large hoop earrings and a wristwatch, who is swaying dynamically with arms extended in the foreground, while in the midground a 1980s Japanese Male Young Man, with medium-length black hair and an average height, clad in a denim jacket over a graphic t-shirt, equipped with sunglasses and a leather belt, is swaying with one arm raised, and in the background a Neon Sign Array, finished in plastic and glass tubes with glowing outlines, is static on building walls, with Confetti Scraps, constructed from colorful paper, fluttering throughout the foreground and midground.
+Scene #3 AssembledImageGenPromptSentence: An eye level vertical full-body action shot captures a 1980s Japanese Female Young Woman, with stylish permed black hair and a slender build, clad in a bright-colored synthetic dress with ruffled details, equipped with large hoop earrings and a wristwatch, who is swaying dynamically with arms extended in the foreground, while in the midground a 1980s Japanese Male Young Man, with medium-length black hair and an average height, clad in a denim jacket over a graphic t-shirt, equipped with sunglasses and a leather belt, is swaying with one arm raised, and in the background a Neon Sign Array, finished in plastic and glass tubes with glowing outlines, is static on building walls, with Confetti Scraps, constructed from colorful paper, fluttering throughout the foreground and midground. the scene is set in Neon-lit urban street in 1980s Japan, with static glowing signs lining buildings and suspended confetti particles in the air, depicting 1980s Japanese urban scene with young people dancing under neon lights. with a steep diagonal tension composition, where the atmosphere is Exhilarating yet somber atmosphere with vibrant energy and underlying tension, reflecting economic cycles, illuminated by Low-key lighting with natural and artificial neon sources, creating high contrast and deep shadows. and a color palette of (#808080, #0000FF, #FFD700). rendered in High-fidelity RAW photography with Raw surface detail and Filmic organic texture, captured with a 35mm lens at f/8.0 for sharp focus throughout the vertical frame and ISO 1600, featuring subtle film grain, highly defined textures, hyper-detailed rendering, extreme visual fidelity, photorealistic textures, and physically based rendering.
+
+Scene #4 imageGenPrompt: {
+  "scene": "1980s Japanese urban luxury car gleaming under the midday sun.",
+  "subjects": [
+    {
+      "id": "luxury_car",
+      "type": "The luxury car",
+      "description": "A 1980s Japanese luxury coupe with a low aerodynamic silhouette, polished red paint, and chrome accents.",
+      "clothes": "High-gloss polished red paint with reflective chrome accents, showcasing sleek and reflective physics of 1980s luxury automotive design.",
+      "accessories": [
+        "Polished alloy wheels with intricate designs",
+        "Dark tinted windows for privacy and style"
+      ],
+      "pose": "Positioned forward along the boulevard, gleaming under the midday sun.",
+      "position": "foreground"
+    }
+  ],
+  "color_palette": [
+    "#808080",
+    "#FF0000",
+    "#1C1C1C"
+  ],
+  "lighting": "Natural sunlight with artificial neon accents in a low-key, high-contrast setup.",
+  "mood": "A tense atmosphere of affluence and underlying tension, with vibrant colors against deep shadows.",
+  "background": "A wide urban boulevard lined with rows of vintage 1980s luxury cars, with tall skyscrapers in the background and shadowed doorways where figures exchange money, all under the bright midday sun."
+}
+Scene #4 OpticalAndTechnicalOption: {"style":"High-fidelity RAW photography with Raw surface detail and Filmic organic texture.","camera":{"angle":"low angle","distance":"vertical full-body action shot","focus":"sharp focus throughout the vertical frame","lens":"35mm","fNumber":"f/8.0","ISO":1600},"composition":"low-to-high leading lines","effects":["subtle film grain","highly defined textures","hyper-detailed rendering","extreme visual fidelity","photorealistic textures","physically based rendering"]}
+Scene #4 ImageGenPromptSentence: A 1980s Japanese luxury coupe, finished in high-gloss polished red paint with reflective chrome accents and equipped with polished alloy wheels and dark tinted windows, which is positioned forward along the boulevard, gleaming under the midday sun in the foreground.
+Scene #4 AssembledImageGenPromptSentence: A low angle vertical full-body action shot captures a 1980s Japanese luxury coupe, finished in high-gloss polished red paint with reflective chrome accents and equipped with polished alloy wheels and dark tinted windows, which is positioned forward along the boulevard, gleaming under the midday sun in the foreground. the scene is set in A wide urban boulevard lined with rows of vintage 1980s luxury cars, with tall skyscrapers in the background and shadowed doorways where figures exchange money, all under the bright midday sun, depicting 1980s Japanese urban luxury car gleaming under the midday sun. with a low-to-high leading lines composition, where the atmosphere is A tense atmosphere of affluence and underlying tension, with vibrant colors against deep shadows, illuminated by Natural sunlight with artificial neon accents in a low-key, high-contrast setup. and a color palette of (#808080, #FF0000, #1C1C1C). rendered in High-fidelity RAW photography with Raw surface detail and Filmic organic texture, captured with a 35mm lens at f/8.0 for sharp focus throughout the vertical frame and ISO 1600, featuring subtle film grain, highly defined textures, hyper-detailed rendering, extreme visual fidelity, photorealistic textures, and physically based rendering.
+
+Scene #5 imageGenPrompt: {
+  "scene": "Urban Japanese shadow shapes stirring in dim alleys",
+  "subjects": [
+    {
+      "id": "shadow_shapes",
+      "type": "The Shadow Shapes",
+      "description": "A set of dark, amorphous shadow shapes with flowing outlines.",
+      "clothes": "Dark, amorphous forms with soft and shifting texture.",
+      "accessories": [],
+      "pose": "Flowing and merging into the background walls with a sense of creeping motion.",
+      "position": "background"
+    }
+  ],
+  "color_palette": [
+    "#808080",
+    "#800080",
+    "#1C1C1C"
+  ],
+  "lighting": "Low-key natural and artificial neon lighting casting deep shadows with neon vibrancy.",
+  "mood": "Tense and atmospheric, with high-contrast neon vibrancy against deep shadows, evoking impending unease.",
+  "background": "Dim alley walls in 1980s Japan urban setting, with vague shadow shapes cast by unseen structures, and stationary figures merging with creeping shadows, creating a sense of depth and unease."
+}
+Scene #5 OpticalAndTechnicalOption: {"style":"High-fidelity RAW photography with Raw surface detail and Filmic organic texture.","camera":{"angle":"high angle shot looking down","distance":"vertical full-body action shot","focus":"sharp focus throughout the vertical frame","lens":"35mm","fNumber":"f/8.0","ISO":1600},"composition":"low-to-high leading lines","effects":["subtle film grain","highly defined textures","hyper-detailed rendering","extreme visual fidelity","photorealistic textures","physically based rendering"]}
+Scene #5 ImageGenPromptSentence: 1980s Japanese urban shadow shapes, with dark, amorphous forms that imply soft and shifting texture, which are flowing and merging into the background walls with a sense of creeping motion.
+Scene #5 AssembledImageGenPromptSentence: A high angle shot looking down vertical full-body action shot captures 1980s Japanese urban shadow shapes, with dark, amorphous forms that imply soft and shifting texture, which are flowing and merging into the background walls with a sense of creeping motion. the scene is set in Dim alley walls in 1980s Japan urban setting, with vague shadow shapes cast by unseen structures, and stationary figures merging with creeping shadows, creating a sense of depth and unease, depicting Urban Japanese shadow shapes stirring in dim alleys with a low-to-high leading lines composition, where the atmosphere is Tense and atmospheric, with high-contrast neon vibrancy against deep shadows, evoking impending unease, illuminated by Low-key natural and artificial neon lighting casting deep shadows with neon vibrancy. and a color palette of (#808080, #800080, #1C1C1C). rendered in High-fidelity RAW photography with Raw surface detail and Filmic organic texture, captured with a 35mm lens at f/8.0 for sharp focus throughout the vertical frame and ISO 1600, featuring subtle film grain, highly defined textures, hyper-detailed rendering, extreme visual fidelity, photorealistic textures, and physically based rendering.
+
+Scene #6 imageGenPrompt: {
+  "scene": "1980s Japan Urban stock monitor cracking under economic pressure",
+  "subjects": [
+    {
+      "id": "stock_exchange_monitor",
+      "type": "Monitor",
+      "description": "A bulky CRT stock exchange monitor with a glass surface, displaying financial data.",
+      "clothes": "Bulky CRT screen with a glass surface, heavy and static, with a prominent bezel and visible cracks.",
+      "accessories": [
+        "Button controls",
+        "Cables"
+      ],
+      "pose": "Positioned centered on a desk, displaying a crashing graph with visible cracks on the glass surface.",
+      "position": "midground"
+    },
+    {
+      "id": "crashing_graph",
+      "type": "Graph",
+      "description": "A glowing red crashing graph display with a sharp downward-trending line.",
+      "clothes": "Glowing red line on a dark background, dynamic and urgent, with crisp motion clarity.",
+      "accessories": [],
+      "pose": "Trending sharply downward with crisp motion clarity, overlaid on the monitor screen.",
+      "position": "midground"
+    }
+  ],
+  "color_palette": [
+    "#808080",
+    "#0000FF",
+    "#00FF00"
+  ],
+  "lighting": "Natural and artificial neon lighting with low-key exposure.",
+  "mood": "Intense and dramatic atmosphere with vibrant neon contrasts and somber shadows, reflecting economic turmoil.",
+  "background": "Urban Japanese office interior with montage of ticker symbols and cracking glass visuals, shrouded in neon-lit haze and deep shadows."
+}
+Scene #6 OpticalAndTechnicalOption: {"style":"High-fidelity RAW photography with Raw surface detail and Filmic organic texture.","camera":{"angle":"high angle shot looking down","distance":"vertical full-body action shot","focus":"sharp focus throughout the vertical frame","lens":"35mm","fNumber":"f/8.0","ISO":1600},"composition":"low-to-high leading lines","effects":["subtle film grain","highly defined textures","hyper-detailed rendering","extreme visual fidelity","photorealistic textures","physically based rendering"]}
+Scene #6 ImageGenPromptSentence: A 1980s Japanese stock exchange monitor, constructed from bulky CRT with a glass surface and featuring button controls and cables, is positioned centered on a desk in the midground, displaying a crashing graph with visible cracks, while a 1980s Japanese crashing graph display, featuring a glowing red line on a dark background, trends sharply downward with crisp motion clarity overlaid on the monitor screen in the midground.
+Scene #6 AssembledImageGenPromptSentence: A high angle shot looking down vertical full-body action shot captures a 1980s Japanese stock exchange monitor, constructed from bulky CRT with a glass surface and featuring button controls and cables, is positioned centered on a desk in the midground, displaying a crashing graph with visible cracks, while a 1980s Japanese crashing graph display, featuring a glowing red line on a dark background, trends sharply downward with crisp motion clarity overlaid on the monitor screen in the midground. the scene is set in Urban Japanese office interior with montage of ticker symbols and cracking glass visuals, shrouded in neon-lit haze and deep shadows, depicting 1980s Japan Urban stock monitor cracking under economic pressure with a low-to-high leading lines composition, where the atmosphere is Intense and dramatic atmosphere with vibrant neon contrasts and somber shadows, reflecting economic turmoil, illuminated by Natural and artificial neon lighting with low-key exposure. and a color palette of (#808080, #0000FF, #00FF00). rendered in High-fidelity RAW photography with Raw surface detail and Filmic organic texture, captured with a 35mm lens at f/8.0 for sharp focus throughout the vertical frame and ISO 1600, featuring subtle film grain, highly defined textures, hyper-detailed rendering, extreme visual fidelity, photorealistic textures, and physically based rendering.
+
+Scene #7 imageGenPrompt: {
+  "scene": "1980s Japan office ruin aftermath of economic collapse.",
+  "subjects": [
+    {
+      "id": "scattered_documents",
+      "type": "The scattered paper documents",
+      "description": "A collection of scattered white paper documents with printed text, varied in size and orientation.",
+      "clothes": "Lightweight white paper with chaotic texture, showing wrinkles and tears from the burst.",
+      "accessories": [],
+      "pose": "Lying scattered across the floor in chaotic patterns, with papers crumpled and torn.",
+      "position": "foreground"
+    },
+    {
+      "id": "broken_chair",
+      "type": "The broken office chair",
+      "description": "A damaged office chair with torn fabric upholstery and a bent metal frame.",
+      "clothes": "Torn fabric upholstery with frayed edges and bent metal frame indicating structural failure.",
+      "accessories": [],
+      "pose": "Leaning backward against the wall, with the frame partially collapsed and fabric hanging loose.",
+      "position": "background"
+    }
+  ],
+  "color_palette": [
+    "#808080",
+    "#FF0000",
+    "#1C1C1C"
+  ],
+  "lighting": "Low-key natural and artificial neon lighting with deep shadows.",
+  "mood": "Somber and dramatic atmosphere with high contrast and neon vibrancy, reflecting the economic burst.",
+  "background": "A dilapidated office interior with cracked walls, dusty air, and a view of a cityscape through a broken window, with symbolic shards suspended in the air and deserted streets below."
+}
+Scene #7 OpticalAndTechnicalOption: {"style":"High-fidelity RAW photography with Raw surface detail and Filmic organic texture.","camera":{"angle":"eye level","distance":"vertical full-body action shot","focus":"sharp focus throughout the vertical frame","lens":"35mm","fNumber":"f/8.0","ISO":1600},"composition":"low-to-high leading lines","effects":["subtle film grain","highly defined textures","hyper-detailed rendering","extreme visual fidelity","photorealistic textures","physically based rendering"]}
+Scene #7 ImageGenPromptSentence: 1990s Japanese office scattered paper documents, constructed from white paper with printed text and showing wrinkled and torn details, which are lying scattered across the foreground floor, with a 1990s Japanese office broken office chair, constructed from torn fabric and bent metal, leaning against the wall in the background.
+Scene #7 AssembledImageGenPromptSentence: An eye level vertical full-body action shot captures 1990s Japanese office scattered paper documents, constructed from white paper with printed text and showing wrinkled and torn details, which are lying scattered across the foreground floor, with a 1990s Japanese office broken office chair, constructed from torn fabric and bent metal, leaning against the wall in the background. the scene is set in A dilapidated office interior with cracked walls, dusty air, and a view of a cityscape through a broken window, with symbolic shards suspended in the air and deserted streets below, depicting 1980s Japan office ruin aftermath of economic collapse. with a low-to-high leading lines composition, where the atmosphere is Somber and dramatic atmosphere with high contrast and neon vibrancy, reflecting the economic burst, illuminated by Low-key natural and artificial neon lighting with deep shadows. and a color palette of (#808080, #FF0000, #1C1C1C). rendered in High-fidelity RAW photography with Raw surface detail and Filmic organic texture, captured with a 35mm lens at f/8.0 for sharp focus throughout the vertical frame and ISO 1600, featuring subtle film grain, highly defined textures, hyper-detailed rendering, extreme visual fidelity, photorealistic textures, and physically based rendering.
+
+Scene #8 imageGenPrompt: {
+  "scene": "1980s-1990s Japanese construction site with resilient atmosphere",
+  "subjects": [
+    {
+      "id": "construction_worker",
+      "type": "The Construction Worker",
+      "description": "A muscular construction worker wearing a heavy-duty work jacket and denim pants, with a hard hat and work gloves.",
+      "clothes": "Heavy-duty work jacket and denim pants with durable texture, showing signs of wear from labor",
+      "accessories": [
+        "Hard hat",
+        "Work gloves"
+      ],
+      "pose": "Lifting upward with the steel beam, muscles straining, back straight, arms extended",
+      "position": "foreground"
+    },
+    {
+      "id": "steel_beam",
+      "type": "The Steel Beam",
+      "description": "A rusted steel beam with a matte finish, being lifted by the worker.",
+      "clothes": "Rusted steel surface with matte finish, showing age and wear",
+      "accessories": [],
+      "pose": "Being lifted upward, held firmly by the worker",
+      "position": "foreground"
+    },
+    {
+      "id": "steel_frames",
+      "type": "The Steel Frames",
+      "description": "Bare metal frames arranged in a grid, with a gray patina.",
+      "clothes": "Bare metal framework with gray patina, dull finish",
+      "accessories": [],
+      "pose": "Stationary, arranged in a geometric lattice",
+      "position": "background"
+    },
+    {
+      "id": "scaffolding",
+      "type": "The Scaffolding",
+      "description": "Interlocking steel pipes forming modular scaffolding.",
+      "clothes": "Interlocking steel pipes with brushed finish, sturdy and modular",
+      "accessories": [],
+      "pose": "Stationary, forming a tubular framework",
+      "position": "background"
+    }
+  ],
+  "color_palette": [
+    "#808080",
+    "#0000FF",
+    "#FFD700"
+  ],
+  "lighting": "Low-key natural and artificial neon lighting with high contrast",
+  "mood": "Resilient and somber with vibrant neon highlights, depicting rebirth from collapse",
+  "background": "Urban Japanese construction site with smoky ruins, steel frames and scaffolding in the background, cherry blossoms framing the scene, era-synced to 1980s-1990s Japan"
+}
+Scene #8 OpticalAndTechnicalOption: {"style":"High-fidelity RAW photography with Raw surface detail and Filmic organic texture.","camera":{"angle":"low angle","distance":"vertical full-body action shot","focus":"sharp focus throughout the vertical frame","lens":"35mm","fNumber":"f/8.0","ISO":1600},"composition":"low-to-high leading lines","effects":["subtle film grain","highly defined textures","hyper-detailed rendering","extreme visual fidelity","photorealistic textures","physically based rendering"]}
+Scene #8 ImageGenPromptSentence: A 1990s Japanese Male construction worker, with a muscular build and sturdy stance, clad in a heavy-duty work jacket and denim pants, equipped with a hard hat and work gloves, who is lifting upward with the steel beam in the foreground, with a 1990s Japanese Industrial steel beam, constructed from rusted steel with a matte finish and rough edges, being lifted upward in the foreground, while in the background 1990s Japanese Architectural steel frames, constructed from bare metal framework with a gray patina, are stationary in a grid, and 1990s Japanese Construction metal scaffolding, constructed from interlocking steel pipes with a brushed finish, is surrounding the site.
+Scene #8 AssembledImageGenPromptSentence: A low angle vertical full-body action shot captures a 1990s Japanese Male construction worker, with a muscular build and sturdy stance, clad in a heavy-duty work jacket and denim pants, equipped with a hard hat and work gloves, who is lifting upward with the steel beam in the foreground, with a 1990s Japanese Industrial steel beam, constructed from rusted steel with a matte finish and rough edges, being lifted upward in the foreground, while in the background 1990s Japanese Architectural steel frames, constructed from bare metal framework with a gray patina, are stationary in a grid, and 1990s Japanese Construction metal scaffolding, constructed from interlocking steel pipes with a brushed finish, is surrounding the site. the scene is set in Urban Japanese construction site with smoky ruins, steel frames and scaffolding in the background, cherry blossoms framing the scene, era-synced to 1980s-1990s Japan, depicting 1980s-1990s Japanese construction site with resilient atmosphere with a low-to-high leading lines composition, where the atmosphere is Resilient and somber with vibrant neon highlights, depicting rebirth from collapse, illuminated by Low-key natural and artificial neon lighting with high contrast and a color palette of (#808080, #0000FF, #FFD700). rendered in High-fidelity RAW photography with Raw surface detail and Filmic organic texture, captured with a 35mm lens at f/8.0 for sharp focus throughout the vertical frame and ISO 1600, featuring subtle film grain, highly defined textures, hyper-detailed rendering, extreme visual fidelity, photorealistic textures, and physically based rendering.

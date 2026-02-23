@@ -1,5 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { openAIServerAPI } from '@/api/server/openAIServerAPI';
+import { NextRequest } from 'next/server';
+import { llmServerAPI } from '@/api/server/llmServerAPI';
 import { ScriptGenerationRequest } from '@/api/types/open-ai/ScriptGeneration';
 import {getNextBaseResponse} from "@/utils/getNextBaseResponse";
 
@@ -20,7 +20,11 @@ export async function POST(request: NextRequest) {
         }
 
         // OpenAI API를 통해 스크립트 생성
-        const result = await openAIServerAPI.postScript(userPrompt);
+        const result = await llmServerAPI.postScript(userPrompt);
+
+        if (!result) {
+            throw new Error("Script generation failed.");
+        }
 
         // 결과 반환
         return getNextBaseResponse(result);

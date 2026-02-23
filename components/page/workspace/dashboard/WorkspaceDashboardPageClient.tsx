@@ -2,28 +2,41 @@
 
 import {memo, useCallback, useEffect, useMemo, useState} from "react";
 import Link from "next/link";
-import {ListTodo, Plus} from 'lucide-react';
-import {VideoGenerationTask, VideoGenerationTaskStatus} from "@/api/types/supabase/VideoGenerationTasks";
+import {Coins, ListTodo, Plus, Loader2} from 'lucide-react';
+import {
+    ExportPlatform,
+    ExportStatus,
+    VideoGenerationTask,
+    VideoGenerationTaskStatus
+} from "@/api/types/supabase/VideoGenerationTasks";
 import Image from "next/image";
 import {videoClientAPI} from "@/api/client/videoClientAPI";
 import {useAuth} from "@/context/AuthContext";
-import {useRouter} from "next/navigation";
+import {useRouter, useSearchParams} from "next/navigation";
 import DashboardItem from "@/components/page/workspace/dashboard/DashboardItem";
 import DefaultModal from "@/components/public/DefaultModal";
 import {createBrowserClient} from "@supabase/ssr";
 import TaskDeleteLoadingModal from "@/components/page/workspace/dashboard/TaskDeleteLoadingModal";
+import {Polar} from "@polar-sh/sdk";
+import {polarClientAPI} from "@/api/client/polarClientAPI";
+import CheckoutResultDialog, {
+    CheckoutResultDialogData
+} from "@/components/page/workspace/dashboard/CheckoutResultDialog";
+import ExportResultModal from "@/components/page/workspace/dashboard/export-result-modal/ExportResultModal";
+import {ExportResult} from "@/components/page/workspace/dashboard/export-result-modal/ExportResult";
 
 export interface TaskData {
     id: string;
     title?: string;
     status: VideoGenerationTaskStatus;
-    sceneCount?: number;
+    sceneCount: number;
     processedSceneCount?: number;
+    videoDuration: number;
     progress?: number; // 0-100
     currentStep: number;
     totalStep: number;
-    createdAt?: Date;
-    updatedAt?: Date;
+    createdAt: Date;
+    updatedAt: Date;
     selectedVoiceId?: string;
     selectedStyleId?: string;
     isGenerationFailed: boolean;
@@ -32,9 +45,22 @@ export interface TaskData {
 function WorkspaceDashboardPageClient() {
     // Draft 마저 작성하는 버튼 추가
     const router = useRouter();
+    const searchParams = useSearchParams();
+
     const { user } = useAuth();
     const [taskDataList, setTaskDataList] = useState<TaskData[]>([]);
+    const [exportResults, setExportResults] = useState<ExportResult[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+
+    const customerSessionToken = useMemo(() => {
+        return searchParams.get('customer_session_token');
+    }, [searchParams]);
+
+    const userCreditCount = useMemo(() => {
+        return user?.credit_count ?? 0;
+    }, [user?.credit_count]);
+
+    const [checkoutResultDialogData, setCheckoutResultDialogData] = useState<CheckoutResultDialogData | null>(null);
 
     // Virtual tabs for navigation consistency
     const virtualTabs = useMemo(() => [
@@ -43,54 +69,81 @@ function WorkspaceDashboardPageClient() {
     ], []);
 
     const [pendingCancelTaskId, setPendingCancelTaskId] = useState<string | null>(null);
+    const [pendingExportTaskId, setPendingExportTaskId] = useState<string | null>(null);
+    const [pendingExportPlatform, setPendingExportPlatform] = useState<ExportPlatform | null>(null);
 
     const [showCancelConfirmModal, setShowCancelConfirmModal] = useState(false);
     const [showCancelLoadingModal, setShowCancelLoadingModal] = useState(false);
 
     const [showRetryLoadingModal, setShowRetryLoadingModal] = useState(false);
 
+    const [showTikTokExportConsentModal, setShowTikTokExportConsentModal] = useState(false);
+
+    const [isExportingVideo, setIsExportingVideo] = useState(false);
+    const [isInitializingExportState, setIsInitializingExportState] = useState(false);
+
     const onClickCancel = useCallback((taskId: string, status: VideoGenerationTaskStatus) => {
         setPendingCancelTaskId(taskId);
         setShowCancelConfirmModal(true);
     }, []);
 
+    const onClickExport = useCallback(async () => {
+        try {
+            if (!user?.id) {
+                throw Error("User is invalid.");
+            }
+
+            if (!pendingExportTaskId || !pendingExportPlatform) {
+                throw Error("Export data is not invalid.");
+            }
+
+            switch (pendingExportPlatform) {
+                case ExportPlatform.YOUTUBE: {
+                    window.location.href = `/api/video/export/youtube/oauth?taskId=${pendingExportTaskId}`;
+                    return;
+                }
+                case ExportPlatform.TIKTOK: {
+                    window.location.href = `/api/video/export/tiktok/oauth?taskId=${pendingExportTaskId}`;
+                    return;
+                }
+                case ExportPlatform.INSTAGRAM: {
+                    // To-Do
+                    return;
+                }
+            }
+        } catch (error) {
+            console.error(error);
+        }
+    }, [user?.id, pendingExportTaskId, pendingExportPlatform]);
+
     const onClickDownload = useCallback(async (taskId: string) => {
         try {
+            const videoGenerationTask = await videoClientAPI.getVideoTaskByTaskId(taskId);
+
+            if (!videoGenerationTask || !videoGenerationTask.video_title) {
+                console.error('Failed to get video generation task data:', taskId);
+                return;
+            }
+
             // videoClientAPI로 영상 URL 가져오기
-            const url = await videoClientAPI.getVideoFinalUrl(taskId);
+            const fileName = `${videoGenerationTask.video_title}-${new Date().toLocaleTimeString()}.mp4`.replaceAll(" ", "-");
+            const url = await videoClientAPI.getVideoFinalUrl(taskId, fileName);
 
             if (!url) {
                 console.error('Failed to get video URL for task:', taskId);
                 return;
             }
 
-            const videoGenerationTask = await videoClientAPI.getVideoTaskByTaskId(taskId);
-
-            if (!videoGenerationTask || !videoGenerationTask.video_main_subject) {
-                console.error('Failed to get video generation task data:', taskId);
-                return;
-            }
-
-            // Blob으로 받아서 다운로드 (CORS 우회)
-            const response = await fetch(url);
-
-            if (!response.ok) {
-                throw new Error(`Failed to fetch video: ${response.status}`);
-            }
-
-            const blob = await response.blob();
-            const blobUrl = window.URL.createObjectURL(blob);
-
             // 임시 <a> 태그 생성해서 다운로드 트리거
             const a = document.createElement('a');
-            a.href = blobUrl;
-            a.download = `${videoGenerationTask.video_main_subject}-${new Date().toLocaleTimeString()}.mp4`.replaceAll(" ", "_");
+
+            a.href = url;
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
 
             // 메모리 해제
-            window.URL.revokeObjectURL(blobUrl);
+            // window.URL.revokeObjectURL(blobUrl);
         } catch (error) {
             console.error('Download failed:', error);
         }
@@ -105,10 +158,7 @@ function WorkspaceDashboardPageClient() {
             setShowRetryLoadingModal(false);
         } catch (error) {
             console.error(error);
-
-            await videoClientAPI.patchVideoTaskByTaskId(taskId, {
-                is_user_cancelled_task: true,
-            })
+            alert(error instanceof Error ? error.message : 'Unknown error occurred. Try again.');
             setShowRetryLoadingModal(false);
         }
         console.log('Retry generation:', taskId);
@@ -151,6 +201,22 @@ function WorkspaceDashboardPageClient() {
         }
     }, [pendingCancelTaskId]);
 
+    const onCloseExportResultModal = useCallback(async () => {
+        setIsInitializingExportState(true);
+
+        await Promise.all(
+            exportResults.map((result) => {
+                return videoClientAPI.patchVideoTaskByTaskId(result.taskId, {
+                    export_status: null,
+                    export_platform: null,
+                });
+            })
+        );
+
+        setIsInitializingExportState(false);
+        setExportResults([]);
+    }, [exportResults]);
+
     // VideoGenerationTaskStatus 기반 진행률 계산
     const calculateProgress = useCallback((status: VideoGenerationTaskStatus): {
         progress: number;
@@ -166,8 +232,8 @@ function WorkspaceDashboardPageClient() {
             VideoGenerationTaskStatus.GENERATING_VIDEO_PROMPT,
             VideoGenerationTaskStatus.GENERATING_VIDEO,
             VideoGenerationTaskStatus.STITCHING_VIDEOS,
-            VideoGenerationTaskStatus.EDITOR,
             VideoGenerationTaskStatus.COMPOSING_MUSIC,
+            VideoGenerationTaskStatus.EDITOR,
             VideoGenerationTaskStatus.FINALIZING,
             VideoGenerationTaskStatus.COMPLETED,
         ];
@@ -207,8 +273,11 @@ function WorkspaceDashboardPageClient() {
 
         return {
             id: task.id,
-            title: task.video_main_subject,
+            title: task.video_title,
             status: status,
+            videoDuration: task.scene_breakdown_list.reduce((acc, sceneData) => {
+                return acc + sceneData.sceneDuration;
+            }, 0),
             sceneCount: task.scene_breakdown_list.length,
             processedSceneCount: task.processed_scene_count,
             progress: progress,
@@ -247,6 +316,22 @@ function WorkspaceDashboardPageClient() {
                     });
 
                     setTaskDataList(taskList);
+                    setIsExportingVideo(videoGenerationTaskList.some((videoGenerationTask) => {
+                        return videoGenerationTask.export_status === ExportStatus.UPLOADING;
+                    }));
+
+                    const pendingExportResults: ExportResult[] = videoGenerationTaskList
+                        .filter((task) => !!task.export_status && task.export_status !== ExportStatus.UPLOADING)
+                        .map((task) => ({
+                            taskId: task.id,
+                            title: task.video_title,
+                            platform: task.export_platform as ExportPlatform,
+                            status: task.export_status as (ExportStatus.SUCCESS | ExportStatus.FAILED),
+                        }));
+
+                    if (pendingExportResults.length > 0) {
+                        setExportResults(pendingExportResults);
+                    }
                 } catch (error) {
                     console.error("WorkspaceDashboardPage: ", error);
                     setIsLoading(false);
@@ -294,6 +379,25 @@ function WorkspaceDashboardPageClient() {
                             case 'UPDATE': {
                                 // 기존 task 업데이트
                                 const updatedTask = payload.new as VideoGenerationTask;
+
+                                setIsExportingVideo(updatedTask.export_status === ExportStatus.UPLOADING);
+
+                                if (!!updatedTask.export_status && updatedTask.export_status !== ExportStatus.UPLOADING) {
+                                    setExportResults((prev) => {
+                                        // 같은 taskId가 이미 있으면 덮어쓰기, 없으면 추가
+                                        const exists = prev.some((r) => r.taskId === updatedTask.id);
+                                        const next = {
+                                            taskId: updatedTask.id,
+                                            title: updatedTask.video_title,
+                                            platform: updatedTask.export_platform as ExportPlatform,
+                                            status: updatedTask.export_status as ExportStatus.SUCCESS | ExportStatus.FAILED,
+                                        };
+                                        return exists
+                                            ? prev.map((r) => r.taskId === updatedTask.id ? next : r)
+                                            : [...prev, next];
+                                    });
+                                }
+                                
                                 const newTaskData = convertToTaskData(updatedTask);
                                 if (newTaskData) {
                                     setTaskDataList((prevTaskDataList) =>
@@ -335,6 +439,62 @@ function WorkspaceDashboardPageClient() {
         }
     }, [router, user?.id, convertToTaskData]);
 
+    useEffect(() => {
+        if (customerSessionToken) {
+            const polar = new Polar({
+                server: process.env.NODE_ENV === 'production'
+                    ? 'production'
+                    : 'sandbox',
+                accessToken: customerSessionToken,
+            });
+
+            const loadOrderData = async () => {
+                const orderList = await polar.customerPortal.orders.list(
+                    { customerSession: customerSessionToken },
+                    {
+                        limit: 1,
+                        sorting: ["-created_at"],
+                    },
+                    { }
+                );
+                const productDataList = await polarClientAPI.getPolarProducts();
+
+                const latestOrder = orderList.result.items[0];
+                const productId = latestOrder.product?.id;
+
+                const productData = productDataList?.find((productData) => {
+                    return productData.id === productId;
+                })
+
+                if (!productData) {
+                    throw new Error("Order data is invalid.");
+                }
+
+                setCheckoutResultDialogData({
+                    planName: productData.name,
+                    price: productData.price,
+                    creditCount: productData.planData.creditCount,
+                })
+            }
+
+            loadOrderData().then();
+        }
+    }, [customerSessionToken]);
+
+    useEffect(() => {
+        let timeout: NodeJS.Timeout;
+
+        if (!user) {
+            timeout = setTimeout(() => {
+                router.push('/');
+            }, 10000);
+        }
+
+        return () => {
+            clearTimeout(timeout);
+        };
+    }, [user, router]);
+
     return (
         <div className="min-h-screen bg-black text-white">
             {/* Top Header - Same as Create */}
@@ -345,25 +505,38 @@ function WorkspaceDashboardPageClient() {
                         alt="Short Real"
                         width={64}
                         height={64}
-                        className="w-16 h-16"
+                        className="w-16 h-16 cursor-pointer"
+                        onClick={() => {
+                            router.push('/');
+                        }}
                     />
                     <div className="flex flex-col ml-4">
                         <span className="text-4xl font-bold bg-gradient-to-r from-pink-400 to-purple-500 bg-clip-text text-transparent">
-                            Video Task Manager
+                            Dashboard
                         </span>
                         <p className="text-gray-400 text-base pl-0.5">
                             Your tasks&#39; progresses here.
                         </p>
                     </div>
                 </div>
-                <div className="pr-6">
-                    <Link 
-                        href="/workspace/create"
-                        className="group bg-gradient-to-r from-pink-500 to-purple-600 text-white px-6 py-3 rounded-xl text-lg font-semibold hover:from-pink-600 hover:to-purple-700 transition-all duration-300 transform hover:scale-105 flex items-center space-x-2 shadow-lg shadow-purple-500/25"
-                    >
-                        <Plus size={20} />
-                        <span>Start New Task</span>
-                    </Link>
+
+                <div className="flex flex-row w-fit items-center gap-2">
+                    <div className="flex items-center space-x-2 mr-6 px-4 py-2 bg-gray-900/50 border border-purple-500/30 rounded-lg backdrop-blur-sm hover:border-purple-400/50 transition-all">
+                        <Coins className="w-5 h-5 text-yellow-400" />
+                        <div className="flex flex-col">
+                            <span className="text-xs text-purple-300">Credits</span>
+                            <span className="text-lg font-bold text-yellow-400">{userCreditCount.toLocaleString()}</span>
+                        </div>
+                    </div>
+                    <div className="pr-6">
+                        <Link
+                            href="/workspace/create"
+                            className="group bg-gradient-to-r from-pink-500 to-purple-600 text-white px-6 py-3 rounded-xl text-lg font-semibold hover:from-pink-600 hover:to-purple-700 transition-all duration-300 transform hover:scale-105 flex items-center space-x-2 shadow-lg shadow-purple-500/25"
+                        >
+                            <Plus size={20} />
+                            <span>Start New Task</span>
+                        </Link>
+                    </div>
                 </div>
             </div>
 
@@ -420,13 +593,21 @@ function WorkspaceDashboardPageClient() {
                             </div>
                         ) : (
                             <div className="space-y-4 max-w-4xl">
-                                {taskDataList.map((taskData) => {
+                                {taskDataList.sort((a, b) => {
+                                    return b.updatedAt.getTime() - a.updatedAt.getTime();
+                                }).map((taskData, index) => {
                                     return <DashboardItem
                                         key={taskData.id}
                                         taskData={taskData}
-                                        onClickCancel={onClickCancel}
+                                        index={index}
                                         onClickDownload={onClickDownload}
+                                        onClickExport={(taskId, platform) => {
+                                            setPendingExportTaskId(taskId);
+                                            setPendingExportPlatform(platform);
+                                            setShowTikTokExportConsentModal(true);
+                                        }}
                                         onClickRetry={onClickRetry}
+                                        onClickCancel={onClickCancel}
                                     />
                                 })}
                             </div>
@@ -464,6 +645,56 @@ function WorkspaceDashboardPageClient() {
                     </div>
                 </div>
             )}
+            {checkoutResultDialogData && (<CheckoutResultDialog
+                checkoutResultDialogData={checkoutResultDialogData}
+                onClose={() => {
+                    setCheckoutResultDialogData(null);
+                    // url param에서 새로고침 없이 customer_session_token 제거
+                }}
+            />)}
+
+            {exportResults.length > 0 && (
+                <ExportResultModal
+                    exportResultList={exportResults}
+                    isInitializingExportState={isInitializingExportState}
+                    onClose={onCloseExportResultModal}
+                />
+            )}
+
+            {/* Video Exporting Floating Indicator */}
+            {isExportingVideo && (
+                <div className="fixed bottom-8 right-8 z-50 flex items-center gap-4 bg-gray-900/90 backdrop-blur-md border border-purple-500/30 rounded-2xl p-4 shadow-2xl shadow-purple-500/10 animate-in fade-in slide-in-from-bottom-4 duration-300">
+                    <div className="relative flex items-center justify-center w-10 h-10 bg-purple-500/10 rounded-full">
+                        <Loader2 className="w-5 h-5 text-purple-400 animate-spin" />
+                        <span className="absolute top-0.5 right-0.5 w-2.5 h-2.5 bg-green-500 border-2 border-gray-900 rounded-full animate-pulse"></span>
+                    </div>
+                    <div className="flex flex-col">
+                        <span className="text-base font-bold text-white">Exporting Video...</span>
+                        <span className="text-sm text-purple-200/70">Sending to platform</span>
+                    </div>
+                </div>
+            )}
+
+            {showTikTokExportConsentModal && <DefaultModal
+                title="Export to TikTok"
+                message={
+                    "By continuing, you authorize ShortReal AI to upload this video to your TikTok account on your behalf.\n\n" +
+                    "• Only this video will be uploaded — no other actions will be taken.\n" +
+                    "• Processing may take a few minutes after upload.\n" +
+                    "• You can remove access at any time from your TikTok settings."
+                }
+                confirmText="Authorize & Continue"
+                cancelText="Cancel"
+                onClickConfirm={async () => {
+                    setShowTikTokExportConsentModal(false);
+                    await onClickExport();
+                }}
+                onClickCancel={() => {
+                    setShowTikTokExportConsentModal(false);
+                    setPendingExportTaskId(null);
+                    setPendingExportPlatform(null);
+                }}
+            />}
         </div>
     )
 }

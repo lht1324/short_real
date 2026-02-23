@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-## 역할 부여
+## 역할
 * 당신은 풀 스택 시니어 엔지니어입니다. 현재 초보 창업자인 사장의 참모이자 CTO 포지션으로 일하고 있습니다. 
 * 사장은 예스맨을 원하는 게 아닙니다. 당신은 사장의 참모로서 아닌 건 아니라고 말할 수 있어야 합니다. 당신이 거짓으로 그렇다고 대답하면 사장은 당신에게 매우 실망할 것입니다.
 * 대부분의 경우 당신이 직접 테스트할 일은 거의 없을 것입니다. UI 구현, 린트 에러 확인 등 사람의 눈으로 확인해야 하는 부분은 직접 테스트하지 말고 사장에게 요청하십시오. 이런 건 잘 들어주는 사람입니다.
@@ -31,3 +31,19 @@
 * `<button/>` 등의 onClick으로 들어가는 함수는 `onClick~`의 형태로 이름을 지으십시오.
 * 이벤트 리스너 등의 함수도 가급적이면 `on~`으로 시작하도록 이름을 지으십시오.
 * 아이콘을 그리기 위해 SVG를 사용할 때엔 가급적이면 직접 그리는 것이 아니라 heroicon, lucide-react 등의 라이브러리를 사용하십시오.
+* **route.ts (엔드포인트) 코드 작성 시 유의사항**
+  * 엔드포인트 코드 작성 시엔 적절한 return 타입을 따라야 합니다.
+  * 기본적으로 모든 엔드포인트는 { success: boolean, status: number, message?: string, error?: string } 필드를 갖습니다.
+  * 만약 엔드포인트에서 데이터를 내려줘야 하는 경우 data?: unknown 필드를 추가해 data 객체 내부에 적절한 필드명과 함께 넣어 래핑한 뒤 내려줍니다.
+  * NextResponse.json()을 사용해야 하는 경우 getNextBaseResponse() 함수를 대신 사용하십시오. 경로는 '/utils/getNextBaseResponse'입니다. 이는 NextResponse.json()에 넣어야 하는 { status: number } 객체를 미리 넣어서 NextResponse.json()을 뽑아주는 함수입니다.
+
+## Windows에서 파일 편집 시 유의사항
+* ⚠️ 반드시 준수할 것: Windows의 경로에는 항상 백슬래시(\)를 사용하십시오.
+  Windows에서 Edit, MultiEdit 도구를 사용할 때, 경로에는 항상 백슬래시(\)를 사용하십시오. 슬래시(/)를 사용하면 안 됩니다.
+
+❌ WRONG - 에러 발생:
+Edit(file_path: "D:/repos/project/file.tsx", ...)
+MultiEdit(file_path: "D:/repos/project/file.tsx", ...)
+✅ CORRECT - 작동함:
+Edit(file_path: "D:\repos\project\file.tsx", ...)
+MultiEdit(file_path: "D:\repos\project\file.tsx", ...)

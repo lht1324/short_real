@@ -1,105 +1,136 @@
 'use client'
 
-import { memo, useMemo } from "react";
-import Header from "../../public/Header";
-import { ArrowRight, Star, Zap, Play } from "lucide-react";
-import HeroSection from "@/components/page/landing/HeroSection";
+import { memo, useCallback, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
+import { polarClientAPI } from "@/api/client/polarClientAPI";
+import { ProductData } from "@/api/types/api/polar/products/ProductData";
+
+// Components
+import HeroSection from "@/components/page/landing/hero-section/HeroSection";
+import FeaturesSection from "@/components/page/landing/features-section/FeaturesSection";
+import ComparisonSection from "@/components/page/landing/comparison-section/ComparisonSection";
+import HowItWorksSection from "@/components/page/landing/how-it-works-section/HowItWorksSection";
+import PricingSection from "@/components/page/landing/pricing-section/PricingSection";
+import FAQSection from "@/components/page/landing/faq-section/FAQSection";
+import Footer from "@/components/public/footer/Footer";
+import FloatingRoadmap from "@/components/page/landing/FloatingRoadmap";
+import {RoadmapItem} from "@/api/types/supabase/RoadmapItem";
+import {roadmapItemClientAPI} from "@/api/client/roadmapItemClientAPI";
 
 function LandingPageClient() {
-    // Daily, Marketing(Temp), Influencer?
-    // 하루에 몇 개 기준 (30, 60, 90)
-    const testimonials = useMemo(() => [
-        {
-            id: 1,
-            name: "Alex Johnson",
-            avatar: "👨‍💻",
-            rating: 5,
-            comment: "Incredible tool! Created 50+ videos in just a week."
-        },
-        {
-            id: 2,
-            name: "Sarah Chen",
-            avatar: "👩‍🎨",
-            rating: 5,
-            comment: "The AI understands exactly what I want to create."
-        },
-        {
-            id: 3,
-            name: "Mike Rodriguez",
-            avatar: "🎬",
-            rating: 5,
-            comment: "Saved me hours of video editing work."
-        },
-        {
-            id: 4,
-            name: "Emily Davis",
-            avatar: "✨",
-            rating: 5,
-            comment: "My viral video got 2M views using this!"
-        },
-        {
-            id: 5,
-            name: "David Kim",
-            avatar: "🚀",
-            rating: 5,
-            comment: "Game changer for content creators."
-        },
-        {
-            id: 6,
-            name: "Lisa Wang",
-            avatar: "💫",
-            rating: 5,
-            comment: "Best investment for my YouTube channel."
+    const router = useRouter();
+    const { user } = useAuth();
+    const [productDataList, setProductDataList] = useState<ProductData[]>([]);
+    const [roadmapItemList, setRoadmapItemList] = useState<RoadmapItem[]>([]);
+
+    const [isLoadingRoadmapItemList, setIsLoadingRoadmapItemList] = useState(false);
+
+    // 결제 로직 (기존 유지)
+    const onClickPurchasePlan = useCallback(async (productId: string) => {
+        try {
+            if (!user) {
+                router.push('/sign-in?redirectTo=pricing');
+                return;
+            }
+            const checkoutUrl = await polarClientAPI.postPolarCheckouts(
+                productId,
+                user.id,
+                user.email,
+                user.name,
+            );
+            if (checkoutUrl) {
+                window.location.href = checkoutUrl;
+            } else {
+                throw new Error("Failed to create checkout session");
+            }
+        } catch (error) {
+            console.error("Error in onClickPurchasePlan:", error);
+            alert("Failed to proceed to checkout. Please try again.");
         }
-    ], []);
+    }, [user, router]);
+
+    // 상품 데이터 로드 (기존 유지)
+    useEffect(() => {
+        const loadProductDataList = async () => {
+            const productDataList = await polarClientAPI.getPolarProducts();
+            if (!productDataList) {
+                throw Error("No polarProducts found");
+            }
+            setProductDataList(productDataList.sort((a, b) => a.price - b.price));
+        }
+        const loadRoadmapItemList = async () => {
+            setIsLoadingRoadmapItemList(true);
+
+            const roadmapItemList = await roadmapItemClientAPI.getRoadmaps();
+            if (!roadmapItemList) {
+                throw Error("No roadmap items found");
+            }
+            setRoadmapItemList(roadmapItemList);
+        }
+        loadProductDataList().then();
+        loadRoadmapItemList().then(() => {
+            setIsLoadingRoadmapItemList(false);
+        });
+    }, []);
 
     return (
-        <div className="min-h-screen bg-black text-white">
-            {/* Hero Section */}
-            <HeroSection
-                className="pt-40 pb-16 px-4 sm:px-6 lg:px-8"
+        // 1. [Global Base] 전체 페이지 배경색 (#0b0b15) 및 기본 설정
+        <main
+            className="relative min-h-screen pt-16 bg-[#0b0b15] text-white selection:bg-pink-500/30 overflow-x-hidden"
+            style={{
+                overflowAnchor: "none"
+            }}
+        >
+
+            {/* 2. [Global Texture] 고정된 그리드 패턴 (Fixed Position)
+                - 스크롤을 내려도 그리드는 배경에 박제되어 있어 고급스러운 깊이감을 줍니다.
+            */}
+            <div className="fixed inset-0 z-0 pointer-events-none">
+                <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808008_1px,transparent_1px),linear-gradient(to_bottom,#80808008_1px,transparent_1px)] bg-[size:32px_32px]"></div>
+            </div>
+
+            {/* 3. [Global Lighting] 페이지 전체를 아우르는 조명 배치 (Absolute Position)
+                - 섹션별로 끊기지 않고 자연스럽게 이어지도록 큰 조명들을 배치합니다.
+            */}
+            <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden h-full">
+                {/* Hero Section Area Glows (Purple & Pink) */}
+                <div className="absolute top-0 left-[-10%] w-[1000px] h-[1000px] bg-purple-900/20 blur-[150px] rounded-full mix-blend-screen opacity-70" />
+                <div className="absolute top-[10%] right-[-10%] w-[800px] h-[800px] bg-pink-900/10 blur-[150px] rounded-full mix-blend-screen opacity-70" />
+
+                {/* Features & Comparison Area Glows (Cyan & Blue) */}
+                <div className="absolute top-[40%] left-[-20%] w-[1200px] h-[1200px] bg-cyan-900/10 blur-[150px] rounded-full mix-blend-screen opacity-60" />
+
+                {/* Pricing & Bottom Area Glows (Return to Purple) */}
+                <div className="absolute bottom-0 right-[-10%] w-[1000px] h-[1000px] bg-purple-900/10 blur-[150px] rounded-full mix-blend-screen opacity-70" />
+            </div>
+
+            {/* 4. [Content Layer] 실제 섹션들 (z-index를 10으로 올려서 배경 위에 띄움) */}
+            <div className="relative z-10">
+                <HeroSection />
+
+                <FeaturesSection />
+
+                <ComparisonSection />
+
+                <HowItWorksSection />
+
+                <PricingSection
+                    productDataList={productDataList}
+                    isLoggedIn={!!user}
+                    onClickPurchasePlan={onClickPurchasePlan}
+                />
+
+                <FAQSection />
+
+                {/* Footer */}
+                <Footer/>
+            </div>
+            <FloatingRoadmap
+                roadmapItemList={roadmapItemList}
+                isLoading={isLoadingRoadmapItemList}
             />
-
-            {/* Testimonials Section */}
-            <section className="py-16 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-transparent to-gray-900/50">
-                <div className="max-w-7xl mx-auto text-center">
-                    <div className="flex justify-center items-center space-x-4 mb-12">
-                        {/* User Avatars */}
-                        <div className="flex -space-x-2">
-                            {testimonials.slice(0, 6).map((testimonial) => (
-                                <div
-                                    key={testimonial.id}
-                                    className="w-12 h-12 bg-gradient-to-r from-pink-500 to-purple-600 rounded-full flex items-center justify-center text-xl border-2 border-black"
-                                >
-                                    {testimonial.avatar}
-                                </div>
-                            ))}
-                        </div>
-
-                        {/* Rating */}
-                        <div className="flex items-center space-x-2">
-                            <div className="flex space-x-1">
-                                {[...Array(5)].map((_, i) => (
-                                    <Star key={i} className="w-5 h-5 text-yellow-400 fill-current" />
-                                ))}
-                            </div>
-                            <span className="text-gray-300 font-medium">5.0</span>
-                        </div>
-                    </div>
-
-                    <p className="text-gray-400 text-lg">
-                        Trusted by <span className="text-pink-400 font-semibold">27,000+</span> creators
-                    </p>
-                </div>
-            </section>
-
-            {/* Footer */}
-            <footer className="py-8 px-4 sm:px-6 lg:px-8 border-t border-gray-800">
-                <div className="max-w-7xl mx-auto text-center text-gray-500">
-                    <p>&copy; 2025 ShortReal. All rights reserved.</p>
-                </div>
-            </footer>
-        </div>
+        </main>
     );
 }
 

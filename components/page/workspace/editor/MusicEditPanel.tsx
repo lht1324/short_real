@@ -1,17 +1,12 @@
 import {ChangeEvent, memo, useCallback, useEffect, useMemo, useRef, useState} from "react";
-import {useWavesurfer} from "@wavesurfer/react";
-import RegionsPlugin, {Region} from "wavesurfer.js/plugins/regions";
+import Peaks, {PeaksInstance, PeaksOptions} from "peaks.js";
 import {Pause, Play, Volume2, VolumeX} from "lucide-react";
-import {MusicData} from "@/api/types/supabase/VideoGenerationTasks";
-import {audioBufferToWavBlob, renderSymmetricWave} from "@/utils/audioUtils";
-import type {WaveSurferOptions} from "wavesurfer.js";
-import {Property} from "csstype";
-import WritingMode = Property.WritingMode;
-import {MusicPlayConfig} from "@/components/page/workspace/editor/WorkspaceEditorPageClient";
+import { MusicData } from "@/api/types/supabase/VideoGenerationTasks";
 
-export enum WaveRenderMode {
-    OVERVIEW = 'overview',
-    DETAIL = 'detail'
+declare global {
+    interface Window {
+        webkitAudioContext: typeof AudioContext;
+    }
 }
 
 interface MusicEditPanelProps {
@@ -20,6 +15,7 @@ interface MusicEditPanelProps {
     panelHeight: number;
     onChangeMusicStartSec: (newStartSec: number) => void;
     onChangeMusicVolume: (newVolume: number) => void;
+    onChangeIsMuted: (newIsMuted: boolean) => void;
 }
 
 function MusicEditPanel({
@@ -28,522 +24,433 @@ function MusicEditPanel({
     panelHeight,
     onChangeMusicStartSec,
     onChangeMusicVolume,
+    onChangeIsMuted,
 }: MusicEditPanelProps) {
-    const overviewContainerRef = useRef<HTMLDivElement | null>(null);
-    const detailContainerRef = useRef<HTMLDivElement | null>(null);
-    const audioContextRef = useRef<AudioContext | null>(null);
-    const volumeRef = useRef<number>(100.0 / 100.0); // range: 0 ~ 1
-    const isClickingOverviewWaveRef = useRef(false);
+    const zoomviewRef = useRef<HTMLDivElement>(null);
+    const overviewRef = useRef<HTMLDivElement>(null);
+    const audioRef = useRef<HTMLAudioElement>(null);
+    const containerRef = useRef<HTMLDivElement>(null);
+    const zoomOverlayRef = useRef<HTMLDivElement>(null);
 
+    const isDraggingRef = useRef(false);
+
+    const [peaksInstance, setPeaksInstance] = useState<PeaksInstance | null>(null);
+    const [isPlaying, setIsPlaying] = useState(false);
+    const [containerWidth, setContainerWidth] = useState(0);
+    const [audioDuration, setAudioDuration] = useState(0);
     const [startTime, setStartTime] = useState(0);
-    const [volume, setVolume] = useState(1);
+
+    const [audioBlobUrl, setAudioBlobUrl] = useState<string | null>(null);
+    const [decodedAudioBuffer, setDecodedAudioBuffer] = useState<AudioBuffer | null>(null);
+    const [isDownloading, setIsDownloading] = useState(false);
+
+    const [volume, setVolume] = useState(1.0);
     const [isMuted, setIsMuted] = useState(false);
 
-    // 로딩 상태
-    const [isOverviewReady, setIsOverviewReady] = useState(false);
-    const [isDetailReady, setIsDetailReady] = useState(false);
+    // 뷰 높이 계산
+    const waveformHeight = Math.floor((panelHeight - 40) / 2);
 
-    // Regions 플러그인 (useMemo로 안정화)
-    const overviewRegionsPlugin = useMemo(() => RegionsPlugin.create(), []);
-    const detailRegionsPlugin = useMemo(() => RegionsPlugin.create(), []);
+    // 6. 렌더링 계산 (Overview 핑크 박스용)
+    const { boxWidth, boxLeft } = useMemo(() => {
+        const safeAudioDuration = audioDuration > 0 ? audioDuration : 1;
+        if (containerWidth === 0) return { boxWidth: 0, boxLeft: 0 };
 
-    // Plugins 배열도 안정화 (매 렌더마다 새 배열 생성 방지)
-    const overviewPlugins = useMemo(() => [overviewRegionsPlugin], [overviewRegionsPlugin]);
-    const detailPlugins = useMemo(() => [detailRegionsPlugin], [detailRegionsPlugin]);
+        const overviewPPS = containerWidth / safeAudioDuration;
+        const boxWidth = videoDuration * overviewPPS;
+        const boxLeft = startTime * overviewPPS;
 
-    const symmetricWaveRenderFunction = useCallback((
-        channels: (Float32Array | number[])[],
-        context: CanvasRenderingContext2D,
-        color: string,
-        mode: WaveRenderMode = WaveRenderMode.OVERVIEW
-    ) => {
-        return renderSymmetricWave(channels, context, color, mode);
-    }, []);
+        return { boxWidth, boxLeft }
+    }, [audioDuration, containerWidth, startTime, videoDuration]);
 
-    const overviewWaveRenderFunction = useCallback((channels: (Float32Array | number[])[], ctx: CanvasRenderingContext2D) => {
-        return symmetricWaveRenderFunction(channels, ctx, 'rgba(168, 85, 247, 0.5)', WaveRenderMode.OVERVIEW);
-    }, [symmetricWaveRenderFunction]);
-
-    const detailWaveRenderFunction = useCallback((channels: (Float32Array | number[])[], ctx: CanvasRenderingContext2D) => {
-        return symmetricWaveRenderFunction(channels, ctx, 'rgba(168, 85, 247, 0.5)', WaveRenderMode.DETAIL);
-    }, [symmetricWaveRenderFunction]);
-
-    // Overview 설정
-    const overviewOption = useMemo(() => {
-        return {
-            container: overviewContainerRef,
-            url: musicData.audioUrl,
-            waveColor: 'rgba(168, 85, 247, 0.5)', // 보라색: 아직 재생 안된 부분
-            progressColor: 'rgba(236, 72, 153, 0.85)',
-            cursorColor: 'rgba(236, 72, 153, 1)',
-            height: 'auto' as const,
-            normalize: false,
-            interact: true, // 클릭으로 Region 이동 가능
-            sampleRate: 48000,
-            backend: "WebAudio" as const,
-            renderFunction: overviewWaveRenderFunction, // 대칭 렌더링
-            plugins: overviewPlugins,
-        }
-    }, [musicData.audioUrl, overviewPlugins, overviewWaveRenderFunction]);
-
-    // Detail 설정
-    const detailOption = useMemo(() => {
-        return {
-            container: detailContainerRef,
-            // url: musicData.audioUrl, ← 이 줄 삭제 (peaks로 파형만 그림)
-            waveColor: 'rgba(168, 85, 247, 0.5)',
-            progressColor: 'rgba(236, 72, 153, 0.85)',
-            cursorColor: 'rgba(236, 72, 153, 1)',
-            cursorWidth: 2,
-            height: 'auto' as const,
-            hideScrollbar: true,
-            normalize: false,
-            interact: true,
-            autoScroll: false,
-            fillParent: true, // ← 컨테이너에 꽉 채움
-            renderFunction: detailWaveRenderFunction,
-            plugins: detailPlugins,
-        };
-    }, [detailPlugins, detailWaveRenderFunction]);
-    
-    // Overview 파형
-    const { wavesurfer: overviewWavesurfer } = useWavesurfer(overviewOption);
-
-    // Detail 파형 (확대된 뷰)
-    const { wavesurfer: detailWavesurfer } = useWavesurfer(detailOption);
-
-    const originalAudioBuffer = useMemo(() => {
-        if (!overviewWavesurfer || !isOverviewReady) return null;
-
-        return overviewWavesurfer.getDecodedData();
-    }, [overviewWavesurfer, isOverviewReady]);
-
-    const focusedAudioBufferData = useMemo(() => {
-        if (!originalAudioBuffer) return null;
-
-        const musicDuration = originalAudioBuffer.duration;
-        const regionLength = Math.min(videoDuration, musicDuration);
-        const regionStart = startTime;
-        const regionEnd = Math.min(regionStart + regionLength, musicDuration);
-
-        const sampleRate = originalAudioBuffer.sampleRate;
-        const startSample = Math.floor(regionStart * sampleRate);
-        const endSample = Math.floor(regionEnd * sampleRate);
-
-        if (endSample <= startSample) return null;
-
-        // ✅ subarray로 참조만 (복사 없음)
-        const peaks = [];
-        for (let channel = 0; channel < originalAudioBuffer.numberOfChannels; channel++) {
-            const channelData = originalAudioBuffer.getChannelData(channel);
-            peaks.push(channelData.subarray(startSample, endSample));
-        }
-
-        return {
-            peaks: peaks,
-            duration: (endSample - startSample) / sampleRate,
-            startOffset: regionStart,
-            endOffset: regionEnd,
-        };
-    }, [originalAudioBuffer, startTime, videoDuration]);
-
-    const playBetween = useCallback(async (start: number, end: number) => {
-        if (!overviewWavesurfer) return;
-
-        overviewWavesurfer.setTime(start);
-        await overviewWavesurfer.play();
-
-        // ✅ media.stopAt 제거 (finish 이벤트 차단 방지)
-        // overviewWavesurfer.media.stopAt(end);
-    }, [overviewWavesurfer]);
-
-    // 볼륨 조절
     const onChangeVolume = useCallback((e: ChangeEvent<HTMLInputElement>) => {
         const newVolume = parseFloat(e.target.value);
+
         setVolume(newVolume);
-        volumeRef.current = newVolume;
-        if (overviewWavesurfer) overviewWavesurfer.setVolume(newVolume);
-    }, [overviewWavesurfer]);
+        onChangeMusicVolume(newVolume);
+    }, [onChangeMusicVolume]);
 
     const onToggleMute = useCallback(() => {
         setIsMuted((prev) => {
-            const newIsMuted = !prev;
-
-            setVolume(newIsMuted ? 0 : volumeRef.current);
-            overviewWavesurfer?.setMuted(newIsMuted);
-            return newIsMuted;
+            onChangeIsMuted(!prev);
+            return !prev;
         });
-    }, [overviewWavesurfer]);
+    }, [onChangeIsMuted]);
 
-    // Overview Wavesurfer 준비 완료 체크
     useEffect(() => {
-        if (!overviewWavesurfer) return;
-
-        const onReady = () => {
-            setIsOverviewReady(true);
-        };
-
-        if (overviewWavesurfer.getDuration() > 0) {
-            setIsOverviewReady(true);
-        } else {
-            overviewWavesurfer.once('ready', onReady);
+        if (audioRef.current) {
+            audioRef.current.volume = isMuted
+                ? 0
+                : Math.max(0, Math.min(1, volume));
         }
+    }, [volume, isMuted]);
 
-        return () => {
-            overviewWavesurfer.un('ready', onReady);
-        };
-    }, [overviewWavesurfer]);
-
-    // Detail Wavesurfer 준비 완료 체크 - load() 완료 시마다 체크
+    // 1. 컨테이너 너비 감지
     useEffect(() => {
-        if (!detailWavesurfer) return;
-
-        const onReady = () => {
-            console.log("Detail ready!");
-            setIsDetailReady(true);
-        };
-
-        // ready 이벤트 리스너 등록
-        detailWavesurfer.on('ready', onReady);
-
-        return () => {
-            detailWavesurfer.un('ready', onReady);
-        };
-    }, [detailWavesurfer]);
-    
-    // Overview 파형 Region 설정 및 동기화
-    useEffect(() => {
-        if (!overviewWavesurfer || !isOverviewReady || !overviewRegionsPlugin) return;
-
-        const musicDuration = overviewWavesurfer.getDuration();
-        const regionLength = Math.min(videoDuration, musicDuration);
-
-        // 기존 Region 제거
-        overviewRegionsPlugin.clearRegions();
-
-        // Region 추가 (videoDuration 길이, 드래그만 가능)
-        const region: Region = overviewRegionsPlugin.addRegion({
-            start: 0,
-            end: regionLength,
-            color: 'rgba(236, 72, 153, 0.3)',
-            drag: true,
-            resize: false,
+        if (!containerRef.current) return;
+        const observer = new ResizeObserver((entries) => {
+            for (const entry of entries) {
+                if (entry.contentRect.width > 0) {
+                    setContainerWidth(entry.contentRect.width);
+                }
+            }
         });
-        
-        // Region 드래그 중 실시간 경계 체크 및 Detail View 업데이트
-        const handleUpdate = () => {
-            console.log("handleUpdate");
-            const regionStart = region.start;
-            const regionEnd = region.end;
-
-            if (regionStart <= 0) {
-                region.setOptions({
-                    start: 0,
-                    end: regionLength,
-                });
-                setStartTime(0);
-            }
-            // 오른쪽 경계 체크 - musicDuration을 넘으면 끝으로
-            else if (regionEnd >= musicDuration) {
-                region.setOptions({
-                    start: musicDuration - regionLength,
-                    end: musicDuration,
-                });
-                setStartTime(musicDuration - regionLength);
-            }
-            // 정상 범위 - 실시간 업데이트
-            else {
-                setStartTime(regionStart);
-            }
-        };
-
-        // 드래그 완료 시 startTime 업데이트
-        const handleUpdateEnd = async () => {
-            console.log("handleUpdateEnd");
-            const wasPlaying = overviewWavesurfer.isPlaying();
-
-            const regionStart = region.start;
-            const regionEnd = region.end;
-
-            // 최종 경계 체크 및 startTime 업데이트
-            if (regionStart <= 0) {
-                region.setOptions({
-                    start: 0,
-                    end: regionLength,
-                });
-                setStartTime(0);
-            }
-            // 오른쪽 경계 체크 - musicDuration을 넘으면 끝으로
-            else if (regionEnd >= musicDuration) {
-                region.setOptions({
-                    start: musicDuration - regionLength,
-                    end: musicDuration,
-                });
-                setStartTime(musicDuration - regionLength);
-            }
-            // 정상 범위 - 실시간 업데이트
-            else {
-                setStartTime(regionStart);
-            }
-
-            if (wasPlaying) {
-                const finalStart = Math.max(0, Math.min(region.start, musicDuration - regionLength));
-                const finalEnd = finalStart + regionLength;
-
-                // 기존 재생 중지 후 새 구간에서 재생
-                overviewWavesurfer.pause();
-                await overviewWavesurfer.play(finalStart, finalEnd);
-            }
-        };
-        
-        const handleClick = (relativeX: number) => {
-            console.log("handleClick");
-            const clickedTime = relativeX * musicDuration;
-
-            let newStart = clickedTime - (regionLength / 2);
-
-            if (newStart < 0) {
-                newStart = 0;
-            } else if (newStart + regionLength > musicDuration) {
-                newStart = musicDuration - regionLength;
-            }
-
-            region.setOptions({
-                start: newStart,
-                end: newStart + regionLength,
-            });
-
-            // ✅ 플래그 설정 (timeupdate가 간섭하지 못하도록)
-            isClickingOverviewWaveRef.current = true;
-
-            setStartTime(newStart);
-            overviewWavesurfer.setTime(newStart);
-
-            if (detailWavesurfer && isDetailReady) {
-                detailWavesurfer.setTime(0);
-            }
-
-            // ✅ 짧은 딜레이 후 플래그 해제
-            setTimeout(() => {
-                isClickingOverviewWaveRef.current = false;
-            }, 100);
-        };
-
-        region.on('update', handleUpdate);
-        region.on('update-end', handleUpdateEnd);
-        overviewWavesurfer.on('click', handleClick);
-
-        return () => {
-            region.un('update', handleUpdate);
-            region.un('update-end', handleUpdateEnd);
-            overviewWavesurfer.un('click', handleClick);
-        };
-    }, [overviewWavesurfer, isOverviewReady, overviewRegionsPlugin, videoDuration, detailWavesurfer, isDetailReady]);
-
-    // // Detail 파형 Region 설정 및 동기화 (Region 범위만 슬라이싱하여 표시)
-    useEffect(() => {
-        if (!detailWavesurfer || !focusedAudioBufferData) return;
-
-        // ✅ setIsDetailReady(false) 제거
-
-        detailWavesurfer.load('', focusedAudioBufferData.peaks, focusedAudioBufferData.duration)
-            .then(() => {
-                console.log("Detail peaks loaded");
-                setIsDetailReady(true); // 첫 로드 시에만 true로
-            });
-
-    }, [detailWavesurfer, focusedAudioBufferData]);
-
-    // Detail 클릭 시 Overview 위치 조절
-    useEffect(() => {
-        if (!detailWavesurfer || !isDetailReady || !overviewWavesurfer) return;
-        if (!focusedAudioBufferData) return;
-
-        const handleDetailClick = (relativeX: number) => {
-            console.log("Detail click:", relativeX);
-
-            // ✅ Detail의 상대적 위치를 Overview의 절대 위치로 변환
-            const detailDuration = focusedAudioBufferData.duration;
-            const clickedTimeInDetail = relativeX * detailDuration;
-            const absoluteTime = focusedAudioBufferData.startOffset + clickedTimeInDetail;
-
-            console.log(`Clicked at ${absoluteTime.toFixed(2)}s`);
-
-            // ✅ Overview의 재생 위치 변경 (이게 전부!)
-            overviewWavesurfer.setTime(absoluteTime);
-        };
-
-        detailWavesurfer.on('click', handleDetailClick);
-
-        return () => {
-            detailWavesurfer.un('click', handleDetailClick);
-        };
-    }, [detailWavesurfer, isDetailReady, overviewWavesurfer, focusedAudioBufferData]);
-
-
-    // Overview와 Detail 커서 동기화 + 반복 재생
-    useEffect(() => {
-        if (!overviewWavesurfer || !isOverviewReady || !focusedAudioBufferData) return;
-        if (!detailWavesurfer || !isDetailReady) return; // ✅ Detail도 필요
-        
-        const handleTimeUpdate = (currentTime: number) => {
-            // ✅ 클릭 직후에는 timeupdate 무시
-            if (isClickingOverviewWaveRef.current) return;
-
-            const { startOffset, endOffset } = focusedAudioBufferData;
-
-            if (currentTime >= startOffset && currentTime < endOffset) {
-                const relativeTime = currentTime - startOffset;
-                detailWavesurfer.setTime(relativeTime);
-            }
-
-            if (currentTime >= endOffset) {
-                overviewWavesurfer.setTime(startOffset);
-                detailWavesurfer.setTime(0);
-            }
-        };
-
-        overviewWavesurfer.on('timeupdate', handleTimeUpdate);
-
-        return () => {
-            overviewWavesurfer.un('timeupdate', handleTimeUpdate);
-        };
-    }, [overviewWavesurfer, detailWavesurfer, isOverviewReady, isDetailReady, focusedAudioBufferData]);
-
-    // 재생/일시정지 토글
-    const onClickPlayPause = useCallback(async () => {
-        if (!overviewWavesurfer || !focusedAudioBufferData) return;
-
-        if (!overviewWavesurfer.isPlaying()) {
-            const regionStart = focusedAudioBufferData.startOffset;
-            const regionEnd = focusedAudioBufferData.endOffset;
-            const currentTime = overviewWavesurfer.getCurrentTime();
-
-            if (currentTime >= regionStart && currentTime < regionEnd) {
-                await overviewWavesurfer.play();
-            } else {
-                await playBetween(
-                    focusedAudioBufferData.startOffset,
-                    focusedAudioBufferData.endOffset
-                );
-            }
-        } else {
-            overviewWavesurfer.pause();
-        }
-    }, [overviewWavesurfer, focusedAudioBufferData, playBetween]);
-
-    // 컴포넌트 마운트 시 AudioContext 생성
-    useEffect(() => {
-        audioContextRef.current = new AudioContext();
-        return () => {
-            audioContextRef.current?.close();
-        };
+        observer.observe(containerRef.current);
+        return () => observer.disconnect();
     }, []);
 
-    // musicData 변경 시 초기화
+    // [단계 1] 오디오 Fetch -> 디코딩 -> 정규화
     useEffect(() => {
-        // 재생 중이면 정지
-        if (overviewWavesurfer?.isPlaying()) {
-            overviewWavesurfer.pause();
-        }
-        if (detailWavesurfer?.isPlaying()) {
-            detailWavesurfer.pause();
-        }
+        if (!musicData.audioUrl) return;
 
-        // state 초기화
+        // [초기화] 오디오 소스가 변경되면 상태를 리셋하고 기존 인스턴스 파괴
         setStartTime(0);
-        setIsOverviewReady(false);
-        setIsDetailReady(false);
+        setIsPlaying(false);
+        setDecodedAudioBuffer(null);
+        setPeaksInstance((prev) => {
+            if (prev) {
+                prev.destroy();
+            }
+            return null;
+        });
 
-        overviewWavesurfer?.setTime(0);
-        detailWavesurfer?.setTime(0);
+        let isMounted = true;
+        setIsDownloading(true);
 
-        // region 클리어
-        overviewRegionsPlugin.clearRegions();
-        detailRegionsPlugin.clearRegions();
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        const tempCtx = new AudioContextClass();
 
-    }, [musicData.audioUrl, overviewWavesurfer, detailWavesurfer, overviewRegionsPlugin, detailRegionsPlugin]);
+        fetch(musicData.audioUrl)
+            .then(async (response) => {
+                if (!response.ok) throw new Error("Audio fetch failed");
 
+                const clone = response.clone();
+                const blob = await response.blob();
+                const arrayBuffer = await clone.arrayBuffer();
+
+                if (!isMounted) return;
+
+                const objectUrl = URL.createObjectURL(blob);
+                setAudioBlobUrl(objectUrl);
+
+                try {
+                    const audioBuffer = await tempCtx.decodeAudioData(arrayBuffer);
+
+                    // 정규화 (Normalization)
+                    const rawData = audioBuffer.getChannelData(0);
+                    let maxAmp = 0;
+                    for (let i = 0; i < rawData.length; i++) {
+                        const val = Math.abs(rawData[i]);
+                        if (val > maxAmp) maxAmp = val;
+                    }
+
+                    // 소리가 작으면 증폭
+                    if (maxAmp > 0 && maxAmp < 0.9) {
+                        const multiplier = 0.95 / maxAmp;
+                        for (let i = 0; i < rawData.length; i++) {
+                            rawData[i] *= multiplier;
+                        }
+                    }
+
+                    setDecodedAudioBuffer(audioBuffer);
+                } catch (decodeErr) {
+                    console.error("Decode Error:", decodeErr);
+                }
+            })
+            .catch(err => console.error(err))
+            .finally(() => {
+                if (isMounted) setIsDownloading(false);
+                if (tempCtx.state !== 'closed') tempCtx.close();
+            });
+
+        return () => {
+            isMounted = false;
+            if (audioBlobUrl) URL.revokeObjectURL(audioBlobUrl);
+        };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [musicData.audioUrl]);
+
+
+    // [단계 2] Peaks.js 초기화
     useEffect(() => {
-        onChangeMusicStartSec(startTime);
-    }, [startTime, onChangeMusicStartSec]);
+        if (
+            !zoomviewRef.current ||
+            !overviewRef.current ||
+            !audioRef.current ||
+            !decodedAudioBuffer ||
+            containerWidth <= 0
+        ) return;
 
+        if (zoomviewRef.current.clientHeight === 0) return;
+        if (peaksInstance) return;
+
+        const options: PeaksOptions = {
+            zoomview: {
+                container: zoomviewRef.current,
+                // [디자인 복구] 보라색 계열
+                waveformColor: 'rgba(168, 85, 247, 0.4)',
+                playedWaveformColor: 'rgba(168, 85, 247, 0.9)',
+                playheadColor: 'rgba(236, 72, 153, 1)',
+                showPlayheadTime: true,
+                axisLabelColor: '#aaa',
+                wheelMode: "scroll",
+                formatAxisTime: () => "",
+                autoScroll: false,
+            },
+            overview: {
+                container: overviewRef.current,
+                waveformColor: 'rgba(255, 255, 255, 0.35)',
+                playedWaveformColor: 'rgba(236, 72, 153, 0.9)',
+                playheadColor: 'rgba(236, 72, 153, 1)',
+                highlightColor: 'transparent',
+                axisLabelColor: '#aaa',
+            },
+            mediaElement: audioRef.current,
+            webAudio: {
+                audioBuffer: decodedAudioBuffer,
+                scale: 128,
+                multiChannel: false,
+            },
+            showAxisLabels: true,
+            emitCueEvents: true,
+        };
+
+        Peaks.init(options, (err, peaks) => {
+            if (err) {
+                console.error("Peaks Init Error:", err);
+                return;
+            }
+            if (!peaks) return;
+
+            // [안전한 줌 적용]
+            const zoomView = peaks.views.getView('zoomview');
+            if (zoomView && videoDuration > 0) {
+                zoomView.setZoom({ seconds: videoDuration });
+                zoomView.setStartTime(0);
+            }
+
+            setAudioDuration(decodedAudioBuffer.duration);
+            setPeaksInstance(peaks);
+            peaks.segments.removeAll();
+        });
+
+        return () => {
+            if (peaksInstance && typeof peaksInstance === 'object') (peaksInstance as PeaksInstance).destroy();
+        };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [decodedAudioBuffer, containerWidth]);
+
+
+    // 3. Zoomview 동기화
     useEffect(() => {
-        onChangeMusicVolume(volume);
-    }, [volume, onChangeMusicVolume]);
+        if (!peaksInstance) return;
+        const zoomView = peaksInstance.views.getView('zoomview');
+        if (!zoomView) return;
+
+        zoomView.setStartTime(startTime);
+
+        if (videoDuration > 0) {
+            zoomView.setZoom({ seconds: videoDuration });
+        }
+    }, [startTime, peaksInstance, containerWidth, videoDuration]);
+
+
+    // 4. 이벤트 핸들러
+    useEffect(() => {
+        if (!peaksInstance) return;
+        const onTimeUpdate = (time: number) => {
+            if (time >= startTime + videoDuration) peaksInstance.player.seek(startTime);
+        };
+        const onOverviewClick = (event: { time: number; evt: MouseEvent }) => {
+            if (isDraggingRef.current) return;
+            const clickTime = event.time;
+            const maxTime = audioDuration - videoDuration;
+            const newTime = Math.max(0, Math.min(clickTime, maxTime));
+            setStartTime(newTime);
+            onChangeMusicStartSec(newTime);
+            peaksInstance.player.seek(newTime);
+        };
+        const onPlayerPlaying = () => setIsPlaying(true);
+        const onPlayerPause = () => setIsPlaying(false);
+        const onPlayerEnded = () => setIsPlaying(false);
+
+        peaksInstance.on('player.timeupdate', onTimeUpdate);
+        peaksInstance.on('player.playing', onPlayerPlaying);
+        peaksInstance.on('player.pause', onPlayerPause);
+        peaksInstance.on('player.ended', onPlayerEnded);
+        peaksInstance.on('overview.click', onOverviewClick);
+
+        return () => {
+            peaksInstance.off('player.timeupdate', onTimeUpdate);
+            peaksInstance.off('player.playing', onPlayerPlaying);
+            peaksInstance.off('player.pause', onPlayerPause);
+            peaksInstance.off('player.ended', onPlayerEnded);
+            peaksInstance.off('overview.click', onOverviewClick);
+        };
+    }, [peaksInstance, startTime, videoDuration, audioDuration, onChangeMusicStartSec]);
+
+    // 5. 드래그 핸들러 (Overview)
+    const handleDragStart = (e: React.MouseEvent) => {
+        if (!peaksInstance) return;
+        isDraggingRef.current = true;
+        const startX = e.clientX;
+        const initialStartTime = startTime;
+        const safeAudioDuration = audioDuration > 0 ? audioDuration : 1;
+        const pps = containerWidth / safeAudioDuration;
+        if (!pps || pps === Infinity) return;
+        let currentDragTime = initialStartTime;
+        const handleMouseMove = (moveEvent: MouseEvent) => {
+            const deltaX = moveEvent.clientX - startX;
+            const deltaTime = deltaX / pps;
+            let newTime = initialStartTime + deltaTime;
+            const maxTime = audioDuration - videoDuration;
+            if (newTime < 0) newTime = 0;
+            if (newTime > maxTime) newTime = maxTime;
+            currentDragTime = newTime;
+            setStartTime(newTime);
+        };
+        const handleMouseUp = () => {
+            isDraggingRef.current = false;
+            window.removeEventListener('mousemove', handleMouseMove);
+            window.removeEventListener('mouseup', handleMouseUp);
+            peaksInstance.player.seek(currentDragTime);
+            onChangeMusicStartSec(currentDragTime);
+        };
+        window.addEventListener('mousemove', handleMouseMove);
+        window.addEventListener('mouseup', handleMouseUp);
+    };
+
+    // 6. 스크러빙 핸들러 (Zoomview)
+    const handleZoomScrub = (e: React.MouseEvent) => {
+        if (!peaksInstance || !zoomOverlayRef.current) return;
+        e.preventDefault();
+        const rect = zoomOverlayRef.current.getBoundingClientRect();
+        if (rect.width === 0) return;
+        const calculateTime = (clientX: number) => {
+            const offsetX = clientX - rect.left;
+            const ratio = Math.max(0, Math.min(1, offsetX / rect.width));
+            const timeOffset = ratio * videoDuration;
+            let targetTime = startTime + timeOffset;
+            targetTime = Math.max(startTime, Math.min(startTime + videoDuration, targetTime));
+            return targetTime;
+        };
+        const initialTime = calculateTime(e.clientX);
+        peaksInstance.player.seek(initialTime);
+        const onMouseMove = (moveEvt: MouseEvent) => {
+            const time = calculateTime(moveEvt.clientX);
+            peaksInstance.player.seek(time);
+        };
+        const onMouseUp = () => {
+            window.removeEventListener('mousemove', onMouseMove);
+            window.removeEventListener('mouseup', onMouseUp);
+        };
+        window.addEventListener('mousemove', onMouseMove);
+        window.addEventListener('mouseup', onMouseUp);
+    };
+
+    const togglePlay = useCallback(() => {
+        if (!peaksInstance) return;
+        if (isPlaying) {
+            peaksInstance.player.pause();
+        } else {
+            const current = peaksInstance.player.getCurrentTime();
+            if (current < startTime || current > startTime + videoDuration) {
+                peaksInstance.player.seek(startTime);
+            }
+            peaksInstance.player.play();
+        }
+    }, [peaksInstance, isPlaying, startTime, videoDuration]);
 
     return (
         <div
-            className="relative bg-gray-900/30 backdrop-blur-sm border-t border-purple-500/20 flex"
+            className="w-full bg-gray-900 border-t border-purple-500/20 flex flex-col select-none overflow-hidden"
             style={{ height: `${panelHeight}px` }}
+            ref={containerRef}
         >
-            {/* 왼쪽: Wave 패널 */}
-            <div className="flex-1 flex flex-col p-2 gap-2">
-                {/* Overview 파형 */}
-                <div className="relative flex-[0.35] bg-gray-800/50 border border-purple-500/30 rounded-lg overflow-hidden">
-                    <div ref={overviewContainerRef} className="h-full" />
-                    {/*<div ref={overviewContainerRef} />*/}
-                </div>
+            {audioBlobUrl && (
+                <audio ref={audioRef} src={audioBlobUrl} className="hidden" />
+            )}
 
-                {/* Detail 파형 */}
-                <div className="relative flex-[0.65] bg-gray-800/50 border border-purple-500/30 rounded-lg overflow-hidden">
-                    <div ref={detailContainerRef} className="h-full overflow-x-auto" />
-                    {/*<div ref={detailContainerRef} />*/}
+            {/* --- Controls --- */}
+            <div className="flex items-center justify-between px-3 py-2 bg-gray-900/50 border-b border-purple-500/10 h-10 shrink-0 z-20">
+                <div className="flex items-center gap-3">
                     <button
-                        onClick={onClickPlayPause}
-                        disabled={!isDetailReady}
-                        className="absolute top-2 left-2 p-1.5 text-white bg-purple-600/80 rounded-md hover:bg-purple-700 disabled:bg-gray-700 disabled:cursor-not-allowed transition-colors z-10"
+                        onClick={togglePlay}
+                        disabled={isDownloading}
+                        className={`p-1.5 rounded-full text-white shadow-sm flex items-center justify-center transition-transform active:scale-95 ${
+                            isDownloading ? 'bg-gray-600 cursor-not-allowed' : 'bg-purple-600 hover:bg-purple-500'
+                        }`}
                     >
-                        {overviewWavesurfer?.isPlaying() ? <Pause size={14} /> : <Play size={14} />}
-                    </button>
-                </div>
-            </div>
-
-            {/* 오른쪽: 볼륨 슬라이더 */}
-            <div className="w-20 flex flex-col items-center justify-center p-2 border-l border-purple-500/30">
-                <input
-                    type="range"
-                    min="0"
-                    max="1"
-                    step="0.01"
-                    value={volume}
-                    onChange={onChangeVolume}
-                    className="accent-purple-500"
-                    style={{
-                        writingMode: 'bt-lr' as WritingMode,
-                        WebkitAppearance: 'slider-vertical',
-                        height: '70%',
-                        width: '8px'
-                    }}
-                />
-                {/* 볼륨 퍼센트 + 뮤트 버튼 (가로 배치) */}
-                <div className="flex items-center gap-1 mt-1">
-                    <span className="text-sm text-purple-300">
-                        {isMuted ? "0%" : `${Math.round(volume * 100)}%`}
-                    </span>
-                    <button
-                        onClick={onToggleMute}
-                        className="p-0.5 rounded hover:bg-purple-600/20 transition-all"
-                        title={isMuted ? "Mute" : "Unmute"}
-                    >
-                        {isMuted ? (
-                            <VolumeX size={16} className="text-purple-400" />
+                        {isDownloading ? (
+                            <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                        ) : isPlaying ? (
+                            <Pause size={14} fill="currentColor" />
                         ) : (
-                            <Volume2 size={16} className="text-purple-400" />
+                            <Play size={14} fill="currentColor" />
                         )}
                     </button>
+                    <span className="text-xs text-gray-300 font-mono">
+                        {startTime.toFixed(1)}s ~ {(startTime + videoDuration).toFixed(1)}s
+                    </span>
+                </div>
+
+                {/* [수정됨] 볼륨 컨트롤러 (가로형) */}
+                <div className="flex items-center gap-2">
+                    <button
+                        onClick={onToggleMute}
+                        className="p-1.5 rounded-full text-gray-400 hover:text-white hover:bg-white/10 transition-colors"
+                        title={isMuted ? "Unmute" : "Mute"}
+                    >
+                        {isMuted ? (
+                            <VolumeX size={14} />
+                        ) : (
+                            <Volume2 size={14} />
+                        )}
+                    </button>
+
+                    <input
+                        type="range"
+                        min="0"
+                        max="1"
+                        step="0.01"
+                        value={volume}
+                        onChange={onChangeVolume}
+                        className="w-20 h-1 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-purple-500 hover:accent-purple-400"
+                    />
+                    <span className="text-[10px] text-gray-400 w-6 text-right tabular-nums">
+                            {Math.round(volume * 100)}%
+                        </span>
                 </div>
             </div>
 
-            {/* 로딩 오버레이 */}
-            {(!isOverviewReady || !isDetailReady) && (
-                <div className="absolute inset-0 flex items-center justify-center bg-gray-900/95 backdrop-blur-sm z-50">
-                    <div className="flex items-center gap-2">
-                        <div className="w-6 h-6 border-2 border-purple-500/20 border-t-purple-500 rounded-full animate-spin" />
-                        <p className="text-white text-sm">Loading Music data...</p>
-                    </div>
+            <div className="flex-1 flex flex-col relative min-h-0">
+                <div className="w-full relative bg-gray-800/20 border-b border-gray-700/50 shrink-0 group" style={{ height: `${waveformHeight}px` }}>
+                    <div ref={zoomviewRef} className="w-full h-full" />
+                    <div ref={zoomOverlayRef} onMouseDown={handleZoomScrub} className="absolute inset-0 z-30 cursor-crosshair bg-transparent" title="Click or Drag to scrub" />
+                    <div className="absolute top-2 right-2 px-1.5 py-0.5 bg-black/40 text-[9px] text-purple-300 rounded border border-purple-500/20 pointer-events-none z-10">Detailed View</div>
                 </div>
-            )}
+
+                <div className="w-full relative bg-gray-900/40 flex-1 min-h-0" style={{ height: `${waveformHeight}px` }}>
+                    <div ref={overviewRef} className="w-full h-full" />
+                    {audioDuration > 0 && (
+                        <div className="absolute top-0 bottom-0 left-0 right-0 pointer-events-none">
+                            <div onMouseDown={handleDragStart} className="absolute h-full bg-pink-500/20 border-x border-pink-500 cursor-grab active:cursor-grabbing hover:bg-pink-500/30 transition-colors z-10 group" style={{ width: `${boxWidth}px`, transform: `translateX(${boxLeft}px)`, pointerEvents: 'auto' }}>
+                                <div className="absolute top-0 left-0 bottom-0 w-1 bg-pink-500/50" />
+                                <div className="absolute top-0 right-0 bottom-0 w-1 bg-pink-500/50" />
+                                <div className="absolute -top-4 left-0 text-[9px] text-pink-400 font-bold opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap bg-black/80 px-1 rounded">Move</div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+
+                {(audioDuration === 0 || isDownloading) && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-gray-900/80 z-50">
+                        <div className="flex flex-col items-center gap-2">
+                            <div className="animate-spin w-5 h-5 border-2 border-purple-500 border-t-transparent rounded-full" />
+                            <span className="text-xs text-gray-400">{isDownloading ? "Analysing Audio..." : "Waiting for Audio..."}</span>
+                        </div>
+                    </div>
+                )}
+            </div>
         </div>
     );
 }

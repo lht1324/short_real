@@ -1,102 +1,284 @@
-import {Style} from "@/api/types/supabase/Styles";
+import { Style } from "@/api/types/supabase/Styles";
 
 export const STYLE_DATA_LIST: Style[] = [
     {
-        id: 'realistic',
-        name: 'Realistic',
-        description: 'Photorealistic rendering with high detail and lifelike accuracy.',
-        stylePrompt: 'photorealistic, DSLR quality, professional photography, high detail, natural lighting, lifelike textures, 8K resolution, sharp focus',
-        thumbnailUrl: '/api/placeholder/200/356'
+        uiMetadata: {
+            id: 'realistic',
+            label: 'Realistic',
+            thumbnailUrl: '/api/placeholder/200/356'
+        },
+        generationParams: {
+            coreConcept: "High-fidelity cinematic rendering with atmospheric depth and storytelling composition.",
+            visualKeywords: [
+                "wide cinematic imagery",
+                "anamorphic lens look",
+                "natural lighting",
+                "believable texture",
+                "visual clarity"
+            ],
+            negativeGuidance: "Avoid editorial fashion close-ups, avoid excessive micro-contrast, avoid grotesque skin textures.",
+            preferredFramingLogic: "Prioritize wide shots and medium shots over extreme close-ups to enhance cinematic feel."
+        }
     },
     {
-        id: 'cinematic',
-        name: 'Cinematic',
-        description: 'Film-like quality with dramatic lighting and professional color grading.',
-        stylePrompt: 'cinematic lighting, film grain, dramatic shadows, professional color grading, movie still, widescreen aspect ratio, depth of field',
-        thumbnailUrl: '/api/placeholder/200/356'
+        uiMetadata: {
+            id: 'cinematic',
+            label: 'Cinematic',
+            thumbnailUrl: '/api/placeholder/200/356'
+        },
+        generationParams: {
+            coreConcept: "Film-like quality with dramatic lighting and professional color grading.",
+            visualKeywords: [
+                "feature film cinematography",
+                "emotional storytelling through light",
+                "moody atmosphere",
+                "anamorphic lens aesthetic",
+                "wide dynamic range",
+                "director's vision"
+            ],
+            negativeGuidance: "Avoid flat lighting, avoid amateur video look, avoid oversaturation.",
+            preferredFramingLogic: "Use cinematic composition techniques like rule of thirds and leading lines."
+        }
     },
     {
-        id: 'vintage',
-        name: 'Vintage',
-        description: 'Emulates the look of old film stock with grain, light leaks, and faded colors.',
-        stylePrompt: 'vintage photography, film grain, retro colors, aged paper texture, light leaks, faded colors, nostalgic mood, old film aesthetic',
-        thumbnailUrl: '/api/placeholder/200/356'
+        uiMetadata: {
+            id: 'vintage',
+            label: 'Vintage',
+            thumbnailUrl: '/api/placeholder/200/356'
+        },
+        generationParams: {
+            coreConcept: "Emulates the look of old film stock with nostalgic warmth and imperfections.",
+            visualKeywords: [
+                "analog film photography",
+                "nostalgic memory",
+                "faded kodachrome warmth",
+                "retro 1970s aesthetic",
+                "imperfection as beauty",
+                "timeless classic"
+            ],
+            negativeGuidance: "Avoid sharp digital clarity, avoid modern HD look, avoid cold colors.",
+            preferredFramingLogic: "Focus on candid moments and slightly softer focus to mimic vintage lenses."
+        }
     },
     {
-        id: 'line_art',
-        name: 'Line Art',
-        description: 'Clean, minimalist style focusing on outlines and contours with little to no shading.',
-        stylePrompt: 'line art, clean lineart, minimalist design, black and white, simple outlines, no shading, vector style, contour drawing',
-        thumbnailUrl: '/api/placeholder/200/356'
+        uiMetadata: {
+            id: 'line_art',
+            label: 'Line Art',
+            thumbnailUrl: '/api/placeholder/200/356'
+        },
+        generationParams: {
+            coreConcept: "Clean, minimalist style focusing on outlines and contours with little to no shading.",
+            visualKeywords: [
+                "minimalist ink illustration",
+                "elegance in simplicity",
+                "continuous line drawing",
+                "negative space usage",
+                "hand-drawn sketch",
+                "architectural precision"
+            ],
+            negativeGuidance: "Avoid shading, avoid gradients, avoid photorealism, avoid complex textures.",
+            preferredFramingLogic: "Use clean compositions with ample negative space to highlight the lines."
+        }
     },
     {
-        id: 'cartoon',
-        name: 'Cartoon',
-        description: 'Stylized with exaggerated features, bold outlines, and vibrant, flat colors.',
-        stylePrompt: 'cartoon style, bold outlines, flat colors, exaggerated features, vibrant colors, cell shading, animated style, colorful',
-        thumbnailUrl: '/api/placeholder/200/356'
+        uiMetadata: {
+            id: 'cartoon',
+            label: 'Cartoon',
+            thumbnailUrl: '/api/placeholder/200/356'
+        },
+        generationParams: {
+            coreConcept: "Stylized with exaggerated features, bold outlines, and vibrant, flat colors.",
+            visualKeywords: [
+                "vibrant Saturday morning cartoon style",
+                "playful energy",
+                "exaggerated expressions",
+                "bold graphical shapes",
+                "fun and dynamic",
+                "colorful animation"
+            ],
+            negativeGuidance: "Avoid realistic textures, avoid sombre tones, avoid gritty details.",
+            preferredFramingLogic: "Emphasize dynamic action poses and exaggerated perspectives."
+        }
     },
     {
-        id: 'anime',
-        name: 'Anime',
-        description: 'Japanese animation style, characterized by large expressive eyes and vibrant scenes.',
-        stylePrompt: 'anime style, manga art, cel-shading, vibrant colors, Japanese animation, large expressive eyes, clean lineart, anime aesthetic',
-        thumbnailUrl: '/api/placeholder/200/356'
+        uiMetadata: {
+            id: 'anime',
+            label: 'Anime',
+            thumbnailUrl: '/api/placeholder/200/356'
+        },
+        generationParams: {
+            coreConcept: "Japanese animation style, characterized by large expressive eyes and vibrant scenes.",
+            visualKeywords: [
+                "high-budget anime production",
+                "emotional sky rendering",
+                "detailed background art",
+                "vibrant youth energy",
+                "dramatic anime lighting",
+                "Shinkai-esque atmosphere"
+            ],
+            negativeGuidance: "Avoid western cartoon style, avoid low quality sketch, avoid realistic proportions.",
+            preferredFramingLogic: "Use dramatic angles and focus on character expressions and environmental grandeur."
+        }
     },
     {
-        id: 'pop_art',
-        name: 'Pop Art',
-        description: 'Inspired by Andy Warhol, featuring bold, saturated colors and comic book aesthetics.',
-        stylePrompt: 'pop art, Andy Warhol style, bold saturated colors, comic book aesthetic, halftone dots, high contrast, retro poster style',
-        thumbnailUrl: '/api/placeholder/200/356'
+        uiMetadata: {
+            id: 'pop_art',
+            label: 'Pop Art',
+            thumbnailUrl: '/api/placeholder/200/356'
+        },
+        generationParams: {
+            coreConcept: "Inspired by Andy Warhol, featuring bold, saturated colors and comic book aesthetics.",
+            visualKeywords: [
+                "bold pop art aesthetic",
+                "iconic cultural imagery",
+                "high contrast screen print",
+                "saturated primary colors",
+                "retro comic book punch",
+                "artistic rebellion"
+            ],
+            negativeGuidance: "Avoid subtle gradients, avoid muted colors, avoid realistic shading.",
+            preferredFramingLogic: "Focus on bold, iconic close-ups and repetitive patterns."
+        }
     },
     {
-        id: 'pixel_art',
-        name: 'Pixel Art',
-        description: 'Retro digital art made of visible pixels, reminiscent of 8-bit and 16-bit video games.',
-        stylePrompt: 'pixel art, 8-bit style, 16-bit graphics, retro gaming, visible pixels, low resolution, pixelated, retro digital art',
-        thumbnailUrl: '/api/placeholder/200/356'
+        uiMetadata: {
+            id: 'pixel_art',
+            label: 'Pixel Art',
+            thumbnailUrl: '/api/placeholder/200/356'
+        },
+        generationParams: {
+            coreConcept: "Retro digital art made of visible pixels, reminiscent of 8-bit and 16-bit video games.",
+            visualKeywords: [
+                "nostalgic pixel art",
+                "golden age of gaming",
+                "intricate sprite work",
+                "digital retro aesthetic",
+                "16-bit fantasy world",
+                "charm of low resolution"
+            ],
+            negativeGuidance: "Avoid anti-aliasing, avoid vector curves, avoid high resolution smoothness.",
+            preferredFramingLogic: "Use orthogonal or side-scrolling perspectives typical of retro games."
+        }
     },
     {
-        id: 'concept_art',
-        name: 'Concept Art',
-        description: 'Painterly and atmospheric style used in film and game development to visualize ideas.',
-        stylePrompt: 'concept art, digital painting, atmospheric lighting, painterly style, matte painting, cinematic concept, detailed artwork',
-        thumbnailUrl: '/api/placeholder/200/356'
+        uiMetadata: {
+            id: 'concept_art',
+            label: 'Concept Art',
+            thumbnailUrl: '/api/placeholder/200/356'
+        },
+        generationParams: {
+            coreConcept: "Painterly and atmospheric style used in film and game development to visualize ideas.",
+            visualKeywords: [
+                "epic digital concept art",
+                "world-building visualization",
+                "atmospheric matte painting",
+                "storytelling through environment",
+                "imagination unleashed",
+                "detailed fantasy/sci-fi"
+            ],
+            negativeGuidance: "Avoid doodles, avoid unfinished sketch look, avoid flat lighting.",
+            preferredFramingLogic: "Prioritize wide environmental shots that establish scale and mood."
+        }
     },
     {
-        id: 'steampunk',
-        name: 'Steampunk',
-        description: 'A retrofuturistic style combining Victorian-era aesthetics with industrial steam-powered machinery.',
-        stylePrompt: 'steampunk aesthetic, Victorian era, brass machinery, industrial design, steam-powered, gears and cogs, retrofuturistic, copper tones',
-        thumbnailUrl: '/api/placeholder/200/356'
+        uiMetadata: {
+            id: 'steampunk',
+            label: 'Steampunk',
+            thumbnailUrl: '/api/placeholder/200/356'
+        },
+        generationParams: {
+            coreConcept: "A retrofuturistic style combining Victorian-era aesthetics with industrial steam-powered machinery.",
+            visualKeywords: [
+                "victorian industrial fantasy",
+                "brass and steam aesthetic",
+                "romantic retro-futurism",
+                "intricate clockwork mechanisms",
+                "adventure and invention",
+                "warm copper tones"
+            ],
+            negativeGuidance: "Avoid modern digital tech, avoid clean plastic surfaces, avoid cold blue tones.",
+            preferredFramingLogic: "Highlight mechanical details and grand industrial landscapes."
+        }
     },
     {
-        id: 'neon_synth',
-        name: 'Neon Synth',
-        description: 'An 80s retro-futuristic aesthetic with glowing neon grids, vibrant pinks, and purples.',
-        stylePrompt: 'synthwave aesthetic, neon lights, 80s retro, glowing grids, vibrant pinks and purples, cyberpunk neon, retrowave, vaporwave',
-        thumbnailUrl: '/api/placeholder/200/356'
+        uiMetadata: {
+            id: 'neon_synth',
+            label: 'Neon Synth',
+            thumbnailUrl: '/api/placeholder/200/356'
+        },
+        generationParams: {
+            coreConcept: "An 80s retro-futuristic aesthetic with glowing neon grids, vibrant pinks, and purples.",
+            visualKeywords: [
+                "80s retrowave dream",
+                "neon-soaked night",
+                "digital horizon",
+                "vibrant magenta and cyan",
+                "retro-future nostalgia",
+                "electronic atmosphere"
+            ],
+            negativeGuidance: "Avoid dull colors, avoid daylight scenes, avoid rustic textures.",
+            preferredFramingLogic: "Use central perspective grids and silhouette contrasts."
+        }
     },
     {
-        id: 'cyberpunk',
-        name: 'Cyberpunk',
-        description: 'A dystopian futuristic setting with neon-drenched cityscapes and advanced technology.',
-        stylePrompt: 'cyberpunk aesthetic, neon-drenched cityscape, futuristic technology, dark atmosphere, sci-fi, dystopian future, holographic displays',
-        thumbnailUrl: '/api/placeholder/200/356'
+        uiMetadata: {
+            id: 'cyberpunk',
+            label: 'Cyberpunk',
+            thumbnailUrl: '/api/placeholder/200/356'
+        },
+        generationParams: {
+            coreConcept: "A dystopian futuristic setting with neon-drenched cityscapes and advanced technology.",
+            visualKeywords: [
+                "high-tech low-life",
+                "dystopian noir",
+                "neon rain",
+                "sprawling futuristic metropolis",
+                "gritty realism meets advanced tech",
+                "dark sci-fi atmosphere"
+            ],
+            negativeGuidance: "Avoid sunny utopian vibes, avoid clean nature, avoid primitive tech.",
+            preferredFramingLogic: "Use low angles to emphasize towering skylines and dense urban clutter."
+        }
     },
     {
-        id: 'fantasy',
-        name: 'Fantasy',
-        description: 'Epic and magical settings featuring mythical creatures, castles, and enchanted forests.',
-        stylePrompt: 'fantasy art, magical atmosphere, mythical creatures, enchanted forest, medieval castles, epic landscape, mystical lighting, magical realism',
-        thumbnailUrl: '/api/placeholder/200/356'
+        uiMetadata: {
+            id: 'fantasy',
+            label: 'Fantasy',
+            thumbnailUrl: '/api/placeholder/200/356'
+        },
+        generationParams: {
+            coreConcept: "Epic and magical settings featuring mythical creatures, castles, and enchanted forests.",
+            visualKeywords: [
+                "epic high fantasy",
+                "mystical and enchanted world",
+                "legends and myths brought to life",
+                "magical realism",
+                "ethereal beauty",
+                "ancient wonder"
+            ],
+            negativeGuidance: "Avoid sci-fi elements, avoid modern technology, avoid mundane urban settings.",
+            preferredFramingLogic: "Emphasize grandeur and scale, showcasing the magical environment."
+        }
     },
     {
-        id: 'gothic',
-        name: 'Gothic',
-        description: 'A dark, mysterious, and moody style with macabre themes and ornate architecture.',
-        stylePrompt: 'gothic architecture, dark atmosphere, mysterious mood, ornate details, dramatic shadows, macabre themes, medieval gothic, dark romanticism',
-        thumbnailUrl: '/api/placeholder/200/356'
+        uiMetadata: {
+            id: 'gothic',
+            label: 'Gothic',
+            thumbnailUrl: '/api/placeholder/200/356'
+        },
+        generationParams: {
+            coreConcept: "A dark, mysterious, and moody style with macabre themes and ornate architecture.",
+            visualKeywords: [
+                "dark romanticism",
+                "mysterious shadows",
+                "haunted beauty",
+                "ornate gothic grandeur",
+                "melancholic atmosphere",
+                "tales of the macabre",
+                "dramatic darkness"
+            ],
+            negativeGuidance: "Avoid bright cheerful colors, avoid modern minimalism, avoid comedy vibes.",
+            preferredFramingLogic: "Use shadows and high contrast to create mystery and depth."
+        }
     }
-]
+];

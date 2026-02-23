@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { imageServerAPI } from '@/api/server/imageServerAPI';
-import {getNextBaseResponse} from "@/utils/getNextBaseResponse";
+import { getNextBaseResponse } from "@/utils/getNextBaseResponse";
 
 export async function GET(request: NextRequest) {
     try {

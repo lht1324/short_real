@@ -1,0 +1,25 @@
+services:
+  next-server:
+    build: .
+    # [Docker 프로젝트]의 이름
+    container_name: short-real-server
+
+    # 포트 연결: [Docker] 3001번 <-> [PC] 3000번
+    ports:
+      - "3001:3000"
+
+    # 여기가 작성자님이 원하시는 '연결' 설정입니다.
+    volumes:
+      # 1. [PC 프로젝트]의 모든 파일(./app 포함)을 [Docker 프로젝트]의 /workdir로 투영
+      # -> PC에서 app 폴더를 고치면 Docker가 바로 인식함
+      - ./:/workdir
+
+      # 2. [Docker 프로젝트]의 node_modules는 보호 (PC 프로젝트와 섞이지 않게)
+      # -> Docker는 리눅스용 라이브러리를 따로 관리함
+      - /workdir/node_modules
+      - /workdir/.next
+      - /workdir/.git
+
+    environment:
+      # 윈도우 파일 시스템 위에서 돌릴 경우를 대비한 핫 리로딩 설정
+      - WATCHPACK_POLLING=true

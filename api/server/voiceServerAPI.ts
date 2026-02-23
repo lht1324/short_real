@@ -10,34 +10,30 @@ import {
 import {SubtitleSegment} from "@/api/types/supabase/VideoGenerationTasks";
 import {createSupabaseServer} from "@/lib/supabaseServer";
 import {createSupabaseServiceRoleClient} from "@/lib/supabaseServiceRole";
+import {VoiceResponseModelCategory} from "@elevenlabs/elevenlabs-js/api/types/VoiceResponseModelCategory";
 
 export const voiceServerAPI = {
     // GET /voices - 사용 가능한 음성 목록 조회
     async getVoices(): Promise<Voice[]> {
-        const response = await elevenLabsClient.voices.search({
-            pageSize: 100,
-            search: "en"
+        const response = await elevenLabsClient.voices.getAll({
+            showLegacy: false,
         });
 
-        return response.voices.map((voice: VoiceOrigin) => {
+        // return response.voices.filter(isVerifiedEnglishVoice).map((voice: VoiceOrigin) => {
+        return response.voices.filter((voice: VoiceOrigin) => {
+            return voice.category === VoiceResponseModelCategory.Premade &&
+                voice.labels?.language === "en";
+        }).map((voice: VoiceOrigin) => {
             return {
                 id: voice.voiceId,
                 name: voice.name || 'Unknown',
                 description: voice.description || '',
-                category: voice.category || 'general',
-                language: voice.labels?.language || 'en',
-                gender: voice.labels?.gender || 'unknown',
-                age: voice.labels?.age || 'unknown',
-                accent: voice.labels?.accent || 'unknown',
+                gender: voice.labels?.gender || '',
+                age: voice.labels?.age || '',
+                accent: voice.labels?.accent || '',
+                descriptive: voice.labels?.descriptive,
+                useCase: voice.labels?.use_case || '',
                 previewUrl: voice.previewUrl || '',
-                labels: voice.labels ? {
-                    accent: voice.labels.accent,
-                    descriptive: voice.labels.descriptive,
-                    age: voice.labels.age,
-                    gender: voice.labels.gender,
-                    language: voice.labels.language,
-                    use_case: voice.labels.use_case
-                } : undefined
             }
         }).sort((a: Voice, b: Voice) => {
             return a.name.localeCompare(b.name)
@@ -49,13 +45,13 @@ export const voiceServerAPI = {
         text: string,
         voiceId: string,
         voiceSettings: VoiceSettings = {
-            stability: 0.6,
-            similarity_boost: 0.7,
-            style: 0.0,
-            use_speaker_boost: false,
+            stability: 0.5,
+            similarity_boost: 0.75,
+            style: 0.1,
+            use_speaker_boost: true,
             speed: 1.1
         },
-        voiceModelId: VoiceGenerationModelId = VoiceGenerationModelId.ELEVEN_FLASH_V2,
+        voiceModelId: VoiceGenerationModelId = VoiceGenerationModelId.ELEVEN_FLASH_V2_5,
         voiceOutputFormat: VoiceGenerationOutputFormat = VoiceGenerationOutputFormat.MP3_128,
     ): Promise<VoiceGenerationResult> {
         try {
@@ -145,7 +141,7 @@ export const voiceServerAPI = {
         taskId: string,
     ) {
         // Supabase Storage에 저장
-        const supabase = await createSupabaseServiceRoleClient();
+        const supabase = createSupabaseServiceRoleClient();
         const fileName = `${taskId}.mp3`;
 
         const { data, error: uploadError } = await supabase.storage
@@ -165,16 +161,17 @@ export const voiceServerAPI = {
         };
     },
 
-    async getVoiceByTaskId(taskId: string) {
-        const supabase = await createSupabaseServer("mutate");
-        const { data: voiceData } = supabase.storage
-            .from('narration_voice_storage')
-            .getPublicUrl(`${taskId}.mp3`);
+    async getVoiceSignedUrl(taskId: string) {
+        const supabase = createSupabaseServiceRoleClient();
 
-        if (!voiceData || !voiceData.publicUrl) {
-            throw new Error('Voice data not found or public URL is missing');
+        const { data, error } = await supabase.storage
+            .from('narration_voice_storage')
+            .createSignedUrl(`${taskId}.mp3`, 60 * 60);
+
+        if (!data || !data.signedUrl) {
+            throw new Error(error instanceof Error ? error.message : "Unexpected error in getVoiceSignedUrl()");
         }
 
-        return voiceData.publicUrl;
+        return data.signedUrl;
     }
 }

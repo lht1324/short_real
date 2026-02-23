@@ -1,4 +1,4 @@
-import {NextRequest, NextResponse} from 'next/server';
+import {NextRequest} from 'next/server';
 import {videoGenerationTasksServerAPI} from '@/api/server/videoGenerationTasksServerAPI';
 import {getNextBaseResponse} from "@/utils/getNextBaseResponse";
 
@@ -24,7 +24,8 @@ export async function GET(
             status: 200,
             data: {
                 videoGenerationTaskList: tasks,
-            }
+            },
+            message: "Fetched video generation task list successfully.",
         });
     } catch (error) {
         console.error('Failed to get user video tasks:', error);
