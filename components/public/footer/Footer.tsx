@@ -22,8 +22,8 @@ function Footer() {
 
                     {/* Links */}
                     <div className="flex space-x-8 text-sm">
-                        <a href={`/legal/terms`} className="text-gray-400 hover:text-white transition-colors">Terms of Service</a>
-                        <a href={`/legal/privacy`} className="text-gray-400 hover:text-white transition-colors">Privacy Policy</a>
+                        <a href={`https://shortreal.ai/legal/terms`} className="text-gray-400 hover:text-white transition-colors">Terms of Service</a>
+                        <a href={`https://shortreal.ai/legal/privacy`} className="text-gray-400 hover:text-white transition-colors">Privacy Policy</a>
                     </div>
 
                     {/* Social Links */}
