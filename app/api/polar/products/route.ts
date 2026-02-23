@@ -2,8 +2,8 @@ import { NextRequest } from "next/server";
 import { getNextBaseResponse } from "@/utils/getNextBaseResponse";
 import { Polar } from "@polar-sh/sdk";
 import { ProductData } from "@/api/types/api/polar/products/ProductData";
-import {LRUCache} from "lru-cache";
-import {processProducts} from "@/utils/polarUtils";
+import { LRUCache } from "lru-cache";
+import { processProducts } from "@/utils/polarUtils";
 
 const isProd = process.env.NODE_ENV === 'production';
 const polar = new Polar({
