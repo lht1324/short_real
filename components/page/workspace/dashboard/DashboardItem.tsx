@@ -37,6 +37,7 @@ enum StatusGroup {
 interface DashboardItemProps {
     taskData: TaskData;
     index: number;
+    onClickEdit: (taskId: string) => void;
     onClickExport: (taskId: string, platform: ExportPlatform) => void;
     onClickDownload: (taskId: string) => void;
     onClickRetry: (taskId: string) => void;
@@ -46,6 +47,7 @@ interface DashboardItemProps {
 function DashboardItem({
     taskData,
     index,
+    onClickEdit,
     onClickExport,
     onClickDownload,
     onClickRetry,
@@ -350,9 +352,11 @@ function DashboardItem({
                             {taskData.title || 'Untitled Task'}
                         </h3>
                         <button
-                            onClick={() => {}}
                             className="text-gray-500 hover:text-white transition-colors p-1.5 rounded-lg hover:bg-white/10 flex-shrink-0"
                             aria-label="Edit title and description"
+                            onClick={() => {
+                                onClickEdit(taskData.id);
+                            }}
                         >
                             <Pencil size={14} />
                         </button>
