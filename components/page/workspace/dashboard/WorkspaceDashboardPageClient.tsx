@@ -28,6 +28,7 @@ import {ExportResult} from "@/components/page/workspace/dashboard/export-result-
 export interface TaskData {
     id: string;
     title?: string;
+    description?: string;
     status: VideoGenerationTaskStatus;
     sceneCount: number;
     processedSceneCount?: number;
@@ -274,6 +275,7 @@ function WorkspaceDashboardPageClient() {
         return {
             id: task.id,
             title: task.video_title,
+            description: task.video_description,
             status: status,
             videoDuration: task.scene_breakdown_list.reduce((acc, sceneData) => {
                 return acc + sceneData.sceneDuration;
