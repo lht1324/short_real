@@ -1,15 +1,9 @@
 import { NextRequest } from "next/server";
 import { getNextBaseResponse } from "@/utils/getNextBaseResponse";
-import { Polar } from "@polar-sh/sdk";
 import { ProductData } from "@/api/types/api/polar/products/ProductData";
-import {LRUCache} from "lru-cache";
-import {processProducts} from "@/utils/polarUtils";
-
-const isProd = process.env.NODE_ENV === 'production';
-const polar = new Polar({
-    server: isProd ? 'production' : 'sandbox',
-    accessToken: process.env.POLAR_API_KEY,
-});
+import { LRUCache } from "lru-cache";
+import { processProducts } from "@/utils/polarUtils";
+import { PolarClient } from "@/lib/PolarClient";
 
 const productCache = new LRUCache<string, ProductData[]>({
     max: 1,
@@ -23,6 +17,7 @@ const productCache = new LRUCache<string, ProductData[]>({
  */
 export async function GET(request: NextRequest) {
     try {
+        const polar = new PolarClient().getClient();
         // Polar API 호출 - 활성 구독 제품만
 
         // 캐시 확인

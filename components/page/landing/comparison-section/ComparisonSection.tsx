@@ -52,8 +52,11 @@ function ComparisonSection() {
                 goodVideoRef.current?.pause();
                 setIsPlaying(false);
             } else {
-                // 다시 돌아오면 재생 시도 (옵션, 원하면 자동 재생 가능)
-                // 여기서는 사용자가 다시 집중할 수 있게 정지 상태 유지
+                // 돌아올 때 ready 상태 리셋 → canplaythrough 재발화 유도
+                setIsBadReady(false);
+                setIsGoodReady(false);
+                badVideoRef.current?.load();
+                goodVideoRef.current?.load();
             }
         };
 

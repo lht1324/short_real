@@ -1,20 +1,14 @@
 import { NextRequest } from "next/server";
 import { getNextBaseResponse } from "@/utils/getNextBaseResponse";
-import { Polar } from "@polar-sh/sdk";
-import {usersServerAPI} from "@/api/server/usersServerAPI";
-import {LRUCache} from "lru-cache";
-import {ProductData} from "@/api/types/api/polar/products/ProductData";
-import {processProducts} from "@/utils/polarUtils";
+import { usersServerAPI } from "@/api/server/usersServerAPI";
+import { LRUCache } from "lru-cache";
+import { ProductData } from "@/api/types/api/polar/products/ProductData";
+import { processProducts } from "@/utils/polarUtils";
 import {
     PostPolarSubscriptionsChangeRequest
 } from "@/api/types/api/polar/subscriptions/change/PostPolarSubscriptionsChangeRequest";
-import {getIsValidRequestC2S} from "@/utils/getIsValidRequest";
-
-const isProd = process.env.NODE_ENV === 'production';
-const polar = new Polar({
-    server: isProd ? 'production' : 'sandbox',
-    accessToken: process.env.POLAR_API_KEY,
-});
+import { getIsValidRequestC2S } from "@/utils/getIsValidRequest";
+import { PolarClient } from "@/lib/PolarClient";
 
 const productCache = new LRUCache<string, ProductData[]>({
     max: 1,
@@ -42,6 +36,8 @@ export async function POST(request: NextRequest) {
     }
 
     try {
+        const polar = new PolarClient().getClient();
+
         // Request body 파싱
         const {
             userId,

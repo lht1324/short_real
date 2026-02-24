@@ -1,18 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { Polar } from '@polar-sh/sdk';
 import { createSupabaseServiceRoleClient } from "@/lib/supabaseServiceRole";
-import {User} from "@/api/types/supabase/Users";
-import {PostgrestError} from "@supabase/supabase-js";
-// User 타입 import 생략
-
-const isProd = process.env.NODE_ENV === 'production';
-const polar = new Polar({
-    server: isProd ? 'production' : 'sandbox',
-    accessToken: process.env.POLAR_API_KEY,
-});
+import { User } from "@/api/types/supabase/Users";
+import { PostgrestError } from "@supabase/supabase-js";
+import { PolarClient } from "@/lib/PolarClient";
 
 export async function GET(request: NextRequest) {
     const supabase = createSupabaseServiceRoleClient();
+    const polar = new PolarClient().getClient();
 
     // 1. 보안 체크
     const authHeader = request.headers.get('authorization');

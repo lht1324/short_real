@@ -122,8 +122,7 @@ function LandingPageClient() {
                 />
 
                 <FAQSection />
-
-                {/* Footer */}
+                
                 <Footer/>
             </div>
             <FloatingRoadmap

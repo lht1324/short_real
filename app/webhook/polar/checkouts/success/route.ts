@@ -1,14 +1,8 @@
 import { NextRequest } from "next/server";
 import { getNextBaseResponse } from "@/utils/getNextBaseResponse";
-import { Polar } from "@polar-sh/sdk";
 import { SubscriptionPlan } from "@/api/types/supabase/Users";
 import { usersServerAPI } from "@/api/server/usersServerAPI";
-
-const isProd = process.env.NODE_ENV === 'production';
-const polar = new Polar({
-    server: isProd ? 'production' : 'sandbox',
-    accessToken: process.env.POLAR_API_KEY,
-});
+import { PolarClient } from "@/lib/PolarClient";
 
 /**
  * POST /webhook/polar/checkouts/success
@@ -16,6 +10,8 @@ const polar = new Polar({
  */
 export async function POST(request: NextRequest) {
     try {
+        const polar = new PolarClient().getClient();
+
         // Webhook payload 파싱
         const payload = await request.json();
 

@@ -1,14 +1,8 @@
 import { NextRequest } from "next/server";
 import { getIsValidRequestC2S } from "@/utils/getIsValidRequest";
 import { getNextBaseResponse } from "@/utils/getNextBaseResponse";
-import { Polar } from "@polar-sh/sdk";
 import { usersServerAPI } from "@/api/server/usersServerAPI";
-
-const isProd = process.env.NODE_ENV === 'production';
-const polar = new Polar({
-    server: isProd ? 'production' : 'sandbox',
-    accessToken: process.env.POLAR_API_KEY,
-});
+import { PolarClient } from "@/lib/PolarClient";
 
 export async function DELETE(request: NextRequest) {
     const {
@@ -36,6 +30,8 @@ export async function DELETE(request: NextRequest) {
     }
 
     try {
+        const polar = new PolarClient().getClient();
+
         // Verify ownership
         // DB에 저장된 사용자의 subscription_id와 요청된 subscriptionId가 일치하는지 확인
         // 만약 DB에 subscription_id가 없다면, 보안상 요청을 거부하거나(추천), 

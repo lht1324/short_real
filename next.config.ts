@@ -49,7 +49,7 @@ const nextConfig: NextConfig = {
         return [
             {
                 source: '/assets/demo/:path*',
-                destination: 'https://tbgymsmwuljvewatnvqg.supabase.co/storage/v1/object/public/demo_assets/:path*'
+                destination: 'https://sqwqmyhniwn4m1bu.public.blob.vercel-storage.com/:path*'
             }
         ]
     }
