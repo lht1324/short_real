@@ -1,5 +1,4 @@
 import LandingPageServer from "@/components/page/landing/LandingPageServer";
-import Footer from "@/components/public/footer/Footer";
 
 export default async function Home() {
     const jsonLd = {
@@ -33,7 +32,6 @@ export default async function Home() {
                 dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
             />
             <LandingPageServer />
-            <Footer/>
         </>
     );
 }
