@@ -12,6 +12,7 @@ import {
     FileVideo,
     Image as ImageIcon,
     Loader2,
+    Pencil,
     Share2,
     Wrench,
     X,
@@ -36,6 +37,7 @@ enum StatusGroup {
 interface DashboardItemProps {
     taskData: TaskData;
     index: number;
+    onClickEdit: (taskId: string) => void;
     onClickExport: (taskId: string, platform: ExportPlatform) => void;
     onClickDownload: (taskId: string) => void;
     onClickRetry: (taskId: string) => void;
@@ -45,6 +47,7 @@ interface DashboardItemProps {
 function DashboardItem({
     taskData,
     index,
+    onClickEdit,
     onClickExport,
     onClickDownload,
     onClickRetry,
@@ -274,6 +277,31 @@ function DashboardItem({
         }
     }, [taskData, retryPrice]);
 
+    // ==================== 설명 텍스트 포맷팅 ====================
+    const formattedDescription = useMemo(() => {
+        if (!taskData.description) return null;
+        const text = taskData.description;
+
+        // 첫 해시태그 찾기 (문자열 시작 혹은 공백 뒤에 오는 #)
+        const match = text.match(/(?:^|\s)(#)/);
+
+        if (match && match.index !== undefined) {
+            const splitIndex = match.index;
+            const part1 = text.substring(0, splitIndex).trimEnd();
+            // splitIndex 이후 첫 '#' 위치 찾기
+            const hashIndex = text.indexOf('#', splitIndex);
+            const part2 = text.substring(hashIndex);
+
+            // 앞부분이 비어있지 않으면 개행 추가, 비어있으면(해시태그로 시작) 그대로 혹은 취향껏
+            // 요청사항: "첫 해시태그 앞에 줄바꿈 두 개"
+            // part1이 빈 문자열이어도 \n\n#tag가 됨.
+            if (part1.length === 0) return part2; // 해시태그로 시작하면 굳이 줄바꿈 안 함 (선택사항, 하지만 보통 이게 자연스러움)
+            return `${part1}\n\n${part2}`;
+        }
+
+        return text;
+    }, [taskData.description]);
+
     // ==================== 시간 포맷 ====================
     const formatDate = useCallback((date: Date) => {
         return date.toLocaleDateString('en-US', {
@@ -319,9 +347,27 @@ function DashboardItem({
                 {/* ==================== 왼쪽: 정보 영역 ==================== */}
                 <div className="flex-1">
                     {/* 제목 */}
-                    <h3 className="text-xl font-semibold text-white mb-3">
-                        {taskData.title || 'Untitled Task'}
-                    </h3>
+                    <div className={`flex items-center gap-2 ${taskData.description ? 'mb-1' : 'mb-3'}`}>
+                        <h3 className="text-xl font-semibold text-white truncate">
+                            {taskData.title || 'Untitled Task'}
+                        </h3>
+                        <button
+                            className="text-gray-500 hover:text-white transition-colors p-1.5 rounded-lg hover:bg-white/10 flex-shrink-0"
+                            aria-label="Edit title and description"
+                            onClick={() => {
+                                onClickEdit(taskData.id);
+                            }}
+                        >
+                            <Pencil size={14} />
+                        </button>
+                    </div>
+
+                    {/* 설명 */}
+                    {formattedDescription && (
+                        <p className="text-sm text-gray-400 mb-3 whitespace-pre-wrap leading-relaxed">
+                            {formattedDescription}
+                        </p>
+                    )}
 
                     {/* 메타 정보 행 1: 날짜, 씬 개수 */}
                     {(taskData.sceneCount) && <div className="flex items-center space-x-6 text-gray-300 mb-2">

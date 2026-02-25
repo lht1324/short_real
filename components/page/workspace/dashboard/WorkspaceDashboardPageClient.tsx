@@ -24,10 +24,12 @@ import CheckoutResultDialog, {
 } from "@/components/page/workspace/dashboard/CheckoutResultDialog";
 import ExportResultModal from "@/components/page/workspace/dashboard/export-result-modal/ExportResultModal";
 import {ExportResult} from "@/components/page/workspace/dashboard/export-result-modal/ExportResult";
+import MetadataEditModal from "@/components/page/workspace/dashboard/MetadataEditModal";
 
 export interface TaskData {
     id: string;
     title?: string;
+    description?: string;
     status: VideoGenerationTaskStatus;
     sceneCount: number;
     processedSceneCount?: number;
@@ -68,10 +70,12 @@ function WorkspaceDashboardPageClient() {
         { id: 'create', icon: Plus, name: 'Create', href: '/workspace/create' }
     ], []);
 
+    const [pendingEditTaskId, setPendingEditTaskId] = useState<string | null>(null);
     const [pendingCancelTaskId, setPendingCancelTaskId] = useState<string | null>(null);
     const [pendingExportTaskId, setPendingExportTaskId] = useState<string | null>(null);
     const [pendingExportPlatform, setPendingExportPlatform] = useState<ExportPlatform | null>(null);
 
+    const [showEditMetadataModal, setShowEditMetadataModal] = useState(false);
     const [showCancelConfirmModal, setShowCancelConfirmModal] = useState(false);
     const [showCancelLoadingModal, setShowCancelLoadingModal] = useState(false);
 
@@ -81,6 +85,23 @@ function WorkspaceDashboardPageClient() {
 
     const [isExportingVideo, setIsExportingVideo] = useState(false);
     const [isInitializingExportState, setIsInitializingExportState] = useState(false);
+
+    const pendingEditTaskMetadata = useMemo(() => {
+        const pendingEditTaskData = taskDataList.find((taskData) => {
+            return taskData.id === pendingEditTaskId;
+        });
+
+        return pendingEditTaskData?.title && pendingEditTaskData?.description
+            ? {
+                title: pendingEditTaskData.title,
+                description: pendingEditTaskData.description,
+            } : null;
+    }, [pendingEditTaskId, taskDataList]);
+
+    const onClickEdit = useCallback((taskId: string) => {
+        setPendingEditTaskId(taskId);
+        setShowEditMetadataModal(true);
+    }, []);
 
     const onClickCancel = useCallback((taskId: string, status: VideoGenerationTaskStatus) => {
         setPendingCancelTaskId(taskId);
@@ -163,6 +184,24 @@ function WorkspaceDashboardPageClient() {
         }
         console.log('Retry generation:', taskId);
     }, []);
+
+    const editMetadata = useCallback(async (title: string, description: string) => {
+        if (!pendingEditTaskId) {
+            throw Error("Task is invalid.");
+        }
+
+        const patchVideoTaskByTaskIdResult = await videoClientAPI.patchVideoTaskByTaskId(pendingEditTaskId, {
+            video_title: title,
+            video_description: description,
+        });
+
+        if (!patchVideoTaskByTaskIdResult) {
+            throw Error("Patching the metadata of video generation task is failed.");
+        }
+
+        setPendingEditTaskId(null);
+        setShowEditMetadataModal(false);
+    }, [pendingEditTaskId]);
 
     const cancelVideoGenerationTask = useCallback(async () => {
         try {
@@ -274,6 +313,7 @@ function WorkspaceDashboardPageClient() {
         return {
             id: task.id,
             title: task.video_title,
+            description: task.video_description,
             status: status,
             videoDuration: task.scene_breakdown_list.reduce((acc, sceneData) => {
                 return acc + sceneData.sceneDuration;
@@ -600,6 +640,7 @@ function WorkspaceDashboardPageClient() {
                                         key={taskData.id}
                                         taskData={taskData}
                                         index={index}
+                                        onClickEdit={onClickEdit}
                                         onClickDownload={onClickDownload}
                                         onClickExport={(taskId, platform) => {
                                             setPendingExportTaskId(taskId);
@@ -615,6 +656,15 @@ function WorkspaceDashboardPageClient() {
                     </div>
                 </div>
             </div>
+            {showEditMetadataModal && pendingEditTaskMetadata && <MetadataEditModal
+                initialTitle={pendingEditTaskMetadata.title}
+                initialDescription={pendingEditTaskMetadata.description}
+                onClose={() => {
+                    setPendingEditTaskId(null);
+                    setShowEditMetadataModal(false);
+                }}
+                onSave={editMetadata}
+            />}
             {showCancelConfirmModal && <DefaultModal
                 title="Cancel Task"
                 message={"Are you sure you want to cancel this task?\n\n" +
