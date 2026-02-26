@@ -1,10 +1,10 @@
 import {NextRequest} from "next/server";
-import {videoGenerationTasksServerAPI} from "@/api/server/videoGenerationTasksServerAPI";
-import {VideoGenerationTaskStatus} from "@/api/types/supabase/VideoGenerationTasks";
+import {videoGenerationTasksServerAPI} from "@/lib/api/server/videoGenerationTasksServerAPI";
+import {VideoGenerationTaskStatus} from "@/lib/api/types/supabase/VideoGenerationTasks";
 import {getNextBaseResponse} from "@/utils/getNextBaseResponse";
 import {getIsValidRequestC2S} from "@/utils/getIsValidRequest";
 import {internalFireAndForgetFetch} from "@/utils/internalFetch";
-import {usersServerAPI} from "@/api/server/usersServerAPI";
+import {usersServerAPI} from "@/lib/api/server/usersServerAPI";
 import {
     RETRY_CREDIT_MUSIC_GENERATION,
     RETRY_CREDIT_PER_SCENE,

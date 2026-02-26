@@ -1,10 +1,10 @@
 import {logger, task } from "@trigger.dev/sdk/v3";
-import { videoGenerationTasksServerAPI } from "@/api/server/videoGenerationTasksServerAPI";
+import { videoGenerationTasksServerAPI } from "@/lib/api/server/videoGenerationTasksServerAPI";
 import { taskCheckAndCleanupIfCancelled } from "@/utils/taskCheckAndCleanupIfCancelled";
-import { VideoGenerationTaskStatus } from "@/api/types/supabase/VideoGenerationTasks";
-import { llmServerAPI } from "@/api/server/llmServerAPI";
+import { VideoGenerationTaskStatus } from "@/lib/api/types/supabase/VideoGenerationTasks";
+import { llmServerAPI } from "@/lib/api/server/llmServerAPI";
 import { STYLE_DATA_LIST } from "@/lib/styles";
-import { usersServerAPI } from "@/api/server/usersServerAPI";
+import { usersServerAPI } from "@/lib/api/server/usersServerAPI";
 import { internalFireAndForgetFetch } from "@/utils/internalFetch";
 import {
     BASE_CREDIT_PER_SCENE, BASE_CREDIT_PER_VIDEO_DURATION,

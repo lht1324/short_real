@@ -1,5 +1,5 @@
 import {NextRequest} from 'next/server';
-import {videoGenerationTasksServerAPI} from '@/api/server/videoGenerationTasksServerAPI';
+import {videoGenerationTasksServerAPI} from '@/lib/api/server/videoGenerationTasksServerAPI';
 import {getNextBaseResponse} from "@/utils/getNextBaseResponse";
 
 export async function GET(

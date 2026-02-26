@@ -3,7 +3,7 @@
 import { NextRequest } from "next/server";
 import { getNextBaseResponse } from "@/utils/getNextBaseResponse";
 import { createSupabaseServiceRoleClient } from "@/lib/supabaseServiceRole";
-import { RoadmapItem } from "@/api/types/supabase/RoadmapItem";
+import { RoadmapItem } from "@/lib/api/types/supabase/RoadmapItem";
 import { LRUCache } from "lru-cache";
 
 const roadmapCache = new LRUCache<string, RoadmapItem[]>({

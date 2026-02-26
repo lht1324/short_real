@@ -1,5 +1,5 @@
 import {memo, useEffect, useMemo} from "react";
-import {OrderData} from "@/api/types/api/polar/orders/GetPolarOrdersResponse";
+import {OrderData} from "@/lib/api/types/api/polar/orders/GetPolarOrdersResponse";
 import {CheckCircle2, Clock, RotateCcw} from "lucide-react";
 
 interface OrderItemProps {

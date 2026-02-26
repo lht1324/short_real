@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { videoServerAPI } from "@/api/server/videoServerAPI";
+import { videoServerAPI } from "@/lib/api/server/videoServerAPI";
 import {getNextBaseResponse} from "@/utils/getNextBaseResponse";
 
 export async function GET(request: NextRequest) {

@@ -2,8 +2,8 @@
 
 import { memo, useState, useRef, useMemo, useCallback, useEffect } from "react";
 import { Sparkles, Clapperboard, Clock, Wand2, ArrowDown, Loader2 } from "lucide-react";
-import { Voice } from "@/api/types/eleven-labs/Voice";
-import { voiceClientAPI } from "@/api/client/voiceClientAPI";
+import { Voice } from "@/lib/api/types/eleven-labs/Voice";
+import { voiceClientAPI } from "@/lib/api/client/voiceClientAPI";
 import CTAModal from "@/components/page/landing/how-it-works-section/CTAModal";
 import GenerateActionPanel from "@/components/page/landing/how-it-works-section/GenerateActionPanel";
 import VoiceSelectionPanel from "@/components/page/landing/how-it-works-section/VoiceSelectionPanel";

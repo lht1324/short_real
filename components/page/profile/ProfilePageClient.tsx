@@ -1,16 +1,16 @@
 'use client'
 
 import {memo, useCallback, useEffect, useMemo, useState} from "react";
-import {SubscriptionPlan} from "@/api/types/supabase/Users";
+import {SubscriptionPlan} from "@/lib/api/types/supabase/Users";
 import {CreditCard, Crown, Calendar, Mail, User as UserIcon, Receipt, FileText, Settings} from "lucide-react";
 import {useAuth} from "@/context/AuthContext";
-import {polarClientAPI} from "@/api/client/polarClientAPI";
-import {OrderData} from "@/api/types/api/polar/orders/GetPolarOrdersResponse";
+import {polarClientAPI} from "@/lib/api/client/polarClientAPI";
+import {OrderData} from "@/lib/api/types/api/polar/orders/GetPolarOrdersResponse";
 import OrderItem from "@/components/page/profile/OrderItem";
-import {SubscriptionData} from "@/api/types/api/polar/subscriptions/SubscriptionData";
+import {SubscriptionData} from "@/lib/api/types/api/polar/subscriptions/SubscriptionData";
 import ChangePlanModal from "@/components/page/profile/ChangePlanModal";
 import {useRouter} from "next/navigation";
-import {ProductData} from "@/api/types/api/polar/products/ProductData";
+import {ProductData} from "@/lib/api/types/api/polar/products/ProductData";
 import Image from "next/image";
 import DefaultModal from "@/components/public/DefaultModal";
 

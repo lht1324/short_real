@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { getNextBaseResponse } from "@/utils/getNextBaseResponse";
-import { SubscriptionData } from "@/api/types/api/polar/subscriptions/SubscriptionData";
+import { SubscriptionData } from "@/lib/api/types/api/polar/subscriptions/SubscriptionData";
 import { LRUCache } from "lru-cache";
 import { PolarClient } from "@/lib/PolarClient";
 

@@ -1,4 +1,4 @@
-import {FontVariant} from "@/api/types/google-fonts/GoogleFont";
+import {FontVariant} from "@/lib/api/types/google-fonts/GoogleFont";
 
 export interface FontFamily {
     name: string;

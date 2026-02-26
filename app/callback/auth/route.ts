@@ -1,7 +1,7 @@
 import {NextRequest, NextResponse} from 'next/server'
-import {usersServerAPI} from '@/api/server/usersServerAPI'
+import {usersServerAPI} from '@/lib/api/server/usersServerAPI'
 import {createSupabaseServer} from "@/lib/supabaseServer";
-import {SubscriptionPlan, User} from "@/api/types/supabase/Users";
+import {SubscriptionPlan, User} from "@/lib/api/types/supabase/Users";
 
 export async function GET(request: NextRequest) {
     const supabase = await createSupabaseServer("mutate");

@@ -1,6 +1,6 @@
-import {FalService, ServiceTypeMap} from "@/api/types/fal-ai/FalAIPublicType";
-import {QueueOptions, ResultOptions, StatusOptions, SubscribeOptions} from "@/api/types/fal-ai/FalAIRequest";
-import {FalApiResult, QueueSubmitResult} from "@/api/types/fal-ai/FalAIResponse";
+import {FalService, ServiceTypeMap} from "@/lib/api/types/fal-ai/FalAIPublicType";
+import {QueueOptions, ResultOptions, StatusOptions, SubscribeOptions} from "@/lib/api/types/fal-ai/FalAIRequest";
+import {FalApiResult, QueueSubmitResult} from "@/lib/api/types/fal-ai/FalAIResponse";
 import {QueueStatus} from "@fal-ai/client";
 
 export class FalAIClient {

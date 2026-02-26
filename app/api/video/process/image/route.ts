@@ -3,7 +3,7 @@ import { tasks } from "@trigger.dev/sdk/v3";
 import { orchestrateImageGeneration } from "@/trigger/orchestrate-image-generation";
 import { getNextBaseResponse } from "@/utils/getNextBaseResponse";
 import { getIsValidRequestS2S } from "@/utils/getIsValidRequest";
-import { videoGenerationTasksServerAPI } from "@/api/server/videoGenerationTasksServerAPI";
+import { videoGenerationTasksServerAPI } from "@/lib/api/server/videoGenerationTasksServerAPI";
 import { taskCheckAndCleanupIfCancelled } from "@/utils/taskCheckAndCleanupIfCancelled";
 
 export async function POST(request: NextRequest) {

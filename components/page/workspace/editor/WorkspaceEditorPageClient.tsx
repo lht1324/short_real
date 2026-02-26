@@ -7,19 +7,19 @@ import {useRouter, useSearchParams} from 'next/navigation';
 import { ChevronLeft } from 'lucide-react';
 import { fontMap, type FontName } from "@/lib/fonts";
 import FONT_FAMILY_LIST, {FontFamily} from "@/lib/FontFamilyList";
-import {videoClientAPI} from "@/api/client/videoClientAPI";
+import {videoClientAPI} from "@/lib/api/client/videoClientAPI";
 import {
     FinalVideoMergeData,
     MusicData,
     SubtitleSegment,
     VideoGenerationTaskStatus
-} from "@/api/types/supabase/VideoGenerationTasks";
+} from "@/lib/api/types/supabase/VideoGenerationTasks";
 import SceneSequencePanel from "@/components/page/workspace/editor/SceneSequencePanel";
 import CaptionConfigPanel, {ColorPickerType} from "@/components/page/workspace/editor/CaptionConfigPanel";
 import VideoPlayerPanel, {VideoPlayerHandle} from "@/components/page/workspace/editor/VideoPlayerPanel";
 import MusicPanel from "@/components/page/workspace/editor/MusicPanel";
 // import MusicEditPanel from "@/components/page/workspace/editor/MusicEditPanel";
-import {musicClientAPI} from "@/api/client/musicClientAPI";
+import {musicClientAPI} from "@/lib/api/client/musicClientAPI";
 import ColorPickerPopover from "@/components/page/workspace/editor/ColorPickerPopover";
 import dynamic from "next/dynamic";
 import {useAuth} from "@/context/AuthContext";

@@ -1,17 +1,17 @@
 import {NextRequest, NextResponse} from 'next/server';
-import {llmServerAPI} from '@/api/server/llmServerAPI';
-import {PostOpenAISceneRequest} from '@/api/types/api/open-ai/scene/PostOpenAISceneRequest';
-import {PostOpenAISceneResponse} from '@/api/types/api/open-ai/scene/PostOpenAISceneResponse';
-import {voiceServerAPI} from "@/api/server/voiceServerAPI";
-import {videoGenerationTasksServerAPI} from "@/api/server/videoGenerationTasksServerAPI";
+import {llmServerAPI} from '@/lib/api/server/llmServerAPI';
+import {PostOpenAISceneRequest} from '@/lib/api/types/api/open-ai/scene/PostOpenAISceneRequest';
+import {PostOpenAISceneResponse} from '@/lib/api/types/api/open-ai/scene/PostOpenAISceneResponse';
+import {voiceServerAPI} from "@/lib/api/server/voiceServerAPI";
+import {videoGenerationTasksServerAPI} from "@/lib/api/server/videoGenerationTasksServerAPI";
 import {
     SceneData, SceneGenerationStatus,
     SubtitleSegment,
     VideoGenerationTask,
     VideoGenerationTaskStatus
-} from "@/api/types/supabase/VideoGenerationTasks";
+} from "@/lib/api/types/supabase/VideoGenerationTasks";
 import {getNextBaseResponse} from "@/utils/getNextBaseResponse";
-import {usersServerAPI} from "@/api/server/usersServerAPI";
+import {usersServerAPI} from "@/lib/api/server/usersServerAPI";
 import {createSupabaseServer} from "@/lib/supabaseServer";
 import {SCENE_SEGMENTATION_STANDARD} from "@/lib/ADDITIONAL_CREDIT_AMOUNT";
 

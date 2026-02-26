@@ -1,7 +1,7 @@
 import {memo, useCallback, useState, ChangeEvent} from "react";
 import {AlertTriangle, Sparkles, X} from "lucide-react";
-import {ScriptGenerationRequest} from "@/api/types/open-ai/ScriptGeneration";
-import {openAIClientAPI} from "@/api/client/openAIClientAPI";
+import {ScriptGenerationRequest} from "@/lib/api/types/open-ai/ScriptGeneration";
+import {openAIClientAPI} from "@/lib/api/client/openAIClientAPI";
 
 interface ScriptGenerationModalProps {
     isGeneratingScript: boolean;

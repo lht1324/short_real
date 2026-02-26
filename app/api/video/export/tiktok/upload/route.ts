@@ -5,10 +5,10 @@ import { createSupabaseServiceRoleClient } from '@/lib/supabaseServiceRole';
 import { getNextBaseResponse } from '@/utils/getNextBaseResponse';
 import { PostgrestSingleResponse } from '@supabase/supabase-js';
 import { DownloadResult } from '@supabase/storage-js';
-import { videoGenerationTasksServerAPI } from '@/api/server/videoGenerationTasksServerAPI';
-import { UserTikTokToken } from '@/api/types/supabase/UserTikTokToken';
+import { videoGenerationTasksServerAPI } from '@/lib/api/server/videoGenerationTasksServerAPI';
+import { UserTikTokToken } from '@/lib/api/types/supabase/UserTikTokToken';
 import {getIsValidRequestS2S} from "@/utils/getIsValidRequest";
-import {ExportPlatform, ExportStatus} from "@/api/types/supabase/VideoGenerationTasks";
+import {ExportPlatform, ExportStatus} from "@/lib/api/types/supabase/VideoGenerationTasks";
 
 
 const MIN_CHUNK = 5 * 1024 * 1024;  // 5MB
