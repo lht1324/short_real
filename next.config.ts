@@ -28,7 +28,6 @@ const nextConfig: NextConfig = {
         }
         return config;
     },
-    turbopack: {},
 
     async headers() {
         return [
