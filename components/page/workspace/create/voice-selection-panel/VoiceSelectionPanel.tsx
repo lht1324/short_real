@@ -1,8 +1,8 @@
 'use client'
 
 import {memo, MouseEvent, useCallback, useEffect, useMemo, useState} from "react";
-import {Voice} from "@/api/types/eleven-labs/Voice";
-import {voiceClientAPI} from "@/api/client/voiceClientAPI";
+import {Voice} from "@/lib/api/types/eleven-labs/Voice";
+import {voiceClientAPI} from "@/lib/api/client/voiceClientAPI";
 import VoiceSelectionPanelItem from "@/components/page/workspace/create/voice-selection-panel/VoiceSelectionPanelItem";
 
 interface VoiceSelectionPanelProps {

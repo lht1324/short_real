@@ -1,11 +1,11 @@
 import {FalAIClient} from "@/lib/fal-ai/FalAIClient";
-import {MergeAudioVideoRequest, MergeVideosRequest, QueueOptions} from "@/api/types/fal-ai/FalAIRequest";
+import {MergeAudioVideoRequest, MergeVideosRequest, QueueOptions} from "@/lib/api/types/fal-ai/FalAIRequest";
 import {
     FalApiResult,
     MergeAudioVideoResponse,
     MergeVideosResponse,
     QueueSubmitResult
-} from "@/api/types/fal-ai/FalAIResponse";
+} from "@/lib/api/types/fal-ai/FalAIResponse";
 
 export class FalAIService {
     constructor(private client: FalAIClient) {}

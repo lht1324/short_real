@@ -2,8 +2,8 @@
 import {NextRequest, NextResponse} from 'next/server';
 import {createSupabaseServiceRoleClient} from "@/lib/supabaseServiceRole";
 import {internalFireAndForgetFetch} from "@/utils/internalFetch";
-import {videoGenerationTasksServerAPI} from "@/api/server/videoGenerationTasksServerAPI";
-import {ExportPlatform, ExportStatus} from "@/api/types/supabase/VideoGenerationTasks";
+import {videoGenerationTasksServerAPI} from "@/lib/api/server/videoGenerationTasksServerAPI";
+import {ExportPlatform, ExportStatus} from "@/lib/api/types/supabase/VideoGenerationTasks";
 
 
 export async function GET(request: NextRequest) {

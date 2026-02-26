@@ -3,8 +3,8 @@
 import { memo, useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
-import { polarClientAPI } from "@/api/client/polarClientAPI";
-import { ProductData } from "@/api/types/api/polar/products/ProductData";
+import { polarClientAPI } from "@/lib/api/client/polarClientAPI";
+import { ProductData } from "@/lib/api/types/api/polar/products/ProductData";
 
 // Components
 import HeroSection from "@/components/page/landing/hero-section/HeroSection";
@@ -15,8 +15,8 @@ import PricingSection from "@/components/page/landing/pricing-section/PricingSec
 import FAQSection from "@/components/page/landing/faq-section/FAQSection";
 import Footer from "@/components/public/footer/Footer";
 import FloatingRoadmap from "@/components/page/landing/FloatingRoadmap";
-import {RoadmapItem} from "@/api/types/supabase/RoadmapItem";
-import {roadmapItemClientAPI} from "@/api/client/roadmapItemClientAPI";
+import {RoadmapItem} from "@/lib/api/types/supabase/RoadmapItem";
+import {roadmapItemClientAPI} from "@/lib/api/client/roadmapItemClientAPI";
 
 function LandingPageClient() {
     const router = useRouter();

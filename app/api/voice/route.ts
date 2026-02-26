@@ -1,7 +1,7 @@
-import { voiceServerAPI } from '@/api/server/voiceServerAPI';
+import { voiceServerAPI } from '@/lib/api/server/voiceServerAPI';
 import {getNextBaseResponse} from "@/utils/getNextBaseResponse";
 import {LRUCache} from "lru-cache";
-import {Voice} from "@/api/types/eleven-labs/Voice";
+import {Voice} from "@/lib/api/types/eleven-labs/Voice";
 
 const voiceCache = new LRUCache<string, Voice[]>({
     max: 1,

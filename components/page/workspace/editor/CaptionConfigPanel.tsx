@@ -2,7 +2,7 @@
 
 import {memo, useCallback, useMemo, useRef} from "react";
 import {CaptionConfigState} from "@/components/page/workspace/editor/WorkspaceEditorPageClient";
-import {FontVariant} from "@/api/types/google-fonts/GoogleFont";
+import {FontVariant} from "@/lib/api/types/google-fonts/GoogleFont";
 import {AccordionSection} from "@/components/public/Accordion";
 import {FontFamily} from "@/lib/FontFamilyList";
 

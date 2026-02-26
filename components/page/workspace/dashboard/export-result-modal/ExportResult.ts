@@ -1,5 +1,5 @@
 
-import {ExportPlatform, ExportStatus} from "@/api/types/supabase/VideoGenerationTasks";
+import {ExportPlatform, ExportStatus} from "@/lib/api/types/supabase/VideoGenerationTasks";
 
 export interface ExportResult {
     taskId: string;

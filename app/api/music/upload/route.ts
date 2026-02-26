@@ -1,9 +1,9 @@
 import { NextRequest } from "next/server";
-import { GeneratedMusicMetadata } from "@/api/types/suno-api/SunoAPIResponses";
-import { musicServerAPI } from "@/api/server/musicServerAPI";
-import {videoGenerationTasksServerAPI} from "@/api/server/videoGenerationTasksServerAPI";
+import { GeneratedMusicMetadata } from "@/lib/api/types/suno-api/SunoAPIResponses";
+import { musicServerAPI } from "@/lib/api/server/musicServerAPI";
+import {videoGenerationTasksServerAPI} from "@/lib/api/server/videoGenerationTasksServerAPI";
 import {taskCheckAndCleanupIfCancelled} from "@/utils/taskCheckAndCleanupIfCancelled";
-import {VideoGenerationTaskStatus} from "@/api/types/supabase/VideoGenerationTasks";
+import {VideoGenerationTaskStatus} from "@/lib/api/types/supabase/VideoGenerationTasks";
 import {getNextBaseResponse} from "@/utils/getNextBaseResponse";
 import {getIsValidRequestS2S} from "@/utils/getIsValidRequest";
 

@@ -31,8 +31,10 @@ const nextConfig: NextConfig = {
             };
             return config;
         }
-    } : {
+    } : isDev ? {
         turbopack: {}  // dev 로컬 + production 모두 Turbopack
+    } : {
+
     }),
 
     async headers() {

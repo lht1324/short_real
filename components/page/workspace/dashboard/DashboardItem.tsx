@@ -2,7 +2,7 @@
 
 import {memo, ReactNode, useCallback, useMemo, useState} from "react";
 import {TaskData} from "@/components/page/workspace/dashboard/WorkspaceDashboardPageClient";
-import {ExportPlatform, VideoGenerationTaskStatus} from "@/api/types/supabase/VideoGenerationTasks";
+import {ExportPlatform, VideoGenerationTaskStatus} from "@/lib/api/types/supabase/VideoGenerationTasks";
 import {
     AlertCircle,
     Calendar,

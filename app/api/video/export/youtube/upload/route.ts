@@ -4,12 +4,12 @@ import { createSupabaseServiceRoleClient } from '@/lib/supabaseServiceRole';
 import { getNextBaseResponse } from '@/utils/getNextBaseResponse';
 import {
     PostVideoExportYoutubeUploadRequest
-} from "@/api/types/api/video/export/youtube/upload/PostVideoExportYoutubeUploadRequest";
-import {UserYoutubeToken} from "@/api/types/supabase/UserYoutubeToken";
+} from "@/lib/api/types/api/video/export/youtube/upload/PostVideoExportYoutubeUploadRequest";
+import {UserYoutubeToken} from "@/lib/api/types/supabase/UserYoutubeToken";
 import {PostgrestSingleResponse} from "@supabase/supabase-js";
 import {DownloadResult} from "@supabase/storage-js";
-import {videoGenerationTasksServerAPI} from "@/api/server/videoGenerationTasksServerAPI";
-import {ExportPlatform, ExportStatus} from "@/api/types/supabase/VideoGenerationTasks";
+import {videoGenerationTasksServerAPI} from "@/lib/api/server/videoGenerationTasksServerAPI";
+import {ExportPlatform, ExportStatus} from "@/lib/api/types/supabase/VideoGenerationTasks";
 
 
 export async function POST(request: NextRequest) {

@@ -1,5 +1,5 @@
 import {NextResponse} from "next/server";
-import {BaseResponse} from "@/api/types/api/BaseResponse";
+import {BaseResponse} from "@/lib/api/types/api/BaseResponse";
 
 interface CustomResponse extends BaseResponse {
     data?: unknown;

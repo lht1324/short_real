@@ -1,7 +1,7 @@
 'use client'
 
 import {memo, useCallback, useEffect, useRef, useState} from "react";
-import {MusicData} from "@/api/types/supabase/VideoGenerationTasks";
+import {MusicData} from "@/lib/api/types/supabase/VideoGenerationTasks";
 import MusicItem from "@/components/page/workspace/editor/MusicItem";
 
 interface MusicPanelProps {

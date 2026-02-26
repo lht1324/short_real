@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { getNextBaseResponse } from "@/utils/getNextBaseResponse";
-import { ProductData } from "@/api/types/api/polar/products/ProductData";
+import { ProductData } from "@/lib/api/types/api/polar/products/ProductData";
 import { LRUCache } from "lru-cache";
 import { processProducts } from "@/utils/polarUtils";
 import { PolarClient } from "@/lib/PolarClient";

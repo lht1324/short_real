@@ -1,7 +1,7 @@
 import {ChangeEvent, memo, useCallback, useEffect, useMemo, useRef, useState} from "react";
 import Peaks, {PeaksInstance, PeaksOptions} from "peaks.js";
 import {Pause, Play, Volume2, VolumeX} from "lucide-react";
-import { MusicData } from "@/api/types/supabase/VideoGenerationTasks";
+import { MusicData } from "@/lib/api/types/supabase/VideoGenerationTasks";
 
 declare global {
     interface Window {

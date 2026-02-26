@@ -1,12 +1,12 @@
 import { NextRequest } from "next/server";
 import { getNextBaseResponse } from "@/utils/getNextBaseResponse";
-import { usersServerAPI } from "@/api/server/usersServerAPI";
+import { usersServerAPI } from "@/lib/api/server/usersServerAPI";
 import { LRUCache } from "lru-cache";
-import { ProductData } from "@/api/types/api/polar/products/ProductData";
+import { ProductData } from "@/lib/api/types/api/polar/products/ProductData";
 import { processProducts } from "@/utils/polarUtils";
 import {
     PostPolarSubscriptionsChangeRequest
-} from "@/api/types/api/polar/subscriptions/change/PostPolarSubscriptionsChangeRequest";
+} from "@/lib/api/types/api/polar/subscriptions/change/PostPolarSubscriptionsChangeRequest";
 import { getIsValidRequestC2S } from "@/utils/getIsValidRequest";
 import { PolarClient } from "@/lib/PolarClient";
 

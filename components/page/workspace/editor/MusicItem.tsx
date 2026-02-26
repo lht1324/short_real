@@ -2,7 +2,7 @@
 
 import {memo, useCallback, useEffect, useMemo, useRef, useState} from "react";
 import Image from "next/image";
-import {MusicData} from "@/api/types/supabase/VideoGenerationTasks";
+import {MusicData} from "@/lib/api/types/supabase/VideoGenerationTasks";
 
 interface MusicItemProps {
     musicData: MusicData;

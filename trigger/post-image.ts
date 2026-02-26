@@ -1,11 +1,11 @@
 import { task } from "@trigger.dev/sdk/v3";
-import { llmServerAPI } from "@/api/server/llmServerAPI";
-import { imageServerAPI } from "@/api/server/imageServerAPI";
-import { videoGenerationTasksServerAPI } from "@/api/server/videoGenerationTasksServerAPI";
+import { llmServerAPI } from "@/lib/api/server/llmServerAPI";
+import { imageServerAPI } from "@/lib/api/server/imageServerAPI";
+import { videoGenerationTasksServerAPI } from "@/lib/api/server/videoGenerationTasksServerAPI";
 import { logger } from "@trigger.dev/sdk";
-import { MasterStyleInfo } from "@/api/types/supabase/MasterStyleInfo";
-import { InitialEntityManifestItem } from "@/api/types/open-ai/Entity";
-import { SceneData } from "@/api/types/supabase/VideoGenerationTasks";
+import { MasterStyleInfo } from "@/lib/api/types/supabase/MasterStyleInfo";
+import { InitialEntityManifestItem } from "@/lib/api/types/open-ai/Entity";
+import { SceneData } from "@/lib/api/types/supabase/VideoGenerationTasks";
 
 export const postImage = task({
     id: "post-image",

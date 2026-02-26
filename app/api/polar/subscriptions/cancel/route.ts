@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import { getIsValidRequestC2S } from "@/utils/getIsValidRequest";
 import { getNextBaseResponse } from "@/utils/getNextBaseResponse";
-import { usersServerAPI } from "@/api/server/usersServerAPI";
+import { usersServerAPI } from "@/lib/api/server/usersServerAPI";
 import { PolarClient } from "@/lib/PolarClient";
 
 export async function DELETE(request: NextRequest) {

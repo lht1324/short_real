@@ -1,10 +1,10 @@
 import { task, tasks } from "@trigger.dev/sdk/v3";
 import { logger } from "@trigger.dev/sdk";
-import { videoGenerationTasksServerAPI } from "@/api/server/videoGenerationTasksServerAPI";
+import { videoGenerationTasksServerAPI } from "@/lib/api/server/videoGenerationTasksServerAPI";
 import { postImage } from "@/trigger/post-image";
-import { SceneData, VideoGenerationTaskStatus } from "@/api/types/supabase/VideoGenerationTasks";
-import { MasterStyleInfo } from "@/api/types/supabase/MasterStyleInfo";
-import { InitialEntityManifestItem } from "@/api/types/open-ai/Entity";
+import { SceneData, VideoGenerationTaskStatus } from "@/lib/api/types/supabase/VideoGenerationTasks";
+import { MasterStyleInfo } from "@/lib/api/types/supabase/MasterStyleInfo";
+import { InitialEntityManifestItem } from "@/lib/api/types/open-ai/Entity";
 import { internalFireAndForgetFetch } from "@/utils/internalFetch";
 
 export const orchestrateImageGeneration = task({

@@ -3,8 +3,8 @@ import {
     BaseSunoAPIResponse,
     PostGenerateWebhookPayload,
     PostGenerateWebhookType
-} from "@/api/types/suno-api/SunoAPIResponses";
-import {videoGenerationTasksServerAPI} from "@/api/server/videoGenerationTasksServerAPI";
+} from "@/lib/api/types/suno-api/SunoAPIResponses";
+import {videoGenerationTasksServerAPI} from "@/lib/api/server/videoGenerationTasksServerAPI";
 import {getNextBaseResponse} from "@/utils/getNextBaseResponse";
 import {internalFireAndForgetFetch} from "@/utils/internalFetch";
 import {cleanAndParseJSON} from "@/utils/jsonUtils";

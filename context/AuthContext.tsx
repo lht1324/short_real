@@ -2,8 +2,8 @@
 
 import React, {createContext, useCallback, useContext, useEffect, useState} from 'react'
 import { User as SupabaseUser, Session } from '@supabase/supabase-js'
-import { User } from '@/api/types/supabase/Users'
-import {usersClientAPI} from "@/api/client/usersClientAPI";
+import { User } from '@/lib/api/types/supabase/Users'
+import {usersClientAPI} from "@/lib/api/client/usersClientAPI";
 import {createBrowserClient} from "@supabase/ssr";
 
 export enum OAuthProvider {

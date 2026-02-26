@@ -8,9 +8,9 @@ import {
     ExportStatus,
     VideoGenerationTask,
     VideoGenerationTaskStatus
-} from "@/api/types/supabase/VideoGenerationTasks";
+} from "@/lib/api/types/supabase/VideoGenerationTasks";
 import Image from "next/image";
-import {videoClientAPI} from "@/api/client/videoClientAPI";
+import {videoClientAPI} from "@/lib/api/client/videoClientAPI";
 import {useAuth} from "@/context/AuthContext";
 import {useRouter, useSearchParams} from "next/navigation";
 import DashboardItem from "@/components/page/workspace/dashboard/DashboardItem";
@@ -18,7 +18,7 @@ import DefaultModal from "@/components/public/DefaultModal";
 import {createBrowserClient} from "@supabase/ssr";
 import TaskDeleteLoadingModal from "@/components/page/workspace/dashboard/TaskDeleteLoadingModal";
 import {Polar} from "@polar-sh/sdk";
-import {polarClientAPI} from "@/api/client/polarClientAPI";
+import {polarClientAPI} from "@/lib/api/client/polarClientAPI";
 import CheckoutResultDialog, {
     CheckoutResultDialogData
 } from "@/components/page/workspace/dashboard/CheckoutResultDialog";

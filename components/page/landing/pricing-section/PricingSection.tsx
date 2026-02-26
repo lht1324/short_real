@@ -2,7 +2,7 @@
 
 import {memo, useCallback, useMemo} from "react";
 import PricingSectionItem from "./PricingSectionItem";
-import {ProductData} from "@/api/types/api/polar/products/ProductData";
+import {ProductData} from "@/lib/api/types/api/polar/products/ProductData";
 import {PRICING_BENEFIT_LIST} from "@/components/page/landing/pricing-section/PRICING_BENEFIT_LIST";
 
 export interface PricingSectionProps {

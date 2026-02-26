@@ -3,7 +3,7 @@
 import { memo, useMemo } from "react";
 import ExportResultSection from "@/components/page/workspace/dashboard/export-result-modal/ExportResultSelection";
 import {ExportResult} from "@/components/page/workspace/dashboard/export-result-modal/ExportResult";
-import {ExportPlatform} from "@/api/types/supabase/VideoGenerationTasks";
+import {ExportPlatform} from "@/lib/api/types/supabase/VideoGenerationTasks";
 import { Loader2 } from "lucide-react";
 
 interface ExportResultModalProps {

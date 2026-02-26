@@ -1,5 +1,5 @@
-import {videoGenerationTasksServerAPI} from "@/api/server/videoGenerationTasksServerAPI";
-import {VideoGenerationTask} from "@/api/types/supabase/VideoGenerationTasks";
+import {videoGenerationTasksServerAPI} from "@/lib/api/server/videoGenerationTasksServerAPI";
+import {VideoGenerationTask} from "@/lib/api/types/supabase/VideoGenerationTasks";
 import {NextResponse} from "next/server";
 
 export async function taskCheckAndCleanupIfCancelled(videoGenerationTask: VideoGenerationTask): Promise<NextResponse | null> {

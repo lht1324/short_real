@@ -1,4 +1,4 @@
-import {BaseSunoAPIResponse, SunoAPIBaseData} from '@/api/types/suno-api/SunoAPIResponses';
+import {BaseSunoAPIResponse, SunoAPIBaseData} from '@/lib/api/types/suno-api/SunoAPIResponses';
 
 export class SunoAPIClient {
     private readonly apiKey?: string;

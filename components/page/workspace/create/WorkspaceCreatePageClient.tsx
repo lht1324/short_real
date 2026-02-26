@@ -9,18 +9,18 @@ import {
     Plus,
     Sparkles,
 } from 'lucide-react';
-import {openAIClientAPI} from '@/api/client/openAIClientAPI';
-import {Style} from "@/api/types/supabase/Styles";
-import {SceneData, VideoGenerationTask, VideoGenerationTaskStatus} from "@/api/types/supabase/VideoGenerationTasks";
-import {videoClientAPI} from "@/api/client/videoClientAPI";
-import {StoryboardData} from "@/api/types/api/open-ai/scene/PostOpenAISceneResponse";
+import {openAIClientAPI} from '@/lib/api/client/openAIClientAPI';
+import {Style} from "@/lib/api/types/supabase/Styles";
+import {SceneData, VideoGenerationTask, VideoGenerationTaskStatus} from "@/lib/api/types/supabase/VideoGenerationTasks";
+import {videoClientAPI} from "@/lib/api/client/videoClientAPI";
+import {StoryboardData} from "@/lib/api/types/api/open-ai/scene/PostOpenAISceneResponse";
 import VoiceSelectionPanel from "@/components/page/workspace/create/voice-selection-panel/VoiceSelectionPanel";
 import {useRouter, useSearchParams} from "next/navigation";
-import {PostOpenAISceneRequest} from "@/api/types/api/open-ai/scene/PostOpenAISceneRequest";
+import {PostOpenAISceneRequest} from "@/lib/api/types/api/open-ai/scene/PostOpenAISceneRequest";
 import DefaultModal from "@/components/public/DefaultModal";
 import {useAuth} from "@/context/AuthContext";
 import {STYLE_DATA_LIST} from "@/lib/styles";
-import {voiceClientAPI} from "@/api/client/voiceClientAPI";
+import {voiceClientAPI} from "@/lib/api/client/voiceClientAPI";
 import ResultPanel from "@/components/page/workspace/create/result-panel/ResultPanel";
 import ScriptGenerationModal from "@/components/page/workspace/create/ScriptGenerationModal";
 import CreateFormPanel from "@/components/page/workspace/create/create-form-panel/CreateFormPanel";

@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
-import { usersServerAPI } from "@/api/server/usersServerAPI";
+import { usersServerAPI } from "@/lib/api/server/usersServerAPI";
 import { getNextBaseResponse } from "@/utils/getNextBaseResponse";
-import { User } from "@/api/types/supabase/Users";
+import { User } from "@/lib/api/types/supabase/Users";
 
 export async function GET(
     request: NextRequest,
