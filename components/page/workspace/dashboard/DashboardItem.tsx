@@ -508,7 +508,6 @@ function DashboardItem({
 
                                         {/* TikTok */}
                                         <button
-                                            disabled={process.env.NODE_ENV === 'production'}
                                             className="w-full h-14 flex items-center text-white hover:bg-gray-700/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent"
                                             onClick={() => { onClickExport(taskData.id, ExportPlatform.TIKTOK); }}
                                         >
@@ -523,9 +522,9 @@ function DashboardItem({
                                             </div>
                                             <span className="text-sm flex-1 text-left pl-2 flex items-center gap-2">
                                                 TikTok
-                                                {process.env.NODE_ENV === 'production' && <span className="px-1.5 py-1 bg-gray-600/50 rounded-full flex items-center opacity-100">
+                                                <span className="px-1.5 py-1 bg-gray-600/50 rounded-full flex items-center opacity-100">
                                                     <Wrench size={12} className="text-yellow-300" />
-                                                </span>}
+                                                </span>
                                             </span>
                                         </button>
 
