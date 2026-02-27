@@ -38,7 +38,7 @@ interface DashboardItemProps {
     taskData: TaskData;
     index: number;
     onClickEdit: (taskId: string) => void;
-    onClickExport: (taskId: string, platform: ExportPlatform) => void;
+    onClickExport: (taskId: string, platform: ExportPlatform) => Promise<void>;
     onClickDownload: (taskId: string) => void;
     onClickRetry: (taskId: string) => void;
     onClickCancel: (taskId: string, status: VideoGenerationTaskStatus) => void;
@@ -490,7 +490,7 @@ function DashboardItem({
                                         {/* YouTube Shorts */}
                                         <button
                                             className="w-full h-14 flex items-center text-white hover:bg-gray-700/50 transition-colors"
-                                            onClick={() => { onClickExport(taskData.id, ExportPlatform.YOUTUBE); }}
+                                            onClick={async () => { await onClickExport(taskData.id, ExportPlatform.YOUTUBE); }}
                                         >
                                             <div className="w-14 h-14 flex items-center justify-center flex-shrink-0">
                                                 <Image
@@ -509,7 +509,7 @@ function DashboardItem({
                                         {/* TikTok */}
                                         <button
                                             className="w-full h-14 flex items-center text-white hover:bg-gray-700/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent"
-                                            onClick={() => { onClickExport(taskData.id, ExportPlatform.TIKTOK); }}
+                                            onClick={async () => { await onClickExport(taskData.id, ExportPlatform.TIKTOK); }}
                                         >
                                             <div className="w-14 h-14 flex items-center justify-center flex-shrink-0">
                                                 <Image
@@ -529,7 +529,7 @@ function DashboardItem({
                                         <button
                                             disabled={true}
                                             className="w-full h-14 flex items-center text-white hover:bg-gray-700/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent"
-                                            onClick={() => { onClickExport(taskData.id, ExportPlatform.INSTAGRAM); }}
+                                            onClick={async () => { await onClickExport(taskData.id, ExportPlatform.INSTAGRAM); }}
                                         >
                                             <div className="w-14 h-14 flex items-center justify-center flex-shrink-0">
                                                 <Image

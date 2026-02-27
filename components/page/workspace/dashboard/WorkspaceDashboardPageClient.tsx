@@ -2,7 +2,7 @@
 
 import {memo, useCallback, useEffect, useMemo, useState} from "react";
 import Link from "next/link";
-import {Coins, ListTodo, Plus, Loader2} from 'lucide-react';
+import {Coins, ListTodo, Loader2, Plus} from 'lucide-react';
 import {
     ExportPlatform,
     ExportStatus,
@@ -642,10 +642,15 @@ function WorkspaceDashboardPageClient() {
                                         index={index}
                                         onClickEdit={onClickEdit}
                                         onClickDownload={onClickDownload}
-                                        onClickExport={(taskId, platform) => {
+                                        onClickExport={async (taskId, platform) => {
                                             setPendingExportTaskId(taskId);
                                             setPendingExportPlatform(platform);
-                                            setShowTikTokExportConsentModal(true);
+
+                                            if (platform === ExportPlatform.TIKTOK) {
+                                                setShowTikTokExportConsentModal(true);
+                                            } else {
+                                                await onClickExport();
+                                            }
                                         }}
                                         onClickRetry={onClickRetry}
                                         onClickCancel={onClickCancel}
