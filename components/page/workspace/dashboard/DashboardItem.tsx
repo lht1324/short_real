@@ -520,12 +520,7 @@ function DashboardItem({
                                                     className="object-contain"
                                                 />
                                             </div>
-                                            <span className="text-sm flex-1 text-left pl-2 flex items-center gap-2">
-                                                TikTok
-                                                <span className="px-1.5 py-1 bg-gray-600/50 rounded-full flex items-center opacity-100">
-                                                    <Wrench size={12} className="text-yellow-300" />
-                                                </span>
-                                            </span>
+                                            <span className="text-sm flex-1 text-left pl-2 flex items-center gap-2">TikTok</span>
                                         </button>
 
                                         {/* Instagram Reels */}
