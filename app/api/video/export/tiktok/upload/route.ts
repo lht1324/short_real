@@ -190,7 +190,8 @@ export async function POST(request: NextRequest) {
             body: JSON.stringify({
                 post_info: {
                     title: videoGenerationTask.video_title ?? 'ShortReal AI',
-                    privacy_level: process.env.NODE_ENV === 'production' ? 'PUBLIC_TO_EVERYONE' : 'SELF_ONLY',
+                    // privacy_level: process.env.NODE_ENV === 'production' ? 'PUBLIC_TO_EVERYONE' : 'SELF_ONLY',
+                    privacy_level: 'SELF_ONLY',
                     disable_duet: false,
                     disable_comment: false,
                     disable_stitch: false,
