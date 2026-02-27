@@ -523,6 +523,8 @@ function DashboardItem({
                                             <span className="text-sm flex-1 text-left pl-2 flex items-center gap-2">TikTok</span>
                                         </button>
 
+                                        <div className="border-t border-purple-500/20" />
+
                                         {/* Instagram Reels */}
                                         <button
                                             disabled={true}
