@@ -56,7 +56,7 @@ function ExportSettingsModal({
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center">
             <div className="bg-gray-900 border border-purple-500/30 rounded-2xl p-6 w-full max-w-md mx-4">
                 <h2 className="text-xl font-bold text-white mb-1">Export to YouTube Shorts</h2>
-                <p className="text-gray-400 text-sm mb-6">
+                <p className="text-gray-400 text-xl mb-6">
                     Choose who can see your video after upload.
                 </p>
 
@@ -76,24 +76,24 @@ function ExportSettingsModal({
                                 <span className={isSelected ? "text-purple-400" : "text-gray-500"}>
                                     {option.icon}
                                 </span>
-                                <span className="text-sm font-medium">{option.label}</span>
+                                <span className="text-base font-medium">{option.label}</span>
                             </button>
                         );
                     })}
                 </div>
 
-                <p className="text-xs text-gray-500 mb-6 px-1">{privacySettingDescription}</p>
+                <p className="text-sm text-gray-500 mb-6 px-1">{privacySettingDescription}</p>
 
                 <div className="flex gap-3">
                     <button
                         onClick={onClickCancel}
-                        className="flex-1 py-3 rounded-xl border border-white/10 text-gray-300 text-sm font-semibold hover:bg-gray-800 transition-all"
+                        className="flex-1 py-3 rounded-xl border border-white/10 text-gray-300 text-base font-semibold hover:bg-gray-800 transition-all"
                     >
                         Cancel
                     </button>
                     <button
                         onClick={onClickConfirm}
-                        className="flex-1 py-3 rounded-xl bg-gradient-to-r from-pink-500 to-purple-600 text-white text-sm font-semibold hover:from-pink-600 hover:to-purple-700 transition-all"
+                        className="flex-1 py-3 rounded-xl bg-gradient-to-r from-pink-500 to-purple-600 text-white text-base font-semibold hover:from-pink-600 hover:to-purple-700 transition-all"
                     >
                         Authorize & Continue
                     </button>

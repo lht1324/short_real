@@ -663,12 +663,15 @@ function WorkspaceDashboardPageClient() {
                                             switch (platform) {
                                                 case ExportPlatform.YOUTUBE: {
                                                     setShowYoutubeExportSettingModal(true);
+                                                    break;
                                                 }
                                                 case ExportPlatform.TIKTOK: {
                                                     setShowTikTokExportConsentModal(true);
+                                                    break;
                                                 }
                                                 case ExportPlatform.INSTAGRAM: {
                                                     /* To-Do */
+                                                    break;
                                                 }
                                             }
                                         }}
