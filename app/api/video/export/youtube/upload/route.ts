@@ -44,6 +44,21 @@ export async function POST(request: NextRequest) {
             });
         }
 
+        const privacySetting = searchParams.get('privacySetting');
+
+        if (!privacySetting) {
+            await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, {
+                export_status: ExportStatus.FAILED,
+                export_platform: ExportPlatform.YOUTUBE,
+            });
+
+            return getNextBaseResponse({
+                success: false,
+                status: 400,
+                error: 'privacySetting is required'
+            });
+        }
+
         const videoGenerationTask = await videoGenerationTasksServerAPI.getVideoGenerationTaskById(taskId);
 
         if (!videoGenerationTask) {
@@ -166,7 +181,8 @@ export async function POST(request: NextRequest) {
             buffer,
             videoGenerationTask.video_title ?? "ShortReal AI",
             videoGenerationTask.video_description ?? "ShortReal AI",
-            boundary
+            boundary,
+            privacySetting,
         )
         const uploadResponse = await fetch(
             'https://www.googleapis.com/upload/youtube/v3/videos?uploadType=multipart&part=snippet,status',
@@ -236,7 +252,8 @@ function createMultipartBody(
     videoBuffer: ArrayBuffer,
     videoTitle: string,
     videoDescription: string,
-    boundary: string
+    boundary: string,
+    privacySetting: string,
 ): Uint8Array {
     const encoder = new TextEncoder();
     const metadataJson = JSON.stringify({
@@ -247,7 +264,7 @@ function createMultipartBody(
             tags: ['shorts', 'ai', 'generated'],
         },
         status: {
-            privacyStatus: 'public',
+            privacyStatus: privacySetting,
             selfDeclaredMadeForKids: false,
         },
     });
