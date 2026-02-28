@@ -53,14 +53,14 @@ export async function GET(request: NextRequest) {
         }
 
         // 2. State에서 userId 추출
-        const { userId, taskId } = JSON.parse(decodeURIComponent(state));
+        const { userId, taskId, privacySetting } = JSON.parse(decodeURIComponent(state));
 
-        if (!userId || !taskId) {
-            console.error('Missing required query param: userId, taskId');
+        if (!userId || !taskId || !privacySetting) {
+            console.error('Missing required query param: userId, taskId, privacySetting');
             if (taskId) {
                 await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, {
                     export_status: ExportStatus.FAILED,
-                    export_platform: ExportPlatform.TIKTOK,
+                    export_platform: ExportPlatform.YOUTUBE,
                 });
             }
             return NextResponse.redirect(`${originUrl}/workspace/dashboard`);
@@ -118,7 +118,7 @@ export async function GET(request: NextRequest) {
             return NextResponse.redirect(`${originUrl}/workspace/dashboard`);
         }
 
-        internalFireAndForgetFetch(`${process.env.BASE_URL}/api/video/export/youtube/upload?taskId=${taskId}`, {
+        internalFireAndForgetFetch(`${process.env.BASE_URL}/api/video/export/youtube/upload?taskId=${taskId}&privacySetting=${privacySetting}`, {
             method: 'POST',
         }, {
             userId: userId,
