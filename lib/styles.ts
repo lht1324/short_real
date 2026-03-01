@@ -1,4 +1,4 @@
-import { Style } from "@/api/types/supabase/Styles";
+import { Style } from "@/lib/api/types/supabase/Styles";
 
 export const STYLE_DATA_LIST: Style[] = [
     {

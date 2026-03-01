@@ -2,7 +2,7 @@
 
 import {memo, ReactNode, useCallback, useMemo, useState} from "react";
 import {TaskData} from "@/components/page/workspace/dashboard/WorkspaceDashboardPageClient";
-import {ExportPlatform, VideoGenerationTaskStatus} from "@/api/types/supabase/VideoGenerationTasks";
+import {ExportPlatform, VideoGenerationTaskStatus} from "@/lib/api/types/supabase/VideoGenerationTasks";
 import {
     AlertCircle,
     Calendar,
@@ -38,7 +38,7 @@ interface DashboardItemProps {
     taskData: TaskData;
     index: number;
     onClickEdit: (taskId: string) => void;
-    onClickExport: (taskId: string, platform: ExportPlatform) => void;
+    onClickExport: (taskId: string, platform: ExportPlatform) => Promise<void>;
     onClickDownload: (taskId: string) => void;
     onClickRetry: (taskId: string) => void;
     onClickCancel: (taskId: string, status: VideoGenerationTaskStatus) => void;
@@ -490,7 +490,7 @@ function DashboardItem({
                                         {/* YouTube Shorts */}
                                         <button
                                             className="w-full h-14 flex items-center text-white hover:bg-gray-700/50 transition-colors"
-                                            onClick={() => { onClickExport(taskData.id, ExportPlatform.YOUTUBE); }}
+                                            onClick={async () => { await onClickExport(taskData.id, ExportPlatform.YOUTUBE); }}
                                         >
                                             <div className="w-14 h-14 flex items-center justify-center flex-shrink-0">
                                                 <Image
@@ -508,9 +508,8 @@ function DashboardItem({
 
                                         {/* TikTok */}
                                         <button
-                                            disabled={process.env.NODE_ENV === 'production'}
                                             className="w-full h-14 flex items-center text-white hover:bg-gray-700/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent"
-                                            onClick={() => { onClickExport(taskData.id, ExportPlatform.TIKTOK); }}
+                                            onClick={async () => { await onClickExport(taskData.id, ExportPlatform.TIKTOK); }}
                                         >
                                             <div className="w-14 h-14 flex items-center justify-center flex-shrink-0">
                                                 <Image
@@ -521,19 +520,16 @@ function DashboardItem({
                                                     className="object-contain"
                                                 />
                                             </div>
-                                            <span className="text-sm flex-1 text-left pl-2 flex items-center gap-2">
-                                                TikTok
-                                                {process.env.NODE_ENV === 'production' && <span className="px-1.5 py-1 bg-gray-600/50 rounded-full flex items-center opacity-100">
-                                                    <Wrench size={12} className="text-yellow-300" />
-                                                </span>}
-                                            </span>
+                                            <span className="text-sm flex-1 text-left pl-2 flex items-center gap-2">TikTok</span>
                                         </button>
+
+                                        <div className="border-t border-purple-500/20" />
 
                                         {/* Instagram Reels */}
                                         <button
                                             disabled={true}
                                             className="w-full h-14 flex items-center text-white hover:bg-gray-700/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent"
-                                            onClick={() => { onClickExport(taskData.id, ExportPlatform.INSTAGRAM); }}
+                                            onClick={async () => { await onClickExport(taskData.id, ExportPlatform.INSTAGRAM); }}
                                         >
                                             <div className="w-14 h-14 flex items-center justify-center flex-shrink-0">
                                                 <Image

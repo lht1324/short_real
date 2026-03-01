@@ -1,7 +1,7 @@
 import {memo, useCallback, useEffect, useRef, useState} from "react";
 import {AlertTriangle, Coins, Film, Play, Square} from "lucide-react";
 import StoryboardItem from "@/components/page/workspace/create/create-form-panel/StoryboardItem";
-import {SceneData} from "@/api/types/supabase/VideoGenerationTasks";
+import {SceneData} from "@/lib/api/types/supabase/VideoGenerationTasks";
 
 interface StoryboardSectionProps {
     script: string;

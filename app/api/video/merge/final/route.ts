@@ -1,9 +1,9 @@
 import {NextRequest} from 'next/server';
-import {videoServerAPI} from '@/api/server/videoServerAPI';
-import {musicServerAPI} from '@/api/server/musicServerAPI';
+import {videoServerAPI} from '@/lib/api/server/videoServerAPI';
+import {musicServerAPI} from '@/lib/api/server/musicServerAPI';
 import {generateASSContent} from "@/utils/captionUtils";
-import {videoGenerationTasksServerAPI} from "@/api/server/videoGenerationTasksServerAPI";
-import {FinalVideoMergeData, VideoGenerationTaskStatus} from "@/api/types/supabase/VideoGenerationTasks";
+import {videoGenerationTasksServerAPI} from "@/lib/api/server/videoGenerationTasksServerAPI";
+import {FinalVideoMergeData, VideoGenerationTaskStatus} from "@/lib/api/types/supabase/VideoGenerationTasks";
 import {taskCheckAndCleanupIfCancelled} from "@/utils/taskCheckAndCleanupIfCancelled";
 import {getNextBaseResponse} from "@/utils/getNextBaseResponse";
 import {getIsValidRequestC2S, getIsValidRequestS2S} from "@/utils/getIsValidRequest";

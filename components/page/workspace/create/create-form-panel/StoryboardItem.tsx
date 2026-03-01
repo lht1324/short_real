@@ -1,7 +1,7 @@
 'use client'
 
 import {memo} from "react";
-import {SceneData} from "@/api/types/supabase/VideoGenerationTasks";
+import {SceneData} from "@/lib/api/types/supabase/VideoGenerationTasks";
 
 interface StoryboardItemProps {
     sceneData: SceneData;

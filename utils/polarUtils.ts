@@ -1,6 +1,6 @@
 import {Product} from "@polar-sh/sdk/models/components/product";
-import {ProductData} from "@/api/types/api/polar/products/ProductData";
-import {SubscriptionPlan} from "@/api/types/supabase/Users";
+import {ProductData} from "@/lib/api/types/api/polar/products/ProductData";
+import {SubscriptionPlan} from "@/lib/api/types/supabase/Users";
 
 export function processProducts(items: Product[]): ProductData[] {
     return items.filter((product: Product) => {

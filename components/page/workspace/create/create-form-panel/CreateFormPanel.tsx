@@ -1,6 +1,6 @@
 import {ChangeEvent, memo, useMemo} from "react";
 import {Sparkles} from "lucide-react";
-import {SceneData} from "@/api/types/supabase/VideoGenerationTasks";
+import {SceneData} from "@/lib/api/types/supabase/VideoGenerationTasks";
 import StoryboardSection from "@/components/page/workspace/create/create-form-panel/StoryboardSection";
 
 interface CreateFormPanelProps {

@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import {videoGenerationTasksServerAPI} from "@/api/server/videoGenerationTasksServerAPI";
+import {videoGenerationTasksServerAPI} from "@/lib/api/server/videoGenerationTasksServerAPI";
 import {getNextBaseResponse} from "@/utils/getNextBaseResponse";
-import {BaseResponse} from "@/api/types/api/BaseResponse";
-import {usersServerAPI} from "@/api/server/usersServerAPI";
+import {BaseResponse} from "@/lib/api/types/api/BaseResponse";
+import {usersServerAPI} from "@/lib/api/server/usersServerAPI";
 import {internalFireAndForgetFetch} from "@/utils/internalFetch";
 import {getIsValidRequestC2S} from "@/utils/getIsValidRequest";
 import {

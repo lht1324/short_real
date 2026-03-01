@@ -3,7 +3,7 @@
 import {memo, useEffect, useState} from "react";
 import Image from "next/image";
 import {CaptionData} from "@/components/page/workspace/editor/WorkspaceEditorPageClient";
-import {imageClientAPI} from "@/api/client/imageClientAPI";
+import {imageClientAPI} from "@/lib/api/client/imageClientAPI";
 import SceneSequenceItem from "@/components/page/workspace/editor/SceneSequenceItem";
 
 interface ImageData {

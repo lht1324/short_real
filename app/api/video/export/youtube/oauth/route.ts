@@ -38,6 +38,16 @@ export async function GET(request: NextRequest) {
             });
         }
 
+        const privacySetting = request.nextUrl.searchParams.get('privacySetting');
+
+        if (!privacySetting) {
+            return getNextBaseResponse({
+                success: false,
+                status: 400,
+                error: 'Youtube privacy setting is invalid.'
+            });
+        }
+
         const params = new URLSearchParams({
             client_id: process.env.GOOGLE_YOUTUBE_CLIENT_ID!,
             redirect_uri: `${process.env.BASE_URL}/callback/youtube`,
@@ -48,6 +58,7 @@ export async function GET(request: NextRequest) {
             state: encodeURIComponent(JSON.stringify({
                 userId: userId,
                 taskId: taskId,
+                privacySetting: privacySetting,
             }))
         });
 

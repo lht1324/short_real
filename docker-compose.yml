@@ -23,3 +23,4 @@ services:
     environment:
       # 윈도우 파일 시스템 위에서 돌릴 경우를 대비한 핫 리로딩 설정
       - WATCHPACK_POLLING=true
+      - DOCKER=true

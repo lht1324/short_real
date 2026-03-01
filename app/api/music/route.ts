@@ -1,11 +1,11 @@
 import {NextRequest} from "next/server";
-import {sunoAPIServerAPI} from "@/api/server/sunoAPIServerAPI";
-import {PostGenerateRequest, SunoModelType} from "@/api/types/suno-api/SunoAPIRequests";
-import {videoGenerationTasksServerAPI} from "@/api/server/videoGenerationTasksServerAPI";
+import {sunoAPIServerAPI} from "@/lib/api/server/sunoAPIServerAPI";
+import {PostGenerateRequest, SunoModelType} from "@/lib/api/types/suno-api/SunoAPIRequests";
+import {videoGenerationTasksServerAPI} from "@/lib/api/server/videoGenerationTasksServerAPI";
 import {taskCheckAndCleanupIfCancelled} from "@/utils/taskCheckAndCleanupIfCancelled";
-import {llmServerAPI} from "@/api/server/llmServerAPI";
+import {llmServerAPI} from "@/lib/api/server/llmServerAPI";
 import {getNextBaseResponse} from "@/utils/getNextBaseResponse";
-import {MusicGenerationData} from "@/api/types/suno-api/MusicGenerationData";
+import {MusicGenerationData} from "@/lib/api/types/suno-api/MusicGenerationData";
 import {getIsValidRequestS2S} from "@/utils/getIsValidRequest";
 
 export async function POST(request: NextRequest) {

@@ -4,12 +4,12 @@ import { createSupabaseServiceRoleClient } from '@/lib/supabaseServiceRole';
 import { getNextBaseResponse } from '@/utils/getNextBaseResponse';
 import {
     PostVideoExportYoutubeUploadRequest
-} from "@/api/types/api/video/export/youtube/upload/PostVideoExportYoutubeUploadRequest";
-import {UserYoutubeToken} from "@/api/types/supabase/UserYoutubeToken";
+} from "@/lib/api/types/api/video/export/youtube/upload/PostVideoExportYoutubeUploadRequest";
+import {UserYoutubeToken} from "@/lib/api/types/supabase/UserYoutubeToken";
 import {PostgrestSingleResponse} from "@supabase/supabase-js";
 import {DownloadResult} from "@supabase/storage-js";
-import {videoGenerationTasksServerAPI} from "@/api/server/videoGenerationTasksServerAPI";
-import {ExportPlatform, ExportStatus} from "@/api/types/supabase/VideoGenerationTasks";
+import {videoGenerationTasksServerAPI} from "@/lib/api/server/videoGenerationTasksServerAPI";
+import {ExportPlatform, ExportStatus} from "@/lib/api/types/supabase/VideoGenerationTasks";
 
 
 export async function POST(request: NextRequest) {
@@ -41,6 +41,21 @@ export async function POST(request: NextRequest) {
                 success: false,
                 status: 400,
                 error: 'userId is required'
+            });
+        }
+
+        const privacySetting = searchParams.get('privacySetting');
+
+        if (!privacySetting) {
+            await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, {
+                export_status: ExportStatus.FAILED,
+                export_platform: ExportPlatform.YOUTUBE,
+            });
+
+            return getNextBaseResponse({
+                success: false,
+                status: 400,
+                error: 'privacySetting is required'
             });
         }
 
@@ -166,7 +181,8 @@ export async function POST(request: NextRequest) {
             buffer,
             videoGenerationTask.video_title ?? "ShortReal AI",
             videoGenerationTask.video_description ?? "ShortReal AI",
-            boundary
+            boundary,
+            privacySetting,
         )
         const uploadResponse = await fetch(
             'https://www.googleapis.com/upload/youtube/v3/videos?uploadType=multipart&part=snippet,status',
@@ -236,7 +252,8 @@ function createMultipartBody(
     videoBuffer: ArrayBuffer,
     videoTitle: string,
     videoDescription: string,
-    boundary: string
+    boundary: string,
+    privacySetting: string,
 ): Uint8Array {
     const encoder = new TextEncoder();
     const metadataJson = JSON.stringify({
@@ -247,7 +264,7 @@ function createMultipartBody(
             tags: ['shorts', 'ai', 'generated'],
         },
         status: {
-            privacyStatus: 'public',
+            privacyStatus: privacySetting,
             selfDeclaredMadeForKids: false,
         },
     });

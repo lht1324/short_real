@@ -2,7 +2,7 @@
 
 import {memo, useCallback, useEffect, useRef, useState} from "react";
 import {ChevronRight, Loader2, Sparkles, X} from "lucide-react";
-import {RoadmapItem, RoadmapStatus} from "@/api/types/supabase/RoadmapItem";
+import {RoadmapItem, RoadmapStatus} from "@/lib/api/types/supabase/RoadmapItem";
 
 interface FloatingRoadmapProps {
     roadmapItemList: RoadmapItem[];

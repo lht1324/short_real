@@ -1,5 +1,9 @@
 import type { NextConfig } from "next";
 
+const isDev = process.env.NODE_ENV === 'development';
+// docker-compose.yml 확인
+const isDocker = process.env.DOCKER === 'true';
+
 const nextConfig: NextConfig = {
     // 외부 이미지 허용
     images: {
@@ -18,17 +22,20 @@ const nextConfig: NextConfig = {
             },
         ]
     },
-    webpack: (config, { dev }) => {
-        if (dev) {
+    ...(isDev && isDocker ? {
+        webpack: (config) => {
             config.watchOptions = {
-                poll: 800,             // 0.8초마다 변경 사항 강제 확인 (감시자 부활)
-                aggregateTimeout: 300,  // 변경 후 0.3초 대기
-                ignored: /node_modules|\.git/ // .git 폴더는 무시 (부하 방지)
+                poll: 800,
+                aggregateTimeout: 300,
+                ignored: /node_modules|\.git/
             };
+            return config;
         }
-        return config;
-    },
-    turbopack: {},
+    } : isDev ? {
+        turbopack: {}  // dev 로컬 + production 모두 Turbopack
+    } : {
+
+    }),
 
     async headers() {
         return [

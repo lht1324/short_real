@@ -1,8 +1,8 @@
 'use client'
 
 import {memo, useCallback, useEffect, useMemo, useState, MouseEvent} from "react";
-import {polarClientAPI} from "@/api/client/polarClientAPI";
-import {ProductData} from "@/api/types/api/polar/products/ProductData";
+import {polarClientAPI} from "@/lib/api/client/polarClientAPI";
+import {ProductData} from "@/lib/api/types/api/polar/products/ProductData";
 import {X} from "lucide-react";
 import ChangePlanModalPricingItem from "@/components/page/profile/ChangePlanModalPricingItem";
 import ChangePlanConfirmModal from "@/components/page/profile/ChangePlanConfirmModal";

@@ -2,15 +2,15 @@
 
 import {memo, useCallback, useEffect, useMemo, useState} from "react";
 import Link from "next/link";
-import {Coins, ListTodo, Plus, Loader2} from 'lucide-react';
+import {Coins, ListTodo, Loader2, Plus} from 'lucide-react';
 import {
     ExportPlatform,
     ExportStatus,
     VideoGenerationTask,
     VideoGenerationTaskStatus
-} from "@/api/types/supabase/VideoGenerationTasks";
+} from "@/lib/api/types/supabase/VideoGenerationTasks";
 import Image from "next/image";
-import {videoClientAPI} from "@/api/client/videoClientAPI";
+import {videoClientAPI} from "@/lib/api/client/videoClientAPI";
 import {useAuth} from "@/context/AuthContext";
 import {useRouter, useSearchParams} from "next/navigation";
 import DashboardItem from "@/components/page/workspace/dashboard/DashboardItem";
@@ -18,13 +18,15 @@ import DefaultModal from "@/components/public/DefaultModal";
 import {createBrowserClient} from "@supabase/ssr";
 import TaskDeleteLoadingModal from "@/components/page/workspace/dashboard/TaskDeleteLoadingModal";
 import {Polar} from "@polar-sh/sdk";
-import {polarClientAPI} from "@/api/client/polarClientAPI";
+import {polarClientAPI} from "@/lib/api/client/polarClientAPI";
 import CheckoutResultDialog, {
     CheckoutResultDialogData
 } from "@/components/page/workspace/dashboard/CheckoutResultDialog";
 import ExportResultModal from "@/components/page/workspace/dashboard/export-result-modal/ExportResultModal";
 import {ExportResult} from "@/components/page/workspace/dashboard/export-result-modal/ExportResult";
 import MetadataEditModal from "@/components/page/workspace/dashboard/MetadataEditModal";
+import ExportSettingsModal from "@/components/page/workspace/dashboard/export-settings-modal/ExportSettingsModal";
+import {ExportPrivacySetting} from "@/components/page/workspace/dashboard/export-settings-modal/ExportPrivacySetting";
 
 export interface TaskData {
     id: string;
@@ -75,12 +77,15 @@ function WorkspaceDashboardPageClient() {
     const [pendingExportTaskId, setPendingExportTaskId] = useState<string | null>(null);
     const [pendingExportPlatform, setPendingExportPlatform] = useState<ExportPlatform | null>(null);
 
+    const [youtubePrivacySetting, setYoutubePrivacySetting] = useState<ExportPrivacySetting>(ExportPrivacySetting.PUBLIC);
+
     const [showEditMetadataModal, setShowEditMetadataModal] = useState(false);
     const [showCancelConfirmModal, setShowCancelConfirmModal] = useState(false);
     const [showCancelLoadingModal, setShowCancelLoadingModal] = useState(false);
 
     const [showRetryLoadingModal, setShowRetryLoadingModal] = useState(false);
 
+    const [showYoutubeExportSettingModal, setShowYoutubeExportSettingModal] = useState(false);
     const [showTikTokExportConsentModal, setShowTikTokExportConsentModal] = useState(false);
 
     const [isExportingVideo, setIsExportingVideo] = useState(false);
@@ -120,7 +125,7 @@ function WorkspaceDashboardPageClient() {
 
             switch (pendingExportPlatform) {
                 case ExportPlatform.YOUTUBE: {
-                    window.location.href = `/api/video/export/youtube/oauth?taskId=${pendingExportTaskId}`;
+                    window.location.href = `/api/video/export/youtube/oauth?taskId=${pendingExportTaskId}&privacySetting=${youtubePrivacySetting}`;
                     return;
                 }
                 case ExportPlatform.TIKTOK: {
@@ -135,7 +140,7 @@ function WorkspaceDashboardPageClient() {
         } catch (error) {
             console.error(error);
         }
-    }, [user?.id, pendingExportTaskId, pendingExportPlatform]);
+    }, [user?.id, pendingExportTaskId, pendingExportPlatform, youtubePrivacySetting]);
 
     const onClickDownload = useCallback(async (taskId: string) => {
         try {
@@ -331,6 +336,10 @@ function WorkspaceDashboardPageClient() {
         };
     }, [calculateProgress]);
 
+    const onChangeYoutubePrivacySetting = useCallback((privacySetting: ExportPrivacySetting) => {
+        setYoutubePrivacySetting(privacySetting);
+    }, []);
+
     useEffect(() => {
         if (user?.id) {
             // 타임아웃 설정
@@ -357,7 +366,12 @@ function WorkspaceDashboardPageClient() {
 
                     setTaskDataList(taskList);
                     setIsExportingVideo(videoGenerationTaskList.some((videoGenerationTask) => {
-                        return videoGenerationTask.export_status === ExportStatus.UPLOADING;
+                        const {
+                            export_status: exportStatus,
+                            export_platform: exportPlatform,
+                        } = videoGenerationTask;
+
+                        return exportStatus === ExportStatus.UPLOADING && exportPlatform !== ExportPlatform.YOUTUBE;
                     }));
 
                     const pendingExportResults: ExportResult[] = videoGenerationTaskList
@@ -420,7 +434,7 @@ function WorkspaceDashboardPageClient() {
                                 // 기존 task 업데이트
                                 const updatedTask = payload.new as VideoGenerationTask;
 
-                                setIsExportingVideo(updatedTask.export_status === ExportStatus.UPLOADING);
+                                setIsExportingVideo(updatedTask.export_status === ExportStatus.UPLOADING && updatedTask.export_platform !== ExportPlatform.YOUTUBE);
 
                                 if (!!updatedTask.export_status && updatedTask.export_status !== ExportStatus.UPLOADING) {
                                     setExportResults((prev) => {
@@ -642,10 +656,24 @@ function WorkspaceDashboardPageClient() {
                                         index={index}
                                         onClickEdit={onClickEdit}
                                         onClickDownload={onClickDownload}
-                                        onClickExport={(taskId, platform) => {
+                                        onClickExport={async (taskId, platform) => {
                                             setPendingExportTaskId(taskId);
                                             setPendingExportPlatform(platform);
-                                            setShowTikTokExportConsentModal(true);
+
+                                            switch (platform) {
+                                                case ExportPlatform.YOUTUBE: {
+                                                    setShowYoutubeExportSettingModal(true);
+                                                    break;
+                                                }
+                                                case ExportPlatform.TIKTOK: {
+                                                    setShowTikTokExportConsentModal(true);
+                                                    break;
+                                                }
+                                                case ExportPlatform.INSTAGRAM: {
+                                                    /* To-Do */
+                                                    break;
+                                                }
+                                            }
                                         }}
                                         onClickRetry={onClickRetry}
                                         onClickCancel={onClickCancel}
@@ -724,6 +752,15 @@ function WorkspaceDashboardPageClient() {
                     </div>
                 </div>
             )}
+
+            {showYoutubeExportSettingModal && <ExportSettingsModal
+                privacySetting={youtubePrivacySetting}
+                onChangePrivacySetting={onChangeYoutubePrivacySetting}
+                onClickConfirm={onClickExport}
+                onClickCancel={() => {
+                    setShowYoutubeExportSettingModal(false);
+                }}
+            />}
 
             {showTikTokExportConsentModal && <DefaultModal
                 title="Export to TikTok"

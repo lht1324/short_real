@@ -1,4 +1,4 @@
-import { voiceServerAPI } from '@/api/server/voiceServerAPI';
+import { voiceServerAPI } from '@/lib/api/server/voiceServerAPI';
 import {getNextBaseResponse} from "@/utils/getNextBaseResponse";
 import {NextRequest} from "next/server";
 
