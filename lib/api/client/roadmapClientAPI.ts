@@ -1,4 +1,4 @@
-import {getFetch, patchFetch, postFetch} from "@/lib/api/client/baseFetch";
+import {deleteFetch, getFetch, patchFetch, postFetch} from "@/lib/api/client/baseFetch";
 import {RoadmapItem} from "@/lib/api/types/supabase/RoadmapItem";
 
 export const roadmapClientAPI = {
@@ -34,7 +34,23 @@ export const roadmapClientAPI = {
         }
     },
 
-    async patchRoadmapItemById(roadmapItemId: string, roadmapItem: Partial<RoadmapItem>): Promise<RoadmapItem | null> {
+    async deleteRoadmapItem(roadmapItemId: string): Promise<boolean> {
+        try {
+            const response = await deleteFetch(`/api/roadmap/${roadmapItemId}`);
+            const deleteRoadmapItemByIdResult = await response.json();
+
+            if (!deleteRoadmapItemByIdResult.success) {
+                throw Error(deleteRoadmapItemByIdResult.error ?? 'Unknown error while deleting roadmap item.');
+            }
+
+            return true;
+        } catch (error) {
+            console.error(error);
+            return false;
+        }
+    },
+
+    async patchRoadmapItem(roadmapItemId: string, roadmapItem: Partial<RoadmapItem>): Promise<RoadmapItem | null> {
         try {
             const response = await patchFetch(`/api/roadmap/${roadmapItemId}`, roadmapItem);
             const patchRoadmapItemByIdResult = await response.json();

@@ -5,6 +5,53 @@ import { getNextBaseResponse } from "@/utils/getNextBaseResponse";
 import { createSupabaseServiceRoleClient } from "@/lib/supabaseServiceRole";
 import { RoadmapItem } from "@/lib/api/types/supabase/RoadmapItem";
 
+export async function DELETE(
+    request: NextRequest,
+    { params }: { params: Promise<{ roadmapItemId: string }> }
+) {
+    const supabase = createSupabaseServiceRoleClient();
+
+    try {
+        const { roadmapItemId } = await params;
+
+        if (!roadmapItemId) {
+            return getNextBaseResponse({
+                success: false,
+                status: 400,
+                error: 'Roadmap id is invalid.'
+            });
+        }
+
+        const { data, error } = await supabase
+            .from('roadmap_items')
+            .delete()
+            .eq('id', roadmapItemId);
+
+        if (error) {
+            console.error('Roadmap delete error:', error);
+            return getNextBaseResponse({
+                success: false,
+                status: 500,
+                error: 'Failed to delete roadmap items.'
+            });
+        }
+
+        return getNextBaseResponse({
+            success: true,
+            status: 200,
+            message: "Successfully deleted roadmap item."
+        });
+
+    } catch (error) {
+        console.error("Error in DELETE /api/roadmap[roadmapItemId]:", error);
+        return getNextBaseResponse({
+            success: false,
+            status: 500,
+            error: error instanceof Error ? error.message : "Failed to delete roadmap items."
+        });
+    }
+}
+
 export async function PATCH(
     request: NextRequest,
     { params }: { params: Promise<{ roadmapItemId: string }> }
@@ -50,15 +97,15 @@ export async function PATCH(
             data: {
                 roadmapItem: patchRoadmapItemResult,
             },
-            message: "Successfully patched roadmap items."
+            message: "Successfully patched roadmap item."
         });
 
     } catch (error) {
-        console.error("Error in PATCH /api/roadmap[roadmapId]:", error);
+        console.error("Error in PATCH /api/roadmap[roadmapItemId]:", error);
         return getNextBaseResponse({
             success: false,
             status: 500,
-            error: error instanceof Error ? error.message : "Failed to fetch roadmap items."
+            error: error instanceof Error ? error.message : "Failed to patch roadmap items."
         });
     }
 }

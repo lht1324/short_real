@@ -3,10 +3,11 @@
 import {memo, useCallback, useEffect, useState} from "react";
 import Image from "next/image";
 import {useRouter} from "next/navigation";
-import {Loader2, ListTodo, Plus} from "lucide-react";
+import {Loader2, ListTodo, Plus, Trash2} from "lucide-react";
 import {roadmapClientAPI} from "@/lib/api/client/roadmapClientAPI";
 import {RoadmapItem, RoadmapStatus} from "@/lib/api/types/supabase/RoadmapItem";
 import AddRoadmapItemModal from "@/components/page/admin/AddRoadmapItemModal";
+import DefaultModal from "@/components/public/DefaultModal";
 
 function AdminPageClient() {
     const router = useRouter();
@@ -14,6 +15,8 @@ function AdminPageClient() {
     const [isLoading, setIsLoading] = useState(true);
     const [savingId, setSavingId] = useState<string | null>(null);
     const [showAddModal, setShowAddModal] = useState(false);
+    const [itemToDelete, setItemToDelete] = useState<RoadmapItem | null>(null);
+    const [isDeleting, setIsDeleting] = useState(false);
 
     const fetchRoadmaps = useCallback(async () => {
         setIsLoading(true);
@@ -38,7 +41,7 @@ function AdminPageClient() {
     const handleStatusChange = useCallback(async (id: string, newStatus: RoadmapStatus) => {
         setSavingId(id);
         try {
-            const updated = await roadmapClientAPI.patchRoadmapItemById(id, {status: Number(newStatus)});
+            const updated = await roadmapClientAPI.patchRoadmapItem(id, {status: Number(newStatus)});
             if (updated) {
                 setRoadmapItems(prev => prev.map(item => item.id === id ? {...item, status: Number(newStatus)} : item));
             }
@@ -70,6 +73,26 @@ function AdminPageClient() {
         }
     }, []);
 
+    const handleDeleteRoadmapItem = useCallback(async () => {
+        if (!itemToDelete) return;
+
+        setIsDeleting(true);
+        try {
+            const success = await roadmapClientAPI.deleteRoadmapItem(itemToDelete.id);
+            if (success) {
+                setRoadmapItems(prev => prev.filter(item => item.id !== itemToDelete.id));
+                setItemToDelete(null);
+            } else {
+                alert("Failed to delete roadmap item.");
+            }
+        } catch (error) {
+            console.error("Failed to delete roadmap item", error);
+            alert("Error deleting roadmap item.");
+        } finally {
+            setIsDeleting(false);
+        }
+    }, [itemToDelete]);
+
     return (
         <div className="min-h-screen bg-black text-white relative overflow-hidden">
             {/* Vaporwave Background Effects */}
@@ -98,16 +121,6 @@ function AdminPageClient() {
                         </p>
                     </div>
                 </div>
-
-                <div className="pr-6">
-                    <button
-                        onClick={() => setShowAddModal(true)}
-                        className="group bg-gradient-to-r from-pink-500 to-purple-600 text-white px-6 py-3 rounded-xl text-lg font-semibold hover:from-pink-600 hover:to-purple-700 transition-all duration-300 transform hover:scale-105 flex items-center space-x-2 shadow-lg shadow-purple-500/25"
-                    >
-                        <Plus size={20} />
-                        <span>Add New Item</span>
-                    </button>
-                </div>
             </div>
 
             <div className="flex h-[calc(100vh-97px)] relative z-10">
@@ -127,14 +140,23 @@ function AdminPageClient() {
                     <div className="p-6">
                         <div className="flex items-center justify-between mb-6 max-w-5xl">
                             <div className="text-purple-300 text-2xl font-medium">Roadmap Items</div>
-                            <button 
-                                onClick={fetchRoadmaps} 
-                                disabled={isLoading} 
-                                className="text-sm px-4 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg border border-gray-600 transition-colors flex items-center gap-2 disabled:opacity-50"
-                            >
-                                {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
-                                Refresh
-                            </button>
+                            <div className="flex items-center gap-3">
+                                <button
+                                    onClick={() => setShowAddModal(true)}
+                                    className="group bg-gradient-to-r from-pink-500 to-purple-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:from-pink-600 hover:to-purple-700 transition-all flex items-center gap-2 shadow-lg shadow-purple-500/25"
+                                >
+                                    <Plus size={16} />
+                                    <span>Add New Item</span>
+                                </button>
+                                <button 
+                                    onClick={fetchRoadmaps} 
+                                    disabled={isLoading} 
+                                    className="text-sm px-4 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg border border-gray-600 transition-colors flex items-center gap-2 disabled:opacity-50"
+                                >
+                                    {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+                                    Refresh
+                                </button>
+                            </div>
                         </div>
 
                         {isLoading ? (
@@ -180,6 +202,13 @@ function AdminPageClient() {
                                                         )}
                                                     </div>
                                                 </div>
+                                                <button
+                                                    onClick={() => setItemToDelete(item)}
+                                                    className="p-2 text-gray-400 hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-colors ml-2"
+                                                    title="Delete"
+                                                >
+                                                    <Trash2 size={20} />
+                                                </button>
                                             </div>
                                         </div>
                                     </div>
@@ -194,6 +223,17 @@ function AdminPageClient() {
                 onClose={() => setShowAddModal(false)}
                 onSave={handleAddRoadmapItem}
             />}
+
+            {itemToDelete && (
+                <DefaultModal
+                    title="Delete Roadmap Item"
+                    message={`Are you sure you want to delete this item?\nThis action cannot be undone.`}
+                    confirmText={isDeleting ? "Deleting..." : "Delete"}
+                    cancelText="Cancel"
+                    onClickConfirm={handleDeleteRoadmapItem}
+                    onClickCancel={() => !isDeleting && setItemToDelete(null)}
+                />
+            )}
         </div>
     );
 }
