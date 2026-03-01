@@ -13,6 +13,12 @@ export const metadata: Metadata = {
         template: '%s | ShortReal AI', // 서비스명으로 변경
         default: 'ShortReal AI - AI Faceless Shorts Generator',
     },
+    icons: {
+        icon: [
+            { url: '/icon.png', type: 'image/png', sizes: '48x48' },
+        ],
+        apple: '/apple-icon.png', // 선택사항
+    },
     description: 'Turn text scripts into viral faceless YouTube Shorts, TikTok & Reels instantly. Best AI Faceless Video Generator with Storyboard, Voiceover, Songwriting & Captions.',
     openGraph: {
         type: 'website',
