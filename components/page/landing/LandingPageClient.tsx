@@ -16,7 +16,7 @@ import FAQSection from "@/components/page/landing/faq-section/FAQSection";
 import Footer from "@/components/public/footer/Footer";
 import FloatingRoadmap from "@/components/page/landing/FloatingRoadmap";
 import {RoadmapItem} from "@/lib/api/types/supabase/RoadmapItem";
-import {roadmapItemClientAPI} from "@/lib/api/client/roadmapItemClientAPI";
+import {roadmapClientAPI} from "@/lib/api/client/roadmapClientAPI";
 
 function LandingPageClient() {
     const router = useRouter();
@@ -62,7 +62,7 @@ function LandingPageClient() {
         const loadRoadmapItemList = async () => {
             setIsLoadingRoadmapItemList(true);
 
-            const roadmapItemList = await roadmapItemClientAPI.getRoadmaps();
+            const roadmapItemList = await roadmapClientAPI.getRoadmaps();
             if (!roadmapItemList) {
                 throw Error("No roadmap items found");
             }
