@@ -66,3 +66,47 @@ export async function GET(_request: NextRequest) {
         });
     }
 }
+
+export async function POST(
+    request: NextRequest,
+) {
+    const supabase = createSupabaseServiceRoleClient();
+
+    try {
+        const newRoadmapItem: Partial<RoadmapItem> = await request.json();
+
+        const { data: postRoadmapItemResult, error } = await supabase
+            .from('roadmap_items')
+            .upsert({
+                ...newRoadmapItem,
+            })
+            .select()
+            .single();
+
+        if (error) {
+            console.error('Roadmap patch error:', error);
+            return getNextBaseResponse({
+                success: false,
+                status: 500,
+                error: 'Failed to post roadmap items.'
+            });
+        }
+
+        return getNextBaseResponse({
+            success: true,
+            status: 200,
+            data: {
+                roadmapItem: postRoadmapItemResult,
+            },
+            message: "Successfully posted roadmap items."
+        });
+
+    } catch (error) {
+        console.error("Error in POST /api/roadmap:", error);
+        return getNextBaseResponse({
+            success: false,
+            status: 500,
+            error: error instanceof Error ? error.message : "Failed to fetch roadmap items."
+        });
+    }
+}

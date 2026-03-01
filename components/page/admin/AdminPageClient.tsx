@@ -3,15 +3,17 @@
 import {memo, useCallback, useEffect, useState} from "react";
 import Image from "next/image";
 import {useRouter} from "next/navigation";
-import {Loader2, ListTodo} from "lucide-react";
+import {Loader2, ListTodo, Plus} from "lucide-react";
 import {roadmapClientAPI} from "@/lib/api/client/roadmapClientAPI";
 import {RoadmapItem, RoadmapStatus} from "@/lib/api/types/supabase/RoadmapItem";
+import AddRoadmapItemModal from "@/components/page/admin/AddRoadmapItemModal";
 
 function AdminPageClient() {
     const router = useRouter();
     const [roadmapItems, setRoadmapItems] = useState<RoadmapItem[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [savingId, setSavingId] = useState<string | null>(null);
+    const [showAddModal, setShowAddModal] = useState(false);
 
     const fetchRoadmaps = useCallback(async () => {
         setIsLoading(true);
@@ -26,10 +28,14 @@ function AdminPageClient() {
     }, []);
 
     useEffect(() => {
-        fetchRoadmaps();
+        const loadData = async () => { // 확장 대비
+            await fetchRoadmaps();
+        }
+
+        loadData().then();
     }, [fetchRoadmaps]);
 
-    const handleStatusChange = async (id: string, newStatus: RoadmapStatus) => {
+    const handleStatusChange = useCallback(async (id: string, newStatus: RoadmapStatus) => {
         setSavingId(id);
         try {
             const updated = await roadmapClientAPI.patchRoadmapItemById(id, {status: Number(newStatus)});
@@ -42,7 +48,27 @@ function AdminPageClient() {
         } finally {
             setSavingId(null);
         }
-    };
+    }, []);
+
+    const handleAddRoadmapItem = useCallback(async (title: string, description: string, status: RoadmapStatus) => {
+        try {
+            const newItem = await roadmapClientAPI.postRoadmapItem({
+                title,
+                description,
+                status
+            });
+
+            if (newItem) {
+                setRoadmapItems(prev => [newItem, ...prev]);
+                setShowAddModal(false);
+            } else {
+                alert("Failed to create roadmap item.");
+            }
+        } catch (error) {
+            console.error("Failed to add roadmap item", error);
+            alert("Error creating roadmap item.");
+        }
+    }, []);
 
     return (
         <div className="min-h-screen bg-black text-white relative overflow-hidden">
@@ -71,6 +97,16 @@ function AdminPageClient() {
                             Manage application data and roadmaps.
                         </p>
                     </div>
+                </div>
+
+                <div className="pr-6">
+                    <button
+                        onClick={() => setShowAddModal(true)}
+                        className="group bg-gradient-to-r from-pink-500 to-purple-600 text-white px-6 py-3 rounded-xl text-lg font-semibold hover:from-pink-600 hover:to-purple-700 transition-all duration-300 transform hover:scale-105 flex items-center space-x-2 shadow-lg shadow-purple-500/25"
+                    >
+                        <Plus size={20} />
+                        <span>Add New Item</span>
+                    </button>
                 </div>
             </div>
 
@@ -153,6 +189,11 @@ function AdminPageClient() {
                     </div>
                 </div>
             </div>
+
+            {showAddModal && <AddRoadmapItemModal
+                onClose={() => setShowAddModal(false)}
+                onSave={handleAddRoadmapItem}
+            />}
         </div>
     );
 }

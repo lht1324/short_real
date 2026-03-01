@@ -5,10 +5,6 @@ import { getNextBaseResponse } from "@/utils/getNextBaseResponse";
 import { createSupabaseServiceRoleClient } from "@/lib/supabaseServiceRole";
 import { RoadmapItem } from "@/lib/api/types/supabase/RoadmapItem";
 
-/**
- * GET /api/roadmap
- * 로드맵 아이템 목록을 조회합니다.
- */
 export async function PATCH(
     request: NextRequest,
     { params }: { params: Promise<{ roadmapItemId: string }> }
@@ -58,7 +54,7 @@ export async function PATCH(
         });
 
     } catch (error) {
-        console.error("Error in GET /api/roadmap:", error);
+        console.error("Error in PATCH /api/roadmap[roadmapId]:", error);
         return getNextBaseResponse({
             success: false,
             status: 500,
