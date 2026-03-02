@@ -1,45 +1,34 @@
 import { voiceServerAPI } from '@/lib/api/server/voiceServerAPI';
 import {getNextBaseResponse} from "@/utils/getNextBaseResponse";
-import {LRUCache} from "lru-cache";
-import {Voice} from "@/lib/api/types/eleven-labs/Voice";
+import {unstable_cache} from "next/cache";
 
-const voiceCache = new LRUCache<string, Voice[]>({
-    max: 1,
-    ttl: 1000 * 60 * 60, // 1시간
-});
+/**
+ * 목소리 목록을 조회하는 내부 함수 (캐싱 대상)
+ */
+const getCachedVoices = unstable_cache(
+    async () => {
+        console.log('❌ Cache MISS - Fetching voices from ElevenLabs API');
+        return await voiceServerAPI.getVoices();
+    },
+    ['voices'],
+    { 
+        revalidate: 3600, // 1시간 캐시
+        tags: ['voices'] 
+    }
+);
+
 export async function GET() {
     try {
-        // 캐시 확인
-        const cacheKey = 'voices';
-        const cached = voiceCache.get(cacheKey);
+        const voiceDataList = await getCachedVoices();
 
-        if (cached) {
-            console.log('✅ Cache HIT - Voices in /voice served from cache');
-            return getNextBaseResponse({
-                success: true,
-                status: 200,
-                data: {
-                    voiceDataList: cached,
-                },
-                message: "Successfully fetched products from cache."
-            });
-        }
-
-        console.log('❌ Cache MISS - Fetching from ElevenLabs API');
-
-        const voiceDataList = await voiceServerAPI.getVoices();
-
-        // 캐시에 저장
-        voiceCache.set(cacheKey, voiceDataList);
-        console.log(`💾 Cached ${voiceDataList.length} voices for 1 hour`);
-
+        console.log('✅ Cache HIT or Fresh Data - Voices in /voice served');
         return getNextBaseResponse({
             success: true,
             status: 200,
             data: {
                 voiceDataList: voiceDataList,
             },
-            message: "Fetched music data successfully.",
+            message: "Successfully fetched voices.",
         });
     } catch (error) {
         console.error('Error fetching voices:', error);

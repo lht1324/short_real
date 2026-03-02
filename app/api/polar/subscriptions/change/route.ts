@@ -1,19 +1,12 @@
 import { NextRequest } from "next/server";
 import { getNextBaseResponse } from "@/utils/getNextBaseResponse";
 import { usersServerAPI } from "@/lib/api/server/usersServerAPI";
-import { LRUCache } from "lru-cache";
-import { ProductData } from "@/lib/api/types/api/polar/products/ProductData";
-import { processProducts } from "@/utils/polarUtils";
+import { getCachedPolarProducts } from "@/lib/api/cached/polarCached";
 import {
     PostPolarSubscriptionsChangeRequest
 } from "@/lib/api/types/api/polar/subscriptions/change/PostPolarSubscriptionsChangeRequest";
 import { getIsValidRequestC2S } from "@/utils/getIsValidRequest";
 import { PolarClient } from "@/lib/PolarClient";
-
-const productCache = new LRUCache<string, ProductData[]>({
-    max: 1,
-    ttl: 1000 * 60 * 60, // 1시간
-});
 
 /**
  * POST /api/polar/subscriptions/change
@@ -82,27 +75,8 @@ export async function POST(request: NextRequest) {
             });
         }
 
-        let productDataList: ProductData[] = [];
-
-        // 캐시 확인
-        const cacheKey = 'products';
-        const cached = productCache.get(cacheKey);
-
-        if (cached) {
-            console.log('✅ Cache HIT - Products in /subscriptions/change served from cache');
-            productDataList = cached;
-        }
-
-        if (productDataList.length === 0) {
-            const result = await polar.products.list({
-                isArchived: false,
-                isRecurring: true,
-            });
-
-            productDataList = processProducts(result.result.items);
-
-            productCache.set(cacheKey, productDataList);
-        }
+        // 공통 캐시 함수를 통해 제품 목록 조회
+        const productDataList = await getCachedPolarProducts();
 
         const prevProductData = productDataList.find((productData) => {
             return productData.id === prevProductId;

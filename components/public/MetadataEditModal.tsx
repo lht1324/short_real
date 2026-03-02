@@ -2,6 +2,7 @@ import {memo, useState} from "react";
 import {Loader2, X} from "lucide-react";
 
 interface MetadataEditProps {
+    modalTitle: string;
     initialTitle: string;
     initialDescription: string;
     onClose: () => void;
@@ -9,6 +10,7 @@ interface MetadataEditProps {
 }
 
 function MetadataEditModal({
+    modalTitle,
     initialTitle,
     initialDescription,
     onClose,
@@ -42,7 +44,7 @@ function MetadataEditModal({
                 
                 {/* Header */}
                 <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 bg-white/5">
-                    <h3 className="text-lg font-semibold text-white">Edit Task Details</h3>
+                    <h3 className="text-lg font-semibold text-white">{modalTitle}</h3>
                     <button 
                         onClick={onClose}
                         className="text-gray-400 hover:text-white transition-colors p-1 rounded-full hover:bg-white/10"
