@@ -22,7 +22,10 @@ const getCachedRoadmapItems = unstable_cache(
         return data as RoadmapItem[];
     },
     ['roadmap_items'],
-    { tags: ['roadmap'] }
+    {
+        revalidate: 60 * 60,
+        tags: ['roadmap']
+    }
 );
 
 /**
@@ -77,7 +80,7 @@ export async function POST(
         }
 
         // 데이터가 변경되었으므로 'roadmap' 태그가 달린 캐시 무효화
-        revalidateTag('roadmap');
+        revalidateTag('roadmap', 'hours');
         console.log('🔄 Cache Revalidated - Roadmap items updated');
 
         return getNextBaseResponse({

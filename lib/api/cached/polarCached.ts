@@ -20,7 +20,7 @@ export const getCachedPolarProducts = unstable_cache(
     },
     ['polar-products'],
     { 
-        revalidate: 3600, // 1시간 캐시
+        revalidate: 60 * 60, // 1시간 캐시
         tags: ['polar-products'] 
     }
 );
