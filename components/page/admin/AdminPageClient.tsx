@@ -3,11 +3,12 @@
 import {memo, useCallback, useEffect, useState} from "react";
 import Image from "next/image";
 import {useRouter} from "next/navigation";
-import {Loader2, ListTodo, Plus, Trash2} from "lucide-react";
+import {Loader2, ListTodo, Plus, Trash2, Pencil} from "lucide-react";
 import {roadmapClientAPI} from "@/lib/api/client/roadmapClientAPI";
 import {RoadmapItem, RoadmapStatus} from "@/lib/api/types/supabase/RoadmapItem";
 import AddRoadmapItemModal from "@/components/page/admin/AddRoadmapItemModal";
 import DefaultModal from "@/components/public/DefaultModal";
+import MetadataEditModal from "@/components/public/MetadataEditModal";
 
 function AdminPageClient() {
     const router = useRouter();
@@ -16,6 +17,7 @@ function AdminPageClient() {
     const [savingId, setSavingId] = useState<string | null>(null);
     const [showAddModal, setShowAddModal] = useState(false);
     const [itemToDelete, setItemToDelete] = useState<RoadmapItem | null>(null);
+    const [itemToEdit, setItemToEdit] = useState<RoadmapItem | null>(null);
     const [isDeleting, setIsDeleting] = useState(false);
 
     const fetchRoadmaps = useCallback(async () => {
@@ -92,6 +94,31 @@ function AdminPageClient() {
             setIsDeleting(false);
         }
     }, [itemToDelete]);
+
+    const handleEditRoadmapItem = useCallback((item: RoadmapItem) => {
+        setItemToEdit(item);
+    }, []);
+
+    const handleSaveMetadata = useCallback(async (title: string, description: string) => {
+        if (!itemToEdit) return;
+
+        try {
+            const updated = await roadmapClientAPI.patchRoadmapItem(itemToEdit.id, {
+                title,
+                description
+            });
+
+            if (updated) {
+                setRoadmapItems(prev => prev.map(item => item.id === itemToEdit.id ? updated : item));
+                setItemToEdit(null);
+            } else {
+                throw new Error("Failed to update roadmap item.");
+            }
+        } catch (error) {
+            console.error("Failed to update roadmap item", error);
+            throw error;
+        }
+    }, [itemToEdit]);
 
     return (
         <div className="min-h-screen bg-black text-white relative overflow-hidden">
@@ -202,13 +229,22 @@ function AdminPageClient() {
                                                         )}
                                                     </div>
                                                 </div>
-                                                <button
-                                                    onClick={() => setItemToDelete(item)}
-                                                    className="p-2 text-gray-400 hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-colors ml-2"
-                                                    title="Delete"
-                                                >
-                                                    <Trash2 size={20} />
-                                                </button>
+                                                <div className="flex items-center gap-1 ml-2">
+                                                    <button
+                                                        onClick={() => handleEditRoadmapItem(item)}
+                                                        className="p-2 text-gray-400 hover:text-purple-400 hover:bg-purple-400/10 rounded-lg transition-colors"
+                                                        title="Edit"
+                                                    >
+                                                        <Pencil size={20} />
+                                                    </button>
+                                                    <button
+                                                        onClick={() => setItemToDelete(item)}
+                                                        className="p-2 text-gray-400 hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-colors"
+                                                        title="Delete"
+                                                    >
+                                                        <Trash2 size={20} />
+                                                    </button>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -223,6 +259,16 @@ function AdminPageClient() {
                 onClose={() => setShowAddModal(false)}
                 onSave={handleAddRoadmapItem}
             />}
+
+            {itemToEdit && (
+                <MetadataEditModal
+                    modalTitle="Edit Roadmap Item"
+                    initialTitle={itemToEdit.title}
+                    initialDescription={itemToEdit.description}
+                    onClose={() => setItemToEdit(null)}
+                    onSave={handleSaveMetadata}
+                />
+            )}
 
             {itemToDelete && (
                 <DefaultModal

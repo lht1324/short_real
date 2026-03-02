@@ -4,14 +4,26 @@ import { NextRequest } from "next/server";
 import { getNextBaseResponse } from "@/utils/getNextBaseResponse";
 import { createSupabaseServiceRoleClient } from "@/lib/supabaseServiceRole";
 import { RoadmapItem } from "@/lib/api/types/supabase/RoadmapItem";
-import { LRUCache } from "lru-cache";
+import { unstable_cache, revalidateTag } from "next/cache";
 
-const roadmapCache = new LRUCache<string, RoadmapItem[]>({
-    max: 1,
-    ttl: 1000 * 60 * 60, // 1시간
-});
+/**
+ * 로드맵 아이템 목록을 조회하는 내부 함수 (캐싱 대상)
+ */
+const getCachedRoadmapItems = unstable_cache(
+    async () => {
+        console.log('❌ Cache MISS - Fetching roadmap items from Supabase');
+        const supabase = createSupabaseServiceRoleClient();
+        const { data, error } = await supabase
+            .from('roadmap_items')
+            .select('*')
+            .order('status', { ascending: true });
 
-const CACHE_KEY = 'roadmap_items';
+        if (error) throw error;
+        return data as RoadmapItem[];
+    },
+    ['roadmap_items'],
+    { tags: ['roadmap'] }
+);
 
 /**
  * GET /api/roadmap
@@ -19,37 +31,9 @@ const CACHE_KEY = 'roadmap_items';
  */
 export async function GET(_request: NextRequest) {
     try {
-        const cached = roadmapCache.get(CACHE_KEY);
-        if (cached) {
-            console.log('✅ Cache HIT - Roadmap items');
-            return getNextBaseResponse({
-                success: true,
-                status: 200,
-                data: { roadmapItemList: cached },
-                message: "Successfully fetched roadmap items from cache."
-            });
-        }
-        console.log('❌ Cache MISS - Roadmap items');
-
-        const supabase = createSupabaseServiceRoleClient();
-        const { data, error } = await supabase
-            .from('roadmap_items')
-            .select('*')
-            .order('status', { ascending: true });
-
-        if (error) {
-            console.error('Roadmap fetch error:', error);
-            return getNextBaseResponse({
-                success: false,
-                status: 500,
-                error: 'Failed to fetch roadmap items.'
-            });
-        }
-
-        const roadmapItemList = data as RoadmapItem[];
-
-        roadmapCache.set(CACHE_KEY, roadmapItemList);
-
+        const roadmapItemList = await getCachedRoadmapItems();
+        
+        console.log('✅ Cache HIT or Fresh Data - Roadmap items served');
         return getNextBaseResponse({
             success: true,
             status: 200,
@@ -91,6 +75,10 @@ export async function POST(
                 error: 'Failed to post roadmap items.'
             });
         }
+
+        // 데이터가 변경되었으므로 'roadmap' 태그가 달린 캐시 무효화
+        revalidateTag('roadmap');
+        console.log('🔄 Cache Revalidated - Roadmap items updated');
 
         return getNextBaseResponse({
             success: true,

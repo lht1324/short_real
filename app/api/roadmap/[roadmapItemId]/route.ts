@@ -4,6 +4,7 @@ import { NextRequest } from "next/server";
 import { getNextBaseResponse } from "@/utils/getNextBaseResponse";
 import { createSupabaseServiceRoleClient } from "@/lib/supabaseServiceRole";
 import { RoadmapItem } from "@/lib/api/types/supabase/RoadmapItem";
+import { revalidateTag } from "next/cache";
 
 export async function DELETE(
     request: NextRequest,
@@ -22,7 +23,7 @@ export async function DELETE(
             });
         }
 
-        const { data, error } = await supabase
+        const { error } = await supabase
             .from('roadmap_items')
             .delete()
             .eq('id', roadmapItemId);
@@ -35,6 +36,10 @@ export async function DELETE(
                 error: 'Failed to delete roadmap items.'
             });
         }
+
+        // 삭제 성공 시 캐시 무효화
+        revalidateTag('roadmap');
+        console.log('🔄 Cache Revalidated - Roadmap item deleted');
 
         return getNextBaseResponse({
             success: true,
@@ -90,6 +95,10 @@ export async function PATCH(
                 error: 'Failed to patch roadmap items.'
             });
         }
+
+        // 수정 성공 시 캐시 무효화
+        revalidateTag('roadmap');
+        console.log('🔄 Cache Revalidated - Roadmap item patched');
 
         return getNextBaseResponse({
             success: true,

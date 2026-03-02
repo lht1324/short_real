@@ -24,7 +24,7 @@ import CheckoutResultDialog, {
 } from "@/components/page/workspace/dashboard/CheckoutResultDialog";
 import ExportResultModal from "@/components/page/workspace/dashboard/export-result-modal/ExportResultModal";
 import {ExportResult} from "@/components/page/workspace/dashboard/export-result-modal/ExportResult";
-import MetadataEditModal from "@/components/page/workspace/dashboard/MetadataEditModal";
+import MetadataEditModal from "@/components/public/MetadataEditModal";
 import ExportSettingsModal from "@/components/page/workspace/dashboard/export-settings-modal/ExportSettingsModal";
 import {ExportPrivacySetting} from "@/components/page/workspace/dashboard/export-settings-modal/ExportPrivacySetting";
 
@@ -685,6 +685,7 @@ function WorkspaceDashboardPageClient() {
                 </div>
             </div>
             {showEditMetadataModal && pendingEditTaskMetadata && <MetadataEditModal
+                modalTitle={"Edit Task Details"}
                 initialTitle={pendingEditTaskMetadata.title}
                 initialDescription={pendingEditTaskMetadata.description}
                 onClose={() => {
