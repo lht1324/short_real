@@ -38,7 +38,7 @@ export async function DELETE(
         }
 
         // 삭제 성공 시 캐시 무효화
-        revalidateTag('roadmap');
+        revalidateTag('roadmap', 'hours');
         console.log('🔄 Cache Revalidated - Roadmap item deleted');
 
         return getNextBaseResponse({
@@ -97,7 +97,7 @@ export async function PATCH(
         }
 
         // 수정 성공 시 캐시 무효화
-        revalidateTag('roadmap');
+        revalidateTag('roadmap', 'hours');
         console.log('🔄 Cache Revalidated - Roadmap item patched');
 
         return getNextBaseResponse({

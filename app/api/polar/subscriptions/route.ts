@@ -60,7 +60,7 @@ const getCachedSubscriptionData = unstable_cache(
     },
     ['user-subscriptions'],
     { 
-        revalidate: 120, // 2분 캐시
+        revalidate: 60 * 2, // 2분 캐시
         tags: ['subscriptions'] 
     }
 );
