@@ -1,7 +1,7 @@
 export interface RoadmapItem {
     id: string;
     title: string;
-    description: number;
+    description: string;
     status: RoadmapStatus;
     created_at: string;
     updated_at: string;

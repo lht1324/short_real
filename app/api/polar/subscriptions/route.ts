@@ -1,50 +1,16 @@
 import { NextRequest } from "next/server";
 import { getNextBaseResponse } from "@/utils/getNextBaseResponse";
 import { SubscriptionData } from "@/lib/api/types/api/polar/subscriptions/SubscriptionData";
-import { LRUCache } from "lru-cache";
+import { unstable_cache } from "next/cache";
 import { PolarClient } from "@/lib/PolarClient";
 
-// 캐싱 (2분)
-const subscriptionCache = new LRUCache<string, SubscriptionData>({
-    max: 1000,
-    ttl: 1000 * 60 * 2,
-});
-
 /**
- * GET /api/polar/subscriptions
- * 이메일을 기준으로 고객의 구독 상품을 조회합니다.
+ * 이메일 기준 구독 데이터를 조회하는 내부 함수 (캐싱 대상)
  */
-export async function GET(request: NextRequest) {
-    try {
+const getCachedSubscriptionData = unstable_cache(
+    async (email: string): Promise<SubscriptionData | null> => {
+        console.log(`❌ Cache MISS - Fetching subscription from Polar API for ${email}`);
         const polar = new PolarClient().getClient();
-
-        // Query parameter에서 email 추출
-        const { searchParams } = new URL(request.url);
-        const email = searchParams.get("email");
-
-        // email 필수 검증
-        if (!email) {
-            return getNextBaseResponse({
-                success: false,
-                status: 400,
-                error: "email is required and must be a string."
-            });
-        }
-
-        // 캐시 확인
-        const cacheKey = `subscription:${email}`;
-        const cached = subscriptionCache.get(cacheKey);
-        if (cached) {
-            console.log(`✅ Cache HIT - Subscription for ${email}`);
-            return getNextBaseResponse({
-                success: true,
-                status: 200,
-                data: {
-                    subscriptionData: cached,
-                },
-                message: "Successfully fetched subscription from cache."
-            });
-        }
 
         // 1단계: 이메일로 고객 조회
         const customerResult = await polar.customers.list({
@@ -54,11 +20,7 @@ export async function GET(request: NextRequest) {
 
         // 고객이 없는 경우
         if (!customerResult.result || customerResult.result.items.length === 0) {
-            return getNextBaseResponse({
-                success: false,
-                status: 404,
-                error: "No customer found with the provided email."
-            });
+            return null;
         }
 
         // 첫 번째 고객의 ID 추출
@@ -75,54 +37,71 @@ export async function GET(request: NextRequest) {
         });
 
         if (sortedSubscriptionList.length === 0) {
-            return getNextBaseResponse({
-                success: false,
-                status: 404,
-                error: "Subscription not found with the provided email."
-            });
+            return null;
         }
 
         const subscription = sortedSubscriptionList[0];
-        const subscriptionData: SubscriptionData = {
-            // 기본
+        return {
             id: subscription.id,
-            status: subscription.status, // "incomplete" | "incomplete_expired" | "trialing" | "active" | "past_due" | "canceled" | "unpaid"
-
-            // 상품
+            status: subscription.status,
             productId: subscription.product.id,
             productName: subscription.product.name,
             productDescription: subscription.product.description ?? undefined,
-
-            // 가격
             amount: subscription.amount,
             currency: subscription.currency,
-
-            // 주기
-            billingCycle: subscription.recurringInterval, // "day" | "week" | "month" | "year"
+            billingCycle: subscription.recurringInterval,
             billingInterval: subscription.recurringIntervalCount,
-
-            // 날짜
             currentPeriodStart: subscription.currentPeriodStart,
             currentPeriodEnd: subscription.currentPeriodEnd ?? undefined,
-
-            // 취소
             cancelAtPeriodEnd: subscription.cancelAtPeriodEnd,
             canceledAt: subscription.canceledAt ?? undefined,
-
-            // 추가
             createdAt: subscription.createdAt,
         };
+    },
+    ['user-subscriptions'],
+    { 
+        revalidate: 120, // 2분 캐시
+        tags: ['subscriptions'] 
+    }
+);
 
-        // 캐시 저장
-        subscriptionCache.set(cacheKey, subscriptionData);
+/**
+ * GET /api/polar/subscriptions
+ * 이메일을 기준으로 고객의 구독 상품을 조회합니다.
+ */
+export async function GET(request: NextRequest) {
+    try {
+        // Query parameter에서 email 추출
+        const { searchParams } = new URL(request.url);
+        const email = searchParams.get("email");
 
+        // email 필수 검증
+        if (!email) {
+            return getNextBaseResponse({
+                success: false,
+                status: 400,
+                error: "email is required and must be a string."
+            });
+        }
+
+        const subscriptionData = await getCachedSubscriptionData(email);
+
+        if (!subscriptionData) {
+            return getNextBaseResponse({
+                success: false,
+                status: 404,
+                error: "No active subscription found with the provided email."
+            });
+        }
+
+        console.log(`✅ Cache HIT or Fresh Data - Subscription for ${email} served`);
         return getNextBaseResponse({
             success: true,
             status: 200,
             data: {
                 subscriptionData: subscriptionData,
             },
-            message: "Successfully fetched orders from Polar."
+            message: "Successfully fetched subscription."
         });
 
     } catch (error) {
