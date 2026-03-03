@@ -52,6 +52,13 @@ export default function RootLayout({
 }>) {
     return (
         <html lang="en">
+            <head>
+                <script
+                    src="https://analytics.ahrefs.com/analytics.js"
+                    data-key="KbAbbQcLHVZfMmqadNvU3g"
+                    async
+                />
+            </head>
             <body
                 className={`${defaultFont.className} antialiased`}
             >
@@ -65,11 +72,6 @@ export default function RootLayout({
                 </AuthProvider>
                 <Analytics/>
             </body>
-            <Script
-                src="https://analytics.ahrefs.com/analytics.js"
-                data-key="KbAbbQcLHVZfMmqadNvU3g"
-                strategy="afterInteractive"
-            />
         </html>
     );
 }
