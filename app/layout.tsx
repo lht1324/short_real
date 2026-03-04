@@ -5,6 +5,7 @@ import ConditionalHeader from "@/components/public/header/ConditionalHeader";
 import { Analytics } from "@vercel/analytics/next";
 import {AuthProvider} from "@/context/AuthContext";
 import "./globals.css";
+import Script from "next/script";
 
 export const metadata: Metadata = {
     metadataBase: new URL('https://shortreal.ai'), // 실제 도메인으로 변경 필수
@@ -51,6 +52,13 @@ export default function RootLayout({
 }>) {
     return (
         <html lang="en">
+            <head>
+                <script
+                    src="https://analytics.ahrefs.com/analytics.js"
+                    data-key="KbAbbQcLHVZfMmqadNvU3g"
+                    async
+                />
+            </head>
             <body
                 className={`${defaultFont.className} antialiased`}
             >
