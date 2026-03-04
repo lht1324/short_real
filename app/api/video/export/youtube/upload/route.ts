@@ -10,9 +10,17 @@ import {PostgrestSingleResponse} from "@supabase/supabase-js";
 import {DownloadResult} from "@supabase/storage-js";
 import {videoGenerationTasksServerAPI} from "@/lib/api/server/videoGenerationTasksServerAPI";
 import {ExportPlatform, ExportStatus} from "@/lib/api/types/supabase/VideoGenerationTasks";
-
+import {getIsValidRequestS2S} from "@/utils/getIsValidRequest";
 
 export async function POST(request: NextRequest) {
+    if (!getIsValidRequestS2S(request)) {
+        return getNextBaseResponse({
+            success: false,
+            status: 401,
+            error: 'Unauthorized internal request',
+        });
+    }
+
     const supabase = createSupabaseServiceRoleClient();
 
     // URL에서 파라미터 추출

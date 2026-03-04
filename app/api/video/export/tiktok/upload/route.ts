@@ -9,6 +9,7 @@ import { videoGenerationTasksServerAPI } from '@/lib/api/server/videoGenerationT
 import { UserTikTokToken } from '@/lib/api/types/supabase/UserTikTokToken';
 import {getIsValidRequestS2S} from "@/utils/getIsValidRequest";
 import {ExportPlatform, ExportStatus} from "@/lib/api/types/supabase/VideoGenerationTasks";
+import JSONbig from 'json-bigint';
 
 
 const MIN_CHUNK = 5 * 1024 * 1024;  // 5MB
@@ -326,7 +327,8 @@ async function pollPublishStatus(
             body: JSON.stringify({ publish_id: publishId }),
         });
 
-        const data = await res.json();
+        const raw = await res.text();
+        const data = JSONbig.parse(raw);
         const status = data.data?.status;
 
         console.log(`[TikTok Upload] Publish status: ${status} (attempt ${i + 1})`);

@@ -1,7 +1,11 @@
-// app/api/youtube/auth/initiate/route.ts
+// app/api/youtube/oauth/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { getNextBaseResponse } from "@/utils/getNextBaseResponse";
 import { getIsValidRequestC2S } from "@/utils/getIsValidRequest";
+import {createSupabaseServiceRoleClient} from "@/lib/supabaseServiceRole";
+import {internalFireAndForgetFetch} from "@/utils/internalFetch";
+import {videoGenerationTasksServerAPI} from "@/lib/api/server/videoGenerationTasksServerAPI";
+import {ExportPlatform, ExportStatus} from "@/lib/api/types/supabase/VideoGenerationTasks";
 
 export async function GET(request: NextRequest) {
     const {
@@ -16,6 +20,8 @@ export async function GET(request: NextRequest) {
             error: "Unauthorized request."
         });
     }
+
+    const supabase = createSupabaseServiceRoleClient();
 
     const taskId = request.nextUrl.searchParams.get('taskId');
 
@@ -46,6 +52,28 @@ export async function GET(request: NextRequest) {
                 status: 400,
                 error: 'Youtube privacy setting is invalid.'
             });
+        }
+
+        const { data: existingToken } = await supabase
+            .from('user_youtube_tokens')
+            .select('refresh_token, expires_at')
+            .eq('user_id', userId)
+            .single();
+
+        if (existingToken?.refresh_token) {
+            // 토큰 있음 → OAuth 건너뛰고 바로 업로드 트리거
+            internalFireAndForgetFetch(
+                `${process.env.BASE_URL}/api/video/export/youtube/upload?taskId=${taskId}&privacySetting=${privacySetting}`,
+                { method: 'POST' },
+                { userId }
+            );
+
+            await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, {
+                export_status: ExportStatus.UPLOADING,
+                export_platform: ExportPlatform.YOUTUBE,
+            });
+
+            return NextResponse.redirect(`${process.env.BASE_URL}/workspace/dashboard`);
         }
 
         const params = new URLSearchParams({
