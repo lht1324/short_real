@@ -11,7 +11,6 @@ import {getIsValidRequestS2S} from "@/utils/getIsValidRequest";
 import {ExportPlatform, ExportStatus} from "@/lib/api/types/supabase/VideoGenerationTasks";
 import JSONbig from 'json-bigint';
 
-
 const MIN_CHUNK = 5 * 1024 * 1024;  // 5MB
 const MAX_CHUNK = 64 * 1024 * 1024; // 64MB
 

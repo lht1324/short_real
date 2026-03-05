@@ -2,11 +2,24 @@ import { NextRequest } from "next/server";
 import { videoGenerationTasksServerAPI } from "@/lib/api/server/videoGenerationTasksServerAPI";
 import { VideoGenerationTask } from "@/lib/api/types/supabase/VideoGenerationTasks";
 import {getNextBaseResponse} from "@/utils/getNextBaseResponse";
+import {getIsValidRequestC2S} from "@/utils/getIsValidRequest";
 
 export async function GET(
     request: NextRequest,
     { params }: { params: Promise<{ taskId: string }> }
 ) {
+    const {
+        isValidRequest,
+    } = await getIsValidRequestC2S();
+
+    if (!isValidRequest) {
+        return getNextBaseResponse({
+            success: false,
+            status: 401,
+            error: "Unauthorized request."
+        });
+    }
+
     try {
         const { taskId } = await params;
 
@@ -42,6 +55,18 @@ export async function PATCH(
     request: NextRequest,
     { params }: { params: Promise<{ taskId: string }> }
 ) {
+    const {
+        isValidRequest,
+    } = await getIsValidRequestC2S();
+
+    if (!isValidRequest) {
+        return getNextBaseResponse({
+            success: false,
+            status: 401,
+            error: "Unauthorized request."
+        });
+    }
+
     try {
         const { taskId } = await params;
         const body: Partial<VideoGenerationTask> = await request.json();
@@ -81,6 +106,18 @@ export async function DELETE(
     request: NextRequest,
     { params }: { params: Promise<{ taskId: string }> }
 ) {
+    const {
+        isValidRequest,
+    } = await getIsValidRequestC2S();
+
+    if (!isValidRequest) {
+        return getNextBaseResponse({
+            success: false,
+            status: 401,
+            error: "Unauthorized request."
+        });
+    }
+
     try {
         const { taskId } = await params;
 
