@@ -15,7 +15,7 @@ export const metadata: Metadata = {
     },
 };
 
-export default async function WorkplaceCreatePage() {
+export default async function WorkspaceCreatePage() {
     return (
         <WorkspaceCreatePageServer/>
     )

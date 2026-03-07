@@ -8,6 +8,7 @@ import {
     ListTodo,
     Plus,
     Sparkles,
+    Zap,
 } from 'lucide-react';
 import {openAIClientAPI} from '@/lib/api/client/openAIClientAPI';
 import {Style} from "@/lib/api/types/supabase/Styles";
@@ -24,6 +25,8 @@ import {voiceClientAPI} from "@/lib/api/client/voiceClientAPI";
 import ResultPanel from "@/components/page/workspace/create/result-panel/ResultPanel";
 import ScriptGenerationModal from "@/components/page/workspace/create/ScriptGenerationModal";
 import CreateFormPanel from "@/components/page/workspace/create/create-form-panel/CreateFormPanel";
+import WorkspaceSidebar from "@/components/public/WorkspaceSidebar";
+import {WorkspaceSidebarItem} from "@/components/public/WorkspaceSidebarItem";
 
 function WorkspaceCreatePageClient() {
     const router = useRouter();
@@ -123,12 +126,6 @@ function WorkspaceCreatePageClient() {
 
     // Style examples for preview
     const styleList = useMemo((): Style[] => STYLE_DATA_LIST, []);
-
-    // Virtual tabs for navigation consistency
-    const virtualTabs = useMemo(() => [
-        { id: 'dashboard', icon: ListTodo, name: 'Dashboard', href: '/workspace/dashboard' },
-        { id: 'create', icon: Plus, name: 'Create', href: '/workspace/create', active: true }
-    ], []);
 
     const onChangeScript = useCallback((e: ChangeEvent<HTMLTextAreaElement>) => {
         setScript(e.target.value);
@@ -470,26 +467,7 @@ function WorkspaceCreatePageClient() {
 
             <div className="flex h-[calc(100vh-97px)]">
                 {/* Left Virtual Tab Sidebar */}
-                <div className="w-20 bg-gray-900/50 backdrop-blur-sm border-r border-purple-500/20 flex flex-col items-center py-4 space-y-4">
-                    {virtualTabs.map((tab) => {
-                        const IconComponent = tab.icon;
-                        return (
-                            <Link
-                                key={tab.id}
-                                href={tab.href}
-                                className={`w-16 h-16 rounded-lg flex flex-col items-center justify-center transition-all border ${
-                                    tab.active 
-                                        ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white border-purple-400/50 shadow-lg' 
-                                        : 'text-gray-400 hover:text-pink-400 hover:bg-gray-800/50 border-transparent hover:border-purple-500/30'
-                                }`}
-                                title={tab.name}
-                            >
-                                <IconComponent size={24} />
-                                <span className="text-sm mt-1 leading-tight">{tab.name}</span>
-                            </Link>
-                        );
-                    })}
-                </div>
+                <WorkspaceSidebar activeItem={WorkspaceSidebarItem.CREATE} />
 
                 {/* Create Form Panel */}
                 <CreateFormPanel

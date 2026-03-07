@@ -2,7 +2,7 @@
 
 import {memo, useCallback, useEffect, useMemo, useState} from "react";
 import Link from "next/link";
-import {Coins, ListTodo, Loader2, Plus} from 'lucide-react';
+import {Coins, ListTodo, Loader2, Plus, Zap} from 'lucide-react';
 import {
     ExportPlatform,
     ExportStatus,
@@ -27,6 +27,8 @@ import {ExportResult} from "@/components/page/workspace/dashboard/export-result-
 import MetadataEditModal from "@/components/public/MetadataEditModal";
 import ExportSettingsModal from "@/components/page/workspace/dashboard/export-settings-modal/ExportSettingsModal";
 import {ExportPrivacySetting} from "@/components/page/workspace/dashboard/export-settings-modal/ExportPrivacySetting";
+import WorkspaceSidebar from "@/components/public/WorkspaceSidebar";
+import {WorkspaceSidebarItem} from "@/components/public/WorkspaceSidebarItem";
 
 export interface TaskData {
     id: string;
@@ -65,12 +67,6 @@ function WorkspaceDashboardPageClient() {
     }, [user?.credit_count]);
 
     const [checkoutResultDialogData, setCheckoutResultDialogData] = useState<CheckoutResultDialogData | null>(null);
-
-    // Virtual tabs for navigation consistency
-    const virtualTabs = useMemo(() => [
-        { id: 'dashboard', icon: ListTodo, name: 'Tasks', href: '/workspace/dashboard', active: true },
-        { id: 'create', icon: Plus, name: 'Create', href: '/workspace/create' }
-    ], []);
 
     const [pendingEditTaskId, setPendingEditTaskId] = useState<string | null>(null);
     const [pendingCancelTaskId, setPendingCancelTaskId] = useState<string | null>(null);
@@ -603,26 +599,7 @@ function WorkspaceDashboardPageClient() {
 
             <div className="flex h-[calc(100vh-97px)]">
                 {/* Left Virtual Tab Sidebar */}
-                <div className="w-20 bg-gray-900/50 backdrop-blur-sm border-r border-purple-500/20 flex flex-col items-center py-4 space-y-4">
-                    {virtualTabs.map((tab) => {
-                        const IconComponent = tab.icon;
-                        return (
-                            <Link
-                                key={tab.id}
-                                href={tab.href}
-                                className={`size-[calc(4px*16)] rounded-lg flex flex-col items-center justify-center transition-all border ${
-                                    tab.active 
-                                        ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white border-purple-400/50 shadow-lg' 
-                                        : 'text-gray-400 hover:text-pink-400 hover:bg-gray-800/50 border-transparent hover:border-purple-500/30'
-                                }`}
-                                title={tab.name}
-                            >
-                                <IconComponent size={24} />
-                                <span className="text-sm mt-1.5 leading-tight">{tab.name}</span>
-                            </Link>
-                        );
-                    })}
-                </div>
+                <WorkspaceSidebar activeItem={WorkspaceSidebarItem.DASHBOARD} />
 
                 {/* Main Content Panel */}
                 <div className="flex-1 bg-gray-900/30 backdrop-blur-sm overflow-y-auto">
