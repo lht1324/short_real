@@ -52,7 +52,7 @@ ShortReal AI ("we", "us", or "our") respects your privacy. This Privacy Policy e
 
 ## 2. Information We Collect
 - **Account Data:** Email address, name, and profile picture (via OAuth providers).
-- **Usage Data:** Prompts, generated video metadata, and interaction logs. Technical data such as IP address and browser type is automatically collected by our infrastructure providers for security and analytics purposes.
+- **Usage Data:** User-provided prompts (text entered directly by you into script or generation fields, not derived from your OAuth account data), generated video metadata, and interaction logs. Technical data such as IP address and browser type is automatically collected by our infrastructure providers for security and analytics purposes.
 - **Payment Data:** We do not store credit card details. All financial transactions are processed by our secure payment provider, Polar (or Stripe).
 
 ## 3. How We Use Your Information
@@ -65,7 +65,7 @@ ShortReal AI ("we", "us", or "our") respects your privacy. This Privacy Policy e
 We utilize industry-leading AI infrastructure providers to generate content. Your input data is processed by the following entities:
 - **AI Infrastructure**
   - **Text** (for script generation & LLM routing)
-    - [OpenRouter LLC](https://openrouter.ai/) (USA)
+    - [OpenRouter LLC](https://openrouter.ai/) (USA) — Only user-provided script content entered directly into generation fields is transmitted. Account data obtained via OAuth (such as email address, name, or profile picture) is never sent to OpenRouter or any other AI infrastructure provider.
   - **Video/Image** (for media generation)
     - [Replicate Inc.](https://replicate.com/) (USA)
     - [fal.ai](https://fal.ai) (USA)
