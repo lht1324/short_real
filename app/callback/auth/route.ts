@@ -65,7 +65,7 @@ export async function GET(request: NextRequest) {
                 ? "/profile"
                 : "/workspace/dashboard"
 
-        return NextResponse.redirect(new URL(redirectPath, request.url))
+        return NextResponse.redirect(new URL(redirectPath, process.env.NODE_ENV === 'production' ? request.url : "http://localhost:3000"))
     } catch (error) {
         console.error('Unexpected auth callback error:', error)
         return NextResponse.redirect(new URL('/sign-in?error=oauth_failed', request.url))

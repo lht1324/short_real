@@ -19,7 +19,7 @@ export const videoServerAPI = {
         taskId: string,
         isViolence: boolean = false,
         aspectRatio: "16:9" | "9:16" | "1:1" | "21:9" | "4:3" | "3:4" | "auto" = "9:16",
-        videoResolution: VideoResolution = VIDEO_RESOLUTIONS.RES_720P, // nP란 가로세로 중 짧은 쪽의 비율을 따라감
+        videoResolution: VideoResolution = VIDEO_RESOLUTIONS.RES_1080P, // nP란 가로세로 중 짧은 쪽의 비율을 따라감
     ) {
         const supabase = createSupabaseServiceRoleClient();
         const falAIClient = fal;
@@ -65,7 +65,7 @@ export const videoServerAPI = {
             ...baseInputData,
             prompt: sceneData.videoGenPrompt ?? "A cinematic video",
             duration: safeDuration.toString() as "4" | "5" | "6" | "7" | "8" | "9" | "10" | "11" | "12", // 4-12
-            resolution: videoResolution as "480p" | "720p",
+            resolution: videoResolution as "480p" | "720p" | "1080p",
             generate_audio: false,
         }
 
