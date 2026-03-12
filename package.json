@@ -15,7 +15,7 @@
     "@polar-sh/sdk": "^0.41.5",
     "@supabase/ssr": "^0.6.1",
     "@supabase/supabase-js": "^2.55.0",
-    "@trigger.dev/sdk": "4.3.3",
+    "@trigger.dev/sdk": "4.4.3",
     "@vercel/analytics": "^1.5.0",
     "@vercel/functions": "^3.2.0",
     "framer-motion": "^12.23.25",
@@ -34,7 +34,7 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3",
     "@tailwindcss/typography": "^0.5.19",
-    "@trigger.dev/build": "4.3.3",
+    "@trigger.dev/build": "4.4.3",
     "@types/node": "20.19.31",
     "@types/react": "19.2.10",
     "@types/react-dom": "^19",
