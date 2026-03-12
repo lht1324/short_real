@@ -86,14 +86,12 @@ export const orchestrateImageGeneration = task({
                     sceneNumber,
                     imageGenPrompt,
                     imageGenPromptSentence,
-                    sceneEntityManifestList,
                 } = run.output;
 
                 return {
                     sceneNumber,
                     imageGenPrompt,
                     imageGenPromptSentence,
-                    sceneEntityManifestList,
                 };
             })
             await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, {
@@ -110,14 +108,12 @@ export const orchestrateImageGeneration = task({
                     const {
                         imageGenPrompt,
                         imageGenPromptSentence,
-                        sceneEntityManifestList,
                     } = imageGenPromptData;
 
                     return {
                         ...sceneData,
                         imageGenPrompt: imageGenPrompt,
                         imageGenPromptSentence: imageGenPromptSentence,
-                        sceneEntityManifestList: sceneEntityManifestList,
                     };
                 })
             });

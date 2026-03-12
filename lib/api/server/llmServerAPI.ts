@@ -6,7 +6,7 @@ import {
     POST_MASTER_STYLE_INFO_PROMPT,
     POST_IMAGE_GEN_PROMPT_PROMPT,
     POST_VIDEO_GEN_PROMPT_PROMPT,
-    POST_MUSIC_GENERATION_DATA_PROMPT,
+    POST_MUSIC_GENERATION_DATA_PROMPT, POST_ENTITY_REFERENCE_IMAGE_PROMPT_PROMPT,
 } from "@/lib/api/types/open-ai/LLMPrompts";
 import { VIDEO_ASPECT_RATIOS, VideoAspectRatio } from "@/lib/ReplicateData";
 import { ScriptGenerationResponse } from "@/lib/api/types/open-ai/ScriptGeneration";
@@ -214,10 +214,14 @@ Instruction: Analyze <video_metadata>, <target_aspect_ratio>, <style_guidelines>
             }, "postSceneCastingDataList()");
 
             if (!generatedContent) {
+                logger.warn('generatedContent is invalid in postSceneCastingDataList().', {
+                    rawContent: generatedContent,
+                });
+
                 return {
                     success: false,
                     error: {
-                        message: 'No response generated from OpenAI',
+                        message: 'No response generated from DeepSeek V3.2.',
                         code: 'EMPTY_RESPONSE'
                     }
                 };
@@ -244,7 +248,7 @@ Instruction: Analyze <video_metadata>, <target_aspect_ratio>, <style_guidelines>
                     scene_casting_list_empty_reason: string;
                 } = cleanAndParseJSON(generatedContent);
 
-                logger.info(`postEntityCasting() raw content`, {
+                logger.info(`postSceneCastingDataList() raw content`, {
                     rawContent: generatedContent
                 });
 
@@ -318,7 +322,11 @@ Instruction: Analyze <video_metadata>, <target_aspect_ratio>, <style_guidelines>
                     })
                 };
             } catch (parseError) {
-                console.error('Failed to parse pre-production JSON response:', parseError);
+                logger.error('Failed to parse pre-production JSON response in postSceneCastingDataList().', {
+                    parseError: parseError,
+                    rawContent: generatedContent,
+                });
+
                 return {
                     success: false,
                     error: {
@@ -395,10 +403,13 @@ Instruction: Analyze <video_metadata>, <target_aspect_ratio>, <style_guidelines>
             }, "postEntityManifestList()");
 
             if (!generatedContent) {
+                logger.warn('generatedContent is invalid in postEntityManifestList().', {
+                    rawContent: generatedContent,
+                });
                 return {
                     success: false,
                     error: {
-                        message: 'No response generated from OpenAI',
+                        message: 'No response generated from DeepSeek V3.2.',
                         code: 'EMPTY_RESPONSE'
                     }
                 };
@@ -420,7 +431,7 @@ Instruction: Analyze <video_metadata>, <target_aspect_ratio>, <style_guidelines>
                 } = parsedData;
 
                 logger.info(`Final Entity Manifest List`, {
-                    entityIds: entityManifestList.map((entity) => entity.id),
+                    entityManifestList: entityManifestList,
                     totalCount: entityManifestList.length
                 });
 
@@ -430,7 +441,132 @@ Instruction: Analyze <video_metadata>, <target_aspect_ratio>, <style_guidelines>
                     entityManifestList: entityManifestList, // 추출된 캐릭터 시트 반환
                 };
             } catch (parseError) {
-                console.error('Failed to parse pre-production JSON response:', parseError);
+                logger.error('Failed to parse pre-production JSON response in postEntityManifestList()', {
+                    parseError: parseError,
+                    rawContent: generatedContent,
+                });
+                return {
+                    success: false,
+                    error: {
+                        message: 'Failed to parse JSON response',
+                        code: 'PARSE_ERROR'
+                    }
+                };
+            }
+        } catch (error) {
+            return {
+                success: false,
+                error: {
+                    message: error instanceof Error ? error.message : 'Unknown error occurred',
+                    code: 'INTERNAL_ERROR'
+                }
+            };
+        }
+    },
+
+    async postEntityReferenceImagePromptList(
+        entityManifestList: InitialEntityManifestItem[], // 'main_hero' | 'sub_character' only
+        styleLabel: string,
+    ): Promise<{
+        success: boolean;
+        entityReferenceImagePromptList?: {
+            id: string;
+            prompt: string;
+        }[],
+        error?: {
+            message: string;
+            code: string
+        }
+    }> {
+        try {
+            // 수정한 프롬프트 (Pre-Production 역할)
+            const systemMessage = POST_ENTITY_REFERENCE_IMAGE_PROMPT_PROMPT;
+
+            const mappedEntityManifestList = entityManifestList.map((entity) => {
+                return {
+                    id: entity.id,
+                    demographics: entity.demographics,
+                    hair: entity.appearance.hair,
+                    body_features: entity.appearance.body_features,
+                    clothing: entity.appearance.clothing,
+                    material: entity.appearance.material,
+                    accessories: entity.appearance.accessories,
+                }
+            });
+            const userMessage = `
+<input_data>
+  <entity_manifest_list>
+    ${JSON.stringify(mappedEntityManifestList, null, 2)}
+  </entity_manifest_list>
+</input_data>
+
+Instruction: For each entity in <entity_manifest_list>, generate a front-view full-body character sheet image prompt based on its appearance data. Each output must include the entity's \`id\` for matching. Return the result as \`entity_reference_image_prompt_list\`.
+`;
+
+            logger.info(`postEntityReferenceImagePromptList()`);
+
+            const client = new OpenRouterClient();
+
+            const generatedContent = await client.createCompletion({
+                model: OpenRouterModel.DEEPSEEK_V_3_2,
+                systemMessage: systemMessage,
+                userMessage: userMessage,
+                reasoning: true,
+                maxCompletionTokens: 10240,
+            }, "postEntityReferenceImagePromptList()");
+
+            if (!generatedContent) {
+                logger.warn('generatedContent is invalid in postEntityReferenceImagePromptList().', {
+                    rawContent: generatedContent,
+                });
+                return {
+                    success: false,
+                    error: {
+                        message: 'No response generated from DeepSeek V3.2.',
+                        code: 'EMPTY_RESPONSE'
+                    }
+                };
+            }
+
+            try {
+                // [수정 4] 변경된 JSON 구조에 맞춰 파싱 (masterStyle + entityManifest)
+                // 프롬프트의 output_schema와 일치해야 함
+                const parsedData: {
+                    entity_reference_image_prompt_list: {
+                        id: string;
+                        prompt: string;
+                    }[];
+                } = cleanAndParseJSON(generatedContent);
+
+                logger.info(`postEntityReferenceImagePromptList() raw content`, {
+                    rawContent: generatedContent
+                });
+
+                const {
+                    entity_reference_image_prompt_list: entityReferenceImagePromptList,
+                } = parsedData;
+
+
+                logger.info(`EntityReferenceImagePromptList`, {
+                    entityReferenceImagePromptList: entityReferenceImagePromptList,
+                });
+
+
+                return {
+                    success: true,
+                    // 구조 분해 할당
+                    entityReferenceImagePromptList: entityReferenceImagePromptList.map((referenceImageData) => {
+                        return {
+                            ...referenceImageData,
+                            prompt: referenceImageData.prompt.replace("reference image style", `${styleLabel.toLowerCase()} reference image style`),
+                        }
+                    }),
+                };
+            } catch (parseError) {
+                logger.error('Failed to parse pre-production JSON response in postEntityReferenceImagePromptList().', {
+                    parseError: parseError,
+                    generatedContent: generatedContent,
+                });
                 return {
                     success: false,
                     error: {
@@ -512,10 +648,13 @@ Instruction: Analyze <video_metadata>, <target_aspect_ratio>, <style_guidelines>
             }, "postMasterStyleInfo()");
 
             if (!generatedContent) {
+                logger.warn('generatedContent is invalid in postMasterStyleInfo().', {
+                    rawContent: generatedContent,
+                });
                 return {
                     success: false,
                     error: {
-                        message: 'No response generated from OpenAI',
+                        message: 'No response generated from DeepSeek V3.2.',
                         code: 'EMPTY_RESPONSE'
                     }
                 };
@@ -547,8 +686,9 @@ Instruction: Analyze <video_metadata>, <target_aspect_ratio>, <style_guidelines>
                     masterStyleInfo: masterStyleInfo,
                 };
             } catch (parseError) {
-                logger.error('Failed to parse pre-production JSON response:', {
+                logger.error('Failed to parse pre-production JSON response in postMasterStyleInfo().', {
                     parseError: parseError,
+                    rawContent: generatedContent,
                 });
                 return {
                     success: false,
@@ -584,7 +724,7 @@ Instruction: Analyze <video_metadata>, <target_aspect_ratio>, <style_guidelines>
         success: boolean;
         imageGenPrompt?: FluxPrompt;
         imageGenPromptSentence?: string;
-        sceneEntityManifestList?: Entity[],
+        entityOrder?: string[];
         error?: {
             message: string;
             code: string
@@ -659,51 +799,32 @@ Instruction: Generate the scene instruction JSON.
                 const instructionJSON: {
                     image_gen_prompt: FluxPrompt;
                     image_gen_prompt_sentence: string;
-                    updated_entity_manifest_list?: Omit<Entity, 'role' | 'type' | 'demographics'>[] | null
+                    entity_order: string[];
                 } = cleanAndParseJSON(generatedContent);
 
                 const {
                     image_gen_prompt: imageGenPrompt,
                     image_gen_prompt_sentence: imageGenPromptSentence,
-                    updated_entity_manifest_list: updatedEntityManifestList,
+                    entity_order: entityOrder,
                 } = instructionJSON;
 
                 logger.info(`Scene #${sceneNumber} imageGenPrompt`, {
                     imageGenPrompt: imageGenPrompt,
-                })
-
-                const newEntityManifestList = updatedEntityManifestList ? updatedEntityManifestList.map(instruction => {
-                    const originalEntity = sceneEntityManifestList.find((entityManifest) => {
-                        return entityManifest.id === instruction.id;
-                    });
-
-                    if (!originalEntity) {
-                        logger.warn(`Warning: LLM generated unknown ID '${instruction.id}'`);
-                        throw Error("LLM generated unknown ID '${instruction.id}'.")
-                    }
-
-                    return {
-                        // LLM이 생성한 핵심 물리/시각 데이터로 덮어쓰기
-                        id: instruction.id,
-                        type: originalEntity.type,
-                        demographics: originalEntity.demographics,
-                        appearance: {
-                            ...originalEntity.appearance,
-                            ...instruction.appearance,
-                        },
-                        role: originalEntity.role,
-                    };
-                }) : [];
+                });
 
                 logger.info(`Scene #${sceneNumber} ImageGenPromptSentence`, {
                     imageGenPromptSentence: imageGenPromptSentence,
+                });
+
+                logger.info(`Scene #${sceneNumber} entityOrder`, {
+                    entityOrder: entityOrder,
                 });
 
                 return {
                     success: true,
                     imageGenPrompt: imageGenPrompt,
                     imageGenPromptSentence: imageGenPromptSentence,
-                    sceneEntityManifestList: newEntityManifestList,
+                    entityOrder: entityOrder,
                 };
             } catch (jsonError) {
                 logger.error('Failed to parse generated JSON:', {
@@ -769,7 +890,7 @@ Proceed with the prompt generation.
                 return {
                     success: false,
                     error: {
-                        message: 'No video generation prompt generated from OpenAI',
+                        message: 'No video generation prompt generated from Gemini 3.0 Flash.',
                         code: 'EMPTY_RESPONSE'
                     }
                 };

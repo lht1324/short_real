@@ -1,12 +1,14 @@
-import { createSupabaseServiceRoleClient } from "@/lib/supabaseServiceRole";
-import { fal } from "@fal-ai/client";
-import { FluxPrompt } from "@/lib/api/types/open-ai/FluxPrompt";
-import { ImageFile } from "@fal-ai/client/endpoints";
+import {createSupabaseServiceRoleClient} from "@/lib/supabaseServiceRole";
+import {fal} from "@fal-ai/client";
+import {FluxPrompt} from "@/lib/api/types/open-ai/FluxPrompt";
+import {ImageFile} from "@fal-ai/client/endpoints";
+import {Entity} from "@/lib/api/types/open-ai/Entity";
 
 export const imageServerAPI = {
     async postImage(
         imageGenPrompt: FluxPrompt,
         imageGenPromptSentence: string,
+        subjectEntityManifestList: Entity[], // Sorted
         taskId: string,
         sceneNumber: number,
     ): Promise<{ success: boolean; error?: { message: string; code: string } }> {
@@ -21,27 +23,36 @@ export const imageServerAPI = {
             let resultImageUrlList: Array<ImageFile>;
             let imageUrl: string;
 
+            const getSignedUrlPromiseList = subjectEntityManifestList.map(async (entity) => {
+                return await this.getImageSignedUrl(`${taskId}/reference_image_${entity.id}.jpeg`);
+            });
+            const imageSignedUrlList = (await Promise.all(getSignedUrlPromiseList))
+                .filter((url): url is string => !!url);
+
+            // 실제로 유효한 URL이 있을 때만 I2I 분기
+            const isSubjectExists = imageSignedUrlList.length !== 0;
+
             try {
-                const output = await fal.subscribe("fal-ai/kling-image/o3/text-to-image", {
+                const modelName = isSubjectExists ? "fal-ai/nano-banana-2/edit" : "fal-ai/nano-banana-2"
+                const output = await fal.subscribe(modelName, {
                     input: {
-                        // prompt: `${JSON.stringify(imageGenPrompt, null, 2).replaceAll(' ', '')}`,
                         prompt: imageGenPromptSentence,
-                        elements: [{
-                            reference_image_urls: []
-                        }],
-                        resolution: "1K",
-                        result_type: "single",
                         num_images: 1,
                         aspect_ratio: "9:16",
                         output_format: "jpeg",
-                        sync_mode: false,
+                        safety_tolerance: "6",
+                        resolution: "1K",
+                        limit_generations: true,
+                        ...(isSubjectExists && { image_urls: imageSignedUrlList }),
                     }
-                })
+                });
 
                 resultImageUrlList = output.data.images;
             } catch (error) {
                 console.error(`Scene #${sceneNumber} Nano Banana Image generation Error: `, error);
-                const output = await falAIClient.subscribe('fal-ai/flux-2', {
+
+                const modelName = isSubjectExists ? "fal-ai/flux-2/edit" : "fal-ai/flux-2"
+                const output = await falAIClient.subscribe(modelName, {
                     input: {
                         prompt: JSON.stringify({
                             ...imageGenPrompt,
@@ -63,7 +74,8 @@ export const imageServerAPI = {
                         acceleration: "none",
                         enable_prompt_expansion: false,
                         enable_safety_checker: false,
-                        output_format: "jpeg"
+                        output_format: "jpeg",
+                        ...(isSubjectExists && { image_urls: imageSignedUrlList }),
                     }
                 });
                 resultImageUrlList = output.data.images;
@@ -92,6 +104,99 @@ export const imageServerAPI = {
             const { error: uploadError } = await supabase.storage
                 .from('scene_image_temp_storage') // 버킷 이름
                 .upload(`${taskId}/${sceneNumber}.jpeg`, imageBuffer, {
+                    contentType: 'image/jpeg', // 파일 포맷 지정
+                    upsert: true // 덮어쓰기 허용
+                });
+
+            // imageBase64 지우는 것 고려하기
+            if (uploadError) {
+                // 업로드 실패 시, 에러를 던져서 전체 프로세스를 중단시킵니다.
+                throw new Error(`Supabase Storage 업로드 실패: ${uploadError.message}`);
+            }
+
+            return {
+                success: true,
+            };
+        } catch (error) {
+            console.error('Image generation error:', error);
+            return {
+                success: false,
+                error: {
+                    message: error instanceof Error ? error.message : 'Unknown error occurred',
+                    code: 'INTERNAL_ERROR'
+                }
+            };
+        }
+    },
+
+    async postReferenceImage(
+        referenceImagePrompt: string,
+        taskId: string,
+        entityId: string,
+    ): Promise<{
+        success: boolean;
+        error?: {
+            code: string;
+            message: string;
+        }
+    }> {
+        const supabase = createSupabaseServiceRoleClient();
+
+        try {
+            fal.config({
+                credentials: process.env.FAL_AI_API_KEY!
+            });
+
+            let imageUrl: string;
+
+            const output = await fal.subscribe("fal-ai/nano-banana", {
+                input: {
+                    prompt: referenceImagePrompt,
+                    num_images: 1,
+                    aspect_ratio: "9:16",
+                    output_format: "jpeg",
+                    // @ts-expect-error - safety_tolerance field is not updated yet in fal SDK.
+                    safety_tolerance: "6",
+                    sync_mode: false,
+                    limit_generations: false,
+                    // elements: [
+                    //     {
+                    //         reference_image_urls: []
+                    //     }
+                    // ],
+                    // resolution: "1K",
+                    // result_type: "single",
+                    // num_images: 1,
+                    // aspect_ratio: "9:16",
+                    // output_format: "jpeg"
+                }
+            });
+
+            const resultImageUrlList = output.data.images;
+
+            if (resultImageUrlList.length !== 0) {
+                imageUrl = resultImageUrlList[0].url;
+            } else {
+                console.log("resultImageUrlList: ", JSON.stringify(resultImageUrlList));
+                throw Error("Image generation failed.")
+            }
+
+            if (!imageUrl) {
+                throw new Error("No image generated from Fal-AI");
+            }
+
+            const imageResponse = await fetch(imageUrl);
+            if (!imageResponse.ok) {
+                throw new Error(`Failed to fetch image from Fal-AI: ${imageResponse.statusText}`);
+            }
+
+            const arrayBuffer = await imageResponse.arrayBuffer();
+            const imageBuffer = Buffer.from(arrayBuffer);
+
+            // Supabase Storage에 이미지 업로드
+            const { error: uploadError } = await supabase.storage
+                .from('scene_image_temp_storage') // 버킷 이름
+                .upload(`${taskId}/reference_image_${entityId}.jpeg`, imageBuffer, {
                     contentType: 'image/jpeg', // 파일 포맷 지정
                     upsert: true // 덮어쓰기 허용
                 });

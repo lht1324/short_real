@@ -11,6 +11,7 @@ import {
     BASE_SCENE_COUNT_STANDARD,
     BASE_VIDEO_DURATION_STANDARD
 } from "@/lib/ADDITIONAL_CREDIT_AMOUNT";
+import {imageServerAPI} from "@/lib/api/server/imageServerAPI";
 
 export const postMasterStyle = task({
     id: "post-master-style",
@@ -95,7 +96,63 @@ export const postMasterStyle = task({
                 throw new Error(postEntityManifestListResult?.error?.message || 'Failed to generate entityManifestList with OpenRouter');
             }
 
-            // --- DeepSeek 호출 3: MasterStyleInfo ---
+            // // TEST!!
+            // await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
+            //
+            // return {
+            //     success: true,
+            //     message: "Generating EntityManifestList Test finished."
+            // };
+
+            const entityReferenceImagePromptList: {
+                id: string;
+                prompt: string;
+            }[] = []
+            const isSubjectExisting = postEntityManifestListResult.entityManifestList.some((entity) => {
+                return entity.role === 'main_hero' || entity.role === 'sub_character';
+            })
+
+            if (isSubjectExisting) {
+                // --- DeepSeek 호출 3: EntityCharacterSheetPromptList ---
+                const postEntityCharacterSheetPromptListResult = await llmServerAPI.postEntityReferenceImagePromptList(
+                    postEntityManifestListResult.entityManifestList.filter((entity) => {
+                        return entity.role === 'main_hero' || entity.role === 'sub_character';
+                    }),
+                    selectedStyle.uiMetadata.label,
+                );
+
+                if (!postEntityCharacterSheetPromptListResult.success || !postEntityCharacterSheetPromptListResult.entityReferenceImagePromptList) {
+                    throw new Error(postEntityCharacterSheetPromptListResult?.error?.message || 'Failed to generate entityReferenceImagePromptList with OpenRouter');
+                }
+
+                entityReferenceImagePromptList.push(...postEntityCharacterSheetPromptListResult.entityReferenceImagePromptList);
+
+                const postReferenceImagePromiseList = entityReferenceImagePromptList.map(async (referenceImageData) => {
+                    const {
+                        id: entityId,
+                        prompt: referenceImagePrompt,
+                    } = referenceImageData;
+
+                    return await imageServerAPI.postReferenceImage(referenceImagePrompt, taskId, entityId);
+                });
+
+                const referenceImageResults = await Promise.all(postReferenceImagePromiseList);
+
+                const failedResults = referenceImageResults.filter((r) => !r.success);
+                if (failedResults.length > 0) {
+                    throw new Error(`Character sheet image generation failed for some entities.`);
+                }
+            }
+
+            // // TEST!!
+            // await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
+            //
+            // return {
+            //     success: true,
+            //     message: "Generating EntityCharacterSheetPromptList Test finished."
+            // };
+
+            // --- DeepSeek 호출 4: MasterStyleInfo ---
             const postMasterStyleInfoResult = await llmServerAPI.postMasterStyleInfo(
                 selectedStyle.generationParams,
                 sceneDataList.map((sceneData) => ({
@@ -117,7 +174,7 @@ export const postMasterStyle = task({
             //
             // return {
             //     success: true,
-            //     message: "Generating MasterStyle Test finished."
+            //     message: "Generating MasterStyleInfo Test finished."
             // };
 
             // 결과 저장 및 상태 업데이트
@@ -128,7 +185,16 @@ export const postMasterStyle = task({
             const patchVideoGenerationTaskStatusFinalResult = await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, {
                 status: VideoGenerationTaskStatus.GENERATING_IMAGE_PROMPT,
                 master_style_info: masterStylePositivePromptInfo,
-                entity_manifest_list: entityManifestList,
+                entity_manifest_list: entityManifestList.map((entity) => {
+                    const referenceImageData = entityReferenceImagePromptList.find((referenceImagePromptData) => {
+                        return referenceImagePromptData.id === entity.id;
+                    });
+
+                    return {
+                        ...entity,
+                        reference_image_prompt: referenceImageData?.prompt,
+                    }
+                }),
                 scene_breakdown_list: sceneDataList.map((sceneData) => {
                     const sceneCastingData = sceneCastingDataList?.find((cd) => cd.sceneNumber === sceneData.sceneNumber);
                     return {

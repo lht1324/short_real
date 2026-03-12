@@ -67,7 +67,7 @@ export const postImage = task({
                 styleId,
             );
 
-            if (!postImageGenPromptResult.success || !postImageGenPromptResult.imageGenPrompt || !postImageGenPromptResult.imageGenPromptSentence) {
+            if (!postImageGenPromptResult.success || !postImageGenPromptResult.imageGenPrompt || !postImageGenPromptResult.imageGenPromptSentence || (typeof postImageGenPromptResult.entityOrder === "undefined")) {
                 // 에러 메시지를 명확히 해서 던짐 (Trigger 대시보드에서 확인 용이)
                 throw new Error(`LLM Prompt Generation Failed: ${postImageGenPromptResult.error?.message ?? "Unknown error"}`);
             }
@@ -81,7 +81,6 @@ export const postImage = task({
             //     // LLM 결과
             //     imageGenPrompt: postImageGenPromptResult.imageGenPrompt,
             //     imageGenPromptSentence: postImageGenPromptResult.imageGenPromptSentence,
-            //     sceneEntityManifestList: postImageGenPromptResult.sceneEntityManifestList,
             // };
 
             // ----------------------------------------------------------------
@@ -89,9 +88,22 @@ export const postImage = task({
             // ----------------------------------------------------------------
             logger.info(`[Scene #${sceneData.sceneNumber}] Generating actual image...`);
 
+            const entityOrder = postImageGenPromptResult.entityOrder;
+
             const postImageResult = await imageServerAPI.postImage(
                 postImageGenPromptResult.imageGenPrompt,
                 postImageGenPromptResult.imageGenPromptSentence,
+                entityManifestList.filter((entity) => {
+                    return sceneData.sceneCastingEntityIdList?.includes(entity.id) === true;
+                }).filter((entity) => {
+                    return entity.role === 'main_hero' || entity.role === 'sub_character';
+                }).sort((a, b) => {
+                    const aIndex = entityOrder.indexOf(a.id);
+                    const bIndex = entityOrder.indexOf(b.id);
+                    if (aIndex === -1) return 1;
+                    if (bIndex === -1) return -1;
+                    return aIndex - bIndex;
+                }),
                 taskId,
                 sceneData.sceneNumber,
             );
@@ -110,7 +122,6 @@ export const postImage = task({
                 // LLM 결과
                 imageGenPrompt: postImageGenPromptResult.imageGenPrompt,
                 imageGenPromptSentence: postImageGenPromptResult.imageGenPromptSentence,
-                sceneEntityManifestList: postImageGenPromptResult.sceneEntityManifestList,
             };
         } catch (error) {
             logger.error(`[Scene #${sceneData.sceneNumber}] Process Failed:`, {
