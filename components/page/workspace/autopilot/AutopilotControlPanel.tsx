@@ -1,6 +1,6 @@
 'use client'
 
-import {memo, useMemo} from "react";
+import {memo, useMemo, useState} from "react";
 import Image from "next/image";
 import {
     Clock,
@@ -9,8 +9,10 @@ import {
     Pause,
     Trash2,
     Info,
-    AlertCircle,
-    TrendingDown
+    BarChart3,
+    Wrench,
+    Coins,
+    Sparkles
 } from 'lucide-react';
 import {ExportPlatform} from "@/lib/api/types/supabase/VideoGenerationTasks";
 
@@ -24,83 +26,91 @@ const DAYS_OF_WEEK = [
     { id: 0, label: 'S' },
 ];
 
+import {AutopilotData} from "@/lib/api/types/supabase/AutopilotData";
+import {cronToWeekly, weeklyToCron} from "@/lib/utils/cronUtils";
+
 interface AutopilotControlPanelProps {
-    isActive: boolean;
-    onClickToggleActive: () => void;
-    platforms: Record<ExportPlatform, boolean>;
-    onTogglePlatform: (platform: ExportPlatform) => void;
-    scheduleMode: 'weekly' | 'cron';
-    setScheduleMode: (mode: 'weekly' | 'cron') => void;
-    selectedDays: number[];
-    onToggleDay: (dayId: number) => void;
-    scheduledHour: number;
-    setScheduledHour: (hour: number) => void;
-    scheduledMinute: number;
-    setScheduledMinute: (minute: number) => void;
-    cronExpression: string;
-    setCronExpression: (expr: string) => void;
+    currentSeries: AutopilotData;
+    updateSeries: (updateData: Partial<AutopilotData>) => void;
     isSaving: boolean;
     onClickSaveConfig: () => void;
     onClickDeleteConfig: () => void;
 }
 
 function AutopilotControlPanel({
-    isActive,
-    onClickToggleActive,
-    platforms,
-    onTogglePlatform,
-    scheduleMode,
-    setScheduleMode,
-    selectedDays,
-    onToggleDay,
-    scheduledHour,
-    setScheduledHour,
-    scheduledMinute,
-    setScheduledMinute,
-    cronExpression,
-    setCronExpression,
+    currentSeries,
+    updateSeries,
     isSaving,
     onClickSaveConfig,
     onClickDeleteConfig,
 }: AutopilotControlPanelProps) {
+    // --- Internal UI UI State (Not persisted in DB) ---
+    // const [scheduleMode, setScheduleMode] = useState<'weekly' | 'cron'>('weekly');
+    const scheduleMode = 'weekly'; // Forced to weekly for now as requested
+
+    // --- Derived Schedule State ---
+    const schedule = useMemo(() => cronToWeekly(currentSeries.schedule_cron), [currentSeries.schedule_cron]);
+    const { days: selectedDays, hour: scheduledHour, minute: scheduledMinute } = schedule;
+
+    // --- Internal Handlers ---
+    const onToggleDay = (dayId: number) => {
+        const newDays = selectedDays.includes(dayId) 
+            ? selectedDays.filter(id => id !== dayId) 
+            : [...selectedDays, dayId];
+        
+        const newCron = weeklyToCron(newDays, scheduledHour, scheduledMinute);
+        updateSeries({ schedule_cron: newCron });
+    };
+
+    const onChangeHour = (hour: number) => {
+        const newCron = weeklyToCron(selectedDays, hour, scheduledMinute);
+        updateSeries({ schedule_cron: newCron });
+    };
+
+    const onChangeMinute = (minute: number) => {
+        const newCron = weeklyToCron(selectedDays, scheduledHour, minute);
+        updateSeries({ schedule_cron: newCron });
+    };
     
     // Internal UI Logic: Forecast
-    const monthlyUsageForecast = useMemo(() => {
-        if (scheduleMode === 'cron') return 'Variable';
+    const usageInfo = useMemo(() => {
         const weeklyCount = selectedDays.length;
-        if (weeklyCount === 0) return { min: 0, max: 0 };
+        if (weeklyCount === 0) return { min: 0, max: 0, actualMax: 0, isBonusApplied: false };
 
         const minVideos = weeklyCount * 4;
-        const maxVideos = (weeklyCount === 7) ? 31 : (weeklyCount * 4) + Math.min(weeklyCount, 3);
+        const actualMaxVideos = (weeklyCount === 7) ? 31 : (weeklyCount * 4) + Math.min(weeklyCount, 3);
         
-        return {
-            min: minVideos * 100,
-            max: maxVideos * 100
-        };
-    }, [selectedDays, scheduleMode]);
+        const minCredits = minVideos * 100;
+        const actualMaxCredits = actualMaxVideos * 100;
+        
+        // Bonus Logic: If max is 3100 (daily), show as 3000 but keep track of actual
+        const isBonusApplied = actualMaxCredits === 3100;
+        const displayedMaxCredits = isBonusApplied ? 3000 : actualMaxCredits;
 
-    const isUsageTight = useMemo(() => {
-        if (typeof monthlyUsageForecast === 'string') return false;
-        // Logic: 7 days selected && [TBD: Plan check]
-        return selectedDays.length === 7 && true; 
-    }, [selectedDays, monthlyUsageForecast]);
+        return {
+            min: minCredits,
+            max: displayedMaxCredits,
+            actualMax: actualMaxCredits,
+            isBonusApplied
+        };
+    }, [selectedDays]);
 
     return (
-        <div className="w-80 bg-gray-900/60 border-l border-purple-500/20 p-6 flex flex-col space-y-8 overflow-y-auto custom-scrollbar">
+        <div className="w-80 bg-gray-900/60 border-l border-purple-500/20 p-6 flex flex-col space-y-7 overflow-y-auto custom-scrollbar">
             {/* Activation Toggle */}
             <div className="space-y-4">
                 <h4 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">Status</h4>
                 <button
-                    onClick={onClickToggleActive}
+                    onClick={() => updateSeries({ is_active: !currentSeries.is_active })}
                     className="w-full py-4 rounded-xl flex items-center justify-center gap-3 transition-all font-bold text-lg"
                     style={{
-                        backgroundColor: isActive ? 'rgba(34, 197, 94, 0.2)' : 'rgba(31, 41, 55, 1)',
-                        color: isActive ? 'rgb(74, 222, 128)' : 'rgb(156, 163, 175)',
-                        border: isActive ? '1px solid rgba(34, 197, 94, 0.4)' : '1px solid rgba(55, 65, 81, 1)'
+                        backgroundColor: currentSeries.is_active ? 'rgba(34, 197, 94, 0.2)' : 'rgba(31, 41, 55, 1)',
+                        color: currentSeries.is_active ? 'rgb(74, 222, 128)' : 'rgb(156, 163, 175)',
+                        border: currentSeries.is_active ? '1px solid rgba(34, 197, 94, 0.4)' : '1px solid rgba(55, 65, 81, 1)'
                     }}
                 >
-                    {isActive ? <Play size={20} /> : <Pause size={20} />}
-                    {isActive ? 'ACTIVE' : 'PAUSED'}
+                    {currentSeries.is_active ? <Play size={20} /> : <Pause size={20} />}
+                    {currentSeries.is_active ? 'ACTIVE' : 'PAUSED'}
                 </button>
             </div>
 
@@ -111,22 +121,29 @@ function AutopilotControlPanel({
                     {[
                         { id: ExportPlatform.YOUTUBE, label: 'YouTube Shorts', src: '/icons/youtube-logo.png', activeColor: 'bg-red-500/10 border-red-500/40', iconColor: 'text-red-500' },
                         { id: ExportPlatform.TIKTOK, label: 'TikTok', src: '/icons/tiktok-logo.svg', activeColor: 'bg-cyan-500/10 border-cyan-500/40', iconColor: 'text-cyan-400' },
-                        { id: ExportPlatform.INSTAGRAM, label: 'Instagram Reels', src: '/icons/instagram-logo.png', activeColor: 'bg-pink-500/10 border-pink-500/40', iconColor: 'text-pink-500' }
+                        { id: ExportPlatform.INSTAGRAM, label: 'Instagram Reels', src: '/icons/instagram-logo.png', activeColor: 'bg-pink-500/10 border-pink-500/40', iconColor: 'text-pink-500', disabled: true }
                     ].map((platform) => (
                         <div 
                             key={platform.id}
-                            onClick={() => onTogglePlatform(platform.id)}
-                            className={`flex items-center justify-between p-3.5 rounded-xl border cursor-pointer transition-all ${
-                                platforms[platform.id] ? platform.activeColor : 'bg-black/20 border-white/5 opacity-60'
+                            onClick={() => !platform.disabled && updateSeries({ 
+                                platforms: { ...currentSeries.platforms, [platform.id]: !currentSeries.platforms[platform.id] } 
+                            })}
+                            className={`flex items-center justify-between p-3.5 rounded-xl border transition-all ${
+                                platform.disabled 
+                                    ? 'bg-black/20 border-white/5 opacity-40 cursor-not-allowed'
+                                    : currentSeries.platforms[platform.id] ? platform.activeColor + ' cursor-pointer' : 'bg-black/20 border-white/5 opacity-60 cursor-pointer'
                             }`}
                         >
                             <div className="flex items-center gap-3.5">
                                 <div className="w-7 h-7 relative">
                                     <Image src={platform.src} alt={platform.label} fill className="object-contain" />
                                 </div>
-                                <span className={`text-sm font-bold ${platforms[platform.id] ? 'text-white' : 'text-gray-500'}`}>{platform.label}</span>
+                                <span className={`text-sm font-bold ${currentSeries.platforms[platform.id] && !platform.disabled ? 'text-white' : 'text-gray-500'}`}>
+                                    {platform.label}
+                                </span>
                             </div>
-                            {platforms[platform.id] && <CheckCircle2 size={18} className={platform.iconColor} />}
+                            {currentSeries.platforms[platform.id] && !platform.disabled && <CheckCircle2 size={18} className={platform.iconColor} />}
+                            {platform.disabled && <Wrench size={18} className="text-yellow-500/50" />}
                         </div>
                     ))}
                 </div>
@@ -140,7 +157,8 @@ function AutopilotControlPanel({
                 </div>
                 
                 <div className="space-y-4">
-                    <div className="flex bg-black/40 p-1.5 rounded-xl border border-purple-500/10">
+                    {/* Mode selection commented out for now as requested */}
+                    {/* <div className="flex bg-black/40 p-1.5 rounded-xl border border-purple-500/10">
                         <button 
                             onClick={() => setScheduleMode('weekly')}
                             className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all ${scheduleMode === 'weekly' ? 'bg-purple-600 text-white' : 'text-gray-500'}`}
@@ -153,10 +171,10 @@ function AutopilotControlPanel({
                         >
                             CRON
                         </button>
-                    </div>
+                    </div> */}
 
                     {scheduleMode === 'weekly' ? (
-                        <div className="space-y-5 animate-in fade-in slide-in-from-top-1 duration-200">
+                        <div className="h-[110px] space-y-5 animate-in fade-in slide-in-from-top-1 duration-200">
                             <div className="flex justify-between gap-1.5">
                                 {DAYS_OF_WEEK.map((day) => (
                                     <button
@@ -178,7 +196,7 @@ function AutopilotControlPanel({
                                     <label className="text-xs text-gray-500 mb-1.5 block ml-1 uppercase font-bold tracking-wider">Hour</label>
                                     <select 
                                         value={scheduledHour}
-                                        onChange={(e) => setScheduledHour(parseInt(e.target.value))}
+                                        onChange={(e) => onChangeHour(parseInt(e.target.value))}
                                         className="w-full bg-black/40 border border-purple-500/30 rounded-lg p-2 text-base text-white focus:outline-none focus:border-purple-500/60 transition-all"
                                     >
                                         {Array.from({ length: 24 }).map((_, i) => (
@@ -190,7 +208,7 @@ function AutopilotControlPanel({
                                     <label className="text-xs text-gray-500 mb-1.5 block ml-1 uppercase font-bold tracking-wider">Minute</label>
                                     <select 
                                         value={scheduledMinute}
-                                        onChange={(e) => setScheduledMinute(parseInt(e.target.value))}
+                                        onChange={(e) => onChangeMinute(parseInt(e.target.value))}
                                         className="w-full bg-black/40 border border-purple-500/30 rounded-lg p-2 text-base text-white focus:outline-none focus:border-purple-500/60 transition-all"
                                     >
                                         {Array.from({ length: 60 }).map((_, i) => (
@@ -201,22 +219,24 @@ function AutopilotControlPanel({
                             </div>
                         </div>
                     ) : (
-                        <div className="space-y-3 animate-in fade-in slide-in-from-top-1 duration-200">
+                        /* Cron input commented out for now as requested */
+                        /* <div className="h-[110px] space-y-3 animate-in fade-in slide-in-from-top-1 duration-200">
                             <div className="flex items-center gap-2 mb-2 text-yellow-500/70 ml-1">
                                 <Info size={14} />
                                 <span className="text-xs font-medium uppercase tracking-tight">Expert Cron Expression</span>
                             </div>
                             <input
                                 type="text"
-                                value={cronExpression}
-                                onChange={(e) => setCronExpression(e.target.value)}
+                                value={currentSeries.schedule_cron}
+                                onChange={(e) => updateSeries({ schedule_cron: e.target.value })}
                                 className="w-full bg-black/40 border border-purple-500/30 rounded-lg p-3 text-sm text-white font-mono focus:outline-none focus:border-purple-500/60 transition-all shadow-inner"
                                 placeholder="0 10 * * *"
                             />
                             <p className="text-xs text-gray-600 px-1">
                                 Format: Min Hr Day Mon DayOfWeek
                             </p>
-                        </div>
+                        </div> */
+                        null
                     )}
                 </div>
             </div>
@@ -225,24 +245,30 @@ function AutopilotControlPanel({
             <div className="bg-white/5 rounded-2xl border border-white/5 p-5 space-y-4">
                 <div className="flex items-center justify-between">
                     <span className="text-gray-400 text-xs font-bold uppercase tracking-widest">Monthly Usage</span>
-                    <TrendingDown size={16} className="text-green-400" />
+                    <BarChart3 size={16} className="text-purple-400" />
                 </div>
-                <div className="flex items-baseline gap-1">
-                    <span className="text-2xl font-black text-white">
-                        {typeof monthlyUsageForecast === 'string' 
-                            ? monthlyUsageForecast 
-                            : `~${monthlyUsageForecast.min.toLocaleString()} - ${monthlyUsageForecast.max.toLocaleString()}`}
-                    </span>
-                    <span className="text-gray-500 text-xs font-bold uppercase">Cr</span>
+                <div className="flex items-center gap-2">
+                    <Coins className="w-5 h-5 text-yellow-400" />
+                    <div className="flex items-baseline gap-1.5 flex-wrap">
+                        <span className="text-2xl font-black text-white">
+                            {usageInfo.min.toLocaleString()} ~ {usageInfo.max.toLocaleString()}
+                        </span>
+                        {usageInfo.isBonusApplied && (
+                            <span className="relative inline-flex items-center text-[18px] text-gray-500/60 font-bold ml-0.5 whitespace-nowrap">
+                                {usageInfo.actualMax.toLocaleString()}
+                                <div className="absolute inset-x-0 h-[2px] bg-purple-500/60 -rotate-12 transform scale-x-100" />
+                            </span>
+                        )}
+                    </div>
                 </div>
                 
-                {isUsageTight && (
-                    <div className="flex items-start gap-2.5 p-3 rounded-xl bg-yellow-500/10 border border-yellow-500/20">
-                        <AlertCircle size={16} className="text-yellow-500 shrink-0 mt-0.5" />
+                {usageInfo.isBonusApplied && (
+                    <div className="flex items-start gap-2.5 p-3.5 rounded-xl bg-purple-500/10 border border-purple-500/20 animate-in fade-in zoom-in-95 duration-300">
+                        <Sparkles size={18} className="text-purple-400 shrink-0 mt-0.5" />
                         <div className="space-y-1">
-                            <p className="text-xs font-bold text-yellow-500 uppercase tracking-tight">Limit Caution</p>
-                            <p className="text-xs text-yellow-500/80 leading-snug">
-                                Daily generation will consume ~3,100 Cr in 31-day months. Ensure your balance covers the extra day.
+                            <p className="text-sm font-black text-purple-300 uppercase tracking-tight">Full Coverage Unlocked</p>
+                            <p className="text-[13px] text-purple-200/90 leading-snug font-bold">
+                                Extra days in 31-day months are on us. Enjoy daily uploads at no extra cost! 🎁
                             </p>
                         </div>
                     </div>

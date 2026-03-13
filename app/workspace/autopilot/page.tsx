@@ -1,5 +1,5 @@
 import { Metadata } from 'next';
-import WorkspaceAutopilotSettingPageClient from "@/components/page/workspace/autopilot/WorkspaceAutopilotSettingPageClient";
+import WorkspaceAutopilotSettingPageClient from "@/components/page/workspace/autopilot/WorkspaceAutopilotPageClient";
 
 // [중요] 도구 페이지는 검색 엔진 수집 차단
 export const metadata: Metadata = {

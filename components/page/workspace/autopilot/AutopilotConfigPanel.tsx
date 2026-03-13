@@ -3,47 +3,24 @@
 import {memo, useCallback, useEffect, useState} from "react";
 import {Sparkles, FileText, Mic2, Zap, Info, Square, Play} from 'lucide-react';
 import {Voice} from "@/lib/api/types/eleven-labs/Voice";
+import {NICHE_DATA_LIST} from "@/lib/niches";
+import {AutopilotData} from "@/lib/api/types/supabase/AutopilotData";
 
-const PRESET_NICHES = [
-    { id: 'space', label: 'Space Facts', icon: '🚀' },
-    { id: 'history', label: 'History Mystery', icon: '🏛️' },
-    { id: 'horror', label: 'Scary Stories', icon: '👻' },
-    { id: 'motivation', label: 'Motivation', icon: '💪' },
-    { id: 'wealth', label: 'Wealth & Money', icon: '💰' },
-    { id: 'philosophy', label: 'Philosophy', icon: '🧠' },
-    { id: 'nature', label: 'Nature/Wild', icon: '🌿' },
-    { id: 'science', label: 'Cool Science', icon: '🧪' },
-];
 
 interface AutopilotConfigPanelProps {
-    autopilotName: string;
-    setAutopilotName: (name: string) => void;
-    topicMode: 'preset' | 'custom';
-    setTopicMode: (mode: 'preset' | 'custom') => void;
-    selectedNiche: string;
-    setSelectedNiche: (nicheId: string) => void;
-    customNiche: string;
-    setCustomNiche: (niche: string) => void;
+    currentSeries: AutopilotData;
+    updateSeries: (updateData: Partial<AutopilotData>) => void;
     voiceList: Voice[];
     isVoiceLoading: boolean;
-    selectedVoiceId: string;
-    setSelectedVoiceId: (id: string) => void;
 }
 
 function AutopilotConfigPanel({
-    autopilotName,
-    setAutopilotName,
-    topicMode,
-    setTopicMode,
-    selectedNiche,
-    setSelectedNiche,
-    customNiche,
-    setCustomNiche,
+    currentSeries,
+    updateSeries,
     voiceList,
     isVoiceLoading,
-    selectedVoiceId,
-    setSelectedVoiceId,
 }: AutopilotConfigPanelProps) {
+    const topicMode = currentSeries.niche_preset_id ? 'preset' : 'custom';
     // Internal UI State: Audio
     const [currentAudio, setCurrentAudio] = useState<HTMLAudioElement | null>(null);
     const [playingVoiceId, setPlayingVoiceId] = useState<string | null>(null);
@@ -102,8 +79,8 @@ function AutopilotConfigPanel({
                     </label>
                     <input
                         type="text"
-                        value={autopilotName}
-                        onChange={(e) => setAutopilotName(e.target.value)}
+                        value={currentSeries.name}
+                        onChange={(e) => updateSeries({ name: e.target.value })}
                         placeholder="e.g., Space Explorer Daily"
                         className="w-full bg-black/40 border border-purple-500/30 rounded-xl p-4 text-lg text-white focus:outline-none focus:border-purple-500/60 transition-all shadow-inner"
                     />
@@ -117,13 +94,13 @@ function AutopilotConfigPanel({
                         </div>
                         <div className="flex bg-black/40 p-1.5 rounded-xl border border-purple-500/20">
                             <button 
-                                onClick={() => setTopicMode('preset')}
+                                onClick={() => updateSeries({ niche_preset_id: NICHE_DATA_LIST[0].uiMetadata.id })}
                                 className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-all ${topicMode === 'preset' ? 'bg-purple-600 text-white' : 'text-gray-400 hover:text-gray-200'}`}
                             >
                                 Presets
                             </button>
                             <button 
-                                onClick={() => setTopicMode('custom')}
+                                onClick={() => updateSeries({ niche_preset_id: undefined })}
                                 className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-all ${topicMode === 'custom' ? 'bg-purple-600 text-white' : 'text-gray-400 hover:text-gray-200'}`}
                             >
                                 Custom
@@ -133,25 +110,25 @@ function AutopilotConfigPanel({
 
                     {topicMode === 'preset' ? (
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                            {PRESET_NICHES.map((niche) => (
+                            {NICHE_DATA_LIST.map((niche) => (
                                 <button
-                                    key={niche.id}
-                                    onClick={() => setSelectedNiche(niche.id)}
+                                    key={niche.uiMetadata.id}
+                                    onClick={() => updateSeries({ niche_preset_id: niche.uiMetadata.id })}
                                     className={`p-4 rounded-xl border text-left transition-all flex items-center gap-3 ${
-                                        selectedNiche === niche.id 
+                                        currentSeries.niche_preset_id === niche.uiMetadata.id 
                                             ? 'bg-purple-600/20 border-purple-500 text-white shadow-lg' 
                                             : 'bg-black/20 border-white/5 text-gray-400 hover:border-white/20'
                                     }`}
                                 >
-                                    <span className="text-2xl">{niche.icon}</span>
-                                    <span className="text-base font-semibold">{niche.label}</span>
+                                    <span className="text-2xl">{niche.uiMetadata.icon}</span>
+                                    <span className="text-base font-semibold">{niche.uiMetadata.label}</span>
                                 </button>
                             ))}
                         </div>
                     ) : (
                         <textarea
-                            value={customNiche}
-                            onChange={(e) => setCustomNiche(e.target.value)}
+                            value={currentSeries.niche_preset_id ? '' : currentSeries.niche_value}
+                            onChange={(e) => updateSeries({ niche_value: e.target.value })}
                             placeholder="Describe your channel's recurring theme in English..."
                             className="w-full h-32 bg-black/40 border border-purple-500/30 rounded-xl p-4 text-lg text-white placeholder-gray-600 focus:outline-none focus:border-purple-500/60 transition-all resize-none shadow-inner"
                         />
@@ -176,16 +153,16 @@ function AutopilotConfigPanel({
                                 return (
                                     <div
                                         key={voice.id}
-                                        onClick={() => setSelectedVoiceId(voice.id)}
+                                        onClick={() => updateSeries({ voice_id: voice.id })}
                                         className={`p-4 rounded-xl border cursor-pointer transition-all flex items-center justify-between gap-4 ${
-                                            selectedVoiceId === voice.id 
+                                            currentSeries.voice_id === voice.id 
                                                 ? 'bg-indigo-600/20 border-indigo-500 text-white shadow-lg ring-1 ring-indigo-500/50' 
                                                 : 'bg-black/20 border-white/5 text-gray-400 hover:border-white/10'
                                         }`}
                                     >
                                         <div className="flex flex-col gap-2.5 min-w-0 flex-1">
                                             <div className="flex items-center gap-1.5 flex-wrap">
-                                                <span className={`text-base font-bold truncate mr-1 ${selectedVoiceId === voice.id ? 'text-indigo-300' : 'text-white'}`}>
+                                                <span className={`text-base font-bold truncate mr-1 ${currentSeries.voice_id === voice.id ? 'text-indigo-300' : 'text-white'}`}>
                                                     {displayName}
                                                 </span>
                                                 <span className="text-[10px] px-1.5 py-0.5 rounded bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 font-bold uppercase tracking-tighter">
