@@ -18,8 +18,14 @@ export function weeklyToCron(days: number[], hour: number, minute: number): stri
     const minStr = minute.toString();
     const hourStr = hour.toString();
     
-    // If all days are selected or no days are selected, use '*'
-    const daysStr = (days.length === 0 || days.length === 7) 
+    // If no days are selected, use 'NONE' to avoid '*' (which means every day)
+    // and let the UI handle the validation error.
+    if (days.length === 0) {
+        return `${minStr} ${hourStr} * * NONE`;
+    }
+    
+    // If all days are selected, use '*'
+    const daysStr = days.length === 7
         ? "*" 
         : [...days].sort((a, b) => a - b).join(",");
         
@@ -46,6 +52,8 @@ export function cronToWeekly(cron: string): WeeklySchedule {
         let days: number[] = [];
         if (daysPart === "*") {
             days = [0, 1, 2, 3, 4, 5, 6];
+        } else if (daysPart === "NONE") {
+            days = [];
         } else {
             // Split by comma and handle 0-7 (Trigger.dev supports 7 as Sunday too)
             days = daysPart.split(",")

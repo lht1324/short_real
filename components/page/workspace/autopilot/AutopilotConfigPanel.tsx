@@ -72,7 +72,7 @@ function AutopilotConfigPanel({
 
     return (
         <div className="flex-1 p-6 overflow-y-auto custom-scrollbar">
-            <div className="max-w-4xl mx-auto space-y-6">
+            <div className="space-y-6">
                 <section className="bg-gray-900/40 border border-purple-500/20 rounded-2xl p-6 backdrop-blur-sm space-y-3">
                     <label className="text-lg font-semibold text-purple-100 flex items-center gap-2">
                         <FileText size={20} className="text-purple-400" /> Autopilot Name
@@ -100,7 +100,7 @@ function AutopilotConfigPanel({
                                 Presets
                             </button>
                             <button 
-                                onClick={() => updateSeries({ niche_preset_id: undefined })}
+                                onClick={() => updateSeries({ niche_preset_id: null })}
                                 className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-all ${topicMode === 'custom' ? 'bg-purple-600 text-white' : 'text-gray-400 hover:text-gray-200'}`}
                             >
                                 Custom
@@ -109,7 +109,7 @@ function AutopilotConfigPanel({
                     </div>
 
                     {topicMode === 'preset' ? (
-                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                        <div className="grid grid-cols-2 gap-3">
                             {NICHE_DATA_LIST.map((niche) => (
                                 <button
                                     key={niche.uiMetadata.id}
@@ -140,7 +140,7 @@ function AutopilotConfigPanel({
                         <Mic2 size={20} className="text-indigo-400" />
                         <span>Narrator Voice</span>
                     </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-2 gap-4">
                         {isVoiceLoading ? (
                             <div className="col-span-full py-10 text-center text-gray-500">Loading voices...</div>
                         ) : (

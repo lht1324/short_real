@@ -7,8 +7,10 @@ import {
     CheckCircle2,
     Play,
     Pause,
+    Loader2,
     Trash2,
     Info,
+    AlertCircle,
     BarChart3,
     Wrench,
     Coins,
@@ -33,6 +35,8 @@ interface AutopilotControlPanelProps {
     currentSeries: AutopilotData;
     updateSeries: (updateData: Partial<AutopilotData>) => void;
     isSaving: boolean;
+    isDirty: boolean;
+    validation: { isValid: boolean; reasons: string[] };
     onClickSaveConfig: () => void;
     onClickDeleteConfig: () => void;
 }
@@ -41,6 +45,8 @@ function AutopilotControlPanel({
     currentSeries,
     updateSeries,
     isSaving,
+    isDirty,
+    validation,
     onClickSaveConfig,
     onClickDeleteConfig,
 }: AutopilotControlPanelProps) {
@@ -99,10 +105,28 @@ function AutopilotControlPanel({
         <div className="w-80 bg-gray-900/60 border-l border-purple-500/20 p-6 flex flex-col space-y-7 overflow-y-auto custom-scrollbar">
             {/* Activation Toggle */}
             <div className="space-y-4">
-                <h4 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">Status</h4>
+                <div className="flex items-center justify-between">
+                    <h4 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">Status</h4>
+                    {!validation.isValid && (
+                        <div className="group relative">
+                            <AlertCircle size={16} className="text-red-400 cursor-help" />
+                            <div className="absolute right-0 top-full mt-2 w-48 p-2 bg-gray-900 border border-red-500/30 rounded-lg shadow-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
+                                <p className="text-[10px] text-red-300 font-bold uppercase mb-1">Required to Activate:</p>
+                                <ul className="list-disc list-inside space-y-0.5">
+                                    {validation.reasons.map((reason, i) => (
+                                        <li key={i} className="text-[10px] text-gray-400">{reason}</li>
+                                    ))}
+                                </ul>
+                            </div>
+                        </div>
+                    )}
+                </div>
                 <button
-                    onClick={() => updateSeries({ is_active: !currentSeries.is_active })}
-                    className="w-full py-4 rounded-xl flex items-center justify-center gap-3 transition-all font-bold text-lg"
+                    onClick={() => validation.isValid && updateSeries({ is_active: !currentSeries.is_active })}
+                    disabled={!validation.isValid}
+                    className={`w-full py-4 rounded-xl flex items-center justify-center gap-3 transition-all font-bold text-lg ${
+                        !validation.isValid ? 'opacity-50 cursor-not-allowed grayscale' : ''
+                    }`}
                     style={{
                         backgroundColor: currentSeries.is_active ? 'rgba(34, 197, 94, 0.2)' : 'rgba(31, 41, 55, 1)',
                         color: currentSeries.is_active ? 'rgb(74, 222, 128)' : 'rgb(156, 163, 175)',
@@ -279,10 +303,19 @@ function AutopilotControlPanel({
             <div className="mt-auto pt-6 space-y-4">
                 <button
                     onClick={onClickSaveConfig}
-                    disabled={isSaving}
-                    className="w-full bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white py-4 rounded-xl font-bold text-lg shadow-lg shadow-purple-500/25 transition-all disabled:opacity-50"
+                    disabled={isSaving || !isDirty || !validation.isValid}
+                    className={`w-full py-4 rounded-xl font-bold text-lg shadow-lg transition-all disabled:opacity-30 disabled:grayscale disabled:cursor-not-allowed ${
+                        isDirty && validation.isValid
+                            ? 'bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white shadow-purple-500/25' 
+                            : 'bg-gray-800 text-gray-500'
+                    }`}
                 >
-                    {isSaving ? 'Saving...' : 'Save Configuration'}
+                    {isSaving ? (
+                        <div className="flex items-center justify-center gap-2">
+                            <Loader2 className="w-5 h-5 animate-spin" />
+                            <span>Saving...</span>
+                        </div>
+                    ) : isDirty ? 'Save Configuration' : 'Everything Saved'}
                 </button>
                 <button
                     onClick={onClickDeleteConfig}
