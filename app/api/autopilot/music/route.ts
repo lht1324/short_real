@@ -1,0 +1,162 @@
+import {NextRequest} from "next/server";
+import {getIsValidRequestS2S} from "@/utils/getIsValidRequest";
+import {getNextBaseResponse} from "@/utils/getNextBaseResponse";
+import {videoGenerationTasksServerAPI} from "@/lib/api/server/videoGenerationTasksServerAPI";
+import {llmServerAPI} from "@/lib/api/server/llmServerAPI";
+import {internalFireAndForgetFetch} from "@/utils/internalFetch";
+import {createSupabaseServiceRoleClient} from "@/lib/supabaseServiceRole";
+import {AutopilotData} from "@/lib/api/types/supabase/AutopilotData";
+import {VideoGenerationTask, VideoGenerationTaskStatus} from "@/lib/api/types/supabase/VideoGenerationTasks";
+import {musicServerAPI} from "@/lib/api/server/musicServerAPI";
+import {voiceServerAPI} from "@/lib/api/server/voiceServerAPI";
+
+export async function POST(
+    request: NextRequest,
+    { params }: { params: Promise<{ taskId: string, seriesId: string }> }
+) {
+    if (!getIsValidRequestS2S(request)) {
+        return getNextBaseResponse({
+            success: false,
+            status: 401,
+            error: 'Unauthorized internal request',
+        });
+    }
+
+    const supabase = createSupabaseServiceRoleClient();
+
+    try {
+        const { taskId, seriesId } = await params;
+
+        if (!taskId) {
+            return getNextBaseResponse({
+                success: false,
+                status: 400,
+                error: 'Task Id is not valid.',
+            })
+        }
+
+        if (!seriesId) {
+            return getNextBaseResponse({
+                success: false,
+                status: 400,
+                error: 'Series Id is not valid.',
+            })
+        }
+
+        const videoGenerationTask = await videoGenerationTasksServerAPI.getVideoGenerationTaskById(taskId);
+
+        if (!videoGenerationTask) {
+            return getNextBaseResponse({
+                success: false,
+                status: 500,
+                error: 'Fetching video generation task is failed.',
+            })
+        }
+
+        const { data: autopilotData, error } = await supabase
+            .from('autopilot_data')
+            .select('*')
+            .eq('id', seriesId)
+            .single();
+
+        if (error) {
+            return getNextBaseResponse({
+                success: false,
+                status: 500,
+                error: 'Fetching autopilot data is failed.',
+            });
+        }
+
+        const {
+            scene_breakdown_list: sceneBreakdownList,
+            final_video_merge_data: videoMergeData,
+        }: VideoGenerationTask = videoGenerationTask;
+
+        if (!videoMergeData) {
+            return getNextBaseResponse({
+                success: false,
+                status: 500,
+                error: 'Video merge data not exists.',
+            });
+        }
+
+        const {
+            niche_value: nicheValue,
+        }: AutopilotData = autopilotData;
+
+        const firstMusicUrl = await musicServerAPI.getMusicSignedUrl(`${taskId}/${taskId}_0.mp3`, 60 * 60);
+        const secondMusicUrl = await musicServerAPI.getMusicSignedUrl(`${taskId}/${taskId}_1.mp3`, 60 * 60);
+        const narrationVoiceUrl = await voiceServerAPI.getVoiceSignedUrl(taskId);
+
+        // 오디오 파일을 Base64로 변환
+        const audioUrls = [firstMusicUrl, secondMusicUrl, narrationVoiceUrl];
+        const audioBase64List = await Promise.all(
+            audioUrls.map(async (url) => {
+                const response = await fetch(url);
+                if (!response.ok) throw new Error(`Failed to fetch audio from ${url}`);
+                const arrayBuffer = await response.arrayBuffer();
+                return Buffer.from(arrayBuffer).toString('base64');
+            })
+        );
+
+        const postMusicAnalysisResult = await llmServerAPI.postMusicAnalysis(
+            nicheValue,
+            sceneBreakdownList.map((sceneData) => {
+                return {
+                    sceneNumber: sceneData.sceneNumber,
+                    narration: sceneData.narration,
+                    sceneDuration: sceneData.sceneDuration,
+                }
+            }),
+            audioBase64List,
+        );
+
+        if (!postMusicAnalysisResult.success || !postMusicAnalysisResult.data) {
+            return getNextBaseResponse({
+                success: false,
+                status: 500,
+                error: `Music analysis failed: ${postMusicAnalysisResult.error}`,
+            });
+        }
+
+        const {
+            selectedIndex,
+            startSec,
+            endSec,
+            volumePercentage,
+        } = postMusicAnalysisResult.data;
+
+        await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, {
+            status: VideoGenerationTaskStatus.FINALIZING,
+            final_video_merge_data: {
+                ...videoMergeData,
+                musicIndex: selectedIndex,
+                cuttingAreaStartSec: startSec,
+                cuttingAreaEndSec: endSec,
+                volumePercentage: volumePercentage, // 볼륨은 추후 고도화 예정
+            }
+        });
+
+        // Fire and Forget으로 최종 병합 호출 (S2S 인증 지원 필요)
+        internalFireAndForgetFetch(
+            `${process.env.BASE_URL}/api/video/merge/final?taskId=${taskId}`,
+            {
+                method: 'POST',
+            },
+        )
+
+        // 즉시 응답
+        return getNextBaseResponse({
+            status: 200,
+            success: true,
+            message: "Music is analyzed successfully",
+        });
+    } catch (error) {
+        console.error("Error in POST /api/autopilot/music:", error);
+        return getNextBaseResponse({
+            status: 500,
+            success: false,
+            message: "Failed to analyze music"
+        });
+    }
+}

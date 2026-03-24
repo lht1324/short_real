@@ -3,10 +3,12 @@ import {
     POST_SCENE_SEGMENTATION_PROMPT,
     POST_SCENE_CASTING_DATA_LIST_PROMPT,
     POST_ENTITY_MANIFEST_LIST,
+    POST_ENTITY_REFERENCE_IMAGE_PROMPT_PROMPT,
     POST_MASTER_STYLE_INFO_PROMPT,
     POST_IMAGE_GEN_PROMPT_PROMPT,
     POST_VIDEO_GEN_PROMPT_PROMPT,
-    POST_MUSIC_GENERATION_DATA_PROMPT, POST_ENTITY_REFERENCE_IMAGE_PROMPT_PROMPT,
+    POST_MUSIC_GENERATION_DATA_PROMPT,
+    POST_MUSIC_ANALYSIS,
 } from "@/lib/api/types/open-ai/LLMPrompts";
 import { VIDEO_ASPECT_RATIOS, VideoAspectRatio } from "@/lib/ReplicateData";
 import { ScriptGenerationResponse } from "@/lib/api/types/open-ai/ScriptGeneration";
@@ -1043,4 +1045,112 @@ Proceed with the prompt generation.
             };
         }
     },
-}
+
+    async postMusicAnalysis(
+        niche: string,
+        scriptDataList: {
+            sceneNumber: number;
+            narration: string;
+            sceneDuration: number;
+        }[],
+        audioBase64List: string[],
+    ): Promise<{
+        success: boolean;
+        data?: {
+            selectedIndex: number;
+            startSec: number;
+            endSec: number;
+            volumePercentage: number;
+        };
+        error?: string;
+    }> {
+        try {
+            const systemMessage = POST_MUSIC_ANALYSIS;
+
+            // 1. 비디오 총 길이 계산
+            const targetDuration = scriptDataList.reduce((acc, scene) => acc + scene.sceneDuration, 0);
+
+            // 2. XML 형태의 유저 메시지 구성
+            const userMessage = `
+    <input_data>
+      <video_context>
+        <niche>${niche}</niche>
+        <script_timeline>${JSON.stringify(scriptDataList, null, 2)}</script_timeline>
+        <target_duration>${targetDuration}</target_duration>
+      </video_context>
+    </input_data>
+
+    Instruction: Analyze the attached audio tracks based on the provided video context and timeline. Return the result in JSON format.
+    `;
+
+            const client = new OpenRouterClient();
+
+            // 3. OpenRouter API 호출 (Gemini 3.1 Flash Lite)
+            const generatedContent = await client.createCompletion({
+                model: OpenRouterModel.GEMINI_3_1_FLASH_LITE_PREVIEW,
+                systemMessage: systemMessage,
+                userMessage: userMessage,
+                audioBase64List: audioBase64List,
+                reasoning: true, // 복잡한 오디오 분석을 위해 추론 활성화
+                maxCompletionTokens: 8192,
+            }, `postMusicAnalysis()`);
+
+            if (!generatedContent) {
+                return {
+                    success: false,
+                    error: 'No analysis generated from Gemini 3.1 Flash Lite'
+                };
+            }
+
+            // 4. JSON 파싱 및 반환
+            try {
+                const {
+                    selected_index: selectedIndex,
+                    reasoning: reasoning,
+                    start_sec: startSec,
+                    end_sec: endSec,
+                    volume_percentage: volumePercentage,
+                    energy_score: energyScore,
+                }: {
+                    selected_index: number;
+                    reasoning: string;
+                    start_sec: number;
+                    end_sec: number;
+                    volume_percentage: number;
+                    energy_score: number;
+                } = cleanAndParseJSON(generatedContent);
+
+                console.log("postMusicAnalysis() Result: ", JSON.stringify({
+                    selectedIndex: selectedIndex,
+                    startSec: startSec,
+                    endSec: endSec,
+                    volume_percentage: volumePercentage,
+                    reasoning: reasoning,
+                    energyScore: energyScore,
+                }));
+
+                return {
+                    success: true,
+                    data: {
+                        selectedIndex,
+                        startSec,
+                        endSec,
+                        volumePercentage,
+                    }
+                };
+            } catch (parseError) {
+                console.error('Failed to parse music analysis JSON:', parseError);
+                return {
+                    success: false,
+                    error: 'Failed to parse AI response'
+                };
+            }
+        } catch (error) {
+            console.error('Error in postMusicAnalysis():', error);
+            return {
+                success: false,
+                error: error instanceof Error ? error.message : 'Unknown error occurred'
+            };
+        }
+    }
+    }

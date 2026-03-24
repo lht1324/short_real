@@ -17,18 +17,18 @@ function WorkspaceSidebar({ activeItem }: WorkspaceSidebarProps) {
             name: 'Dashboard', 
             href: '/workspace/dashboard' 
         },
+        {
+            id: WorkspaceSidebarItem.AUTOPILOT,
+            icon: Zap,
+            name: 'Autopilot',
+            href: '/workspace/autopilot'
+        },
         { 
             id: WorkspaceSidebarItem.CREATE, 
             icon: Plus, 
             name: 'Create', 
             href: '/workspace/create' 
         },
-        { 
-            id: WorkspaceSidebarItem.AUTOPILOT, 
-            icon: Zap, 
-            name: 'Autopilot', 
-            href: '/workspace/autopilot' 
-        }
     ], []);
 
     return (
