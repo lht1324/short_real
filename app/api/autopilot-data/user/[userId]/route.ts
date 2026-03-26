@@ -2,7 +2,7 @@ import { NextRequest } from "next/server";
 import { getNextBaseResponse } from "@/utils/getNextBaseResponse";
 import { createSupabaseServiceRoleClient } from "@/lib/supabaseServiceRole";
 import { AutopilotData } from "@/lib/api/types/supabase/AutopilotData";
-import {getIsValidRequestC2S, getIsValidRequestS2S} from "@/utils/getIsValidRequest";
+import { getIsValidRequestS2S } from "@/utils/getIsValidRequest";
 
 /**
  * GET /api/autopilot-data/user/[userId]
@@ -122,26 +122,25 @@ export async function PATCH(
  * Delete all autopilot series for a specific user.
  */
 export async function DELETE(
-    _request: NextRequest,
+    request: NextRequest,
     context: { params: Promise<{ userId: string }> }
 ) {
-    const { isValidRequest, user } = await getIsValidRequestC2S();
-
-    if (!isValidRequest || !user?.id) {
+    if (!getIsValidRequestS2S(request)) {
         return getNextBaseResponse({
             success: false,
             status: 401,
-            error: "Unauthorized request."
+            error: 'Unauthorized internal request',
         });
     }
 
     const { userId } = await context.params;
-    
-    if (user.id !== userId) {
+    const sessionUserId = request.nextUrl.searchParams.get('userId');
+
+    if (!sessionUserId || (userId !== sessionUserId)) {
         return getNextBaseResponse({
             success: false,
             status: 403,
-            error: "Forbidden. You can only delete your own data."
+            error: "Forbidden. You can only read your own data."
         });
     }
 

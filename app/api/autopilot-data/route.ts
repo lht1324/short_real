@@ -2,20 +2,32 @@ import { NextRequest } from "next/server";
 import { getNextBaseResponse } from "@/utils/getNextBaseResponse";
 import { createSupabaseServiceRoleClient } from "@/lib/supabaseServiceRole";
 import { AutopilotData } from "@/lib/api/types/supabase/AutopilotData";
-import { getIsValidRequestC2S } from "@/utils/getIsValidRequest";
+import { getIsValidRequestS2S } from "@/utils/getIsValidRequest";
 
 /**
  * POST /api/autopilot-data
  * Create a new autopilot series.
  */
-export async function POST(request: NextRequest) {
-    const { isValidRequest, user } = await getIsValidRequestC2S();
-
-    if (!isValidRequest || !user?.id) {
+export async function POST(
+    request: NextRequest,
+    context: { params: Promise<{ userId: string }> }
+) {
+    if (!getIsValidRequestS2S(request)) {
         return getNextBaseResponse({
             success: false,
             status: 401,
-            error: "Unauthorized request."
+            error: 'Unauthorized internal request',
+        });
+    }
+
+    const { userId } = await context.params;
+    const sessionUserId = request.nextUrl.searchParams.get('userId');
+
+    if (!sessionUserId || (userId !== sessionUserId)) {
+        return getNextBaseResponse({
+            success: false,
+            status: 403,
+            error: "Forbidden. You can only read your own data."
         });
     }
 
@@ -28,7 +40,7 @@ export async function POST(request: NextRequest) {
             .from('autopilot_data')
             .insert({
                 ...newAutopilotData,
-                user_id: user.id // Force the user_id to be the authenticated user
+                user_id: userId // Force the user_id to be the authenticated user
             })
             .select()
             .single();

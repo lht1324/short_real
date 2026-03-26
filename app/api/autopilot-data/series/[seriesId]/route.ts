@@ -2,7 +2,7 @@ import { NextRequest } from "next/server";
 import { getNextBaseResponse } from "@/utils/getNextBaseResponse";
 import { createSupabaseServiceRoleClient } from "@/lib/supabaseServiceRole";
 import { AutopilotData } from "@/lib/api/types/supabase/AutopilotData";
-import { getIsValidRequestC2S } from "@/utils/getIsValidRequest";
+import { getIsValidRequestS2S } from "@/utils/getIsValidRequest";
 import { schedules } from "@trigger.dev/sdk/v3";
 
 /**
@@ -10,20 +10,28 @@ import { schedules } from "@trigger.dev/sdk/v3";
  * Fetch a specific autopilot series.
  */
 export async function GET(
-    _request: NextRequest,
+    request: NextRequest,
     context: { params: Promise<{ seriesId: string }> }
 ) {
-    const { isValidRequest, user } = await getIsValidRequestC2S();
-
-    if (!isValidRequest || !user?.id) {
+    if (!getIsValidRequestS2S(request)) {
         return getNextBaseResponse({
             success: false,
             status: 401,
-            error: "Unauthorized request."
+            error: 'Unauthorized internal request',
         });
     }
 
+    const sessionUserId = request.nextUrl.searchParams.get('userId');
     const { seriesId } = await context.params;
+
+    if (!sessionUserId) {
+        return getNextBaseResponse({
+            success: false,
+            status: 403,
+            error: "Forbidden. You can only read your own data."
+        });
+    }
+
     const supabase = createSupabaseServiceRoleClient();
 
     try {
@@ -35,7 +43,7 @@ export async function GET(
 
         if (error) throw error;
         
-        if (data.user_id !== user.id) {
+        if (data.user_id !== sessionUserId) {
             return getNextBaseResponse({
                 success: false,
                 status: 403,
@@ -67,17 +75,25 @@ export async function PATCH(
     request: NextRequest,
     context: { params: Promise<{ seriesId: string }> }
 ) {
-    const { isValidRequest, user } = await getIsValidRequestC2S();
-
-    if (!isValidRequest || !user?.id) {
+    if (!getIsValidRequestS2S(request)) {
         return getNextBaseResponse({
             success: false,
             status: 401,
-            error: "Unauthorized request."
+            error: 'Unauthorized internal request',
         });
     }
 
+    const sessionUserId = request.nextUrl.searchParams.get('userId');
     const { seriesId } = await context.params;
+
+    if (!sessionUserId) {
+        return getNextBaseResponse({
+            success: false,
+            status: 403,
+            error: "Forbidden. You can only read your own data."
+        });
+    }
+
     const supabase = createSupabaseServiceRoleClient();
 
     try {
@@ -92,7 +108,7 @@ export async function PATCH(
             return getNextBaseResponse({ success: false, status: 404, error: "Series not found." });
         }
         
-        if (existingData.user_id !== user.id) {
+        if (existingData.user_id !== sessionUserId) {
             return getNextBaseResponse({ success: false, status: 403, error: "Forbidden. You can only update your own series." });
         }
 
@@ -159,20 +175,28 @@ export async function PATCH(
  * Delete a specific autopilot series and cleanup Trigger.dev schedule.
  */
 export async function DELETE(
-    _request: NextRequest,
+    request: NextRequest,
     context: { params: Promise<{ seriesId: string }> }
 ) {
-    const { isValidRequest, user } = await getIsValidRequestC2S();
-
-    if (!isValidRequest || !user?.id) {
+    if (!getIsValidRequestS2S(request)) {
         return getNextBaseResponse({
             success: false,
             status: 401,
-            error: "Unauthorized request."
+            error: 'Unauthorized internal request',
         });
     }
 
+    const sessionUserId = request.nextUrl.searchParams.get('userId');
     const { seriesId } = await context.params;
+
+    if (!sessionUserId) {
+        return getNextBaseResponse({
+            success: false,
+            status: 403,
+            error: "Forbidden. You can only read your own data."
+        });
+    }
+
     const supabase = createSupabaseServiceRoleClient();
 
     try {
@@ -187,7 +211,7 @@ export async function DELETE(
             return getNextBaseResponse({ success: false, status: 404, error: "Series not found." });
         }
         
-        if (existingData.user_id !== user.id) {
+        if (existingData.user_id !== sessionUserId) {
             return getNextBaseResponse({ success: false, status: 403, error: "Forbidden. You can only delete your own series." });
         }
 
