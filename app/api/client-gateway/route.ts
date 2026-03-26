@@ -50,14 +50,9 @@ async function handleGatewayRequest(request: NextRequest) {
             headers: {
                 "Content-Type": "application/json",
                 "x-internal-secret": process.env.INTERNAL_FIRE_AND_FORGET_API_SECRET!,
-            }
+            },
+            body: method !== 'GET' ? JSON.stringify(await request.json().catch(() => ({}))) : undefined,
         };
-
-        // 4. Inject userId into Body for non-GET methods
-        if (method !== 'GET') {
-            const originalBody = await request.json().catch(() => ({}));
-            fetchOptions.body = JSON.stringify({ ...originalBody, userId: userId });
-        }
 
         // 5. Proxy the request and return the response directly
         const response = await fetch(internalApiUrl, fetchOptions);
