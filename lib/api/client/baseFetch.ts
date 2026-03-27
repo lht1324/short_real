@@ -6,9 +6,22 @@ function getRootPath(route: string) {
         : `${process.env.NEXT_PUBLIC_BASE_URL!}`
 }
 
+/**
+ * Automatically wraps '/api/...' routes with the client-gateway.
+ * e.g., /api/video?taskId=123 -> /api/client-gateway?path=/video&taskId=123
+ */
+function getGatewayRoute(route: string) {
+    if (route.startsWith('/api/') && !route.startsWith('/api/client-gateway')) {
+        const [path, query] = route.replace('/api', '').split('?');
+        return `/api/client-gateway?path=${path}${query ? `&${query}` : ""}`;
+    }
+    return route;
+}
+
 export async function getFetch(route: string) {
     const rootPath = getRootPath(route);
-    const response = await fetch(`${rootPath}${route}`, {
+    const gatewayRoute = getGatewayRoute(route);
+    const response = await fetch(`${rootPath}${gatewayRoute}`, {
         method: 'GET',
         headers: {
             'Content-Type': 'application/json',
@@ -29,7 +42,8 @@ export async function getFetch(route: string) {
 
 export async function postFetch(route: string, body?: unknown) {
     const rootPath = getRootPath(route);
-    const response = await fetch(`${rootPath}${route}`, {
+    const gatewayRoute = getGatewayRoute(route);
+    const response = await fetch(`${rootPath}${gatewayRoute}`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -51,7 +65,8 @@ export async function postFetch(route: string, body?: unknown) {
 
 export async function patchFetch(route: string, body?: unknown) {
     const rootPath = getRootPath(route);
-    const response = await fetch(`${rootPath}${route}`, {
+    const gatewayRoute = getGatewayRoute(route);
+    const response = await fetch(`${rootPath}${gatewayRoute}`, {
         method: 'PATCH',
         headers: {
             'Content-Type': 'application/json',
@@ -73,7 +88,8 @@ export async function patchFetch(route: string, body?: unknown) {
 
 export async function deleteFetch(route: string) {
     const rootPath = getRootPath(route);
-    const response = await fetch(`${rootPath}${route}`, {
+    const gatewayRoute = getGatewayRoute(route);
+    const response = await fetch(`${rootPath}${gatewayRoute}`, {
         method: 'DELETE',
         headers: {
             'Content-Type': 'application/json',

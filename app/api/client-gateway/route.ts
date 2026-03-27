@@ -18,6 +18,8 @@ async function handleGatewayRequest(request: NextRequest) {
             error: "Unauthorized: Sign-in required."
         });
     }
+    // 로그인 안 하는 경우도 대비해야 함
+    // Whitelist?
 
     const userId = user.id;
     const method = request.method;
@@ -26,14 +28,6 @@ async function handleGatewayRequest(request: NextRequest) {
 
     if (!targetPath) {
         return getNextBaseResponse({ success: false, status: 400, error: "Missing 'path' param." });
-    }
-
-    // 2. Simple Whitelist Check (Pattern based)
-    const allowedPrefixes = ['/video', '/autopilot-data', '/polar', '/user', '/roadmap', '/music', '/voice'];
-    const isAllowed = allowedPrefixes.some(prefix => targetPath.startsWith(prefix));
-
-    if (!isAllowed) {
-        return getNextBaseResponse({ success: false, status: 403, error: `Path '${targetPath}' is not allowed.` });
     }
 
     // 3. Construct Internal URL & Params (Inject userId into Query)
