@@ -13,6 +13,7 @@ export async function DELETE(request: NextRequest) {
         });
     }
 
+
     const searchParams = request.nextUrl.searchParams;
 
     const subscriptionId = searchParams.get('subscriptionId');
