@@ -2,7 +2,7 @@ import {NextRequest} from "next/server";
 import {videoGenerationTasksServerAPI} from "@/lib/api/server/videoGenerationTasksServerAPI";
 import {VideoGenerationTaskStatus} from "@/lib/api/types/supabase/VideoGenerationTasks";
 import {getNextBaseResponse} from "@/utils/getNextBaseResponse";
-import {getIsValidRequestC2S} from "@/utils/getIsValidRequest";
+import {getIsValidRequestC2S, getIsValidRequestS2S} from "@/utils/getIsValidRequest";
 import {internalFireAndForgetFetch} from "@/utils/internalFetch";
 import {usersServerAPI} from "@/lib/api/server/usersServerAPI";
 import {
@@ -19,24 +19,38 @@ interface RetryPathData {
 
 export async function POST(
     request: NextRequest,
-    { params }: { params: Promise<{ taskId: string }> }
+    context: { params: Promise<{ taskId: string }> }
 ) {
-    const {
-        user,
-        isValidRequest,
-    } = await getIsValidRequestC2S();
-
-    if (!isValidRequest || !user) {
+    if (!getIsValidRequestS2S(request)) {
         return getNextBaseResponse({
             success: false,
             status: 401,
-            error: "Unauthorized request."
+            error: 'Unauthorized internal request',
+        });
+    }
+
+    const searchParams = request.nextUrl.searchParams;
+
+    const { taskId } = await context.params;
+    const sessionUserId = searchParams.get('userId');
+
+    if (!taskId) {
+        return getNextBaseResponse({
+            success: false,
+            status: 400,
+            error: 'Missing required query param: taskId',
+        });
+    }
+
+    if (!sessionUserId) {
+        return getNextBaseResponse({
+            success: false,
+            status: 403,
+            error: "Forbidden. You can only read your own data."
         });
     }
 
     try {
-        const { taskId } = await params;
-
         // Task 데이터 가져오기
         const videoGenerationTask = await videoGenerationTasksServerAPI.getVideoGenerationTaskById(taskId);
 
@@ -90,7 +104,7 @@ export async function POST(
 
         if (requiredCredits > 0) {
             // 인증으로 넘어오는 user 객체가 users 테이블 객체과 같은 값 갖는지 확인
-            const currentUser = await usersServerAPI.getUserByUserId(user.id);
+            const currentUser = await usersServerAPI.getUserByUserId(sessionUserId);
             const currentCredits = currentUser?.credit_count ?? 0;
 
             if (currentCredits < requiredCredits) {
@@ -102,7 +116,7 @@ export async function POST(
             }
 
             // 크레딧 차감 (음수 값 전달)
-            await usersServerAPI.patchUserCreditCountByUserId(user.id, -requiredCredits);
+            await usersServerAPI.patchUserCreditCountByUserId(sessionUserId, -requiredCredits);
         }
 
         const getRetryPathAndRestType = (): RetryPathData | null => {

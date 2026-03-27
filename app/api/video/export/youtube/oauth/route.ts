@@ -1,29 +1,25 @@
 // app/api/youtube/oauth/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { getNextBaseResponse } from "@/utils/getNextBaseResponse";
-import { getIsValidRequestC2S } from "@/utils/getIsValidRequest";
-import {createSupabaseServiceRoleClient} from "@/lib/supabaseServiceRole";
-import {internalFireAndForgetFetch} from "@/utils/internalFetch";
-import {videoGenerationTasksServerAPI} from "@/lib/api/server/videoGenerationTasksServerAPI";
-import {ExportPlatform, ExportStatus} from "@/lib/api/types/supabase/VideoGenerationTasks";
+import { getIsValidRequestS2S } from "@/utils/getIsValidRequest";
+import { createSupabaseServiceRoleClient } from "@/lib/supabaseServiceRole";
+import { internalFireAndForgetFetch } from "@/utils/internalFetch";
+import { videoGenerationTasksServerAPI } from "@/lib/api/server/videoGenerationTasksServerAPI";
+import { ExportPlatform, ExportStatus } from "@/lib/api/types/supabase/VideoGenerationTasks";
 
 export async function GET(request: NextRequest) {
-    const {
-        user,
-        isValidRequest,
-    } = await getIsValidRequestC2S();
-
-    if (!isValidRequest) {
+    if (!getIsValidRequestS2S(request)) {
         return getNextBaseResponse({
             success: false,
             status: 401,
-            error: "Unauthorized request."
+            error: 'Unauthorized internal request',
         });
     }
 
-    const supabase = createSupabaseServiceRoleClient();
+    const searchParams = request.nextUrl.searchParams;
 
-    const taskId = request.nextUrl.searchParams.get('taskId');
+    const taskId = searchParams.get('taskId')
+    const sessionUserId = searchParams.get('userId');
 
     if (!taskId) {
         return getNextBaseResponse({
@@ -33,17 +29,17 @@ export async function GET(request: NextRequest) {
         });
     }
 
+    if (!sessionUserId) {
+        return getNextBaseResponse({
+            success: false,
+            status: 403,
+            error: "Forbidden. You can only read your own data."
+        });
+    }
+
+    const supabase = createSupabaseServiceRoleClient();
+
     try {
-        const userId = user?.id;
-
-        if (!userId) {
-            return getNextBaseResponse({
-                success: false,
-                status: 401,
-                error: 'Unauthorized'
-            });
-        }
-
         const privacySetting = request.nextUrl.searchParams.get('privacySetting');
 
         if (!privacySetting) {
@@ -57,7 +53,7 @@ export async function GET(request: NextRequest) {
         const { data: existingToken } = await supabase
             .from('user_youtube_tokens')
             .select('refresh_token, expires_at')
-            .eq('user_id', userId)
+            .eq('user_id', sessionUserId)
             .single();
 
         if (existingToken?.refresh_token) {
@@ -65,7 +61,7 @@ export async function GET(request: NextRequest) {
             internalFireAndForgetFetch(
                 `${process.env.BASE_URL}/api/video/export/youtube/upload?taskId=${taskId}&privacySetting=${privacySetting}`,
                 { method: 'POST' },
-                { userId }
+                { sessionUserId }
             );
 
             await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, {
@@ -84,7 +80,7 @@ export async function GET(request: NextRequest) {
             access_type: 'offline',
             prompt: 'consent',
             state: encodeURIComponent(JSON.stringify({
-                userId: userId,
+                userId: sessionUserId,
                 taskId: taskId,
                 privacySetting: privacySetting,
             }))

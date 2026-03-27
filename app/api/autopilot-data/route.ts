@@ -10,7 +10,6 @@ import { getIsValidRequestS2S } from "@/utils/getIsValidRequest";
  */
 export async function POST(
     request: NextRequest,
-    context: { params: Promise<{ userId: string }> }
 ) {
     if (!getIsValidRequestS2S(request)) {
         return getNextBaseResponse({
@@ -20,10 +19,9 @@ export async function POST(
         });
     }
 
-    const { userId } = await context.params;
     const sessionUserId = request.nextUrl.searchParams.get('userId');
 
-    if (!sessionUserId || (userId !== sessionUserId)) {
+    if (!sessionUserId) {
         return getNextBaseResponse({
             success: false,
             status: 403,
@@ -40,7 +38,7 @@ export async function POST(
             .from('autopilot_data')
             .insert({
                 ...newAutopilotData,
-                user_id: userId // Force the user_id to be the authenticated user
+                user_id: sessionUserId // Force the user_id to be the authenticated user
             })
             .select()
             .single();

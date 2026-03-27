@@ -1,25 +1,30 @@
 import { NextRequest } from "next/server";
-import { getIsValidRequestC2S } from "@/utils/getIsValidRequest";
+import { getIsValidRequestS2S } from "@/utils/getIsValidRequest";
 import { getNextBaseResponse } from "@/utils/getNextBaseResponse";
 import { usersServerAPI } from "@/lib/api/server/usersServerAPI";
 import { PolarClient } from "@/lib/PolarClient";
 
 export async function DELETE(request: NextRequest) {
-    const {
-        user: sessionUser,
-        isValidRequest,
-    } = await getIsValidRequestC2S();
-
-    if (!isValidRequest || !sessionUser) {
+    if (!getIsValidRequestS2S(request)) {
         return getNextBaseResponse({
             success: false,
             status: 401,
-            error: "Unauthorized request."
+            error: 'Unauthorized internal request',
         });
     }
 
-    const { searchParams } = new URL(request.url);
+    const searchParams = request.nextUrl.searchParams;
+
     const subscriptionId = searchParams.get('subscriptionId');
+    const sessionUserId = searchParams.get('userId');
+
+    if (!sessionUserId) {
+        return getNextBaseResponse({
+            success: false,
+            status: 403,
+            error: "Forbidden. You can only read your own data."
+        });
+    }
 
     if (!subscriptionId) {
         return getNextBaseResponse({
@@ -38,7 +43,7 @@ export async function DELETE(request: NextRequest) {
         // Polar API를 통해 해당 구독이 이 유저의 것인지 확인해야 함.
         // 여기서는 DB의 최신 정보를 가져와서 비교합니다.
         
-        const user = await usersServerAPI.getUserByUserId(sessionUser.id);
+        const user = await usersServerAPI.getUserByUserId(sessionUserId);
         
         if (!user) {
              return getNextBaseResponse({

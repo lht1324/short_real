@@ -1,19 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getIsValidRequestC2S } from '@/utils/getIsValidRequest';
+import { getIsValidRequestS2S } from '@/utils/getIsValidRequest';
 import { getNextBaseResponse } from '@/utils/getNextBaseResponse';
 
 export async function GET(request: NextRequest) {
-    const { user, isValidRequest } = await getIsValidRequestC2S();
-
-    if (!isValidRequest || !user?.id) {
+    if (!getIsValidRequestS2S(request)) {
         return getNextBaseResponse({
             success: false,
             status: 401,
-            error: 'Unauthorized request.',
+            error: 'Unauthorized internal request',
         });
     }
 
-    const taskId = request.nextUrl.searchParams.get('taskId');
+    const searchParams = request.nextUrl.searchParams;
+
+    const taskId = searchParams.get('taskId')
+    const sessionUserId = searchParams.get('userId');
 
     if (!taskId) {
         return getNextBaseResponse({
@@ -23,13 +24,21 @@ export async function GET(request: NextRequest) {
         });
     }
 
+    if (!sessionUserId) {
+        return getNextBaseResponse({
+            success: false,
+            status: 403,
+            error: "Forbidden. You can only read your own data."
+        });
+    }
+
     try {
         const params = new URLSearchParams({
             client_key: process.env.TIKTOK_CLIENT_KEY!,
             scope: 'user.info.basic,video.publish',
             response_type: 'code',
             redirect_uri: `${process.env.BASE_URL}/callback/tiktok`,
-            state: JSON.stringify({ taskId, userId: user.id }),
+            state: JSON.stringify({ taskId, userId: sessionUserId }),
         });
 
         return NextResponse.redirect(`https://www.tiktok.com/v2/auth/authorize?${params}`);

@@ -3,44 +3,40 @@ import {videoServerAPI} from '@/lib/api/server/videoServerAPI';
 import {musicServerAPI} from '@/lib/api/server/musicServerAPI';
 import {generateASSContent} from "@/utils/captionUtils";
 import {videoGenerationTasksServerAPI} from "@/lib/api/server/videoGenerationTasksServerAPI";
-import {FinalVideoMergeData, VideoGenerationTaskStatus} from "@/lib/api/types/supabase/VideoGenerationTasks";
+import {FinalVideoMergeData, VideoGenerationTaskStatus } from "@/lib/api/types/supabase/VideoGenerationTasks";
 import {taskCheckAndCleanupIfCancelled} from "@/utils/taskCheckAndCleanupIfCancelled";
 import {getNextBaseResponse} from "@/utils/getNextBaseResponse";
-import {getIsValidRequestC2S, getIsValidRequestS2S} from "@/utils/getIsValidRequest";
+import {getIsValidRequestS2S} from "@/utils/getIsValidRequest";
 
-export async function POST(request: NextRequest) {
-    // URL에서 파라미터 추출
-    const { searchParams } = new URL(request.url);
-    const taskId = searchParams.get('taskId');
-    const isRetry = searchParams.get('isRetry');
-
-    if (isRetry) {
-        if (!getIsValidRequestS2S(request)) {
-            return getNextBaseResponse({
-                success: false,
-                status: 401,
-                error: 'Unauthorized internal request',
-            });
-        }
-    } else {
-        const {
-            isValidRequest,
-        } = await getIsValidRequestC2S();
-
-        if (!isValidRequest) {
-            return getNextBaseResponse({
-                success: false,
-                status: 401,
-                error: "Unauthorized request."
-            });
-        }
+export async function POST(
+    request: NextRequest,
+) {
+    if (!getIsValidRequestS2S(request)) {
+        return getNextBaseResponse({
+            success: false,
+            status: 401,
+            error: 'Unauthorized internal request',
+        });
     }
+
+    const searchParams = request.nextUrl.searchParams;
+
+    const taskId = searchParams.get('taskId')
+    const sessionUserId = searchParams.get('userId');
 
     if (!taskId) {
         return getNextBaseResponse({
             success: false,
             status: 400,
             error: 'Missing required query param: taskId',
+        });
+    }
+
+    if (!sessionUserId) {
+        return getNextBaseResponse({
+            success: false,
+            status: 403,
+            error: "Forbidden. You can only read your own data."
         });
     }
 
