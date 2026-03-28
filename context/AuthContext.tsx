@@ -75,7 +75,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             const { error } = await supabase.auth.signInWithOAuth({
                 provider: provider,
                 options: {
-                    redirectTo: `${window.location.origin}/callback/auth${redirectTo ? `?redirectTo=${redirectTo}` : ""}`,
+                    redirectTo: `${process.env.NEXT_PUBLIC_BASE_URL}/callback/auth${redirectTo ? `?redirectTo=${redirectTo}` : ""}`,
                     ...getOAuthOptionByProvider(provider),
                 }
             })

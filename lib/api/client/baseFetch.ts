@@ -12,7 +12,7 @@ function getRootPath(route: string) {
  */
 function getGatewayRoute(route: string) {
     if (route.startsWith('/api/') && !route.startsWith('/api/client-gateway')) {
-        const [path, query] = route.replace('/api', '').split('?');
+        const [path, query] = route.split('?');
         return `/api/client-gateway?path=${path}${query ? `&${query}` : ""}`;
     }
     return route;
