@@ -3,6 +3,7 @@ import { getNextBaseResponse } from "@/utils/getNextBaseResponse";
 import { SubscriptionData } from "@/lib/api/types/api/polar/subscriptions/SubscriptionData";
 import { unstable_cache } from "next/cache";
 import { PolarClient } from "@/lib/PolarClient";
+import {getIsValidRequestS2S} from "@/utils/getIsValidRequest";
 
 /**
  * 이메일 기준 구독 데이터를 조회하는 내부 함수 (캐싱 대상)
@@ -70,20 +71,37 @@ const getCachedSubscriptionData = unstable_cache(
  * 이메일을 기준으로 고객의 구독 상품을 조회합니다.
  */
 export async function GET(request: NextRequest) {
+    if (!getIsValidRequestS2S(request)) {
+        return getNextBaseResponse({
+            success: false,
+            status: 401,
+            error: 'Unauthorized internal request',
+        });
+    }
+
+    const searchParams = request.nextUrl.searchParams;
+
+    const email = searchParams.get("email");
+    const sessionUserId = searchParams.get('userId');
+
+    // email 필수 검증
+    if (!email) {
+        return getNextBaseResponse({
+            success: false,
+            status: 400,
+            error: "email is required and must be a string."
+        });
+    }
+
+    if (!sessionUserId) {
+        return getNextBaseResponse({
+            success: false,
+            status: 403,
+            error: "Forbidden. You can only read your own data."
+        });
+    }
+
     try {
-        // Query parameter에서 email 추출
-        const { searchParams } = new URL(request.url);
-        const email = searchParams.get("email");
-
-        // email 필수 검증
-        if (!email) {
-            return getNextBaseResponse({
-                success: false,
-                status: 400,
-                error: "email is required and must be a string."
-            });
-        }
-
         const subscriptionData = await getCachedSubscriptionData(email);
 
         if (!subscriptionData) {

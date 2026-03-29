@@ -91,7 +91,7 @@ async function handleGatewayRequest(request: NextRequest) {
         } else {
             return getNextBaseResponse({
                 success: false,
-                status: 500,
+                status: data?.status ?? 500,
                 error: data?.error ?? "Internal Server Error",
             });
         }
