@@ -330,7 +330,7 @@ export const videoServerAPI = {
             const videoMergeInput = {
                 audio_url: audioUrl,
                 video_urls: JSON.stringify(processedVideoSignedUrlList),
-                ffmpeg_args: "-c:v copy -c:a aac",
+                ffmpeg_args: "-c:v libx264 -preset fast -crf 12 -c:a aac",
             }
             const finalVideoUrl = await replicate.run(
                 "lht1324/ffmpeg-sandbox-2:06262bdc243f9afe6d1b9a8d338ab536044d0604ce4c420c9cde7ee7fe781339",
