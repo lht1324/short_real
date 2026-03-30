@@ -11,6 +11,7 @@ import {
     BASE_SCENE_COUNT_STANDARD,
     BASE_VIDEO_DURATION_STANDARD
 } from "@/lib/ADDITIONAL_CREDIT_AMOUNT";
+import {VideoGenerationTaskStatus} from "@/lib/api/types/supabase/VideoGenerationTasks";
 
 export async function POST(request: NextRequest): Promise<NextResponse<BaseResponse>> {
     const {
@@ -88,6 +89,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<BaseRespo
         }
 
         await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, {
+            status: VideoGenerationTaskStatus.GENERATING_MASTER_STYLE_PROMPT,
             selected_style_id: selectedStyleId,
         });
 
