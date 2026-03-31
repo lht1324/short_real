@@ -134,10 +134,16 @@ export async function PATCH(
             if (updated.is_active && updated.schedule_cron !== "NONE") {
                 // Upsert schedule: create or update if already exists using deduplicationKey
                 await schedules.create({
-                    task: "autopilot-orchestrator",
+                    task: "autopilot-generation-orchestrator",
+                    cron: updated.schedule_cron, // Cron n시간 전으로 맞춰야 함
+                    externalId: `${seriesId}-generation`,
+                    deduplicationKey: `${scheduleKey}-generation`,
+                });
+                await schedules.create({
+                    task: "autopilot-upload-orchestrator",
                     cron: updated.schedule_cron,
-                    externalId: seriesId,
-                    deduplicationKey: scheduleKey,
+                    externalId: `${seriesId}-upload`,
+                    deduplicationKey: `${scheduleKey}-upload`,
                 });
                 console.log(`[Trigger.dev] Schedule synced (Active) for series: ${seriesId}`);
             } else {
