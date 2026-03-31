@@ -12,7 +12,6 @@ import {voiceServerAPI} from "@/lib/api/server/voiceServerAPI";
 
 export async function POST(
     request: NextRequest,
-    { params }: { params: Promise<{ taskId: string, seriesId: string }> }
 ) {
     if (!getIsValidRequestS2S(request)) {
         return getNextBaseResponse({
@@ -25,14 +24,16 @@ export async function POST(
     const supabase = createSupabaseServiceRoleClient();
 
     try {
-        const { taskId, seriesId } = await params;
+        const searchParams = request.nextUrl.searchParams;
+        const taskId = searchParams.get("taskId");
+        const seriesId = searchParams.get("seriesId");
 
         if (!taskId) {
             return getNextBaseResponse({
                 success: false,
                 status: 400,
                 error: 'Task Id is not valid.',
-            })
+            });
         }
 
         if (!seriesId) {
@@ -40,7 +41,7 @@ export async function POST(
                 success: false,
                 status: 400,
                 error: 'Series Id is not valid.',
-            })
+            });
         }
 
         const videoGenerationTask = await videoGenerationTasksServerAPI.getVideoGenerationTaskById(taskId);
@@ -139,7 +140,7 @@ export async function POST(
 
         // Fire and Forget으로 최종 병합 호출 (S2S 인증 지원 필요)
         internalFireAndForgetFetch(
-            `${process.env.BASE_URL}/api/video/merge/final?taskId=${taskId}`,
+            `${process.env.BASE_URL}/api/video/merge/final?taskId=${taskId}&userId=${videoGenerationTask.user_id}`,
             {
                 method: 'POST',
             },

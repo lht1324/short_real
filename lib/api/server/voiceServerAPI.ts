@@ -125,7 +125,15 @@ export const voiceServerAPI = {
             return {
                 audioBuffer: Buffer.from(audioConvertResponse.audioBase64, 'base64'),
                 audioBase64: audioConvertResponse.audioBase64,
-                subtitleSegmentList: subtitleSegments,
+                subtitleSegmentList: subtitleSegments.map((subtitleSegment) => {
+                    return {
+                        ...subtitleSegment,
+                        word: subtitleSegment.word
+                            .replaceAll('--', '...')
+                            .replaceAll('—', '...')
+                            .replaceAll(/["\u201C\u201D]/g, ''),
+                    }
+                }),
             };
             
         } catch (error) {

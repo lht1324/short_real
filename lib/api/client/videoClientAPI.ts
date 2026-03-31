@@ -9,10 +9,7 @@ export const videoClientAPI = {
      */
     async postVideo(taskId: string, userId: string, selectedStyleId: string): Promise<boolean> {
         try {
-            const response = await postFetch(`/api/video?taskId=${taskId}`, {
-                userId: userId,
-                selectedStyleId: selectedStyleId,
-            });
+            const response = await postFetch(`/api/video?taskId=${taskId}&selectedStyleId=${selectedStyleId}`);
 
             if (!response.ok) {
                 throw Error(`HTTP error! status: ${response.status}`);

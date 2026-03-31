@@ -721,7 +721,10 @@ const VideoPlayerPanel = forwardRef<VideoPlayerHandle, VideoPlayerPanelProps>(({
                                                 ...getPairedCaptionStyle(pairedSegmentData.isActive),
                                             }}
                                         >
-                                            {pairedSegmentData.word}{(index + 1) % 2 === 1 ? ' ' : ''}
+                                            {pairedSegmentData.word
+                                                .replaceAll('—', '...')
+                                                .replace(/["\u201C\u201D]/g, '')
+                                            }{(index + 1) % 2 === 1 ? ' ' : ''}
                                         </span>
                                     })}
                                 </p>

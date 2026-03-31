@@ -60,6 +60,7 @@ export async function POST(
             niche_preset_id: nichePresetId,
             niche_value: nicheValue,
             voice_id: voiceId,
+            style_id: styleId,
             caption_config: captionConfig,
         }: AutopilotData = autopilotData;
 
@@ -109,6 +110,8 @@ export async function POST(
             status: VideoGenerationTaskStatus.GENERATING_MASTER_STYLE_PROMPT,
             narration_script: narrationScript,
             selected_voice_id: voiceId,
+            selected_style_id: styleId,
+            series_id: seriesId,
             // Autopilot에서는 기본적으로 9:16 등의 설정을 어디서 가져올지 고민 필요하나, 
             // 현재는 씬 분할 단계로 넘어가기 위한 최소 정보만 저장
         });
@@ -234,7 +237,7 @@ export async function POST(
                 // 숏폼 기본 해상도 및 자막 위치 설정 (1080x1920 기준)
                 videoWidth: 1080,
                 videoHeight: 1920,
-                captionAreaTop: 1400, // 하단 자막 위치 (예시)
+                captionAreaTop: Math.round((captionConfig.captionPosition / 100) * (1920 - ((captionConfig.fontSize * 2) + 84))),
                 captionAreaVerticalPadding: 40,
                 captionOneLineHeight: captionConfig.fontSize,
 
@@ -250,7 +253,7 @@ export async function POST(
 
         // 10. 비디오 생성 엔드포인트 호출 (Fire and Forget)
         internalFireAndForgetFetch(
-            `${process.env.BASE_URL}/api/video?taskId=${taskId}`,
+            `${process.env.BASE_URL}/api/video?taskId=${taskId}&userId=${userId}&selectedStyleId=${styleId}`,
             {
                 method: 'POST',
             },
@@ -267,6 +270,7 @@ export async function POST(
         });
     } catch (error) {
         console.error("Error in POST /api/autopilot/video-metadata:", error);
+
         return getNextBaseResponse({
             status: 500,
             success: false,

@@ -26,6 +26,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<BaseRespo
 
     const taskId = searchParams.get('taskId')
     const sessionUserId = searchParams.get('userId');
+    const selectedStyleId = searchParams.get('selectedStyleId');
 
     if (!taskId) {
         return getNextBaseResponse({
@@ -42,12 +43,6 @@ export async function POST(request: NextRequest): Promise<NextResponse<BaseRespo
             error: "Forbidden. You can only read your own data."
         });
     }
-
-    const {
-        selectedStyleId,
-    }: {
-        selectedStyleId: string;
-    } = await request.json();
 
     try {
         const videoGenerationTask = await videoGenerationTasksServerAPI.getVideoGenerationTaskById(taskId);
@@ -66,6 +61,14 @@ export async function POST(request: NextRequest): Promise<NextResponse<BaseRespo
                 success: false,
                 status: 404,
                 error: "User not found."
+            });
+        }
+
+        if (!selectedStyleId) {
+            return getNextBaseResponse({
+                success: false,
+                status: 400,
+                error: "Style is not selected."
             });
         }
 

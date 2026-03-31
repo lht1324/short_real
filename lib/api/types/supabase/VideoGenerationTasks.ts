@@ -26,6 +26,7 @@ export interface VideoGenerationTask {
     is_generation_failed?: boolean; // boolean, default false - 실패 여부 (Retry 시 기존 status 조회하기)
     export_status?: ExportStatus | null;
     export_platform?: ExportPlatform | null;
+    series_id?: string;
     created_at?: string; // timestamp with time zone, default CURRENT_TIMESTAMP
     updated_at?: string;
 }

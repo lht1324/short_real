@@ -6,6 +6,7 @@ import {taskCheckAndCleanupIfCancelled} from "@/utils/taskCheckAndCleanupIfCance
 import {VideoGenerationTaskStatus} from "@/lib/api/types/supabase/VideoGenerationTasks";
 import {getNextBaseResponse} from "@/utils/getNextBaseResponse";
 import {getIsValidRequestS2S} from "@/utils/getIsValidRequest";
+import {internalFireAndForgetFetch} from "@/utils/internalFetch";
 
 export async function POST(request: NextRequest) {
     if (!getIsValidRequestS2S(request)) {
@@ -99,7 +100,16 @@ export async function POST(request: NextRequest) {
                         console.log(`Successfully uploaded ${musicFileList.length} music files for task: ${taskId}`);
 
                         // Task 상태 'EDITOR'로 업데이트
-                        await videoGenerationTasksServerAPI.patchVideoGenerationTaskStatus(taskId, VideoGenerationTaskStatus.EDITOR);
+                        if (videoGenerationTask.final_video_merge_data) {
+                            internalFireAndForgetFetch(
+                                `${process.env.BASE_URL}/api/autopilot/music?taskId=${taskId}&seriesId=${videoGenerationTask.series_id}`,
+                                {
+                                    method: 'POST',
+                                },
+                            );
+                        } else {
+                            await videoGenerationTasksServerAPI.patchVideoGenerationTaskStatus(taskId, VideoGenerationTaskStatus.EDITOR);
+                        }
                     } else {
                         console.error(`Failed to upload music files for task: ${taskId}`, uploadResult.error);
                     }

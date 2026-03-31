@@ -9,6 +9,7 @@ export interface AutopilotData {
     niche_preset_id: string | null; // 프리셋인 경우 id, 커스텀인 경우 undefined
     niche_value: string; // 프리셋인 경우 프리셋 label, 커스텀인 경우 사용자가 입력한 프롬프트
     voice_id: string;
+    style_id?: string;
     platforms: Record<ExportPlatform, boolean>;
     schedule_cron: string;
     topic_history: string[];
