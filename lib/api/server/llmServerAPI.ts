@@ -24,7 +24,85 @@ import { logger } from "@trigger.dev/sdk";
 import { OpenRouterClient, OpenRouterModel } from "@/lib/OpenRouterClient";
 import {STYLE_DATA_LIST} from "@/lib/styles";
 
+const POST_AUTOPILOT_NICHE_TOPIC_PROMPT = `
+<developer_instruction>
+  <role>
+    You are a Content Strategy Expert specializing in viral short-form video topic discovery (e.g., YouTube Shorts, Reels, TikTok).
+  </role>
+  <input_data_interpretation>
+    - <niche_label>: The primary category or brand name of the content series.
+    - <niche_system_role>: The specific persona and expertise required for this niche.
+    - <discovery_instruction>: The strategic goal and specific criteria for finding the next topic.
+    - <topic_history>: A list of previously covered topics to ensure absolute uniqueness and variety.
+  </input_data_interpretation>
+  <processing_logic>
+    1. Analyze the provided <niche_label>, <niche_system_role>, and <discovery_instruction>.
+    2. Review the <topic_history> to identify and avoid any redundant or overlapping subjects.
+    3. Brainstorm a fresh, high-impact topic that precisely fulfills the <discovery_instruction>.
+    4. Ensure the topic is "hook-ready" and likely to captivate an audience within the first 3 seconds.
+    5. Maintain the specific tone and persona defined in <niche_system_role>.
+  </processing_logic>
+  <output_schema>
+    Return the JSON object in a compact, single-line format, removing all extra whitespace and newlines within fields.
+    {
+      "new_topic": "string (The final selected specific topic)",
+      "reasoning": "string (Brief technical justification for the selection)"
+    }
+  </output_schema>
+</developer_instruction>
+`
+
 export const llmServerAPI = {
+    async postAutopilotNicheTopic(
+        nicheValue: string,
+        topicHistory: string[],
+        discoveryInstruction: string,
+        systemRole: string
+    ): Promise<string | null> {
+        try {
+            const userMessage = `
+<input_data>
+  <niche_label>${nicheValue}</niche_label>
+  <niche_system_role>${systemRole}</niche_system_role>
+  <discovery_instruction>${discoveryInstruction}</discovery_instruction>
+  <topic_history>
+    ${topicHistory.length > 0 ? topicHistory.join('\n') : 'No history yet.'}
+  </topic_history>
+</input_data>
+
+Instruction: Process the input data and generate the next viral topic based on the provided niche context and history. Return the result strictly in JSON format.
+`;
+
+            const client = new OpenRouterClient();
+            const generatedContent = await client.createCompletion({
+                model: OpenRouterModel.DEEPSEEK_V_3_2,
+                systemMessage: POST_AUTOPILOT_NICHE_TOPIC_PROMPT,
+                userMessage: userMessage,
+                maxCompletionTokens: 2048,
+                reasoning: true, // DeepSeek Reasoning 활성화
+                temperature: 0.9,
+            }, "postAutopilotNicheTopic()");
+
+            if (!generatedContent) return null;
+
+            try {
+                const parsedData: {
+                    new_topic: string;
+                    reasoning: string;
+                } = cleanAndParseJSON(generatedContent);
+
+                return parsedData.new_topic || null;
+            } catch (parseError) {
+                console.error('Failed to parse autopilot topic JSON response:', parseError);
+                return null;
+            }
+
+        } catch (error) {
+            console.error("Error in postAutopilotNicheTopic():", error);
+            return null;
+        }
+    },
+
     async postScript(userPrompt: string): Promise<ScriptGenerationResponse | null> {
         try {
             const client = new OpenRouterClient();

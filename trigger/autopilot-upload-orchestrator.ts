@@ -14,7 +14,7 @@ export const autopilotUploadOrchestrator = schedules.task({
             timestamp: payload.timestamp,
         });
 
-        const seriesId = payload.externalId;
+        const seriesId = payload.externalId?.replace('-upload', '');
         if (!seriesId) {
             logger.error("[Autopilot] Missing seriesId (externalId) in payload");
             return;

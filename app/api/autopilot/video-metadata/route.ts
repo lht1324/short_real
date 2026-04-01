@@ -55,6 +55,23 @@ export async function POST(
             });
         }
 
+        /**
+         * Stash ToDo
+         * 1. 주제 발굴 (Topic Discovery):
+         *    - llmServerAPI.postAutopilotNicheTopic() 호출
+         *    - 파라미터: nicheValue, topic_history, discoveryInstruction, systemRole
+         *    - discoveryInstruction과 systemRole은 nichePresetId가 있으면 NICHE_DATA_LIST에서 추출, 없으면 기본값 사용
+         * 
+         * 2. 히스토리 업데이트 (Queue Management):
+         *    - 생성된 newTopic을 topic_history 배열에 추가
+         *    - 배열 크기가 180개를 초과하면 가장 오래된 항목(shift) 제거
+         *    - Supabase의 'autopilot_data' 테이블에 업데이트된 topic_history와 last_run_at(현재시간) 저장
+         * 
+         * 3. 스크립트 프롬프트 반영:
+         *    - 선정된 newTopic을 아래 userPrompt의 <topic> 태그 안에 주입하여 
+         *      단순 니치 이름이 아닌 "구체적인 주제"로 대본을 쓰도록 수정
+         */
+
         const {
             user_id: userId,
             niche_preset_id: nichePresetId,
@@ -86,7 +103,7 @@ export async function POST(
 </input_data>
 `;
 
-        // 2. 스크립트 생성
+            // 2. 스크립트 생성
         const postScriptResult = await llmServerAPI.postScript(userPrompt);
 
         if (!postScriptResult?.data) {
