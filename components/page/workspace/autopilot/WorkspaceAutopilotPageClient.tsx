@@ -265,6 +265,7 @@ function WorkspaceAutopilotPageClient() {
                     [ExportPlatform.INSTAGRAM]: false,
                 },
                 schedule_cron: '0 10 * * *',
+                user_timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
                 topic_history: [],
                 caption_config: INITIAL_CAPTION_CONFIG_STATE,
             };

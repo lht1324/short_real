@@ -12,6 +12,7 @@ export interface AutopilotData {
     style_id?: string;
     platforms: Record<ExportPlatform, boolean>;
     schedule_cron: string;
+    user_timezone: string;
     topic_history: string[];
     caption_config: CaptionConfigState;
     last_run_at?: string; // timestamptz

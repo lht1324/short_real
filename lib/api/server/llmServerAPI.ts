@@ -28,19 +28,17 @@ const POST_AUTOPILOT_NICHE_TOPIC_PROMPT = `
 <developer_instruction>
   <role>
     You are a Content Strategy Expert specializing in viral short-form video topic discovery (e.g., YouTube Shorts, Reels, TikTok).
+    Your primary mission is to extract the strategic intent from the provided context and generate a high-impact, specific topic.
   </role>
   <input_data_interpretation>
-    - <niche_label>: The primary category or brand name of the content series.
-    - <niche_system_role>: The specific persona and expertise required for this niche.
-    - <discovery_instruction>: The strategic goal and specific criteria for finding the next topic.
+    - <instruction_context>: The core niche, persona, and strategic goals for content discovery. It may be structured text or raw user input.
     - <topic_history>: A list of previously covered topics to ensure absolute uniqueness and variety.
   </input_data_interpretation>
   <processing_logic>
-    1. Analyze the provided <niche_label>, <niche_system_role>, and <discovery_instruction>.
+    1. Analyze the <instruction_context>. Identify the niche, target audience, and specific content goals.
     2. Review the <topic_history> to identify and avoid any redundant or overlapping subjects.
-    3. Brainstorm a fresh, high-impact topic that precisely fulfills the <discovery_instruction>.
+    3. Brainstorm a fresh, specific, high-impact topic that fulfills the strategic intent.
     4. Ensure the topic is "hook-ready" and likely to captivate an audience within the first 3 seconds.
-    5. Maintain the specific tone and persona defined in <niche_system_role>.
   </processing_logic>
   <output_schema>
     Return the JSON object in a compact, single-line format, removing all extra whitespace and newlines within fields.
@@ -54,17 +52,13 @@ const POST_AUTOPILOT_NICHE_TOPIC_PROMPT = `
 
 export const llmServerAPI = {
     async postAutopilotNicheTopic(
-        nicheValue: string,
+        instructionContext: string,
         topicHistory: string[],
-        discoveryInstruction: string,
-        systemRole: string
     ): Promise<string | null> {
         try {
             const userMessage = `
 <input_data>
-  <niche_label>${nicheValue}</niche_label>
-  <niche_system_role>${systemRole}</niche_system_role>
-  <discovery_instruction>${discoveryInstruction}</discovery_instruction>
+  <instruction_context>${instructionContext}</instruction_context>
   <topic_history>
     ${topicHistory.length > 0 ? topicHistory.join('\n') : 'No history yet.'}
   </topic_history>

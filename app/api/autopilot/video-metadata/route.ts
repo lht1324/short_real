@@ -55,23 +55,6 @@ export async function POST(
             });
         }
 
-        /**
-         * Stash ToDo
-         * 1. 주제 발굴 (Topic Discovery):
-         *    - llmServerAPI.postAutopilotNicheTopic() 호출
-         *    - 파라미터: nicheValue, topic_history, discoveryInstruction, systemRole
-         *    - discoveryInstruction과 systemRole은 nichePresetId가 있으면 NICHE_DATA_LIST에서 추출, 없으면 기본값 사용
-         * 
-         * 2. 히스토리 업데이트 (Queue Management):
-         *    - 생성된 newTopic을 topic_history 배열에 추가
-         *    - 배열 크기가 180개를 초과하면 가장 오래된 항목(shift) 제거
-         *    - Supabase의 'autopilot_data' 테이블에 업데이트된 topic_history와 last_run_at(현재시간) 저장
-         * 
-         * 3. 스크립트 프롬프트 반영:
-         *    - 선정된 newTopic을 아래 userPrompt의 <topic> 태그 안에 주입하여 
-         *      단순 니치 이름이 아닌 "구체적인 주제"로 대본을 쓰도록 수정
-         */
-
         const {
             user_id: userId,
             niche_preset_id: nichePresetId,
@@ -79,17 +62,44 @@ export async function POST(
             voice_id: voiceId,
             style_id: styleId,
             caption_config: captionConfig,
+            topic_history: topicHistory = [],
         }: AutopilotData = autopilotData;
 
-        // 1. 프롬프트 구성 (Preset / Custom 모드)
+        // 1. 주제 발굴 (Topic Discovery)
         const nicheData = nichePresetId
             ? NICHE_DATA_LIST.find(n => n.uiMetadata.id === nichePresetId)
             : null;
 
+        const instructionContext = nicheData
+            ? `
+[Niche Category]: ${nicheData.uiMetadata.label}
+[Persona/Style]: ${nicheData.generationParams.systemRole}
+[Discovery Goal]: ${nicheData.generationParams.topicDiscoveryPrompt}
+`.trim()
+            : nicheValue;
+
+        const newTopic = await llmServerAPI.postAutopilotNicheTopic(
+            instructionContext,
+            topicHistory
+        );
+
+        // 2. 히스토리 업데이트 및 DB 저장
+        const finalTopic = newTopic || nicheValue;
+        const updatedHistory = [finalTopic, ...topicHistory].slice(0, 180);
+
+        await supabase
+            .from('autopilot_data')
+            .update({
+                topic_history: updatedHistory,
+                last_run_at: new Date().toISOString()
+            })
+            .eq('id', seriesId);
+
+        // 3. 프롬프트 구성 (Preset / Custom 모드)
         const userPrompt = nicheData
             ? `
 <input_data>
-  <topic>${nicheValue}</topic>
+  <topic>${finalTopic}</topic>
   <style_guidelines>
     <system_role>${nicheData.generationParams.systemRole}</system_role>
     <instruction>${nicheData.generationParams.scriptInstruction}</instruction>
@@ -99,7 +109,7 @@ export async function POST(
 `
             : `
 <input_data>
-  <topic>${nicheValue}</topic>
+  <topic>${finalTopic}</topic>
 </input_data>
 `;
 
