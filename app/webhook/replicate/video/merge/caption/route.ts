@@ -1,9 +1,9 @@
 import { NextRequest } from 'next/server';
 import { createSupabaseServiceRoleClient } from '@/lib/supabaseServiceRole';
 import {videoGenerationTasksServerAPI} from "@/lib/api/server/videoGenerationTasksServerAPI";
-import {taskCheckAndCleanupIfCancelled} from "@/utils/taskCheckAndCleanupIfCancelled";
-import {getNextBaseResponse} from "@/utils/getNextBaseResponse";
-import {internalFireAndForgetFetch} from "@/utils/internalFetch";
+import {taskCheckAndCleanupIfCancelled} from "@/lib/utils/taskCheckAndCleanupIfCancelled";
+import {getNextBaseResponse} from "@/lib/utils/getNextBaseResponse";
+import {internalFireAndForgetFetch} from "@/lib/utils/internalFetch";
 
 export async function POST(request: NextRequest) {
     const supabase = createSupabaseServiceRoleClient();

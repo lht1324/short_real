@@ -1,8 +1,8 @@
 import { NextRequest } from "next/server";
-import { getNextBaseResponse } from "@/utils/getNextBaseResponse";
+import { getNextBaseResponse } from "@/lib/utils/getNextBaseResponse";
 import { createSupabaseServiceRoleClient } from "@/lib/supabaseServiceRole";
 import { AutopilotData } from "@/lib/api/types/supabase/AutopilotData";
-import { getIsValidRequestS2S } from "@/utils/getIsValidRequest";
+import { getIsValidRequestS2S } from "@/lib/utils/getIsValidRequest";
 
 /**
  * GET /api/autopilot-data/user/[userId]

@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import { tasks } from "@trigger.dev/sdk/v3";
-import { getNextBaseResponse } from "@/utils/getNextBaseResponse";
-import { getIsValidRequestS2S } from "@/utils/getIsValidRequest";
+import { getNextBaseResponse } from "@/lib/utils/getNextBaseResponse";
+import { getIsValidRequestS2S } from "@/lib/utils/getIsValidRequest";
 import { postMasterStyle } from "@/trigger/post-master-style";
 
 export async function POST(request: NextRequest) {

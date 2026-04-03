@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { musicServerAPI } from "@/lib/api/server/musicServerAPI";
-import {getNextBaseResponse} from "@/utils/getNextBaseResponse";
+import {getNextBaseResponse} from "@/lib/utils/getNextBaseResponse";
 
 export async function GET(request: NextRequest) {
     try {

@@ -1,9 +1,9 @@
 import { NextRequest } from "next/server";
-import { getNextBaseResponse } from "@/utils/getNextBaseResponse";
+import { getNextBaseResponse } from "@/lib/utils/getNextBaseResponse";
 import { SubscriptionData } from "@/lib/api/types/api/polar/subscriptions/SubscriptionData";
 import { unstable_cache } from "next/cache";
 import { PolarClient } from "@/lib/PolarClient";
-import {getIsValidRequestS2S} from "@/utils/getIsValidRequest";
+import {getIsValidRequestS2S} from "@/lib/utils/getIsValidRequest";
 
 /**
  * 이메일 기준 구독 데이터를 조회하는 내부 함수 (캐싱 대상)

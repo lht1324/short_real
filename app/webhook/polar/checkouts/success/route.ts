@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { getNextBaseResponse } from "@/utils/getNextBaseResponse";
+import { getNextBaseResponse } from "@/lib/utils/getNextBaseResponse";
 import { SubscriptionPlan } from "@/lib/api/types/supabase/Users";
 import { usersServerAPI } from "@/lib/api/server/usersServerAPI";
 import { PolarClient } from "@/lib/PolarClient";

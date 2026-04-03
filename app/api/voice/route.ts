@@ -1,5 +1,5 @@
 import { voiceServerAPI } from '@/lib/api/server/voiceServerAPI';
-import {getNextBaseResponse} from "@/utils/getNextBaseResponse";
+import {getNextBaseResponse} from "@/lib/utils/getNextBaseResponse";
 import {unstable_cache} from "next/cache";
 
 /**

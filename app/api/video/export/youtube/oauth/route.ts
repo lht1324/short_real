@@ -1,9 +1,9 @@
 // app/api/youtube/oauth/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { getNextBaseResponse } from "@/utils/getNextBaseResponse";
-import { getIsValidRequestS2S } from "@/utils/getIsValidRequest";
+import { getNextBaseResponse } from "@/lib/utils/getNextBaseResponse";
+import { getIsValidRequestS2S } from "@/lib/utils/getIsValidRequest";
 import { createSupabaseServiceRoleClient } from "@/lib/supabaseServiceRole";
-import { internalFireAndForgetFetch } from "@/utils/internalFetch";
+import { internalFireAndForgetFetch } from "@/lib/utils/internalFetch";
 import { videoGenerationTasksServerAPI } from "@/lib/api/server/videoGenerationTasksServerAPI";
 import { ExportPlatform, ExportStatus } from "@/lib/api/types/supabase/VideoGenerationTasks";
 

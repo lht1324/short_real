@@ -10,7 +10,7 @@ import {
     VideoGenerationTask,
     VideoGenerationTaskStatus
 } from "@/lib/api/types/supabase/VideoGenerationTasks";
-import {getNextBaseResponse} from "@/utils/getNextBaseResponse";
+import {getNextBaseResponse} from "@/lib/utils/getNextBaseResponse";
 import {usersServerAPI} from "@/lib/api/server/usersServerAPI";
 import {createSupabaseServer} from "@/lib/supabaseServer";
 import {SCENE_SEGMENTATION_STANDARD} from "@/lib/ADDITIONAL_CREDIT_AMOUNT";

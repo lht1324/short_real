@@ -1,7 +1,7 @@
 // app/api/callback/youtube/route.ts
 import {NextRequest, NextResponse} from 'next/server';
 import {createSupabaseServiceRoleClient} from "@/lib/supabaseServiceRole";
-import {internalFireAndForgetFetch} from "@/utils/internalFetch";
+import {internalFireAndForgetFetch} from "@/lib/utils/internalFetch";
 import {videoGenerationTasksServerAPI} from "@/lib/api/server/videoGenerationTasksServerAPI";
 import {ExportPlatform, ExportStatus} from "@/lib/api/types/supabase/VideoGenerationTasks";
 

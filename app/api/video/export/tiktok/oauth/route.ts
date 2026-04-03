@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getIsValidRequestS2S } from '@/utils/getIsValidRequest';
-import { getNextBaseResponse } from '@/utils/getNextBaseResponse';
+import { getIsValidRequestS2S } from '@/lib/utils/getIsValidRequest';
+import { getNextBaseResponse } from '@/lib/utils/getNextBaseResponse';
 
 export async function GET(request: NextRequest) {
     if (!getIsValidRequestS2S(request)) {

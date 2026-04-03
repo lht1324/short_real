@@ -1,7 +1,7 @@
 // app/api/youtube/upload/route.ts
 import { NextRequest } from 'next/server';
 import { createSupabaseServiceRoleClient } from '@/lib/supabaseServiceRole';
-import { getNextBaseResponse } from '@/utils/getNextBaseResponse';
+import { getNextBaseResponse } from '@/lib/utils/getNextBaseResponse';
 import {
     PostVideoExportYoutubeUploadRequest
 } from "@/lib/api/types/api/video/export/youtube/upload/PostVideoExportYoutubeUploadRequest";
@@ -10,7 +10,7 @@ import {PostgrestSingleResponse} from "@supabase/supabase-js";
 import {DownloadResult} from "@supabase/storage-js";
 import {videoGenerationTasksServerAPI} from "@/lib/api/server/videoGenerationTasksServerAPI";
 import {ExportPlatform, ExportStatus} from "@/lib/api/types/supabase/VideoGenerationTasks";
-import {getIsValidRequestS2S} from "@/utils/getIsValidRequest";
+import {getIsValidRequestS2S} from "@/lib/utils/getIsValidRequest";
 
 export async function POST(request: NextRequest) {
     if (!getIsValidRequestS2S(request)) {

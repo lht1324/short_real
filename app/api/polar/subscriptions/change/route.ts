@@ -1,11 +1,11 @@
 import { NextRequest } from "next/server";
-import { getNextBaseResponse } from "@/utils/getNextBaseResponse";
+import { getNextBaseResponse } from "@/lib/utils/getNextBaseResponse";
 import { usersServerAPI } from "@/lib/api/server/usersServerAPI";
 import { getCachedPolarProducts } from "@/lib/api/cached/polarCached";
 import {
     PostPolarSubscriptionsChangeRequest
 } from "@/lib/api/types/api/polar/subscriptions/change/PostPolarSubscriptionsChangeRequest";
-import {getIsValidRequestC2S, getIsValidRequestS2S} from "@/utils/getIsValidRequest";
+import {getIsValidRequestC2S, getIsValidRequestS2S} from "@/lib/utils/getIsValidRequest";
 import { PolarClient } from "@/lib/PolarClient";
 
 /**

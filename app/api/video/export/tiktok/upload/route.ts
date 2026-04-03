@@ -2,12 +2,12 @@
 
 import { NextRequest } from 'next/server';
 import { createSupabaseServiceRoleClient } from '@/lib/supabaseServiceRole';
-import { getNextBaseResponse } from '@/utils/getNextBaseResponse';
+import { getNextBaseResponse } from '@/lib/utils/getNextBaseResponse';
 import { PostgrestSingleResponse } from '@supabase/supabase-js';
 import { DownloadResult } from '@supabase/storage-js';
 import { videoGenerationTasksServerAPI } from '@/lib/api/server/videoGenerationTasksServerAPI';
 import { UserTikTokToken } from '@/lib/api/types/supabase/UserTikTokToken';
-import {getIsValidRequestS2S} from "@/utils/getIsValidRequest";
+import {getIsValidRequestS2S} from "@/lib/utils/getIsValidRequest";
 import {ExportPlatform, ExportStatus} from "@/lib/api/types/supabase/VideoGenerationTasks";
 import JSONbig from 'json-bigint';
 

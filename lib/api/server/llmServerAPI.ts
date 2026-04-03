@@ -19,7 +19,7 @@ import { Entity, InitialEntityManifestItem } from "@/lib/api/types/open-ai/Entit
 import { MasterStyleInfo } from "@/lib/api/types/supabase/MasterStyleInfo";
 import { FluxPrompt } from "@/lib/api/types/open-ai/FluxPrompt";
 import { MusicGenerationData } from "@/lib/api/types/suno-api/MusicGenerationData";
-import { cleanAndParseJSON } from "@/utils/jsonUtils";
+import { cleanAndParseJSON } from "@/lib/utils/jsonUtils";
 import { logger } from "@trigger.dev/sdk";
 import { OpenRouterClient, OpenRouterModel } from "@/lib/OpenRouterClient";
 import {STYLE_DATA_LIST} from "@/lib/styles";

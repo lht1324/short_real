@@ -1,5 +1,5 @@
 import { logger, schedules } from "@trigger.dev/sdk/v3";
-import { internalFireAndForgetFetch } from "@/utils/internalFetch";
+import { internalFireAndForgetFetch } from "@/lib/utils/internalFetch";
 
 /**
  * Autopilot Orchestrator Task

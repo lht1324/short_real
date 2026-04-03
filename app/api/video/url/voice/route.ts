@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { videoServerAPI } from "@/lib/api/server/videoServerAPI";
-import {getNextBaseResponse} from "@/utils/getNextBaseResponse";
+import {getNextBaseResponse} from "@/lib/utils/getNextBaseResponse";
 
 export async function GET(request: NextRequest) {
     try {

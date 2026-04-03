@@ -1,8 +1,8 @@
 import { NextRequest } from "next/server";
 import { videoGenerationTasksServerAPI } from "@/lib/api/server/videoGenerationTasksServerAPI";
 import { VideoGenerationTask } from "@/lib/api/types/supabase/VideoGenerationTasks";
-import { getNextBaseResponse } from "@/utils/getNextBaseResponse";
-import { getIsValidRequestS2S } from "@/utils/getIsValidRequest";
+import { getNextBaseResponse } from "@/lib/utils/getNextBaseResponse";
+import { getIsValidRequestS2S } from "@/lib/utils/getIsValidRequest";
 
 export async function GET(
     request: NextRequest,

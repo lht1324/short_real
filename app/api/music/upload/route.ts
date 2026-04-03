@@ -2,11 +2,11 @@ import { NextRequest } from "next/server";
 import { GeneratedMusicMetadata } from "@/lib/api/types/suno-api/SunoAPIResponses";
 import { musicServerAPI } from "@/lib/api/server/musicServerAPI";
 import {videoGenerationTasksServerAPI} from "@/lib/api/server/videoGenerationTasksServerAPI";
-import {taskCheckAndCleanupIfCancelled} from "@/utils/taskCheckAndCleanupIfCancelled";
+import {taskCheckAndCleanupIfCancelled} from "@/lib/utils/taskCheckAndCleanupIfCancelled";
 import {VideoGenerationTaskStatus} from "@/lib/api/types/supabase/VideoGenerationTasks";
-import {getNextBaseResponse} from "@/utils/getNextBaseResponse";
-import {getIsValidRequestS2S} from "@/utils/getIsValidRequest";
-import {internalFireAndForgetFetch} from "@/utils/internalFetch";
+import {getNextBaseResponse} from "@/lib/utils/getNextBaseResponse";
+import {getIsValidRequestS2S} from "@/lib/utils/getIsValidRequest";
+import {internalFireAndForgetFetch} from "@/lib/utils/internalFetch";
 
 export async function POST(request: NextRequest) {
     if (!getIsValidRequestS2S(request)) {

@@ -1,10 +1,10 @@
 import {NextRequest} from "next/server";
-import {getIsValidRequestS2S} from "@/utils/getIsValidRequest";
-import {getNextBaseResponse} from "@/utils/getNextBaseResponse";
+import {getIsValidRequestS2S} from "@/lib/utils/getIsValidRequest";
+import {getNextBaseResponse} from "@/lib/utils/getNextBaseResponse";
 import {videoGenerationTasksServerAPI} from "@/lib/api/server/videoGenerationTasksServerAPI";
 import {llmServerAPI} from "@/lib/api/server/llmServerAPI";
 import {voiceServerAPI} from "@/lib/api/server/voiceServerAPI";
-import {internalFireAndForgetFetch} from "@/utils/internalFetch";
+import {internalFireAndForgetFetch} from "@/lib/utils/internalFetch";
 import {createSupabaseServiceRoleClient} from "@/lib/supabaseServiceRole";
 import {AutopilotData} from "@/lib/api/types/supabase/AutopilotData";
 import {

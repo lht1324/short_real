@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getIsValidRequestC2S } from "@/utils/getIsValidRequest";
-import { getNextBaseResponse } from "@/utils/getNextBaseResponse";
+import { getIsValidRequestC2S } from "@/lib/utils/getIsValidRequest";
+import { getNextBaseResponse } from "@/lib/utils/getNextBaseResponse";
 
 /**
  * Client Gateway Handler

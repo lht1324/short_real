@@ -5,7 +5,7 @@ import { postImage } from "@/trigger/post-image";
 import { SceneData, VideoGenerationTaskStatus } from "@/lib/api/types/supabase/VideoGenerationTasks";
 import { MasterStyleInfo } from "@/lib/api/types/supabase/MasterStyleInfo";
 import { InitialEntityManifestItem } from "@/lib/api/types/open-ai/Entity";
-import { internalFireAndForgetFetch } from "@/utils/internalFetch";
+import { internalFireAndForgetFetch } from "@/lib/utils/internalFetch";
 
 export const orchestrateImageGeneration = task({
     id: "orchestrate-image-generation",

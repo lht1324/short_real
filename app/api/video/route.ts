@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { videoGenerationTasksServerAPI } from "@/lib/api/server/videoGenerationTasksServerAPI";
-import { getNextBaseResponse } from "@/utils/getNextBaseResponse";
+import { getNextBaseResponse } from "@/lib/utils/getNextBaseResponse";
 import { BaseResponse } from "@/lib/api/types/api/BaseResponse";
 import { usersServerAPI } from "@/lib/api/server/usersServerAPI";
-import { internalFireAndForgetFetch } from "@/utils/internalFetch";
-import { getIsValidRequestS2S } from "@/utils/getIsValidRequest";
+import { internalFireAndForgetFetch } from "@/lib/utils/internalFetch";
+import { getIsValidRequestS2S } from "@/lib/utils/getIsValidRequest";
 import {
     BASE_CREDIT_PER_SCENE,
     BASE_CREDIT_PER_VIDEO_DURATION,

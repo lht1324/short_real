@@ -5,9 +5,9 @@ import {
     PostGenerateWebhookType
 } from "@/lib/api/types/suno-api/SunoAPIResponses";
 import {videoGenerationTasksServerAPI} from "@/lib/api/server/videoGenerationTasksServerAPI";
-import {getNextBaseResponse} from "@/utils/getNextBaseResponse";
-import {internalFireAndForgetFetch} from "@/utils/internalFetch";
-import {cleanAndParseJSON} from "@/utils/jsonUtils";
+import {getNextBaseResponse} from "@/lib/utils/getNextBaseResponse";
+import {internalFireAndForgetFetch} from "@/lib/utils/internalFetch";
+import {cleanAndParseJSON} from "@/lib/utils/jsonUtils";
 
 export async function POST(request: NextRequest) {
     // URL에서 파라미터 추출

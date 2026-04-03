@@ -1,12 +1,12 @@
 import {NextRequest} from 'next/server';
 import {videoServerAPI} from '@/lib/api/server/videoServerAPI';
 import {musicServerAPI} from '@/lib/api/server/musicServerAPI';
-import {generateASSContent} from "@/utils/captionUtils";
+import {generateASSContent} from "@/lib/utils/captionUtils";
 import {videoGenerationTasksServerAPI} from "@/lib/api/server/videoGenerationTasksServerAPI";
 import {FinalVideoMergeData, VideoGenerationTaskStatus } from "@/lib/api/types/supabase/VideoGenerationTasks";
-import {taskCheckAndCleanupIfCancelled} from "@/utils/taskCheckAndCleanupIfCancelled";
-import {getNextBaseResponse} from "@/utils/getNextBaseResponse";
-import {getIsValidRequestS2S} from "@/utils/getIsValidRequest";
+import {taskCheckAndCleanupIfCancelled} from "@/lib/utils/taskCheckAndCleanupIfCancelled";
+import {getNextBaseResponse} from "@/lib/utils/getNextBaseResponse";
+import {getIsValidRequestS2S} from "@/lib/utils/getIsValidRequest";
 
 export async function POST(
     request: NextRequest,
