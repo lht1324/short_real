@@ -1,6 +1,6 @@
 'use client'
 
-import {memo, useMemo, useState} from "react";
+import {memo, useMemo, useState, useEffect} from "react";
 import Image from "next/image";
 import {
     Clock,
@@ -14,7 +14,9 @@ import {
     BarChart3,
     Wrench,
     Coins,
-    Sparkles
+    Sparkles,
+    Globe,
+    ChevronDown
 } from 'lucide-react';
 import {ExportPlatform} from "@/lib/api/types/supabase/VideoGenerationTasks";
 
@@ -37,7 +39,7 @@ interface AutopilotControlPanelProps {
     isSaving: boolean;
     isDirty: boolean;
     validation: { isValid: boolean; reasons: string[] };
-    onClickSaveConfig: () => void;
+    onClickSaveConfig: (runImmediately?: boolean) => void;
     onClickDeleteConfig: () => void;
 }
 
@@ -51,12 +53,55 @@ function AutopilotControlPanel({
     onClickDeleteConfig,
 }: AutopilotControlPanelProps) {
     // --- Internal UI UI State (Not persisted in DB) ---
-    // const [scheduleMode, setScheduleMode] = useState<'weekly' | 'cron'>('weekly');
-    const scheduleMode = 'weekly'; // Forced to weekly for now as requested
+    const [runImmediately, setRunImmediately] = useState(false);
+    const scheduleMode = 'weekly'; 
 
     // --- Derived Schedule State ---
     const schedule = useMemo(() => cronToWeekly(currentSeries.schedule_cron), [currentSeries.schedule_cron]);
     const { days: selectedDays, hour: scheduledHour, minute: scheduledMinute } = schedule;
+
+    // --- 2-Hour Window Logic ---
+    const schedulingForecast = useMemo(() => {
+        // Get current time in the series' timezone
+        const now = new Date();
+        try {
+            const formatter = new Intl.DateTimeFormat('en-US', {
+                timeZone: currentSeries.user_timezone || Intl.DateTimeFormat().resolvedOptions().timeZone,
+                hour: 'numeric',
+                minute: 'numeric',
+                hour12: false
+            });
+            
+            const parts = formatter.formatToParts(now);
+            const currentHour = parseInt(parts.find(p => p.type === 'hour')?.value || '0', 10);
+            const currentMinute = parseInt(parts.find(p => p.type === 'minute')?.value || '0', 10);
+            
+            // Target generation time is 2 hours before scheduled upload
+            let genHour = scheduledHour - 2;
+            if (genHour < 0) genHour += 24;
+
+            // Is today's generation window closed? 
+            const currentTimeInMinutes = (currentHour * 60) + currentMinute;
+            const genStartTimeInMinutes = (genHour * 60) + scheduledMinute;
+            
+            // If the current time is past the generation start time, the window is closed for today.
+            const isWindowClosed = currentTimeInMinutes >= genStartTimeInMinutes;
+            
+            return {
+                isWindowClosed,
+                genTime: `${genHour.toString().padStart(2, '0')}:${scheduledMinute.toString().padStart(2, '0')}`,
+                uploadTime: `${scheduledHour.toString().padStart(2, '0')}:${scheduledMinute.toString().padStart(2, '0')}`
+            };
+        } catch (e) {
+            console.error("Timezone error:", e);
+            return { isWindowClosed: false, genTime: '--:--', uploadTime: '--:--' };
+        }
+    }, [scheduledHour, scheduledMinute, currentSeries.user_timezone]);
+
+    // Reset runImmediately if window opens or series changes
+    useEffect(() => {
+        setRunImmediately(false);
+    }, [schedulingForecast.isWindowClosed, currentSeries.id]);
 
     // --- Internal Handlers ---
     const onToggleDay = (dayId: number) => {
@@ -76,6 +121,10 @@ function AutopilotControlPanel({
     const onChangeMinute = (minute: number) => {
         const newCron = weeklyToCron(selectedDays, scheduledHour, minute);
         updateSeries({ schedule_cron: newCron });
+    };
+
+    const onChangeTimezone = (timezone: string) => {
+        updateSeries({ user_timezone: timezone });
     };
     
     // Internal UI Logic: Forecast
@@ -181,6 +230,39 @@ function AutopilotControlPanel({
                 </div>
                 
                 <div className="space-y-4">
+                    {/* Timezone Selection */}
+                    <div className="space-y-1.5">
+                        <label className="text-[10px] text-gray-500 mb-1 block ml-1 uppercase font-bold tracking-wider">Timezone</label>
+                        <div className="relative group">
+                            <Globe size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-purple-400/70 pointer-events-none" />
+                            <select 
+                                value={currentSeries.user_timezone}
+                                onChange={(e) => onChangeTimezone(e.target.value)}
+                                className="w-full bg-black/40 border border-purple-500/10 rounded-xl py-2.5 pl-9 pr-4 text-[11px] font-bold text-gray-300 focus:outline-none focus:border-purple-500/40 transition-all appearance-none cursor-pointer"
+                            >
+                                {Intl.supportedValuesOf('timeZone').map((tz) => (
+                                    <option key={tz} value={tz} className="bg-gray-900 text-white">
+                                        {tz.replace(/_/g, ' ')}
+                                    </option>
+                                ))}
+                            </select>
+                            <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                                <ChevronDown size={14} className="text-gray-500" />
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Run Window Info */}
+                    <div className="px-1 space-y-1.5">
+                        <div className="flex justify-between text-[10px] font-black uppercase tracking-widest">
+                            <span className="text-purple-400/80">Generation (2h Prior)</span>
+                            <span className="text-white">{schedulingForecast.genTime}</span>
+                        </div>
+                        <div className="flex justify-between text-[10px] font-black uppercase tracking-widest">
+                            <span className="text-pink-400/80">Upload Time</span>
+                            <span className="text-white">{schedulingForecast.uploadTime}</span>
+                        </div>
+                    </div>
                     {/* Mode selection commented out for now as requested */}
                     {/* <div className="flex bg-black/40 p-1.5 rounded-xl border border-purple-500/10">
                         <button 
@@ -300,9 +382,38 @@ function AutopilotControlPanel({
             </div>
 
             {/* Actions */}
-            <div className="mt-auto pt-6 space-y-4">
+            <div className="mt-auto pt-6 space-y-4">ㅊ
+                {schedulingForecast.isWindowClosed && (
+                    <div className="bg-gray-800/50 border border-purple-500/20 rounded-xl p-4 space-y-3 animate-in fade-in zoom-in-95 duration-300">
+                        <div className="flex items-center gap-2 text-yellow-500/90">
+                            <AlertCircle size={16} />
+                            <span className="text-[11px] font-black uppercase tracking-wider">Today&#39;s window closed</span>
+                        </div>
+                        
+                        <label className="flex items-start gap-3 cursor-pointer group">
+                            <div className="relative flex items-center mt-0.5">
+                                <input
+                                    type="checkbox"
+                                    checked={runImmediately}
+                                    onChange={(e) => setRunImmediately(e.target.checked)}
+                                    className="peer h-5 w-5 cursor-pointer appearance-none rounded-md border border-purple-500/30 bg-black/40 transition-all checked:bg-purple-600 checked:border-purple-400 focus:outline-none"
+                                />
+                                <CheckCircle2 className="absolute h-3.5 w-3.5 text-white opacity-0 peer-checked:opacity-100 left-0.75 top-0.75 pointer-events-none transition-opacity" />
+                            </div>
+                            <div className="space-y-1">
+                                <p className="text-xs font-bold text-gray-200 group-hover:text-purple-300 transition-colors">Start first video immediately</p>
+                                <p className="text-[10px] leading-relaxed text-gray-500 font-medium">
+                                    {runImmediately 
+                                        ? "Starting now! May be uploaded earlier or later than scheduled." 
+                                        : "First video will be uploaded tomorrow at the scheduled time."}
+                                </p>
+                            </div>
+                        </label>
+                    </div>
+                )}
+
                 <button
-                    onClick={onClickSaveConfig}
+                    onClick={() => onClickSaveConfig(runImmediately)}
                     disabled={isSaving || !isDirty || !validation.isValid}
                     className={`w-full py-4 rounded-xl font-bold text-lg shadow-lg transition-all disabled:opacity-30 disabled:grayscale disabled:cursor-not-allowed ${
                         isDirty && validation.isValid

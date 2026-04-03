@@ -3,7 +3,8 @@ import { getNextBaseResponse } from "@/lib/utils/getNextBaseResponse";
 import { createSupabaseServiceRoleClient } from "@/lib/supabaseServiceRole";
 import { AutopilotData } from "@/lib/api/types/supabase/AutopilotData";
 import { getIsValidRequestS2S } from "@/lib/utils/getIsValidRequest";
-import { schedules } from "@trigger.dev/sdk/v3";
+import { schedules, tasks } from "@trigger.dev/sdk/v3";
+import { subtractHoursFromCron } from "@/lib/utils/cronUtils";
 
 /**
  * GET /api/autopilot-data/series/[seriesId]
@@ -129,30 +130,61 @@ export async function PATCH(
         // 3. Trigger.dev Schedule Sync
         try {
             const updated: AutopilotData = data;
-            const scheduleKey = `autopilot-${seriesId}`;
+            const runImmediately = request.nextUrl.searchParams.get('runImmediately') === 'true';
+            
+            // Sync if scheduling fields have changed OR runImmediately is requested
+            const isSchedulingChange = (
+                'is_active' in updateData || 
+                'schedule_cron' in updateData || 
+                'user_timezone' in updateData ||
+                runImmediately
+            );
 
-            if (updated.is_active && updated.schedule_cron !== "NONE") {
-                // Upsert schedule: create or update if already exists using deduplicationKey
-                await schedules.create({
-                    task: "autopilot-generation-orchestrator",
-                    cron: updated.schedule_cron, // Cron n시간 전으로 맞춰야 함
-                    externalId: `${seriesId}-generation`,
-                    deduplicationKey: `${scheduleKey}-generation`,
-                });
-                await schedules.create({
-                    task: "autopilot-upload-orchestrator",
-                    cron: updated.schedule_cron,
-                    externalId: `${seriesId}-upload`,
-                    deduplicationKey: `${scheduleKey}-upload`,
-                });
-                console.log(`[Trigger.dev] Schedule synced (Active) for series: ${seriesId}`);
-            } else {
-                // Remove schedule if inactive or invalid
-                const existingSchedules = await schedules.list();
-                for (const schedule of existingSchedules.data) {
-                    if (schedule.externalId === seriesId && schedule.deduplicationKey === scheduleKey) {
-                        await schedules.del(schedule.id);
-                        console.log(`[Trigger.dev] Schedule removed (Inactive) for series: ${seriesId}`);
+            if (isSchedulingChange) {
+                const scheduleKey = `autopilot-${seriesId}`;
+
+                if (updated.is_active && updated.schedule_cron !== "NONE") {
+                    // Adjust cron for generation: 2 hours buffer
+                    const generationCron = subtractHoursFromCron(updated.schedule_cron, 2);
+                    
+                    // Update Generation Schedule
+                    await schedules.create({
+                        task: "autopilot-generation-orchestrator",
+                        cron: generationCron,
+                        timezone: updated.user_timezone,
+                        externalId: `${seriesId}-generation`,
+                        deduplicationKey: `${scheduleKey}-generation`,
+                    });
+                    
+                    // Update Upload Schedule
+                    await schedules.create({
+                        task: "autopilot-upload-orchestrator",
+                        cron: updated.schedule_cron,
+                        timezone: updated.user_timezone,
+                        externalId: `${seriesId}-upload`,
+                        deduplicationKey: `${scheduleKey}-upload`,
+                    });
+                    
+                    // If runImmediately is true, trigger a one-time generation run
+                    // Note: Ensure the video generation pipeline (rendering complete step) 
+                    // triggers the 'autopilot-upload-orchestrator' task upon finishing 
+                    // to achieve immediate upload as promised in the UI.
+                    if (runImmediately) {
+                        await tasks.trigger("autopilot-generation-orchestrator", { 
+                            externalId: `${seriesId}-generation` 
+                        });
+                        console.log(`[Trigger.dev] Immediate run triggered for series: ${seriesId}`);
+                    }
+                    
+                    console.log(`[Trigger.dev] Schedules synced (Active) for series: ${seriesId}`);
+                } else {
+                    // Remove both schedules if inactive or invalid
+                    const existingSchedules = await schedules.list();
+                    for (const schedule of existingSchedules.data) {
+                        if (schedule.externalId === `${seriesId}-generation` || schedule.externalId === `${seriesId}-upload`) {
+                            await schedules.del(schedule.id);
+                            console.log(`[Trigger.dev] Schedule removed (Inactive): ${schedule.externalId}`);
+                        }
                     }
                 }
             }
@@ -233,11 +265,12 @@ export async function DELETE(
         try {
             const existingSchedules = await schedules.list();
             for (const schedule of existingSchedules.data) {
-                if (schedule.externalId === seriesId) {
+                // Check for both generation and upload schedules
+                if (schedule.externalId === `${seriesId}-generation` || schedule.externalId === `${seriesId}-upload`) {
                     await schedules.del(schedule.id);
+                    console.log(`[Trigger.dev] Cleanup successful for: ${schedule.externalId}`);
                 }
             }
-            console.log(`[Trigger.dev] Cleanup successful for series: ${seriesId}`);
         } catch (cleanupError) {
             console.error("[Trigger.dev] Cleanup Error:", cleanupError);
         }

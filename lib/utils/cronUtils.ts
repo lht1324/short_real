@@ -33,6 +33,51 @@ export function weeklyToCron(days: number[], hour: number, minute: number): stri
 }
 
 /**
+ * Subtracts n hours from a cron expression.
+ * Handles hour wrap-around and adjusts the day of the week accordingly.
+ * Supported format: "min hour day month dayOfWeek" (5 fields)
+ */
+export function subtractHoursFromCron(cron: string, hoursToSubtract: number): string {
+    if (!cron || cron === "NONE") return cron;
+    
+    const parts = cron.split(" ");
+    if (parts.length < 5) return cron;
+
+    let minute = parseInt(parts[0], 10);
+    let hour = parseInt(parts[1], 10);
+    const dayOfMonth = parts[2];
+    const month = parts[3];
+    const dayOfWeekPart = parts[4];
+
+    if (isNaN(hour)) return cron;
+
+    // Adjust hour and track day shifts
+    let dayShift = 0;
+    hour -= hoursToSubtract;
+
+    while (hour < 0) {
+        hour += 24;
+        dayShift -= 1;
+    }
+
+    // Adjust day of week if necessary
+    let newDayOfWeek = dayOfWeekPart;
+    if (dayShift !== 0 && dayOfWeekPart !== "*") {
+        const days = dayOfWeekPart.split(",").map(d => {
+            let day = parseInt(d, 10);
+            if (day === 7) day = 0; // Normalize 7 to 0
+            
+            // Apply shift (mod 7 handles negative numbers correctly in JS as (n % 7 + 7) % 7)
+            const shifted = (((day + dayShift) % 7) + 7) % 7;
+            return shifted;
+        });
+        newDayOfWeek = Array.from(new Set(days)).sort((a, b) => a - b).join(",");
+    }
+
+    return `${minute} ${hour} ${dayOfMonth} ${month} ${newDayOfWeek}`;
+}
+
+/**
  * Parses a Cron expression back into UI-friendly weekly data.
  * Example: "30 15 * * 0,6" -> { days: [0,6], hour: 15, minute: 30 }
  */

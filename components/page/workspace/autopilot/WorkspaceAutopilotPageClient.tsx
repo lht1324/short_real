@@ -210,7 +210,7 @@ function WorkspaceAutopilotPageClient() {
         fetchVoices();
     }, []);
 
-    const onClickSaveConfig = useCallback(async () => {
+    const onClickSaveConfig = useCallback(async (runImmediately?: boolean) => {
         if (!currentSeries || !isDirty || isSaving || !validation.isValid) return;
         setIsSaving(true);
         setSaveStatus('saving');
@@ -219,7 +219,11 @@ function WorkspaceAutopilotPageClient() {
             ...currentSeries,
             caption_config: captionConfigStateRef.current,
         }
-        const result = await autopilotDataClientAPI.patchAutopilotDataBySeriesId(currentSeries.id, currentSeriesWithCaptionConfigState);
+        const result = await autopilotDataClientAPI.patchAutopilotDataBySeriesId(
+            currentSeries.id, 
+            currentSeriesWithCaptionConfigState,
+            runImmediately
+        );
 
         if (result) {
             setLastSavedSeriesList(prev => {
