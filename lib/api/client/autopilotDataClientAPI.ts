@@ -84,7 +84,7 @@ export const autopilotDataClientAPI = {
 
     async patchAutopilotDataBySeriesId(seriesId: string, updateData: Partial<AutopilotData>, runImmediately?: boolean): Promise<AutopilotData | null> {
         try {
-            const url = runImmediately ? `/api/autopilot-data/series/${seriesId}?runImmediately=true` : `/api/autopilot-data/series/${seriesId}`;
+            const url = `/api/autopilot-data/series/${seriesId}?runImmediately=${runImmediately ?? false}`;
             const response = await patchFetch(url, updateData);
             const result = await response.json();
 

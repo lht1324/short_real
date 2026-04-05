@@ -52,7 +52,7 @@ function AutopilotControlPanel({
     onClickSaveConfig,
     onClickDeleteConfig,
 }: AutopilotControlPanelProps) {
-    // --- Internal UI UI State (Not persisted in DB) ---
+    // --- Internal UI State (Not persisted in DB) ---
     const [runImmediately, setRunImmediately] = useState(false);
     const scheduleMode = 'weekly'; 
 
