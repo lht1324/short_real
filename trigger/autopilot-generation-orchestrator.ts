@@ -39,7 +39,17 @@ export const autopilotGenerationOrchestrator = schedules.task({
 
         const autopilotData = series as AutopilotData;
 
-        // 2. Idempotency Check (Only run once per target upload day)
+        // 2. Activation Check
+        if (!autopilotData.is_active) {
+            logger.info(`[Autopilot] Skipping generation: Series is not active`, { seriesId });
+            return {
+                success: true,
+                seriesId,
+                action: "skipped-inactive",
+            };
+        }
+
+        // 3. Idempotency Check (Only run once per target upload day)
         // Note: payload.timestamp is the scheduled trigger time (generation start)
         const targetUploadTime = getIntendedUploadTime(payload.timestamp, 2);
         const userTimezone = autopilotData.user_timezone || 'UTC';

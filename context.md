@@ -1,25 +1,32 @@
-2026-04-06 23:59
+2026-04-07 15:30
 
-# 프로젝트 컨텍스트: 오토파일럿 중복 실행 방지 및 멱등성 보장
+# 프로젝트 컨텍스트: 오토파일럿 업로드 엔진 연동 및 활성화 로직 적용
 
 ## 1. 개요
-비디오 생성 소요 시간을 고려하여 실제 업로드 2시간 전 생성을 시작하되, 사용자가 설정을 변경할 때 발생하는 **'동일 날짜 중복 실행'** 문제를 해결하기 위해 **태스크 단위의 멱등성(Idempotency) 로직**을 도입했습니다. 또한, 생성과 업로드 단계를 `current_generating_task_id`를 통해 연결하여 안정성을 확보했습니다.
+오토파일럿의 비디오 생성 이후, 실제 플랫폼(YouTube, TikTok)으로의 자동 업로드를 위해 기존에 구축된 '수동 업로드 엔진'을 오케스트레이터와 연동했습니다. 또한, 시리즈의 활성화 상태(`is_active`)에 따른 실행 제어 로직을 추가했습니다.
 
 ## 2. 주요 결정 사항 및 구현 완료 사항
-- **생성 버퍼 시간 (`n`)**: 2시간으로 설정.
-- **타임존 기반 멱등성 로직 (완료)**:
-    - `lib/utils/dateUtils.ts` 구현: 타임존별 날짜 비교 및 버퍼 시간 계산 유틸리티.
-    - `autopilot-generation-orchestrator.ts` 수정: 실행 시 `payload.timestamp + 2h`를 계산하여 `last_run_at`과 비교 후 중복 시 스킵.
-- **태스크 추적 및 업로드 방어 (완료)**:
-    - `app/api/autopilot/video-metadata/route.ts`: 태스크 생성 시 `autopilot_data.current_generating_task_id`에 저장하도록 수정.
-    - `autopilot-upload-orchestrator.ts`: 저장된 `taskId`를 조회하고, 실제 영상 파일이 존재하는지(`videoServerAPI.getVideoSignedUrl`) 확인 후 업로드 진행하도록 방어 로직 추가.
-- **DB 스키마 (설계)**:
-    - `autopilot_data` 테이블에 `last_run_at` (timestamptz), `current_generating_task_id` (uuid) 컬럼 추가 필요.
+- **업로드 엔진 연동 (완료)**:
+    - `autopilot-upload-orchestrator.ts`: `internalFireAndForgetFetch`를 사용하여 유튜브 및 틱톡 업로드 API를 병렬로 호출하도록 수정.
+    - 플랫폼별 설정(`youtube`, `tiktok`) 및 공개 범위(`youtube_privacy`)에 따라 동적으로 엔진 가동.
+- **시리즈 활성화 체크 (완료)**:
+    - `autopilot-generation-orchestrator.ts`: 실행 초기에 `is_active` 필드를 검사하여 `false`인 경우 생성을 스킵하도록 로직 추가.
+- **DB 스키마 (완료)**:
+    - `autopilot_data` 테이블에 `last_run_at`, `current_generating_task_id` 컬럼 생성 확인 (사장님 직접 수행).
 
 ## 3. 현재 상태 (Status)
-- **로직 구현 완료**: 생성 멱등성 체크 및 업로드 연동 로직 코드 반영 완료.
-- **남은 과제**: 실제 업로드 로직(YouTube, TikTok 등 API 연동) 구현 시 `upload-orchestrator`의 TODO 섹션 채우기.
+- **백엔드 파이프라인 완성**: [생성 오케스트레이터] -> [비디오 생성] -> [업로드 오케스트레이터] -> [플랫폼별 업로드 엔진]으로 이어지는 흐름 구축 완료.
+- **태스크 ID 초기화 보류**: 업로드 엔진 호출 후 `current_generating_task_id`를 어느 시점에 비울지(오케스트레이터 종료 시 vs 업로드 성공 콜백 시) 결정이 필요하여 일단 미뤄둠.
 
 ## 4. 향후 작업 및 기술적 메모 (Next Steps)
-1.  **실제 업로드 연동**: `autopilot-upload-orchestrator.ts` 내부의 플레이스홀더를 각 플랫폼별 업로드 API로 교체.
-2.  **테스트**: 자정 교차 시점(23:00 생성 -> 01:00 업로드)에 `last_run_at`이 정상적으로 다음 날짜로 기록되어 중복을 막는지 최종 확인.
+1.  **UI 스마트화 (핵심)**: 
+    - `AutopilotControlPanel.tsx` 및 `AutopilotConfigPanel.tsx` 수정.
+    - 유저의 유튜브/틱톡 토큰 존재 여부를 확인하는 API 필요.
+    - 토큰이 없으면 [플랫폼 연동하기] 버튼 노출, 토큰이 있으면 [자동 업로드 활성화] 체크박스 노출.
+2.  **OAuth 연동 보완**: 
+    - 오토파일럿 설정 단계(태스크가 없는 상태)에서도 계정 연동만 가능하도록 기존 OAuth 엔드포인트 수정 또는 전용 엔드포인트 검토.
+3.  **태스크 초기화 로직 확정**: 업로드 오케스트레이터 종료 시점에 `current_generating_task_id`를 `null`로 바꿀지 최종 결정 및 구현.
+
+
+## 직접 확인 후 추가
+1. `trigger/autopilot-upload-orchestrator.ts` 내부 privacySetting 사용 부분에 빨간 줄이 뜨는데 그 부분 확인해 봐야 함 

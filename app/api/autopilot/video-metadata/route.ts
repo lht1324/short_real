@@ -148,7 +148,7 @@ export async function POST(
         // [New] Update autopilot_data with the current generating taskId
         await supabase
             .from('autopilot_data')
-            .update({
+            .upsert({
                 current_generating_task_id: taskId
             })
             .eq('id', seriesId);
