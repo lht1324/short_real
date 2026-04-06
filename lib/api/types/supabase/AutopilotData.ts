@@ -15,6 +15,7 @@ export interface AutopilotData {
     user_timezone: string;
     topic_history: string[];
     caption_config: CaptionConfigState;
+    current_generating_task_id?: string;
     last_run_at?: string; // timestamptz
     created_at?: string; // timestamptz
     updated_at?: string; // timestamptz

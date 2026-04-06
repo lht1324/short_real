@@ -145,6 +145,14 @@ export async function POST(
 
         const taskId = videoGenerationTask.id;
 
+        // [New] Update autopilot_data with the current generating taskId
+        await supabase
+            .from('autopilot_data')
+            .update({
+                current_generating_task_id: taskId
+            })
+            .eq('id', seriesId);
+
         // 5. OpenAI를 통해 씬 분할 (Scene Segmentation)
         const postSceneSegmentationResult = await llmServerAPI.postSceneSegmentation(
             taskId,

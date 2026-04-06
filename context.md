@@ -1,34 +1,25 @@
-2026-04-06 23:55
+2026-04-06 23:59
 
 # 프로젝트 컨텍스트: 오토파일럿 중복 실행 방지 및 멱등성 보장
 
 ## 1. 개요
-비디오 생성 소요 시간을 고려하여 실제 업로드 2시간 전 생성을 시작하되, 사용자가 설정을 변경할 때 발생하는 **'동일 날짜 중복 실행'** 문제를 해결하기 위해 **태스크 단위의 멱등성(Idempotency) 로직**을 도입합니다. 또한, 전 세계 사용자의 로컬 시간을 정확히 대응하기 위해 IANA 타임존 기반 예약 시스템을 구축합니다.
+비디오 생성 소요 시간을 고려하여 실제 업로드 2시간 전 생성을 시작하되, 사용자가 설정을 변경할 때 발생하는 **'동일 날짜 중복 실행'** 문제를 해결하기 위해 **태스크 단위의 멱등성(Idempotency) 로직**을 도입했습니다. 또한, 생성과 업로드 단계를 `current_generating_task_id`를 통해 연결하여 안정성을 확보했습니다.
 
 ## 2. 주요 결정 사항 및 구현 완료 사항
 - **생성 버퍼 시간 (`n`)**: 2시간으로 설정.
-- **타임존 관리 (완료)**: `Intl.supportedValuesOf('timeZone')` 활용 및 브라우저 타임존 자동 감지 연동.
-- **스케줄 및 태스크 분리 (완료)**: `-generation`(2시간 전) 및 `-upload`(정시) 스케줄 분리.
-- **"오늘 한 번만 일하기" 원칙 (설계)**:
-    - 생성 태스크 시작 시 DB의 `last_run_at`과 유저의 `user_timezone`을 조회.
-    - 유저 타임존 기준으로 오늘 이미 실행되었다면 생성 로직을 스킵하여 중복 방지.
-- **"내일부터 적용" 정책**:
-    - 이미 오늘 생성을 마친 경우 자연스럽게 내일부터 바뀐 시간이 적용되도록 유도.
-    - 아직 오늘 생성을 하지 않은 경우 바뀐 시간에 즉시 대응.
+- **타임존 기반 멱등성 로직 (완료)**:
+    - `lib/utils/dateUtils.ts` 구현: 타임존별 날짜 비교 및 버퍼 시간 계산 유틸리티.
+    - `autopilot-generation-orchestrator.ts` 수정: 실행 시 `payload.timestamp + 2h`를 계산하여 `last_run_at`과 비교 후 중복 시 스킵.
+- **태스크 추적 및 업로드 방어 (완료)**:
+    - `app/api/autopilot/video-metadata/route.ts`: 태스크 생성 시 `autopilot_data.current_generating_task_id`에 저장하도록 수정.
+    - `autopilot-upload-orchestrator.ts`: 저장된 `taskId`를 조회하고, 실제 영상 파일이 존재하는지(`videoServerAPI.getVideoSignedUrl`) 확인 후 업로드 진행하도록 방어 로직 추가.
+- **DB 스키마 (설계)**:
+    - `autopilot_data` 테이블에 `last_run_at` (timestamptz), `current_generating_task_id` (uuid) 컬럼 추가 필요.
 
 ## 3. 현재 상태 (Status)
-- **Cron 유틸리티**: `lib/utils/cronUtils.ts` (요일 보정 포함) 완료.
-- **API/DB**: `last_run_at` 필드 활용 및 `PATCH` 로직에서 Trigger.dev 스케줄 동기화 완료.
-- **UI**: 타임존 선택, 실행 예측 정보 및 "오늘 즉시 시작" 옵션 연동 완료.
+- **로직 구현 완료**: 생성 멱등성 체크 및 업로드 연동 로직 코드 반영 완료.
+- **남은 과제**: 실제 업로드 로직(YouTube, TikTok 등 API 연동) 구현 시 `upload-orchestrator`의 TODO 섹션 채우기.
 
 ## 4. 향후 작업 및 기술적 메모 (Next Steps)
-1.  **날짜 유틸리티 구현**: `lib/utils/dateUtils.ts`에 타임존 기반 날짜 비교 함수 추가.
-2.  **태스크 멱등성 로직 적용**: `autopilot-generation-orchestrator.ts` 상단에 DB 조회 및 중복 체크 로직 추가.
-3.  **즉시 업로드 연동**: `runImmediately` 옵션 시 생성 완료 후 `autopilot-upload-orchestrator` 즉시 트리거 연결.
-4.  **API 안정성 모니터링**: 스케줄 Upsert 시 `deduplicationKey` 충돌 여부 지속 모니터링.
-
-## 5. 테스트 케이스 예시
-- 사용자 설정: 월요일 01:00 (Asia/Seoul)
-- 생성 스케줄: 일요일 23:00 (Asia/Seoul) -> `0 23 * * 0` (크론 요일 보정 확인)
-- 업로드 스케줄: 월요일 01:00 (Asia/Seoul) -> `0 1 * * 1`
-- 중복 방지: 3시 생성 완료 후 3시 30분에 설정을 4시로 변경 시, 4시 트리거는 `last_run_at` 체크로 인해 스킵되어야 함.
+1.  **실제 업로드 연동**: `autopilot-upload-orchestrator.ts` 내부의 플레이스홀더를 각 플랫폼별 업로드 API로 교체.
+2.  **테스트**: 자정 교차 시점(23:00 생성 -> 01:00 업로드)에 `last_run_at`이 정상적으로 다음 날짜로 기록되어 중복을 막는지 최종 확인.
