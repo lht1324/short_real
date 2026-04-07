@@ -1,5 +1,6 @@
 import { ExportPlatform } from "@/lib/api/types/supabase/VideoGenerationTasks";
 import { CaptionConfigState } from "@/components/page/workspace/editor/WorkspaceEditorPageClient";
+import {ExportPrivacySetting} from "@/components/page/workspace/dashboard/export-settings-modal/ExportPrivacySetting";
 
 export interface AutopilotData {
     id: string; // uuid
@@ -16,7 +17,11 @@ export interface AutopilotData {
     topic_history: string[];
     caption_config: CaptionConfigState;
     current_generating_task_id?: string;
-    last_run_at?: string; // timestamptz
+
+    // Platform Setting
+    youtube_privacy?: ExportPrivacySetting | null;
+
+    last_run_at?: string | null; // timestamptz
     created_at?: string; // timestamptz
     updated_at?: string; // timestamptz
 }

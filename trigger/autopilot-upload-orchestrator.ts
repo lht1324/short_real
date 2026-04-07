@@ -1,8 +1,9 @@
-import { logger, schedules } from "@trigger.dev/sdk/v3";
-import { createSupabaseServiceRoleClient } from "@/lib/supabaseServiceRole";
-import { videoServerAPI } from "@/lib/api/server/videoServerAPI";
-import { AutopilotData } from "@/lib/api/types/supabase/AutopilotData";
-import { internalFireAndForgetFetch } from "@/lib/utils/internalFetch";
+import {logger, schedules} from "@trigger.dev/sdk/v3";
+import {createSupabaseServiceRoleClient} from "@/lib/supabaseServiceRole";
+import {videoServerAPI} from "@/lib/api/server/videoServerAPI";
+import {AutopilotData} from "@/lib/api/types/supabase/AutopilotData";
+import {internalFireAndForgetFetch} from "@/lib/utils/internalFetch";
+import {ExportPrivacySetting} from "@/components/page/workspace/dashboard/export-settings-modal/ExportPrivacySetting";
 
 /**
  * Autopilot Orchestrator Task
@@ -58,7 +59,9 @@ export const autopilotUploadOrchestrator = schedules.task({
 
             // YouTube Upload
             if (autopilotData.platforms?.youtube) {
-                const privacySetting = autopilotData.platforms?.youtube_privacy || 'unlisted';
+                // 기존 수동 파이프라인에선 선택한 뒤 param으로 바로 보내고 잊는 거라 저장이 없음
+                // UI에 선택창 추가하고 AutopilotData에 optional string으로 넣어야 하나?
+                const privacySetting = autopilotData.youtube_privacy || ExportPrivacySetting.UNLISTED;
                 const youtubeUrl = `${baseUrl}/api/video/export/youtube/upload?taskId=${taskId}&privacySetting=${privacySetting}`;
                 
                 logger.info(`[Autopilot] Triggering YouTube upload for taskId: ${taskId}`);
