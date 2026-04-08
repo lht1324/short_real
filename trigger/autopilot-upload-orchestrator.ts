@@ -53,7 +53,7 @@ export const autopilotUploadOrchestrator = schedules.task({
             
             logger.info(`[Autopilot] Video found and ready for upload: ${taskId}`, { videoUrl });
             
-            // 3. Trigger actual upload/publish tasks for each platform (Fire and Forget)
+            // 3. Trigger actual upload/publish tasks for each platform-connection (Fire and Forget)
             const baseUrl = process.env.BASE_URL;
             let triggeredCount = 0;
 

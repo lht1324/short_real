@@ -114,4 +114,24 @@ export const autopilotDataClientAPI = {
             return false;
         }
     },
+
+    async getAutopilotDataPlatformConnection(): Promise<{
+        youtube: boolean,
+        tiktok: boolean,
+        instagram: boolean,
+    } | null> {
+        try {
+            const response = await getFetch(`/api/autopilot-data/platform-connection`);
+            const result = await response.json();
+
+            if (!result.success) {
+                throw Error(result.error ?? 'Unknown error while fetching autopilot platform connection data by series id.');
+            }
+
+            return result.data.platformConnection;
+        } catch (error) {
+            console.error(error);
+            return null;
+        }
+    },
 }
