@@ -193,7 +193,7 @@ function AutopilotControlPanel({
                 <div className="space-y-2.5">
                     {[
                         { id: ExportPlatform.YOUTUBE, label: 'YouTube Shorts', src: '/icons/youtube-logo.png', activeColor: 'bg-red-500/10 border-red-500/40', iconColor: 'text-red-500' },
-                        { id: ExportPlatform.TIKTOK, label: 'TikTok', src: '/icons/tiktok-logo.svg', activeColor: 'bg-cyan-500/10 border-cyan-500/40', iconColor: 'text-cyan-400' },
+                        { id: ExportPlatform.TIKTOK, label: 'TikTok', src: '/icons/tiktok-logo-white.svg', activeColor: 'bg-cyan-500/10 border-cyan-500/40', iconColor: 'text-cyan-400' },
                         { id: ExportPlatform.INSTAGRAM, label: 'Instagram Reels', src: '/icons/instagram-logo.png', activeColor: 'bg-pink-500/10 border-pink-500/40', iconColor: 'text-pink-500', disabled: true }
                     ].map((platform) => (
                         <div 
