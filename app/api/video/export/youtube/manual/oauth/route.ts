@@ -1,4 +1,4 @@
-// app/api/youtube/oauth/route.ts
+// app/api/youtube/manual/oauth/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { getNextBaseResponse } from "@/lib/utils/getNextBaseResponse";
 import { getIsValidRequestS2S } from "@/lib/utils/getIsValidRequest";

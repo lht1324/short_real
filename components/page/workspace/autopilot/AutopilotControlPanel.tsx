@@ -32,6 +32,8 @@ const DAYS_OF_WEEK = [
 
 import {AutopilotData} from "@/lib/api/types/supabase/AutopilotData";
 import {cronToWeekly, weeklyToCron} from "@/lib/utils/cronUtils";
+import GoogleSignInButton from "@/components/public/GoogleSignInButton";
+import TikTokSignInButton from "@/components/public/TikTokSignInButton";
 
 interface AutopilotControlPanelProps {
     currentSeries: AutopilotData;
@@ -195,30 +197,66 @@ function AutopilotControlPanel({
                         { id: ExportPlatform.YOUTUBE, label: 'YouTube Shorts', src: '/icons/youtube-logo.png', activeColor: 'bg-red-500/10 border-red-500/40', iconColor: 'text-red-500' },
                         { id: ExportPlatform.TIKTOK, label: 'TikTok', src: '/icons/tiktok-logo-white.svg', activeColor: 'bg-cyan-500/10 border-cyan-500/40', iconColor: 'text-cyan-400' },
                         { id: ExportPlatform.INSTAGRAM, label: 'Instagram Reels', src: '/icons/instagram-logo.png', activeColor: 'bg-pink-500/10 border-pink-500/40', iconColor: 'text-pink-500', disabled: true }
-                    ].map((platform) => (
-                        <div 
-                            key={platform.id}
-                            onClick={() => !platform.disabled && updateSeries({ 
-                                platforms: { ...currentSeries.platforms, [platform.id]: !currentSeries.platforms[platform.id] } 
-                            })}
-                            className={`flex items-center justify-between p-3.5 rounded-xl border transition-all ${
-                                platform.disabled 
-                                    ? 'bg-black/20 border-white/5 opacity-40 cursor-not-allowed'
-                                    : currentSeries.platforms[platform.id] ? platform.activeColor + ' cursor-pointer' : 'bg-black/20 border-white/5 opacity-60 cursor-pointer'
-                            }`}
-                        >
-                            <div className="flex items-center gap-3.5">
-                                <div className="w-7 h-7 relative">
-                                    <Image src={platform.src} alt={platform.label} fill className="object-contain" />
+                    ].map((platform) => {
+                        // Dummy condition: Show Connect buttons by default if not disabled
+                        const isNotConnected = true;
+
+                        if (isNotConnected && !platform.disabled) {
+                            if (platform.id === ExportPlatform.YOUTUBE) {
+                                return (
+                                    <GoogleSignInButton
+                                        key={platform.id}
+                                        text="Connect YouTube"
+                                        className="!w-full !justify-start !rounded-xl !h-[56px] !px-4"
+                                        textClassName="!font-bold !text-sm"
+                                        iconClassName="!w-6 !h-6 !mr-8 !flex-shrink-0"
+                                        onClick={() => {
+                                            window.location.href = `/api/video/export/youtube/autopilot/oauth?seriesId=${currentSeries.id}&userId=${currentSeries.user_id}`;
+                                        }}
+                                    />
+                                );
+                            }
+                            if (platform.id === ExportPlatform.TIKTOK) {
+                                return (
+                                    <TikTokSignInButton
+                                        key={platform.id}
+                                        text="Connect TikTok"
+                                        className="!w-full !justify-start !rounded-xl !h-[56px] !px-4"
+                                        textClassName="!font-bold !text-sm"
+                                        iconClassName="!w-6 !h-6 !mr-8 !flex-shrink-0"
+                                        onClick={() => {
+                                            window.location.href = `/api/video/export/tiktok/autopilot/oauth?seriesId=${currentSeries.id}&userId=${currentSeries.user_id}`;
+                                        }}
+                                    />
+                                );
+                            }
+                        }
+
+                        return (
+                            <div 
+                                key={platform.id}
+                                onClick={() => !platform.disabled && updateSeries({ 
+                                    platforms: { ...currentSeries.platforms, [platform.id]: !currentSeries.platforms[platform.id] } 
+                                })}
+                                className={`flex items-center justify-between p-3.5 rounded-xl border transition-all ${
+                                    platform.disabled 
+                                        ? 'bg-black/20 border-white/5 opacity-40 cursor-not-allowed'
+                                        : currentSeries.platforms[platform.id] ? platform.activeColor + ' cursor-pointer' : 'bg-black/20 border-white/5 opacity-60 cursor-pointer'
+                                }`}
+                            >
+                                <div className="flex items-center gap-3.5">
+                                    <div className="w-7 h-7 relative">
+                                        <Image src={platform.src} alt={platform.label} fill className="object-contain" />
+                                    </div>
+                                    <span className={`text-sm font-bold ${currentSeries.platforms[platform.id] && !platform.disabled ? 'text-white' : 'text-gray-500'}`}>
+                                        {platform.label}
+                                    </span>
                                 </div>
-                                <span className={`text-sm font-bold ${currentSeries.platforms[platform.id] && !platform.disabled ? 'text-white' : 'text-gray-500'}`}>
-                                    {platform.label}
-                                </span>
+                                {currentSeries.platforms[platform.id] && !platform.disabled && <CheckCircle2 size={18} className={platform.iconColor} />}
+                                {platform.disabled && <Wrench size={18} className="text-yellow-500/50" />}
                             </div>
-                            {currentSeries.platforms[platform.id] && !platform.disabled && <CheckCircle2 size={18} className={platform.iconColor} />}
-                            {platform.disabled && <Wrench size={18} className="text-yellow-500/50" />}
-                        </div>
-                    ))}
+                        );
+                    })}
                 </div>
             </div>
 

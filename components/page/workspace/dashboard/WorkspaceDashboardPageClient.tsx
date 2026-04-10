@@ -121,11 +121,11 @@ function WorkspaceDashboardPageClient() {
 
             switch (pendingExportPlatform) {
                 case ExportPlatform.YOUTUBE: {
-                    window.location.href = `/api/video/export/youtube/oauth?taskId=${pendingExportTaskId}&privacySetting=${youtubePrivacySetting}`;
+                    window.location.href = `/api/video/export/youtube/manual/oauth?taskId=${pendingExportTaskId}&privacySetting=${youtubePrivacySetting}`;
                     return;
                 }
                 case ExportPlatform.TIKTOK: {
-                    window.location.href = `/api/video/export/tiktok/oauth?taskId=${pendingExportTaskId}`;
+                    window.location.href = `/api/video/export/tiktok/manual/oauth?taskId=${pendingExportTaskId}`;
                     return;
                 }
                 case ExportPlatform.INSTAGRAM: {
