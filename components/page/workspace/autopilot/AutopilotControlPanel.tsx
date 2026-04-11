@@ -1,24 +1,26 @@
 'use client'
 
-import {memo, useMemo, useState, useEffect} from "react";
+import {memo, useEffect, useMemo, useState} from "react";
 import Image from "next/image";
 import {
-    Clock,
-    CheckCircle2,
-    Play,
-    Pause,
-    Loader2,
-    Trash2,
-    Info,
     AlertCircle,
     BarChart3,
-    Wrench,
+    CheckCircle2,
+    ChevronDown,
+    Clock,
     Coins,
-    Sparkles,
     Globe,
-    ChevronDown
+    Loader2,
+    Pause,
+    Play,
+    Sparkles,
+    Trash2,
+    Wrench
 } from 'lucide-react';
 import {ExportPlatform} from "@/lib/api/types/supabase/VideoGenerationTasks";
+import {AutopilotData} from "@/lib/api/types/supabase/AutopilotData";
+import {cronToWeekly, weeklyToCron} from "@/lib/utils/cronUtils";
+import PlatformConnectButton from "@/components/page/workspace/autopilot/PlatformConnectButton";
 
 const DAYS_OF_WEEK = [
     { id: 1, label: 'M' },
@@ -29,11 +31,6 @@ const DAYS_OF_WEEK = [
     { id: 6, label: 'S' },
     { id: 0, label: 'S' },
 ];
-
-import {AutopilotData} from "@/lib/api/types/supabase/AutopilotData";
-import {cronToWeekly, weeklyToCron} from "@/lib/utils/cronUtils";
-import GoogleSignInButton from "@/components/public/GoogleSignInButton";
-import TikTokSignInButton from "@/components/public/TikTokSignInButton";
 
 interface AutopilotControlPanelProps {
     currentSeries: AutopilotData;
@@ -196,50 +193,36 @@ function AutopilotControlPanel({
                     {[
                         { id: ExportPlatform.YOUTUBE, label: 'YouTube Shorts', src: '/icons/youtube-logo.png', activeColor: 'bg-red-500/10 border-red-500/40', iconColor: 'text-red-500' },
                         { id: ExportPlatform.TIKTOK, label: 'TikTok', src: '/icons/tiktok-logo-white.svg', activeColor: 'bg-cyan-500/10 border-cyan-500/40', iconColor: 'text-cyan-400' },
-                        { id: ExportPlatform.INSTAGRAM, label: 'Instagram Reels', src: '/icons/instagram-logo.png', activeColor: 'bg-pink-500/10 border-pink-500/40', iconColor: 'text-pink-500', disabled: true }
+                        { id: ExportPlatform.INSTAGRAM, label: 'Instagram Reels', src: '/icons/instagram-logo.png', activeColor: 'bg-pink-500/10 border-pink-500/40', iconColor: 'text-pink-500' }
                     ].map((platform) => {
                         // Dummy condition: Show Connect buttons by default if not disabled
-                        const isNotConnected = true;
+                        const isNotConnected = !currentSeries.platforms[platform.id];
+                        const isDisabled = platform.id === ExportPlatform.INSTAGRAM;
 
-                        if (isNotConnected && !platform.disabled) {
-                            if (platform.id === ExportPlatform.YOUTUBE) {
-                                return (
-                                    <GoogleSignInButton
-                                        key={platform.id}
-                                        text="Connect YouTube"
-                                        className="!w-full !justify-start !rounded-xl !h-[56px] !px-4"
-                                        textClassName="!font-bold !text-sm"
-                                        iconClassName="!w-6 !h-6 !mr-8 !flex-shrink-0"
-                                        onClick={() => {
-                                            window.location.href = `/api/video/export/youtube/autopilot/oauth?seriesId=${currentSeries.id}&userId=${currentSeries.user_id}`;
-                                        }}
-                                    />
-                                );
-                            }
-                            if (platform.id === ExportPlatform.TIKTOK) {
-                                return (
-                                    <TikTokSignInButton
-                                        key={platform.id}
-                                        text="Connect TikTok"
-                                        className="!w-full !justify-start !rounded-xl !h-[56px] !px-4"
-                                        textClassName="!font-bold !text-sm"
-                                        iconClassName="!w-6 !h-6 !mr-8 !flex-shrink-0"
-                                        onClick={() => {
-                                            window.location.href = `/api/video/export/tiktok/autopilot/oauth?seriesId=${currentSeries.id}&userId=${currentSeries.user_id}`;
-                                        }}
-                                    />
-                                );
-                            }
+                        if (!isNotConnected) {
+                            return (
+                                <PlatformConnectButton
+                                    key={platform.id}
+                                    logoSrc={platform.src}
+                                    text={`Connect ${platform.id === ExportPlatform.YOUTUBE ? 'YouTube' : platform.id === ExportPlatform.TIKTOK ? 'TikTok' : 'Instagram'}`}
+                                    onClick={() => {
+                                        window.location.href = `/api/video/export/${platform.id}/autopilot/oauth?seriesId=${currentSeries.id}`;
+                                    }}
+                                    disabled={isDisabled}
+                                    isProgressing={isDisabled}
+                                />
+                            );
                         }
 
+                        // 체크박스와 기존 코드 분리 필요
                         return (
-                            <div 
+                            <div
                                 key={platform.id}
-                                onClick={() => !platform.disabled && updateSeries({ 
-                                    platforms: { ...currentSeries.platforms, [platform.id]: !currentSeries.platforms[platform.id] } 
+                                onClick={() => !platform.disabled && updateSeries({
+                                    platforms: { ...currentSeries.platforms, [platform.id]: !currentSeries.platforms[platform.id] }
                                 })}
                                 className={`flex items-center justify-between p-3.5 rounded-xl border transition-all ${
-                                    platform.disabled 
+                                    isDisabled
                                         ? 'bg-black/20 border-white/5 opacity-40 cursor-not-allowed'
                                         : currentSeries.platforms[platform.id] ? platform.activeColor + ' cursor-pointer' : 'bg-black/20 border-white/5 opacity-60 cursor-pointer'
                                 }`}
@@ -252,8 +235,8 @@ function AutopilotControlPanel({
                                         {platform.label}
                                     </span>
                                 </div>
-                                {currentSeries.platforms[platform.id] && !platform.disabled && <CheckCircle2 size={18} className={platform.iconColor} />}
-                                {platform.disabled && <Wrench size={18} className="text-yellow-500/50" />}
+                                {currentSeries.platforms[platform.id] && !isNotConnected && <CheckCircle2 size={18} className={platform.iconColor} />}
+                                {isDisabled && <Wrench size={18} className="text-yellow-500/50" />}
                             </div>
                         );
                     })}
@@ -420,7 +403,7 @@ function AutopilotControlPanel({
             </div>
 
             {/* Actions */}
-            <div className="mt-auto pt-6 space-y-4">ㅊ
+            <div className="mt-auto pt-6 space-y-4">
                 {schedulingForecast.isWindowClosed && (
                     <div className="bg-gray-800/50 border border-purple-500/20 rounded-xl p-4 space-y-3 animate-in fade-in zoom-in-95 duration-300">
                         <div className="flex items-center gap-2 text-yellow-500/90">
