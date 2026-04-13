@@ -190,9 +190,9 @@ function AutopilotControlPanel({
                 <h4 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">Platforms</h4>
                 <div className="space-y-2.5">
                     {[
-                        { id: ExportPlatform.YOUTUBE, label: 'YouTube Shorts', shortLabel: 'YouTube', src: '/icons/youtube-logo.png', activeColor: 'bg-red-500/10 border-red-500/40', iconColor: 'text-red-500' },
-                        { id: ExportPlatform.TIKTOK, label: 'TikTok', shortLabel: 'TikTok', src: '/icons/tiktok-logo-white.svg', activeColor: 'bg-cyan-500/10 border-cyan-500/40', iconColor: 'text-cyan-400' },
-                        { id: ExportPlatform.INSTAGRAM, label: 'Instagram Reels', shortLabel: 'Instagram', src: '/icons/instagram-logo.png', activeColor: 'bg-pink-500/10 border-pink-500/40', iconColor: 'text-pink-500' }
+                        { id: ExportPlatform.YOUTUBE, label: 'YouTube Shorts', platformLabel: 'YouTube', src: '/icons/youtube-logo.png', activeColor: 'bg-red-500/10 border-red-500/40', iconColor: 'text-red-500' },
+                        { id: ExportPlatform.TIKTOK, label: 'TikTok', platformLabel: 'TikTok', src: '/icons/tiktok-logo-white.svg', activeColor: 'bg-cyan-500/10 border-cyan-500/40', iconColor: 'text-cyan-400' },
+                        { id: ExportPlatform.INSTAGRAM, label: 'Instagram Reels', platformLabel: 'Instagram', src: '/icons/instagram-logo.png', activeColor: 'bg-pink-500/10 border-pink-500/40', iconColor: 'text-pink-500' }
                     ].map((platform) => {
                         const isConnected = currentSeries.platforms[platform.id] !== undefined;
                         const isDisabled = platform.id === ExportPlatform.INSTAGRAM;
@@ -220,7 +220,7 @@ function AutopilotControlPanel({
                                 <PlatformConnectButton
                                     key={platform.id}
                                     logoSrc={platform.src}
-                                    text={`Connect ${platform.shortLabel}`}
+                                    text={`Connect ${platform.platformLabel}`}
                                     onClick={() => {
                                         window.location.href = `/api/video/export/${platform.id}/autopilot/oauth?seriesId=${currentSeries.id}`;
                                     }}

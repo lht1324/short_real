@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getIsValidRequestS2S } from '@/lib/utils/getIsValidRequest';
+import { getIsValidRequestC2S } from '@/lib/utils/getIsValidRequest';
 import { getNextBaseResponse } from '@/lib/utils/getNextBaseResponse';
 
 /**
@@ -7,31 +7,24 @@ import { getNextBaseResponse } from '@/lib/utils/getNextBaseResponse';
  * Initiates TikTok OAuth process for an Autopilot series.
  */
 export async function GET(request: NextRequest) {
-    if (!getIsValidRequestS2S(request)) {
+    const { isValidRequest, user } = await getIsValidRequestC2S();
+
+    if (!isValidRequest || !user || !user.id) {
         return getNextBaseResponse({
             success: false,
             status: 401,
-            error: 'Unauthorized internal request',
+            error: 'Unauthorized. Sign-in required.',
         });
     }
 
     const searchParams = request.nextUrl.searchParams;
     const seriesId = searchParams.get('seriesId') || searchParams.get('taskId');
-    const sessionUserId = searchParams.get('userId');
 
     if (!seriesId) {
         return getNextBaseResponse({
             success: false,
             status: 400,
             error: 'Missing required query param: seriesId',
-        });
-    }
-
-    if (!sessionUserId) {
-        return getNextBaseResponse({
-            success: false,
-            status: 403,
-            error: "Forbidden. You can only read your own data."
         });
     }
 
@@ -43,7 +36,7 @@ export async function GET(request: NextRequest) {
             redirect_uri: `${process.env.BASE_URL}/callback/tiktok`,
             state: JSON.stringify({ 
                 seriesId: seriesId, 
-                userId: sessionUserId, 
+                userId: user.id, 
                 mode: 'autopilot' 
             }),
         });

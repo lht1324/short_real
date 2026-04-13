@@ -1,39 +1,31 @@
-// app/api/youtube/manual/oauth/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { getNextBaseResponse } from "@/lib/utils/getNextBaseResponse";
-import { getIsValidRequestS2S } from "@/lib/utils/getIsValidRequest";
+import { getIsValidRequestC2S } from "@/lib/utils/getIsValidRequest";
 import { createSupabaseServiceRoleClient } from "@/lib/supabaseServiceRole";
 import { internalFireAndForgetFetch } from "@/lib/utils/internalFetch";
 import { videoGenerationTasksServerAPI } from "@/lib/api/server/videoGenerationTasksServerAPI";
 import { ExportPlatform, ExportStatus } from "@/lib/api/types/supabase/VideoGenerationTasks";
 
 export async function GET(request: NextRequest) {
-    if (!getIsValidRequestS2S(request)) {
+    const { isValidRequest, user } = await getIsValidRequestC2S();
+
+    if (!isValidRequest || !user || !user.id) {
         return getNextBaseResponse({
             success: false,
             status: 401,
-            error: 'Unauthorized internal request',
+            error: 'Unauthorized. Sign-in required.',
         });
     }
 
     const searchParams = request.nextUrl.searchParams;
 
     const taskId = searchParams.get('taskId')
-    const sessionUserId = searchParams.get('userId');
 
     if (!taskId) {
         return getNextBaseResponse({
             success: false,
             status: 400,
             error: 'Missing required query param: taskId'
-        });
-    }
-
-    if (!sessionUserId) {
-        return getNextBaseResponse({
-            success: false,
-            status: 403,
-            error: "Forbidden. You can only read your own data."
         });
     }
 
@@ -53,7 +45,7 @@ export async function GET(request: NextRequest) {
         const { data: existingToken } = await supabase
             .from('user_youtube_tokens')
             .select('refresh_token, expires_at')
-            .eq('user_id', sessionUserId)
+            .eq('user_id', user.id)
             .single();
 
         if (existingToken?.refresh_token) {
@@ -61,7 +53,7 @@ export async function GET(request: NextRequest) {
             internalFireAndForgetFetch(
                 `${process.env.BASE_URL}/api/video/export/youtube/upload?taskId=${taskId}&privacySetting=${privacySetting}`,
                 { method: 'POST' },
-                { sessionUserId }
+                { userId: user.id }
             );
 
             await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, {
@@ -80,7 +72,7 @@ export async function GET(request: NextRequest) {
             access_type: 'offline',
             prompt: 'consent',
             state: encodeURIComponent(JSON.stringify({
-                userId: sessionUserId,
+                userId: user.id,
                 taskId: taskId,
                 privacySetting: privacySetting,
             }))
