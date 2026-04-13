@@ -264,9 +264,9 @@ function WorkspaceAutopilotPageClient() {
                 niche_value: '',
                 voice_id: voiceList[0]?.id || '',
                 platforms: {
-                    [ExportPlatform.YOUTUBE]: true,
-                    [ExportPlatform.TIKTOK]: false,
-                    [ExportPlatform.INSTAGRAM]: false,
+                    [ExportPlatform.YOUTUBE]: null,
+                    [ExportPlatform.TIKTOK]: null,
+                    [ExportPlatform.INSTAGRAM]: null,
                 },
                 schedule_cron: '0 10 * * *',
                 user_timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,

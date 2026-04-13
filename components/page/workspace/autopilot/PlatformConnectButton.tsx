@@ -8,27 +8,24 @@ interface PlatformConnectButtonProps {
     logoSrc: string;
     text: string;
     onClick: () => void;
-    disabled?: boolean;
-    isProgressing: boolean; // 추가: 개발 중인 플랫폼 표시 여부
+    isDisabled?: boolean;
 }
 
 /**
  * 오토파일럿 사이드바 전용 플랫폼 연동 버튼
- * isProgressing이 true일 경우 우측에 렌치 아이콘을 띄우고 비활성화됨.
+ * isDisabled가 true일 경우 우측에 렌치 아이콘을 띄우고 비활성화됨.
  */
 function PlatformConnectButton({
     logoSrc,
     text,
     onClick,
-    disabled = false,
-    isProgressing = false,
+    isDisabled = false,
 }: PlatformConnectButtonProps) {
     return (
         <button 
             type="button"
             onClick={onClick}
-            // isProgressing인 경우에도 클릭되지 않도록 비활성화 처리
-            disabled={disabled || isProgressing}
+            disabled={isDisabled}
             className="w-full flex items-center justify-between bg-gray-800 hover:bg-gray-700 text-white rounded-xl h-[56px] px-4 transition-all border border-purple-500/30 hover:border-purple-400 shadow-lg disabled:opacity-40 disabled:cursor-not-allowed group"
         >
             <div className="flex items-center">
@@ -53,9 +50,9 @@ function PlatformConnectButton({
 
             {/* 
                 상태 아이콘:
-                isProgressing일 때만 노란색 렌치 아이콘을 보여줌.
+                isDisabled일 때만 노란색 렌치 아이콘을 보여줌.
             */}
-            {isProgressing && (
+            {isDisabled && (
                 <Wrench size={18} className="text-yellow-500/50" />
             )}
         </button>

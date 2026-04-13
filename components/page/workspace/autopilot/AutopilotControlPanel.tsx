@@ -1,7 +1,6 @@
 'use client'
 
 import {memo, useEffect, useMemo, useState} from "react";
-import Image from "next/image";
 import {
     AlertCircle,
     BarChart3,
@@ -14,13 +13,13 @@ import {
     Pause,
     Play,
     Sparkles,
-    Trash2,
-    Wrench
+    Trash2
 } from 'lucide-react';
 import {ExportPlatform} from "@/lib/api/types/supabase/VideoGenerationTasks";
 import {AutopilotData} from "@/lib/api/types/supabase/AutopilotData";
 import {cronToWeekly, weeklyToCron} from "@/lib/utils/cronUtils";
 import PlatformConnectButton from "@/components/page/workspace/autopilot/PlatformConnectButton";
+import PlatformCheckbox from "@/components/page/workspace/autopilot/PlatformCheckbox";
 
 const DAYS_OF_WEEK = [
     { id: 1, label: 'M' },
@@ -191,54 +190,44 @@ function AutopilotControlPanel({
                 <h4 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">Platforms</h4>
                 <div className="space-y-2.5">
                     {[
-                        { id: ExportPlatform.YOUTUBE, label: 'YouTube Shorts', src: '/icons/youtube-logo.png', activeColor: 'bg-red-500/10 border-red-500/40', iconColor: 'text-red-500' },
-                        { id: ExportPlatform.TIKTOK, label: 'TikTok', src: '/icons/tiktok-logo-white.svg', activeColor: 'bg-cyan-500/10 border-cyan-500/40', iconColor: 'text-cyan-400' },
-                        { id: ExportPlatform.INSTAGRAM, label: 'Instagram Reels', src: '/icons/instagram-logo.png', activeColor: 'bg-pink-500/10 border-pink-500/40', iconColor: 'text-pink-500' }
+                        { id: ExportPlatform.YOUTUBE, label: 'YouTube Shorts', shortLabel: 'YouTube', src: '/icons/youtube-logo.png', activeColor: 'bg-red-500/10 border-red-500/40', iconColor: 'text-red-500' },
+                        { id: ExportPlatform.TIKTOK, label: 'TikTok', shortLabel: 'TikTok', src: '/icons/tiktok-logo-white.svg', activeColor: 'bg-cyan-500/10 border-cyan-500/40', iconColor: 'text-cyan-400' },
+                        { id: ExportPlatform.INSTAGRAM, label: 'Instagram Reels', shortLabel: 'Instagram', src: '/icons/instagram-logo.png', activeColor: 'bg-pink-500/10 border-pink-500/40', iconColor: 'text-pink-500' }
                     ].map((platform) => {
-                        // Dummy condition: Show Connect buttons by default if not disabled
-                        const isNotConnected = !currentSeries.platforms[platform.id];
+                        const isConnected = currentSeries.platforms[platform.id] !== undefined;
                         const isDisabled = platform.id === ExportPlatform.INSTAGRAM;
 
-                        if (!isNotConnected) {
+                        if (isConnected) {
+                            return (
+                                <PlatformCheckbox
+                                    key={platform.id}
+                                    logoSrc={platform.src}
+                                    activeColor={platform.activeColor}
+                                    iconColor={platform.iconColor}
+                                    label={platform.label}
+                                    isChecked={currentSeries.platforms[platform.id] === true}
+                                    isDisabled={isDisabled}
+                                    onClick={() => updateSeries({
+                                        platforms: { 
+                                            ...currentSeries.platforms, 
+                                            [platform.id]: !currentSeries.platforms[platform.id] 
+                                        }
+                                    })}
+                                />
+                            );
+                        } else {
                             return (
                                 <PlatformConnectButton
                                     key={platform.id}
                                     logoSrc={platform.src}
-                                    text={`Connect ${platform.id === ExportPlatform.YOUTUBE ? 'YouTube' : platform.id === ExportPlatform.TIKTOK ? 'TikTok' : 'Instagram'}`}
+                                    text={`Connect ${platform.shortLabel}`}
                                     onClick={() => {
                                         window.location.href = `/api/video/export/${platform.id}/autopilot/oauth?seriesId=${currentSeries.id}`;
                                     }}
-                                    disabled={isDisabled}
-                                    isProgressing={isDisabled}
+                                    isDisabled={isDisabled}
                                 />
                             );
                         }
-
-                        // 체크박스와 기존 코드 분리 필요
-                        return (
-                            <div
-                                key={platform.id}
-                                onClick={() => !platform.disabled && updateSeries({
-                                    platforms: { ...currentSeries.platforms, [platform.id]: !currentSeries.platforms[platform.id] }
-                                })}
-                                className={`flex items-center justify-between p-3.5 rounded-xl border transition-all ${
-                                    isDisabled
-                                        ? 'bg-black/20 border-white/5 opacity-40 cursor-not-allowed'
-                                        : currentSeries.platforms[platform.id] ? platform.activeColor + ' cursor-pointer' : 'bg-black/20 border-white/5 opacity-60 cursor-pointer'
-                                }`}
-                            >
-                                <div className="flex items-center gap-3.5">
-                                    <div className="w-7 h-7 relative">
-                                        <Image src={platform.src} alt={platform.label} fill className="object-contain" />
-                                    </div>
-                                    <span className={`text-sm font-bold ${currentSeries.platforms[platform.id] && !platform.disabled ? 'text-white' : 'text-gray-500'}`}>
-                                        {platform.label}
-                                    </span>
-                                </div>
-                                {currentSeries.platforms[platform.id] && !isNotConnected && <CheckCircle2 size={18} className={platform.iconColor} />}
-                                {isDisabled && <Wrench size={18} className="text-yellow-500/50" />}
-                            </div>
-                        );
                     })}
                 </div>
             </div>

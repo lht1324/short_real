@@ -11,7 +11,7 @@ export interface AutopilotData {
     niche_value: string; // 프리셋인 경우 프리셋 label, 커스텀인 경우 사용자가 입력한 프롬프트
     voice_id: string;
     style_id?: string;
-    platforms: Record<ExportPlatform, boolean>;
+    platforms: Record<ExportPlatform, boolean | undefined | null>; // 체크 여부 | 연결 안 됨 (Response) | 연결 안 함 (Request)
     schedule_cron: string;
     user_timezone: string;
     topic_history: string[];
