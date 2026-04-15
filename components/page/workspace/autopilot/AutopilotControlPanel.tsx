@@ -20,6 +20,7 @@ import {AutopilotData} from "@/lib/api/types/supabase/AutopilotData";
 import {cronToWeekly, weeklyToCron} from "@/lib/utils/cronUtils";
 import PlatformConnectButton from "@/components/page/workspace/autopilot/PlatformConnectButton";
 import PlatformCheckbox from "@/components/page/workspace/autopilot/PlatformCheckbox";
+import {autopilotDataClientAPI} from "@/lib/api/client/autopilotDataClientAPI";
 
 const DAYS_OF_WEEK = [
     { id: 1, label: 'M' },
