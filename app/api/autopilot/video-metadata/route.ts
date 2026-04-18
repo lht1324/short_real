@@ -89,10 +89,7 @@ export async function POST(
 
         await supabase
             .from('autopilot_data')
-            .update({
-                topic_history: updatedHistory,
-                last_run_at: new Date().toISOString()
-            })
+            .update({ topic_history: updatedHistory, })
             .eq('id', seriesId);
 
         // 3. 프롬프트 구성 (Preset / Custom 모드)
@@ -124,12 +121,32 @@ export async function POST(
             });
         }
 
+        console.log("[Autopilot] - postScriptResult: ", postScriptResult);
+
+        // // TEST!!
+        //
+        // return getNextBaseResponse({
+        //     success: true,
+        //     status: 200,
+        //     message: "Autopilot video metadata test: postScript()"
+        // });
+
         const {
             script: narrationScript,
         } = postScriptResult.data;
 
         // 3. 음성 생성 및 자막 타임라인 획득
         const voiceGenerationResult = await voiceServerAPI.postVoice(narrationScript, voiceId);
+
+        console.log("[Autopilot] - postVoiceResult: ", voiceGenerationResult.subtitleSegmentList);
+
+        // // TEST!!
+        //
+        // return getNextBaseResponse({
+        //     success: true,
+        //     status: 200,
+        //     message: "Autopilot video metadata test: postVoice()"
+        // });
 
         // 4. 비디오 생성 태스크 초기 레코드 생성
         const videoGenerationTask = await videoGenerationTasksServerAPI.postVideoGenerationTask({
@@ -145,12 +162,19 @@ export async function POST(
 
         const taskId = videoGenerationTask.id;
 
+        // // TEST!!
+        // await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
+        //
+        // return getNextBaseResponse({
+        //     success: true,
+        //     status: 200,
+        //     message: "Autopilot video metadata test: postVideoGenerationTask()"
+        // });
+
         // [New] Update autopilot_data with the current generating taskId
         await supabase
             .from('autopilot_data')
-            .upsert({
-                current_generating_task_id: taskId
-            })
+            .update({ current_generating_task_id: taskId })
             .eq('id', seriesId);
 
         // 5. OpenAI를 통해 씬 분할 (Scene Segmentation)
@@ -159,6 +183,17 @@ export async function POST(
             narrationScript,
             voiceGenerationResult.subtitleSegmentList
         );
+
+        console.log("[Autopilot] - postSceneSegmentationResult: ", postSceneSegmentationResult);
+
+        // // TEST!!
+        // await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
+        //
+        // return getNextBaseResponse({
+        //     success: true,
+        //     status: 200,
+        //     message: "Autopilot video metadata test: postSceneSegmentation()"
+        // });
 
         if (!postSceneSegmentationResult) {
             return getNextBaseResponse({
