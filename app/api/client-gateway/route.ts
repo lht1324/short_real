@@ -33,13 +33,6 @@ async function handleGatewayRequest(request: NextRequest) {
     // 2. Authenticate Session (Always attempt, but enforce only if not public)
     const { isValidRequest, user } = await getIsValidRequestC2S();
 
-    console.log("getIsValidRequestC2S(): ", {
-        isValidRequest,
-        user,
-        method,
-        targetPath,
-    })
-
     if (!(isPublic || (isValidRequest && user))) {
         return getNextBaseResponse({
             success: false,
