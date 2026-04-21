@@ -10,6 +10,7 @@ import {
 import {SubtitleSegment} from "@/lib/api/types/supabase/VideoGenerationTasks";
 import {createSupabaseServiceRoleClient} from "@/lib/supabaseServiceRole";
 import {VoiceResponseModelCategory} from "@elevenlabs/elevenlabs-js/api/types/VoiceResponseModelCategory";
+import Replicate from "replicate";
 
 export const voiceServerAPI = {
     // GET /voices - 사용 가능한 음성 목록 조회
@@ -138,6 +139,89 @@ export const voiceServerAPI = {
             
         } catch (error) {
             console.error('postNarrationBase64 error:', error);
+            throw error;
+        }
+    },
+
+    /**
+     * 오디오 길이 및 자막 타임라인을 특정 비율로 조절합니다.
+     * @param voiceResult 원본 음성 생성 결과
+     * @param ratio 적용할 배율 (목표 길이 / 원본 길이). 1보다 작으면 빨라짐.
+     * @param tempIdentifier 임시 파일 식별자 (예: seriesId)
+     */
+    async scaleVoiceDuration(
+        voiceResult: VoiceGenerationResult,
+        ratio: number,
+        tempIdentifier: string
+    ): Promise<VoiceGenerationResult> {
+        if (ratio === 1.0) return voiceResult;
+
+        const replicate = new Replicate({
+            auth: process.env.REPLICATE_API_TOKEN,
+        });
+        const supabase = createSupabaseServiceRoleClient();
+
+        try {
+            // 1. 배속 계산 (FFmpeg atempo 필터용)
+            // atempo = 1 / ratio (예: ratio 0.87 -> 약 1.15배속)
+            const speed = (1 / ratio).toFixed(6);
+
+            // 2. 임시 업로드 (Replicate 호출용)
+            const tempFileName = `temp/scale-voice-${tempIdentifier}.mp3`;
+            const { error: uploadError } = await supabase.storage
+                .from('narration_voice_storage')
+                .upload(tempFileName, voiceResult.audioBuffer, {
+                    contentType: 'audio/mpeg',
+                    upsert: true
+                });
+
+            if (uploadError) throw new Error(`Temp audio upload failed: ${uploadError.message}`);
+
+            const { data: signedData, error: signedError } = await supabase.storage
+                .from('narration_voice_storage')
+                .createSignedUrl(tempFileName, 300);
+
+            if (signedError || !signedData?.signedUrl) throw new Error("Failed to create signed URL for temp audio.");
+
+            // 3. Replicate FFmpeg Sandbox 호출
+            // atempo 필터는 0.5 ~ 2.0 사이만 지원하나, 현재 우리의 보정 범위(1.0 ~ 1.15)는 안전함.
+            const ffmpegArgs = `-filter:a "atempo=${speed}" -c:a libmp3lame -q:a 2`;
+            
+            const processedAudioUrl = await replicate.run(
+                "lht1324/ffmpeg-sandbox-2:06262bdc243f9afe6d1b9a8d338ab536044d0604ce4c420c9cde7ee7fe781339",
+                {
+                    input: {
+                        video_urls: JSON.stringify([signedData.signedUrl]),
+                        ffmpeg_args: ffmpegArgs,
+                    }
+                }
+            );
+
+            if (!processedAudioUrl) throw new Error("Replicate audio scaling failed.");
+
+            // 4. 결과 다운로드 및 업데이트
+            const response = await fetch(processedAudioUrl.toString());
+            if (!response.ok) throw new Error("Failed to download scaled audio.");
+            
+            const scaledAudioBuffer = Buffer.from(await response.arrayBuffer());
+
+            // 5. 자막 타임라인 업데이트
+            const scaledSubtitleList = voiceResult.subtitleSegmentList.map(segment => ({
+                ...segment,
+                startSec: segment.startSec * ratio,
+                endSec: segment.endSec * ratio,
+            }));
+
+            // 6. 임시 파일 삭제 (비동기로 진행하여 응답 속도 확보)
+            supabase.storage.from('narration_voice_storage').remove([tempFileName]).catch(console.error);
+
+            return {
+                audioBuffer: scaledAudioBuffer,
+                audioBase64: scaledAudioBuffer.toString('base64'),
+                subtitleSegmentList: scaledSubtitleList,
+            };
+        } catch (error) {
+            console.error("[scaleVoiceDuration] Error:", error);
             throw error;
         }
     },

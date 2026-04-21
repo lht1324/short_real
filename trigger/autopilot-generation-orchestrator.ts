@@ -54,7 +54,7 @@ export const autopilotGenerationOrchestrator = schedules.task({
         const targetUploadTime = getIntendedUploadTime(payload.timestamp, 2);
         const userTimezone = autopilotData.user_timezone || 'UTC';
 
-        if (autopilotData.last_run_at) {
+        if (process.env.NODE_ENV === "production" && autopilotData.last_run_at) {
             const lastRunAt = new Date(autopilotData.last_run_at);
             const isSameDay = isSameDayInTimezone(lastRunAt, targetUploadTime, userTimezone);
 

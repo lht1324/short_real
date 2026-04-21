@@ -140,6 +140,35 @@ export async function POST(
 
         console.log("[Autopilot] - postVoiceResult: ", voiceGenerationResult.subtitleSegmentList);
 
+        const lastSegment = voiceGenerationResult.subtitleSegmentList[voiceGenerationResult.subtitleSegmentList.length - 1];
+        const totalOriginalDuration = lastSegment ? lastSegment.endSec : 0;
+
+        let scalingRatio = 1.0;
+        if (totalOriginalDuration > 32.0) {
+            // Case B: 32s < T_orig <= 34.5s -> 30.0s 타겟
+            if (totalOriginalDuration <= 34.5) {
+                scalingRatio = 30.0 / totalOriginalDuration;
+            } 
+            // Case C: T_orig > 34.5s -> 1.15배속 제한 (R = 1/1.15)
+            else {
+                scalingRatio = 1 / 1.15;
+            }
+        }
+
+        if (scalingRatio !== 1.0) {
+            console.log(`[Autopilot] Scaling voice: ${totalOriginalDuration.toFixed(2)}s -> ${(totalOriginalDuration * scalingRatio).toFixed(2)}s (Ratio: ${scalingRatio.toFixed(4)})`);
+            const scaledResult = await voiceServerAPI.scaleVoiceDuration(voiceGenerationResult, scalingRatio, seriesId);
+            
+            // 결과 덮어쓰기
+            voiceGenerationResult.audioBuffer = scaledResult.audioBuffer;
+            voiceGenerationResult.audioBase64 = scaledResult.audioBase64;
+            voiceGenerationResult.subtitleSegmentList = scaledResult.subtitleSegmentList;
+
+            console.log("[Autopilot] - scaledPostVoiceResult: ", voiceGenerationResult.subtitleSegmentList);
+        }
+
+        // 추가 테스트 필요
+        
         // // TEST!!
         //
         // return getNextBaseResponse({
