@@ -167,8 +167,6 @@ export async function POST(
             console.log("[Autopilot] - scaledPostVoiceResult: ", voiceGenerationResult.subtitleSegmentList);
         }
 
-        // 추가 테스트 필요
-        
         // // TEST!!
         //
         // return getNextBaseResponse({
