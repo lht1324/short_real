@@ -71,6 +71,7 @@ export async function POST(
         const {
             scene_breakdown_list: sceneBreakdownList,
             final_video_merge_data: videoMergeData,
+            music_data_list: musicDataList,
         }: VideoGenerationTask = videoGenerationTask;
 
         if (!videoMergeData) {
@@ -89,16 +90,18 @@ export async function POST(
         const secondMusicUrl = await musicServerAPI.getMusicSignedUrl(`${taskId}/${taskId}_1.mp3`, 60 * 60);
         const narrationVoiceUrl = await voiceServerAPI.getVoiceSignedUrl(taskId);
 
-        // 오디오 파일을 Base64로 변환
-        const audioUrls = [firstMusicUrl, secondMusicUrl, narrationVoiceUrl];
-        const audioBase64List = await Promise.all(
-            audioUrls.map(async (url) => {
-                const response = await fetch(url);
-                if (!response.ok) throw new Error(`Failed to fetch audio from ${url}`);
-                const arrayBuffer = await response.arrayBuffer();
-                return Buffer.from(arrayBuffer).toString('base64');
-            })
-        );
+        // 음악 2개는 리샘플링(Mono 24kHz 64kbps), 나레이션은 원본 그대로
+        const [firstMusicBase64, secondMusicBase64] = await Promise.all([
+            musicServerAPI.resampleAudioForLLM(firstMusicUrl, `${taskId}-0`),
+            musicServerAPI.resampleAudioForLLM(secondMusicUrl, `${taskId}-1`),
+        ]);
+
+        const narrationResponse = await fetch(narrationVoiceUrl);
+        if (!narrationResponse.ok) throw new Error(`Failed to fetch narration audio from ${narrationVoiceUrl}`);
+        const narrationBuffer = Buffer.from(await narrationResponse.arrayBuffer());
+        const narrationBase64 = narrationBuffer.toString('base64');
+
+        const audioBase64List = [firstMusicBase64, secondMusicBase64, narrationBase64];
 
         const postMusicAnalysisResult = await llmServerAPI.postMusicAnalysis(
             nicheValue,
@@ -110,6 +113,7 @@ export async function POST(
                 }
             }),
             audioBase64List,
+            musicDataList || [],
         );
 
         if (!postMusicAnalysisResult.success || !postMusicAnalysisResult.data) {

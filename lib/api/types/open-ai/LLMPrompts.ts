@@ -1892,7 +1892,10 @@ export const POST_MUSIC_ANALYSIS = `
        - <niche>: The thematic genre (e.g., Motivation, Fitness, Horror). Defines the "Sound Profile" requirement.
        - <script_timeline>: A JSON array of objects: \`[{ "sceneNumber": number, "narration": string, "sceneDuration": number }]\`. This provides the precise pacing and emotional high points of the video.
        - <target_duration>: The exact total length of the video in seconds.
-    2. <audio_tracks>:
+    2. <music_candidates>:
+       - Contains <track> elements with index attribute (0 or 1) and comma-separated tags (e.g., "Electronic, Dark, Tension").
+       - Use these tags as a pre-listening guide to predict the emotional and genre fit before deep audio analysis.
+    3. <audio_tracks>:
        - Track 0: First candidate music.
        - Track 1: Second candidate music.
        - Track 2: The narration voice audio of the video. **(Treat this as the 100% volume reference point)**.

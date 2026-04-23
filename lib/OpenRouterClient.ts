@@ -3,7 +3,9 @@ import OpenAI from "openai";
 export enum OpenRouterModel {
     DEEPSEEK_V_3_2 = "deepseek/deepseek-v3.2",
     GEMINI_3_0_FLASH_PREVIEW = "google/gemini-3-flash-preview", // 3.0 Flash 출시 안 됨
-    GEMINI_3_1_FLASH_LITE_PREVIEW = "google/gemini-3.1-flash-lite-preview"
+    GEMINI_3_1_FLASH_LITE_PREVIEW = "google/gemini-3.1-flash-lite-preview",
+    GROK_4_1_FAST = "x-ai/grok-4.1-fast", // agentic/tool calling 강함, reasoning 지원
+    GEMINI_1_5_FLASH_EXP = "google/gemini-1.5-flash-exp", // 빠른 멀티모달, 오디오 강함 (후보)
 }
 
 export interface CompletionBaseInput {

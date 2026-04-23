@@ -219,5 +219,68 @@ export const musicServerAPI = {
         }
 
         return data.signedUrl;
+    },
+
+    async resampleAudioForLLM(
+        audioUrl: string,
+        tempIdentifier: string
+    ): Promise<string> {
+        const replicate = new Replicate({
+            auth: process.env.REPLICATE_API_TOKEN,
+        });
+        const supabase = createSupabaseServiceRoleClient();
+
+        try {
+            // 1. 오디오 다운로드
+            const response = await fetch(audioUrl);
+            if (!response.ok) throw new Error(`Failed to fetch audio from ${audioUrl}`);
+            const audioBuffer = Buffer.from(await response.arrayBuffer());
+
+            // 2. 임시 업로드 (Replicate 호출용)
+            const tempFileName = `temp/resample-llm-${tempIdentifier}.mp3`;
+            const { error: uploadError } = await supabase.storage
+                .from('video_music_temp_storage')
+                .upload(tempFileName, audioBuffer, {
+                    contentType: 'audio/mpeg',
+                    upsert: true
+                });
+
+            if (uploadError) throw new Error(`Temp audio upload failed: ${uploadError.message}`);
+
+            const { data: signedData, error: signedError } = await supabase.storage
+                .from('video_music_temp_storage')
+                .createSignedUrl(tempFileName, 300);
+
+            if (signedError || !signedData?.signedUrl) throw new Error("Failed to create signed URL for temp audio.");
+
+            // 3. Replicate FFmpeg Sandbox 호출 (Mono, 24kHz, 64kbps)
+            const ffmpegArgs = `-ar 24000 -ac 1 -b:a 64k`;
+
+            const processedAudioUrl = await replicate.run(
+                "lht1324/ffmpeg-sandbox-2:06262bdc243f9afe6d1b9a8d338ab536044d0604ce4c420c9cde7ee7fe781339",
+                {
+                    input: {
+                        video_urls: JSON.stringify([signedData.signedUrl]),
+                        ffmpeg_args: ffmpegArgs,
+                    }
+                }
+            );
+
+            if (!processedAudioUrl) throw new Error("Replicate audio resampling failed.");
+
+            // 4. 결과 다운로드
+            const processedResponse = await fetch(processedAudioUrl.toString());
+            if (!processedResponse.ok) throw new Error("Failed to download resampled audio.");
+
+            const resampledBuffer = Buffer.from(await processedResponse.arrayBuffer());
+
+            // 5. 임시 파일 삭제 (비동기로 진행하여 응답 속도 확보)
+            supabase.storage.from('video_music_temp_storage').remove([tempFileName]).catch(console.error);
+
+            return resampledBuffer.toString('base64');
+        } catch (error) {
+            console.error("[resampleAudioForLLM] Error:", error);
+            throw error;
+        }
     }
 }

@@ -13,7 +13,7 @@ import {
 import { VIDEO_ASPECT_RATIOS, VideoAspectRatio } from "@/lib/ReplicateData";
 import { ScriptGenerationResponse } from "@/lib/api/types/open-ai/ScriptGeneration";
 import { StyleGenerationParams } from "@/lib/api/types/supabase/Styles";
-import { SceneData, SubtitleSegment } from "@/lib/api/types/supabase/VideoGenerationTasks";
+import { MusicData, SceneData, SubtitleSegment } from "@/lib/api/types/supabase/VideoGenerationTasks";
 import { StoryboardData } from "@/lib/api/types/api/open-ai/scene/PostOpenAISceneResponse";
 import { Entity, InitialEntityManifestItem } from "@/lib/api/types/open-ai/Entity";
 import { MasterStyleInfo } from "@/lib/api/types/supabase/MasterStyleInfo";
@@ -1126,6 +1126,7 @@ Proceed with the prompt generation.
             sceneDuration: number;
         }[],
         audioBase64List: string[],
+        musicDataList: MusicData[],
     ): Promise<{
         success: boolean;
         data?: {
@@ -1142,7 +1143,12 @@ Proceed with the prompt generation.
             // 1. 비디오 총 길이 계산
             const targetDuration = scriptDataList.reduce((acc, scene) => acc + scene.sceneDuration, 0);
 
-            // 2. XML 형태의 유저 메시지 구성
+            // 2. Music Candidates XML 구성
+            const musicCandidatesXML = musicDataList.map((musicData, index) => {
+                return `    <track index="${index}">${(musicData.tagList || []).join(', ')}</track>`;
+            }).join('\n');
+
+            // 3. XML 형태의 유저 메시지 구성
             const userMessage = `
     <input_data>
       <video_context>
@@ -1150,6 +1156,9 @@ Proceed with the prompt generation.
         <script_timeline>${JSON.stringify(scriptDataList, null, 2)}</script_timeline>
         <target_duration>${targetDuration}</target_duration>
       </video_context>
+      <music_candidates>
+${musicCandidatesXML}
+      </music_candidates>
     </input_data>
 
     Instruction: Analyze the attached audio tracks based on the provided video context and timeline. Return the result in JSON format.
@@ -1159,7 +1168,7 @@ Proceed with the prompt generation.
 
             // 3. OpenRouter API 호출 (Gemini 3.1 Flash Lite)
             const generatedContent = await client.createCompletion({
-                model: OpenRouterModel.GEMINI_3_1_FLASH_LITE_PREVIEW,
+                model: OpenRouterModel.GROK_4_1_FAST, // Kimi 2.6 -> Grok 4.1 Fast 변경. 후보: GEMINI_1_5_FLASH_EXP
                 systemMessage: systemMessage,
                 userMessage: userMessage,
                 audioBase64List: audioBase64List,
