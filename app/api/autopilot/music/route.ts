@@ -124,6 +124,14 @@ export async function POST(
             });
         }
 
+        // // TEST!!
+        //
+        // return getNextBaseResponse({
+        //     success: true,
+        //     status: 200,
+        //     message: "Autopilot video metadata test: postScript()"
+        // });
+
         const {
             selectedIndex,
             startSec,

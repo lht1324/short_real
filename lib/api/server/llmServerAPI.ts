@@ -1168,7 +1168,7 @@ ${musicCandidatesXML}
 
             // 3. OpenRouter API 호출 (Gemini 3.1 Flash Lite)
             const generatedContent = await client.createCompletion({
-                model: OpenRouterModel.GROK_4_1_FAST, // Kimi 2.6 -> Grok 4.1 Fast 변경. 후보: GEMINI_1_5_FLASH_EXP
+                model: OpenRouterModel.GEMINI_3_1_FLASH_LITE_PREVIEW,
                 systemMessage: systemMessage,
                 userMessage: userMessage,
                 audioBase64List: audioBase64List,
