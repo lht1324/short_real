@@ -67,7 +67,7 @@ Instruction: Process the input data and generate the next viral topic based on t
 
             const client = new OpenRouterClient();
             const generatedContent = await client.createCompletion({
-                model: OpenRouterModel.DEEPSEEK_V_3_2,
+                model: OpenRouterModel.DEEPSEEK_V_4_FLASH,
                 systemMessage: POST_AUTOPILOT_NICHE_TOPIC_PROMPT,
                 userMessage: userMessage,
                 maxCompletionTokens: 2048,
@@ -100,7 +100,7 @@ Instruction: Process the input data and generate the next viral topic based on t
             const client = new OpenRouterClient();
 
             const generatedContent = await client.createCompletion({
-                model: OpenRouterModel.DEEPSEEK_V_3_2,
+                model: OpenRouterModel.DEEPSEEK_V_4_FLASH,
                 systemMessage: POST_SCRIPT_PROMPT,
                 userMessage: userPrompt,
 
@@ -197,7 +197,7 @@ Instruction: Process the input data and return the JSON output according to the 
             const client = new OpenRouterClient();
 
             const generatedContent = await client.createCompletion({
-                model: OpenRouterModel.DEEPSEEK_V_3_2,
+                model: OpenRouterModel.DEEPSEEK_V_4_FLASH,
                 systemMessage: systemMessage,
                 userMessage: userMessage,
                 reasoning: true,
@@ -278,7 +278,7 @@ Instruction: Analyze <video_metadata>, <target_aspect_ratio>, <style_guidelines>
             const client = new OpenRouterClient();
 
             const generatedContent = await client.createCompletion({
-                model: OpenRouterModel.DEEPSEEK_V_3_2,
+                model: OpenRouterModel.DEEPSEEK_V_4_FLASH,
                 systemMessage: systemMessage,
                 userMessage: userMessage,
                 reasoning: true,
@@ -467,7 +467,7 @@ Instruction: Analyze <video_metadata>, <target_aspect_ratio>, <style_guidelines>
             const client = new OpenRouterClient();
 
             const generatedContent = await client.createCompletion({
-                model: OpenRouterModel.DEEPSEEK_V_3_2,
+                model: OpenRouterModel.DEEPSEEK_V_4_FLASH,
                 systemMessage: systemMessage,
                 userMessage: userMessage,
                 reasoning: true,
@@ -580,7 +580,7 @@ Instruction: For each entity in <entity_manifest_list>, generate a front-view fu
             const client = new OpenRouterClient();
 
             const generatedContent = await client.createCompletion({
-                model: OpenRouterModel.DEEPSEEK_V_3_2,
+                model: OpenRouterModel.DEEPSEEK_V_4_FLASH,
                 systemMessage: systemMessage,
                 userMessage: userMessage,
                 reasoning: true,
@@ -712,7 +712,7 @@ Instruction: Analyze <video_metadata>, <target_aspect_ratio>, <style_guidelines>
             const client = new OpenRouterClient();
 
             const generatedContent = await client.createCompletion({
-                model: OpenRouterModel.DEEPSEEK_V_3_2,
+                model: OpenRouterModel.DEEPSEEK_V_4_FLASH,
                 systemMessage: systemMessage,
                 userMessage: userMessage,
                 reasoning: true,
@@ -848,7 +848,7 @@ Instruction: Generate the scene instruction JSON.
             const client = new OpenRouterClient();
 
             const generatedContent = await client.createCompletion({
-                model: OpenRouterModel.DEEPSEEK_V_3_2,
+                model: OpenRouterModel.DEEPSEEK_V_4_FLASH,
                 systemMessage: systemMessage,
                 userMessage: userMessage,
                 reasoning: true,
@@ -1069,7 +1069,7 @@ Proceed with the prompt generation.
             const client = new OpenRouterClient();
 
             const generatedContent = await client.createCompletion({
-                model: OpenRouterModel.DEEPSEEK_V_3_2,
+                model: OpenRouterModel.DEEPSEEK_V_4_FLASH,
                 systemMessage: systemMessage,
                 userMessage: userMessage,
                 maxCompletionTokens: 8192,

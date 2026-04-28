@@ -2,6 +2,7 @@ import OpenAI from "openai";
 
 export enum OpenRouterModel {
     DEEPSEEK_V_3_2 = "deepseek/deepseek-v3.2",
+    DEEPSEEK_V_4_FLASH = "deepseek/deepseek-v4-flash",
     GEMINI_3_0_FLASH_PREVIEW = "google/gemini-3-flash-preview", // 3.0 Flash 출시 안 됨
     GEMINI_3_1_FLASH_LITE_PREVIEW = "google/gemini-3.1-flash-lite-preview",
     GROK_4_1_FAST = "x-ai/grok-4.1-fast", // agentic/tool calling 강함, reasoning 지원
