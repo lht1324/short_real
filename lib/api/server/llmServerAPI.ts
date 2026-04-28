@@ -1,15 +1,3 @@
-import {
-    POST_SCRIPT_PROMPT,
-    POST_SCENE_SEGMENTATION_PROMPT,
-    POST_SCENE_CASTING_DATA_LIST_PROMPT,
-    POST_ENTITY_MANIFEST_LIST,
-    POST_ENTITY_REFERENCE_IMAGE_PROMPT_PROMPT,
-    POST_MASTER_STYLE_INFO_PROMPT,
-    POST_IMAGE_GEN_PROMPT_PROMPT,
-    POST_VIDEO_GEN_PROMPT_PROMPT,
-    POST_MUSIC_GENERATION_DATA_PROMPT,
-    POST_MUSIC_ANALYSIS,
-} from "@/lib/api/types/open-ai/LLMPrompts";
 import { VIDEO_ASPECT_RATIOS, VideoAspectRatio } from "@/lib/ReplicateData";
 import { ScriptGenerationResponse } from "@/lib/api/types/open-ai/ScriptGeneration";
 import { StyleGenerationParams } from "@/lib/api/types/supabase/Styles";
@@ -23,6 +11,16 @@ import { cleanAndParseJSON } from "@/lib/utils/jsonUtils";
 import { logger } from "@trigger.dev/sdk";
 import { OpenRouterClient, OpenRouterModel } from "@/lib/OpenRouterClient";
 import {STYLE_DATA_LIST} from "@/lib/styles";
+import {POST_SCRIPT_PROMPT} from "@/lib/llm-prompts/POST_SCRIPT_PROMPT";
+import {POST_SCENE_SEGMENTATION_PROMPT} from "@/lib/llm-prompts/POST_SCENE_SEGMENTATION_PROMPT";
+import {POST_SCENE_CASTING_DATA_LIST_PROMPT} from "@/lib/llm-prompts/POST_SCENE_CASTING_DATA_LIST_PROMPT";
+import {POST_ENTITY_MANIFEST_LIST} from "@/lib/llm-prompts/POST_ENTITY_MANIFEST_LIST";
+import {POST_ENTITY_REFERENCE_IMAGE_PROMPT_PROMPT} from "@/lib/llm-prompts/POST_ENTITY_REFERENCE_IMAGE_PROMPT_PROMPT";
+import {POST_MASTER_STYLE_INFO_PROMPT} from "@/lib/llm-prompts/POST_MASTER_STYLE_INFO_PROMPT";
+import {POST_IMAGE_GEN_PROMPT_PROMPT} from "@/lib/llm-prompts/POST_IMAGE_GEN_PROMPT_PROMPT";
+import {POST_VIDEO_GEN_PROMPT_PROMPT} from "@/lib/llm-prompts/POST_VIDEO_GEN_PROMPT_PROMPT";
+import {POST_MUSIC_GENERATION_DATA_PROMPT} from "@/lib/llm-prompts/POST_MUSIC_GENERATION_DATA_PROMPT";
+import {POST_MUSIC_ANALYSIS} from "@/lib/llm-prompts/POST_MUSIC_ANALYSIS";
 
 const POST_AUTOPILOT_NICHE_TOPIC_PROMPT = `
 <developer_instruction>
