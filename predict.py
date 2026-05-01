@@ -4,12 +4,23 @@ import subprocess
 import re
 import librosa
 import numpy as np
+import soundfile as sf
 from cog import BasePredictor, Input, Path
 
 class Predictor(BasePredictor):
     def setup(self):
         """환경 설정 및 필요한 라이브러리 체크"""
-        pass
+        print("--- Environment Check ---", flush=True)
+        try:
+            res = subprocess.run(["ffmpeg", "-version"], capture_output=True, text=True)
+            print(f"FFmpeg found: {res.stdout.splitlines()[0]}", flush=True)
+        except Exception as e:
+            print(f"FFmpeg NOT FOUND: {e}", flush=True)
+            
+        try:
+            print(f"Soundfile version: {sf.__version__}", flush=True)
+        except Exception as e:
+            print(f"Soundfile error: {e}", flush=True)
 
     def predict(
         self,
@@ -20,18 +31,45 @@ class Predictor(BasePredictor):
         """
         Librosa를 사용하여 음악의 하이라이트 구간을 비트에 맞춰 추출합니다.
         """
+        print(f"--- Prediction Start ---", flush=True)
+        print(f"audio_url path: {audio_url}", flush=True)
+        
+        if os.path.exists(str(audio_url)):
+            file_size = os.path.getsize(str(audio_url))
+            print(f"Audio file exists. Size: {file_size} bytes", flush=True)
+            # 사전 정보 출력 (librosa.load hang 오해 방지)
+            try:
+                info = sf.info(str(audio_url))
+                print(f"Audio info: Duration={info.duration:.2f}s, SR={info.samplerate}, Channels={info.channels}", flush=True)
+            except Exception as e:
+                print(f"Could not read audio info via soundfile: {e}", flush=True)
+        else:
+            print(f"ERROR: Audio file does not exist at {audio_url}", flush=True)
+            return []
+
         # 1. 오디오 로드
-        print(f"Loading audio: {audio_url}", flush=True)
-        # sr=None으로 로드하여 원본 샘플링 레이트 유지
-        y, sr = librosa.load(str(audio_url), sr=None)
+        print(f"Loading audio with librosa (this may take 10-30s for typical tracks)...", flush=True)
+        try:
+            # sr=None으로 로드하여 원본 샘플링 레이트 유지
+            y, sr = librosa.load(str(audio_url), sr=None)
+            print(f"Audio loaded. Data shape: {y.shape}, Final Duration: {len(y)/sr:.2f}s", flush=True)
+        except Exception as e:
+            print(f"FAILED to load audio: {e}", flush=True)
+            return []
         
         # 2. 비트 트래킹 (BPM 및 Beat 위치 파악)
         print("Analyzing beats...", flush=True)
-        tempo, beat_frames = librosa.beat.beat_track(y=y, sr=sr)
-        beat_times = librosa.frames_to_time(beat_frames, sr=sr)
+        try:
+            tempo, beat_frames = librosa.beat.beat_track(y=y, sr=sr)
+            # librosa 0.10+ 대응 (scalar tempo 처리)
+            bpm = float(np.atleast_1d(tempo)[0])
+            print(f"Estimated BPM: {bpm:.2f}", flush=True)
+            beat_times = librosa.frames_to_time(beat_frames, sr=sr)
+        except Exception as e:
+            print(f"Beat tracking failed: {e}", flush=True)
+            beat_times = np.array([])
         
         # 3. 구간 에너지 분석 (Sliding Window RMS)
-        # 사장님 말씀대로 특정 지점이 아닌 '구간'의 평균 에너지를 계산합니다.
         print(f"Analyzing energy for {target_duration}s windows...", flush=True)
         hop_length = 512
         rms = librosa.feature.rms(y=y, hop_length=hop_length)[0]
@@ -47,6 +85,7 @@ class Predictor(BasePredictor):
             window_times = rms_times[:len(window_avg_rms)]
         else:
             # 오디오가 target_duration보다 짧은 경우 (비정상 케이스 처리)
+            print("Warning: Audio is shorter than target_duration.", flush=True)
             window_avg_rms = np.array([np.mean(rms)])
             window_times = np.array([0.0])
 
@@ -69,10 +108,8 @@ class Predictor(BasePredictor):
                 continue
             
             # 5. [핵심] 비트 정렬 (Beat Alignment)
-            # 해당 피크 지점에서 가장 가까운 '이전' 비트 위치를 찾음 (정박 시작 보장)
             past_beats = beat_times[beat_times <= start_time_candidate]
             if len(past_beats) > 0:
-                # 피크 바로 직전의 비트 지점을 시작점으로 보정
                 aligned_start_sec = past_beats[-1]
             else:
                 aligned_start_sec = start_time_candidate
@@ -83,13 +120,12 @@ class Predictor(BasePredictor):
                 'avg_rms': float(window_avg_rms[idx])
             })
             
-            # 목표 개수만큼 찾으면 중단
             if len(candidates) >= candidate_count:
                 break
         
         # 6. 클립 추출 및 저장 (FFmpeg 사용)
         output_paths = []
-        output_dir = "candidates_output"
+        output_dir = "/tmp/candidates_output"  # 안정성을 위한 절대경로 (/tmp 권장)
         if os.path.exists(output_dir):
             shutil.rmtree(output_dir)
         os.makedirs(output_dir)
@@ -100,8 +136,6 @@ class Predictor(BasePredictor):
             out_path = os.path.join(output_dir, out_filename)
             start = cand['start_sec']
             
-            # FFmpeg: 정밀 커팅
-            # -ss (start), -t (duration)
             cmd = [
                 "ffmpeg", "-y",
                 "-ss", f"{start:.6f}",
@@ -115,7 +149,7 @@ class Predictor(BasePredictor):
             try:
                 subprocess.run(cmd, check=True, capture_output=True)
                 
-                # 추가: 각 클립의 LUFS 측정 (Step 2를 위한 데이터 확보)
+                # 추가: 각 클립의 LUFS 측정
                 lufs = self.measure_lufs(out_path)
                 print(f"Candidate {i}: Start at {start:.2f}s (RMS: {cand['avg_rms']:.4f}, LUFS: {lufs})", flush=True)
                 
@@ -124,6 +158,7 @@ class Predictor(BasePredictor):
                 print(f"Error extracting candidate {i}: {e.stderr.decode()}", flush=True)
                 continue
 
+        print(f"--- Prediction Finished. Generated {len(output_paths)} clips. ---", flush=True)
         return output_paths
 
     def measure_lufs(self, file_path):
@@ -134,7 +169,7 @@ class Predictor(BasePredictor):
             "-f", "null", "-"
         ]
         result = subprocess.run(cmd, capture_output=True, text=True)
-        # stderr에서 Integrated loudness 추출
+        # stderr에서 Integrated loudness 추출 (정규식 수정)
         output = result.stderr
         match = re.search(r"I:\s+(-?\d+\.?\d*)\s+LUFS", output)
         if match:

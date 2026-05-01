@@ -43,3 +43,9 @@ yarn-error.log*
 next-env.d.ts
 .trigger
 /env.local
+
+# Replicate Cog
+.dockerignore
+.cog/*
+/workflows/*
+__pycache__/*
