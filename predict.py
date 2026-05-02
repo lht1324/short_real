@@ -70,13 +70,14 @@ class Predictor(BasePredictor):
             beat_times = np.array([])
         
         # 3. 구간 에너지 분석 (Sliding Window RMS)
-        print(f"Analyzing energy for {target_duration}s windows...", flush=True)
+        actual_target_duration = min(target_duration, len(y) / sr)
+        print(f"Analyzing energy for {actual_target_duration:.2f}s windows...", flush=True)
         hop_length = 512
         rms = librosa.feature.rms(y=y, hop_length=hop_length)[0]
         rms_times = librosa.frames_to_time(np.arange(len(rms)), sr=sr, hop_length=hop_length)
         
-        # 30초(target_duration) 길이에 해당하는 윈도우 사이즈 계산
-        window_size_frames = int(librosa.time_to_frames(target_duration, sr=sr, hop_length=hop_length))
+        # 윈도우 사이즈 계산 (실제 곡 길이를 넘지 않도록 조정)
+        window_size_frames = int(librosa.time_to_frames(actual_target_duration, sr=sr, hop_length=hop_length))
         
         # 슬라이딩 윈도우로 평균 RMS 계산
         if len(rms) > window_size_frames:
@@ -84,14 +85,14 @@ class Predictor(BasePredictor):
             # convolve 결과의 시간축 매핑
             window_times = rms_times[:len(window_avg_rms)]
         else:
-            # 오디오가 target_duration보다 짧은 경우 (비정상 케이스 처리)
-            print("Warning: Audio is shorter than target_duration.", flush=True)
+            # 오디오가 target_duration보다 짧은 경우 (전체 평균 사용)
+            print(f"Warning: Audio ({len(y)/sr:.2f}s) is shorter than target_duration ({target_duration}s).", flush=True)
             window_avg_rms = np.array([np.mean(rms)])
             window_times = np.array([0.0])
 
         # 4. 하이라이트 후보 선정 (거리 제한 적용)
         candidates = []
-        min_distance_sec = target_duration + 5.0  # 클립 간 최소 간격 유지 (중복 방지)
+        min_distance_sec = actual_target_duration + 5.0  # 클립 간 최소 간격 유지 (중복 방지)
         
         # 에너지가 높은 순서대로 인덱스 정렬
         sorted_indices = np.argsort(window_avg_rms)[::-1]
@@ -99,8 +100,8 @@ class Predictor(BasePredictor):
         for idx in sorted_indices:
             start_time_candidate = window_times[idx]
             
-            # 곡의 끝부분 확보 가능 여부 체크
-            if start_time_candidate + target_duration > len(y) / sr:
+            # 곡의 끝부분 확보 가능 여부 체크 (실제 남은 길이 기준)
+            if start_time_candidate + actual_target_duration > (len(y) / sr) + 0.1: # 소량의 오차 허용
                 continue
                 
             # 이미 선정된 후보와 너무 가까운지 체크
@@ -136,10 +137,13 @@ class Predictor(BasePredictor):
             out_path = os.path.join(output_dir, out_filename)
             start = cand['start_sec']
             
+            # 추출할 길이 결정 (곡의 끝을 넘지 않도록)
+            clip_duration = min(actual_target_duration, (len(y) / sr) - start)
+            
             cmd = [
                 "ffmpeg", "-y",
                 "-ss", f"{start:.6f}",
-                "-t", f"{target_duration:.6f}",
+                "-t", f"{clip_duration:.6f}",
                 "-i", str(audio_url),
                 "-acodec", "libmp3lame",
                 "-b:a", "192k",
@@ -151,7 +155,7 @@ class Predictor(BasePredictor):
                 
                 # 추가: 각 클립의 LUFS 측정
                 lufs = self.measure_lufs(out_path)
-                print(f"Candidate {i}: Start at {start:.2f}s (RMS: {cand['avg_rms']:.4f}, LUFS: {lufs})", flush=True)
+                print(f"Candidate {i}: Start at {start:.2f}s, Dur: {clip_duration:.2f}s (RMS: {cand['avg_rms']:.4f}, LUFS: {lufs})", flush=True)
                 
                 output_paths.append(Path(out_path))
             except subprocess.CalledProcessError as e:
@@ -169,9 +173,16 @@ class Predictor(BasePredictor):
             "-f", "null", "-"
         ]
         result = subprocess.run(cmd, capture_output=True, text=True)
-        # stderr에서 Integrated loudness 추출 (정규식 수정)
         output = result.stderr
-        match = re.search(r"I:\s+(-?\d+\.?\d*)\s+LUFS", output)
-        if match:
-            return float(match.group(1))
+        
+        # 1. Summary 섹션에서 I(Integrated) 값 추출 시도 (가장 정확)
+        summary_match = re.search(r"Summary:.*I:\s+(-?\d+\.?\d*)\s+LUFS", output, re.DOTALL)
+        if summary_match:
+            return float(summary_match.group(1))
+            
+        # 2. 실패 시 모든 I 값 중 마지막 값을 추출 (FFmpeg의 실시간 로그 대응)
+        all_matches = re.findall(r"I:\s+(-?\d+\.?\d*)\s+LUFS", output)
+        if all_matches:
+            return float(all_matches[-1])
+            
         return None
