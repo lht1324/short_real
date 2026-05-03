@@ -4,185 +4,149 @@ import subprocess
 import re
 import librosa
 import numpy as np
-import soundfile as sf
 from cog import BasePredictor, Input, Path
 
 class Predictor(BasePredictor):
     def setup(self):
-        """환경 설정 및 필요한 라이브러리 체크"""
-        print("--- Environment Check ---", flush=True)
-        try:
-            res = subprocess.run(["ffmpeg", "-version"], capture_output=True, text=True)
-            print(f"FFmpeg found: {res.stdout.splitlines()[0]}", flush=True)
-        except Exception as e:
-            print(f"FFmpeg NOT FOUND: {e}", flush=True)
-            
-        try:
-            print(f"Soundfile version: {sf.__version__}", flush=True)
-        except Exception as e:
-            print(f"Soundfile error: {e}", flush=True)
+        """환경 설정"""
+        pass
 
     def predict(
         self,
-        audio_url: Path = Input(description="분석할 음악 파일 URL"),
+        music_audio_url: Path = Input(description="분석 및 추출할 원본 음악 파일 URL"),
+        voice_audio_url: Path = Input(description="기준점이 될 나레이션(음성) 파일 URL"),
         target_duration: float = Input(description="추출할 클립의 길이 (초)", default=30.0),
         candidate_count: int = Input(description="추출할 후보 클립 개수 (최대 5)", default=3, ge=1, le=5),
     ) -> list[Path]:
         """
-        Librosa를 사용하여 음악의 하이라이트 구간을 비트에 맞춰 추출합니다.
+        1. 음성 오디오의 평균 LUFS 측정
+        2. 음악 하이라이트 구간(비트 정렬) 추출
+        3. 각 음악 클립을 음성 LUFS에 맞춰 1:1 볼륨 조절 후 반환
         """
-        print(f"--- Prediction Start ---", flush=True)
-        print(f"audio_url path: {audio_url}", flush=True)
+        # --- [Step 1] 음성(나레이션) LUFS 분석 ---
+        print(f"--- Step 1: Analyzing Voice Anchor ---", flush=True)
+        print(f"Voice URL: {voice_audio_url}", flush=True)
+        voice_lufs = self.measure_lufs(str(voice_audio_url))
         
-        if os.path.exists(str(audio_url)):
-            file_size = os.path.getsize(str(audio_url))
-            print(f"Audio file exists. Size: {file_size} bytes", flush=True)
-            # 사전 정보 출력 (librosa.load hang 오해 방지)
-            try:
-                info = sf.info(str(audio_url))
-                print(f"Audio info: Duration={info.duration:.2f}s, SR={info.samplerate}, Channels={info.channels}", flush=True)
-            except Exception as e:
-                print(f"Could not read audio info via soundfile: {e}", flush=True)
+        if voice_lufs is None:
+            print("Warning: Failed to measure voice LUFS. Falling back to -20.0 LUFS.", flush=True)
+            voice_lufs = -20.0
         else:
-            print(f"ERROR: Audio file does not exist at {audio_url}", flush=True)
-            return []
+            print(f"Voice Anchor LUFS: {voice_lufs}", flush=True)
 
-        # 1. 오디오 로드
-        print(f"Loading audio with librosa (this may take 10-30s for typical tracks)...", flush=True)
-        try:
-            # sr=None으로 로드하여 원본 샘플링 레이트 유지
-            y, sr = librosa.load(str(audio_url), sr=None)
-            print(f"Audio loaded. Data shape: {y.shape}, Final Duration: {len(y)/sr:.2f}s", flush=True)
-        except Exception as e:
-            print(f"FAILED to load audio: {e}", flush=True)
-            return []
+        # --- [Step 2] 음악 분석 및 하이라이트 후보 선정 ---
+        print(f"\n--- Step 2: Analyzing Music Highlights ---", flush=True)
+        print(f"Music URL: {music_audio_url}", flush=True)
         
-        # 2. 비트 트래킹 (BPM 및 Beat 위치 파악)
-        print("Analyzing beats...", flush=True)
-        try:
-            tempo, beat_frames = librosa.beat.beat_track(y=y, sr=sr)
-            # librosa 0.10+ 대응 (scalar tempo 처리)
-            bpm = float(np.atleast_1d(tempo)[0])
-            print(f"Estimated BPM: {bpm:.2f}", flush=True)
-            beat_times = librosa.frames_to_time(beat_frames, sr=sr)
-        except Exception as e:
-            print(f"Beat tracking failed: {e}", flush=True)
-            beat_times = np.array([])
+        # 오디오 로드
+        y, sr = librosa.load(str(music_audio_url), sr=None)
+        duration = len(y) / sr
+        print(f"Music Duration: {duration:.2f}s, SR: {sr}", flush=True)
         
-        # 3. 구간 에너지 분석 (Sliding Window RMS)
-        actual_target_duration = min(target_duration, len(y) / sr)
-        print(f"Analyzing energy for {actual_target_duration:.2f}s windows...", flush=True)
+        # 비트 트래킹
+        print("Detecting beats...", flush=True)
+        tempo, beat_frames = librosa.beat.beat_track(y=y, sr=sr)
+        beat_times = librosa.frames_to_time(beat_frames, sr=sr)
+        
+        # 구간 에너지 분석 (Sliding Window RMS)
+        print(f"Scanning for high-energy {target_duration}s windows...", flush=True)
         hop_length = 512
         rms = librosa.feature.rms(y=y, hop_length=hop_length)[0]
         rms_times = librosa.frames_to_time(np.arange(len(rms)), sr=sr, hop_length=hop_length)
         
-        # 윈도우 사이즈 계산 (실제 곡 길이를 넘지 않도록 조정)
-        window_size_frames = int(librosa.time_to_frames(actual_target_duration, sr=sr, hop_length=hop_length))
+        window_size_frames = int(librosa.time_to_frames(target_duration, sr=sr, hop_length=hop_length))
         
-        # 슬라이딩 윈도우로 평균 RMS 계산
         if len(rms) > window_size_frames:
             window_avg_rms = np.convolve(rms, np.ones(window_size_frames)/window_size_frames, mode='valid')
-            # convolve 결과의 시간축 매핑
             window_times = rms_times[:len(window_avg_rms)]
         else:
-            # 오디오가 target_duration보다 짧은 경우 (전체 평균 사용)
-            print(f"Warning: Audio ({len(y)/sr:.2f}s) is shorter than target_duration ({target_duration}s).", flush=True)
             window_avg_rms = np.array([np.mean(rms)])
             window_times = np.array([0.0])
 
-        # 4. 하이라이트 후보 선정 (거리 제한 적용)
+        # 후보지 선정 (거리 제한 35초 적용)
         candidates = []
-        min_distance_sec = actual_target_duration + 5.0  # 클립 간 최소 간격 유지 (중복 방지)
-        
-        # 에너지가 높은 순서대로 인덱스 정렬
+        min_distance_sec = target_duration + 5.0
         sorted_indices = np.argsort(window_avg_rms)[::-1]
         
         for idx in sorted_indices:
             start_time_candidate = window_times[idx]
-            
-            # 곡의 끝부분 확보 가능 여부 체크 (실제 남은 길이 기준)
-            if start_time_candidate + actual_target_duration > (len(y) / sr) + 0.1: # 소량의 오차 허용
+            if start_time_candidate + target_duration > duration:
                 continue
-                
-            # 이미 선정된 후보와 너무 가까운지 체크
             if any(abs(start_time_candidate - c['raw_start']) < min_distance_sec for c in candidates):
                 continue
             
-            # 5. [핵심] 비트 정렬 (Beat Alignment)
+            # 비트 정렬 (시작점을 가장 가까운 이전 비트로 당김)
             past_beats = beat_times[beat_times <= start_time_candidate]
-            if len(past_beats) > 0:
-                aligned_start_sec = past_beats[-1]
-            else:
-                aligned_start_sec = start_time_candidate
+            aligned_start_sec = past_beats[-1] if len(past_beats) > 0 else start_time_candidate
             
             candidates.append({
                 'raw_start': start_time_candidate,
                 'start_sec': float(aligned_start_sec),
                 'avg_rms': float(window_avg_rms[idx])
             })
-            
             if len(candidates) >= candidate_count:
                 break
         
-        # 6. 클립 추출 및 저장 (FFmpeg 사용)
+        # --- [Step 3] 클립 추출 및 1:1 볼륨 정렬 (Normalization) ---
+        print(f"\n--- Step 3: Extracting & Normalizing {len(candidates)} Clips ---", flush=True)
         output_paths = []
-        output_dir = "/tmp/candidates_output"  # 안정성을 위한 절대경로 (/tmp 권장)
+        output_dir = "normalized_candidates"
         if os.path.exists(output_dir):
             shutil.rmtree(output_dir)
         os.makedirs(output_dir)
         
-        print(f"Extracting {len(candidates)} candidates...", flush=True)
         for i, cand in enumerate(candidates):
-            out_filename = f"candidate_{i}.mp3"
-            out_path = os.path.join(output_dir, out_filename)
+            temp_path = os.path.join(output_dir, f"temp_raw_{i}.mp3")
+            final_path = os.path.join(output_dir, f"candidate_{i}.mp3")
             start = cand['start_sec']
             
-            # 추출할 길이 결정 (곡의 끝을 넘지 않도록)
-            clip_duration = min(actual_target_duration, (len(y) / sr) - start)
-            
-            cmd = [
-                "ffmpeg", "-y",
-                "-ss", f"{start:.6f}",
-                "-t", f"{clip_duration:.6f}",
-                "-i", str(audio_url),
-                "-acodec", "libmp3lame",
-                "-b:a", "192k",
-                out_path
+            # 1. 구간 추출 (원본 볼륨 유지)
+            extract_cmd = [
+                "ffmpeg", "-y", "-ss", f"{start:.6f}", "-t", f"{target_duration:.6f}",
+                "-i", str(music_audio_url), "-acodec", "libmp3lame", "-b:a", "192k", temp_path
             ]
+            subprocess.run(extract_cmd, check=True, capture_output=True)
             
-            try:
-                subprocess.run(cmd, check=True, capture_output=True)
+            # 2. 추출된 클립의 LUFS 측정
+            music_clip_lufs = self.measure_lufs(temp_path)
+            
+            # 3. 보정값(Gain) 계산: Voice Anchor - Music Clip LUFS
+            # 예: 음성이 -20, 음악이 -15라면 -5dB를 적용해 음악을 낮춤
+            if music_clip_lufs is not None:
+                gain = voice_lufs - music_clip_lufs
+            else:
+                gain = 0.0
                 
-                # 추가: 각 클립의 LUFS 측정
-                lufs = self.measure_lufs(out_path)
-                print(f"Candidate {i}: Start at {start:.2f}s, Dur: {clip_duration:.2f}s (RMS: {cand['avg_rms']:.4f}, LUFS: {lufs})", flush=True)
+            print(f"Clip {i}: Music LUFS {music_clip_lufs}, Target LUFS {voice_lufs} -> Applying Gain: {gain:.2f}dB", flush=True)
+            
+            # 4. 볼륨 보정 적용하여 최종 파일 생성
+            norm_cmd = [
+                "ffmpeg", "-y", "-i", temp_path,
+                "-af", f"volume={gain:.2f}dB",
+                "-acodec", "libmp3lame", "-b:a", "192k", final_path
+            ]
+            subprocess.run(norm_cmd, check=True, capture_output=True)
+            
+            # 임시 파일 삭제
+            if os.path.exists(temp_path):
+                os.remove(temp_path)
                 
-                output_paths.append(Path(out_path))
-            except subprocess.CalledProcessError as e:
-                print(f"Error extracting candidate {i}: {e.stderr.decode()}", flush=True)
-                continue
+            output_paths.append(Path(final_path))
 
-        print(f"--- Prediction Finished. Generated {len(output_paths)} clips. ---", flush=True)
+        print(f"\n--- Processing Complete: {len(output_paths)} clips generated ---", flush=True)
         return output_paths
 
     def measure_lufs(self, file_path):
-        """FFmpeg을 사용하여 파일의 Integrated Loudness(LUFS)를 측정합니다."""
-        cmd = [
-            "ffmpeg", "-i", file_path,
-            "-af", "ebur128=peak=true",
-            "-f", "null", "-"
-        ]
-        result = subprocess.run(cmd, capture_output=True, text=True)
-        output = result.stderr
-        
-        # 1. Summary 섹션에서 I(Integrated) 값 추출 시도 (가장 정확)
-        summary_match = re.search(r"Summary:.*I:\s+(-?\d+\.?\d*)\s+LUFS", output, re.DOTALL)
-        if summary_match:
-            return float(summary_match.group(1))
-            
-        # 2. 실패 시 모든 I 값 중 마지막 값을 추출 (FFmpeg의 실시간 로그 대응)
-        all_matches = re.findall(r"I:\s+(-?\d+\.?\d*)\s+LUFS", output)
-        if all_matches:
-            return float(all_matches[-1])
-            
+        """Integrated LUFS 측정 유틸리티"""
+        # ebur128 필터를 사용하여 Integrated Loudness(I) 추출
+        cmd = ["ffmpeg", "-i", file_path, "-af", "ebur128", "-f", "null", "-"]
+        try:
+            result = subprocess.run(cmd, capture_output=True, text=True)
+            output = result.stderr
+            # re.findall을 사용하여 모든 'I:' 값을 찾고, 그 중 마지막(최종 결과) 값을 선택합니다.
+            matches = re.findall(r"I:\s+(-?\d+\.?\d*)\s+LUFS", output)
+            if matches:
+                return float(matches[-1])
+        except Exception as e:
+            print(f"LUFS Measurement Error: {e}", flush=True)
         return None
