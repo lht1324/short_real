@@ -9,6 +9,7 @@ import {AutopilotData} from "@/lib/api/types/supabase/AutopilotData";
 import {VideoGenerationTask, VideoGenerationTaskStatus} from "@/lib/api/types/supabase/VideoGenerationTasks";
 import {musicServerAPI} from "@/lib/api/server/musicServerAPI";
 import {voiceServerAPI} from "@/lib/api/server/voiceServerAPI";
+import Replicate from "replicate";
 
 export async function POST(
     request: NextRequest,
@@ -22,6 +23,9 @@ export async function POST(
     }
 
     const supabase = createSupabaseServiceRoleClient();
+    const replicate = new Replicate({
+        auth: process.env.REPLICATE_API_TOKEN,
+    });
 
     try {
         const searchParams = request.nextUrl.searchParams;
@@ -103,7 +107,7 @@ export async function POST(
 
         const audioBase64List = [firstMusicBase64, secondMusicBase64, narrationBase64];
 
-        const postMusicAnalysisResult = await llmServerAPI.postMusicAnalysis(
+        const postMusicAnalysisResult = await llmServerAPI.postMusicSelection(
             nicheValue,
             sceneBreakdownList.map((sceneData) => {
                 return {
@@ -115,6 +119,50 @@ export async function POST(
             audioBase64List,
             musicDataList || [],
         );
+
+        // [Step 2 & 3] Librosa 기반 하이라이트 추출 및 볼륨 정규화 (Smart Extraction)
+        const totalDuration = sceneBreakdownList.reduce((acc, scene) => acc + scene.sceneDuration, 0);
+
+        console.log(`[Music Preprocessor] Calling Replicate model for taskId: ${taskId}, duration: ${totalDuration}`);
+
+        const preprocessorResult = await replicate.run(
+            "lht1324/audio-preprocessor:23202b8a079e2bacc0f634035550d8325173010be30aa5209d806ee3db3b0ad9",
+            {
+                input: {
+                    music_audio_url: firstMusicUrl, // musicIndex 0 (사장님 요청사항)
+                    voice_audio_url: narrationVoiceUrl,
+                    target_duration: totalDuration,
+                    candidate_count: 3,
+                }
+            }
+        ) as string[];
+
+        if (!preprocessorResult || preprocessorResult.length === 0) {
+            throw new Error("Music preprocessing failed: No output from Replicate");
+        }
+
+        // 추출된 후보 클립들을 Supabase Storage에 업로드 (Step 4에서 AI가 선택할 수 있도록 준비)
+        const uploadPromises = preprocessorResult.map(async (url, index) => {
+            const response = await fetch(url);
+            if (!response.ok) throw new Error(`Failed to fetch candidate ${index} from ${url}`);
+
+            const arrayBuffer = await response.arrayBuffer();
+            const storagePath = `${taskId}/candidate_${index}.mp3`;
+
+            const { error: uploadError } = await supabase.storage
+                .from('video_music_temp_storage')
+                .upload(storagePath, arrayBuffer, {
+                    contentType: 'audio/mpeg',
+                    upsert: true
+                });
+
+            if (uploadError) throw new Error(`Failed to upload candidate ${index}: ${uploadError.message}`);
+
+            return storagePath;
+        });
+
+        const candidatePaths = await Promise.all(uploadPromises);
+        console.log(`[Music Preprocessor] Uploaded ${candidatePaths.length} candidates to storage`);
 
         if (!postMusicAnalysisResult.success || !postMusicAnalysisResult.data) {
             return getNextBaseResponse({

@@ -1116,7 +1116,7 @@ Proceed with the prompt generation.
         }
     },
 
-    async postMusicAnalysis(
+    async postMusicSelection(
         niche: string,
         scriptDataList: {
             sceneNumber: number;
@@ -1231,5 +1231,75 @@ ${musicCandidatesXML}
                 error: error instanceof Error ? error.message : 'Unknown error occurred'
             };
         }
+    },
+
+    async postMusicHighlightSelection(
+        niche: string,
+        scriptDataList: {
+            sceneNumber: number;
+            narration: string;
+            sceneDuration: number;
+        }[],
+        audioBase64List: string[],
+    ): Promise<{
+        success: boolean;
+        data?: {
+            selectedIndex: number;
+            mixingWeight: number;
+        };
+        error?: string;
+    }> {
+        try {
+            // TODO: Define proper system prompt for highlight selection
+            const systemMessage = ""; 
+
+            const userMessage = ``;
+
+            const client = new OpenRouterClient();
+
+            // 오디오 분석을 위해 Gemini 3.1 Flash Lite 사용
+            const generatedContent = await client.createCompletion({
+                model: OpenRouterModel.GEMINI_3_1_FLASH_LITE_PREVIEW,
+                systemMessage: systemMessage,
+                userMessage: userMessage,
+                audioBase64List: audioBase64List,
+                reasoning: true,
+                maxCompletionTokens: 2048,
+            }, `postMusicHighlightSelection()`);
+
+            if (!generatedContent) {
+                return {
+                    success: false,
+                    error: 'No analysis generated from AI'
+                };
+            }
+
+            try {
+                const parsedData: {
+                    selected_index: number;
+                    mixing_weight: number;
+                } = cleanAndParseJSON(generatedContent);
+
+                return {
+                    success: true,
+                    data: {
+                        selectedIndex: parsedData.selected_index,
+                        mixingWeight: parsedData.mixing_weight,
+                    }
+                };
+            } catch (parseError) {
+                console.error('Failed to parse music highlight selection JSON:', parseError);
+                return {
+                    success: false,
+                    error: 'Failed to parse AI response'
+                };
+            }
+        } catch (error) {
+            console.error('Error in postMusicHighlightSelection():', error);
+            return {
+                success: false,
+                error: error instanceof Error ? error.message : 'Unknown error occurred'
+            };
+        }
     }
-    }
+}
