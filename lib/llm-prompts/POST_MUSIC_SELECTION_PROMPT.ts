@@ -1,4 +1,4 @@
-export const POST_MUSIC_ANALYSIS = `
+export const POST_MUSIC_SELECTION_PROMPT = `
 <developer_instruction>
   <role>
     You are an "Elite AI Audio Editor" and "Kinetic Sound Strategist" for viral short-form content.

@@ -20,7 +20,8 @@ import {POST_MASTER_STYLE_INFO_PROMPT} from "@/lib/llm-prompts/POST_MASTER_STYLE
 import {POST_IMAGE_GEN_PROMPT_PROMPT} from "@/lib/llm-prompts/POST_IMAGE_GEN_PROMPT_PROMPT";
 import {POST_VIDEO_GEN_PROMPT_PROMPT} from "@/lib/llm-prompts/POST_VIDEO_GEN_PROMPT_PROMPT";
 import {POST_MUSIC_GENERATION_DATA_PROMPT} from "@/lib/llm-prompts/POST_MUSIC_GENERATION_DATA_PROMPT";
-import {POST_MUSIC_ANALYSIS} from "@/lib/llm-prompts/POST_MUSIC_ANALYSIS";
+import {POST_MUSIC_SELECTION_PROMPT} from "@/lib/llm-prompts/POST_MUSIC_SELECTION_PROMPT";
+import {POST_MUSIC_HIGHLIGHT_SELECTION_PROMPT} from "@/lib/llm-prompts/POST_MUSIC_HIGHLIGHT_SELECTION_PROMPT";
 
 const POST_AUTOPILOT_NICHE_TOPIC_PROMPT = `
 <developer_instruction>
@@ -1136,7 +1137,7 @@ Proceed with the prompt generation.
         error?: string;
     }> {
         try {
-            const systemMessage = POST_MUSIC_ANALYSIS;
+            const systemMessage = POST_MUSIC_SELECTION_PROMPT;
 
             // 1. 비디오 총 길이 계산
             const targetDuration = scriptDataList.reduce((acc, scene) => acc + scene.sceneDuration, 0);
@@ -1235,12 +1236,21 @@ ${musicCandidatesXML}
 
     async postMusicHighlightSelection(
         niche: string,
+        videoTitle: string,
+        videoDescription: string,
+        styleContext: {
+            era: string;
+            location: string;
+            tonality: string;
+            vibe: string;
+        },
         scriptDataList: {
             sceneNumber: number;
             narration: string;
             sceneDuration: number;
         }[],
-        audioBase64List: string[],
+        voiceBase64: string,
+        musicAudioBase64List: string[],
     ): Promise<{
         success: boolean;
         data?: {
@@ -1250,14 +1260,33 @@ ${musicCandidatesXML}
         error?: string;
     }> {
         try {
-            // TODO: Define proper system prompt for highlight selection
-            const systemMessage = ""; 
+            const systemMessage = POST_MUSIC_HIGHLIGHT_SELECTION_PROMPT;
 
-            const userMessage = ``;
+            const userMessage = `
+<input_data>
+  <video_context>
+    <title>${videoTitle}</title>
+    <description>${videoDescription}</description>
+    <niche>${niche}</niche>
+    <style_context>
+      <era>${styleContext.era}</era>
+      <location>${styleContext.location}</location>
+      <tonality>${styleContext.tonality}</tonality>
+      <vibe>${styleContext.vibe}</vibe>
+    </style_context>
+    <script_timeline>${JSON.stringify(scriptDataList, null, 2)}</script_timeline>
+  </video_context>
+</input_data>
+
+Instruction: Analyze the narration (Track 0) and the candidate music tracks (Track 1 to N). Select the best track and the optimal mixing weight. Return the result in JSON format.
+`;
 
             const client = new OpenRouterClient();
 
             // 오디오 분석을 위해 Gemini 3.1 Flash Lite 사용
+            // Track 0: Voice, Track 1~N: Music Candidates
+            const audioBase64List = [voiceBase64, ...musicAudioBase64List];
+
             const generatedContent = await client.createCompletion({
                 model: OpenRouterModel.GEMINI_3_1_FLASH_LITE_PREVIEW,
                 systemMessage: systemMessage,
@@ -1278,7 +1307,14 @@ ${musicCandidatesXML}
                 const parsedData: {
                     selected_index: number;
                     mixing_weight: number;
+                    reasoning: string;
                 } = cleanAndParseJSON(generatedContent);
+
+                console.log("postMusicHighlightSelection() Result: ", JSON.stringify({
+                    selectedIndex: parsedData.selected_index,
+                    mixingWeight: parsedData.mixing_weight,
+                    reasoning: parsedData.reasoning,
+                }));
 
                 return {
                     success: true,
