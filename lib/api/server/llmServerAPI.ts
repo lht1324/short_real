@@ -1118,11 +1118,18 @@ Proceed with the prompt generation.
     },
 
     async postMusicSelection(
+        videoTitle: string,
+        videoDescription: string,
         niche: string,
+        styleContext: {
+            era: string;
+            location: string;
+            tonality: string;
+            vibe: string;
+        },
         scriptDataList: {
             sceneNumber: number;
             narration: string;
-            sceneDuration: number;
         }[],
         audioBase64List: string[],
         musicDataList: MusicData[],
@@ -1130,38 +1137,40 @@ Proceed with the prompt generation.
         success: boolean;
         data?: {
             selectedIndex: number;
-            startSec: number;
-            endSec: number;
-            volumePercentage: number;
+            reasoning: string;
         };
         error?: string;
     }> {
         try {
             const systemMessage = POST_MUSIC_SELECTION_PROMPT;
 
-            // 1. 비디오 총 길이 계산
-            const targetDuration = scriptDataList.reduce((acc, scene) => acc + scene.sceneDuration, 0);
-
-            // 2. Music Candidates XML 구성
+            // 1. Music Candidates XML 구성
             const musicCandidatesXML = musicDataList.map((musicData, index) => {
                 return `    <track index="${index}">${(musicData.tagList || []).join(', ')}</track>`;
             }).join('\n');
 
-            // 3. XML 형태의 유저 메시지 구성
+            // 2. XML 형태의 유저 메시지 구성 (styleContext 포함)
             const userMessage = `
-    <input_data>
-      <video_context>
-        <niche>${niche}</niche>
-        <script_timeline>${JSON.stringify(scriptDataList, null, 2)}</script_timeline>
-        <target_duration>${targetDuration}</target_duration>
-      </video_context>
-      <music_candidates>
+<input_data>
+  <video_context>
+    <title>${videoTitle}</title>
+    <description>${videoDescription}</description>
+    <niche>${niche}</niche>
+    <style_context>
+      <era>${styleContext.era}</era>
+      <location>${styleContext.location}</location>
+      <tonality>${styleContext.tonality}</tonality>
+      <vibe>${styleContext.vibe}</vibe>
+    </style_context>
+    <script_timeline>${JSON.stringify(scriptDataList, null, 2)}</script_timeline>
+  </video_context>
+  <music_candidates>
 ${musicCandidatesXML}
-      </music_candidates>
-    </input_data>
+  </music_candidates>
+</input_data>
 
-    Instruction: Analyze the attached audio tracks based on the provided video context and timeline. Return the result in JSON format.
-    `;
+Instruction: Analyze the attached audio tracks based on the provided video context and style guidelines. Select the best track and return the result in JSON format.
+`;
 
             const client = new OpenRouterClient();
 
@@ -1171,62 +1180,42 @@ ${musicCandidatesXML}
                 systemMessage: systemMessage,
                 userMessage: userMessage,
                 audioBase64List: audioBase64List,
-                reasoning: true, // 복잡한 오디오 분석을 위해 추론 활성화
-                maxCompletionTokens: 8192,
-            }, `postMusicAnalysis()`);
+                reasoning: true,
+                maxCompletionTokens: 2048,
+            }, `postMusicSelection()`);
 
             if (!generatedContent) {
                 return {
                     success: false,
-                    error: 'No analysis generated from Gemini 3.1 Flash Lite'
+                    error: 'No analysis generated from AI'
                 };
             }
 
             // 4. JSON 파싱 및 반환
             try {
-                const {
-                    selected_index: selectedIndex,
-                    reasoning: reasoning,
-                    start_sec: startSec,
-                    end_sec: endSec,
-                    volume_percentage: volumePercentage,
-                    energy_score: energyScore,
-                }: {
+                const parsedData: {
                     selected_index: number;
                     reasoning: string;
-                    start_sec: number;
-                    end_sec: number;
-                    volume_percentage: number;
-                    energy_score: number;
                 } = cleanAndParseJSON(generatedContent);
 
-                console.log("postMusicAnalysis() Result: ", JSON.stringify({
-                    selectedIndex: selectedIndex,
-                    startSec: startSec,
-                    endSec: endSec,
-                    volume_percentage: volumePercentage,
-                    reasoning: reasoning,
-                    energyScore: energyScore,
-                }));
+                console.log("postMusicSelection() Result: ", JSON.stringify(parsedData));
 
                 return {
                     success: true,
                     data: {
-                        selectedIndex,
-                        startSec,
-                        endSec,
-                        volumePercentage,
+                        selectedIndex: parsedData.selected_index,
+                        reasoning: parsedData.reasoning,
                     }
                 };
             } catch (parseError) {
-                console.error('Failed to parse music analysis JSON:', parseError);
+                console.error('Failed to parse music selection JSON:', parseError);
                 return {
                     success: false,
                     error: 'Failed to parse AI response'
                 };
             }
         } catch (error) {
-            console.error('Error in postMusicAnalysis():', error);
+            console.error('Error in postMusicSelection():', error);
             return {
                 success: false,
                 error: error instanceof Error ? error.message : 'Unknown error occurred'
