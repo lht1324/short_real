@@ -76,6 +76,9 @@ export async function POST(
             scene_breakdown_list: sceneBreakdownList,
             final_video_merge_data: videoMergeData,
             music_data_list: musicDataList,
+            video_title: videoTitle,
+            video_description: videoDescription,
+            master_style_info: masterStyleInfo,
         }: VideoGenerationTask = videoGenerationTask;
 
         if (!videoMergeData) {
@@ -90,46 +93,60 @@ export async function POST(
             niche_value: nicheValue,
         }: AutopilotData = autopilotData;
 
+        // [Step 1] 예술적 곡 선택 (Artistic Song Selection) Prep
         const firstMusicUrl = await musicServerAPI.getMusicSignedUrl(`${taskId}/${taskId}_0.mp3`, 60 * 60);
         const secondMusicUrl = await musicServerAPI.getMusicSignedUrl(`${taskId}/${taskId}_1.mp3`, 60 * 60);
         const narrationVoiceUrl = await voiceServerAPI.getVoiceSignedUrl(taskId);
 
-        // 음악 2개는 리샘플링(Mono 24kHz 64kbps), 나레이션은 원본 그대로
-        const [firstMusicBase64, secondMusicBase64] = await Promise.all([
+        // 오디오 리샘플링 (LLM 분석용: Mono 24kHz 64kbps)
+        console.log(`[Music Selection] Resampling audio for Step 1 analysis...`);
+        const [firstMusicBase64, secondMusicBase64, narrationBase64] = await Promise.all([
             musicServerAPI.resampleAudioForLLM(firstMusicUrl, `${taskId}-0`),
             musicServerAPI.resampleAudioForLLM(secondMusicUrl, `${taskId}-1`),
+            musicServerAPI.resampleAudioForLLM(narrationVoiceUrl, `${taskId}-narration`),
         ]);
 
-        const narrationResponse = await fetch(narrationVoiceUrl);
-        if (!narrationResponse.ok) throw new Error(`Failed to fetch narration audio from ${narrationVoiceUrl}`);
-        const narrationBuffer = Buffer.from(await narrationResponse.arrayBuffer());
-        const narrationBase64 = narrationBuffer.toString('base64');
+        // 스타일 컨텍스트 추출
+        const styleContext = {
+            era: masterStyleInfo?.globalEnvironment.era || "Modern",
+            location: masterStyleInfo?.globalEnvironment.locationArchetype || "Cinematic Space",
+            tonality: masterStyleInfo?.colorAndLight.tonality || "Balanced",
+            vibe: `${masterStyleInfo?.colorAndLight.lightingSetup || ""} ${masterStyleInfo?.fidelity.grainLevel || ""}`.trim() || "Professional Vibe",
+        };
 
-        const audioBase64List = [firstMusicBase64, secondMusicBase64, narrationBase64];
-
-        const postMusicAnalysisResult = await llmServerAPI.postMusicSelection(
+        // [Step 1] 예술적 곡 선택 (Artistic Song Selection) 실행
+        const musicSelectionResult = await llmServerAPI.postMusicSelection(
+            videoTitle || "Viral Content",
+            videoDescription || "A high-impact short-form video",
             nicheValue,
-            sceneBreakdownList.map((sceneData) => {
-                return {
-                    sceneNumber: sceneData.sceneNumber,
-                    narration: sceneData.narration,
-                    sceneDuration: sceneData.sceneDuration,
-                }
-            }),
-            audioBase64List,
+            styleContext,
+            sceneBreakdownList.map((sceneData) => ({
+                sceneNumber: sceneData.sceneNumber,
+                narration: sceneData.narration,
+            })),
+            [firstMusicBase64, secondMusicBase64, narrationBase64], // [음악0, 음악1, 나레이션] 순서 준수
             musicDataList || [],
         );
+
+        if (!musicSelectionResult.success || !musicSelectionResult.data) {
+            throw new Error(`Music selection failed: ${musicSelectionResult.error}`);
+        }
+
+        const selectedMusicIndex = musicSelectionResult.data.selectedIndex;
+        const selectedMusicUrl = selectedMusicIndex === 0 ? firstMusicUrl : secondMusicUrl;
+        console.log(`[Music Selection] AI selected music index: ${selectedMusicIndex} (Reasoning: ${musicSelectionResult.data.reasoning})`);
 
         // [Step 2 & 3] Librosa 기반 하이라이트 추출 및 볼륨 정규화 (Smart Extraction)
         const totalDuration = sceneBreakdownList.reduce((acc, scene) => acc + scene.sceneDuration, 0);
 
-        console.log(`[Music Preprocessor] Calling Replicate model for taskId: ${taskId}, duration: ${totalDuration}`);
+        console.log(`[Music Preprocessor] Calling Librosa model for selected index: ${selectedMusicIndex}, duration: ${totalDuration}`);
 
+        // Processed audio files' path list
         const preprocessorResult = await replicate.run(
             "lht1324/audio-preprocessor:23202b8a079e2bacc0f634035550d8325173010be30aa5209d806ee3db3b0ad9",
             {
                 input: {
-                    music_audio_url: firstMusicUrl, // musicIndex 0 (사장님 요청사항)
+                    music_audio_url: selectedMusicUrl,
                     voice_audio_url: narrationVoiceUrl,
                     target_duration: totalDuration,
                     candidate_count: 3,
@@ -141,7 +158,7 @@ export async function POST(
             throw new Error("Music preprocessing failed: No output from Replicate");
         }
 
-        // 추출된 후보 클립들을 Supabase Storage에 업로드 (Step 4에서 AI가 선택할 수 있도록 준비)
+        // 추출된 후보 클립들을 Supabase Storage에 업로드
         const uploadPromises = preprocessorResult.map(async (url, index) => {
             const response = await fetch(url);
             if (!response.ok) throw new Error(`Failed to fetch candidate ${index} from ${url}`);
@@ -164,41 +181,56 @@ export async function POST(
         const candidatePaths = await Promise.all(uploadPromises);
         console.log(`[Music Preprocessor] Uploaded ${candidatePaths.length} candidates to storage`);
 
-        if (!postMusicAnalysisResult.success || !postMusicAnalysisResult.data) {
-            return getNextBaseResponse({
-                success: false,
-                status: 500,
-                error: `Music analysis failed: ${postMusicAnalysisResult.error}`,
-            });
+        // [Step 4] AI 최종 매칭 및 가중치 결정 (Final Matching)
+        console.log(`[Music Finalist] Resampling candidates for final selection...`);
+        const candidateBase64List = await Promise.all(candidatePaths.map(async (path, index) => {
+            const signedUrl = await musicServerAPI.getMusicSignedUrl(path, 600);
+            return await musicServerAPI.resampleAudioForLLM(signedUrl, `${taskId}-candidate-${index}`);
+        }));
+
+        const finalMatchingResult = await llmServerAPI.postMusicHighlightSelection(
+            nicheValue,
+            videoTitle || "Viral Content",
+            videoDescription || "A high-impact short-form video",
+            styleContext,
+            sceneBreakdownList.map((sceneData) => ({
+                sceneNumber: sceneData.sceneNumber,
+                narration: sceneData.narration,
+                sceneDuration: sceneData.sceneDuration,
+            })),
+            narrationBase64,
+            candidateBase64List // [후보0, 후보1, 후보2]
+        );
+
+        if (!finalMatchingResult.success || !finalMatchingResult.data) {
+            throw new Error(`Final music matching failed: ${finalMatchingResult.error}`);
         }
 
-        // // TEST!!
-        //
-        // return getNextBaseResponse({
-        //     success: true,
-        //     status: 200,
-        //     message: "Autopilot video metadata test: postScript()"
-        // });
+        const { selectedIndex: finalCandidateIndex, mixingWeight } = finalMatchingResult.data;
+        console.log(`[Music Finalist] AI selected candidate index: ${finalCandidateIndex}, mixingWeight: ${mixingWeight}`);
 
-        const {
-            selectedIndex,
-            startSec,
-            endSec,
-            volumePercentage,
-        } = postMusicAnalysisResult.data;
+        // [Step 3.5] 최종 선택된 파일을 autopilot_cut_music.mp3로 고정 (사장님 요청사항)
+        const selectedCandidatePath = `${taskId}/candidate_${finalCandidateIndex}.mp3`;
+        const finalCutMusicPath = `${taskId}/autopilot_cut_music.mp3`;
 
+        const { error: copyError } = await supabase.storage
+            .from('video_music_temp_storage')
+            .copy(selectedCandidatePath, finalCutMusicPath);
+
+        if (copyError) throw new Error(`Failed to copy selected candidate to final path: ${copyError.message}`);
+
+        // DB 업데이트: 최종 선택된 정보와 가공 완료 플래그 저장
         await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, {
             status: VideoGenerationTaskStatus.FINALIZING,
             final_video_merge_data: {
                 ...videoMergeData,
-                musicIndex: selectedIndex,
-                cuttingAreaStartSec: startSec,
-                cuttingAreaEndSec: endSec,
-                volumePercentage: volumePercentage, // 볼륨은 추후 고도화 예정
+                musicIndex: selectedMusicIndex,
+                volumePercentage: Math.round(mixingWeight * 100),
+                isMusicPreProcessed: true, // 새로운 하이브리드 로직 적용됨을 명시
             }
         });
 
-        // Fire and Forget으로 최종 병합 호출 (S2S 인증 지원 필요)
+        // Fire and Forget으로 최종 병합 호출
         internalFireAndForgetFetch(
             `${process.env.BASE_URL}/api/video/merge/final?taskId=${taskId}&userId=${videoGenerationTask.user_id}`,
             {
@@ -210,7 +242,7 @@ export async function POST(
         return getNextBaseResponse({
             status: 200,
             success: true,
-            message: "Music is analyzed successfully",
+            message: "Music hybrid pipeline (Step 1-3) completed successfully",
         });
     } catch (error) {
         console.error("Error in POST /api/autopilot/music:", error);

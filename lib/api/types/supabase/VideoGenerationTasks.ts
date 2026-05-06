@@ -116,6 +116,9 @@ export interface FinalVideoMergeData {
     cuttingAreaStartSec: number;
     cuttingAreaEndSec: number;
     volumePercentage: number;
+
+    // Autopilot
+    isMusicPreProcessed?: boolean;
 }
 
 export enum ExportStatus {
