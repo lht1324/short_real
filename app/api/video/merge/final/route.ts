@@ -78,9 +78,11 @@ export async function POST(
             cuttingAreaStartSec,
             cuttingAreaEndSec,
             volumePercentage,
+
+            isMusicPreProcessed,
         }: FinalVideoMergeData = videoGenerationTask.final_video_merge_data;
 
-        if (cuttingAreaEndSec <= cuttingAreaStartSec) {
+        if (!isMusicPreProcessed && (cuttingAreaEndSec <= cuttingAreaStartSec)) {
             await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
             return getNextBaseResponse({
                 success: false,
@@ -98,8 +100,12 @@ export async function POST(
             });
         }
 
+        const audioFilePath = isMusicPreProcessed
+            ? `${taskId}/autopilot_cut_music.mp3`
+            : `${taskId}/${taskId}_${musicIndex}.mp3`;
+
         const videoUrl = await videoServerAPI.getVideoSignedUrl(`${taskId}/${taskId}.mp4`, 60 * 60);
-        const audioUrl = await musicServerAPI.getMusicSignedUrl(`${taskId}/${taskId}_${musicIndex}.mp3`, 60 * 60);
+        const audioUrl = await musicServerAPI.getMusicSignedUrl(audioFilePath, 60 * 60);
 
         const patchVideoGenerationTaskStatusResult = await videoGenerationTasksServerAPI.patchVideoGenerationTaskStatus(taskId, VideoGenerationTaskStatus.FINALIZING);
 
@@ -121,6 +127,10 @@ export async function POST(
             captionOneLineHeight,
         );
 
+        const videoDuration = videoGenerationTask.scene_breakdown_list.reduce((acc, sceneData) => {
+            return sceneData.sceneDuration + acc;
+        }, 0);
+
         // 1. Caption 번인 2. Music 편집을 병렬 실행
         const [captionPredictionId, musicPredictionId] = await Promise.all([
             videoServerAPI.postVideoMergeCaption(
@@ -130,12 +140,12 @@ export async function POST(
             ),
             musicServerAPI.postMusicModifying(
                 audioUrl,
-                cuttingAreaStartSec,
-                cuttingAreaEndSec,
+                isMusicPreProcessed ? 0 : cuttingAreaStartSec,
+                isMusicPreProcessed ? videoDuration : cuttingAreaEndSec,
                 volumePercentage,
                 taskId
             )
-        ]);
+        ])
 
         console.log(`[API Final] Caption prediction: ${captionPredictionId}`);
         console.log(`[API Final] Music prediction: ${musicPredictionId}`);
