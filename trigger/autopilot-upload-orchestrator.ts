@@ -84,10 +84,8 @@ export const autopilotUploadOrchestrator = schedules.task({
             } else {
                 logger.info(`[Autopilot] No platforms enabled for auto-upload for series: ${seriesId}.`);
             }
-            
-            // TODO: Reset current_generating_task_id? 
-            // 사장님 지시에 따라 이 부분은 업로드 상태 확인 후 결정하기 위해 미뤄둡니다.
-            
+
+            await supabase.from('autopilot_data').update({ current_generating_task_id: null }).eq('id', seriesId);
         } catch (error) {
             logger.warn(`[Autopilot] Video file not found or generation not finished for taskId: ${taskId}. Skipping.`, { error });
             return { success: true, action: "skipped-video-not-found" };
