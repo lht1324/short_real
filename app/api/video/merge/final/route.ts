@@ -78,6 +78,7 @@ export async function POST(
             cuttingAreaStartSec,
             cuttingAreaEndSec,
             volumePercentage,
+            mixingGainDb,
 
             isMusicPreProcessed,
         }: FinalVideoMergeData = videoGenerationTask.final_video_merge_data;
@@ -91,12 +92,13 @@ export async function POST(
             });
         }
 
-        if (volumePercentage < 0 || volumePercentage > 100) {
+        // volumePercentage(%) 혹은 mixingGainDb(dB) 중 하나는 유효해야 함
+        if ((volumePercentage < 0 || volumePercentage > 100) && (mixingGainDb === undefined)) {
             await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
             return getNextBaseResponse({
                 success: false,
                 status: 400,
-                error: 'volumePercentage must be between 0 and 100'
+                error: 'Invalid volume settings: volumePercentage or mixingGainDb required'
             });
         }
 
@@ -143,7 +145,8 @@ export async function POST(
                 isMusicPreProcessed ? 0 : cuttingAreaStartSec,
                 isMusicPreProcessed ? videoDuration : cuttingAreaEndSec,
                 volumePercentage,
-                taskId
+                taskId,
+                mixingGainDb
             )
         ])
 

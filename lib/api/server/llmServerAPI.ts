@@ -1244,7 +1244,7 @@ Instruction: Analyze the attached audio tracks based on the provided video conte
         success: boolean;
         data?: {
             selectedIndex: number;
-            mixingWeight: number;
+            scriptIntensity: number;
         };
         error?: string;
     }> {
@@ -1267,7 +1267,7 @@ Instruction: Analyze the attached audio tracks based on the provided video conte
   </video_context>
 </input_data>
 
-Instruction: Analyze the narration (Track 0) and the candidate music tracks (Track 1 to N). Select the best track and the optimal mixing weight. Return the result in JSON format.
+Instruction: Analyze the narration (Track 0) and the candidate music tracks (Track 1 to N). Select the best track and judge the script intensity. Return the result in JSON format.
 `;
 
             const client = new OpenRouterClient();
@@ -1295,13 +1295,13 @@ Instruction: Analyze the narration (Track 0) and the candidate music tracks (Tra
             try {
                 const parsedData: {
                     selected_index: number;
-                    mixing_weight: number;
+                    script_intensity: number;
                     reasoning: string;
                 } = cleanAndParseJSON(generatedContent);
 
                 console.log("postMusicHighlightSelection() Result: ", JSON.stringify({
                     selectedIndex: parsedData.selected_index,
-                    mixingWeight: parsedData.mixing_weight,
+                    scriptIntensity: parsedData.script_intensity,
                     reasoning: parsedData.reasoning,
                 }));
 
@@ -1309,7 +1309,7 @@ Instruction: Analyze the narration (Track 0) and the candidate music tracks (Tra
                     success: true,
                     data: {
                         selectedIndex: parsedData.selected_index,
-                        mixingWeight: parsedData.mixing_weight,
+                        scriptIntensity: parsedData.script_intensity,
                     }
                 };
             } catch (parseError) {

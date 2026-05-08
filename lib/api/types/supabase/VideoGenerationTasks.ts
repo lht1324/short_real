@@ -116,6 +116,7 @@ export interface FinalVideoMergeData {
     cuttingAreaStartSec: number;
     cuttingAreaEndSec: number;
     volumePercentage: number;
+    mixingGainDb?: number; // Intensity 기반 계산된 최종 게인값 (dB)
 
     // Autopilot
     isMusicPreProcessed?: boolean;

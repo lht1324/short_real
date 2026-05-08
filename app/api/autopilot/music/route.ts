@@ -206,8 +206,16 @@ export async function POST(
             throw new Error(`Final music matching failed: ${finalMatchingResult.error}`);
         }
 
-        const { selectedIndex: finalCandidateIndex, mixingWeight } = finalMatchingResult.data;
-        console.log(`[Music Finalist] AI selected candidate index: ${finalCandidateIndex}, mixingWeight: ${mixingWeight}`);
+        const { selectedIndex: finalCandidateIndex, scriptIntensity } = finalMatchingResult.data;
+        console.log(`[Music Finalist] AI selected candidate index: ${finalCandidateIndex}, scriptIntensity: ${scriptIntensity}`);
+
+        // [신규] Intensity 기반 LUFS 오프셋 계산 (dB)
+        // Offset = 15.0 - (Intensity - 1) * (10.0 / 9.0)
+        // Intensity 1 -> -15.0dB, Intensity 10 -> -5.0dB
+        const intensityOffset = 15.0 - (scriptIntensity - 1) * (10.0 / 9.0);
+        const mixingGainDb = parseFloat((-intensityOffset).toFixed(2));
+
+        console.log(`[Music Mixing] Calculated mixingGainDb: ${mixingGainDb}dB (Intensity: ${scriptIntensity})`);
 
         // [Step 3.5] 최종 선택된 파일을 autopilot_cut_music.mp3로 고정 (사장님 요청사항)
         const selectedCandidatePath = `${taskId}/candidate_${finalCandidateIndex}.mp3`;
@@ -225,8 +233,9 @@ export async function POST(
             final_video_merge_data: {
                 ...videoMergeData,
                 musicIndex: selectedMusicIndex,
-                volumePercentage: Math.round(mixingWeight * 100),
-                isMusicPreProcessed: true, // 새로운 하이브리드 로직 적용됨을 명시
+                mixingGainDb: mixingGainDb, // 신규 게인값 저장
+                volumePercentage: 100, // dB를 사용하므로 %는 100으로 고정하거나 무시됨
+                isMusicPreProcessed: true,
             }
         });
 
