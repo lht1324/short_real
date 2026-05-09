@@ -70,8 +70,7 @@ export async function GET(request: NextRequest) {
             if (pendingTaskId) {
                 internalFireAndForgetFetch(
                     `${process.env.BASE_URL}/api/video/export/youtube/upload?taskId=${pendingTaskId}&privacySetting=${privacySetting}`,
-                    { method: 'POST' },
-                    { userId: user.id }
+                    { method: 'POST' }
                 );
 
                 await videoGenerationTasksServerAPI.patchVideoGenerationTask(pendingTaskId, {

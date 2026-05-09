@@ -31,17 +31,17 @@ export async function GET(request: NextRequest) {
     const supabase = createSupabaseServiceRoleClient();
 
     try {
-        // 1. YouTube 토큰 존재 여부 확인
+        // 1. YouTube 토큰 정보 조회
         const { data: youtubeToken } = await supabase
             .from('user_youtube_tokens')
-            .select('user_id')
+            .select('user_id, handle_name, display_name')
             .eq('user_id', sessionUserId)
             .maybeSingle();
 
-        // 2. TikTok 토큰 존재 여부 확인
+        // 2. TikTok 토큰 정보 조회
         const { data: tiktokToken } = await supabase
             .from('user_tiktok_tokens')
-            .select('user_id')
+            .select('user_id, handle_name, display_name')
             .eq('user_id', sessionUserId)
             .maybeSingle();
 
@@ -50,9 +50,21 @@ export async function GET(request: NextRequest) {
             status: 200,
             data: {
                 platformConnection: {
-                    youtube: !!youtubeToken,
-                    tiktok: !!tiktokToken,
-                    instagram: false, // 아직 미지원
+                    youtube: {
+                        connected: !!youtubeToken,
+                        handleName: youtubeToken?.handle_name || null,
+                        displayName: youtubeToken?.display_name || null,
+                    },
+                    tiktok: {
+                        connected: !!tiktokToken,
+                        handleName: tiktokToken?.handle_name || null,
+                        displayName: tiktokToken?.display_name || null,
+                    },
+                    instagram: {
+                        connected: false,
+                        handleName: null,
+                        displayName: null,
+                    },
                 }
             },
             message: "Successfully fetched platform connection status."

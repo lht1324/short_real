@@ -4,6 +4,8 @@ export interface UserYoutubeToken {
     refresh_token: string;
     expires_at: string;
     youtube_channel_id?: string;
+    handle_name?: string;
+    display_name?: string;
     created_at: string;
     updated_at: string;
     last_used_at?: string;

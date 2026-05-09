@@ -36,22 +36,9 @@ export async function POST(request: NextRequest) {
         });
     }
 
+    // 1262af2d-502d-4f7d-9752-3993008dd3fe
+
     try {
-        const { userId }: PostVideoExportYoutubeUploadRequest = await request.json();
-
-        if (!userId) {
-            await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, {
-                export_status: ExportStatus.FAILED,
-                export_platform: ExportPlatform.YOUTUBE,
-            });
-
-            return getNextBaseResponse({
-                success: false,
-                status: 400,
-                error: 'userId is required'
-            });
-        }
-
         const privacySetting = searchParams.get('privacySetting');
 
         if (!privacySetting) {
@@ -81,6 +68,8 @@ export async function POST(request: NextRequest) {
                 error: "Task not found."
             })
         }
+
+        const userId = videoGenerationTask.user_id;
 
         console.log(`[YouTube Upload] Starting for userId=${userId}`);
 

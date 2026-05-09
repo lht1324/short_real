@@ -4,6 +4,8 @@ export interface UserTikTokToken {
     refresh_token: string;
     expires_at: string;
     tiktok_user_id?: string;
+    handle_name?: string;
+    display_name?: string;
     created_at: string;
     updated_at: string;
     last_used_at?: string;

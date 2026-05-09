@@ -52,8 +52,7 @@ export async function GET(request: NextRequest) {
             // 토큰 있음 → OAuth 건너뛰고 바로 업로드 트리거
             internalFireAndForgetFetch(
                 `${process.env.BASE_URL}/api/video/export/youtube/upload?taskId=${taskId}&privacySetting=${privacySetting}`,
-                { method: 'POST' },
-                { userId: user.id }
+                { method: 'POST' }
             );
 
             await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, {

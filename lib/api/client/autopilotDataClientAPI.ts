@@ -1,6 +1,18 @@
 import { deleteFetch, getFetch, patchFetch, postFetch } from "@/lib/api/client/baseFetch";
 import { AutopilotData } from "@/lib/api/types/supabase/AutopilotData";
 
+export interface PlatformConnectionInfo {
+    connected: boolean;
+    handleName: string | null;
+    displayName: string | null;
+}
+
+export interface AutopilotPlatformConnection {
+    youtube: PlatformConnectionInfo;
+    tiktok: PlatformConnectionInfo;
+    instagram: PlatformConnectionInfo;
+}
+
 export const autopilotDataClientAPI = {
     async postAutopilotData(newAutopilotData: Partial<AutopilotData>): Promise<AutopilotData | null> {
         try {
@@ -115,11 +127,7 @@ export const autopilotDataClientAPI = {
         }
     },
 
-    async getAutopilotDataPlatformConnection(): Promise<{
-        youtube: boolean,
-        tiktok: boolean,
-        instagram: boolean,
-    } | null> {
+    async getAutopilotDataPlatformConnection(): Promise<AutopilotPlatformConnection | null> {
         try {
             const response = await getFetch(`/api/autopilot-data/platform-connection`);
             const result = await response.json();

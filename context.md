@@ -1,34 +1,24 @@
-2026-05-09 12:15
+2026-05-09 18:45
 
 # 프로젝트 컨텍스트: 오토파일럿 자동 업로드 파이프라인 고도화
 
 ## 1. 개요
-Trigger.dev 기반 오토파일럿 스케줄러(`autopilot-upload-orchestrator`)에서 YouTube/TikTok 업로드 엔드포인트로 내부 요청을 보낼 때, **POST body가 수신 측에서 파싱되지 않는 문제**를 해결 중. 음악 믹싱(Intensity-based LUFS Matching) 파이프라인은 완료되었으며 현재는 업로드 연동에 집중하고 있음.
+오토파일럿 플랫폼 관리 시스템 업그레이드 완료. 계정 정보 수집 및 UI 개선을 통해 사용자 경험을 고도화함.
 
 ## 2. 완료된 작업
 
-### 2.1 지능형 LUFS 기반 오디오 믹싱 전략 - [완료]
-- Intensity-based LUFS Matching 구현 완료 (`Target Music LUFS = Voice LUFS - Offset`)
-- AI가 스크립트 텍스트 분석으로 `script_intensity(1~10)`를 반환
-- `mixingGainDb` 기반 dB 단위 정밀 믹싱 연동 완료 (Replicate `ffmpeg-audio-modifier`)
+### 2.1 오토파일럿 플랫폼 관리 업그레이드 - [완료]
+- **데이터 모델**: `UserYoutubeToken`, `UserTikTokToken`, `AutopilotData` 타입 업데이트 및 DB 컬럼 대응 완료.
+- **OAuth 콜백**: YouTube(핸들, 이름) 및 TikTok(이름) 정보 자동 수집 로직 구현 완료. (틱톡은 리스크 최소화를 위해 `user.info.profile` 스코프 제외)
+- **API 확장**: `platform-connection` API가 계정 정보를 반환하도록 고도화.
+- **UI 개편**: `PlatformAccountCard` 신규 구현 및 `AutopilotControlPanel` 리팩토링 완료. 
+- **설정 통합**: `ExportSettingsModal`을 연동하여 시리즈별 공개 범위 설정 기능 추가.
 
-### 2.2 오토파일럿 업로드 파이프라인 구조 - [완료]
-- `trigger/autopilot-upload-orchestrator.ts`: 스토리지 영상 존재 확인 후 플랫폼별 업로드 트리거
-- `app/callback/youtube/route.ts`, `app/callback/tiktok/route.ts`: OAuth 콜백 및 토큰 저장/갱신 로직
-- `app/api/video/export/youtube/upload/route.ts`, `app/api/video/export/tiktok/upload/route.ts`: 토큰 조회/갱신 → Storage 다운로드 → 멀티파트/청크 업로드 로직
+### 2.2 업로드 파이프라인 이슈 해결 - [완료]
+- `internalFireAndForgetFetch` 바디 유실 이슈를 `videoGenerationTask`의 `user_id`를 직접 활용하는 방식으로 우회하여 해결 완료.
 
-## 3. 현재 진행 중인 문제 (BLOCKER)
-
-### 3.1 `internalFireAndForgetFetch` POST body 파싱 실패
-- **증상**: `autopilot-upload-orchestrator`에서 `{ userId: autopilotData.user_id }`를 body에 실어 `POST` 요청을 보내면, 수신 측(`upload/route.ts`)의 `await request.json()`에서 `SyntaxError: Unexpected end of JSON input` 발생
-- **원인**: Next.js의 서버 내 self-fetch 요청에서 body stream이 제대로 전달되지 않는 것으로 추정 (로컬 `next dev` + `waitUntil` 환경)
-- **영향**: YouTube, TikTok 업로드 엔드포인트 모두 userId를 수신하지 못해 500 에러 발생. 수동(callback)도 동일한 함수(`internalFireAndForgetFetch`)를 사용하므로 동일 증상
-- **해결 방안 고려 중**:
-  1. userId를 query parameter로 이동 (즉시 땜질 가능)
-  2. 업로드 핵심 로직을 별도 service/util 함수로 분리하고 Orchestrator/Route Handler가 직접 import 호출 (근본적 해결)
-
-## 4. 향후 작업 (Next Steps) - [Priority: HIGH]
-1. **POST body 파싱 문제 해결**: `userId` 전달 방식 변경 (body → query param 또는 로직 직접 호출)
-2. **수동 업로드 플로우 재점검**: callback → upload 흐름이 정상 작동하는지 확인
-3. **오토파일럿 End-to-End 테스트**: generation → 영상 생성 완료 → upload orchestrator 트리거 → 실제 YouTube/TikTok 업로드까지 전 과정 검증
-4. **`current_generating_task_id` 리셋 안전성 확인**: 업로드 성공/실패 후 `null`로 리셋하여 중복 업로드 방지
+## 3. 향후 작업 (Next Steps) - [Priority: HIGH]
+1. **연동 테스트**: 실제 YouTube/TikTok 계정 연동 후 UI에 핸들/이름이 정상 표시되는지 확인.
+2. **공개 범위 저장 테스트**: 설정 모달에서 변경한 공개 범위가 DB에 정상 저장되고 새로고침 후에도 유지되는지 확인.
+3. **오토파일럿 End-to-End 테스트**: 자동 생성 -> 자동 업로드 전 과정 검증.
+4. **연결 해제 로직 구현**: `PlatformAccountCard`의 X 버튼을 위한 실제 DELETE API 및 핸들러 구현.

@@ -20,6 +20,7 @@ export interface AutopilotData {
 
     // Platform Setting
     youtube_privacy?: ExportPrivacySetting | null;
+    tiktok_privacy?: ExportPrivacySetting | null;
 
     last_run_at?: string | null; // timestamptz
     created_at?: string; // timestamptz

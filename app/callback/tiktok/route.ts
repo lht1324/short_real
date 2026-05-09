@@ -96,6 +96,24 @@ export async function GET(request: NextRequest) {
 
         // 4. Supabase에 토큰 저장
         const supabase = createSupabaseServiceRoleClient();
+
+        // [추가] TikTok 사용자 정보 조회 (Display Name)
+        let displayName = null;
+        try {
+            const userRes = await fetch('https://open.tiktokapis.com/v2/user/info/?fields=display_name', {
+                headers: { Authorization: `Bearer ${tokens.access_token}` }
+            });
+            if (userRes.ok) {
+                const userData = await userRes.json();
+                if (userData.data?.user) {
+                    displayName = userData.data.user.display_name || null;
+                    console.log(`[TikTok Callback] Fetched profile: ${displayName}`);
+                }
+            }
+        } catch (e) {
+            console.error('[TikTok Callback] Failed to fetch user info:', e);
+        }
+
         const { error: dbError } = await supabase
             .from('user_tiktok_tokens')
             .upsert({
@@ -105,6 +123,7 @@ export async function GET(request: NextRequest) {
                 expires_at: new Date(Date.now() + tokens.expires_in * 1000).toISOString(),
                 refresh_expires_at: new Date(Date.now() + tokens.refresh_expires_in * 1000).toISOString(),
                 tiktok_user_id: tokens.open_id,
+                display_name: displayName,
                 updated_at: new Date().toISOString(),
                 last_used_at: new Date().toISOString(),
             });

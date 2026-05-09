@@ -1,6 +1,6 @@
 'use client'
 
-import {memo, useEffect, useMemo, useState} from "react";
+import {memo, useCallback, useEffect, useMemo, useState} from "react";
 import {
     AlertCircle,
     BarChart3,
@@ -18,9 +18,10 @@ import {
 import {ExportPlatform} from "@/lib/api/types/supabase/VideoGenerationTasks";
 import {AutopilotData} from "@/lib/api/types/supabase/AutopilotData";
 import {cronToWeekly, weeklyToCron} from "@/lib/utils/cronUtils";
-import PlatformConnectButton from "@/components/page/workspace/autopilot/PlatformConnectButton";
-import PlatformCheckbox from "@/components/page/workspace/autopilot/PlatformCheckbox";
-import {autopilotDataClientAPI} from "@/lib/api/client/autopilotDataClientAPI";
+import {autopilotDataClientAPI, AutopilotPlatformConnection} from "@/lib/api/client/autopilotDataClientAPI";
+import PlatformAccountCard from "@/components/page/workspace/autopilot/PlatformAccountCard";
+import ExportSettingsModal from "@/components/page/workspace/dashboard/export-settings-modal/ExportSettingsModal";
+import {ExportPrivacySetting} from "@/components/page/workspace/dashboard/export-settings-modal/ExportPrivacySetting";
 
 const DAYS_OF_WEEK = [
     { id: 1, label: 'M' },
@@ -53,12 +54,9 @@ function AutopilotControlPanel({
 }: AutopilotControlPanelProps) {
     // --- Internal UI State (Not persisted in DB) ---
     const [runImmediately, setRunImmediately] = useState(false);
-    const [platformConnections, setPlatformConnections] = useState<Record<string, boolean | undefined>>({
-        youtube: false,
-        tiktok: false,
-        instagram: false
-    });
+    const [platformConnections, setPlatformConnections] = useState<AutopilotPlatformConnection | null>(null);
     const [isLoadingConnections, setIsLoadingConnections] = useState(true);
+    const [settingsModalOpen, setSettingsModalOpen] = useState<ExportPlatform | null>(null);
     const scheduleMode = 'weekly'; 
 
     // Fetch actual platform connection status using Client API
@@ -136,6 +134,15 @@ function AutopilotControlPanel({
         const newCron = weeklyToCron(newDays, scheduledHour, scheduledMinute);
         updateSeries({ schedule_cron: newCron });
     };
+
+    const onClickPlatformSettings = useCallback((platform: ExportPlatform) => {
+        setSettingsModalOpen(platform);
+    }, []);
+
+    const onClickPlatformDisconnect = useCallback((platform: ExportPlatform) => {
+        // TODO: Implement actual disconnect logic
+        alert("Disconnecting from " + platform + " is not implemented yet.");
+    }, []);
 
     const onChangeHour = (hour: number) => {
         const newCron = weeklyToCron(selectedDays, hour, scheduledMinute);
@@ -221,44 +228,40 @@ function AutopilotControlPanel({
                         </div>
                     ) : (
                         [
-                            { id: ExportPlatform.YOUTUBE, label: 'YouTube Shorts', platformLabel: 'YouTube', src: '/icons/youtube-logo.png', activeColor: 'bg-red-500/10 border-red-500/40', iconColor: 'text-red-500' },
-                            { id: ExportPlatform.TIKTOK, label: 'TikTok', platformLabel: 'TikTok', src: '/icons/tiktok-logo-white.svg', activeColor: 'bg-cyan-500/10 border-cyan-500/40', iconColor: 'text-cyan-400' },
-                            { id: ExportPlatform.INSTAGRAM, label: 'Instagram Reels', platformLabel: 'Instagram', src: '/icons/instagram-logo.png', activeColor: 'bg-pink-500/10 border-pink-500/40', iconColor: 'text-pink-500' }
+                            { id: ExportPlatform.YOUTUBE, label: 'YouTube Shorts', src: '/icons/youtube-logo.png', activeColor: 'bg-red-500/10 border-red-500/40', iconColor: 'text-red-500' },
+                            { id: ExportPlatform.TIKTOK, label: 'TikTok', src: '/icons/tiktok-logo-white.svg', activeColor: 'bg-cyan-500/10 border-cyan-500/40', iconColor: 'text-cyan-400' },
+                            { id: ExportPlatform.INSTAGRAM, label: 'Instagram Reels', src: '/icons/instagram-logo.png', activeColor: 'bg-pink-500/10 border-pink-500/40', iconColor: 'text-pink-500' }
                         ].map((platform) => {
-                            // 실제 API 상의 연동 여부 확인 (Client API 결과 사용)
-                            const isConnected = !!platformConnections[platform.id];
+                            const connection = platformConnections ? platformConnections[platform.id] : null;
+                            const isConnected = !!connection?.connected;
                             const isInstagram = platform.id === ExportPlatform.INSTAGRAM;
 
-                            if (isConnected && !isInstagram) {
-                                return (
-                                    <PlatformCheckbox
-                                        key={platform.id}
-                                        logoSrc={platform.src}
-                                        activeColor={platform.activeColor}
-                                        iconColor={platform.iconColor}
-                                        label={platform.label}
-                                        isChecked={currentSeries.platforms[platform.id] === true}
-                                        onClick={() => updateSeries({
-                                            platforms: { 
-                                                ...currentSeries.platforms, 
-                                                [platform.id]: !currentSeries.platforms[platform.id] 
-                                            }
-                                        })}
-                                    />
-                                );
-                            } else {
-                                return (
-                                    <PlatformConnectButton
-                                        key={platform.id}
-                                        logoSrc={platform.src}
-                                        text={`Connect ${platform.platformLabel}`}
-                                        onClick={() => {
-                                            window.location.href = `/api/video/export/${platform.id}/autopilot/oauth?seriesId=${currentSeries.id}&userId=${currentSeries.user_id}`;
-                                        }}
-                                        isDisabled={isInstagram}
-                                    />
-                                );
-                            }
+                            return (
+                                <PlatformAccountCard
+                                    key={platform.id}
+                                    platform={platform.id}
+                                    logoSrc={platform.src}
+                                    activeColor={platform.activeColor}
+                                    iconColor={platform.iconColor}
+                                    label={platform.label}
+                                    isConnected={isConnected}
+                                    isChecked={currentSeries.platforms[platform.id] === true}
+                                    handleName={connection?.handleName}
+                                    displayName={connection?.displayName}
+                                    isDisabled={isInstagram}
+                                    onClickToggle={() => updateSeries({
+                                        platforms: { 
+                                            ...currentSeries.platforms, 
+                                            [platform.id]: !currentSeries.platforms[platform.id] 
+                                        }
+                                    })}
+                                    onClickConnect={() => {
+                                        window.location.href = `/api/video/export/${platform.id}/autopilot/oauth?seriesId=${currentSeries.id}&userId=${currentSeries.user_id}`;
+                                    }}
+                                    onClickSettings={() => onClickPlatformSettings(platform.id)}
+                                    onClickDisconnect={() => onClickPlatformDisconnect(platform.id)}
+                                />
+                            );
                         })
                     )}
                 </div>
@@ -305,21 +308,6 @@ function AutopilotControlPanel({
                             <span className="text-white">{schedulingForecast.uploadTime}</span>
                         </div>
                     </div>
-                    {/* Mode selection commented out for now as requested */}
-                    {/* <div className="flex bg-black/40 p-1.5 rounded-xl border border-purple-500/10">
-                        <button 
-                            onClick={() => setScheduleMode('weekly')}
-                            className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all ${scheduleMode === 'weekly' ? 'bg-purple-600 text-white' : 'text-gray-500'}`}
-                        >
-                            WEEKLY
-                        </button>
-                        <button 
-                            onClick={() => setScheduleMode('cron')}
-                            className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all ${scheduleMode === 'cron' ? 'bg-purple-600 text-white' : 'text-gray-500'}`}
-                        >
-                            CRON
-                        </button>
-                    </div> */}
 
                     {scheduleMode === 'weekly' ? (
                         <div className="h-[110px] space-y-5 animate-in fade-in slide-in-from-top-1 duration-200">
@@ -367,23 +355,6 @@ function AutopilotControlPanel({
                             </div>
                         </div>
                     ) : (
-                        /* Cron input commented out for now as requested */
-                        /* <div className="h-[110px] space-y-3 animate-in fade-in slide-in-from-top-1 duration-200">
-                            <div className="flex items-center gap-2 mb-2 text-yellow-500/70 ml-1">
-                                <Info size={14} />
-                                <span className="text-xs font-medium uppercase tracking-tight">Expert Cron Expression</span>
-                            </div>
-                            <input
-                                type="text"
-                                value={currentSeries.schedule_cron}
-                                onChange={(e) => updateSeries({ schedule_cron: e.target.value })}
-                                className="w-full bg-black/40 border border-purple-500/30 rounded-lg p-3 text-sm text-white font-mono focus:outline-none focus:border-purple-500/60 transition-all shadow-inner"
-                                placeholder="0 10 * * *"
-                            />
-                            <p className="text-xs text-gray-600 px-1">
-                                Format: Min Hr Day Mon DayOfWeek
-                            </p>
-                        </div> */
                         null
                     )}
                 </div>
@@ -478,6 +449,27 @@ function AutopilotControlPanel({
                     Delete Config
                 </button>
             </div>
+
+            {/* Settings Modal Integration */}
+            {settingsModalOpen && (
+                <ExportSettingsModal
+                    platform={settingsModalOpen}
+                    privacySetting={
+                        settingsModalOpen === ExportPlatform.YOUTUBE
+                            ? (currentSeries.youtube_privacy ?? ExportPrivacySetting.UNLISTED)
+                            : (currentSeries.tiktok_privacy ?? ExportPrivacySetting.PRIVATE)
+                    }
+                    onChangePrivacySetting={(setting) => {
+                        if (settingsModalOpen === ExportPlatform.YOUTUBE) {
+                            updateSeries({ youtube_privacy: setting });
+                        } else {
+                            updateSeries({ tiktok_privacy: setting });
+                        }
+                    }}
+                    onClickConfirm={async () => setSettingsModalOpen(null)}
+                    onClickCancel={() => setSettingsModalOpen(null)}
+                />
+            )}
         </div>
     );
 }

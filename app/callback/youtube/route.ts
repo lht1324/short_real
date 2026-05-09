@@ -102,6 +102,25 @@ export async function GET(request: NextRequest) {
             Date.now() + tokens.expires_in * 1000
         ).toISOString();
 
+        // [추가] YouTube 채널 정보 조회 (Handle, Display Name)
+        let handleName = null;
+        let displayName = null;
+        try {
+            const channelRes = await fetch('https://www.googleapis.com/youtube/v3/channels?part=snippet&mine=true', {
+                headers: { Authorization: `Bearer ${tokens.access_token}` }
+            });
+            if (channelRes.ok) {
+                const channelData = await channelRes.json();
+                if (channelData.items?.[0]?.snippet) {
+                    handleName = channelData.items[0].snippet.customUrl || null;
+                    displayName = channelData.items[0].snippet.title || null;
+                    console.log(`[YouTube Callback] Fetched profile: ${handleName} (${displayName})`);
+                }
+            }
+        } catch (e) {
+            console.error('[YouTube Callback] Failed to fetch channel info:', e);
+        }
+
         const { error: dbError } = await supabase
             .from('user_youtube_tokens')
             .upsert({
@@ -109,6 +128,8 @@ export async function GET(request: NextRequest) {
                 access_token: tokens.access_token,
                 refresh_token: tokens.refresh_token,
                 expires_at: expiresAt,
+                handle_name: handleName,
+                display_name: displayName,
                 updated_at: new Date().toISOString()
             });
 
@@ -134,8 +155,6 @@ export async function GET(request: NextRequest) {
         // 수동 업로드 모드인 경우: 기존 업로드 트리거 로직 실행
         internalFireAndForgetFetch(`${process.env.BASE_URL}/api/video/export/youtube/upload?taskId=${taskId}&privacySetting=${privacySetting}`, {
             method: 'POST',
-        }, {
-            userId: userId,
         });
 
         await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, {

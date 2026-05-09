@@ -37,22 +37,8 @@ export async function POST(request: NextRequest) {
     }
 
     try {
-        const { userId } = await request.json();
-
-        if (!userId) {
-            await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, {
-                export_status: ExportStatus.FAILED,
-                export_platform: ExportPlatform.TIKTOK,
-            });
-
-            return getNextBaseResponse({
-                success: false,
-                status: 400,
-                error: 'userId is required',
-            });
-        }
-
         const videoGenerationTask = await videoGenerationTasksServerAPI.getVideoGenerationTaskById(taskId);
+
         if (!videoGenerationTask) {
             await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, {
                 export_status: ExportStatus.FAILED,
@@ -65,6 +51,8 @@ export async function POST(request: NextRequest) {
                 error: 'Task not found.',
             });
         }
+
+        const userId = videoGenerationTask.user_id;
 
         console.log(`[TikTok Upload] Starting for userId=${userId}`);
 

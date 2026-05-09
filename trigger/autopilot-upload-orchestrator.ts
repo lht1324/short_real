@@ -65,7 +65,7 @@ export const autopilotUploadOrchestrator = schedules.task({
                 const youtubeUrl = `${baseUrl}/api/video/export/youtube/upload?taskId=${taskId}&privacySetting=${privacySetting}`;
                 
                 logger.info(`[Autopilot] Triggering YouTube upload for taskId: ${taskId}`);
-                internalFireAndForgetFetch(youtubeUrl, { method: 'POST' }, { userId: autopilotData.user_id });
+                internalFireAndForgetFetch(youtubeUrl, { method: 'POST' });
                 triggeredCount++;
             }
 
