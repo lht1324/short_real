@@ -127,19 +127,35 @@ export const autopilotDataClientAPI = {
         }
     },
 
-    async getAutopilotDataPlatformConnection(): Promise<AutopilotPlatformConnection | null> {
+    async getAutopilotDataPlatformConnection(seriesId: string): Promise<AutopilotPlatformConnection | null> {
         try {
-            const response = await getFetch(`/api/autopilot-data/platform-connection`);
+            const response = await getFetch(`/api/autopilot-data/platform-connection?seriesId=${seriesId}`);
             const result = await response.json();
 
             if (!result.success) {
-                throw Error(result.error ?? 'Unknown error while fetching autopilot platform connection data by series id.');
+                throw Error(result.error ?? 'Unknown error while fetching autopilot platform connection data.');
             }
 
             return result.data.platformConnection;
         } catch (error) {
             console.error(error);
             return null;
+        }
+    },
+
+    async deleteAutopilotDataPlatformConnection(seriesId: string, platform: string): Promise<boolean> {
+        try {
+            const response = await deleteFetch(`/api/autopilot-data/platform-connection?seriesId=${seriesId}&platform=${platform}`);
+            const result = await response.json();
+
+            if (!result.success) {
+                throw Error(result.error ?? `Unknown error while disconnecting ${platform} account.`);
+            }
+
+            return true;
+        } catch (error) {
+            console.error(error);
+            return false;
         }
     },
 }

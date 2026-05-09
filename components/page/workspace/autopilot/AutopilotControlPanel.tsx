@@ -62,9 +62,10 @@ function AutopilotControlPanel({
     // Fetch actual platform connection status using Client API
     useEffect(() => {
         const fetchConnections = async () => {
+            if (!currentSeries.id) return;
             try {
                 setIsLoadingConnections(true);
-                const connections = await autopilotDataClientAPI.getAutopilotDataPlatformConnection();
+                const connections = await autopilotDataClientAPI.getAutopilotDataPlatformConnection(currentSeries.id);
                 if (connections) {
                     setPlatformConnections(connections);
                 }
@@ -76,7 +77,7 @@ function AutopilotControlPanel({
         };
 
         fetchConnections();
-    }, []);
+    }, [currentSeries.id]);
 
     // --- Derived Schedule State ---
     const schedule = useMemo(() => cronToWeekly(currentSeries.schedule_cron), [currentSeries.schedule_cron]);
@@ -139,10 +140,33 @@ function AutopilotControlPanel({
         setSettingsModalOpen(platform);
     }, []);
 
-    const onClickPlatformDisconnect = useCallback((platform: ExportPlatform) => {
-        // TODO: Implement actual disconnect logic
-        alert("Disconnecting from " + platform + " is not implemented yet.");
-    }, []);
+    const onClickPlatformDisconnect = useCallback(async (platform: ExportPlatform) => {
+        if (!confirm(`Are you sure you want to disconnect your ${platform} account from this series?`)) return;
+
+        try {
+            const success = await autopilotDataClientAPI.deleteAutopilotDataPlatformConnection(currentSeries.id, platform);
+            if (success) {
+                // UI 즉시 업데이트
+                setPlatformConnections(prev => prev ? {
+                    ...prev,
+                    [platform]: { connected: false, handleName: null, displayName: null }
+                } : null);
+
+                // 만약 해당 플랫폼이 체크되어 있었다면 해제
+                if (currentSeries.platforms[platform]) {
+                    updateSeries({
+                        platforms: {
+                            ...currentSeries.platforms,
+                            [platform]: false
+                        }
+                    });
+                }
+            }
+        } catch (error) {
+            console.error(`Failed to disconnect ${platform}:`, error);
+            alert("Failed to disconnect account. Please try again.");
+        }
+    }, [currentSeries.id, currentSeries.platforms, updateSeries]);
 
     const onChangeHour = (hour: number) => {
         const newCron = weeklyToCron(selectedDays, hour, scheduledMinute);
