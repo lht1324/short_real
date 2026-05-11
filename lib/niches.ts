@@ -15,28 +15,15 @@ export interface NicheData {
 export const NICHE_DATA_LIST: NicheData[] = [
     {
         uiMetadata: {
-            id: 'space',
-            label: 'Space Facts',
-            icon: '🚀'
-        },
-        generationParams: {
-            systemRole: "You are a world-class space documentary scriptwriter.",
-            topicDiscoveryPrompt: "Find an obscure but verified scientific fact about space that would shock a general audience.",
-            scriptInstruction: "Write a 30-second high-tension script. Start with a hook that challenges a common misconception.",
-            negativeConstraints: "Never mention sci-fi movies, focus only on real science. Avoid jargon."
-        }
-    },
-    {
-        uiMetadata: {
             id: 'history',
-            label: 'History Mystery',
+            label: 'Historical Secrets',
             icon: '🏛️'
         },
         generationParams: {
-            systemRole: "You are a historical investigator specializing in hidden mysteries.",
-            topicDiscoveryPrompt: "Identify a mysterious historical event or person from the 18th or 19th century that remains unexplained.",
-            scriptInstruction: "Maintain a suspenseful, slightly eerie tone. Use present tense to make it immersive.",
-            negativeConstraints: "Do not use modern-day political comparisons. Avoid dry academic facts."
+            systemRole: "You are a historical investigator specializing in hidden mysteries and human drama.",
+            topicDiscoveryPrompt: "Identify a mysterious historical event or person from the 18th or 19th century that remains unexplained. Focus on the human choices and secrets involved.",
+            scriptInstruction: "Maintain a suspenseful, slightly eerie tone. Use present tense to make it immersive. Describe the people and their expressions vividly.",
+            negativeConstraints: "Do not use modern-day political comparisons. Avoid dry academic facts or landscape-only descriptions."
         }
     },
     {
@@ -47,74 +34,74 @@ export const NICHE_DATA_LIST: NicheData[] = [
         },
         generationParams: {
             systemRole: "You are a master of horror storytelling and urban legends.",
-            topicDiscoveryPrompt: "Find a chilling folklore or real-life unexplained creepy phenomenon.",
-            scriptInstruction: "Write a 30-second terrifying script. Use vivid, unsettling descriptions and a twist ending.",
-            negativeConstraints: "Avoid excessive gore, rely on psychological horror and suspense."
+            topicDiscoveryPrompt: "Find a chilling folklore or real-life unexplained creepy phenomenon involving a person's encounter.",
+            scriptInstruction: "Write a 30-second terrifying script. Use vivid, unsettling descriptions of characters and a twist ending.",
+            negativeConstraints: "Avoid excessive gore, rely on psychological horror and character-driven suspense."
         }
     },
     {
         uiMetadata: {
             id: 'motivation',
-            label: 'Motivation',
+            label: 'Daily Motivation',
             icon: '💪'
         },
         generationParams: {
             systemRole: "You are a top-tier motivational speaker and life coach.",
-            topicDiscoveryPrompt: "Identify a powerful psychological principle or historical story of overcoming immense odds.",
-            scriptInstruction: "Write an energetic, fast-paced 30-second script that inspires immediate action.",
-            negativeConstraints: "Avoid cliché quotes, focus on actionable and intense reality checks."
+            topicDiscoveryPrompt: "Identify a powerful psychological principle or historical story of a person overcoming immense odds.",
+            scriptInstruction: "Write an energetic, fast-paced 30-second script that inspires immediate action through human struggle and triumph.",
+            negativeConstraints: "Avoid cliché quotes, focus on actionable and intense reality checks involving real human effort."
         }
     },
     {
         uiMetadata: {
             id: 'wealth',
-            label: 'Wealth & Money',
+            label: 'Business Legends',
             icon: '💰'
         },
         generationParams: {
-            systemRole: "You are a financial analyst and business strategist.",
-            topicDiscoveryPrompt: "Explain a hidden mechanic of wealth building, a historical financial masterstroke, or a psychological money trap.",
-            scriptInstruction: "Deliver a crisp, authoritative 30-second script. Make the viewer feel they are learning an insider secret.",
-            negativeConstraints: "Never give direct financial advice or promote crypto/scams."
+            systemRole: "You are a business strategist and biographer.",
+            topicDiscoveryPrompt: "Explain a hidden mechanic of wealth building or a historical financial masterstroke by a legendary figure.",
+            scriptInstruction: "Deliver a crisp, authoritative 30-second script. Focus on the genius and decision-making of the person involved.",
+            negativeConstraints: "Never give direct financial advice. Avoid generic money facts; focus on the person's story."
         }
     },
     {
         uiMetadata: {
             id: 'philosophy',
-            label: 'Philosophy',
+            label: 'Life Philosophy',
             icon: '🧠'
         },
         generationParams: {
             systemRole: "You are a modern philosopher translating deep concepts for the digital age.",
-            topicDiscoveryPrompt: "Choose a profound philosophical paradox or stoic principle.",
-            scriptInstruction: "Write a thought-provoking 30-second script. End with a question that leaves the viewer contemplating their own life.",
-            negativeConstraints: "Avoid overly dense academic jargon, keep it relatable to daily life."
+            topicDiscoveryPrompt: "Choose a profound philosophical paradox or stoic principle that directly applies to a person's daily life.",
+            scriptInstruction: "Write a thought-provoking 30-second script. End with a question that leaves the viewer contemplating their own character and life.",
+            negativeConstraints: "Avoid overly dense academic jargon. Focus on the internal world of a person."
         }
     },
     {
         uiMetadata: {
-            id: 'nature',
-            label: 'Nature/Wild',
-            icon: '🌿'
+            id: 'psychology',
+            label: 'Dark Psychology',
+            icon: '👁️'
         },
         generationParams: {
-            systemRole: "You are a wildlife documentary narrator.",
-            topicDiscoveryPrompt: "Find a bizarre or terrifying animal survival adaptation.",
-            scriptInstruction: "Write a dramatic 30-second script highlighting the brutal or fascinating reality of nature.",
-            negativeConstraints: "Avoid humanizing the animals too much; stick to raw, fascinating biological facts."
+            systemRole: "You are a master of behavioral psychology and human observation.",
+            topicDiscoveryPrompt: "Identify a powerful psychological trick or dark manipulation tactic used in social interactions.",
+            scriptInstruction: "Write a 30-second high-tension script. Describe the subtle body language and psychological effects on people involved.",
+            negativeConstraints: "Avoid clinical medical terms. Focus on the visceral and social reality of the tactic."
         }
     },
     {
         uiMetadata: {
-            id: 'science',
-            label: 'Cool Science',
-            icon: '🧪'
+            id: 'crime',
+            label: 'True Crime',
+            icon: '🕵️'
         },
         generationParams: {
-            systemRole: "You are an enthusiastic science communicator.",
-            topicDiscoveryPrompt: "Explain a mind-bending physics concept or a weird chemical reaction.",
-            scriptInstruction: "Write an upbeat, fast-paced 30-second script that makes complex science feel like magic.",
-            negativeConstraints: "Don't get bogged down in math; focus on the visual and conceptual wonder."
+            systemRole: "You are a criminal investigator and cold case specialist.",
+            topicDiscoveryPrompt: "Find a mysterious historical heist or an unsolved criminal mastermind story.",
+            scriptInstruction: "Maintain a fast-paced, high-stakes narrative. Focus on the motives and clever maneuvers of the people involved.",
+            negativeConstraints: "Avoid gratuitous violence. Focus on the intellectual and psychological aspects of the crime."
         }
     }
 ];
