@@ -2,10 +2,19 @@ import { NextRequest } from "next/server";
 import { getNextBaseResponse } from "@/lib/utils/getNextBaseResponse";
 import { createSupabaseServiceRoleClient } from "@/lib/supabaseServiceRole";
 import { AIModelData } from "@/lib/api/types/supabase/AIModelData";
+import {getIsValidRequestS2S} from "@/lib/utils/getIsValidRequest";
 
-export async function POST(req: NextRequest) {
+export async function POST(request: NextRequest) {
+    if (!getIsValidRequestS2S(request)) {
+        return getNextBaseResponse({
+            success: false,
+            status: 401,
+            error: 'Unauthorized internal request',
+        });
+    }
+
     try {
-        const falApiKey = process.env.FAL_KEY;
+        const falApiKey = process.env.FAL_AI_API_KEY;
         if (!falApiKey) {
             return getNextBaseResponse({
                 success: false,
@@ -15,38 +24,42 @@ export async function POST(req: NextRequest) {
         }
 
         const allModels = [];
-        let hasMore = true;
-        let cursor: string | null = null;
+        const targetCategories = ["image-to-video", "image-to-image"];
 
-        // 1. fal.ai API에서 활성화된 비디오 모델 목록 페이지네이션으로 수집
-        while (hasMore) {
-            const url = new URL("https://api.fal.ai/v1/models");
-            url.searchParams.append("category", "image-to-video");
-            url.searchParams.append("status", "active");
-            url.searchParams.append("expand", "openapi-3.0");
-            if (cursor) {
-                url.searchParams.append("cursor", cursor);
+        // 1. fal.ai API에서 활성화된 모델 목록 카테고리별/페이지네이션으로 수집
+        for (const category of targetCategories) {
+            let hasMore = true;
+            let cursor: string | null = null;
+
+            while (hasMore) {
+                const url = new URL("https://api.fal.ai/v1/models");
+                url.searchParams.append("category", category);
+                url.searchParams.append("status", "active");
+                url.searchParams.append("expand", "openapi-3.0");
+                if (cursor) {
+                    url.searchParams.append("cursor", cursor);
+                }
+
+                const res = await fetch(url.toString(), {
+                    method: "GET",
+                    headers: {
+                        Authorization: `Key ${falApiKey}`,
+                    },
+                });
+
+                if (!res.ok) {
+                    const text = await res.text();
+                    throw new Error(`Fal API Error: ${res.status} ${text} (Category: ${category})`);
+                }
+
+                const data = await res.json();
+                if (data.models && Array.isArray(data.models)) {
+                    allModels.push(...data.models);
+                }
+                
+                hasMore = data.has_more === true;
+                cursor = data.next_cursor;
             }
-
-            const res = await fetch(url.toString(), {
-                method: "GET",
-                headers: {
-                    Authorization: `Key ${falApiKey}`,
-                },
-            });
-
-            if (!res.ok) {
-                const text = await res.text();
-                throw new Error(`Fal API Error: ${res.status} ${text}`);
-            }
-
-            const data = await res.json();
-            if (data.models && Array.isArray(data.models)) {
-                allModels.push(...data.models);
-            }
-            
-            hasMore = data.has_more === true;
-            cursor = data.next_cursor;
         }
 
         const processedModels: AIModelData[] = [];

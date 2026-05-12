@@ -17,7 +17,7 @@ export const falAiModelUpdateScheduler = schedules.task({
 
         // 내부 API 엔드포인트 URL 구성
         const appUrl = process.env.BASE_URL || "http://localhost:3000";
-        const internalApiUrl = `${appUrl}/api`; // 임시
+        const internalApiUrl = `${appUrl}/api/admin/ai-model`;
         const falApiUrl = "https://api.fal.ai/v1/models";
 
         // Vercel(Next.js) 엔드포인트에 동기화 작업 위임 (Fire and Forget)
