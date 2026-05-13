@@ -9,6 +9,7 @@ export interface AIModelData {
     thumbnail_url: string;
     model_url: string;
     supported_durations?: number[];
+    price_per_sec: number;
     created_at?: string;
     updated_at?: string;
 }

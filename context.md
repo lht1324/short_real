@@ -21,6 +21,8 @@
 - **데이터 스키마**: `ai_models` 테이블 용 `AIModelData` 인터페이스 정의 완료 (배속 처리를 위한 `supported_durations` 파라미터 최적화).
 - **스케줄러 연동**: Trigger.dev 용 `fal-ai-model-update-scheduler` 태스크 구조화 완료 (대시보드에서 스케줄 등록 예정).
 - **동기화 API**: `GET https://api.fal.ai/v1/models` API를 페이지네이션으로 호출하여 `image-to-video` 활성 모델을 파싱하고 DB에 일괄 업데이트(Bulk Upsert)하는 `/api/admin/ai-model/route.ts` 구현 완료.
+  - **동적 스키마 파싱 적용:** OpenAPI `enum` 구조와 데이터(`720p`, `1080p`, `16:9` 등)를 분석하여 세밀한 길이 조절 및 필수 포맷을 지원하는 모델만 필터링하는 로직 구현.
+  - **Pricing API 연동:** 수집된 모델들의 `endpoint_id`를 50개 단위 청크로 나누어 요금 데이터를 가져오고, '1초 당 요금'(`price_per_sec`)으로 단위를 통일하여 병합하는 로직 작성 중.
 
 ## 3. 향후 작업 (Next Steps) - [Priority: HIGH]
 *참고: 모델 선택 및 과금 관련 상세 스펙은 `@add-model-selection-plan.md` 파일을 참조할 것.*
