@@ -1326,5 +1326,15 @@ Instruction: Analyze the narration (Track 0) and the candidate music tracks (Tra
                 error: error instanceof Error ? error.message : 'Unknown error occurred'
             };
         }
+    },
+
+    // 5개씩 끊어 넣기
+    async postPricePerSecScrapping(
+        aiModelPricePureTextList: {
+            endpointId: string;
+            pricePureText: string;
+        }[]
+    ) {
+
     }
 }

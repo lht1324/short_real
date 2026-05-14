@@ -3,6 +3,7 @@ import { getNextBaseResponse } from "@/lib/utils/getNextBaseResponse";
 import { createSupabaseServiceRoleClient } from "@/lib/supabaseServiceRole";
 import { AIModelData } from "@/lib/api/types/supabase/AIModelData";
 import {getIsValidRequestS2S} from "@/lib/utils/getIsValidRequest";
+import {llmServerAPI} from "@/lib/api/server/llmServerAPI";
 
 export async function POST(request: NextRequest) {
     if (!getIsValidRequestS2S(request)) {
@@ -25,12 +26,12 @@ export async function POST(request: NextRequest) {
             });
         }
 
-        const processedModels: Omit<AIModelData, 'price_per_sec'>[] = [];
+        const processedAIModelList: Omit<AIModelData, 'price_per_sec'| 'is_valuable'>[] = [];
         const targetCategories = ["image-to-video", "image-to-image"];
 
         // 1. fal.ai API에서 활성화된 모델 목록 카테고리별/페이지네이션으로 수집
         for (const category of targetCategories) {
-            const allModels = [];
+            const allModelList = [];
             let hasMore = true;
             let cursor: string | null = null;
 
@@ -57,7 +58,7 @@ export async function POST(request: NextRequest) {
 
                 const data = await res.json();
                 if (data.models && Array.isArray(data.models)) {
-                    allModels.push(...data.models);
+                    allModelList.push(...data.models);
                 }
                 
                 hasMore = data.has_more === true;
@@ -65,8 +66,8 @@ export async function POST(request: NextRequest) {
             }
 
             // 2. 수집된 모델들의 OpenAPI 스키마를 파싱하여 전처리
-            processedModels.push(
-                ...allModels.reduce((acc: Omit<AIModelData, 'price_per_sec'>[], modelData) => {
+            processedAIModelList.push(
+                ...allModelList.reduce((acc: Omit<AIModelData, 'price_per_sec' | 'is_valuable'>[], modelData) => {
                     const openapi = modelData.openapi;
 
                     // 1) 스키마가 없으면 건너뜀 (filter 역할)
@@ -162,7 +163,7 @@ export async function POST(request: NextRequest) {
             )
         }
 
-        if (processedModels.length === 0) {
+        if (processedAIModelList.length === 0) {
             return getNextBaseResponse({
                 success: true,
                 status: 200,
@@ -170,101 +171,109 @@ export async function POST(request: NextRequest) {
             });
         }
 
-        // processedModels의 endpoint_id만 뽑은 리스트를 만들고, 50개씩 자른 뒤 join(',')으로 붙여 ','로 붙은 문자열로 만들어야 한다 (API 최대 50개)
-        const endpointIdList = processedModels.map((modelData) => {
-            return modelData.endpoint_id;
-        });
+        // 1. 기존 DB 모델 목록 조회 (비교용)
+        const { data: existingAIModelList, error: fetchError } = await supabase
+            .from("ai_model_data")
+            .select("endpoint_id");
 
-        // 50개 단위로 청크를 나누어 Pricing API 호출 후 하나로 합치기
-        const allPricingDataList: {
-            endpoint_id: string;
-            unit_price: number;
-            unit: string;
-            currency: string;
-        }[] = [];
-        const chunkSize = 50;
+        if (fetchError) {
+            throw new Error(`Failed to fetch existing models: ${fetchError.message}`);
+        }
 
-        for (let i = 0; i < endpointIdList.length; i += chunkSize) {
-            const chunk = endpointIdList.slice(i, i + chunkSize);
-            const joinedIds = chunk.join(',');
+        const existingEndpointIds = new Set(existingAIModelList?.map(m => m.endpoint_id) || []);
+        const processedEndpointIds = new Set(processedAIModelList.map(m => m.endpoint_id));
 
-            const pricingUrl = new URL("https://api.fal.ai/v1/models/pricing");
-            pricingUrl.searchParams.append("endpoint_id", joinedIds); // 문서에 명시된 쿼리 파라미터명에 따라 (id, ids 등) 수정될 수 있음
+        // 2. Deprecated 모델 DB에서 완전히 삭제 (Hard Delete)
+        // (fal.ai에서 더 이상 내려주지 않거나 상업용 라이선스가 풀린 모델 등)
+        const modelsToDelete = [...existingEndpointIds].filter(id => !processedEndpointIds.has(id));
+        
+        if (modelsToDelete.length > 0) {
+            const { error: deleteError } = await supabase
+                .from("ai_model_data")
+                .delete()
+                .in("endpoint_id", modelsToDelete);
 
-            const pricingRes = await fetch(pricingUrl.toString(), {
-                method: "GET",
-                headers: {
-                    Authorization: `Key ${falApiKey}`,
-                },
-            });
-
-            if (!pricingRes.ok) {
-                const text = await pricingRes.text();
-                throw new Error(`Fal Pricing API Error: ${pricingRes.status} ${text}`);
+            if (deleteError) {
+                console.error("Error deleting deprecated models:", deleteError);
             }
+        }
 
-            const pricingData = await pricingRes.json();
+        // 3. 신규 추가된 모델의 endpoint_id 추출
+        const newAIModelToFetchList = processedAIModelList.filter(m => !existingEndpointIds.has(m.endpoint_id));
 
-            // 반환 결과가 배열이거나 특정 필드(예: data) 안에 있을 경우를 모두 고려하여 하나로 합침
-            if (Array.isArray(pricingData)) {
-                allPricingDataList.push(...pricingData);
-            } else if (pricingData && typeof pricingData === 'object') {
-                // 응답이 객체로 오고 내부에 배열이 있는 형태인 경우 (예: { data: [...] })
-                const arrayData = Object.values(pricingData).find(Array.isArray);
-                if (arrayData) {
-                    allPricingDataList.push(...arrayData);
+        // 4. 신규 모델들의 웹 페이지 HTML fetch 및 순수 텍스트(Pure Text) 추출
+        const newAIModelTextDataList: { endpoint_id: string; pure_text: string }[] = [];
+
+        // HTML 태그 전부 제거하고 순수 텍스트만 남기는 함수 (토큰 최적화)
+        const extractPureText = (html: string) => {
+            const cleaned = html
+                .replace(/<head\b[^>]*>([\s\S]*?)<\/head>/gi, '')
+                .replace(/<script\b[^>]*>([\s\S]*?)<\/script>/gi, '')
+                .replace(/<style\b[^>]*>([\s\S]*?)<\/style>/gi, '')
+                .replace(/<svg\b[^>]*>([\s\S]*?)<\/svg>/gi, '')
+                .replace(/<!--([\s\S]*?)-->/g, ''); // 주석 제거
+                
+            // 남은 모든 HTML 태그 껍데기 제거 후 다중 공백 압축
+            return cleaned.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+        };
+
+        for (const model of newAIModelToFetchList) {
+            try {
+                const res = await fetch(model.model_url);
+                if (!res.ok) {
+                    console.warn(`Failed to fetch HTML for ${model.endpoint_id}: ${res.status}`);
+                    continue;
                 }
+                const htmlText = await res.text();
+                const pureText = extractPureText(htmlText);
+                
+                newAIModelTextDataList.push({
+                    endpoint_id: model.endpoint_id,
+                    pure_text: pureText,
+                });
+            } catch (err) {
+                console.error(`Error fetching HTML for ${model.endpoint_id}:`, err);
             }
         }
 
-        allPricingDataList.filter((pricingData) => {
-            return pricingData.unit === 'seconds' || '5 seconds' || 'megapixels';
-        }).map((pricingData) => {
-            let pricePerSec = 0.0;
+        // 5. LLM을 호출하여 가격 정보 추출 (5개씩 청크 단위로 병렬 처리)
+        // 주의: Rate Limit 및 Vercel Timeout 방어를 위해 청크 단위로는 순차적(Sequential)으로 실행
+        const chunkSize = 5;
+        const scrappedPriceDataList = [];
 
-            if (pricingData.unit === 'seconds') {
-                pricePerSec = pricingData.unit_price;
-            } else if (pricingData.unit === '5 seconds') {
-                pricePerSec = pricingData.unit_price / 5.0;
-            } else {
-                // megapixel 계산 공식 추가 (720p 기준으로 계산해야 함)
-                // 보통 1초에 24FPS * 가로 * 세로 형식으로 뽑는 거 같은데 잘은 모르겠음
+        for (let i = 0; i < newAIModelTextDataList.length; i += chunkSize) {
+            const chunk = newAIModelTextDataList.slice(i, i + chunkSize);
+            
+            // llmServerAPI 파라미터 규격에 맞게 변환
+            const payload = chunk.map(data => ({
+                endpointId: data.endpoint_id,
+                pricePureText: data.pure_text
+            }));
 
-                /**
-                 * 예시
-                 * Your request will cost $0.001605 per megapixel of generated video data (width × height × frames), rounded up. For example, if you generate a video that is 121 frames long at 1280 × 720, your total generated video is ≈112 MP, and your request will cost $0.179.
-                 */
+            try {
+                // TODO: 실제 리턴 타입(PriceByResolution 배열 혹은 null 등)에 맞게 추후 수정 필요
+                const chunkResult = await llmServerAPI.postPricePerSecScrapping(payload);
+                if (chunkResult && Array.isArray(chunkResult)) {
+                    scrappedPriceDataList.push(...chunkResult);
+                }
+            } catch (err) {
+                console.error(`Error during LLM scrapping for chunk ${i / chunkSize}:`, err);
+                // 하나의 청크가 실패하더라도 나머지는 계속 진행하도록 처리
             }
-            return {
-                endpoint_id: pricingData.endpoint_id,
-                price_per_second: pricePerSec,
-            }
-        });
-
-        // TODO: 여기서 allPricingData를 processedModels의 데이터와 매핑하여 AIModelData에 가격 정보 추가 가능
-
-        // 3. 정제된 데이터를 Supabase에 일괄 Upsert
-        const { error } = await supabase
-            .from("ai_models")
-            .upsert(processedModels, { onConflict: "endpoint_id" });
-
-        if (error) {
-            console.error("Error upserting AI models:", error);
-            return getNextBaseResponse({
-                success: false,
-                status: 500,
-                message: "Failed to upsert AI models",
-                error: error.message
-            });
         }
+
+        // TODO: scrappedPriceDataList와 processedAIModelList를 병합하여 DB에 upsert 하는 로직 구현 예정
 
         return getNextBaseResponse({
             success: true,
             status: 200,
-            message: "Successfully synchronized AI models",
-            data: { count: processedModels.length }
+            message: "Successfully parsed new models html and scrapped price data",
+            data: { 
+                deletedCount: modelsToDelete.length,
+                newModelsCount: newAIModelTextDataList.length,
+                scrappedDataCount: scrappedPriceDataList.length
+            }
         });
-
     } catch (error) {
         console.error("AI Model Sync Error:", error);
         return getNextBaseResponse({
