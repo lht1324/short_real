@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import { getNextBaseResponse } from "@/lib/utils/getNextBaseResponse";
 import { createSupabaseServiceRoleClient } from "@/lib/supabaseServiceRole";
-import { AIModelData } from "@/lib/api/types/supabase/AIModelData";
+import {AIModelData, PriceByResolution} from "@/lib/api/types/supabase/AIModelData";
 import {getIsValidRequestS2S} from "@/lib/utils/getIsValidRequest";
 import {llmServerAPI} from "@/lib/api/server/llmServerAPI";
 
@@ -239,7 +239,7 @@ export async function POST(request: NextRequest) {
         // 5. LLM을 호출하여 가격 정보 추출 (5개씩 청크 단위로 병렬 처리)
         // 주의: Rate Limit 및 Vercel Timeout 방어를 위해 청크 단위로는 순차적(Sequential)으로 실행
         const chunkSize = 5;
-        const scrappedPriceDataList = [];
+        const scrappedPriceDataList: { endpointId: string; priceByResolutionList: PriceByResolution[] }[] = [];
 
         for (let i = 0; i < newAIModelTextDataList.length; i += chunkSize) {
             const chunk = newAIModelTextDataList.slice(i, i + chunkSize);
@@ -251,10 +251,9 @@ export async function POST(request: NextRequest) {
             }));
 
             try {
-                // TODO: 실제 리턴 타입(PriceByResolution 배열 혹은 null 등)에 맞게 추후 수정 필요
                 const chunkResult = await llmServerAPI.postPricePerSecScrapping(payload);
-                if (chunkResult && Array.isArray(chunkResult)) {
-                    scrappedPriceDataList.push(...chunkResult);
+                if (chunkResult.success && chunkResult.data?.modelPricePerSecondList) {
+                    scrappedPriceDataList.push(...chunkResult.data.modelPricePerSecondList);
                 }
             } catch (err) {
                 console.error(`Error during LLM scrapping for chunk ${i / chunkSize}:`, err);
@@ -262,7 +261,31 @@ export async function POST(request: NextRequest) {
             }
         }
 
-        // TODO: scrappedPriceDataList와 processedAIModelList를 병합하여 DB에 upsert 하는 로직 구현 예정
+        // 6. scrappedPriceDataList와 processedAIModelList를 병합하여 DB에 insert (신규 모델만)
+        const finalModelDataToInsert: AIModelData[] = [];
+
+        for (const model of processedAIModelList) {
+            // 새로 추가되는 모델인 경우에만 insert 대상으로 선정
+            if (newAIModelToFetchList.some(m => m.endpoint_id === model.endpoint_id)) {
+                const scrappedData = scrappedPriceDataList.find(s => s.endpointId === model.endpoint_id);
+                
+                finalModelDataToInsert.push({
+                    ...model,
+                    price_per_sec: scrappedData ? scrappedData.priceByResolutionList : [],
+                    is_valuable: !!scrappedData // 가격 정보가 추출되었으면 true, 계산 불가 등으로 누락되었으면 false
+                });
+            }
+        }
+
+        if (finalModelDataToInsert.length > 0) {
+            const { error: insertError } = await supabase
+                .from("ai_model_data")
+                .insert(finalModelDataToInsert);
+
+            if (insertError) {
+                console.error("Error inserting new models:", insertError);
+            }
+        }
 
         return getNextBaseResponse({
             success: true,

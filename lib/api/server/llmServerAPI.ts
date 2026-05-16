@@ -22,6 +22,7 @@ import {POST_VIDEO_GEN_PROMPT_PROMPT} from "@/lib/llm-prompts/POST_VIDEO_GEN_PRO
 import {POST_MUSIC_GENERATION_DATA_PROMPT} from "@/lib/llm-prompts/POST_MUSIC_GENERATION_DATA_PROMPT";
 import {POST_MUSIC_SELECTION_PROMPT} from "@/lib/llm-prompts/POST_MUSIC_SELECTION_PROMPT";
 import {POST_MUSIC_HIGHLIGHT_SELECTION_PROMPT} from "@/lib/llm-prompts/POST_MUSIC_HIGHLIGHT_SELECTION_PROMPT";
+import {PriceByResolution} from "@/lib/api/types/supabase/AIModelData";
 
 const POST_AUTOPILOT_NICHE_TOPIC_PROMPT = `
 <developer_instruction>
@@ -1334,7 +1335,70 @@ Instruction: Analyze the narration (Track 0) and the candidate music tracks (Tra
             endpointId: string;
             pricePureText: string;
         }[]
-    ) {
+    ): Promise<{
+        success: boolean;
+        data?: {
+            modelPricePerSecondList: {
+                endpointId: string;
+                priceByResolutionList: PriceByResolution[];
+            }[];
+        };
+        error?: string;
+    }> {
+        try {
+            const systemMessage = ``;
 
+            const userMessage = `
+<input_data>
+  ${JSON.stringify(aiModelPricePureTextList, null, 2)}
+</input_data>
+
+Instruction: Process the input data and extract the price per second for each endpoint ID. Return the result strictly in JSON format.
+`;
+
+            const client = new OpenRouterClient();
+            const generatedContent = await client.createCompletion({
+                model: OpenRouterModel.DEEPSEEK_V_4_FLASH,
+                systemMessage: systemMessage,
+                userMessage: userMessage,
+                reasoning: true,
+                maxCompletionTokens: 4096,
+            }, "postPricePerSecScrapping()");
+
+            if (!generatedContent) {
+                return {
+                    success: false,
+                    error: 'No analysis generated from AI'
+                };
+            }
+
+            try {
+                const parsedData: {
+                    modelPricePerSecondList: {
+                        endpointId: string;
+                        priceByResolutionList: PriceByResolution[];
+                    }[];
+                } = cleanAndParseJSON(generatedContent);
+
+                return {
+                    success: true,
+                    data: {
+                        modelPricePerSecondList: parsedData.modelPricePerSecondList,
+                    }
+                };
+            } catch (parseError) {
+                console.error('Failed to parse price scrapping JSON:', parseError);
+                return {
+                    success: false,
+                    error: 'Failed to parse AI response'
+                };
+            }
+        } catch (error) {
+            console.error("Error in postPricePerSecScrapping():", error);
+            return {
+                success: false,
+                error: error instanceof Error ? error.message : 'Unknown error occurred',
+            };
+        }
     }
 }
