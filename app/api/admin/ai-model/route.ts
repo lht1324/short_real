@@ -243,7 +243,7 @@ export async function POST(request: NextRequest) {
 
         for (let i = 0; i < newAIModelTextDataList.length; i += chunkSize) {
             const chunk = newAIModelTextDataList.slice(i, i + chunkSize);
-            
+
             // llmServerAPI 파라미터 규격에 맞게 변환
             const payload = chunk.map(data => ({
                 endpointId: data.endpoint_id,
@@ -272,7 +272,7 @@ export async function POST(request: NextRequest) {
                 finalModelDataToInsert.push({
                     ...model,
                     price_per_sec: scrappedData ? scrappedData.priceByResolutionList : [],
-                    is_valuable: !!scrappedData // 가격 정보가 추출되었으면 true, 계산 불가 등으로 누락되었으면 false
+                    is_valuable: !!scrappedData && scrappedData.priceByResolutionList.length == 2 // 가격 정보가 추출되었으면 true, 계산 불가 등으로 누락되었으면 false
                 });
             }
         }

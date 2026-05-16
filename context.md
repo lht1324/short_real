@@ -22,9 +22,12 @@
 - **스케줄러 연동**: Trigger.dev 용 `fal-ai-model-update-scheduler` 태스크 구조화 완료 (대시보드에서 스케줄 등록 예정).
 - **동기화 API**: `GET https://api.fal.ai/v1/models` API를 페이지네이션으로 호출하여 `image-to-video` 활성 모델을 파싱하고 DB에 일괄 업데이트(Bulk Upsert)하는 `/api/admin/ai-model/route.ts` 구현 완료.
   - **동적 스키마 파싱 적용:** OpenAPI `enum` 구조와 데이터(`720p`, `1080p`, `16:9` 등)를 분석하여 세밀한 길이 조절 및 필수 포맷을 지원하는 모델만 필터링하는 로직 구현.
-  - **[NEW] 파편화된 가격 데이터 추출 전략 확정:** fal.ai Pricing API의 단위(`unit`)가 모델마다 상이한 문제를 해결하기 위해, API 연동 대신 **웹 파싱 + LLM 추출 하이브리드 파이프라인**을 도입하기로 결정.
+  - **파편화된 가격 데이터 추출 전략 확정:** fal.ai Pricing API의 단위(`unit`)가 모델마다 상이한 문제를 해결하기 위해, API 연동 대신 **웹 파싱 + LLM 추출 하이브리드 파이프라인**을 도입하기로 결정.
     - 백엔드 코드에서 모델 웹페이지 HTML fetch 후 불필요한 태그(`<head>`, `<script>`, `<style>`, `<svg>`) 및 전체 태그 제거 -> 순수 텍스트(Pure Text) 추출.
     - 추출된 순수 텍스트를 LLM (DeepSeek V4 Flash 권장) 에 프롬프트와 함께 주입하여 '720p 24fps 기준 1초당 요금'을 계산하여 도출.
+  - **[NEW] 가격 추출용 프롬프트 및 API 구성 완료:**
+    - `POST_PRICE_PER_SECOND_SCRAPPING_PROMPT.ts` 작성 완료 (Megapixel 단위 변환 수학 공식 명시, 720p/1080p 개별 유추, 환산 불가 시 빈 배열 반환 규칙 적용).
+    - `@lib/api/server/llmServerAPI.ts` 내에 `postPricePerSecScrapping` 메서드 구현 완료.
 
 ## 3. 향후 작업 (Next Steps) - [Priority: HIGH]
 *참고: 모델 선택 및 과금 관련 상세 스펙은 `@add-model-selection-plan.md` 파일을 참조할 것.*
