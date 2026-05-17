@@ -23,6 +23,7 @@ import {POST_MUSIC_GENERATION_DATA_PROMPT} from "@/lib/llm-prompts/POST_MUSIC_GE
 import {POST_MUSIC_SELECTION_PROMPT} from "@/lib/llm-prompts/POST_MUSIC_SELECTION_PROMPT";
 import {POST_MUSIC_HIGHLIGHT_SELECTION_PROMPT} from "@/lib/llm-prompts/POST_MUSIC_HIGHLIGHT_SELECTION_PROMPT";
 import {PriceByResolution} from "@/lib/api/types/supabase/AIModelData";
+import {POST_PRICE_PER_SECOND_SCRAPPING_PROMPT} from "@/lib/llm-prompts/POST_PRICE_PER_SECOND_SCRAPPING_PROMPT";
 
 const POST_AUTOPILOT_NICHE_TOPIC_PROMPT = `
 <developer_instruction>
@@ -1346,7 +1347,7 @@ Instruction: Analyze the narration (Track 0) and the candidate music tracks (Tra
         error?: string;
     }> {
         try {
-            const systemMessage = ``;
+            const systemMessage = POST_PRICE_PER_SECOND_SCRAPPING_PROMPT;
 
             const userMessage = `
 <input_data>

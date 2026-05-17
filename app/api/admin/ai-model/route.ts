@@ -1,9 +1,47 @@
+import fs from "fs";
+import path from "path";
 import { NextRequest } from "next/server";
 import { getNextBaseResponse } from "@/lib/utils/getNextBaseResponse";
 import { createSupabaseServiceRoleClient } from "@/lib/supabaseServiceRole";
 import {AIModelData, PriceByResolution} from "@/lib/api/types/supabase/AIModelData";
 import {getIsValidRequestS2S} from "@/lib/utils/getIsValidRequest";
 import {llmServerAPI} from "@/lib/api/server/llmServerAPI";
+
+interface RawFalAIModel {
+    endpoint_id: string;
+    metadata?: FalAIMetadata;
+    openapi?: {
+        components?: {
+            schemas?: Record<string, OpenAPISchema>;
+        }
+    }
+}
+
+interface FalAIMetadata {
+    display_name?: string;
+    description?: string;
+    category?: string;
+    status?: string;
+    thumbnail_url?: string;
+    model_url?: string;
+    license_type?: string;
+    [key: string]: unknown; // 추가적인 메타데이터 허용
+}
+
+interface FlattenedFalAIModel extends FalAIMetadata {
+    endpoint_id: string;
+    openapi?: RawFalAIModel['openapi'];
+}
+
+interface OpenAPISchema {
+    properties?: Record<string, OpenAPIProperty | unknown>;
+    [key: string]: unknown;
+}
+
+interface OpenAPIProperty {
+    enum?: string[];
+    [key: string]: unknown;
+}
 
 export async function POST(request: NextRequest) {
     if (!getIsValidRequestS2S(request)) {
@@ -26,12 +64,14 @@ export async function POST(request: NextRequest) {
             });
         }
 
+        const rawJsonList: RawFalAIModel[] = [];
+
         const processedAIModelList: Omit<AIModelData, 'price_per_sec'| 'is_valuable'>[] = [];
         const targetCategories = ["image-to-video", "image-to-image"];
 
         // 1. fal.ai API에서 활성화된 모델 목록 카테고리별/페이지네이션으로 수집
         for (const category of targetCategories) {
-            const allModelList = [];
+            const allModelList: FlattenedFalAIModel[] = [];
             let hasMore = true;
             let cursor: string | null = null;
 
@@ -58,12 +98,41 @@ export async function POST(request: NextRequest) {
 
                 const data = await res.json();
                 if (data.models && Array.isArray(data.models)) {
-                    allModelList.push(...data.models);
+                    rawJsonList.push(...data.models);
+
+                    allModelList.push(...data.models.map((model: RawFalAIModel) => {
+                        return {
+                            endpoint_id: model.endpoint_id,
+                            ...model.metadata,
+                            openapi: model.openapi,
+                        }
+                    }));
                 }
                 
                 hasMore = data.has_more === true;
                 cursor = data.next_cursor;
             }
+
+            const dumpFilePath = path.join(process.cwd(), 'fal_models_dump.json');
+            fs.writeFileSync(dumpFilePath, JSON.stringify(rawJsonList.map((rawJson) => {
+                const schemas = rawJson.openapi?.components?.schemas || {};
+                const inputProperties: Record<string, unknown> = {};
+                
+                Object.keys(schemas).forEach(key => {
+                    if (key.endsWith('Input')) {
+                        inputProperties[key] = schemas[key].properties;
+                    }
+                });
+
+                return {
+                    endpoint_id: rawJson.endpoint_id,
+                    metadata: rawJson.metadata,
+                    schemas: inputProperties
+                }
+            }), null, 2), 'utf-8');
+            console.log(`✅ JSON dump saved: ${dumpFilePath}`);
+
+            console.log(`allModelList.length === ${allModelList.length}`)
 
             // 2. 수집된 모델들의 OpenAPI 스키마를 파싱하여 전처리
             processedAIModelList.push(
@@ -85,10 +154,12 @@ export async function POST(request: NextRequest) {
 
                     // 3) 맞는 메인 스키마가 없으면 건너뜀
                     if (!inputSchemaKey) {
+                        console.log(`[${modelData.display_name}] keys: ${JSON.stringify(Object.keys(schemas))}`);
                         return acc;
                     }
 
                     if (modelData.license_type !== 'commercial') {
+                        console.log(`[${modelData.display_name}] licenseType: ${modelData.license_type}`);
                         return acc;
                     }
 
@@ -109,52 +180,66 @@ export async function POST(request: NextRequest) {
 
                             // 각각의 enum이 무엇을 다루는지(해상도, 종횡비, 길이) 데이터를 보고 동적으로 판별
 
-                            // 가. 해상도(Resolution) 필드인지 확인 후 조건 검사
-                            // (480p 등 다른 게 섞여 있어도 720p와 1080p가 '모두' 있으면 통과)
-                            if (enums.includes('720p') && enums.includes('1080p')) {
-                                hasRequiredResolution = true;
-                            }
-
-                            // 나. 종횡비(Aspect Ratio) 필드인지 확인 후 조건 검사
-                            // (1:1 등 다른 게 섞여 있어도 16:9와 9:16이 '모두' 있으면 통과)
-                            if (enums.includes('16:9') && enums.includes('9:16')) {
-                                hasRequiredAspectRatio = true;
-                            }
-
-                            // 다. 영상 길이(Duration) 필드인지 확인 후 파싱
-                            // 숫자로 변환 가능한 값들만 추출하여 오름차순 정렬
-                            const numbers = enums.map(Number).filter(n => !isNaN(n)).sort((a, b) => a - b);
-
-                            // 숫자가 2개 이상인 경우, 1초 간격(연속된 숫자)이 얼마나 있는지 확인
-                            if (numbers.length >= 2) {
-                                let stepOfOneCount = 0;
-                                for (let i = 1; i < numbers.length; i++) {
-                                    if (numbers[i] - numbers[i - 1] === 1) stepOfOneCount++;
+                            if (category === "image-to-video") {
+                                // 가. 해상도(Resolution) 필드인지 확인 후 조건 검사
+                                // (480p 등 다른 게 섞여 있어도 720p와 1080p가 '모두' 있으면 통과)
+                                if (enums.includes('720p') && enums.includes('1080p')) {
+                                    hasRequiredResolution = true;
                                 }
 
-                                // 1초 간격이 2번 이상 등장하면 이를 duration 필드로 확정
-                                if (stepOfOneCount >= 2) {
-                                    supportedDurations = numbers;
+                                // 나. 종횡비(Aspect Ratio) 필드인지 확인 후 조건 검사
+                                // (1:1 등 다른 게 섞여 있어도 16:9와 9:16이 '모두' 있으면 통과)
+                                if (enums.includes('16:9') && enums.includes('9:16')) {
+                                    hasRequiredAspectRatio = true;
+                                }
+
+                                if (!hasRequiredResolution) {
+                                    console.log(`[${modelData.display_name}] 720p: ${enums.includes('720p')}, 1080p: ${enums.includes('1080p')}`)
+                                }
+
+                                if (!hasRequiredAspectRatio) {
+                                    console.log(`[${modelData.display_name}] 16:9: ${enums.includes('16:9')}, 9:16: ${enums.includes('9:16')}`)
+                                }
+
+                                // 다. 영상 길이(Duration) 필드인지 확인 후 파싱
+                                // 숫자로 변환 가능한 값들만 추출하여 오름차순 정렬
+                                const numbers = enums.map((enumData) => {
+                                    // s, sec 등 숫자 아닌 것 제거 필요
+                                    return Number(enumData);
+                                }).filter(n => !isNaN(n)).sort((a, b) => a - b);
+
+                                // 숫자가 2개 이상인 경우, 1초 간격(연속된 숫자)이 얼마나 있는지 확인
+                                if (numbers.length >= 2) {
+                                    let stepOfOneCount = 0;
+                                    for (let i = 1; i < numbers.length; i++) {
+                                        if (numbers[i] - numbers[i - 1] === 1) stepOfOneCount++;
+                                    }
+
+                                    // 1초 간격이 2번 이상 등장하면 이를 duration 필드로 확정
+                                    if (stepOfOneCount >= 2) {
+                                        supportedDurations = numbers;
+                                    }
+                                }
+
+                                // 1초 단위 세밀 조절, 720p/1080p 지원, 16:9/9:16 지원을 "모두" 만족하는 타겟 모델만 통과
+                                if (!supportedDurations || !hasRequiredResolution || !hasRequiredAspectRatio) {
+                                    console.log(`[${modelData.display_name}]: inputSchemaKey = ${inputSchemaKey}, supportedDurations = ${supportedDurations}, hasRequiredResolution = ${hasRequiredResolution}, hasRequiredAspectRatio = ${hasRequiredAspectRatio}`)
+                                    return acc;
                                 }
                             }
                         }
-                    }
-
-                    // 1초 단위 세밀 조절, 720p/1080p 지원, 16:9/9:16 지원을 "모두" 만족하는 타겟 모델만 통과
-                    if (!supportedDurations || !hasRequiredResolution || !hasRequiredAspectRatio) {
-                        return acc;
                     }
 
                     // 5) 정제된 데이터 배열에 추가
                     acc.push({
                         endpoint_id: modelData.endpoint_id,
                         provider: "fal-ai",
-                        display_name: modelData.metadata?.display_name || modelData.endpoint_id,
-                        description: modelData.metadata?.description || "",
-                        category: modelData.metadata?.category || "image-to-video",
-                        status: modelData.metadata?.status || "active",
-                        thumbnail_url: modelData.metadata?.thumbnail_url || "",
-                        model_url: modelData.metadata?.model_url || `https://fal.run/${modelData.endpoint_id}`,
+                        display_name: modelData.display_name || modelData.endpoint_id,
+                        description: modelData.description || "",
+                        category: modelData.category || "image-to-video",
+                        status: modelData.status || "active",
+                        thumbnail_url: modelData.thumbnail_url || "",
+                        model_url: modelData.model_url || `https://fal.run/${modelData.endpoint_id}`,
                         supported_durations: supportedDurations,
                     });
 
@@ -217,9 +302,12 @@ export async function POST(request: NextRequest) {
             return cleaned.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
         };
 
+        let count = 0;
         for (const model of newAIModelToFetchList) {
             try {
-                const res = await fetch(model.model_url);
+                if (count === 5) break;
+
+                const res = await fetch(`https://fal.ai/models/${model.endpoint_id}`);
                 if (!res.ok) {
                     console.warn(`Failed to fetch HTML for ${model.endpoint_id}: ${res.status}`);
                     continue;
@@ -231,6 +319,8 @@ export async function POST(request: NextRequest) {
                     endpoint_id: model.endpoint_id,
                     pure_text: pureText,
                 });
+
+                count++;
             } catch (err) {
                 console.error(`Error fetching HTML for ${model.endpoint_id}:`, err);
             }
@@ -241,25 +331,67 @@ export async function POST(request: NextRequest) {
         const chunkSize = 5;
         const scrappedPriceDataList: { endpointId: string; priceByResolutionList: PriceByResolution[] }[] = [];
 
-        for (let i = 0; i < newAIModelTextDataList.length; i += chunkSize) {
-            const chunk = newAIModelTextDataList.slice(i, i + chunkSize);
+        // for (let i = 0; i < newAIModelTextDataList.length; i += chunkSize) {
+        //     const chunk = newAIModelTextDataList.slice(i, i + chunkSize);
+        //
+        //     // llmServerAPI 파라미터 규격에 맞게 변환
+        //     const payload = chunk.map(data => ({
+        //         endpointId: data.endpoint_id,
+        //         pricePureText: data.pure_text
+        //     }));
+        //
+        //     try {
+        //         const chunkResult = await llmServerAPI.postPricePerSecScrapping(payload);
+        //         if (chunkResult.success && chunkResult.data?.modelPricePerSecondList) {
+        //             scrappedPriceDataList.push(...chunkResult.data.modelPricePerSecondList);
+        //         }
+        //     } catch (err) {
+        //         console.error(`Error during LLM scrapping for chunk ${i / chunkSize}:`, err);
+        //         // 하나의 청크가 실패하더라도 나머지는 계속 진행하도록 처리
+        //     }
+        // }
 
-            // llmServerAPI 파라미터 규격에 맞게 변환
-            const payload = chunk.map(data => ({
-                endpointId: data.endpoint_id,
-                pricePureText: data.pure_text
-            }));
 
-            try {
-                const chunkResult = await llmServerAPI.postPricePerSecScrapping(payload);
-                if (chunkResult.success && chunkResult.data?.modelPricePerSecondList) {
-                    scrappedPriceDataList.push(...chunkResult.data.modelPricePerSecondList);
-                }
-            } catch (err) {
-                console.error(`Error during LLM scrapping for chunk ${i / chunkSize}:`, err);
-                // 하나의 청크가 실패하더라도 나머지는 계속 진행하도록 처리
+        const chunk = newAIModelTextDataList.slice(0, chunkSize);
+
+        // llmServerAPI 파라미터 규격에 맞게 변환
+        const payload = chunk.map(data => ({
+            endpointId: data.endpoint_id,
+            pricePureText: data.pure_text
+        }));
+
+        try {
+            const chunkResult = await llmServerAPI.postPricePerSecScrapping(payload);
+            if (chunkResult.success && chunkResult.data?.modelPricePerSecondList) {
+                scrappedPriceDataList.push(...chunkResult.data.modelPricePerSecondList);
+
+                newAIModelToFetchList.forEach((aiModel) => {
+                    const analysisResult = chunkResult.data?.modelPricePerSecondList.find((result) => {
+                        return result.endpointId === aiModel.endpoint_id;
+                    });
+
+                    if (analysisResult) {
+                        console.log(`[${aiModel.display_name}]: `, JSON.stringify(analysisResult.priceByResolutionList));
+                    }
+                })
             }
+        } catch (err) {
+            console.error(`Error during LLM scrapping for chunk:`, err);
+            // 하나의 청크가 실패하더라도 나머지는 계속 진행하도록 처리
         }
+
+        console.log("processedModelList: ", processedAIModelList.map(model => model.display_name));
+
+        return getNextBaseResponse({
+            success: true,
+            status: 200,
+            message: "Test finished.",
+            data: {
+                deletedCount: modelsToDelete.length,
+                newModelsCount: newAIModelTextDataList.length,
+                scrappedDataCount: scrappedPriceDataList.length
+            }
+        });
 
         // 6. scrappedPriceDataList와 processedAIModelList를 병합하여 DB에 insert (신규 모델만)
         const finalModelDataToInsert: AIModelData[] = [];
