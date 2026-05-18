@@ -1,0 +1,10 @@
+[ INPUTS ]
+- Prompt (Hint: The character walks forward slowly, with the camera following from behind.)
+- Image Url* (Hint: Choose...Hint: Drag and drop image files from your computer, images from web pages, paste from clipb)
+- End Image Url (Hint: Choose...Hint: Drag and drop image files from your computer, images from web pages, paste from clipb)
+- Duration (Hint: 10)
+- Generate Audio
+- Multi Prompt (Hint: Add item)
+
+[ RESULT & PRICING ]
+For every second of video you generated, you will be charged $0.42 regardless of whether audio is on or off. For example, a 5s video will cost $2.10.

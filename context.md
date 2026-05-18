@@ -1,4 +1,4 @@
-2026-05-12 00:00
+2026-05-18 23:45
 
 # 프로젝트 컨텍스트: 오토파일럿 고도화 및 유연한 모델 선택/과금 구조 전환
 
@@ -17,24 +17,23 @@
 ### 2.2 업로드 파이프라인 이슈 해결 - [완료]
 - `internalFireAndForgetFetch` 바디 유실 이슈를 `videoGenerationTask`의 `user_id`를 직접 활용하는 방식으로 우회하여 해결 완료.
 
-### 2.3 AI 모델 선택 구조 개편: 1단계 (DB 동기화) - [진행 중]
-- **데이터 스키마**: `ai_models` 테이블 용 `AIModelData` 인터페이스 정의 완료 (배속 처리를 위한 `supported_durations` 파라미터 최적화).
-- **스케줄러 연동**: Trigger.dev 용 `fal-ai-model-update-scheduler` 태스크 구조화 완료 (대시보드에서 스케줄 등록 예정).
-- **동기화 API**: `GET https://api.fal.ai/v1/models` API를 페이지네이션으로 호출하여 `image-to-video` 활성 모델을 파싱하고 DB에 일괄 업데이트(Bulk Upsert)하는 `/api/admin/ai-model/route.ts` 구현 완료.
-  - **동적 스키마 파싱 적용:** OpenAPI `enum` 구조와 데이터(`720p`, `1080p`, `16:9` 등)를 분석하여 세밀한 길이 조절 및 필수 포맷을 지원하는 모델만 필터링하는 로직 구현.
-  - **파편화된 가격 데이터 추출 전략 확정:** fal.ai Pricing API의 단위(`unit`)가 모델마다 상이한 문제를 해결하기 위해, API 연동 대신 **웹 파싱 + LLM 추출 하이브리드 파이프라인**을 도입하기로 결정.
-    - 백엔드 코드에서 모델 웹페이지 HTML fetch 후 불필요한 태그(`<head>`, `<script>`, `<style>`, `<svg>`) 및 전체 태그 제거 -> 순수 텍스트(Pure Text) 추출.
-    - 추출된 순수 텍스트를 LLM (DeepSeek V4 Flash 권장) 에 프롬프트와 함께 주입하여 '720p 24fps 기준 1초당 요금'을 계산하여 도출.
-  - **[NEW] 가격 추출용 프롬프트 및 API 구성 완료:**
-    - `POST_PRICE_PER_SECOND_SCRAPPING_PROMPT.ts` 작성 완료 (Megapixel 단위 변환 수학 공식 명시, 720p/1080p 개별 유추, 환산 불가 시 빈 배열 반환 규칙 적용).
-    - `@lib/api/server/llmServerAPI.ts` 내에 `postPricePerSecScrapping` 메서드 구현 완료.
+### 2.3 AI 모델 선택 구조 개편: 1단계 (DB 동기화 전략 수정) - [진행 중]
+- **데이터 스키마**: `ai_models` 테이블 용 `AIModelData` 인터페이스 정의 완료.
+- **스케줄러 연동**: Trigger.dev 용 `fal-ai-model-update-scheduler` 태스크 구조화 완료.
+- **동기화 API**: 기존 OpenAPI 덤프 파싱 방식에서 **Playground HTML 구조 기반의 정밀 타격(Scraping) + LLM 추출 하이브리드 방식**으로 전략 완전 전면 수정.
+  - **이유:** fal.ai의 모델마다 OpenAPI 구조가 파편화되어 있고, 가격 산정 문구도 모두 다름.
+  - **새로운 전략 (Cheerio 활용):**
+    1. HTML의 `<h3>Input</h3>`과 `<h3>Result</h3>` 태그를 앵커로 삼아, Playground UI의 해당 카드 섹션(`.border-stroke-strong`) DOM만 통째로 격리.
+    2. 격리된 **Input 섹션**에서 `.form-control` 내부의 `<label>` 및 선택 가능한 옵션(Hint) 텍스트를 구조적으로 추출.
+    3. 격리된 **Result 섹션**에서 안내용 `<p>` 태그만 추출하여, 특정 키워드에 의존하지 않고도 깔끔한 가격 문장을 획득.
+  - **Kling 4K 모델 특이사항 발견:** Kling V3-Omni 4K(`o3/4k`) 엔드포인트는 해상도(Resolution)나 종횡비 파라미터를 노출하지 않음. 이는 1080p 업스케일링이 아닌 **Native 4K (3840x2160) 단일 생성** 파이프라인이며, Input 이미지의 종횡비를 자동으로 상속받도록 설계되었기 때문임. (최상위 스펙 충족 확인)
 
 ## 3. 향후 작업 (Next Steps) - [Priority: HIGH]
 *참고: 모델 선택 및 과금 관련 상세 스펙은 `@add-model-selection-plan.md` 파일을 참조할 것.*
 
 1. **AI 모델 DB 동기화 파이프라인 완성 (초기 데이터 구축)**:
-   - 확정된 전략을 바탕으로 `route.ts` 내 Pricing 로직을 LLM 기반 텍스트 분석 로직으로 교체.
-   - Vercel 타임아웃 및 LLM Rate Limit을 고려하여, 모델을 5개 단위로 청크(Chunk)를 나누어 병렬 호출(`Promise.allSettled`)하는 안정적인 초기 데이터 셋업 스크립트(또는 로직) 작성.
+   - 확정된 Playground HTML 추출 전략을 `@app/api/admin/ai-model/route.ts`의 메인 로직에 적용.
+   - 추출된 요약본(Input 파라미터 리스트 + Result 가격 문단)을 활용하여 LLM 프롬프트를 간소화하고, 정확한 초당 가격을 산출하는 로직 구현.
 2. **AI 모델 선택 UI 및 DB 연동 (Phase 2)**: 
    - `video_generation_tasks`에 `selected_model_id` 추가.
    - `/workspace/create`에 `ModelSelectionPanel` 컴포넌트 추가 및 상태 연동 로직 구현.

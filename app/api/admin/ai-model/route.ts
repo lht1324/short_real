@@ -10,11 +10,6 @@ import {llmServerAPI} from "@/lib/api/server/llmServerAPI";
 interface RawFalAIModel {
     endpoint_id: string;
     metadata?: FalAIMetadata;
-    openapi?: {
-        components?: {
-            schemas?: Record<string, OpenAPISchema>;
-        }
-    }
 }
 
 interface FalAIMetadata {
@@ -26,21 +21,6 @@ interface FalAIMetadata {
     model_url?: string;
     license_type?: string;
     [key: string]: unknown; // 추가적인 메타데이터 허용
-}
-
-interface FlattenedFalAIModel extends FalAIMetadata {
-    endpoint_id: string;
-    openapi?: RawFalAIModel['openapi'];
-}
-
-interface OpenAPISchema {
-    properties?: Record<string, OpenAPIProperty | unknown>;
-    [key: string]: unknown;
-}
-
-interface OpenAPIProperty {
-    enum?: string[];
-    [key: string]: unknown;
 }
 
 export async function POST(request: NextRequest) {
@@ -64,14 +44,11 @@ export async function POST(request: NextRequest) {
             });
         }
 
-        const rawJsonList: RawFalAIModel[] = [];
-
         const processedAIModelList: Omit<AIModelData, 'price_per_sec'| 'is_valuable'>[] = [];
         const targetCategories = ["image-to-video", "image-to-image"];
 
         // 1. fal.ai API에서 활성화된 모델 목록 카테고리별/페이지네이션으로 수집
         for (const category of targetCategories) {
-            const allModelList: FlattenedFalAIModel[] = [];
             let hasMore = true;
             let cursor: string | null = null;
 
@@ -79,7 +56,6 @@ export async function POST(request: NextRequest) {
                 const url = new URL("https://api.fal.ai/v1/models");
                 url.searchParams.append("category", category);
                 url.searchParams.append("status", "active");
-                url.searchParams.append("expand", "openapi-3.0");
                 if (cursor) {
                     url.searchParams.append("cursor", cursor);
                 }
@@ -98,13 +74,12 @@ export async function POST(request: NextRequest) {
 
                 const data = await res.json();
                 if (data.models && Array.isArray(data.models)) {
-                    rawJsonList.push(...data.models);
-
-                    allModelList.push(...data.models.map((model: RawFalAIModel) => {
+                    processedAIModelList.push(...data.models.filter((model: RawFalAIModel) => {
+                        return model.metadata?.license_type === 'commercial';
+                    }).map((model: RawFalAIModel) => {
                         return {
                             endpoint_id: model.endpoint_id,
                             ...model.metadata,
-                            openapi: model.openapi,
                         }
                     }));
                 }
@@ -113,139 +88,7 @@ export async function POST(request: NextRequest) {
                 cursor = data.next_cursor;
             }
 
-            const dumpFilePath = path.join(process.cwd(), 'fal_models_dump.json');
-            fs.writeFileSync(dumpFilePath, JSON.stringify(rawJsonList.map((rawJson) => {
-                const schemas = rawJson.openapi?.components?.schemas || {};
-                const inputProperties: Record<string, unknown> = {};
-                
-                Object.keys(schemas).forEach(key => {
-                    if (key.endsWith('Input')) {
-                        inputProperties[key] = schemas[key].properties;
-                    }
-                });
-
-                return {
-                    endpoint_id: rawJson.endpoint_id,
-                    metadata: rawJson.metadata,
-                    schemas: inputProperties
-                }
-            }), null, 2), 'utf-8');
-            console.log(`✅ JSON dump saved: ${dumpFilePath}`);
-
-            console.log(`allModelList.length === ${allModelList.length}`)
-
-            // 2. 수집된 모델들의 OpenAPI 스키마를 파싱하여 전처리
-            processedAIModelList.push(
-                ...allModelList.reduce((acc: Omit<AIModelData, 'price_per_sec' | 'is_valuable'>[], modelData) => {
-                    const openapi = modelData.openapi;
-
-                    // 1) 스키마가 없으면 건너뜀 (filter 역할)
-                    if (!openapi?.components?.schemas) {
-                        return acc;
-                    }
-
-                    const schemas = openapi.components.schemas;
-
-                    // 2) 우리 워크플로우에 맞는 타겟 스키마 키워드 (소문자로 작성)
-
-                    const inputSchemaKey = Object.keys(schemas).find(key => {
-                        return key.toLowerCase().includes(`${category.replaceAll('-', '')}input`);
-                    });
-
-                    // 3) 맞는 메인 스키마가 없으면 건너뜀
-                    if (!inputSchemaKey) {
-                        console.log(`[${modelData.display_name}] keys: ${JSON.stringify(Object.keys(schemas))}`);
-                        return acc;
-                    }
-
-                    if (modelData.license_type !== 'commercial') {
-                        console.log(`[${modelData.display_name}] licenseType: ${modelData.license_type}`);
-                        return acc;
-                    }
-
-                    // 4) 동적 프로퍼티 분석 (Shape-based Parsing)
-                    let supportedDurations: number[] | undefined = undefined;
-                    let hasRequiredResolution = false;
-                    let hasRequiredAspectRatio = false;
-                    
-                    const properties = schemas[inputSchemaKey].properties;
-
-                    if (properties && typeof properties === 'object') {
-                        // eslint 경고 방지를 위해 Object.values 사용 및 unknown 타입 캐스팅 활용
-                        for (const field of Object.values(properties)) {
-                            const fieldObj = field as Record<string, unknown>;
-                            const enums = fieldObj.enum;
-                            
-                            if (!enums || !Array.isArray(enums)) continue;
-
-                            // 각각의 enum이 무엇을 다루는지(해상도, 종횡비, 길이) 데이터를 보고 동적으로 판별
-
-                            if (category === "image-to-video") {
-                                // 가. 해상도(Resolution) 필드인지 확인 후 조건 검사
-                                // (480p 등 다른 게 섞여 있어도 720p와 1080p가 '모두' 있으면 통과)
-                                if (enums.includes('720p') && enums.includes('1080p')) {
-                                    hasRequiredResolution = true;
-                                }
-
-                                // 나. 종횡비(Aspect Ratio) 필드인지 확인 후 조건 검사
-                                // (1:1 등 다른 게 섞여 있어도 16:9와 9:16이 '모두' 있으면 통과)
-                                if (enums.includes('16:9') && enums.includes('9:16')) {
-                                    hasRequiredAspectRatio = true;
-                                }
-
-                                if (!hasRequiredResolution) {
-                                    console.log(`[${modelData.display_name}] 720p: ${enums.includes('720p')}, 1080p: ${enums.includes('1080p')}`)
-                                }
-
-                                if (!hasRequiredAspectRatio) {
-                                    console.log(`[${modelData.display_name}] 16:9: ${enums.includes('16:9')}, 9:16: ${enums.includes('9:16')}`)
-                                }
-
-                                // 다. 영상 길이(Duration) 필드인지 확인 후 파싱
-                                // 숫자로 변환 가능한 값들만 추출하여 오름차순 정렬
-                                const numbers = enums.map((enumData) => {
-                                    // s, sec 등 숫자 아닌 것 제거 필요
-                                    return Number(enumData);
-                                }).filter(n => !isNaN(n)).sort((a, b) => a - b);
-
-                                // 숫자가 2개 이상인 경우, 1초 간격(연속된 숫자)이 얼마나 있는지 확인
-                                if (numbers.length >= 2) {
-                                    let stepOfOneCount = 0;
-                                    for (let i = 1; i < numbers.length; i++) {
-                                        if (numbers[i] - numbers[i - 1] === 1) stepOfOneCount++;
-                                    }
-
-                                    // 1초 간격이 2번 이상 등장하면 이를 duration 필드로 확정
-                                    if (stepOfOneCount >= 2) {
-                                        supportedDurations = numbers;
-                                    }
-                                }
-
-                                // 1초 단위 세밀 조절, 720p/1080p 지원, 16:9/9:16 지원을 "모두" 만족하는 타겟 모델만 통과
-                                if (!supportedDurations || !hasRequiredResolution || !hasRequiredAspectRatio) {
-                                    console.log(`[${modelData.display_name}]: inputSchemaKey = ${inputSchemaKey}, supportedDurations = ${supportedDurations}, hasRequiredResolution = ${hasRequiredResolution}, hasRequiredAspectRatio = ${hasRequiredAspectRatio}`)
-                                    return acc;
-                                }
-                            }
-                        }
-                    }
-
-                    // 5) 정제된 데이터 배열에 추가
-                    acc.push({
-                        endpoint_id: modelData.endpoint_id,
-                        provider: "fal-ai",
-                        display_name: modelData.display_name || modelData.endpoint_id,
-                        description: modelData.description || "",
-                        category: modelData.category || "image-to-video",
-                        status: modelData.status || "active",
-                        thumbnail_url: modelData.thumbnail_url || "",
-                        model_url: modelData.model_url || `https://fal.run/${modelData.endpoint_id}`,
-                        supported_durations: supportedDurations,
-                    });
-
-                    return acc;
-                }, [])
-            )
+            console.log(`[${category}] processedAIModelList.length === ${processedAIModelList.length}`);
         }
 
         if (processedAIModelList.length === 0) {
@@ -282,6 +125,8 @@ export async function POST(request: NextRequest) {
                 console.error("Error deleting deprecated models:", deleteError);
             }
         }
+
+        // 여기부터 extraction 참고해 html 긁어 와서 추출한 뒤 LLM에 넣어줄 데이터 만드는 작업으로 수정하기
 
         // 3. 신규 추가된 모델의 endpoint_id 추출
         const newAIModelToFetchList = processedAIModelList.filter(m => !existingEndpointIds.has(m.endpoint_id));
