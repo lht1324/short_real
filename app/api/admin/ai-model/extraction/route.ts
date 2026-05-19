@@ -3,19 +3,22 @@ import path from "path";
 import { NextRequest } from "next/server";
 import { getNextBaseResponse } from "@/lib/utils/getNextBaseResponse";
 import { createSupabaseServiceRoleClient } from "@/lib/supabaseServiceRole";
-import {AIModelData, PriceByResolution} from "@/lib/api/types/supabase/AIModelData";
-import {getIsValidRequestS2S} from "@/lib/utils/getIsValidRequest";
-import {llmServerAPI} from "@/lib/api/server/llmServerAPI";
-import * as cheerio from 'cheerio';
+import { PriceByResolution } from "@/lib/api/types/supabase/AIModelData";
+import { getIsValidRequestS2S } from "@/lib/utils/getIsValidRequest";
+import { llmServerAPI } from "@/lib/api/server/llmServerAPI";
+import { extractFalAIModelMetadataFromHtmlText } from "@/lib/utils/htmlUtils";
+import { PostgrestError } from "@supabase/supabase-js";
+
+interface OpenAPIObject {
+    components?: {
+        schemas?: Record<string, OpenAPISchema>;
+    }
+}
 
 interface RawFalAIModel {
     endpoint_id: string;
     metadata?: FalAIMetadata;
-    openapi?: {
-        components?: {
-            schemas?: Record<string, OpenAPISchema>;
-        }
-    }
+    openapi?: OpenAPIObject;
 }
 
 interface FalAIMetadata {
@@ -31,16 +34,21 @@ interface FalAIMetadata {
 
 interface FlattenedFalAIModel extends FalAIMetadata {
     endpoint_id: string;
-    openapi?: RawFalAIModel['openapi'];
+    openapi?: OpenAPIObject;
 }
 
 interface OpenAPISchema {
     properties?: Record<string, OpenAPIProperty | unknown>;
+    'x-fal-order-properties'?: string[];
     [key: string]: unknown;
 }
 
 interface OpenAPIProperty {
     enum?: string[];
+    description?: string;
+    title?: string;
+    type?: string;
+    anyOf?: unknown[];
     [key: string]: unknown;
 }
 
@@ -65,75 +73,187 @@ export async function POST(request: NextRequest) {
             });
         }
 
-        const url = 'https://fal.ai/models/fal-ai/kling-video/o3/4k/image-to-video';
-        const res = await fetch(url);
-        if (!res.ok) {
-            throw new Error(`Failed to fetch HTML: ${res.status}`);
-        }
-        const htmlText = await res.text();
-        const $ = cheerio.load(htmlText);
+        const processedAIModelList: FlattenedFalAIModel[] = [];
+        const targetCategories = ["image-to-video", "image-to-image"];
 
-        // 불필요한 태그 제거 (다이어트)
-        $('head, style, script, svg').remove();
+        // 1. fal.ai API에서 활성화된 모델 목록 카테고리별/페이지네이션으로 수집
+        for (const category of targetCategories) {
+            let hasMore = true;
+            let cursor: string | null = null;
 
-        // 1단계: Playground의 Input 섹션과 Result 섹션 컨테이너 통째로 잡기
-        const inputH3 = $('h3').filter((_, el) => $(el).text().trim() === 'Input').first();
-        const resultH3 = $('h3').filter((_, el) => $(el).text().trim().startsWith('Result')).first();
+            while (hasMore) {
+                const url = new URL("https://api.fal.ai/v1/models");
+                url.searchParams.append("category", category);
+                url.searchParams.append("status", "active");
+                url.searchParams.append("expand", "openapi-3.0");
 
-        let resultText = "";
+                if (cursor) {
+                    url.searchParams.append("cursor", cursor);
+                }
 
-        if (inputH3.length > 0) {
-            const inputContainer = inputH3.closest('.border-stroke-strong');
-            if (inputContainer.length > 0) {
-                resultText += "[ INPUTS ]\n";
-                
-                // 2단계 (Input): .form-control 내부의 라벨과 요소 텍스트 솎아내기
-                inputContainer.find('.form-control').each((_, el) => {
-                    // 라벨 텍스트 추출
-                    const label = $(el).find('label').text().replace(/\s+/g, ' ').trim();
-                    
-                    // 라벨을 제외한 나머지 텍스트(선택된 옵션이나 버튼 텍스트 등) 추출
-                    const clone = $(el).clone();
-                    clone.find('label').remove();
-                    const restText = clone.text().replace(/\s+/g, ' ').trim();
+                const res = await fetch(url.toString(), {
+                    method: "GET",
+                    headers: {
+                        Authorization: `Key ${falApiKey}`,
+                    },
+                });
 
-                    if (label) {
-                        resultText += `- ${label}`;
-                        if (restText) {
-                            // 너무 긴 텍스트 방지 (최대 100자)
-                            resultText += ` (Hint: ${restText.substring(0, 100)})`;
+                if (!res.ok) {
+                    const text = await res.text();
+                    throw new Error(`Fal API Error: ${res.status} ${text} (Category: ${category})`);
+                }
+                const data = await res.json();
+                if (data.models && Array.isArray(data.models)) {
+                    processedAIModelList.push(...data.models.filter((model: RawFalAIModel) => {
+                        return model.metadata?.license_type === 'commercial';
+                    }).map((model: RawFalAIModel) => {
+                        return {
+                            endpoint_id: model.endpoint_id,
+                            openapi: model.openapi,
+                            ...model.metadata,
                         }
-                        resultText += "\n";
+                    }));
+                }
+
+                hasMore = data.has_more === true;
+                cursor = data.next_cursor;
+            }
+
+            console.log(`[${category}] processedAIModelList.length === ${processedAIModelList.length}`);
+        }
+
+        if (processedAIModelList.length === 0) {
+            return getNextBaseResponse({
+                success: true,
+                status: 200,
+                message: "No active models found to sync.",
+            });
+        }
+
+        // 1. 기존 DB 모델 목록 조회 (비교용)
+        const { data: existingAIModelEndpointIdList, error: fetchError }: {
+            data: { endpoint_id: string }[] | null,
+            error: PostgrestError | null;
+        } = await supabase
+            .from("ai_model_data")
+            .select("endpoint_id");
+
+        if (!existingAIModelEndpointIdList && fetchError) {
+            throw new Error(`Failed to fetch existing models: ${fetchError.message}`);
+        }
+
+        const prevAIModelEndpointIdList = (existingAIModelEndpointIdList as { endpoint_id: string }[]).map((partialAIModel: { endpoint_id: string }) => {
+            return partialAIModel.endpoint_id as string;
+        });
+
+        const newAIModelList = processedAIModelList.filter((newAIModel) => {
+            return prevAIModelEndpointIdList.find(prevEndpointId => prevEndpointId === newAIModel.endpoint_id) === undefined;
+        });
+
+        const aiModelPricePureTextList: { endpointId: string; pricePureText: string }[] = [];
+
+        // 2. 각 모델 페이지의 HTML을 가져와 필요한 텍스트만 추출 및 OpenAPI 매칭
+        for (const aiModel of newAIModelList) {
+            const url = `https://fal.ai/models/${aiModel.endpoint_id}`;
+
+            try {
+                const res = await fetch(url);
+
+                if (res.ok) {
+                    const htmlText = await res.text();
+                    const { inputLabelList, pricingText } = extractFalAIModelMetadataFromHtmlText(htmlText);
+                    
+                    let combinedText = "[ INPUTS ]\n";
+                    let schemaMatched = false;
+
+                    // 라벨 정규화
+                    const cleanedLabels = inputLabelList.map(l => l.replace(/\*/g, '').trim().replace(/ /g, '_').toLowerCase());
+
+                    // OpenAPI 스키마 매칭
+                    if (aiModel.openapi?.components?.schemas) {
+                        for (const [schemaName, rawSchemaObj] of Object.entries(aiModel.openapi.components.schemas)) {
+                            const schemaObj = rawSchemaObj as OpenAPISchema;
+                            if (!schemaName.endsWith("Input")) continue;
+
+                            const orderProps = schemaObj['x-fal-order-properties'];
+                            if (!orderProps || !Array.isArray(orderProps)) continue;
+
+                            const isMatch = cleanedLabels.every(label => orderProps.includes(label));
+
+                            if (isMatch) {
+                                schemaMatched = true;
+                                const props = schemaObj.properties || {};
+                                
+                                inputLabelList.forEach((originalLabel, index) => {
+                                    const cleaned = cleanedLabels[index];
+                                    const propDef = props[cleaned] as OpenAPIProperty | undefined;
+                                    
+                                    if (propDef) {
+                                        const desc = propDef.description || propDef.title || "";
+                                        const type = propDef.type || (propDef.anyOf ? "anyOf" : "unknown");
+                                        combinedText += `- ${originalLabel} [${type}]: ${desc.replace(/\n/g, ' ')}\n`;
+                                    } else {
+                                        combinedText += `- ${originalLabel}\n`;
+                                    }
+                                });
+                                break; // 매칭되는 스키마 하나를 찾으면 종료
+                            }
+                        }
                     }
-                });
-                resultText += "\n";
+
+                    if (!schemaMatched) {
+                        // 스키마 매칭 실패 시 기본 텍스트 추가
+                        inputLabelList.forEach(label => {
+                            combinedText += `- ${label}\n`;
+                        });
+                    }
+
+                    combinedText += "\n[ RESULT & PRICING ]\n" + pricingText;
+
+                    aiModelPricePureTextList.push({
+                        endpointId: aiModel.endpoint_id as string,
+                        pricePureText: combinedText.trim(),
+                    });
+                } else {
+                    console.warn(`[Warn] Failed to fetch ${url} - Status: ${res.status}`);
+                }
+            } catch (e) {
+                console.error(`[Error] Failed to fetch or parse ${url}:`, e);
+            }
+
+            // 429 Too Many Requests 방지를 위한 500ms 딜레이
+            await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+
+        const debugOutputPath = path.join(process.cwd(), 'entire_model_data.json');
+        fs.writeFileSync(debugOutputPath, JSON.stringify(aiModelPricePureTextList, null, 2), { encoding: 'utf-8', mode: 0o666 });
+        console.log(`✅ Saved extracted data to ${debugOutputPath}`);
+
+        const finalPriceList: { endpointId: string; priceByResolutionList: PriceByResolution[] }[] = [];
+        const chunkSize = 5;
+
+        // 3. 5개씩 끊어서 LLM에 요청
+        for (let i = 0; i < aiModelPricePureTextList.length; i += chunkSize) {
+            const chunk = aiModelPricePureTextList.slice(i, i + chunkSize);
+            console.log(`[Processing LLM Chunk] ${Math.floor(i / chunkSize) + 1} / ${Math.ceil(aiModelPricePureTextList.length / chunkSize)}`);
+            
+            const llmRes = await llmServerAPI.postPricePerSecScrapping(chunk);
+            if (llmRes.success && llmRes.data) {
+                finalPriceList.push(...llmRes.data.modelPricePerSecondList);
+            } else {
+                console.error(`[LLM Error] Failed to process chunk ${Math.floor(i / chunkSize) + 1}:`, llmRes.error);
             }
         }
 
-        if (resultH3.length > 0) {
-            const resultContainer = resultH3.closest('.border-stroke-strong');
-            if (resultContainer.length > 0) {
-                resultText += "[ RESULT & PRICING ]\n";
-                
-                // 2단계 (Result): 쓸데없는 버튼이나 상태값 무시하고 <p> 태그의 문장만 추출
-                resultContainer.find('p').each((_, el) => {
-                    const pText = $(el).text().replace(/\s+/g, ' ').trim();
-                    if (pText) {
-                        resultText += pText + "\n";
-                    }
-                });
-                resultText += "\n";
-            }
-        }
-
-        const outputPath = path.join(process.cwd(), 'processed_html.txt');
-        fs.writeFileSync(outputPath, resultText.trim(), { encoding: 'utf-8', mode: 0o666 });
-        console.log(`✅ Saved extracted text to ${outputPath}`);
+        console.log("✅ Extracted Final Price List count:", finalPriceList.length);
 
         return getNextBaseResponse({
             success: true,
             status: 200,
-            message: "Test finished.",
+            message: "Extraction finished.",
+            data: {
+                extractedData: finalPriceList
+            }
         });
     } catch (error) {
         console.error("AI Model Sync Error:", error);

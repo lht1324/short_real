@@ -6,21 +6,51 @@ import { createSupabaseServiceRoleClient } from "@/lib/supabaseServiceRole";
 import {AIModelData, PriceByResolution} from "@/lib/api/types/supabase/AIModelData";
 import {getIsValidRequestS2S} from "@/lib/utils/getIsValidRequest";
 import {llmServerAPI} from "@/lib/api/server/llmServerAPI";
+import {PostgrestError} from "@supabase/supabase-js";
+import {extractFalAIModelMetadataFromHtmlText} from "@/lib/utils/htmlUtils";
+
+interface OpenAPIObject {
+    components?: {
+        schemas?: Record<string, OpenAPISchema>;
+    }
+}
 
 interface RawFalAIModel {
     endpoint_id: string;
     metadata?: FalAIMetadata;
+    openapi?: OpenAPIObject;
 }
 
 interface FalAIMetadata {
-    display_name?: string;
-    description?: string;
-    category?: string;
-    status?: string;
-    thumbnail_url?: string;
-    model_url?: string;
-    license_type?: string;
+    display_name: string;
+    provider: string;
+    description: string;
+    category: string;
+    status: string;
+    thumbnail_url: string;
+    model_url: string;
+    license_type: string;
     [key: string]: unknown; // 추가적인 메타데이터 허용
+}
+
+interface FlattenedFalAIModel extends FalAIMetadata {
+    endpoint_id: string;
+    openapi?: OpenAPIObject;
+}
+
+interface OpenAPISchema {
+    properties?: Record<string, OpenAPIProperty | unknown>;
+    'x-fal-order-properties'?: string[];
+    [key: string]: unknown;
+}
+
+interface OpenAPIProperty {
+    enum?: string[];
+    description?: string;
+    title?: string;
+    type?: string;
+    anyOf?: unknown[];
+    [key: string]: unknown;
 }
 
 export async function POST(request: NextRequest) {
@@ -44,7 +74,7 @@ export async function POST(request: NextRequest) {
             });
         }
 
-        const processedAIModelList: Omit<AIModelData, 'price_per_sec'| 'is_valuable'>[] = [];
+        const processedAIModelList: FlattenedFalAIModel[] = [];
         const targetCategories = ["image-to-video", "image-to-image"];
 
         // 1. fal.ai API에서 활성화된 모델 목록 카테고리별/페이지네이션으로 수집
@@ -56,6 +86,8 @@ export async function POST(request: NextRequest) {
                 const url = new URL("https://api.fal.ai/v1/models");
                 url.searchParams.append("category", category);
                 url.searchParams.append("status", "active");
+                url.searchParams.append("expand", "openapi-3.0");
+
                 if (cursor) {
                     url.searchParams.append("cursor", cursor);
                 }
@@ -71,7 +103,6 @@ export async function POST(request: NextRequest) {
                     const text = await res.text();
                     throw new Error(`Fal API Error: ${res.status} ${text} (Category: ${category})`);
                 }
-
                 const data = await res.json();
                 if (data.models && Array.isArray(data.models)) {
                     processedAIModelList.push(...data.models.filter((model: RawFalAIModel) => {
@@ -79,11 +110,12 @@ export async function POST(request: NextRequest) {
                     }).map((model: RawFalAIModel) => {
                         return {
                             endpoint_id: model.endpoint_id,
+                            openapi: model.openapi,
                             ...model.metadata,
                         }
                     }));
                 }
-                
+
                 hasMore = data.has_more === true;
                 cursor = data.next_cursor;
             }
@@ -100,146 +132,135 @@ export async function POST(request: NextRequest) {
         }
 
         // 1. 기존 DB 모델 목록 조회 (비교용)
-        const { data: existingAIModelList, error: fetchError } = await supabase
+        const { data: existingAIModelEndpointIdList, error: fetchError }: {
+            data: { endpoint_id: string }[] | null,
+            error: PostgrestError | null;
+        } = await supabase
             .from("ai_model_data")
             .select("endpoint_id");
 
-        if (fetchError) {
+        if (!existingAIModelEndpointIdList && fetchError) {
             throw new Error(`Failed to fetch existing models: ${fetchError.message}`);
         }
 
-        const existingEndpointIds = new Set(existingAIModelList?.map(m => m.endpoint_id) || []);
-        const processedEndpointIds = new Set(processedAIModelList.map(m => m.endpoint_id));
+        const prevAIModelEndpointIdList = (existingAIModelEndpointIdList as { endpoint_id: string }[]).map((partialAIModel: { endpoint_id: string }) => {
+            return partialAIModel.endpoint_id as string;
+        });
 
-        // 2. Deprecated 모델 DB에서 완전히 삭제 (Hard Delete)
-        // (fal.ai에서 더 이상 내려주지 않거나 상업용 라이선스가 풀린 모델 등)
-        const modelsToDelete = [...existingEndpointIds].filter(id => !processedEndpointIds.has(id));
-        
-        if (modelsToDelete.length > 0) {
-            const { error: deleteError } = await supabase
-                .from("ai_model_data")
-                .delete()
-                .in("endpoint_id", modelsToDelete);
+        const newAIModelList = processedAIModelList.filter((newAIModel) => {
+            return prevAIModelEndpointIdList.find(prevEndpointId => prevEndpointId === newAIModel.endpoint_id) === undefined;
+        });
 
-            if (deleteError) {
-                console.error("Error deleting deprecated models:", deleteError);
-            }
-        }
+        const aiModelPricePureTextList: { endpointId: string; pricePureText: string }[] = [];
+        // 6. scrappedPriceDataList와 processedAIModelList를 병합하여 DB에 insert (신규 모델만)
+        const finalModelDataToInsert: AIModelData[] = [];
 
-        // 여기부터 extraction 참고해 html 긁어 와서 추출한 뒤 LLM에 넣어줄 데이터 만드는 작업으로 수정하기
+        // 2. 각 모델 페이지의 HTML을 가져와 필요한 텍스트만 추출 및 OpenAPI 매칭
+        for (const aiModel of newAIModelList) {
+            const url = `https://fal.ai/models/${aiModel.endpoint_id}`;
 
-        // 3. 신규 추가된 모델의 endpoint_id 추출
-        const newAIModelToFetchList = processedAIModelList.filter(m => !existingEndpointIds.has(m.endpoint_id));
-
-        // 4. 신규 모델들의 웹 페이지 HTML fetch 및 순수 텍스트(Pure Text) 추출
-        const newAIModelTextDataList: { endpoint_id: string; pure_text: string }[] = [];
-
-        // HTML 태그 전부 제거하고 순수 텍스트만 남기는 함수 (토큰 최적화)
-        const extractPureText = (html: string) => {
-            const cleaned = html
-                .replace(/<head\b[^>]*>([\s\S]*?)<\/head>/gi, '')
-                .replace(/<script\b[^>]*>([\s\S]*?)<\/script>/gi, '')
-                .replace(/<style\b[^>]*>([\s\S]*?)<\/style>/gi, '')
-                .replace(/<svg\b[^>]*>([\s\S]*?)<\/svg>/gi, '')
-                .replace(/<!--([\s\S]*?)-->/g, ''); // 주석 제거
-                
-            // 남은 모든 HTML 태그 껍데기 제거 후 다중 공백 압축
-            return cleaned.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
-        };
-
-        let count = 0;
-        for (const model of newAIModelToFetchList) {
             try {
-                if (count === 5) break;
+                const res = await fetch(url);
 
-                const res = await fetch(`https://fal.ai/models/${model.endpoint_id}`);
-                if (!res.ok) {
-                    console.warn(`Failed to fetch HTML for ${model.endpoint_id}: ${res.status}`);
-                    continue;
-                }
-                const htmlText = await res.text();
-                const pureText = extractPureText(htmlText);
-                
-                newAIModelTextDataList.push({
-                    endpoint_id: model.endpoint_id,
-                    pure_text: pureText,
-                });
+                if (res.ok) {
+                    const htmlText = await res.text();
+                    const { inputLabelList, pricingText } = extractFalAIModelMetadataFromHtmlText(htmlText);
 
-                count++;
-            } catch (err) {
-                console.error(`Error fetching HTML for ${model.endpoint_id}:`, err);
-            }
-        }
+                    let combinedText = "[ INPUTS ]\n";
+                    let schemaMatched = false;
 
-        // 5. LLM을 호출하여 가격 정보 추출 (5개씩 청크 단위로 병렬 처리)
-        // 주의: Rate Limit 및 Vercel Timeout 방어를 위해 청크 단위로는 순차적(Sequential)으로 실행
-        const chunkSize = 5;
-        const scrappedPriceDataList: { endpointId: string; priceByResolutionList: PriceByResolution[] }[] = [];
+                    // 라벨 정규화
+                    const cleanedLabels = inputLabelList.map(l => l.replace(/\*/g, '').trim().replace(/ /g, '_').toLowerCase());
 
-        // for (let i = 0; i < newAIModelTextDataList.length; i += chunkSize) {
-        //     const chunk = newAIModelTextDataList.slice(i, i + chunkSize);
-        //
-        //     // llmServerAPI 파라미터 규격에 맞게 변환
-        //     const payload = chunk.map(data => ({
-        //         endpointId: data.endpoint_id,
-        //         pricePureText: data.pure_text
-        //     }));
-        //
-        //     try {
-        //         const chunkResult = await llmServerAPI.postPricePerSecScrapping(payload);
-        //         if (chunkResult.success && chunkResult.data?.modelPricePerSecondList) {
-        //             scrappedPriceDataList.push(...chunkResult.data.modelPricePerSecondList);
-        //         }
-        //     } catch (err) {
-        //         console.error(`Error during LLM scrapping for chunk ${i / chunkSize}:`, err);
-        //         // 하나의 청크가 실패하더라도 나머지는 계속 진행하도록 처리
-        //     }
-        // }
+                    // OpenAPI 스키마 매칭
+                    if (aiModel.openapi?.components?.schemas) {
+                        for (const [schemaName, rawSchemaObj] of Object.entries(aiModel.openapi.components.schemas)) {
+                            const schemaObj = rawSchemaObj as OpenAPISchema;
+                            if (!schemaName.endsWith("Input")) continue;
 
+                            const orderProps = schemaObj['x-fal-order-properties'];
+                            if (!orderProps || !Array.isArray(orderProps)) continue;
 
-        const chunk = newAIModelTextDataList.slice(0, chunkSize);
+                            const isMatch = cleanedLabels.every(label => orderProps.includes(label));
 
-        // llmServerAPI 파라미터 규격에 맞게 변환
-        const payload = chunk.map(data => ({
-            endpointId: data.endpoint_id,
-            pricePureText: data.pure_text
-        }));
+                            if (isMatch) {
+                                schemaMatched = true;
+                                const props = schemaObj.properties || {};
 
-        try {
-            const chunkResult = await llmServerAPI.postPricePerSecScrapping(payload);
-            if (chunkResult.success && chunkResult.data?.modelPricePerSecondList) {
-                scrappedPriceDataList.push(...chunkResult.data.modelPricePerSecondList);
+                                inputLabelList.forEach((originalLabel, index) => {
+                                    const cleaned = cleanedLabels[index];
+                                    const propDef = props[cleaned] as OpenAPIProperty | undefined;
 
-                newAIModelToFetchList.forEach((aiModel) => {
-                    const analysisResult = chunkResult.data?.modelPricePerSecondList.find((result) => {
-                        return result.endpointId === aiModel.endpoint_id;
-                    });
-
-                    if (analysisResult) {
-                        console.log(`[${aiModel.display_name}]: `, JSON.stringify(analysisResult.priceByResolutionList));
+                                    if (propDef) {
+                                        const desc = propDef.description || propDef.title || "";
+                                        const type = propDef.type || (propDef.anyOf ? "anyOf" : "unknown");
+                                        combinedText += `- ${originalLabel} [${type}]: ${desc.replace(/\n/g, ' ')}\n`;
+                                    } else {
+                                        combinedText += `- ${originalLabel}\n`;
+                                    }
+                                });
+                                break; // 매칭되는 스키마 하나를 찾으면 종료
+                            }
+                        }
                     }
-                })
+
+                    if (!schemaMatched) {
+                        // 스키마 매칭 실패 시 기본 텍스트 추가
+                        inputLabelList.forEach(label => {
+                            combinedText += `- ${label}\n`;
+                        });
+                    }
+
+                    combinedText += "\n[ RESULT & PRICING ]\n" + pricingText;
+
+                    aiModelPricePureTextList.push({
+                        endpointId: aiModel.endpoint_id as string,
+                        pricePureText: combinedText.trim(),
+                    });
+                } else {
+                    console.warn(`[Warn] Failed to fetch ${url} - Status: ${res.status}`);
+                    finalModelDataToInsert.push({
+                        endpoint_id: aiModel.endpoint_id,
+                        provider: aiModel.provider,
+                        display_name: aiModel.display_name,
+                        description: aiModel.description,
+                        category: aiModel.category,
+                        status: aiModel.status,
+                        thumbnail_url: aiModel.thumbnail_url,
+                        model_url: aiModel.model_url,
+                        price_per_sec: [],
+                        is_valuable: false,
+                    });
+                }
+            } catch (e) {
+                console.error(`[Error] Failed to fetch or parse ${url}:`, e);
             }
-        } catch (err) {
-            console.error(`Error during LLM scrapping for chunk:`, err);
-            // 하나의 청크가 실패하더라도 나머지는 계속 진행하도록 처리
+
+            // 429 Too Many Requests 방지를 위한 500ms 딜레이
+            await new Promise(resolve => setTimeout(resolve, 1000));
         }
 
-        console.log("processedModelList: ", processedAIModelList.map(model => model.display_name));
+        const finalPriceList: { endpointId: string; priceByResolutionList: PriceByResolution[] }[] = [];
+        const chunkSize = 5;
+
+        // 3. 5개씩 끊어서 LLM에 요청
+        for (let i = 0; i < aiModelPricePureTextList.length; i += chunkSize) {
+            const chunk = aiModelPricePureTextList.slice(i, i + chunkSize);
+            console.log(`[Processing LLM Chunk] ${Math.floor(i / chunkSize) + 1} / ${Math.ceil(aiModelPricePureTextList.length / chunkSize)}`);
+
+            const llmRes = await llmServerAPI.postPricePerSecScrapping(chunk);
+            if (llmRes.success && llmRes.data) {
+                finalPriceList.push(...llmRes.data.modelPricePerSecondList);
+            } else {
+                console.error(`[LLM Error] Failed to process chunk ${Math.floor(i / chunkSize) + 1}:`, llmRes.error);
+            }
+        }
 
         return getNextBaseResponse({
             success: true,
             status: 200,
             message: "Test finished.",
-            data: {
-                deletedCount: modelsToDelete.length,
-                newModelsCount: newAIModelTextDataList.length,
-                scrappedDataCount: scrappedPriceDataList.length
-            }
         });
-
-        // 6. scrappedPriceDataList와 processedAIModelList를 병합하여 DB에 insert (신규 모델만)
-        const finalModelDataToInsert: AIModelData[] = [];
 
         for (const model of processedAIModelList) {
             // 새로 추가되는 모델인 경우에만 insert 대상으로 선정
@@ -248,8 +269,8 @@ export async function POST(request: NextRequest) {
                 
                 finalModelDataToInsert.push({
                     ...model,
-                    price_per_sec: scrappedData ? scrappedData.priceByResolutionList : [],
-                    is_valuable: !!scrappedData && scrappedData.priceByResolutionList.length == 2 // 가격 정보가 추출되었으면 true, 계산 불가 등으로 누락되었으면 false
+                    price_per_sec: scrappedData?.priceByResolutionList ?? [],
+                    is_valuable: (scrappedData?.priceByResolutionList?.length === 2) || false // 가격 정보가 추출되었으면 true, 계산 불가 등으로 누락되었으면 false
                 });
             }
         }
