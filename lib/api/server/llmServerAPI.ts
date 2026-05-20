@@ -1332,9 +1332,17 @@ Instruction: Analyze the narration (Track 0) and the candidate music tracks (Tra
 
     // 5개씩 끊어 넣기
     async postPricePerSecScrapping(
-        aiModelPricePureTextList: {
+        aiModelMetadataList: {
             endpointId: string;
-            pricePureText: string;
+            displayName: string;
+            description: string;
+            matchedSchemaName: string;
+            inputDataList: {
+                name: string;
+                type: string;
+                description: string;
+            }[];
+            pricingText: string;
         }[]
     ): Promise<{
         success: boolean;
@@ -1342,6 +1350,9 @@ Instruction: Analyze the narration (Track 0) and the candidate music tracks (Tra
             modelPricePerSecondList: {
                 endpointId: string;
                 priceByResolutionList: PriceByResolution[];
+                isValuable: boolean;
+                isValuableReasoning: string;
+                supportedDurationRange: number[];
             }[];
         };
         error?: string;
@@ -1349,13 +1360,31 @@ Instruction: Analyze the narration (Track 0) and the candidate music tracks (Tra
         try {
             const systemMessage = POST_PRICE_PER_SECOND_SCRAPPING_PROMPT;
 
+            // systemMessage의 태그 형태에 맞춰 userMessage를 정밀 조립 (XML)
             const userMessage = `
 <input_data>
-  ${JSON.stringify(aiModelPricePureTextList, null, 2)}
+${aiModelMetadataList.map((aiModelMetadata) => { return `
+  <model>
+    <endpoint_id>${aiModelMetadata.endpointId}</endpoint_id>
+    <display_name>${aiModelMetadata.displayName}</display_name>
+    <description>${aiModelMetadata.description}</description>
+    <matched_schema_name>${aiModelMetadata.matchedSchemaName}</matched_schema_name>
+    <input_parameters>
+      ${aiModelMetadata.inputDataList.map((inputData) => { return `
+      <parameter>
+        <name>${inputData.name}</name>
+        <type>${inputData.type}</type>
+        <description>${inputData.description}</description>
+      </parameter>
+`}).join('')}
+    </input_parameters>
+    <raw_pricing_text>${aiModelMetadata.pricingText}</raw_pricing_text>
+  </model>
+`}).join('')}
 </input_data>
 
-Instruction: Process the input data and extract the price per second for each endpoint ID. Return the result strictly in JSON format.
-`;
+Instruction: Process the models in <input_data> and extract the price per second and viability (is_valuable) for each endpoint. Return the result strictly in JSON format matching the output_schema.
+`
 
             const client = new OpenRouterClient();
             const generatedContent = await client.createCompletion({
@@ -1374,17 +1403,32 @@ Instruction: Process the input data and extract the price per second for each en
             }
 
             try {
+                // LLM이 뱉는 SnakeCase 포맷 스키마에 맞춰 파싱
                 const parsedData: {
                     modelPricePerSecondList: {
                         endpointId: string;
+                        is_valuable: boolean | 'true' | 'false';
+                        is_valuable_reasoning: string;
+                        supported_duration_range: number[];
                         priceByResolutionList: PriceByResolution[];
                     }[];
                 } = cleanAndParseJSON(generatedContent);
 
+                // 사장님이 선언하신 CamelCase 타입으로 예쁘게 맵핑하여 반환
+                const mappedList = parsedData.modelPricePerSecondList.map((item) => {
+                    return {
+                        endpointId: item.endpointId,
+                        priceByResolutionList: item.priceByResolutionList || [],
+                        isValuable: item.is_valuable == true,
+                        isValuableReasoning: item.is_valuable_reasoning || "",
+                        supportedDurationRange: item.supported_duration_range || [],
+                    };
+                });
+
                 return {
                     success: true,
                     data: {
-                        modelPricePerSecondList: parsedData.modelPricePerSecondList,
+                        modelPricePerSecondList: mappedList,
                     }
                 };
             } catch (parseError) {

@@ -3,7 +3,7 @@ import path from "path";
 import { NextRequest } from "next/server";
 import { getNextBaseResponse } from "@/lib/utils/getNextBaseResponse";
 import { createSupabaseServiceRoleClient } from "@/lib/supabaseServiceRole";
-import { PriceByResolution } from "@/lib/api/types/supabase/AIModelData";
+import {AIModelData, PriceByResolution} from "@/lib/api/types/supabase/AIModelData";
 import { getIsValidRequestS2S } from "@/lib/utils/getIsValidRequest";
 import { llmServerAPI } from "@/lib/api/server/llmServerAPI";
 import { extractFalAIModelMetadataFromHtmlText } from "@/lib/utils/htmlUtils";
@@ -29,6 +29,7 @@ interface FalAIMetadata {
     thumbnail_url?: string;
     model_url?: string;
     license_type?: string;
+    date?: string;
     [key: string]: unknown; // 추가적인 메타데이터 허용
 }
 
@@ -106,6 +107,16 @@ export async function POST(request: NextRequest) {
                 if (data.models && Array.isArray(data.models)) {
                     processedAIModelList.push(...data.models.filter((model: RawFalAIModel) => {
                         return model.metadata?.license_type === 'commercial';
+                    }).filter((model: RawFalAIModel) => {
+                        if (!model.metadata?.date) return false;
+
+                        const cutoffDateString = category === 'image-to-video'
+                            ? '2025-05-01'
+                            : '2024-10-01'
+                        const cutoffDate = new Date(cutoffDateString);
+                        const modelReleaseDate = new Date(model.metadata.date);
+
+                        return modelReleaseDate.getTime() > cutoffDate.getTime()
                     }).map((model: RawFalAIModel) => {
                         return {
                             endpoint_id: model.endpoint_id,
@@ -145,16 +156,41 @@ export async function POST(request: NextRequest) {
         const prevAIModelEndpointIdList = (existingAIModelEndpointIdList as { endpoint_id: string }[]).map((partialAIModel: { endpoint_id: string }) => {
             return partialAIModel.endpoint_id as string;
         });
+        const prevAIModelEndpointIdSet = new Set(prevAIModelEndpointIdList);
 
         const newAIModelList = processedAIModelList.filter((newAIModel) => {
-            return prevAIModelEndpointIdList.find(prevEndpointId => prevEndpointId === newAIModel.endpoint_id) === undefined;
+            return !prevAIModelEndpointIdSet.has(newAIModel.endpoint_id);
         });
 
-        const aiModelPricePureTextList: { endpointId: string; pricePureText: string }[] = [];
+        const processedAIModelEndpointIdSet = new Set(processedAIModelList.map(aiModel => aiModel.endpoint_id));
+
+        const endpointIdListToDelete = prevAIModelEndpointIdList.filter((endpointId) => {
+            return !processedAIModelEndpointIdSet.has(endpointId);
+        });
+
+        const newAIModelMetadataList: {
+            endpointId: string;
+            displayName: string;
+            description: string;
+            matchedSchemaName: string;
+            inputDataList: {
+                name: string;
+                type: string;
+                description: string;
+            }[];
+            pricingText: string;
+        }[] = [];
 
         // 2. 각 모델 페이지의 HTML을 가져와 필요한 텍스트만 추출 및 OpenAPI 매칭
         for (const aiModel of newAIModelList) {
             const url = `https://fal.ai/models/${aiModel.endpoint_id}`;
+
+            let matchedSchemaName: string = '';
+            const inputDataList: {
+                name: string;
+                type: string;
+                description: string;
+            }[] = [];
 
             try {
                 const res = await fetch(url);
@@ -162,8 +198,7 @@ export async function POST(request: NextRequest) {
                 if (res.ok) {
                     const htmlText = await res.text();
                     const { inputLabelList, pricingText } = extractFalAIModelMetadataFromHtmlText(htmlText);
-                    
-                    let combinedText = "[ INPUTS ]\n";
+
                     let schemaMatched = false;
 
                     // 라벨 정규화
@@ -182,6 +217,7 @@ export async function POST(request: NextRequest) {
 
                             if (isMatch) {
                                 schemaMatched = true;
+                                matchedSchemaName = schemaName;
                                 const props = schemaObj.properties || {};
                                 
                                 inputLabelList.forEach((originalLabel, index) => {
@@ -189,11 +225,14 @@ export async function POST(request: NextRequest) {
                                     const propDef = props[cleaned] as OpenAPIProperty | undefined;
                                     
                                     if (propDef) {
-                                        const desc = propDef.description || propDef.title || "";
+                                        const description = propDef.description || propDef.title || "";
                                         const type = propDef.type || (propDef.anyOf ? "anyOf" : "unknown");
-                                        combinedText += `- ${originalLabel} [${type}]: ${desc.replace(/\n/g, ' ')}\n`;
-                                    } else {
-                                        combinedText += `- ${originalLabel}\n`;
+
+                                        inputDataList.push({
+                                            name: originalLabel,
+                                            type: type,
+                                            description: description.replace(/\n/g, ' '),
+                                        });
                                     }
                                 });
                                 break; // 매칭되는 스키마 하나를 찾으면 종료
@@ -201,18 +240,13 @@ export async function POST(request: NextRequest) {
                         }
                     }
 
-                    if (!schemaMatched) {
-                        // 스키마 매칭 실패 시 기본 텍스트 추가
-                        inputLabelList.forEach(label => {
-                            combinedText += `- ${label}\n`;
-                        });
-                    }
-
-                    combinedText += "\n[ RESULT & PRICING ]\n" + pricingText;
-
-                    aiModelPricePureTextList.push({
+                    newAIModelMetadataList.push({
                         endpointId: aiModel.endpoint_id as string,
-                        pricePureText: combinedText.trim(),
+                        displayName: aiModel.display_name as string,
+                        description: aiModel.description as string,
+                        matchedSchemaName: matchedSchemaName,
+                        inputDataList: schemaMatched ? inputDataList : [],
+                        pricingText: pricingText,
                     });
                 } else {
                     console.warn(`[Warn] Failed to fetch ${url} - Status: ${res.status}`);
@@ -225,34 +259,133 @@ export async function POST(request: NextRequest) {
             await new Promise(resolve => setTimeout(resolve, 1000));
         }
 
-        const debugOutputPath = path.join(process.cwd(), 'entire_model_data.json');
-        fs.writeFileSync(debugOutputPath, JSON.stringify(aiModelPricePureTextList, null, 2), { encoding: 'utf-8', mode: 0o666 });
-        console.log(`✅ Saved extracted data to ${debugOutputPath}`);
-
-        const finalPriceList: { endpointId: string; priceByResolutionList: PriceByResolution[] }[] = [];
+        const finalInferredDataList: {
+            endpointId: string;
+            priceByResolutionList: PriceByResolution[];
+            isValuable: boolean;
+            supportedDurationRange: number[];
+        }[] = [];
         const chunkSize = 5;
 
+        const filteredAIModelMetadataList = newAIModelMetadataList.filter((metadata) => {
+            return metadata.matchedSchemaName !== '';
+        });
+
         // 3. 5개씩 끊어서 LLM에 요청
-        for (let i = 0; i < aiModelPricePureTextList.length; i += chunkSize) {
-            const chunk = aiModelPricePureTextList.slice(i, i + chunkSize);
-            console.log(`[Processing LLM Chunk] ${Math.floor(i / chunkSize) + 1} / ${Math.ceil(aiModelPricePureTextList.length / chunkSize)}`);
-            
+        for (let i = 0; i < filteredAIModelMetadataList.length; i += chunkSize) {
+            const chunk = filteredAIModelMetadataList.slice(i, i + chunkSize);
+            console.log(`[Processing LLM Chunk] ${Math.floor(i / chunkSize) + 1} / ${Math.ceil(filteredAIModelMetadataList.length / chunkSize)}`);
+
             const llmRes = await llmServerAPI.postPricePerSecScrapping(chunk);
             if (llmRes.success && llmRes.data) {
-                finalPriceList.push(...llmRes.data.modelPricePerSecondList);
+                finalInferredDataList.push(...llmRes.data.modelPricePerSecondList);
             } else {
                 console.error(`[LLM Error] Failed to process chunk ${Math.floor(i / chunkSize) + 1}:`, llmRes.error);
             }
         }
 
-        console.log("✅ Extracted Final Price List count:", finalPriceList.length);
+        // DB 업로드 할 배열 만들 때 사용 (find)
+        const invalidAIModelEndpointIdList = newAIModelMetadataList.filter((metadata) => {
+            return metadata.matchedSchemaName === '';
+        }).map((metadata) => {
+            return metadata.endpointId;
+        });
+
+        const finalAIModelDataListToUpsert: AIModelData[] = newAIModelList.map((aiModel) => {
+            const provider = (aiModel.provider as string) || "fal.ai";
+            const basicAIModelData = {
+                endpoint_id: aiModel.endpoint_id,
+                provider: provider,
+                display_name: aiModel.display_name || aiModel.endpoint_id,
+                description: aiModel.description || "",
+                category: aiModel.category || "",
+                status: aiModel.status || "active",
+                thumbnail_url: aiModel.thumbnail_url || "",
+                model_url: aiModel.model_url || "",
+            };
+
+            const priceData = finalInferredDataList.find((data) => {
+                return data.endpointId === aiModel.endpoint_id;
+            });
+
+            if (!priceData) {
+                return {
+                    ...basicAIModelData,
+                    price_per_sec: [],
+                    is_valuable: false,
+                    supported_durations: [],
+                };
+            }
+
+            const {
+                supportedDurationRange,
+                priceByResolutionList,
+                isValuable,
+            } = priceData;
+
+            return {
+                ...basicAIModelData,
+                price_per_sec: priceByResolutionList,
+                is_valuable: isValuable,
+                supported_durations: supportedDurationRange,
+            };
+        });
+
+        // 테스트, 끝나면 제거.
+        const debugOutputPath = path.join(process.cwd(), 'entire_model_data.json');
+        fs.writeFileSync(debugOutputPath, JSON.stringify(finalAIModelDataListToUpsert, null, 2), { encoding: 'utf-8', mode: 0o666 });
+        console.log(`✅ Saved extracted data to ${debugOutputPath}`);
 
         return getNextBaseResponse({
             success: true,
             status: 200,
-            message: "Extraction finished.",
+            message: "Test finished.",
             data: {
-                extractedData: finalPriceList
+                insertedCount: finalAIModelDataListToUpsert.length,
+                extractedData: finalInferredDataList
+            }
+        });
+
+        // 4. DB 삭제 (fal.ai에서 사라졌거나 OpenAPI 매칭에 실패한 모델 일괄 제거)
+        const allEndpointIdsToDelete = [
+            ...endpointIdListToDelete,
+            ...invalidAIModelEndpointIdList
+        ];
+
+        if (allEndpointIdsToDelete.length > 0) {
+            const { error: deleteError } = await supabase
+                .from("ai_model_data")
+                .delete()
+                .in("endpoint_id", allEndpointIdsToDelete);
+
+            if (deleteError) {
+                console.error("Error deleting old/invalid models from DB:", deleteError);
+                throw new Error(`Failed to delete old/invalid models from DB: ${deleteError.message}`);
+            }
+            console.log(`🗑️ Successfully deleted ${allEndpointIdsToDelete.length} obsolete/invalid models from DB.`);
+        }
+
+        if (finalAIModelDataListToUpsert.length > 0) {
+            const { error: upsertError } = await supabase
+                .from("ai_model_data")
+                .upsert(finalAIModelDataListToUpsert, { onConflict: "endpoint_id" });
+
+            if (upsertError) {
+                console.error("Error upserting new models into DB:", upsertError);
+                throw new Error(`Failed to upsert new models into DB: ${upsertError.message}`);
+            }
+            console.log(`✅ Successfully synced (upserted) ${finalAIModelDataListToUpsert.length} models to DB.`);
+        }
+
+        console.log("✅ Extracted Final Price List count:", finalInferredDataList.length);
+
+        return getNextBaseResponse({
+            success: true,
+            status: 200,
+            message: "Extraction and DB sync finished successfully.",
+            data: {
+                insertedCount: finalAIModelDataListToUpsert.length,
+                extractedData: finalInferredDataList
             }
         });
     } catch (error) {
