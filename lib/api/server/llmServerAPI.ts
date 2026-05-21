@@ -1335,6 +1335,13 @@ Instruction: Analyze the narration (Track 0) and the candidate music tracks (Tra
         aiModelMetadataList: {
             endpointId: string;
             displayName: string;
+            description: string;
+            matchedSchemaName: string;
+            inputDataList: {
+                name: string;
+                type: string;
+                description: string;
+            }[];
             pricingText: string;
         }[]
     ): Promise<{
@@ -1353,13 +1360,23 @@ Instruction: Analyze the narration (Track 0) and the candidate music tracks (Tra
         try {
             const systemMessage = POST_IMAGE_PRICE_ANALYSIS_PROMPT;
 
-            // Simplified XML payload without input parameters
             const userMessage = `
 <input_data>
 ${aiModelMetadataList.map((aiModelMetadata) => { return `
   <model>
     <endpoint_id>${aiModelMetadata.endpointId}</endpoint_id>
     <display_name>${aiModelMetadata.displayName}</display_name>
+    <description>${aiModelMetadata.description}</description>
+    <matched_schema_name>${aiModelMetadata.matchedSchemaName}</matched_schema_name>
+    <input_parameters>
+      ${aiModelMetadata.inputDataList.map((inputData) => { return `
+      <parameter>
+        <name>${inputData.name}</name>
+        <type>${inputData.type}</type>
+        <description>${inputData.description}</description>
+      </parameter>
+`}).join('')}
+    </input_parameters>
     <raw_pricing_text>${aiModelMetadata.pricingText}</raw_pricing_text>
   </model>
 `}).join('')}

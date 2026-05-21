@@ -28,5 +28,6 @@ export interface AIModelPrice {
 export enum AIModelPriceUnit {
     VIDEO_720P = '720p',
     VIDEO_1080P = '1080p',
-    IMAGE_ONE_IMAGE = 'image',
+    IMAGE_720P = 'image_720p',
+    IMAGE_1080P = 'image_1080p',
 }

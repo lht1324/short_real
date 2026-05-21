@@ -265,7 +265,7 @@ export async function POST(request: NextRequest) {
             if (!priceData) {
                 return {
                     ...basicAIModelData,
-                    price_per_sec: [],
+                    ai_model_price_list: [],
                     is_valuable: false,
                     supported_durations: [],
                 };
@@ -273,13 +273,13 @@ export async function POST(request: NextRequest) {
 
             const {
                 supportedDurationRange,
-                priceByResolutionList,
+                aiModelPriceList,
                 isValuable,
             } = priceData;
 
             return {
                 ...basicAIModelData,
-                price_per_sec: priceByResolutionList,
+                ai_model_price_list: aiModelPriceList,
                 is_valuable: isValuable,
                 supported_durations: supportedDurationRange,
             };

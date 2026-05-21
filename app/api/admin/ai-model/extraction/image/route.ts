@@ -254,7 +254,7 @@ export async function POST(request: NextRequest) {
         const chunkSize = 5;
 
         // I2I 엔드포인트만 골라서 LLM으로 보냄 (최적화)
-        // I2I 카테고리인지 확인하기 위해 원본 리스트와 조인
+        // I2I 카테고리인지 확인하기 위해 원본 리스트와 조인하고 파라미터 정보가 있는 것만 필터링
         const i2iMetadataList = newAIModelMetadataList.filter((metadata) => {
             const originalModel = newAIModelList.find(m => m.endpoint_id === metadata.endpointId);
             return originalModel?.category === 'image-to-image' && metadata.matchedSchemaName !== '';
