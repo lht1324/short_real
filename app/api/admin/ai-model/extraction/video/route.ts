@@ -3,55 +3,12 @@ import path from "path";
 import { NextRequest } from "next/server";
 import { getNextBaseResponse } from "@/lib/utils/getNextBaseResponse";
 import { createSupabaseServiceRoleClient } from "@/lib/supabaseServiceRole";
-import {AIModelData, PriceByResolution} from "@/lib/api/types/supabase/AIModelData";
+import {AIModelData, AIModelPrice, PriceByResolution} from "@/lib/api/types/supabase/AIModelData";
 import { getIsValidRequestS2S } from "@/lib/utils/getIsValidRequest";
 import { llmServerAPI } from "@/lib/api/server/llmServerAPI";
 import { extractFalAIModelMetadataFromHtmlText } from "@/lib/utils/htmlUtils";
 import { PostgrestError } from "@supabase/supabase-js";
-
-interface OpenAPIObject {
-    components?: {
-        schemas?: Record<string, OpenAPISchema>;
-    }
-}
-
-interface RawFalAIModel {
-    endpoint_id: string;
-    metadata?: FalAIMetadata;
-    openapi?: OpenAPIObject;
-}
-
-interface FalAIMetadata {
-    display_name?: string;
-    description?: string;
-    category?: string;
-    status?: string;
-    thumbnail_url?: string;
-    model_url?: string;
-    license_type?: string;
-    date?: string;
-    [key: string]: unknown; // 추가적인 메타데이터 허용
-}
-
-interface FlattenedFalAIModel extends FalAIMetadata {
-    endpoint_id: string;
-    openapi?: OpenAPIObject;
-}
-
-interface OpenAPISchema {
-    properties?: Record<string, OpenAPIProperty | unknown>;
-    'x-fal-order-properties'?: string[];
-    [key: string]: unknown;
-}
-
-interface OpenAPIProperty {
-    enum?: string[];
-    description?: string;
-    title?: string;
-    type?: string;
-    anyOf?: unknown[];
-    [key: string]: unknown;
-}
+import {FlattenedFalAIModel, OpenAPIProperty, OpenAPISchema, RawFalAIModel} from "@/lib/api/types/fal-ai/FalAIModel";
 
 export async function POST(request: NextRequest) {
     if (!getIsValidRequestS2S(request)) {
@@ -75,63 +32,59 @@ export async function POST(request: NextRequest) {
         }
 
         const processedAIModelList: FlattenedFalAIModel[] = [];
-        const targetCategories = ["image-to-video", "image-to-image"];
+        const category = "image-to-video";
 
         // 1. fal.ai API에서 활성화된 모델 목록 카테고리별/페이지네이션으로 수집
-        for (const category of targetCategories) {
-            let hasMore = true;
-            let cursor: string | null = null;
+        let hasMore = true;
+        let cursor: string | null = null;
 
-            while (hasMore) {
-                const url = new URL("https://api.fal.ai/v1/models");
-                url.searchParams.append("category", category);
-                url.searchParams.append("status", "active");
-                url.searchParams.append("expand", "openapi-3.0");
+        while (hasMore) {
+            const url = new URL("https://api.fal.ai/v1/models");
+            url.searchParams.append("category", category);
+            url.searchParams.append("status", "active");
+            url.searchParams.append("expand", "openapi-3.0");
 
-                if (cursor) {
-                    url.searchParams.append("cursor", cursor);
-                }
-
-                const res = await fetch(url.toString(), {
-                    method: "GET",
-                    headers: {
-                        Authorization: `Key ${falApiKey}`,
-                    },
-                });
-
-                if (!res.ok) {
-                    const text = await res.text();
-                    throw new Error(`Fal API Error: ${res.status} ${text} (Category: ${category})`);
-                }
-                const data = await res.json();
-                if (data.models && Array.isArray(data.models)) {
-                    processedAIModelList.push(...data.models.filter((model: RawFalAIModel) => {
-                        return model.metadata?.license_type === 'commercial';
-                    }).filter((model: RawFalAIModel) => {
-                        if (!model.metadata?.date) return false;
-
-                        const cutoffDateString = category === 'image-to-video'
-                            ? '2025-05-01'
-                            : '2024-10-01'
-                        const cutoffDate = new Date(cutoffDateString);
-                        const modelReleaseDate = new Date(model.metadata.date);
-
-                        return modelReleaseDate.getTime() > cutoffDate.getTime()
-                    }).map((model: RawFalAIModel) => {
-                        return {
-                            endpoint_id: model.endpoint_id,
-                            openapi: model.openapi,
-                            ...model.metadata,
-                        }
-                    }));
-                }
-
-                hasMore = data.has_more === true;
-                cursor = data.next_cursor;
+            if (cursor) {
+                url.searchParams.append("cursor", cursor);
             }
 
-            console.log(`[${category}] processedAIModelList.length === ${processedAIModelList.length}`);
+            const res = await fetch(url.toString(), {
+                method: "GET",
+                headers: {
+                    Authorization: `Key ${falApiKey}`,
+                },
+            });
+
+            if (!res.ok) {
+                const text = await res.text();
+                throw new Error(`Fal API Error: ${res.status} ${text} (Category: ${category})`);
+            }
+            const data = await res.json();
+            if (data.models && Array.isArray(data.models)) {
+                processedAIModelList.push(...data.models.filter((model: RawFalAIModel) => {
+                    return model.metadata?.license_type === 'commercial';
+                }).filter((model: RawFalAIModel) => {
+                    if (!model.metadata?.date) return false;
+
+                    const cutoffDateString = '2025-05-01';
+                    const cutoffDate = new Date(cutoffDateString);
+                    const modelReleaseDate = new Date(model.metadata.date);
+
+                    return modelReleaseDate.getTime() > cutoffDate.getTime()
+                }).map((model: RawFalAIModel) => {
+                    return {
+                        endpoint_id: model.endpoint_id,
+                        openapi: model.openapi,
+                        ...model.metadata,
+                    }
+                }));
+            }
+
+            hasMore = data.has_more === true;
+            cursor = data.next_cursor;
         }
+
+        console.log(`[${category}] processedAIModelList.length === ${processedAIModelList.length}`);
 
         if (processedAIModelList.length === 0) {
             return getNextBaseResponse({
@@ -142,6 +95,7 @@ export async function POST(request: NextRequest) {
         }
 
         // 1. 기존 DB 모델 목록 조회 (비교용)
+        // category === 'image-to-video' 조건으로 조회 추가 필요
         const { data: existingAIModelEndpointIdList, error: fetchError }: {
             data: { endpoint_id: string }[] | null,
             error: PostgrestError | null;
@@ -261,7 +215,7 @@ export async function POST(request: NextRequest) {
 
         const finalInferredDataList: {
             endpointId: string;
-            priceByResolutionList: PriceByResolution[];
+            aiModelPriceList: AIModelPrice[];
             isValuable: boolean;
             supportedDurationRange: number[];
         }[] = [];
@@ -276,7 +230,7 @@ export async function POST(request: NextRequest) {
             const chunk = filteredAIModelMetadataList.slice(i, i + chunkSize);
             console.log(`[Processing LLM Chunk] ${Math.floor(i / chunkSize) + 1} / ${Math.ceil(filteredAIModelMetadataList.length / chunkSize)}`);
 
-            const llmRes = await llmServerAPI.postPricePerSecScrapping(chunk);
+            const llmRes = await llmServerAPI.postVideoPriceAnalysis(chunk);
             if (llmRes.success && llmRes.data) {
                 finalInferredDataList.push(...llmRes.data.modelPricePerSecondList);
             } else {
@@ -333,7 +287,16 @@ export async function POST(request: NextRequest) {
 
         // 테스트, 끝나면 제거.
         const debugOutputPath = path.join(process.cwd(), 'entire_model_data.json');
-        fs.writeFileSync(debugOutputPath, JSON.stringify(finalAIModelDataListToUpsert, null, 2), { encoding: 'utf-8', mode: 0o666 });
+        fs.writeFileSync(debugOutputPath, JSON.stringify(finalAIModelDataListToUpsert.map((item) => {
+            const metadata = filteredAIModelMetadataList.find((data) => {
+                return data.endpointId === item.endpoint_id;
+            });
+
+            return {
+                ...item,
+                pricingText: metadata ? metadata.pricingText : 'None'
+            }
+        }), null, 2), { encoding: 'utf-8', mode: 0o666 });
         console.log(`✅ Saved extracted data to ${debugOutputPath}`);
 
         return getNextBaseResponse({

@@ -1,4 +1,4 @@
-export const POST_PRICE_PER_SECOND_SCRAPPING_PROMPT = `
+export const POST_VIDEO_PRICE_ANALYSIS_PROMPT = `
 <developer_instruction>
   <role>
     You are an expert "AI Model Suitability & Pricing Analyst".
@@ -41,7 +41,12 @@ export const POST_PRICE_PER_SECOND_SCRAPPING_PROMPT = `
     - Rule 2.3 (Upscaling & Single Fixed/Premium Resolution Inheritance):
       - If you infer from the model's description, display name, matched schema name, or pricing text that it is an **upscaling model** (e.g., upscale, upscaler, outputs in premium spec via single step) or a **single fixed-resolution model** (e.g., natively outputs only in 4K, Pro spec, or a single specific resolution) and it only provides a single flat rate without distinct 720p/1080p rates:
       - Treat this as a "Superset" model that inherently meets the service criteria for both 720p and 1080p.
-      - Map that single flat rate directly as the price for both "720p" and "1080p" (i.e., price_per_sec for both 720p and 1080p will be identical).
+      - Map that single flat rate directly as the price for both "720p" and "1080p" (i.e., price_per_unit for both 720p and 1080p will be identical).
+    - Rule 2.4 (Non-Deterministic Pricing Exclusion):
+      - If the pricing cannot be mathematically or deterministically converted into a fixed USD cost per 1 second of video, it MUST be excluded.
+      - This includes models priced by "compute time" (e.g., "per compute second", "GPU execution time") where the exact computation duration per video second is unknown beforehand, or any pricing structure lacking a clear formula to calculate the cost based on resolution and duration.
+      - If a definitive per-second cost cannot be calculated from the provided data, Step 2 FAILS. Set "is_valuable" to false and explain the opaque pricing structure in "is_valuable_reasoning".
+      - Note: If a determinable price can be calculated for ONLY one resolution (e.g., 720p is calculable but 1080p is not supported or calculable), Step 2 still PASSES for that specific resolution. You must include ONLY the calculable resolution in the "ai_model_price_list".
     - Verdict: If a valid USD price per second can be determined for at least one of 720p or 1080p (either directly, calculated, or inherited from upscaling/fixed single specs), Step 2 passes. Otherwise, it fails.
     [Step 3: Duration Range & Interval Verification]
     - Goal: Determine the video durations (in integer seconds) supported by the model and ensure it satisfies our control density criteria.
@@ -60,21 +65,21 @@ export const POST_PRICE_PER_SECOND_SCRAPPING_PROMPT = `
     - Verdict: If the duration interval constraint passes (Step 3 passes), proceed. Otherwise, the model fails suitability.
     [Step 4: Final is_valuable Verdict]
     - If Step 1 (Aspect Ratio), Step 2 (Resolution Price), AND Step 3 (Duration Constraint) all pass, set "is_valuable" to true.
-    - If any step fails (e.g., aspect ratio criteria is not met, neither 720p nor 1080p pricing can be calculated, or duration control is insufficient/absent), set "is_valuable" to false, record the detailed reason in "is_valuable_reasoning", and return an empty array "[]" for "priceByResolutionList".
+    - If any step fails (e.g., aspect ratio criteria is not met, neither 720p nor 1080p pricing can be calculated, or duration control is insufficient/absent), set "is_valuable" to false, record the detailed reason in "is_valuable_reasoning", and return an empty array "[]" for "ai_model_price_list".
   </viability_criteria_logic>
   <output_schema>
     Return ONLY a compact, valid JSON object without markdown code block wrapping. Do not wrap in \`\`\`json.
     {
-      "modelPricePerSecondList": [
+      "ai_model_price_data_list": [
         {
           "endpointId": "string",
           "is_valuable": boolean,
           "is_valuable_reasoning": "string (Empty if is_valuable is true, otherwise describe exactly why it failed, e.g., 'Only supports 16:9 ratio, portrait 9:16 is not supported')",
           "supported_duration_range": [number],
-          "priceByResolutionList": [
+          "ai_model_price_list": [
             {
-              "resolution": "string ('720p' or '1080p')",
-              "price_per_sec": number (float, USD per second, e.g., 0.08)
+              "unit": "string ('720p' or '1080p')",
+              "price_per_unit": number (float, USD per second, e.g., 0.08)
             }
             // Include only the supported resolution(s). If only 720p is supported, include only the 720p object.
           ]

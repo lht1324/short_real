@@ -22,8 +22,9 @@ import {POST_VIDEO_GEN_PROMPT_PROMPT} from "@/lib/llm-prompts/POST_VIDEO_GEN_PRO
 import {POST_MUSIC_GENERATION_DATA_PROMPT} from "@/lib/llm-prompts/POST_MUSIC_GENERATION_DATA_PROMPT";
 import {POST_MUSIC_SELECTION_PROMPT} from "@/lib/llm-prompts/POST_MUSIC_SELECTION_PROMPT";
 import {POST_MUSIC_HIGHLIGHT_SELECTION_PROMPT} from "@/lib/llm-prompts/POST_MUSIC_HIGHLIGHT_SELECTION_PROMPT";
-import {PriceByResolution} from "@/lib/api/types/supabase/AIModelData";
-import {POST_PRICE_PER_SECOND_SCRAPPING_PROMPT} from "@/lib/llm-prompts/POST_PRICE_PER_SECOND_SCRAPPING_PROMPT";
+import {AIModelPrice, PriceByResolution} from "@/lib/api/types/supabase/AIModelData";
+import {POST_VIDEO_PRICE_ANALYSIS_PROMPT} from "../../llm-prompts/POST_VIDEO_PRICE_ANALYSIS_PROMPT";
+import {POST_IMAGE_PRICE_ANALYSIS_PROMPT} from "../../llm-prompts/POST_IMAGE_PRICE_ANALYSIS_PROMPT";
 
 const POST_AUTOPILOT_NICHE_TOPIC_PROMPT = `
 <developer_instruction>
@@ -1330,8 +1331,115 @@ Instruction: Analyze the narration (Track 0) and the candidate music tracks (Tra
         }
     },
 
+    async postImagePriceAnalysis(
+        aiModelMetadataList: {
+            endpointId: string;
+            displayName: string;
+            pricingText: string;
+        }[]
+    ): Promise<{
+        success: boolean;
+        data?: {
+            aiModelPriceDataList: {
+                endpointId: string;
+                aiModelPriceList: AIModelPrice[];
+                isValuable: boolean;
+                isValuableReasoning: string;
+                supportedDurationRange: number[]; // Will be empty array for images
+            }[];
+        };
+        error?: string;
+    }> {
+        try {
+            const systemMessage = POST_IMAGE_PRICE_ANALYSIS_PROMPT;
+
+            // Simplified XML payload without input parameters
+            const userMessage = `
+<input_data>
+${aiModelMetadataList.map((aiModelMetadata) => { return `
+  <model>
+    <endpoint_id>${aiModelMetadata.endpointId}</endpoint_id>
+    <display_name>${aiModelMetadata.displayName}</display_name>
+    <raw_pricing_text>${aiModelMetadata.pricingText}</raw_pricing_text>
+  </model>
+`}).join('')}
+</input_data>
+
+Instruction: Process the models in <input_data> and extract the per-image price and viability (is_valuable) for each endpoint. Return the result strictly in JSON format matching the output_schema.
+`
+
+            const client = new OpenRouterClient();
+            const generatedContent = await client.createCompletion({
+                model: OpenRouterModel.DEEPSEEK_V_4_FLASH,
+                systemMessage: systemMessage,
+                userMessage: userMessage,
+                reasoning: true,
+                maxCompletionTokens: 4096,
+            }, "postImagePriceAnalysis()");
+
+            if (!generatedContent) {
+                return {
+                    success: false,
+                    error: 'No analysis generated from AI'
+                };
+            }
+
+            try {
+                // Parse the JSON output matching the snake_case schema from the prompt
+                const parsedData: {
+                    ai_model_price_data_list: {
+                        endpointId: string;
+                        is_valuable: boolean | 'true' | 'false';
+                        is_valuable_reasoning: string;
+                        supported_duration_range: number[];
+                        ai_model_price_list: AIModelPrice[];
+                    }[];
+                } = cleanAndParseJSON(generatedContent);
+
+                // Map to camelCase for the return object
+                const mappedList = parsedData.ai_model_price_data_list.map((item) => {
+                    const aiModelData = aiModelMetadataList.find((metadata) => {
+                        return metadata.endpointId === item.endpointId;
+                    });
+
+                    if (aiModelData) {
+                        console.log(`[${aiModelData.displayName}] pricing: ${aiModelData.pricingText}`);
+                        console.log(`[${aiModelData.displayName}] priceReasoning: ${item.is_valuable_reasoning}`);
+                    }
+
+                    return {
+                        endpointId: item.endpointId,
+                        aiModelPriceList: item.ai_model_price_list || [],
+                        isValuable: item.is_valuable == true,
+                        isValuableReasoning: item.is_valuable_reasoning || "",
+                        supportedDurationRange: item.supported_duration_range || [], // Will be [] as per prompt
+                    };
+                });
+
+                return {
+                    success: true,
+                    data: {
+                        aiModelPriceDataList: mappedList,
+                    }
+                };
+            } catch (parseError) {
+                console.error('Failed to parse price analysis JSON:', parseError);
+                return {
+                    success: false,
+                    error: 'Failed to parse AI response'
+                };
+            }
+        } catch (error) {
+            console.error("Error in postImagePriceAnalysis():", error);
+            return {
+                success: false,
+                error: error instanceof Error ? error.message : 'Unknown error occurred',
+            };
+        }
+    },
+
     // 5개씩 끊어 넣기
-    async postPricePerSecScrapping(
+    async postVideoPriceAnalysis(
         aiModelMetadataList: {
             endpointId: string;
             displayName: string;
@@ -1347,9 +1455,9 @@ Instruction: Analyze the narration (Track 0) and the candidate music tracks (Tra
     ): Promise<{
         success: boolean;
         data?: {
-            modelPricePerSecondList: {
+            aiModelPriceDataList: {
                 endpointId: string;
-                priceByResolutionList: PriceByResolution[];
+                aiModelPriceList: AIModelPrice[];
                 isValuable: boolean;
                 isValuableReasoning: string;
                 supportedDurationRange: number[];
@@ -1358,7 +1466,7 @@ Instruction: Analyze the narration (Track 0) and the candidate music tracks (Tra
         error?: string;
     }> {
         try {
-            const systemMessage = POST_PRICE_PER_SECOND_SCRAPPING_PROMPT;
+            const systemMessage = POST_VIDEO_PRICE_ANALYSIS_PROMPT;
 
             // systemMessage의 태그 형태에 맞춰 userMessage를 정밀 조립 (XML)
             const userMessage = `
@@ -1405,20 +1513,29 @@ Instruction: Process the models in <input_data> and extract the price per second
             try {
                 // LLM이 뱉는 SnakeCase 포맷 스키마에 맞춰 파싱
                 const parsedData: {
-                    modelPricePerSecondList: {
+                    ai_model_price_data_list: {
                         endpointId: string;
                         is_valuable: boolean | 'true' | 'false';
                         is_valuable_reasoning: string;
                         supported_duration_range: number[];
-                        priceByResolutionList: PriceByResolution[];
+                        ai_model_price_list: AIModelPrice[];
                     }[];
                 } = cleanAndParseJSON(generatedContent);
 
                 // 사장님이 선언하신 CamelCase 타입으로 예쁘게 맵핑하여 반환
-                const mappedList = parsedData.modelPricePerSecondList.map((item) => {
+                const mappedList = parsedData.ai_model_price_data_list.map((item) => {
+                    const aiModelData = aiModelMetadataList.find((metadata) => {
+                        return metadata.endpointId === item.endpointId;
+                    });
+
+                    if (aiModelData) {
+                        console.log(`[${aiModelData.displayName}] pricing: ${aiModelData.pricingText}`);
+                        console.log(`[${aiModelData.displayName}] priceReasoning: ${item.is_valuable_reasoning}`);
+                    }
+
                     return {
                         endpointId: item.endpointId,
-                        priceByResolutionList: item.priceByResolutionList || [],
+                        aiModelPriceList: item.ai_model_price_list || [],
                         isValuable: item.is_valuable == true,
                         isValuableReasoning: item.is_valuable_reasoning || "",
                         supportedDurationRange: item.supported_duration_range || [],
@@ -1428,7 +1545,7 @@ Instruction: Process the models in <input_data> and extract the price per second
                 return {
                     success: true,
                     data: {
-                        modelPricePerSecondList: mappedList,
+                        aiModelPriceDataList: mappedList,
                     }
                 };
             } catch (parseError) {

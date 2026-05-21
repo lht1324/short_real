@@ -248,7 +248,7 @@ export async function POST(request: NextRequest) {
             const chunk = aiModelPricePureTextList.slice(i, i + chunkSize);
             console.log(`[Processing LLM Chunk] ${Math.floor(i / chunkSize) + 1} / ${Math.ceil(aiModelPricePureTextList.length / chunkSize)}`);
 
-            const llmRes = await llmServerAPI.postPricePerSecScrapping(chunk);
+            const llmRes = await llmServerAPI.postVideoPriceAnalysis(chunk);
             if (llmRes.success && llmRes.data) {
                 finalPriceList.push(...llmRes.data.modelPricePerSecondList);
             } else {
