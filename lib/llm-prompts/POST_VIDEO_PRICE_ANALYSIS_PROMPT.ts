@@ -23,26 +23,28 @@ export const POST_VIDEO_PRICE_ANALYSIS_PROMPT = `
   </objective>
   <viability_criteria_logic>
     You must evaluate the model through a strict reasoning chain for each endpoint:
-    [Step 1: Aspect Ratio Support Verification]
-    - Goal: Determine if the model can generate both 16:9 (Landscape) and 9:16 (Portrait) videos.
-    - Rule 1.1 (Explicit Parameters): Check the <input_parameters> list for fields like "aspect_ratio", "image_size", "width", "height". If they contain options, enums, or descriptions for both "16:9" (or "landscape") AND "9:16" (or "portrait"), it satisfies the condition.
-    - Rule 1.2 (Input Source Inheritance): If there are NO aspect ratio parameters, but the model has an input field for a source image (e.g., "image_url", "image") and is an "image-to-video" model, it automatically inherits the aspect ratio of the input image. Thus, it implicitly supports both 16:9 and 9:16. This satisfies the condition.
-    - Rule 1.3 (Fixed Ratio & Legacy Models): If the model explicitly limits generation to a single fixed ratio (e.g., only "1:1", or only "16:9" with no image inheritance), or if it is a legacy/inflexible model that cannot adapt its aspect ratio, it fails.
-    - Verdict: If both 16:9 and 9:16 are supported (explicitly or via image inheritance), Step 1 passes. Otherwise, it fails.
+    [Step 1: Core I2V Behavior & Aspect Ratio Verification]
+    - Goal: Verify the model is a standard Image-to-Video (I2V) generator and supports both 16:9 and 9:16 aspect ratios.
+    - Rule 1.1 (Strict Single Base Image I2V): The model MUST accept a single base image to act as the first frame of the generated video. If the model requires multiple images (e.g., image interpolation, start/end frames) or only uses the image as a stylistic reference without treating it as the initial frame, it fails.
+    - Rule 1.2 (Explicit Parameters): Check the <input_parameters> list for fields like "aspect_ratio", "image_size", "width", "height". If they contain options, enums, or descriptions for both "16:9" (or "landscape") AND "9:16" (or "portrait"), it satisfies the condition.
+    - Rule 1.3 (Input Source Inheritance): If there are NO aspect ratio parameters, but the model has an input field for a source image (e.g., "image_url", "image") and is an "image-to-video" model, it automatically inherits the aspect ratio of the input image. Thus, it implicitly supports both 16:9 and 9:16. This satisfies the condition.
+    - Rule 1.4 (Fixed Ratio & Legacy Models): If the model explicitly limits generation to a single fixed ratio (e.g., only "1:1", or only "16:9" with no image inheritance), or if it is a legacy/inflexible model that cannot adapt its aspect ratio, it fails.
+    - Verdict: If both 16:9 and 9:16 are supported (explicitly or via image inheritance) and it is a strict single base image I2V model, Step 1 passes. Otherwise, it fails.
     [Step 2: Resolution & Cost Verification]
     - Goal: Determine if the model can output 720p, 1080p, or both, and calculate the exact USD cost per second for the supported resolution(s).
-    - Rule 2.1 (Direct Pricing): Look for pricing information in <raw_pricing_text> related to "720p" and "1080p".
-    - Rule 2.2 (Mathematical Conversion):
+    - Rule 2.1 (Audio Generation Exclusion): Review both <input_parameters> and <raw_pricing_text> for any mention of audio generation. If the model offers an option to generate audio, you MUST calculate the price based strictly on the configuration where audio generation is DISABLED. Do not include any extra costs or premium rates associated with audio generation.
+    - Rule 2.2 (Direct Pricing): Look for pricing information in <raw_pricing_text> related to "720p" and "1080p".
+    - Rule 2.3 (Mathematical Conversion):
       - If the price is given per "megapixel", "token", or "credit", convert it to USD per second.
       - Constants: Assume Frame Rate (FPS) is always 24 FPS.
       - 720p Resolution: 1280 x 720 = 921,600 pixels per frame. 1 second of 720p = (1280 * 720 * 24) / 1,000,000 = 22.1184 Megapixels.
       - 1080p Resolution: 1920 x 1080 = 2,073,600 pixels per frame. 1 second of 1080p = (1920 * 1080 * 24) / 1,000,000 = 49.7664 Megapixels.
       - Multiply the megapixel count by the per-megapixel price to get the 1-second price.
-    - Rule 2.3 (Upscaling & Single Fixed/Premium Resolution Inheritance):
+    - Rule 2.4 (Upscaling & Single Fixed/Premium Resolution Inheritance):
       - If you infer from the model's description, display name, matched schema name, or pricing text that it is an **upscaling model** (e.g., upscale, upscaler, outputs in premium spec via single step) or a **single fixed-resolution model** (e.g., natively outputs only in 4K, Pro spec, or a single specific resolution) and it only provides a single flat rate without distinct 720p/1080p rates:
       - Treat this as a "Superset" model that inherently meets the service criteria for both 720p and 1080p.
       - Map that single flat rate directly as the price for both "720p" and "1080p" (i.e., price_per_unit for both 720p and 1080p will be identical).
-    - Rule 2.4 (Non-Deterministic Pricing Exclusion):
+    - Rule 2.5 (Non-Deterministic Pricing Exclusion):
       - If the pricing cannot be mathematically or deterministically converted into a fixed USD cost per 1 second of video, it MUST be excluded.
       - This includes models priced by "compute time" (e.g., "per compute second", "GPU execution time") where the exact computation duration per video second is unknown beforehand, or any pricing structure lacking a clear formula to calculate the cost based on resolution and duration.
       - If a definitive per-second cost cannot be calculated from the provided data, Step 2 FAILS. Set "is_valuable" to false and explain the opaque pricing structure in "is_valuable_reasoning".

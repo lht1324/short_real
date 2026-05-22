@@ -101,7 +101,8 @@ export async function POST(request: NextRequest) {
             error: PostgrestError | null;
         } = await supabase
             .from("ai_model_data")
-            .select("endpoint_id");
+            .select("endpoint_id")
+            .eq("category", "image-to-video");
 
         if (!existingAIModelEndpointIdList && fetchError) {
             throw new Error(`Failed to fetch existing models: ${fetchError.message}`);
@@ -232,7 +233,7 @@ export async function POST(request: NextRequest) {
 
             const llmRes = await llmServerAPI.postVideoPriceAnalysis(chunk);
             if (llmRes.success && llmRes.data) {
-                finalInferredDataList.push(...llmRes.data.modelPricePerSecondList);
+                finalInferredDataList.push(...llmRes.data.aiModelPriceDataList);
             } else {
                 console.error(`[LLM Error] Failed to process chunk ${Math.floor(i / chunkSize) + 1}:`, llmRes.error);
             }
@@ -286,7 +287,7 @@ export async function POST(request: NextRequest) {
         });
 
         // 테스트, 끝나면 제거.
-        const debugOutputPath = path.join(process.cwd(), 'entire_model_data.json');
+        const debugOutputPath = path.join(process.cwd(), 'entire_model_data_video.json');
         fs.writeFileSync(debugOutputPath, JSON.stringify(finalAIModelDataListToUpsert.map((item) => {
             const metadata = filteredAIModelMetadataList.find((data) => {
                 return data.endpointId === item.endpoint_id;

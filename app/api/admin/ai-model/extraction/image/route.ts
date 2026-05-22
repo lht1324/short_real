@@ -133,7 +133,8 @@ export async function POST(request: NextRequest) {
             error: PostgrestError | null;
         } = await supabase
             .from("ai_model_data")
-            .select("endpoint_id");
+            .select("endpoint_id")
+            .in("category", ["image-to-image", "text-to-image"]);
 
         if (!existingAIModelEndpointIdList && fetchError) {
             throw new Error(`Failed to fetch existing models: ${fetchError.message}`);
@@ -326,7 +327,7 @@ export async function POST(request: NextRequest) {
         });
 
         // 테스트, 끝나면 제거.
-        const debugOutputPath = path.join(process.cwd(), 'entire_model_data.json');
+        const debugOutputPath = path.join(process.cwd(), 'entire_model_data_image.json');
         fs.writeFileSync(debugOutputPath, JSON.stringify(finalAIModelDataListToUpsert.map((item) => {
             const metadata = newAIModelMetadataList.find((data) => {
                 return data.endpointId === item.endpoint_id;
