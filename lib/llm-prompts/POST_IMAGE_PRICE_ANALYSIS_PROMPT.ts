@@ -10,10 +10,7 @@ export const POST_IMAGE_PRICE_ANALYSIS_PROMPT = `
     - <display_name>: Human-readable name.
     - <description>: Detailed model description.
     - <matched_schema_name>: The OpenAPI schema name.
-    - <input_parameters>: A list of parameters. Each parameter is wrapped in a <parameter> tag containing:
-      - <name>: Parameter name.
-      - <type>: Data type.
-      - <description>: Parameter purpose and details.
+    - <schema_properties>: A raw JSON string containing the complete "properties" object from the model's OpenAPI schema. You MUST parse this JSON string and comprehensively analyze the entire object structure (including anyOf, allOf, descriptions, enums, defaults) to infer parameter capabilities.
     - <raw_pricing_text>: Pricing documentation and paragraphs scraped from the playground.
   </input_data_interpretation>
   <objective>
@@ -25,7 +22,7 @@ export const POST_IMAGE_PRICE_ANALYSIS_PROMPT = `
     You must evaluate the model through a strict reasoning chain for each endpoint:
     [Step 1: Aspect Ratio & Resolution Support Verification]
     - Goal: Determine if the model can generate both 16:9 (Landscape) and 9:16 (Portrait) images, and check its resolution capabilities.
-    - Rule 1.1 (Explicit Parameters): Check the <input_parameters> list for fields like "aspect_ratio", "image_size", "width", "height". If they contain options, enums, or descriptions that clearly allow specifying both "16:9" (or 1280x720, 1920x1080) AND "9:16" (or 720x1280, 1080x1920), it satisfies the condition. Also check if the model supports outputting at least 720p (approx. 0.9 Megapixels) or 1080p (approx. 2.07 Megapixels).
+    - Rule 1.1 (Explicit Parameters): Parse the JSON string in <schema_properties>. Check for fields like "aspect_ratio", "image_size", "width", "height". Analyze their full object definition. If they contain options, enums (even within anyOf/allOf blocks), or descriptions that clearly allow specifying both "16:9" (or 1280x720, 1920x1080) AND "9:16" (or 720x1280, 1080x1920), it satisfies the condition. Also check if the model supports outputting at least 720p (approx. 0.9 Megapixels) or 1080p (approx. 2.07 Megapixels).
     - Rule 1.2 (I2I Native Image Processing): If there are NO explicit aspect ratio parameters, but the model is an "image-to-image" model (taking "image_url", "image", or "reference_image" as input), assume it natively processes and outputs the dimensions of the provided source image. Since we will provide 16:9 or 9:16 source images (e.g., a vertical framing for a character), the model naturally handles our required ratios. This satisfies the condition.
     - Rule 1.3 (Fixed Ratio Exclusions): If the model explicitly limits generation to a single fixed ratio (e.g., only "1:1", or only "16:9" with no image inheritance), or cannot reach at least 720p resolution, it fails.
     - Verdict: If both 16:9 and 9:16 are supported (explicitly or via image inheritance) at acceptable resolutions, Step 1 passes. Otherwise, it fails.
@@ -36,7 +33,7 @@ export const POST_IMAGE_PRICE_ANALYSIS_PROMPT = `
       - 720p Equivalent Image: 1280 x 720 = 921,600 pixels. Calculate cost for 0.9216 Megapixels.
       - 1080p Equivalent Image: 1920 x 1080 = 2,073,600 pixels. Calculate cost for 2.0736 Megapixels.
     - Rule 2.2 (Mathematical Conversion - Tokens/Credits):
-      - If the price is based on tokens or credits, attempt to find the formula. Calculate the cost for a ~0.9MP (720p) and ~2.07MP (1080p) image.
+      - If the price is based on tokens or credits, attempt to find the formula. Calculate the cost for a ~0.9MP (720p) and ~2.07MP (1080p) image. Pay close attention to any pricing logic embedded in the parameter descriptions within <schema_properties>.
     - Rule 2.3 (Direct Pricing & Upscaling/Fixed Tiers):
       - If a flat rate "per image" is provided without resolution distinction, apply it to both 720p and 1080p tiers.
       - If the pricing explicitly lists different flat rates for different resolutions (e.g., "1k image: $0.02, 2k image: $0.05"), map the closest matching tier to 720p (e.g., 1k) and 1080p (e.g., 2k).

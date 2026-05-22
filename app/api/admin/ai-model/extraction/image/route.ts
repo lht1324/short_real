@@ -160,11 +160,7 @@ export async function POST(request: NextRequest) {
             displayName: string;
             description: string;
             matchedSchemaName: string;
-            inputDataList: {
-                name: string;
-                type: string;
-                description: string;
-            }[];
+            schemaPropertiesString: string;
             pricingText: string;
         }[] = [];
 
@@ -173,11 +169,7 @@ export async function POST(request: NextRequest) {
             const url = `https://fal.ai/models/${aiModel.endpoint_id}`;
 
             let matchedSchemaName: string = '';
-            const inputDataList: {
-                name: string;
-                type: string;
-                description: string;
-            }[] = [];
+            let schemaPropertiesString: string = '';
 
             try {
                 const res = await fetch(url);
@@ -205,23 +197,7 @@ export async function POST(request: NextRequest) {
                             if (isMatch) {
                                 schemaMatched = true;
                                 matchedSchemaName = schemaName;
-                                const props = schemaObj.properties || {};
-
-                                inputLabelList.forEach((originalLabel, index) => {
-                                    const cleaned = cleanedLabels[index];
-                                    const propDef = props[cleaned] as OpenAPIProperty | undefined;
-
-                                    if (propDef) {
-                                        const description = propDef.description || propDef.title || "";
-                                        const type = propDef.type || (propDef.anyOf ? "anyOf" : "unknown");
-
-                                        inputDataList.push({
-                                            name: originalLabel,
-                                            type: type,
-                                            description: description.replace(/\n/g, ' '),
-                                        });
-                                    }
-                                });
+                                schemaPropertiesString = JSON.stringify(schemaObj.properties || {});
                                 break; // 매칭되는 스키마 하나를 찾으면 종료
                             }
                         }
@@ -232,7 +208,7 @@ export async function POST(request: NextRequest) {
                         displayName: aiModel.display_name as string,
                         description: aiModel.description as string,
                         matchedSchemaName: matchedSchemaName,
-                        inputDataList: schemaMatched ? inputDataList : [],
+                        schemaPropertiesString: schemaMatched ? schemaPropertiesString : '',
                         pricingText: pricingText,
                     });
                 } else {
