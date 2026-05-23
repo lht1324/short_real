@@ -165,7 +165,7 @@ export async function POST(request: NextRequest) {
                             if (isMatch) {
                                 schemaMatched = true;
                                 matchedSchemaName = schemaName;
-                                schemaPropertiesString = JSON.stringify(schemaObj.properties || {});
+                                schemaPropertiesString = JSON.stringify(schemaObj.properties || {}, null, 2);
                                 break; // 매칭되는 스키마 하나를 찾으면 종료
                             }
                         }
@@ -200,6 +200,62 @@ export async function POST(request: NextRequest) {
 
         const filteredAIModelMetadataList = newAIModelMetadataList.filter((metadata) => {
             return metadata.matchedSchemaName !== '';
+        });
+
+        const escapeCsv = (str: string | undefined | null) => {
+            if (str == null) return '""';
+            return '"' + String(str).replace(/"/g, '""').replace(/\n/g, '\\n') + '"';
+        };
+
+        const rawJsonPath = path.join(process.cwd(), 'raw_input_data_video.json');
+        const rawCsvPath = path.join(process.cwd(), 'raw_input_data_video.csv');
+        const dbCsvPath = path.join(process.cwd(), 'db_ready_data_video.csv');
+
+        // JSON 저장 (필터링 전 전체 데이터)
+        fs.writeFileSync(rawJsonPath, JSON.stringify(filteredAIModelMetadataList, null, 2), { encoding: 'utf-8' });
+        fs.chmodSync(rawJsonPath, 0o666);
+
+        // CSV 저장 (헤더 및 데이터, 필터링 전 전체)
+        const csvHeader = 'endpointId,displayName,description,matchedSchemaName,schemaPropertiesString,pricingText\n';
+        const csvRows = filteredAIModelMetadataList.map(item => {
+            return [
+                escapeCsv(item.endpointId),
+                escapeCsv(item.displayName),
+                escapeCsv(item.description),
+                escapeCsv(item.matchedSchemaName),
+                escapeCsv(item.schemaPropertiesString),
+                escapeCsv(item.pricingText)
+            ].join(',');
+        }).join('\n');
+        fs.writeFileSync(rawCsvPath, csvHeader + csvRows, { encoding: 'utf-8' });
+        fs.chmodSync(rawCsvPath, 0o666);
+
+        // DB Ready CSV 저장
+        const dbCsvHeader = 'endpoint_id,provider,display_name,description,category,status,thumbnail_url,model_url,supported_duration_range,ai_model_price_list,is_valuable\n';
+        const dbCsvRows = newAIModelList.map(model => {
+            return [
+                escapeCsv(model.endpoint_id as string),
+                escapeCsv((model.provider as string) || "fal.ai"),
+                escapeCsv((model.display_name as string) || (model.endpoint_id as string)),
+                escapeCsv((model.description as string) || ""),
+                escapeCsv((model.category as string) || ""),
+                escapeCsv((model.status as string) || "active"),
+                escapeCsv((model.thumbnail_url as string) || ""),
+                escapeCsv((model.model_url as string) || ""),
+                escapeCsv("[]"), // supported_duration_range
+                escapeCsv("[]"), // ai_model_price_list
+                escapeCsv("FALSE") // is_valuable
+            ].join(',');
+        }).join('\n');
+        fs.writeFileSync(dbCsvPath, dbCsvHeader + dbCsvRows, { encoding: 'utf-8' });
+        fs.chmodSync(dbCsvPath, 0o666);
+
+        console.log(`✅ Saved raw input data to ${rawJsonPath}, ${rawCsvPath}, and ${dbCsvPath}`);
+
+        return getNextBaseResponse({
+            success: true,
+            status: 200,
+            message: "Test finished.",
         });
 
         // 3. 5개씩 끊어서 LLM에 요청

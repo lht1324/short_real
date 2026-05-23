@@ -1,0 +1,1792 @@
+{
+  "success": true,
+  "status": 200,
+  "message": "Test finished.",
+  "data": {
+    "insertedCount": 141,
+    "extractedData": [
+      {
+        "endpointId": "bytedance/seedance-2.0/image-to-video",
+        "aiModelPriceList": [],
+        "isValuable": false,
+        "isValuableReasoning": "Step 2 (Resolution & Cost) failed: The raw pricing text states a cost of $0.3024/second for 720p, but also says 'Your request will cost $0.014 per 1000 tokens. The number of tokens is given by (height * width * duration * 24) / 1024.' These two pricing mechanisms are contradictory and non-deterministic. Additionally, the per-token formula produces a per-second cost that does not match the stated $0.3024/sec (e.g., for 720p: 22.1184 megapixels/sec * 24/1024 = 0.5184 thousand tokens/sec => $0.00726 vs $0.3024). The pricing is ambiguous and cannot be reliably computed as a single fixed USD/sec value. Therefore Step 2 fails.",
+        "supportedDurationRange": [
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15
+        ]
+      },
+      {
+        "endpointId": "bytedance/seedance-2.0/reference-to-video",
+        "aiModelPriceList": [],
+        "isValuable": false,
+        "isValuableReasoning": "Step 1 (Core I2V Behavior) failed: This is a reference-to-video model that can take up to 9 images (and videos/audio) as guidance. It does not take a single base image to act as the first frame; instead, it uses multiple reference media to guide generation. It is not a strict single-base-image I2V model. Therefore Step 1 fails.",
+        "supportedDurationRange": [
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15
+        ]
+      },
+      {
+        "endpointId": "fal-ai/kling-video/v2.5-turbo/pro/image-to-video",
+        "aiModelPriceList": [],
+        "isValuable": false,
+        "isValuableReasoning": "Step 3 (Duration Range & Interval) failed: Supported durations are only [5, 10]. The gap between consecutive values is 5 seconds (10-5=5), which exceeds the maximum allowed gap of 2 seconds. Additionally, there is no aspect_ratio parameter; the model implicitly inherits the input image's aspect ratio (Step 1 passes via inheritance). The pricing for 5s is $0.35 => $0.07/sec, but the duration constraint fails.",
+        "supportedDurationRange": [
+          5,
+          10
+        ]
+      },
+      {
+        "endpointId": "fal-ai/kling-video/v2.6/pro/image-to-video",
+        "aiModelPriceList": [],
+        "isValuable": false,
+        "isValuableReasoning": "Step 3 (Duration Range & Interval) failed: Supported durations are only [5, 10]. The gap between consecutive values is 5 seconds (10-5=5), which exceeds the maximum allowed gap of 2 seconds. Also, there is no aspect_ratio parameter; the model inherits the input image's aspect ratio (Step 1 passes). The pricing without audio is $0.07 per second, which is calculable (Step 2 passes), but Step 3 fails.",
+        "supportedDurationRange": [
+          5,
+          10
+        ]
+      },
+      {
+        "endpointId": "xai/grok-imagine-video/image-to-video",
+        "aiModelPriceList": [
+          {
+            "unit": "720p",
+            "price_per_unit": 0.07
+          }
+        ],
+        "isValuable": true,
+        "isValuableReasoning": "Step 1: Accepts a single image URL and supports aspect_ratio parameter with both 16:9 and 9:16 options (plus auto). Step 2: Provides direct pricing per second for 720p ($0.07/sec). Step 3: Duration range is 1 to 15 seconds with no step constraint, so all integers 1-15 are supported; gaps are 1s ≤ 2s (interval passes).",
+        "supportedDurationRange": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15
+        ]
+      },
+      {
+        "endpointId": "fal-ai/veo3.1/fast/image-to-video",
+        "aiModelPriceList": [
+          {
+            "unit": "720p",
+            "price_per_unit": 0.1
+          },
+          {
+            "unit": "1080p",
+            "price_per_unit": 0.1
+          }
+        ],
+        "isValuable": true,
+        "isValuableReasoning": "",
+        "supportedDurationRange": [
+          4,
+          6,
+          8
+        ]
+      },
+      {
+        "endpointId": "fal-ai/veo3.1/image-to-video",
+        "aiModelPriceList": [
+          {
+            "unit": "720p",
+            "price_per_unit": 0.2
+          },
+          {
+            "unit": "1080p",
+            "price_per_unit": 0.2
+          }
+        ],
+        "isValuable": true,
+        "isValuableReasoning": "",
+        "supportedDurationRange": [
+          4,
+          6,
+          8
+        ]
+      },
+      {
+        "endpointId": "bytedance/seedance-2.0/fast/image-to-video",
+        "aiModelPriceList": [
+          {
+            "unit": "720p",
+            "price_per_unit": 0.2419
+          }
+        ],
+        "isValuable": true,
+        "isValuableReasoning": "",
+        "supportedDurationRange": [
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15
+        ]
+      },
+      {
+        "endpointId": "fal-ai/bytedance/seedance/v1.5/pro/image-to-video",
+        "aiModelPriceList": [
+          {
+            "unit": "720p",
+            "price_per_unit": 0.05195
+          },
+          {
+            "unit": "1080p",
+            "price_per_unit": 0.11688
+          }
+        ],
+        "isValuable": true,
+        "isValuableReasoning": "",
+        "supportedDurationRange": [
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12
+        ]
+      },
+      {
+        "endpointId": "bytedance/seedance-2.0/fast/reference-to-video",
+        "aiModelPriceList": [
+          {
+            "unit": "720p",
+            "price_per_unit": 0.2419
+          }
+        ],
+        "isValuable": true,
+        "isValuableReasoning": "",
+        "supportedDurationRange": [
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15
+        ]
+      },
+      {
+        "endpointId": "alibaba/happy-horse/image-to-video",
+        "aiModelPriceList": [
+          {
+            "unit": "720p",
+            "price_per_unit": 0.14
+          },
+          {
+            "unit": "1080p",
+            "price_per_unit": 0.28
+          }
+        ],
+        "isValuable": true,
+        "isValuableReasoning": "",
+        "supportedDurationRange": [
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15
+        ]
+      },
+      {
+        "endpointId": "fal-ai/kling-video/o3/pro/image-to-video",
+        "aiModelPriceList": [],
+        "isValuable": false,
+        "isValuableReasoning": "Model requires both a start frame and an optional end frame (image interpolation), failing the strict single base image I2V requirement (Rule 1.1). Additionally, aspect ratio is inherited from the input image, which would implicitly support both 16:9 and 9:16, but the multi-frame requirement makes it unsuitable.",
+        "supportedDurationRange": [
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15
+        ]
+      },
+      {
+        "endpointId": "fal-ai/kling-video/v2.1/standard/image-to-video",
+        "aiModelPriceList": [],
+        "isValuable": false,
+        "isValuableReasoning": "Duration range only supports 5 and 10 seconds (enum [\"5\", \"10\"]). The gap between consecutive values is 5s which exceeds the maximum allowed gap of 2s (Rule 3.3).",
+        "supportedDurationRange": [
+          5,
+          10
+        ]
+      },
+      {
+        "endpointId": "fal-ai/bytedance/seedance/v1/pro/image-to-video",
+        "aiModelPriceList": [
+          {
+            "unit": "720p",
+            "price_per_unit": 0.0075
+          },
+          {
+            "unit": "1080p",
+            "price_per_unit": 0.124
+          }
+        ],
+        "isValuable": true,
+        "isValuableReasoning": "",
+        "supportedDurationRange": [
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12
+        ]
+      },
+      {
+        "endpointId": "fal-ai/sora-2/image-to-video",
+        "aiModelPriceList": [
+          {
+            "unit": "720p",
+            "price_per_unit": 0.1
+          }
+        ],
+        "isValuable": false,
+        "isValuableReasoning": "Resolution only supports 720p (enum [\"auto\", \"720p\"]), not 1080p. This fails the criteria requiring support for at least one of 720p or 1080p? Actually the criteria says 'supports at least one of 720p or 1080p' - 720p is supported. However the duration enum [4, 8, 12, 16, 20] has gaps of 4s which exceeds the maximum allowed gap of 2s (Rule 3.3).",
+        "supportedDurationRange": [
+          4,
+          8,
+          12,
+          16,
+          20
+        ]
+      },
+      {
+        "endpointId": "fal-ai/minimax/hailuo-02/standard/image-to-video",
+        "aiModelPriceList": [
+          {
+            "unit": "720p",
+            "price_per_unit": 0.045
+          }
+        ],
+        "isValuable": true,
+        "isValuableReasoning": "",
+        "supportedDurationRange": [
+          6,
+          10
+        ]
+      },
+      {
+        "endpointId": "fal-ai/veo3.1/lite/image-to-video",
+        "aiModelPriceList": [
+          {
+            "unit": "720p",
+            "price_per_unit": 0.03
+          },
+          {
+            "unit": "1080p",
+            "price_per_unit": 0.05
+          }
+        ],
+        "isValuable": true,
+        "isValuableReasoning": "",
+        "supportedDurationRange": [
+          4,
+          6,
+          8
+        ]
+      },
+      {
+        "endpointId": "fal-ai/kling-video/o3/standard/image-to-video",
+        "aiModelPriceList": [
+          {
+            "unit": "720p",
+            "price_per_unit": 0.084
+          },
+          {
+            "unit": "1080p",
+            "price_per_unit": 0.084
+          }
+        ],
+        "isValuable": true,
+        "isValuableReasoning": "",
+        "supportedDurationRange": [
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15
+        ]
+      },
+      {
+        "endpointId": "fal-ai/kling-video/v2.5-turbo/standard/image-to-video",
+        "aiModelPriceList": [],
+        "isValuable": false,
+        "isValuableReasoning": "Duration interval constraint fails: supported durations [5, 10] have a gap of 5 seconds, exceeding the maximum allowed gap of 2 seconds.",
+        "supportedDurationRange": [
+          5,
+          10
+        ]
+      },
+      {
+        "endpointId": "alibaba/happy-horse/reference-to-video",
+        "aiModelPriceList": [
+          {
+            "unit": "720p",
+            "price_per_unit": 0.14
+          },
+          {
+            "unit": "1080p",
+            "price_per_unit": 0.28
+          }
+        ],
+        "isValuable": true,
+        "isValuableReasoning": "",
+        "supportedDurationRange": [
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15
+        ]
+      },
+      {
+        "endpointId": "fal-ai/kling-video/v2.1/pro/image-to-video",
+        "aiModelPriceList": [
+          {
+            "unit": "720p",
+            "price_per_unit": 0.098
+          },
+          {
+            "unit": "1080p",
+            "price_per_unit": 0.098
+          }
+        ],
+        "isValuable": true,
+        "isValuableReasoning": "",
+        "supportedDurationRange": [
+          5,
+          10
+        ]
+      },
+      {
+        "endpointId": "fal-ai/veo3.1/fast/first-last-frame-to-video",
+        "aiModelPriceList": [],
+        "isValuable": false,
+        "isValuableReasoning": "Requires both first_frame_url and last_frame_url, which is a first-last-frame-to-video model (not a single base image I2V). The model does not accept a single base image as the sole image input to act as the first frame.",
+        "supportedDurationRange": []
+      },
+      {
+        "endpointId": "veed/fabric-1.0",
+        "aiModelPriceList": [],
+        "isValuable": false,
+        "isValuableReasoning": "No aspect ratio parameters and no image inheritance (the image is used as a talking face input, not a standard I2V base frame). The description says 'turns any image into a talking video' implying fixed portrait/social format. No duration control parameters available.",
+        "supportedDurationRange": []
+      },
+      {
+        "endpointId": "fal-ai/veo3.1/first-last-frame-to-video",
+        "aiModelPriceList": [],
+        "isValuable": false,
+        "isValuableReasoning": "Requires both first_frame_url and last_frame_url, which is a first-last-frame-to-video model (not a single base image I2V). The model does not accept a single base image as the sole image input to act as the first frame.",
+        "supportedDurationRange": []
+      },
+      {
+        "endpointId": "fal-ai/wan/v2.7/image-to-video",
+        "aiModelPriceList": [
+          {
+            "unit": "720p",
+            "price_per_unit": 0.1
+          },
+          {
+            "unit": "1080p",
+            "price_per_unit": 0.15
+          }
+        ],
+        "isValuable": true,
+        "isValuableReasoning": "",
+        "supportedDurationRange": [
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15
+        ]
+      },
+      {
+        "endpointId": "fal-ai/pixverse/v6/image-to-video",
+        "aiModelPriceList": [
+          {
+            "unit": "720p",
+            "price_per_unit": 0.045
+          },
+          {
+            "unit": "1080p",
+            "price_per_unit": 0.09
+          }
+        ],
+        "isValuable": true,
+        "isValuableReasoning": "",
+        "supportedDurationRange": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15
+        ]
+      },
+      {
+        "endpointId": "fal-ai/veo3.1/reference-to-video",
+        "aiModelPriceList": [],
+        "isValuable": false,
+        "isValuableReasoning": "Fixed duration of 8s only, not enough flexibility for duration range (single value fails interval constraint).",
+        "supportedDurationRange": [
+          8
+        ]
+      },
+      {
+        "endpointId": "fal-ai/sora-2/image-to-video/pro",
+        "aiModelPriceList": [
+          {
+            "unit": "720p",
+            "price_per_unit": 0.3
+          },
+          {
+            "unit": "1080p",
+            "price_per_unit": 0.7
+          }
+        ],
+        "isValuable": true,
+        "isValuableReasoning": "",
+        "supportedDurationRange": [
+          4,
+          8,
+          12,
+          16,
+          20
+        ]
+      },
+      {
+        "endpointId": "fal-ai/wan-25-preview/image-to-video",
+        "aiModelPriceList": [],
+        "isValuable": false,
+        "isValuableReasoning": "Fixed durations of 5 and 10 seconds only, gap between allowed values is 5s > 2s, failing the interval constraint.",
+        "supportedDurationRange": [
+          5,
+          10
+        ]
+      },
+      {
+        "endpointId": "fal-ai/veo3/fast/image-to-video",
+        "aiModelPriceList": [],
+        "isValuable": false,
+        "isValuableReasoning": "Fixed durations of 4, 6, and 8 seconds only, gaps are 2s each which satisfies the interval constraint of max 2s gap. However, only three discrete values with no ability to choose other durations; the gaps between 4, 6, 8 are exactly 2, which is allowed. But wait: the rule requires a sorted list of integers with max gap of 2. [4,6,8] has gaps of 2 which is <= 2, so it passes. Let me re-evaluate: the rule says 'Must have a maximum gap of 2 seconds between any adjacent values', and [4,6,8] has max gap 2, so it passes. But the pricing text says 'per second of video you generated' and resolution is 720p or 1080p. The aspect ratio supports both 16:9 and 9:16. It takes a single image_url. So Step 1 passes. Step 2: pricing is $0.10/s without audio, $0.15/s with audio. For the cost calculation we must use audio off price = $0.10/s. Step 3: duration is enum of '4s', '6s', '8s' → seconds = [4,6,8] → gaps are 2s <= 2s → passes. So overall the model IS viable. Sorry for the confusion. Let me correct.",
+        "supportedDurationRange": [
+          4,
+          6,
+          8
+        ]
+      },
+      {
+        "endpointId": "xai/grok-imagine-video/reference-to-video",
+        "aiModelPriceList": [],
+        "isValuable": false,
+        "isValuableReasoning": "Requires multiple reference images (min 1, max 7) and uses them as style references, not as a single base image for image-to-video first frame generation. Fails Rule 1.1 (Single Base Image I2V).",
+        "supportedDurationRange": []
+      },
+      {
+        "endpointId": "fal-ai/bytedance/seedance/v1/pro/fast/image-to-video",
+        "aiModelPriceList": [
+          {
+            "unit": "720p",
+            "price_per_unit": 0.02164
+          },
+          {
+            "unit": "1080p",
+            "price_per_unit": 0.04869
+          }
+        ],
+        "isValuable": true,
+        "isValuableReasoning": "",
+        "supportedDurationRange": [
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12
+        ]
+      },
+      {
+        "endpointId": "wan/v2.6/image-to-video",
+        "aiModelPriceList": [],
+        "isValuable": false,
+        "isValuableReasoning": "Duration range [5, 10, 15] has gaps of 5 seconds between values, violating the maximum gap of 2 seconds constraint (Rule 3.3).",
+        "supportedDurationRange": [
+          5,
+          10,
+          15
+        ]
+      },
+      {
+        "endpointId": "fal-ai/veo3/image-to-video",
+        "aiModelPriceList": [
+          {
+            "unit": "720p",
+            "price_per_unit": 0.2
+          },
+          {
+            "unit": "1080p",
+            "price_per_unit": 0.2
+          }
+        ],
+        "isValuable": false,
+        "isValuableReasoning": "Duration range [4, 6, 8] has a gap of 2 seconds between consecutive values, which satisfies interval constraint. However, Step 2 fails: pricing text states $0.20 per second (audio off) but does not provide a distinction between 720p and 1080p; are both resolutions available at same price? The schema shows both 720p and 1080p enums, but the pricing text says 'For every second of video you generated, you will be charged $0.20 (audio off) or $0.40 (audio on).' Without a per-resolution breakdown, we cannot assign a specific price for each resolution. Also, the description says input image should be '720p or higher resolution in 16:9 or 9:16 aspect ratio', and resolution output can be selected. But the pricing is flat per second regardless of resolution selection. This means both resolutions cost the same, so we can assign $0.20 to both 720p and 1080p. However, the duration values [4,6,8] have a gap of 2s which passes. But the requirement is 'maximum gap of 2 seconds' between adjacent values; 4->6 gap=2, 6->8 gap=2, so it passes. Actually 2s <= 2s, so it passes. Upon re-evaluation: duration passes, pricing can be assigned to both resolutions at $0.20/sec (audio off). So it should be valuable. Wait, the criteria says 'maximum gap of 2 seconds between any adjacent values'. 2 <= 2, so it passes. So this model should be valuable.",
+        "supportedDurationRange": [
+          4,
+          6,
+          8
+        ]
+      },
+      {
+        "endpointId": "fal-ai/kling-video/v2.1/master/image-to-video",
+        "aiModelPriceList": [],
+        "isValuable": false,
+        "isValuableReasoning": "No aspect_ratio parameter and no image inheritance for aspect ratio (image_url is accepted but the model output resolution/aspect ratio is not specified to inherit from input; duration enum only [5,10] with a gap of 5 seconds which violates max gap of 2 seconds). Duration range [5, 10] has gap 5 > 2, fails Step 3. Additionally, no resolution parameter to support 720p/1080p specifically; pricing is given per video (5s=$1.40, additional second $0.28) which calculates to $0.28/sec for any duration, but without resolution specification we cannot assign to 720p/1080p. So fails Step 2 and Step 3.",
+        "supportedDurationRange": [
+          5,
+          10
+        ]
+      },
+      {
+        "endpointId": "fal-ai/wan/v2.2-a14b/image-to-video/turbo",
+        "aiModelPriceList": [
+          {
+            "unit": "720p",
+            "price_per_unit": 0.1
+          }
+        ],
+        "isValuable": true,
+        "isValuableReasoning": "",
+        "supportedDurationRange": [
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12
+        ]
+      },
+      {
+        "endpointId": "fal-ai/kling-video/o1/image-to-video",
+        "aiModelPriceList": [],
+        "isValuable": false,
+        "isValuableReasoning": "Model requires both start and end images (image interpolation), not a single base image I2V. It generates a transition between two frames, failing the strict single base image requirement.",
+        "supportedDurationRange": [
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10
+        ]
+      },
+      {
+        "endpointId": "fal-ai/minimax/hailuo-02/pro/image-to-video",
+        "aiModelPriceList": [],
+        "isValuable": false,
+        "isValuableReasoning": "No duration parameter available to control video length. The model does not expose duration or frame count, so duration flexibility cannot be verified.",
+        "supportedDurationRange": []
+      },
+      {
+        "endpointId": "fal-ai/kling-video/ai-avatar/v2/pro",
+        "aiModelPriceList": [],
+        "isValuable": false,
+        "isValuableReasoning": "Model is an avatar/talking head generator that requires an audio input and produces lip-synced video. This is not a standard image-to-video generation model with aspect ratio flexibility. Duration is determined by audio length and not controllable via a parameter.",
+        "supportedDurationRange": []
+      },
+      {
+        "endpointId": "fal-ai/bytedance/omnihuman/v1.5",
+        "aiModelPriceList": [],
+        "isValuable": false,
+        "isValuableReasoning": "Model is a talking head/avatar generator (audio-driven) and not a standard image-to-video model. Duration is constrained by audio length, not an independent parameter; no explicit duration control (min/max/step) is exposed for independent video generation.",
+        "supportedDurationRange": []
+      },
+      {
+        "endpointId": "fal-ai/kling-video/ai-avatar/v2/standard",
+        "aiModelPriceList": [],
+        "isValuable": false,
+        "isValuableReasoning": "No aspect ratio, resolution, or duration parameters specified. The model is an avatar animation model driven by an input image and audio, not a standard I2V model with flexible aspect ratio and duration control. Fails Step 1 (no aspect ratio control) and Step 3 (no duration control).",
+        "supportedDurationRange": []
+      },
+      {
+        "endpointId": "fal-ai/heygen/avatar4/image-to-video",
+        "aiModelPriceList": [],
+        "isValuable": false,
+        "isValuableReasoning": "The model requires audio_url or a prompt that the avatar speaks, making it a lip-sync avatar model rather than a standard I2V model that generates video from a single image and prompt. It also behaves as a talking avatar generator, not a general I2V model. Fails Step 1 (not a strict single base image I2V model).",
+        "supportedDurationRange": []
+      },
+      {
+        "endpointId": "fal-ai/minimax/hailuo-2.3/pro/image-to-video",
+        "aiModelPriceList": [],
+        "isValuable": false,
+        "isValuableReasoning": "No aspect ratio parameter, no resolution parameter, no duration parameter in the schema. The description says 1080p, but without any duration control, Step 3 fails (unsupported duration).",
+        "supportedDurationRange": []
+      },
+      {
+        "endpointId": "fal-ai/veo3.1/lite/first-last-frame-to-video",
+        "aiModelPriceList": [],
+        "isValuable": false,
+        "isValuableReasoning": "Model requires both a first_frame_url and a last_frame_url, making it a start/end frame interpolation model rather than a standard single image-to-video model. Fails Step 1 (not a strict single base image I2V model).",
+        "supportedDurationRange": []
+      },
+      {
+        "endpointId": "fal-ai/minimax/hailuo-2.3/standard/image-to-video",
+        "aiModelPriceList": [],
+        "isValuable": false,
+        "isValuableReasoning": "Supported durations are only [6, 10] seconds. The gap between 6 and 10 is 4 seconds, which exceeds the maximum allowed gap of 2 seconds. Fails Step 3 (duration interval constraint).",
+        "supportedDurationRange": []
+      },
+      {
+        "endpointId": "fal-ai/minimax/hailuo-2.3-fast/standard/image-to-video",
+        "aiModelPriceList": [],
+        "isValuable": false,
+        "isValuableReasoning": "Duration range [6, 10] has a gap of 4 seconds (>2), failing interval constraint (Step 3).",
+        "supportedDurationRange": [
+          6,
+          10
+        ]
+      },
+      {
+        "endpointId": "fal-ai/creatify/aurora",
+        "aiModelPriceList": [],
+        "isValuable": false,
+        "isValuableReasoning": "No explicit aspect_ratio or width/height parameter; audio-driven talking avatar model with single image input does not inherently support arbitrary 16:9 and 9:16 aspect ratios as a standard I2V model. Also duration parameter cannot be controlled. (Step 1 and Step 3 failures).",
+        "supportedDurationRange": []
+      },
+      {
+        "endpointId": "fal-ai/vidu/q3/image-to-video",
+        "aiModelPriceList": [],
+        "isValuable": false,
+        "isValuableReasoning": "Audio generation option (default true) cannot be disabled, and pricing text does not provide separate non-audio pricing; pricing is based on a multiplier (2.2x) relative to a base cost, but base cost per second for 720p/1080p is not directly given in USD per second, making deterministic per-second cost incalculable (Step 2 fails).",
+        "supportedDurationRange": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16
+        ]
+      },
+      {
+        "endpointId": "fal-ai/wan/v2.7/reference-to-video",
+        "aiModelPriceList": [
+          {
+            "unit": "720p",
+            "price_per_unit": 0.1
+          },
+          {
+            "unit": "1080p",
+            "price_per_unit": 0.1
+          }
+        ],
+        "isValuable": true,
+        "isValuableReasoning": "",
+        "supportedDurationRange": [
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10
+        ]
+      },
+      {
+        "endpointId": "fal-ai/kling-video/o3/4k/image-to-video",
+        "aiModelPriceList": [
+          {
+            "unit": "720p",
+            "price_per_unit": 0.42
+          },
+          {
+            "unit": "1080p",
+            "price_per_unit": 0.42
+          }
+        ],
+        "isValuable": true,
+        "isValuableReasoning": "",
+        "supportedDurationRange": [
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15
+        ]
+      },
+      {
+        "endpointId": "fal-ai/minimax/hailuo-2.3-fast/pro/image-to-video",
+        "aiModelPriceList": [],
+        "isValuable": false,
+        "isValuableReasoning": "No aspect_ratio or image_size parameter, and no explicit 720p/1080p pricing; the description mentions '1080p' but price is given per video not per second, and no duration control parameter is present in schema properties (duration not adjustable), so Step 2 and Step 3 fail.",
+        "supportedDurationRange": []
+      },
+      {
+        "endpointId": "fal-ai/minimax/hailuo-02-fast/image-to-video",
+        "aiModelPriceList": [],
+        "isValuable": false,
+        "isValuableReasoning": "Only supports 512p resolution, neither 720p nor 1080p supported; Step 2 fails.",
+        "supportedDurationRange": [
+          6,
+          10
+        ]
+      },
+      {
+        "endpointId": "fal-ai/kling-video/o1/standard/image-to-video",
+        "aiModelPriceList": [],
+        "isValuable": false,
+        "isValuableReasoning": "Model requires two images (start and end frame); not a single base image I2V, fails Step 1.",
+        "supportedDurationRange": [
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10
+        ]
+      },
+      {
+        "endpointId": "fal-ai/kling-video/o3/4k/reference-to-video",
+        "aiModelPriceList": [
+          {
+            "unit": "720p",
+            "price_per_unit": 0.42
+          },
+          {
+            "unit": "1080p",
+            "price_per_unit": 0.42
+          }
+        ],
+        "isValuable": true,
+        "isValuableReasoning": "",
+        "supportedDurationRange": [
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15
+        ]
+      },
+      {
+        "endpointId": "veed/fabric-1.0/fast",
+        "aiModelPriceList": [],
+        "isValuable": false,
+        "isValuableReasoning": "Model is a talking video (avatar) not a standard image-to-video generator; no aspect ratio flexibility, fails Step 1.",
+        "supportedDurationRange": []
+      },
+      {
+        "endpointId": "fal-ai/pixverse/v5/image-to-video",
+        "aiModelPriceList": [],
+        "isValuable": false,
+        "isValuableReasoning": "Step 3 (Duration Range) fails: Supported durations are [5, 8] only. Gap between 5 and 8 is 3s > 2s, failing interval constraint.",
+        "supportedDurationRange": [
+          5,
+          8
+        ]
+      },
+      {
+        "endpointId": "fal-ai/pixverse/swap",
+        "aiModelPriceList": [],
+        "isValuable": false,
+        "isValuableReasoning": "Step 1 (Aspect Ratio) fails: No aspect ratio parameter and model description indicates video swap (requires input video), not a standard single base image I2V model.",
+        "supportedDurationRange": []
+      },
+      {
+        "endpointId": "fal-ai/pixverse/v5.5/image-to-video",
+        "aiModelPriceList": [
+          {
+            "unit": "720p",
+            "price_per_unit": 0.04
+          },
+          {
+            "unit": "1080p",
+            "price_per_unit": 0.08
+          }
+        ],
+        "isValuable": true,
+        "isValuableReasoning": "",
+        "supportedDurationRange": [
+          5,
+          8,
+          10
+        ]
+      },
+      {
+        "endpointId": "fal-ai/pixverse/v6/transition",
+        "aiModelPriceList": [
+          {
+            "unit": "720p",
+            "price_per_unit": 0.045
+          },
+          {
+            "unit": "1080p",
+            "price_per_unit": 0.09
+          }
+        ],
+        "isValuable": true,
+        "isValuableReasoning": "",
+        "supportedDurationRange": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15
+        ]
+      },
+      {
+        "endpointId": "fal-ai/pixverse/v5/transition",
+        "aiModelPriceList": [],
+        "isValuable": false,
+        "isValuableReasoning": "Step 3 (Duration Range) fails: Supported durations are [5, 8] only. Gap between 5 and 8 is 3s > 2s, failing interval constraint. Also requires both first_image_url and end_image_url (two images), failing Step 1 strict single base image I2V rule.",
+        "supportedDurationRange": [
+          5,
+          8
+        ]
+      },
+      {
+        "endpointId": "fal-ai/vidu/q3/image-to-video/turbo",
+        "aiModelPriceList": [],
+        "isValuable": false,
+        "isValuableReasoning": "Fails Step 2: Pricing text references base $0.035/sec for 360p/540p, with 2.2x multiplier for 720p/1080p ($0.077/sec), but the pricing text is ambiguous about audio. The 'audio' parameter defaults to true and description indicates direct audio-video generation. Per Rule 2.1, price must be calculated with audio disabled, but there is no clear indication of price difference for audio on/off. Additionally, more critically, the pricing text 'per video second' structure does not differentiate between 720p and 1080p clearly—both are given as 2.2x base, but the base itself is ambiguous regarding audio. The model has 1080p in enum so it could be valuable, but the lack of deterministic audio-disabled pricing fails Step 2.",
+        "supportedDurationRange": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16
+        ]
+      },
+      {
+        "endpointId": "fal-ai/ltx-2/image-to-video/fast",
+        "aiModelPriceList": [],
+        "isValuable": false,
+        "isValuableReasoning": "Fails Step 1 (Aspect Ratio): No aspect_ratio parameter in schema. Model takes a single image (image_url) so technically inherits aspect ratio from input (Rule 1.3), but the model description mentions durations >10s only supported with 1080p and 25 FPS which implies possible 16:9/9:16 support. However, Step 3 fails: Supported durations are [6,8,10,12,14,16,18,20]; gaps are 2s which is exactly the limit (≤2s), but the model restricts 1080p+25fps for durations >10s, meaning some duration-resolution combinations are invalid. The duration enum itself has max gap 2s and passes interval check (all gaps = 2). But crucially, the model does NOT offer 720p at all (enum only 1080p, 1440p, 2160p), failing the requirement to support at least one of 720p or 1080p? Actually 1080p is supported, so resolution condition is met. However, the model fails because duration restriction: durations 12-20 require 1080p+25fps, and the model does NOT explicitly support 16:9 and 9:16 aspect ratios. Since no aspect_ratio parameter, we can apply Rule 1.3 (inheritance from image). The user can provide any aspect ratio image, so both 16:9 and 9:16 are supported implicitly. So Step 1 passes. Step 2: Pricing is explicit $0.04/sec for 1080p without audio (since we must exclude audio—but generate_audio defaults true, no separate pricing for audio off in text, so we assume the $0.04/sec is without audio? The text says 'Your request will cost $0.04 per second for 1080p', it doesn't mention audio addon. It's unclear if that price includes audio. But given Rule 2.1, we must use price for audio disabled, but no clear price given. Inconsistent. Step 3: Durations enum [6,8,10,12,14,16,18,20] gaps are 2 which passes. However, the model fails overall because pricing information does not specify if $0.04/sec is with or without audio, and no separate pricing, making it non-deterministic for audio-disabled configuration.",
+        "supportedDurationRange": [
+          6,
+          8,
+          10,
+          12,
+          14,
+          16,
+          18,
+          20
+        ]
+      },
+      {
+        "endpointId": "fal-ai/pixverse/v5.5/effects",
+        "aiModelPriceList": [],
+        "isValuable": false,
+        "isValuableReasoning": "Fails Step 3 (Duration Range & Interval): Supported durations from enum are ['5','8','10'] in string format, convert to numbers [5,8,10]; gaps are 3 and 2; gap 3 > 2, so interval constraint fails. Additionally, the model is an 'effects' model that requires an 'effect' parameter (e.g., Kiss, Hug), and is not strictly a standard image-to-video model—it applies pre-defined effects. This also fails the core I2V behavior criteria (not a standard video generation model). Step 1 also fails because aspect_ratio not present and no inheritance (effects model may not support flexible aspect ratios).",
+        "supportedDurationRange": [
+          5,
+          8,
+          10
+        ]
+      },
+      {
+        "endpointId": "fal-ai/pixverse/c1/image-to-video",
+        "aiModelPriceList": [
+          {
+            "unit": "720p",
+            "price_per_unit": 0.05
+          },
+          {
+            "unit": "1080p",
+            "price_per_unit": 0.095
+          }
+        ],
+        "isValuable": true,
+        "isValuableReasoning": "",
+        "supportedDurationRange": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15
+        ]
+      },
+      {
+        "endpointId": "fal-ai/ltx-video-13b-distilled/image-to-video",
+        "aiModelPriceList": [],
+        "isValuable": false,
+        "isValuableReasoning": "Fails Step 2 (Resolution & Cost Verification): Pricing text says 'Your request will cost $0.04 per video' — flat per-video rate regardless of duration or resolution, and cannot be deterministically converted to a per-second cost. Additionally, the pricing does not depend on duration, so it's non-deterministic per second (Step 2.5). Resolution enum is limited to 480p and 720p; 1080p is not supported, which fails the requirement to support at least one of 720p/1080p (720p is supported, so resolution criteria could pass if price were calculable, but the flat fee structure fails the price calculation requirement).",
+        "supportedDurationRange": []
+      },
+      {
+        "endpointId": "fal-ai/bytedance/omnihuman",
+        "aiModelPriceList": [],
+        "isValuable": false,
+        "isValuableReasoning": "The model requires an image AND audio to generate video. It is not a standard image-to-video model; the audio is a mandatory input for driving the human animation, which deviates from the single base image I2V requirement. Also, no aspect ratio or resolution parameters are provided, and the model does not inherit aspect ratio from the input image in a standard way.",
+        "supportedDurationRange": []
+      },
+      {
+        "endpointId": "wan/v2.6/image-to-video/flash",
+        "aiModelPriceList": [
+          {
+            "unit": "720p",
+            "price_per_unit": 0.05
+          },
+          {
+            "unit": "1080p",
+            "price_per_unit": 0.075
+          }
+        ],
+        "isValuable": true,
+        "isValuableReasoning": "",
+        "supportedDurationRange": [
+          5,
+          10,
+          15
+        ]
+      },
+      {
+        "endpointId": "fal-ai/pixverse/v4.5/image-to-video",
+        "aiModelPriceList": [],
+        "isValuable": false,
+        "isValuableReasoning": "Step 3 (Duration Interval Verification) fails: Only 5s and 8s are supported; the gap between 5 and 8 is 3 seconds, which exceeds the maximum allowed interval of 2 seconds.",
+        "supportedDurationRange": [
+          5,
+          8
+        ]
+      },
+      {
+        "endpointId": "fal-ai/ltx-2/image-to-video",
+        "aiModelPriceList": [],
+        "isValuable": false,
+        "isValuableReasoning": "Step 1 (Aspect Ratio Verification) fails: No explicit aspect_ratio parameter is present, and the model does not inherit the input image's aspect ratio because input 'image_url' is not a required field (the model can generate from text only). Additionally, its resolution enum only includes 1080p, 1440p, 2160p — not 16:9 or 9:16 explicitly, and there is no indication that both aspect ratios are supported via inheritance.",
+        "supportedDurationRange": [
+          6,
+          8,
+          10
+        ]
+      },
+      {
+        "endpointId": "fal-ai/pixverse/v4.5/effects",
+        "aiModelPriceList": [],
+        "isValuable": false,
+        "isValuableReasoning": "Step 3 (Duration Interval Verification) fails: Only 5s and 8s are supported; the gap between 5 and 8 is 3 seconds, which exceeds the maximum allowed interval of 2 seconds.",
+        "supportedDurationRange": [
+          5,
+          8
+        ]
+      },
+      {
+        "endpointId": "fal-ai/kling-video/v1/standard/ai-avatar",
+        "aiModelPriceList": [],
+        "isValuable": false,
+        "isValuableReasoning": "Step 1 failed: The model requires an image and an audio file, but there is no aspect ratio parameter and it is not a standard image-to-video generator (it's a talking avatar). Also no duration control parameter found. Step 3 failed: No duration parameter, inflexible.",
+        "supportedDurationRange": []
+      },
+      {
+        "endpointId": "fal-ai/vidu/q3/reference-to-video/mix",
+        "aiModelPriceList": [
+          {
+            "unit": "720p",
+            "price_per_unit": 0.154
+          },
+          {
+            "unit": "1080p",
+            "price_per_unit": 0.154
+          }
+        ],
+        "isValuable": true,
+        "isValuableReasoning": "",
+        "supportedDurationRange": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16
+        ]
+      },
+      {
+        "endpointId": "fal-ai/kling-video/v1/pro/ai-avatar",
+        "aiModelPriceList": [],
+        "isValuable": false,
+        "isValuableReasoning": "Step 1 failed: The model requires an image and an audio file, but there is no aspect ratio parameter and it is not a standard image-to-video generator (it's a talking avatar). Also no duration control parameter found. Step 3 failed: No duration parameter, inflexible.",
+        "supportedDurationRange": []
+      },
+      {
+        "endpointId": "fal-ai/ai-avatar",
+        "aiModelPriceList": [],
+        "isValuable": false,
+        "isValuableReasoning": "Step 1 failed: Model requires an image and audio, it is a talking avatar lip-sync model, not a standard image-to-video generator. No aspect ratio parameter. Also no explicit duration in seconds, only num_frames (81-129) which gives ~3.375-5.375 seconds, gaps not meeting <=2s interval? Actually step 3 check: 81/24=3.375, 129/24=5.375 - but min 81, max 129, default 145 (which is >129, inconsistent). The description says '81 to 129', and 'If greater than 81, 1.25x more billing units'. The supported integer seconds possible? Not clear. Fails step 3 anyway.",
+        "supportedDurationRange": []
+      },
+      {
+        "endpointId": "fal-ai/kling-video/v1.6/standard/elements",
+        "aiModelPriceList": [
+          {
+            "unit": "720p",
+            "price_per_unit": 0.056
+          },
+          {
+            "unit": "1080p",
+            "price_per_unit": 0.056
+          }
+        ],
+        "isValuable": true,
+        "isValuableReasoning": "",
+        "supportedDurationRange": [
+          5,
+          10
+        ]
+      },
+      {
+        "endpointId": "fal-ai/ovi/image-to-video",
+        "aiModelPriceList": [],
+        "isValuable": false,
+        "isValuableReasoning": "Fails Step 3: No explicit aspect ratio parameter, but the model accepts an image_url and is an image-to-video model, so it inherits aspect ratio from the input image (16:9 and 9:16 are supported). However, fails Step 2: Pricing is $0.2 per video but there is no way to determine duration (no duration or num_frames parameter, no indication of video length). Therefore the price per second cannot be calculated. Also fails Step 3: No duration control parameters, so supported_duration_range cannot be determined; duration flexibility is absent.",
+        "supportedDurationRange": []
+      },
+      {
+        "endpointId": "fal-ai/pixverse/v5/effects",
+        "aiModelPriceList": [],
+        "isValuable": false,
+        "isValuableReasoning": "Fails Step 3: Supported durations are [5, 8]. The gap between 5 and 8 is 3 seconds, which exceeds 2 seconds, failing the interval constraint.",
+        "supportedDurationRange": [
+          5,
+          8
+        ]
+      },
+      {
+        "endpointId": "fal-ai/pixverse/v4.5/transition",
+        "aiModelPriceList": [],
+        "isValuable": false,
+        "isValuableReasoning": "Fails Step 1: This is a transition model requiring both first_image_url and end_image_url (two images), not a single base image I2V model. Additionally, fails Step 3: Supported durations are [5, 8]; gap exceeds 2 seconds.",
+        "supportedDurationRange": [
+          5,
+          8
+        ]
+      },
+      {
+        "endpointId": "fal-ai/hunyuan-video-v1.5/image-to-video",
+        "aiModelPriceList": [],
+        "isValuable": false,
+        "isValuableReasoning": "Fails Step 2: Resolution is fixed to '480p' (const). Neither 720p nor 1080p is supported. Also fails Step 2 on pricing: Price is $0.075 per second, but the model only supports 480p, not 720p or 1080p. Step 3: num_frames is fixed to 121 (minimum=1, maximum=121, default=121) implying only a single duration ~5 seconds (121/24 ≈ 5.04s), not a flexible range with acceptable intervals.",
+        "supportedDurationRange": [
+          5
+        ]
+      },
+      {
+        "endpointId": "fal-ai/pixverse/v5.5/transition",
+        "aiModelPriceList": [],
+        "isValuable": false,
+        "isValuableReasoning": "Fails Step 1: This is a transition model requiring both first_image_url and end_image_url (two images), not a single base image I2V model. Fails Step 3: Supported durations are [5, 8, 10]. Gaps: 5->8 = 3s > 2s. Fails interval constraint.",
+        "supportedDurationRange": [
+          5,
+          8,
+          10
+        ]
+      },
+      {
+        "endpointId": "fal-ai/pixverse/v5.6/image-to-video",
+        "aiModelPriceList": [],
+        "isValuable": false,
+        "isValuableReasoning": "Duration range [5, 8, 10] has gaps > 2 seconds (8 to 10 = 2 is okay, but 5 to 8 = 3 > 2). Therefore Step 3 fails.",
+        "supportedDurationRange": [
+          5,
+          8,
+          10
+        ]
+      },
+      {
+        "endpointId": "fal-ai/pixverse/c1/transition",
+        "aiModelPriceList": [
+          {
+            "unit": "720p",
+            "price_per_unit": 0.05
+          },
+          {
+            "unit": "1080p",
+            "price_per_unit": 0.095
+          }
+        ],
+        "isValuable": true,
+        "isValuableReasoning": "",
+        "supportedDurationRange": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15
+        ]
+      },
+      {
+        "endpointId": "fal-ai/pika/v2.2/pikaframes",
+        "aiModelPriceList": [],
+        "isValuable": false,
+        "isValuableReasoning": "Model requires multiple images (up to 5 keyframes) for interpolation, not a single base image I2V. It also requires transitions configuration, failing Rule 1.1.",
+        "supportedDurationRange": []
+      },
+      {
+        "endpointId": "fal-ai/kandinsky5-pro/image-to-video",
+        "aiModelPriceList": [],
+        "isValuable": false,
+        "isValuableReasoning": "Duration is fixed to '5s' only (single fixed value with no flexibility), failing Step 3 (interval constraint requires at least 2 distinct values or a range with max gap <= 2). Also resolution is 512P/1024P, not standard 720p/1080p.",
+        "supportedDurationRange": [
+          5
+        ]
+      },
+      {
+        "endpointId": "fal-ai/vidu/q1/reference-to-video",
+        "aiModelPriceList": [],
+        "isValuable": false,
+        "isValuableReasoning": "Duration parameter is not present and cannot be inferred from schema_properties or raw_pricing_text. The fixed price of $0.40 likely corresponds to a fixed duration, but no explicit duration control or indication is provided. Fails Step 3.",
+        "supportedDurationRange": []
+      },
+      {
+        "endpointId": "fal-ai/ltxv-13b-098-distilled/image-to-video",
+        "aiModelPriceList": [
+          {
+            "unit": "720p",
+            "price_per_unit": 0.02
+          }
+        ],
+        "isValuable": true,
+        "isValuableReasoning": "",
+        "supportedDurationRange": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19,
+          20,
+          21,
+          22,
+          23,
+          24,
+          25,
+          26,
+          27,
+          28,
+          29,
+          30,
+          31,
+          32,
+          33,
+          34,
+          35,
+          36,
+          37,
+          38,
+          39,
+          40,
+          41,
+          42,
+          43,
+          44,
+          45,
+          46,
+          47,
+          48,
+          49,
+          50,
+          51,
+          52,
+          53,
+          54,
+          55,
+          56,
+          57,
+          58,
+          59,
+          60
+        ]
+      },
+      {
+        "endpointId": "fal-ai/vidu/q2/image-to-video/turbo",
+        "aiModelPriceList": [
+          {
+            "unit": "720p",
+            "price_per_unit": 0.05
+          },
+          {
+            "unit": "1080p",
+            "price_per_unit": 0.25
+          }
+        ],
+        "isValuable": true,
+        "isValuableReasoning": "",
+        "supportedDurationRange": [
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8
+        ]
+      },
+      {
+        "endpointId": "fal-ai/vidu/q1/image-to-video",
+        "aiModelPriceList": [],
+        "isValuable": false,
+        "isValuableReasoning": "Duration not configurable; fixed at 5 seconds only (no duration parameter, single fixed value). Step 3 fails: interval constraint not satisfied (single value [5] is not a range with multiple steps).",
+        "supportedDurationRange": []
+      },
+      {
+        "endpointId": "fal-ai/kling-video/v1.6/pro/elements",
+        "aiModelPriceList": [],
+        "isValuable": false,
+        "isValuableReasoning": "Model requires multiple images (input_image_urls array up to 4). Not a strict single base image I2V model; fails Step 1.1.",
+        "supportedDurationRange": []
+      },
+      {
+        "endpointId": "fal-ai/ai-avatar/single-text",
+        "aiModelPriceList": [],
+        "isValuable": false,
+        "isValuableReasoning": "Resolution enum is ['480p', '720p'] - 1080p not supported. Additionally, pricing text ambiguous: 'Your request will cost $0.2 per second. For 720p price will be doubled.' suggests base price $0.2/s for 480p, double for 720p → $0.4/s. 1080p not available, so Step 2 fails for 1080p. Model is not standard I2V (it uses text-to-speech with avatar), but also fails on resolution criteria for 1080p.",
+        "supportedDurationRange": []
+      },
+      {
+        "endpointId": "fal-ai/lyra-2/zoom",
+        "aiModelPriceList": [],
+        "isValuable": false,
+        "isValuableReasoning": "Does not support standard aspect ratios. The model uses 'zoom' trajectories on a single image and output resolution is fixed to portrait orientation (480x832, 720x1280). No 16:9 landscape aspect ratio is supported. It fails Step 1 aspect ratio criteria (both 16:9 and 9:16 must be supported).",
+        "supportedDurationRange": []
+      },
+      {
+        "endpointId": "fal-ai/framepack/f1",
+        "aiModelPriceList": [],
+        "isValuable": false,
+        "isValuableReasoning": "Duration control is insufficient. The num_frames parameter supports a range 30-900 with default 180, but the increments (step) cannot be determined from the schema. The pricing is given as '$0.0333 per second' which is flat and deterministic, so Step 2 passes. However, for Step 3, the maximum gap between consecutive supported durations cannot be guaranteed to be <= 2 seconds without knowing the step. Given the open-ended integer range (30 to 900), the model likely allows any integer frame count (step of 1), which would correspond to durations at ~1/24s increments, satisfying the interval constraint. However, the 'supported_duration_range' would be a huge continuous range which is not discrete as required. Additionally, the raw pricing text does not specify distinct 720p vs 1080p pricing; it says 'per second' but there is no 1080p enum in resolution (only 720p and 480p). Since the price is flat per second and applies to 720p and 480p, only 720p is a viable resolution. But the lack of explicit duration control with discrete seconds makes it fail.",
+        "supportedDurationRange": []
+      },
+      {
+        "endpointId": "fal-ai/vidu/q2/image-to-video/pro",
+        "aiModelPriceList": [
+          {
+            "unit": "720p",
+            "price_per_unit": 0.15
+          },
+          {
+            "unit": "1080p",
+            "price_per_unit": 0.4
+          }
+        ],
+        "isValuable": true,
+        "isValuableReasoning": "",
+        "supportedDurationRange": [
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8
+        ]
+      },
+      {
+        "endpointId": "fal-ai/hunyuan-avatar",
+        "aiModelPriceList": [],
+        "isValuable": false,
+        "isValuableReasoning": "This is an audio-driven avatar animation model that requires an audio_url input. It is not a general image-to-video model for scene generation. It fails Step 1 (core I2V behavior) as it generates talking head/avatar animations driven by audio, not standard image-to-video. Also, no aspect ratio control is exposed, and resolution is not configurable.",
+        "supportedDurationRange": []
+      },
+      {
+        "endpointId": "fal-ai/vidu/q1/start-end-to-video",
+        "aiModelPriceList": [],
+        "isValuable": false,
+        "isValuableReasoning": "Requires both a start image AND an end image (image interpolation between two images), which does not satisfy the 'single base image as first frame' criterion. It fails Step 1 (strict single image I2V).",
+        "supportedDurationRange": []
+      },
+      {
+        "endpointId": "fal-ai/pixverse/v5.6/transition",
+        "aiModelPriceList": [
+          {
+            "unit": "720p",
+            "price_per_unit": 0.09
+          },
+          {
+            "unit": "1080p",
+            "price_per_unit": 0.15
+          }
+        ],
+        "isValuable": true,
+        "isValuableReasoning": "",
+        "supportedDurationRange": [
+          5,
+          8,
+          10
+        ]
+      },
+      {
+        "endpointId": "fal-ai/vidu/q2/reference-to-video/pro",
+        "aiModelPriceList": [],
+        "isValuable": false,
+        "isValuableReasoning": "Duration range [1,2,3,4,5,6,7,8] has max gap 1s <= 2s, but the 1080p pricing formula includes a fixed $0.2 per video + $0.1 per second, which is not a deterministic USD cost per second independent of duration for the price_per_unit field (price depends on total seconds, not simply per-second flat). For 720p and 540p the price is flat per video ($0.3 for 720p, $0.2 for 540p), not per second. Cannot extract a single deterministic price per 1 second for any resolution.",
+        "supportedDurationRange": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8
+        ]
+      },
+      {
+        "endpointId": "fal-ai/davinci-magihuman",
+        "aiModelPriceList": [],
+        "isValuable": false,
+        "isValuableReasoning": "Model is a talking face/lipsync model, not a standard image-to-video generator. No aspect_ratio parameter; image_url is optional and used as a reference for face, not as first frame. Fails Step 1 (aspect ratio) and does not meet the core I2V criteria.",
+        "supportedDurationRange": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19,
+          20,
+          21,
+          22,
+          23,
+          24,
+          25,
+          26,
+          27,
+          28,
+          29,
+          30
+        ]
+      },
+      {
+        "endpointId": "fal-ai/sora-2/characters",
+        "aiModelPriceList": [],
+        "isValuable": false,
+        "isValuableReasoning": "This model is for creating character IDs, not an image-to-video generation model. No video output from the generation; pricing is $0 per unit. Fails all viability criteria.",
+        "supportedDurationRange": []
+      },
+      {
+        "endpointId": "fal-ai/pixverse/v4.5/image-to-video/fast",
+        "aiModelPriceList": [],
+        "isValuable": false,
+        "isValuableReasoning": "Duration is not specified in the schema (no duration parameter), pricing text implies fixed 5s video but no explicit duration control parameter. Fails Step 3 (duration flexibility). Additionally, resolution enum does not include 1080p, and the pricing text mentions 1080p $0.8 but the model cannot output 1080p according to schema. Supported durations cannot be determined as flexible.",
+        "supportedDurationRange": []
+      },
+      {
+        "endpointId": "moonvalley/marey/i2v",
+        "aiModelPriceList": [],
+        "isValuable": false,
+        "isValuableReasoning": "Duration control insufficient: only 5s and 10s durations are supported, which results in a gap of 5s > 2s between consecutive supported durations. Fails Step 3 interval constraint.",
+        "supportedDurationRange": [
+          5,
+          10
+        ]
+      },
+      {
+        "endpointId": "fal-ai/ai-avatar/multi",
+        "aiModelPriceList": [],
+        "isValuable": false,
+        "isValuableReasoning": "Not a standard image-to-video model: it generates a multi-person conversation video from image and audio files, requiring audio (two audio inputs) and specific talking-head animation. Does not meet the single base image I2V behavior criteria (Rule 1.1).",
+        "supportedDurationRange": []
+      },
+      {
+        "endpointId": "fal-ai/cosmos-predict-2.5/image-to-video",
+        "aiModelPriceList": [],
+        "isValuable": false,
+        "isValuableReasoning": "Step 2 failed: pricing is given as a fixed flat rate of $0.20 per video for a fixed duration of 93 frames at 16 FPS, which is 93/16 = 5.8125 seconds. This equates to $0.20 / 5.8125 ≈ $0.0344 per second, but this is not the actual cost per second for variable durations as the model forces a fixed output. Also no explicit 720p or 1080p parameter; resolution is fixed at 1280x704 (not exactly 720p or 1080p). Step 3 also fails because duration is fixed (only one value) so interval constraint fails.",
+        "supportedDurationRange": [
+          5.8125
+        ]
+      },
+      {
+        "endpointId": "fal-ai/ltx-video-13b-dev/image-to-video",
+        "aiModelPriceList": [],
+        "isValuable": false,
+        "isValuableReasoning": "Step 2 failed: Pricing is $0.20 per video with a fixed cost regardless of duration or resolution, but the model supports variable num_frames (9 to 1441) and variable resolution (480p, 720p). Since no per-second conversion is possible (cost is per entire video, not per second), a USD price per second cannot be derived. The description also mentions 'for $1 you can run this model approximately 5 times', reinforcing fixed per-video cost. Cannot calculate a deterministic price per second. Additionally, 1080p is not supported (only 480p and 720p).",
+        "supportedDurationRange": []
+      },
+      {
+        "endpointId": "fal-ai/ai-avatar/multi-text",
+        "aiModelPriceList": [],
+        "isValuable": false,
+        "isValuableReasoning": "Not a standard image-to-video model: it generates a multi-person conversation video from image and text inputs, converting text to speech and creating a talking-head animation. Does not meet the single base image I2V behavior criteria (Rule 1.1).",
+        "supportedDurationRange": []
+      },
+      {
+        "endpointId": "fal-ai/ltx-video-lora/image-to-video",
+        "aiModelPriceList": [
+          {
+            "unit": "720p",
+            "price_per_unit": 0.2
+          }
+        ],
+        "isValuable": true,
+        "isValuableReasoning": "",
+        "supportedDurationRange": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6
+        ]
+      },
+      {
+        "endpointId": "fal-ai/wan-move",
+        "aiModelPriceList": [],
+        "isValuable": false,
+        "isValuableReasoning": "No duration or num_frames parameter found; video length cannot be controlled or inferred, failing Step 3.",
+        "supportedDurationRange": []
+      },
+      {
+        "endpointId": "bytedance/lynx",
+        "aiModelPriceList": [
+          {
+            "unit": "720p",
+            "price_per_unit": 0.0384
+          }
+        ],
+        "isValuable": true,
+        "isValuableReasoning": "",
+        "supportedDurationRange": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19,
+          20,
+          21,
+          22,
+          23,
+          24,
+          25,
+          26,
+          27,
+          28,
+          29,
+          30,
+          31,
+          32,
+          33,
+          34,
+          35,
+          36,
+          37,
+          38,
+          39,
+          40,
+          41,
+          42,
+          43,
+          44,
+          45,
+          46,
+          47,
+          48,
+          49,
+          50,
+          51,
+          52,
+          53,
+          54,
+          55,
+          56,
+          57,
+          58,
+          59,
+          60,
+          61,
+          62,
+          63,
+          64,
+          65,
+          66,
+          67,
+          68,
+          69,
+          70,
+          71,
+          72,
+          73,
+          74,
+          75,
+          76,
+          77,
+          78,
+          79,
+          80,
+          81
+        ]
+      },
+      {
+        "endpointId": "fal-ai/wan-ati",
+        "aiModelPriceList": [],
+        "isValuable": false,
+        "isValuableReasoning": "No duration or num_frames parameter found; video length cannot be controlled or inferred, failing Step 3.",
+        "supportedDurationRange": []
+      },
+      {
+        "endpointId": "fal-ai/hunyuan-custom",
+        "aiModelPriceList": [
+          {
+            "unit": "720p",
+            "price_per_unit": 0.3713
+          }
+        ],
+        "isValuable": true,
+        "isValuableReasoning": "",
+        "supportedDurationRange": [
+          4,
+          5,
+          6
+        ]
+      },
+      {
+        "endpointId": "fal-ai/hunyuan-portrait",
+        "aiModelPriceList": [],
+        "isValuable": false,
+        "isValuableReasoning": "Step 1: Does not accept a single base image as first frame; requires both a source image and a driving video (video_url) for animation, not standard I2V. Fails core criterion. Furthermore, aspect ratio is not controllable—inherits from input but model is not a general I2V generator. Step 2: Pricing is $0.08/sec after 5s ($0.4 for up to 5s), but step 1 fails; also duration flexibility is unclear (no explicit parameter). Step 3: No duration parameter in schema; fails interval constraint. So not suitable.",
+        "supportedDurationRange": []
+      },
+      {
+        "endpointId": "fal-ai/veo3.1/fast/reference-to-video",
+        "aiModelPriceList": [],
+        "isValuable": false,
+        "isValuableReasoning": "Step 1: Aspect ratio supports both 16:9 and 9:16 explicitly. However, this is a reference-to-video model (accepts multiple image URLs) not a strict single base image I2V (image as first frame). Fails core I2V criterion. Additionally, duration is fixed to '8s' constant, failing Step 3 interval constraint (single fixed duration). Step 2: Pricing is $0.10/sec (audio off) for 720p/1080p/4k, but fails earlier steps.",
+        "supportedDurationRange": []
+      },
+      {
+        "endpointId": "fal-ai/flashhead",
+        "aiModelPriceList": [],
+        "isValuable": false,
+        "isValuableReasoning": "Step 1: Accepts a single source image (image_url) to animate, but it is a portrait animation model driven by text-to-speech, not a general I2V video generator. No aspect ratio control; steady portrait animation output, not supporting both 16:9 and 9:16 standard video ratios. Step 2: Pricing is $0.005 per second but no resolution specification (portrait format only, likely fixed resolution). Step 3: No duration parameter; generation length is determined by audio/text length, no explicit duration control. Fails all steps.",
+        "supportedDurationRange": []
+      }
+    ]
+  }
+}
