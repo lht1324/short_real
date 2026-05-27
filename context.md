@@ -36,15 +36,17 @@
 - **비디오 파이프라인 에러 수정**: `llmServerAPI.ts`에서 구형 파라미터(`inputDataList`)를 참조하여 TypeError가 발생하고 전체 비디오 모델이 `is_valuable: false`로 폴백되던 치명적 버그 수정 완료.
 - **원본 데이터 CSV 추출**: LLM의 수학적 오류/환각에 대비하여, DB 적재 전 원본 메타데이터를 `csv` 형태로 추출하는 방어 로직 추가. (DB 저장은 조기 리턴으로 임시 차단 상태)
 
+### 2.5 AI 모델 수동 데이터 정제 및 DB Import 파일 생성 완료 (전략 수정) - [완료]
+- **전략 수정**: LLM을 통한 자동 가격 파싱의 오류율(환각) 및 비용 문제를 고려하여, 완전 자동화를 폐기하고 **초기 데이터 수동 세팅 및 주기적 수동 관리** 방향으로 아키텍처 의사결정 완료.
+- **수동 데이터 정제**: 쓸모없는 모델 120여 개를 제외하고, 서비스에 실제 투입할 가치가 있는 45개(이미지 26개, 비디오 19개)의 모델만 선별.
+- **데이터 병합 스크립트 실행**: 선별된 메타데이터 CSV 파일과 수작업으로 매핑한 가격 텍스트 파일(`raw_price_image.txt`, `raw_price_video.txt`)을 1:1로 읽어들여, Supabase의 `AIModelData` 타입(`ai_model_price_list`, `supported_duration_range` JSONB 포맷)에 완벽하게 일치하는 통합 CSV 파일(`initial_ai_model_list.csv`) 생성 성공. (2160p 해상도 과금 단위 추가 대응 완료)
+
 ## 3. 향후 작업 (Next Steps) - [Priority: HIGH]
 *참고: 모델 선택 및 과금 관련 상세 스펙은 `@add-model-selection-plan.md` 파일을 참조할 것.*
 
-1. **AI 모델 가격 수동 매핑 및 DB 업로드 스크립트 구현 (신규)**:
-   - **목적:** LLM의 토큰 계산/수학적 환각을 배제하고, 정리된 CSV 모델 리스트에 가격을 빠르게 입력하여 DB에 확실하게 동기화.
-   - **사용 파일 및 방식:**
-     - `processed_model_list_[image/video].csv`: 갤러리/LoRA 등 불필요한 모델을 걷어낸 클린 마스터 모델 리스트.
-     - `prices_[image/video].txt`: CSV의 줄 번호(Row)에 1:1로 매핑되는 가격 입력 텍스트 파일. (입력 포맷 예: `0.05/0.08` -> 720p/1080p 가격. 제외할 모델은 `-` 입력)
-   - **작업 내용:** Node.js 스크립트 또는 임시 API를 작성하여 `txt` 파일을 줄 단위로 읽고 `/`를 기준으로 파싱. 해당 값을 CSV 데이터의 `ai_model_price_list` JSON 포맷으로 변환하고 `is_valuable`을 자동 설정한 뒤 Supabase `ai_model_data` 테이블에 일괄 업서트(Upsert)하는 로직 개발.
+1. **AI 모델 DB Import 및 연동**:
+   - 생성된 `initial_ai_model_list.csv` 파일을 Supabase 대시보드에서 `ai_model_data` 테이블에 직접 Import.
+   - 불필요해진 추출 및 동기화 관련 기존 자동화 코드 정리 여부 검토.
 
 2. **AI 모델 오토파일럿/수동 분리 아키텍처 개편 (모델 2-Track 전략)**:
    - **DB 스키마 추가:** `ai_model_data`에 `is_autopilot_eligible` (boolean) 컬럼 추가. (1초 단위 제어가 가능한 Seedance, PixVerse 등만 True)

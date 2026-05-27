@@ -10,13 +10,12 @@ export interface AIModelData {
     model_url: string;
     supported_duration_range?: number[];
     ai_model_price_list: AIModelPrice[]; // compute second처럼 초당 가격으로 환산 불가능할 경우 빈 배열
-    is_valuable: boolean;
     created_at?: string;
     updated_at?: string;
 }
 
 export interface PriceByResolution {
-    resolution: '720p' | '1080p';
+    resolution: '720p' | '1080p' | '2160p';
     price_per_sec: number; // USD
 }
 
@@ -26,8 +25,10 @@ export interface AIModelPrice {
 }
 
 export enum AIModelPriceUnit {
-    VIDEO_720P = '720p',
-    VIDEO_1080P = '1080p',
+    VIDEO_720P = 'video_720p',
+    VIDEO_1080P = 'video_1080p',
+    VIDEO_2160P = 'video_2160p',
     IMAGE_720P = 'image_720p',
     IMAGE_1080P = 'image_1080p',
+    IMAGE_2160P = 'image_2160p',
 }
