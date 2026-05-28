@@ -12,7 +12,8 @@ import { getNextBaseResponse } from "@/lib/utils/getNextBaseResponse";
 const PUBLIC_ROUTES = [
     { method: "GET", path: "/api/polar/products" },
     { method: "GET", path: "/api/roadmap" },
-    { method: "GET", path: "/api/voice" }
+    { method: "GET", path: "/api/voice" },
+    { method: "GET", path: "/api/ai-model-data" }
 ];
 
 async function handleGatewayRequest(request: NextRequest) {
