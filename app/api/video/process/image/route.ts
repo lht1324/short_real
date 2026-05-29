@@ -1,10 +1,10 @@
 import { NextRequest } from "next/server";
 import { tasks } from "@trigger.dev/sdk/v3";
 import { orchestrateImageGeneration } from "@/trigger/orchestrate-image-generation";
-import { getNextBaseResponse } from "@/utils/getNextBaseResponse";
-import { getIsValidRequestS2S } from "@/utils/getIsValidRequest";
+import { getNextBaseResponse } from "@/lib/utils/getNextBaseResponse";
+import { getIsValidRequestS2S } from "@/lib/utils/getIsValidRequest";
 import { videoGenerationTasksServerAPI } from "@/lib/api/server/videoGenerationTasksServerAPI";
-import { taskCheckAndCleanupIfCancelled } from "@/utils/taskCheckAndCleanupIfCancelled";
+import { taskCheckAndCleanupIfCancelled } from "@/lib/utils/taskCheckAndCleanupIfCancelled";
 
 export async function POST(request: NextRequest) {
     // 1. 보안 검사

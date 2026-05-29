@@ -1,7 +1,7 @@
 // app/api/youtube/upload/route.ts
 import { NextRequest } from 'next/server';
 import { createSupabaseServiceRoleClient } from '@/lib/supabaseServiceRole';
-import { getNextBaseResponse } from '@/utils/getNextBaseResponse';
+import { getNextBaseResponse } from '@/lib/utils/getNextBaseResponse';
 import {
     PostVideoExportYoutubeUploadRequest
 } from "@/lib/api/types/api/video/export/youtube/upload/PostVideoExportYoutubeUploadRequest";
@@ -10,9 +10,17 @@ import {PostgrestSingleResponse} from "@supabase/supabase-js";
 import {DownloadResult} from "@supabase/storage-js";
 import {videoGenerationTasksServerAPI} from "@/lib/api/server/videoGenerationTasksServerAPI";
 import {ExportPlatform, ExportStatus} from "@/lib/api/types/supabase/VideoGenerationTasks";
-
+import {getIsValidRequestS2S} from "@/lib/utils/getIsValidRequest";
 
 export async function POST(request: NextRequest) {
+    if (!getIsValidRequestS2S(request)) {
+        return getNextBaseResponse({
+            success: false,
+            status: 401,
+            error: 'Unauthorized internal request',
+        });
+    }
+
     const supabase = createSupabaseServiceRoleClient();
 
     // URL에서 파라미터 추출
@@ -28,22 +36,9 @@ export async function POST(request: NextRequest) {
         });
     }
 
+    // 1262af2d-502d-4f7d-9752-3993008dd3fe
+
     try {
-        const { userId }: PostVideoExportYoutubeUploadRequest = await request.json();
-
-        if (!userId) {
-            await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, {
-                export_status: ExportStatus.FAILED,
-                export_platform: ExportPlatform.YOUTUBE,
-            });
-
-            return getNextBaseResponse({
-                success: false,
-                status: 400,
-                error: 'userId is required'
-            });
-        }
-
         const privacySetting = searchParams.get('privacySetting');
 
         if (!privacySetting) {
@@ -73,6 +68,8 @@ export async function POST(request: NextRequest) {
                 error: "Task not found."
             })
         }
+
+        const userId = videoGenerationTask.user_id;
 
         console.log(`[YouTube Upload] Starting for userId=${userId}`);
 

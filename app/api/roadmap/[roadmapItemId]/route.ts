@@ -1,7 +1,7 @@
 // app/api/roadmap/route.ts
 
 import { NextRequest } from "next/server";
-import { getNextBaseResponse } from "@/utils/getNextBaseResponse";
+import { getNextBaseResponse } from "@/lib/utils/getNextBaseResponse";
 import { createSupabaseServiceRoleClient } from "@/lib/supabaseServiceRole";
 import { RoadmapItem } from "@/lib/api/types/supabase/RoadmapItem";
 import { revalidateTag } from "next/cache";

@@ -14,6 +14,6 @@ export const metadata: Metadata = {
     },
 };
 
-export default async function WorkplaceEditorPage() {
+export default async function WorkspaceEditorPage() {
     return (<WorkspaceEditorPageServer/>)
 }

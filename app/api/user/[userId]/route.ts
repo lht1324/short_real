@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { usersServerAPI } from "@/lib/api/server/usersServerAPI";
-import { getNextBaseResponse } from "@/utils/getNextBaseResponse";
+import { getNextBaseResponse } from "@/lib/utils/getNextBaseResponse";
 import { User } from "@/lib/api/types/supabase/Users";
 
 export async function GET(

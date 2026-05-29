@@ -1,7 +1,7 @@
 // app/api/callback/youtube/route.ts
 import {NextRequest, NextResponse} from 'next/server';
 import {createSupabaseServiceRoleClient} from "@/lib/supabaseServiceRole";
-import {internalFireAndForgetFetch} from "@/utils/internalFetch";
+import {internalFireAndForgetFetch} from "@/lib/utils/internalFetch";
 import {videoGenerationTasksServerAPI} from "@/lib/api/server/videoGenerationTasksServerAPI";
 import {ExportPlatform, ExportStatus} from "@/lib/api/types/supabase/VideoGenerationTasks";
 
@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
         if (error) {
             console.error(error);
 
-            const taskId = state ? JSON.parse(state)?.taskId : null;
+            const taskId = state ? JSON.parse(decodeURIComponent(state))?.taskId : null;
             if (taskId) {
                 await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, {
                     export_status: ExportStatus.FAILED,
@@ -38,7 +38,7 @@ export async function GET(request: NextRequest) {
                 console.error("Missing required query param: code");
 
                 if (state) {
-                    const taskId = state ? JSON.parse(state)?.taskId : null;
+                    const taskId = state ? JSON.parse(decodeURIComponent(state))?.taskId : null;
                     if (taskId) {
                         await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, {
                             export_status: ExportStatus.FAILED,
@@ -52,10 +52,13 @@ export async function GET(request: NextRequest) {
             return NextResponse.redirect(`${originUrl}/workspace/dashboard`);
         }
 
-        // 2. State에서 userId 추출
-        const { userId, taskId, privacySetting } = JSON.parse(decodeURIComponent(state));
+        // 2. State에서 데이터 추출
+        const stateData = JSON.parse(decodeURIComponent(state));
+        const { userId, taskId, seriesId, mode, privacySetting } = stateData;
+        const isAutopilot = mode === 'autopilot';
 
-        if (!userId || !taskId || !privacySetting) {
+        // 필수 파라미터 체크: 오토파일럿은 userId만 있으면 됨, 매뉴얼은 taskId/privacySetting 필수
+        if (!userId || (!isAutopilot && (!taskId || !privacySetting))) {
             console.error('Missing required query param: userId, taskId, privacySetting');
             if (taskId) {
                 await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, {
@@ -63,7 +66,7 @@ export async function GET(request: NextRequest) {
                     export_platform: ExportPlatform.YOUTUBE,
                 });
             }
-            return NextResponse.redirect(`${originUrl}/workspace/dashboard`);
+            return NextResponse.redirect(isAutopilot ? `${originUrl}/workspace/autopilot?seriesId=${seriesId}` : `${originUrl}/workspace/dashboard`);
         }
 
         // 3. Authorization code를 access_token + refresh_token으로 교환
@@ -84,18 +87,39 @@ export async function GET(request: NextRequest) {
         if (tokens.error) {
             console.error('Token exchange error:', tokens.error);
 
-            await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, {
-                export_status: ExportStatus.FAILED,
-                export_platform: ExportPlatform.YOUTUBE,
-            });
+            if (taskId) {
+                await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, {
+                    export_status: ExportStatus.FAILED,
+                    export_platform: ExportPlatform.YOUTUBE,
+                });
+            }
 
-            return NextResponse.redirect(`${originUrl}/workspace/dashboard`);
+            return NextResponse.redirect(isAutopilot ? `${originUrl}/workspace/autopilot?seriesId=${seriesId}` : `${originUrl}/workspace/dashboard`);
         }
 
         // 4. Supabase에 토큰 저장 (Service Role 사용)
         const expiresAt = new Date(
             Date.now() + tokens.expires_in * 1000
         ).toISOString();
+
+        // [추가] YouTube 채널 정보 조회 (Handle, Display Name)
+        let handleName = null;
+        let displayName = null;
+        try {
+            const channelRes = await fetch('https://www.googleapis.com/youtube/v3/channels?part=snippet&mine=true', {
+                headers: { Authorization: `Bearer ${tokens.access_token}` }
+            });
+            if (channelRes.ok) {
+                const channelData = await channelRes.json();
+                if (channelData.items?.[0]?.snippet) {
+                    handleName = channelData.items[0].snippet.customUrl || null;
+                    displayName = channelData.items[0].snippet.title || null;
+                    console.log(`[YouTube Callback] Fetched profile: ${handleName} (${displayName})`);
+                }
+            }
+        } catch (e) {
+            console.error('[YouTube Callback] Failed to fetch channel info:', e);
+        }
 
         const { error: dbError } = await supabase
             .from('user_youtube_tokens')
@@ -104,24 +128,33 @@ export async function GET(request: NextRequest) {
                 access_token: tokens.access_token,
                 refresh_token: tokens.refresh_token,
                 expires_at: expiresAt,
+                handle_name: handleName,
+                display_name: displayName,
                 updated_at: new Date().toISOString()
             });
 
         if (dbError) {
             console.error('Database error:', dbError);
 
-            await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, {
-                export_status: ExportStatus.FAILED,
-                export_platform: ExportPlatform.YOUTUBE,
-            });
+            if (taskId) {
+                await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, {
+                    export_status: ExportStatus.FAILED,
+                    export_platform: ExportPlatform.YOUTUBE,
+                });
+            }
 
-            return NextResponse.redirect(`${originUrl}/workspace/dashboard`);
+            return NextResponse.redirect(isAutopilot ? `${originUrl}/workspace/autopilot?seriesId=${seriesId}` : `${originUrl}/workspace/dashboard`);
         }
 
+        // 5. 모드에 따른 후속 작업 및 리다이렉트
+        if (isAutopilot) {
+            // 오토파일럿 모드인 경우: 설정 페이지로 리다이렉트
+            return NextResponse.redirect(`${originUrl}/workspace/autopilot?seriesId=${seriesId}`);
+        }
+
+        // 수동 업로드 모드인 경우: 기존 업로드 트리거 로직 실행
         internalFireAndForgetFetch(`${process.env.BASE_URL}/api/video/export/youtube/upload?taskId=${taskId}&privacySetting=${privacySetting}`, {
             method: 'POST',
-        }, {
-            userId: userId,
         });
 
         await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, {
@@ -133,7 +166,6 @@ export async function GET(request: NextRequest) {
 
     } catch (error) {
         console.error('YouTube callback error:', error);
-
         return NextResponse.redirect(`${originUrl}/workspace/dashboard`);
     }
 }

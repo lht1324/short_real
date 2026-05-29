@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 import { llmServerAPI } from '@/lib/api/server/llmServerAPI';
 import { ScriptGenerationRequest } from '@/lib/api/types/open-ai/ScriptGeneration';
-import {getNextBaseResponse} from "@/utils/getNextBaseResponse";
+import {getNextBaseResponse} from "@/lib/utils/getNextBaseResponse";
 
 export async function POST(request: NextRequest) {
     try {

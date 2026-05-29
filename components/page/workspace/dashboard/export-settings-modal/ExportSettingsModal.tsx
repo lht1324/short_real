@@ -1,6 +1,7 @@
 import { memo, useMemo, ReactNode } from "react";
 import { ExportPrivacySetting } from "@/components/page/workspace/dashboard/export-settings-modal/ExportPrivacySetting";
 import { Globe, Lock, Link } from "lucide-react";
+import { ExportPlatform } from "@/lib/api/types/supabase/VideoGenerationTasks";
 
 const PRIVACY_OPTIONS: {
     value: ExportPrivacySetting;
@@ -29,6 +30,7 @@ const PRIVACY_OPTIONS: {
 ];
 
 interface ExportSettingsModalProps {
+    platform?: ExportPlatform;
     privacySetting: ExportPrivacySetting;
     onChangePrivacySetting: (privacySetting: ExportPrivacySetting) => void;
     onClickConfirm: () => Promise<void>;
@@ -36,11 +38,19 @@ interface ExportSettingsModalProps {
 }
 
 function ExportSettingsModal({
+    platform = ExportPlatform.YOUTUBE,
     privacySetting,
     onChangePrivacySetting,
     onClickConfirm,
     onClickCancel,
 }: ExportSettingsModalProps) {
+    const filteredOptions = useMemo(() => {
+        if (platform === ExportPlatform.TIKTOK) {
+            return PRIVACY_OPTIONS.filter(opt => opt.value !== ExportPrivacySetting.UNLISTED);
+        }
+        return PRIVACY_OPTIONS;
+    }, [platform]);
+
     const privacySettingDescription = useMemo(() => {
         switch (privacySetting) {
             case ExportPrivacySetting.PUBLIC:
@@ -52,16 +62,21 @@ function ExportSettingsModal({
         }
     }, [privacySetting]);
 
+    const modalTitle = useMemo(() => {
+        const platformLabel = platform === ExportPlatform.YOUTUBE ? "YouTube Shorts" : "TikTok";
+        return `${platformLabel} Settings`;
+    }, [platform]);
+
     return (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center">
             <div className="bg-gray-900 border border-purple-500/30 rounded-2xl p-6 w-full max-w-md mx-4">
-                <h2 className="text-xl font-bold text-white mb-1">Export to YouTube Shorts</h2>
-                <p className="text-gray-400 text-xl mb-6">
+                <h2 className="text-xl font-bold text-white mb-1">{modalTitle}</h2>
+                <p className="text-gray-400 text-sm mb-6">
                     Choose who can see your video after upload.
                 </p>
 
                 <div className="space-y-2 mb-2">
-                    {PRIVACY_OPTIONS.map((option) => {
+                    {filteredOptions.map((option) => {
                         const isSelected = privacySetting === option.value;
                         return (
                             <button
@@ -95,7 +110,7 @@ function ExportSettingsModal({
                         onClick={onClickConfirm}
                         className="flex-1 py-3 rounded-xl bg-gradient-to-r from-pink-500 to-purple-600 text-white text-base font-semibold hover:from-pink-600 hover:to-purple-700 transition-all"
                     >
-                        Authorize & Continue
+                        Save Settings
                     </button>
                 </div>
             </div>

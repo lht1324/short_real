@@ -1,6 +1,6 @@
 import { unstable_cache } from "next/cache";
 import { PolarClient } from "@/lib/PolarClient";
-import { processProducts } from "@/utils/polarUtils";
+import { processProducts } from "@/lib/utils/polarUtils";
 import { ProductData } from "@/lib/api/types/api/polar/products/ProductData";
 
 /**

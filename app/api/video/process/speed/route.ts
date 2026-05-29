@@ -1,14 +1,14 @@
 import {NextRequest} from "next/server";
 import {videoGenerationTasksServerAPI} from "@/lib/api/server/videoGenerationTasksServerAPI";
 import {videoServerAPI} from "@/lib/api/server/videoServerAPI";
-import {taskCheckAndCleanupIfCancelled} from "@/utils/taskCheckAndCleanupIfCancelled";
-import {getNextBaseResponse} from "@/utils/getNextBaseResponse";
-import {getIsValidRequestS2S} from "@/utils/getIsValidRequest";
+import {taskCheckAndCleanupIfCancelled} from "@/lib/utils/taskCheckAndCleanupIfCancelled";
+import {getNextBaseResponse} from "@/lib/utils/getNextBaseResponse";
+import {getIsValidRequestS2S} from "@/lib/utils/getIsValidRequest";
 import {createSupabaseServiceRoleClient} from "@/lib/supabaseServiceRole";
-import {getErrorMessage} from "@/utils/ErrorUtils";
+import {getErrorMessage} from "@/lib/utils/ErrorUtils";
 import {FalAiErrorDetail} from "@/lib/api/types/fal-ai/FalAIResponse";
 import {VideoGenerationTaskStatus} from "@/lib/api/types/supabase/VideoGenerationTasks";
-import {internalFireAndForgetFetch} from "@/utils/internalFetch";
+import {internalFireAndForgetFetch} from "@/lib/utils/internalFetch";
 
 export async function POST(request: NextRequest) {
     if (!getIsValidRequestS2S(request)) {

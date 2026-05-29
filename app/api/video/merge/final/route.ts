@@ -1,46 +1,42 @@
 import {NextRequest} from 'next/server';
 import {videoServerAPI} from '@/lib/api/server/videoServerAPI';
 import {musicServerAPI} from '@/lib/api/server/musicServerAPI';
-import {generateASSContent} from "@/utils/captionUtils";
+import {generateASSContent} from "@/lib/utils/captionUtils";
 import {videoGenerationTasksServerAPI} from "@/lib/api/server/videoGenerationTasksServerAPI";
-import {FinalVideoMergeData, VideoGenerationTaskStatus} from "@/lib/api/types/supabase/VideoGenerationTasks";
-import {taskCheckAndCleanupIfCancelled} from "@/utils/taskCheckAndCleanupIfCancelled";
-import {getNextBaseResponse} from "@/utils/getNextBaseResponse";
-import {getIsValidRequestC2S, getIsValidRequestS2S} from "@/utils/getIsValidRequest";
+import {FinalVideoMergeData, VideoGenerationTaskStatus } from "@/lib/api/types/supabase/VideoGenerationTasks";
+import {taskCheckAndCleanupIfCancelled} from "@/lib/utils/taskCheckAndCleanupIfCancelled";
+import {getNextBaseResponse} from "@/lib/utils/getNextBaseResponse";
+import {getIsValidRequestS2S} from "@/lib/utils/getIsValidRequest";
 
-export async function POST(request: NextRequest) {
-    // URL에서 파라미터 추출
-    const { searchParams } = new URL(request.url);
-    const taskId = searchParams.get('taskId');
-    const isRetry = searchParams.get('isRetry');
-
-    if (isRetry) {
-        if (!getIsValidRequestS2S(request)) {
-            return getNextBaseResponse({
-                success: false,
-                status: 401,
-                error: 'Unauthorized internal request',
-            });
-        }
-    } else {
-        const {
-            isValidRequest,
-        } = await getIsValidRequestC2S();
-
-        if (!isValidRequest) {
-            return getNextBaseResponse({
-                success: false,
-                status: 401,
-                error: "Unauthorized request."
-            });
-        }
+export async function POST(
+    request: NextRequest,
+) {
+    if (!getIsValidRequestS2S(request)) {
+        return getNextBaseResponse({
+            success: false,
+            status: 401,
+            error: 'Unauthorized internal request',
+        });
     }
+
+    const searchParams = request.nextUrl.searchParams;
+
+    const taskId = searchParams.get('taskId')
+    const sessionUserId = searchParams.get('userId');
 
     if (!taskId) {
         return getNextBaseResponse({
             success: false,
             status: 400,
             error: 'Missing required query param: taskId',
+        });
+    }
+
+    if (!sessionUserId) {
+        return getNextBaseResponse({
+            success: false,
+            status: 403,
+            error: "Forbidden. You can only read your own data."
         });
     }
 
@@ -82,9 +78,12 @@ export async function POST(request: NextRequest) {
             cuttingAreaStartSec,
             cuttingAreaEndSec,
             volumePercentage,
+            mixingGainDb,
+
+            isMusicPreProcessed,
         }: FinalVideoMergeData = videoGenerationTask.final_video_merge_data;
 
-        if (cuttingAreaEndSec <= cuttingAreaStartSec) {
+        if (!isMusicPreProcessed && (cuttingAreaEndSec <= cuttingAreaStartSec)) {
             await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
             return getNextBaseResponse({
                 success: false,
@@ -93,17 +92,22 @@ export async function POST(request: NextRequest) {
             });
         }
 
-        if (volumePercentage < 0 || volumePercentage > 100) {
+        // volumePercentage(%) 혹은 mixingGainDb(dB) 중 하나는 유효해야 함
+        if ((volumePercentage < 0 || volumePercentage > 100) && (mixingGainDb === undefined)) {
             await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
             return getNextBaseResponse({
                 success: false,
                 status: 400,
-                error: 'volumePercentage must be between 0 and 100'
+                error: 'Invalid volume settings: volumePercentage or mixingGainDb required'
             });
         }
 
+        const audioFilePath = isMusicPreProcessed
+            ? `${taskId}/autopilot_cut_music.mp3`
+            : `${taskId}/${taskId}_${musicIndex}.mp3`;
+
         const videoUrl = await videoServerAPI.getVideoSignedUrl(`${taskId}/${taskId}.mp4`, 60 * 60);
-        const audioUrl = await musicServerAPI.getMusicSignedUrl(`${taskId}/${taskId}_${musicIndex}.mp3`, 60 * 60);
+        const audioUrl = await musicServerAPI.getMusicSignedUrl(audioFilePath, 60 * 60);
 
         const patchVideoGenerationTaskStatusResult = await videoGenerationTasksServerAPI.patchVideoGenerationTaskStatus(taskId, VideoGenerationTaskStatus.FINALIZING);
 
@@ -125,6 +129,10 @@ export async function POST(request: NextRequest) {
             captionOneLineHeight,
         );
 
+        const videoDuration = videoGenerationTask.scene_breakdown_list.reduce((acc, sceneData) => {
+            return sceneData.sceneDuration + acc;
+        }, 0);
+
         // 1. Caption 번인 2. Music 편집을 병렬 실행
         const [captionPredictionId, musicPredictionId] = await Promise.all([
             videoServerAPI.postVideoMergeCaption(
@@ -134,12 +142,13 @@ export async function POST(request: NextRequest) {
             ),
             musicServerAPI.postMusicModifying(
                 audioUrl,
-                cuttingAreaStartSec,
-                cuttingAreaEndSec,
+                isMusicPreProcessed ? 0 : cuttingAreaStartSec,
+                isMusicPreProcessed ? videoDuration : cuttingAreaEndSec,
                 volumePercentage,
-                taskId
+                taskId,
+                mixingGainDb
             )
-        ]);
+        ])
 
         console.log(`[API Final] Caption prediction: ${captionPredictionId}`);
         console.log(`[API Final] Music prediction: ${musicPredictionId}`);

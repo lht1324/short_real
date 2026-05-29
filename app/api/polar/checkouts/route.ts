@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { getNextBaseResponse } from "@/utils/getNextBaseResponse";
+import { getNextBaseResponse } from "@/lib/utils/getNextBaseResponse";
 import { PolarClient } from "@/lib/PolarClient";
 
 /**

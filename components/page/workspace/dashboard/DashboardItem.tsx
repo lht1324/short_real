@@ -513,7 +513,7 @@ function DashboardItem({
                                         >
                                             <div className="w-14 h-14 flex items-center justify-center flex-shrink-0">
                                                 <Image
-                                                    src="/icons/tiktok-logo.svg"
+                                                    src="/icons/tiktok-logo-white.svg"
                                                     alt="TikTok"
                                                     width={32}
                                                     height={32}

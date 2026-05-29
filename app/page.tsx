@@ -10,8 +10,8 @@ export default async function Home() {
         offers: {
             '@type': 'AggregateOffer',
             priceCurrency: 'USD',
-            lowPrice: '59',
-            highPrice: '199',
+            lowPrice: '149',
+            highPrice: '569',
             offerCount: 4,
         },
         description: 'AI-powered faceless shortform generator. Create viral YouTube Shorts, TikTok, and Reels from text scripts instantly.',

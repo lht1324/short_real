@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import {videoGenerationTasksServerAPI} from "@/lib/api/server/videoGenerationTasksServerAPI";
-import {getNextBaseResponse} from "@/utils/getNextBaseResponse";
-import {BaseResponse} from "@/lib/api/types/api/BaseResponse";
-import {usersServerAPI} from "@/lib/api/server/usersServerAPI";
-import {internalFireAndForgetFetch} from "@/utils/internalFetch";
-import {getIsValidRequestC2S} from "@/utils/getIsValidRequest";
+import { videoGenerationTasksServerAPI } from "@/lib/api/server/videoGenerationTasksServerAPI";
+import { getNextBaseResponse } from "@/lib/utils/getNextBaseResponse";
+import { BaseResponse } from "@/lib/api/types/api/BaseResponse";
+import { usersServerAPI } from "@/lib/api/server/usersServerAPI";
+import { internalFireAndForgetFetch } from "@/lib/utils/internalFetch";
+import { getIsValidRequestS2S } from "@/lib/utils/getIsValidRequest";
 import {
     BASE_CREDIT_PER_SCENE,
     BASE_CREDIT_PER_VIDEO_DURATION,
@@ -14,42 +14,39 @@ import {
 import {VideoGenerationTaskStatus} from "@/lib/api/types/supabase/VideoGenerationTasks";
 
 export async function POST(request: NextRequest): Promise<NextResponse<BaseResponse>> {
-    const {
-        user,
-        isValidRequest,
-    } = await getIsValidRequestC2S();
-
-    if (!isValidRequest) {
+    if (!getIsValidRequestS2S(request)) {
         return getNextBaseResponse({
             success: false,
             status: 401,
-            error: "Unauthorized request."
+            error: 'Unauthorized internal request',
         });
     }
 
-    // URL에서 파라미터 추출
-    const { searchParams } = new URL(request.url);
-    const taskId = searchParams.get('taskId');
+    const searchParams = request.nextUrl.searchParams;
 
-    const userId = user!.id;
+    const taskId = searchParams.get('taskId')
+    const sessionUserId = searchParams.get('userId');
+    const selectedStyleId = searchParams.get('selectedStyleId');
 
-    const {
-        selectedStyleId,
-    }: {
-        selectedStyleId: string;
-    } = await request.json();
-
-    if (!taskId || !userId) {
+    if (!taskId) {
         return getNextBaseResponse({
             success: false,
             status: 400,
-            error: "Missing required query param: taskId or userId"
+            error: 'Missing required query param: taskId',
+        });
+    }
+
+    if (!sessionUserId) {
+        return getNextBaseResponse({
+            success: false,
+            status: 403,
+            error: "Forbidden. You can only read your own data."
         });
     }
 
     try {
         const videoGenerationTask = await videoGenerationTasksServerAPI.getVideoGenerationTaskById(taskId);
-        const user = await usersServerAPI.getUserByUserId(userId);
+        const user = await usersServerAPI.getUserByUserId(sessionUserId);
 
         if (!videoGenerationTask) {
             return getNextBaseResponse({
@@ -64,6 +61,14 @@ export async function POST(request: NextRequest): Promise<NextResponse<BaseRespo
                 success: false,
                 status: 404,
                 error: "User not found."
+            });
+        }
+
+        if (!selectedStyleId) {
+            return getNextBaseResponse({
+                success: false,
+                status: 400,
+                error: "Style is not selected."
             });
         }
 

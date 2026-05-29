@@ -9,12 +9,14 @@ interface VoiceSelectionPanelProps {
     selectedVoiceId?: string,
     onSelectVoice: (voiceId: string) => void,
     onChangeIsLoading: (isVoiceLoading: boolean) => void,
+    className?: string,
 }
 
 function VoiceSelectionPanel({
     selectedVoiceId,
     onSelectVoice,
     onChangeIsLoading,
+    className,
 }: VoiceSelectionPanelProps) {
     const [voiceList, setVoiceList] = useState<Voice[]>([]);
     const [voiceGenderTagRecord, setVoiceGenderTagRecord] = useState<Record<string, boolean>>({ });
@@ -234,7 +236,7 @@ function VoiceSelectionPanel({
     }, [currentAudio]);
 
     return (
-        <div className="flex-[2.7] flex-shrink-0 bg-gray-900/30 backdrop-blur-sm border-r border-purple-500/20 overflow-y-auto">
+        <div className={className ?? "flex-[2.7] flex-shrink-0 bg-gray-900/30 backdrop-blur-sm border-r border-purple-500/20 overflow-y-auto"}>
             <div className="p-6">
                 <div className="text-purple-300 text-2xl font-medium mb-4">Voice</div>
 

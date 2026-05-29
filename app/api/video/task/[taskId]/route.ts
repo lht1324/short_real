@@ -1,15 +1,33 @@
 import { NextRequest } from "next/server";
 import { videoGenerationTasksServerAPI } from "@/lib/api/server/videoGenerationTasksServerAPI";
 import { VideoGenerationTask } from "@/lib/api/types/supabase/VideoGenerationTasks";
-import {getNextBaseResponse} from "@/utils/getNextBaseResponse";
+import { getNextBaseResponse } from "@/lib/utils/getNextBaseResponse";
+import { getIsValidRequestS2S } from "@/lib/utils/getIsValidRequest";
 
 export async function GET(
     request: NextRequest,
-    { params }: { params: Promise<{ taskId: string }> }
+    context: { params: Promise<{ taskId: string }> }
 ) {
-    try {
-        const { taskId } = await params;
+    if (!getIsValidRequestS2S(request)) {
+        return getNextBaseResponse({
+            success: false,
+            status: 401,
+            error: 'Unauthorized internal request',
+        });
+    }
 
+    const { taskId } = await context.params;
+    const sessionUserId = request.nextUrl.searchParams.get('userId');
+
+    if (!sessionUserId) {
+        return getNextBaseResponse({
+            success: false,
+            status: 403,
+            error: "Forbidden. You can only read your own data."
+        });
+    }
+
+    try {
         const task = await videoGenerationTasksServerAPI.getVideoGenerationTaskById(taskId);
 
         if (!task) {
@@ -40,10 +58,28 @@ export async function GET(
 
 export async function PATCH(
     request: NextRequest,
-    { params }: { params: Promise<{ taskId: string }> }
+    context: { params: Promise<{ taskId: string }> }
 ) {
+    if (!getIsValidRequestS2S(request)) {
+        return getNextBaseResponse({
+            success: false,
+            status: 401,
+            error: 'Unauthorized internal request',
+        });
+    }
+
+    const { taskId } = await context.params;
+    const sessionUserId = request.nextUrl.searchParams.get('userId');
+
+    if (!sessionUserId) {
+        return getNextBaseResponse({
+            success: false,
+            status: 403,
+            error: "Forbidden. You can only read your own data."
+        });
+    }
+
     try {
-        const { taskId } = await params;
         const body: Partial<VideoGenerationTask> = await request.json();
 
         // taskId 존재 여부 확인
@@ -79,11 +115,28 @@ export async function PATCH(
 
 export async function DELETE(
     request: NextRequest,
-    { params }: { params: Promise<{ taskId: string }> }
+    context: { params: Promise<{ taskId: string }> }
 ) {
-    try {
-        const { taskId } = await params;
+    if (!getIsValidRequestS2S(request)) {
+        return getNextBaseResponse({
+            success: false,
+            status: 401,
+            error: 'Unauthorized internal request',
+        });
+    }
 
+    const { taskId } = await context.params;
+    const sessionUserId = request.nextUrl.searchParams.get('userId');
+
+    if (!sessionUserId) {
+        return getNextBaseResponse({
+            success: false,
+            status: 403,
+            error: "Forbidden. You can only read your own data."
+        });
+    }
+
+    try {
         // Task 삭제
         const deleteVideoGenerationTaskResult = await videoGenerationTasksServerAPI.deleteVideoGenerationTask(taskId);
 

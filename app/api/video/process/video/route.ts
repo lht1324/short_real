@@ -1,13 +1,13 @@
 import {NextRequest} from "next/server";
 import {createSupabaseServiceRoleClient} from "@/lib/supabaseServiceRole";
 import {videoGenerationTasksServerAPI} from "@/lib/api/server/videoGenerationTasksServerAPI";
-import {taskCheckAndCleanupIfCancelled} from "@/utils/taskCheckAndCleanupIfCancelled";
+import {taskCheckAndCleanupIfCancelled} from "@/lib/utils/taskCheckAndCleanupIfCancelled";
 import {SceneData, VideoGenerationTaskStatus} from "@/lib/api/types/supabase/VideoGenerationTasks";
 import {llmServerAPI} from "@/lib/api/server/llmServerAPI";
 import {videoServerAPI} from "@/lib/api/server/videoServerAPI";
-import {getNextBaseResponse} from "@/utils/getNextBaseResponse";
-import {delay} from "@/utils/asyncUtils";
-import {getIsValidRequestS2S} from "@/utils/getIsValidRequest";
+import {getNextBaseResponse} from "@/lib/utils/getNextBaseResponse";
+import {delay} from "@/lib/utils/asyncUtils";
+import {getIsValidRequestS2S} from "@/lib/utils/getIsValidRequest";
 
 export async function POST(request: NextRequest) {
     if (!getIsValidRequestS2S(request)) {

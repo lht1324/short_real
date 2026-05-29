@@ -2,10 +2,10 @@ import {NextRequest} from "next/server";
 import {videoServerAPI} from "@/lib/api/server/videoServerAPI";
 import {videoGenerationTasksServerAPI} from "@/lib/api/server/videoGenerationTasksServerAPI";
 import {VideoGenerationTaskStatus} from "@/lib/api/types/supabase/VideoGenerationTasks";
-import {taskCheckAndCleanupIfCancelled} from "@/utils/taskCheckAndCleanupIfCancelled";
-import {getNextBaseResponse} from "@/utils/getNextBaseResponse";
-import {internalFireAndForgetFetch} from "@/utils/internalFetch";
-import {getIsValidRequestS2S} from "@/utils/getIsValidRequest";
+import {taskCheckAndCleanupIfCancelled} from "@/lib/utils/taskCheckAndCleanupIfCancelled";
+import {getNextBaseResponse} from "@/lib/utils/getNextBaseResponse";
+import {internalFireAndForgetFetch} from "@/lib/utils/internalFetch";
+import {getIsValidRequestS2S} from "@/lib/utils/getIsValidRequest";
 
 export async function POST(request: NextRequest) {
     if (!getIsValidRequestS2S(request)) {

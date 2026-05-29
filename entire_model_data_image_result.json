@@ -1,0 +1,974 @@
+{
+  "success": true,
+  "status": 200,
+  "message": "Test finished.",
+  "data": {
+    "insertedCount": 132,
+    "extractedData": [
+      {
+        "endpointId": "fal-ai/nano-banana-2/edit",
+        "aiModelPriceList": [
+          {
+            "unit": "image_720p",
+            "price_per_unit": 0.08
+          },
+          {
+            "unit": "image_1080p",
+            "price_per_unit": 0.12
+          }
+        ],
+        "isValuable": true,
+        "isValuableReasoning": "",
+        "supportedDurationRange": []
+      },
+      {
+        "endpointId": "fal-ai/nano-banana-pro/edit",
+        "aiModelPriceList": [
+          {
+            "unit": "image_720p",
+            "price_per_unit": 0.15
+          },
+          {
+            "unit": "image_1080p",
+            "price_per_unit": 0.15
+          }
+        ],
+        "isValuable": true,
+        "isValuableReasoning": "",
+        "supportedDurationRange": []
+      },
+      {
+        "endpointId": "openai/gpt-image-2/edit",
+        "aiModelPriceList": [],
+        "isValuable": false,
+        "isValuableReasoning": "Pricing is based on tokens (text and image tokens) and per-token rates, not a deterministic per-image USD cost. The number of tokens per image varies unpredictably based on prompt length, image size, and quality setting. Cannot determine exact price per 720p or 1080p image.",
+        "supportedDurationRange": []
+      },
+      {
+        "endpointId": "fal-ai/nano-banana/edit",
+        "aiModelPriceList": [
+          {
+            "unit": "image_720p",
+            "price_per_unit": 0.039
+          },
+          {
+            "unit": "image_1080p",
+            "price_per_unit": 0.039
+          }
+        ],
+        "isValuable": true,
+        "isValuableReasoning": "",
+        "supportedDurationRange": []
+      },
+      {
+        "endpointId": "fal-ai/flux-pro/kontext",
+        "aiModelPriceList": [
+          {
+            "unit": "image_720p",
+            "price_per_unit": 0.04
+          },
+          {
+            "unit": "image_1080p",
+            "price_per_unit": 0.04
+          }
+        ],
+        "isValuable": true,
+        "isValuableReasoning": "",
+        "supportedDurationRange": []
+      },
+      {
+        "endpointId": "xai/grok-imagine-image/edit",
+        "aiModelPriceList": [
+          {
+            "unit": "image_720p",
+            "price_per_unit": 0.022
+          },
+          {
+            "unit": "image_1080p",
+            "price_per_unit": 0.022
+          }
+        ],
+        "isValuable": true,
+        "isValuableReasoning": "",
+        "supportedDurationRange": []
+      },
+      {
+        "endpointId": "fal-ai/gemini-3-pro-image-preview/edit",
+        "aiModelPriceList": [
+          {
+            "unit": "image_720p",
+            "price_per_unit": 0.15
+          },
+          {
+            "unit": "image_1080p",
+            "price_per_unit": 0.15
+          }
+        ],
+        "isValuable": true,
+        "isValuableReasoning": "",
+        "supportedDurationRange": []
+      },
+      {
+        "endpointId": "fal-ai/gpt-image-1.5/edit",
+        "aiModelPriceList": [],
+        "isValuable": false,
+        "isValuableReasoning": "Pricing is non-deterministic and varies by quality, size, and number of images. No fixed USD cost per image can be derived from the provided pricing text.",
+        "supportedDurationRange": []
+      },
+      {
+        "endpointId": "fal-ai/gemini-25-flash-image/edit",
+        "aiModelPriceList": [
+          {
+            "unit": "image_720p",
+            "price_per_unit": 0.039
+          },
+          {
+            "unit": "image_1080p",
+            "price_per_unit": 0.039
+          }
+        ],
+        "isValuable": true,
+        "isValuableReasoning": "",
+        "supportedDurationRange": []
+      },
+      {
+        "endpointId": "fal-ai/flux-pro/kontext/max",
+        "aiModelPriceList": [
+          {
+            "unit": "image_720p",
+            "price_per_unit": 0.08
+          },
+          {
+            "unit": "image_1080p",
+            "price_per_unit": 0.08
+          }
+        ],
+        "isValuable": true,
+        "isValuableReasoning": "",
+        "supportedDurationRange": []
+      },
+      {
+        "endpointId": "fal-ai/gemini-3.1-flash-image-preview/edit",
+        "aiModelPriceList": [
+          {
+            "unit": "image_720p",
+            "price_per_unit": 0.08
+          },
+          {
+            "unit": "image_1080p",
+            "price_per_unit": 0.08
+          }
+        ],
+        "isValuable": true,
+        "isValuableReasoning": "",
+        "supportedDurationRange": []
+      },
+      {
+        "endpointId": "fal-ai/flux-2-max/edit",
+        "aiModelPriceList": [
+          {
+            "unit": "image_720p",
+            "price_per_unit": 0.073
+          },
+          {
+            "unit": "image_1080p",
+            "price_per_unit": 0.141
+          }
+        ],
+        "isValuable": true,
+        "isValuableReasoning": "",
+        "supportedDurationRange": []
+      },
+      {
+        "endpointId": "fal-ai/flux-2/klein/9b/edit",
+        "aiModelPriceList": [
+          {
+            "unit": "image_720p",
+            "price_per_unit": 0.021
+          },
+          {
+            "unit": "image_1080p",
+            "price_per_unit": 0.034
+          }
+        ],
+        "isValuable": true,
+        "isValuableReasoning": "",
+        "supportedDurationRange": []
+      },
+      {
+        "endpointId": "fal-ai/qwen-image-2/edit",
+        "aiModelPriceList": [
+          {
+            "unit": "image_720p",
+            "price_per_unit": 0.035
+          },
+          {
+            "unit": "image_1080p",
+            "price_per_unit": 0.035
+          }
+        ],
+        "isValuable": true,
+        "isValuableReasoning": "",
+        "supportedDurationRange": []
+      },
+      {
+        "endpointId": "fal-ai/qwen-image-2/pro/edit",
+        "aiModelPriceList": [
+          {
+            "unit": "image_720p",
+            "price_per_unit": 0.075
+          },
+          {
+            "unit": "image_1080p",
+            "price_per_unit": 0.075
+          }
+        ],
+        "isValuable": true,
+        "isValuableReasoning": "",
+        "supportedDurationRange": []
+      },
+      {
+        "endpointId": "fal-ai/flux-2-flex/edit",
+        "aiModelPriceList": [
+          {
+            "unit": "image_720p",
+            "price_per_unit": 0.05
+          },
+          {
+            "unit": "image_1080p",
+            "price_per_unit": 0.1
+          }
+        ],
+        "isValuable": true,
+        "isValuableReasoning": "",
+        "supportedDurationRange": []
+      },
+      {
+        "endpointId": "fal-ai/kling-image/o3/image-to-image",
+        "aiModelPriceList": [
+          {
+            "unit": "image_720p",
+            "price_per_unit": 0.028
+          },
+          {
+            "unit": "image_1080p",
+            "price_per_unit": 0.028
+          }
+        ],
+        "isValuable": true,
+        "isValuableReasoning": "",
+        "supportedDurationRange": []
+      },
+      {
+        "endpointId": "fal-ai/kling-image/v3/image-to-image",
+        "aiModelPriceList": [
+          {
+            "unit": "image_720p",
+            "price_per_unit": 0.028
+          },
+          {
+            "unit": "image_1080p",
+            "price_per_unit": 0.028
+          }
+        ],
+        "isValuable": true,
+        "isValuableReasoning": "",
+        "supportedDurationRange": []
+      },
+      {
+        "endpointId": "fal-ai/flux-kontext-lora",
+        "aiModelPriceList": [
+          {
+            "unit": "image_720p",
+            "price_per_unit": 0.035
+          },
+          {
+            "unit": "image_1080p",
+            "price_per_unit": 0.07
+          }
+        ],
+        "isValuable": true,
+        "isValuableReasoning": "",
+        "supportedDurationRange": []
+      },
+      {
+        "endpointId": "fal-ai/flux-kontext-lora/inpaint",
+        "aiModelPriceList": [
+          {
+            "unit": "image_720p",
+            "price_per_unit": 0.035
+          },
+          {
+            "unit": "image_1080p",
+            "price_per_unit": 0.07
+          }
+        ],
+        "isValuable": true,
+        "isValuableReasoning": "",
+        "supportedDurationRange": []
+      },
+      {
+        "endpointId": "fal-ai/wan/v2.7/pro/edit",
+        "aiModelPriceList": [
+          {
+            "unit": "image_720p",
+            "price_per_unit": 0.075
+          },
+          {
+            "unit": "image_1080p",
+            "price_per_unit": 0.075
+          }
+        ],
+        "isValuable": true,
+        "isValuableReasoning": "",
+        "supportedDurationRange": []
+      },
+      {
+        "endpointId": "fal-ai/wan/v2.7/edit",
+        "aiModelPriceList": [
+          {
+            "unit": "image_720p",
+            "price_per_unit": 0.03
+          },
+          {
+            "unit": "image_1080p",
+            "price_per_unit": 0.03
+          }
+        ],
+        "isValuable": true,
+        "isValuableReasoning": "",
+        "supportedDurationRange": []
+      },
+      {
+        "endpointId": "fal-ai/wan/v2.2-a14b/image-to-image",
+        "aiModelPriceList": [
+          {
+            "unit": "image_720p",
+            "price_per_unit": 0.05
+          },
+          {
+            "unit": "image_1080p",
+            "price_per_unit": 0.05
+          }
+        ],
+        "isValuable": true,
+        "isValuableReasoning": "",
+        "supportedDurationRange": []
+      },
+      {
+        "endpointId": "fal-ai/hunyuan-image/v3/instruct/edit",
+        "aiModelPriceList": [
+          {
+            "unit": "image_720p",
+            "price_per_unit": 0.082944
+          },
+          {
+            "unit": "image_1080p",
+            "price_per_unit": 0.186624
+          }
+        ],
+        "isValuable": true,
+        "isValuableReasoning": "",
+        "supportedDurationRange": []
+      },
+      {
+        "endpointId": "fal-ai/gpt-image-1/edit-image",
+        "aiModelPriceList": [],
+        "isValuable": false,
+        "isValuableReasoning": "Pricing is non-deterministic and opaque: stated as 'different amounts based on the input and output.' No fixed USD per image or per megapixel formula is provided, and no deterministic conversion to per-image cost for 720p/1080p equivalents is possible.",
+        "supportedDurationRange": []
+      },
+      {
+        "endpointId": "fal-ai/flux-2/klein/4b/edit",
+        "aiModelPriceList": [
+          {
+            "unit": "image_720p",
+            "price_per_unit": 0.009216
+          },
+          {
+            "unit": "image_1080p",
+            "price_per_unit": 0.020736
+          }
+        ],
+        "isValuable": true,
+        "isValuableReasoning": "",
+        "supportedDurationRange": []
+      },
+      {
+        "endpointId": "fal-ai/flux-2/klein/9b/base/edit",
+        "aiModelPriceList": [
+          {
+            "unit": "image_720p",
+            "price_per_unit": 0.0211312
+          },
+          {
+            "unit": "image_1080p",
+            "price_per_unit": 0.0338096
+          }
+        ],
+        "isValuable": true,
+        "isValuableReasoning": "",
+        "supportedDurationRange": []
+      },
+      {
+        "endpointId": "fal-ai/flux-2/klein/9b/base/edit/lora",
+        "aiModelPriceList": [
+          {
+            "unit": "image_720p",
+            "price_per_unit": 0.038432
+          },
+          {
+            "unit": "image_1080p",
+            "price_per_unit": 0.061472
+          }
+        ],
+        "isValuable": true,
+        "isValuableReasoning": "",
+        "supportedDurationRange": []
+      },
+      {
+        "endpointId": "fal-ai/recraft/v3/image-to-image",
+        "aiModelPriceList": [
+          {
+            "unit": "image_720p",
+            "price_per_unit": 0.04
+          },
+          {
+            "unit": "image_1080p",
+            "price_per_unit": 0.04
+          }
+        ],
+        "isValuable": true,
+        "isValuableReasoning": "",
+        "supportedDurationRange": []
+      },
+      {
+        "endpointId": "fal-ai/ideogram/v3/reframe",
+        "aiModelPriceList": [
+          {
+            "unit": "image_720p",
+            "price_per_unit": 0.03
+          },
+          {
+            "unit": "image_1080p",
+            "price_per_unit": 0.03
+          }
+        ],
+        "isValuable": true,
+        "isValuableReasoning": "",
+        "supportedDurationRange": []
+      },
+      {
+        "endpointId": "fal-ai/ideogram/v3/remix",
+        "aiModelPriceList": [
+          {
+            "unit": "image_720p",
+            "price_per_unit": 0.06
+          },
+          {
+            "unit": "image_1080p",
+            "price_per_unit": 0.06
+          }
+        ],
+        "isValuable": true,
+        "isValuableReasoning": "",
+        "supportedDurationRange": []
+      },
+      {
+        "endpointId": "fal-ai/ideogram/v3/layerize-text",
+        "aiModelPriceList": [],
+        "isValuable": false,
+        "isValuableReasoning": "This model does not generate images; it extracts text layout from existing flat graphics. It does not produce image outputs with aspect ratio support for generation.",
+        "supportedDurationRange": []
+      },
+      {
+        "endpointId": "fal-ai/flux-2/klein/9b/edit/lora",
+        "aiModelPriceList": [
+          {
+            "unit": "image_720p",
+            "price_per_unit": 0.0276
+          },
+          {
+            "unit": "image_1080p",
+            "price_per_unit": 0.0461
+          }
+        ],
+        "isValuable": true,
+        "isValuableReasoning": "",
+        "supportedDurationRange": []
+      },
+      {
+        "endpointId": "fal-ai/flux-2/klein/4b/base/edit",
+        "aiModelPriceList": [
+          {
+            "unit": "image_720p",
+            "price_per_unit": 0.0166
+          },
+          {
+            "unit": "image_1080p",
+            "price_per_unit": 0.0277
+          }
+        ],
+        "isValuable": true,
+        "isValuableReasoning": "",
+        "supportedDurationRange": []
+      },
+      {
+        "endpointId": "fal-ai/gpt-image-1-mini/edit",
+        "aiModelPriceList": [],
+        "isValuable": false,
+        "isValuableReasoning": "Pricing is opaque ('different amounts based on input and output') and cannot be deterministically converted to a fixed USD per image cost for 720p/1080p.",
+        "supportedDurationRange": []
+      },
+      {
+        "endpointId": "fal-ai/patina",
+        "aiModelPriceList": [],
+        "isValuable": false,
+        "isValuableReasoning": "Fails Step 1: No aspect ratio parameter and the model is not an image-to-image model that inherits source aspect ratio for general image generation (it generates PBR maps from images, not standard images with user-controlled ratios). The 'image_url' input is a photograph or render, but the model outputs fixed-dimension PBR maps, not images in 16:9 or 9:16 aspect ratios. Also fails Step 2: The pricing is per-map and per-megapixel, and the output resolution is tied to the input image, making deterministic per-image cost calculation for 720p/1080p equivalents ambiguous.",
+        "supportedDurationRange": []
+      },
+      {
+        "endpointId": "fal-ai/patina/material/extract",
+        "aiModelPriceList": [],
+        "isValuable": false,
+        "isValuableReasoning": "Fails Step 1: The 'image_size' parameter includes options like 'portrait_16_9' and 'landscape_16_9' which suggest 16:9 support, but it does not explicitly support 9:16 (portrait_16_9 is 9:16 aspect ratio, yes). However, the model generates tile-based textures and PBR maps, not standard image outputs; the primary purpose is material extraction, not general image editing/generation with flexible aspect ratios as per our criteria. Furthermore, pricing is complex (base $0.10 + per MP + per map + upscaling tiers) making it non-deterministic for simple 720p/1080p image generation.",
+        "supportedDurationRange": []
+      },
+      {
+        "endpointId": "fal-ai/hidream-o1-image/edit",
+        "aiModelPriceList": [
+          {
+            "unit": "image_720p",
+            "price_per_unit": 0.009216
+          },
+          {
+            "unit": "image_1080p",
+            "price_per_unit": 0.020736
+          }
+        ],
+        "isValuable": true,
+        "isValuableReasoning": "",
+        "supportedDurationRange": []
+      },
+      {
+        "endpointId": "fal-ai/hidream-o1-image/dev/edit",
+        "aiModelPriceList": [
+          {
+            "unit": "image_720p",
+            "price_per_unit": 0.004608
+          },
+          {
+            "unit": "image_1080p",
+            "price_per_unit": 0.010368
+          }
+        ],
+        "isValuable": true,
+        "isValuableReasoning": "",
+        "supportedDurationRange": []
+      },
+      {
+        "endpointId": "fal-ai/flux-2/klein/4b/base/edit/lora",
+        "aiModelPriceList": [
+          {
+            "unit": "image_720p",
+            "price_per_unit": 0.0294912
+          },
+          {
+            "unit": "image_1080p",
+            "price_per_unit": 0.0663552
+          }
+        ],
+        "isValuable": true,
+        "isValuableReasoning": "",
+        "supportedDurationRange": []
+      },
+      {
+        "endpointId": "fal-ai/flux-2-lora-gallery/virtual-tryon",
+        "aiModelPriceList": [
+          {
+            "unit": "image_720p",
+            "price_per_unit": 0.0193536
+          },
+          {
+            "unit": "image_1080p",
+            "price_per_unit": 0.0435456
+          }
+        ],
+        "isValuable": true,
+        "isValuableReasoning": "",
+        "supportedDurationRange": []
+      },
+      {
+        "endpointId": "fal-ai/flux-2-lora-gallery/apartment-staging",
+        "aiModelPriceList": [
+          {
+            "unit": "image_720p",
+            "price_per_unit": 0.0193536
+          },
+          {
+            "unit": "image_1080p",
+            "price_per_unit": 0.0435456
+          }
+        ],
+        "isValuable": true,
+        "isValuableReasoning": "",
+        "supportedDurationRange": []
+      },
+      {
+        "endpointId": "fal-ai/flux-2-lora-gallery/face-to-full-portrait",
+        "aiModelPriceList": [
+          {
+            "unit": "image_720p",
+            "price_per_unit": 0.0193536
+          },
+          {
+            "unit": "image_1080p",
+            "price_per_unit": 0.0435456
+          }
+        ],
+        "isValuable": true,
+        "isValuableReasoning": "",
+        "supportedDurationRange": []
+      },
+      {
+        "endpointId": "fal-ai/flux-2-lora-gallery/add-background",
+        "aiModelPriceList": [
+          {
+            "unit": "image_720p",
+            "price_per_unit": 0.0193536
+          },
+          {
+            "unit": "image_1080p",
+            "price_per_unit": 0.0435456
+          }
+        ],
+        "isValuable": true,
+        "isValuableReasoning": "",
+        "supportedDurationRange": []
+      },
+      {
+        "endpointId": "fal-ai/glm-image/image-to-image",
+        "aiModelPriceList": [
+          {
+            "unit": "image_720p",
+            "price_per_unit": 0.04608
+          },
+          {
+            "unit": "image_1080p",
+            "price_per_unit": 0.10368
+          }
+        ],
+        "isValuable": true,
+        "isValuableReasoning": "",
+        "supportedDurationRange": []
+      },
+      {
+        "endpointId": "fal-ai/qwen-image/image-to-image",
+        "aiModelPriceList": [
+          {
+            "unit": "image_720p",
+            "price_per_unit": 0.0184
+          },
+          {
+            "unit": "image_1080p",
+            "price_per_unit": 0.0415
+          }
+        ],
+        "isValuable": true,
+        "isValuableReasoning": "",
+        "supportedDurationRange": []
+      },
+      {
+        "endpointId": "fal-ai/flux/krea/image-to-image",
+        "aiModelPriceList": [
+          {
+            "unit": "image_720p",
+            "price_per_unit": 0.025
+          },
+          {
+            "unit": "image_1080p",
+            "price_per_unit": 0.075
+          }
+        ],
+        "isValuable": true,
+        "isValuableReasoning": "",
+        "supportedDurationRange": []
+      },
+      {
+        "endpointId": "fal-ai/flux-1/krea/image-to-image",
+        "aiModelPriceList": [
+          {
+            "unit": "image_720p",
+            "price_per_unit": 0.025
+          },
+          {
+            "unit": "image_1080p",
+            "price_per_unit": 0.075
+          }
+        ],
+        "isValuable": true,
+        "isValuableReasoning": "",
+        "supportedDurationRange": []
+      },
+      {
+        "endpointId": "fal-ai/flux-krea-lora/image-to-image",
+        "aiModelPriceList": [
+          {
+            "unit": "image_720p",
+            "price_per_unit": 0.035
+          },
+          {
+            "unit": "image_1080p",
+            "price_per_unit": 0.105
+          }
+        ],
+        "isValuable": true,
+        "isValuableReasoning": "",
+        "supportedDurationRange": []
+      },
+      {
+        "endpointId": "fal-ai/qwen-image-max/edit",
+        "aiModelPriceList": [
+          {
+            "unit": "image_720p",
+            "price_per_unit": 0.075
+          },
+          {
+            "unit": "image_1080p",
+            "price_per_unit": 0.075
+          }
+        ],
+        "isValuable": true,
+        "isValuableReasoning": "",
+        "supportedDurationRange": []
+      },
+      {
+        "endpointId": "fal-ai/flux-1/dev/image-to-image",
+        "aiModelPriceList": [
+          {
+            "unit": "image_720p",
+            "price_per_unit": 0.025
+          },
+          {
+            "unit": "image_1080p",
+            "price_per_unit": 0.055
+          }
+        ],
+        "isValuable": true,
+        "isValuableReasoning": "",
+        "supportedDurationRange": []
+      },
+      {
+        "endpointId": "fal-ai/vecglypher/image-to-svg",
+        "aiModelPriceList": [],
+        "isValuable": false,
+        "isValuableReasoning": "Model generates SVG vector output, not raster images. No aspect ratio or resolution support for 16:9 or 9:16. The output is a vector graphic, not an image with defined resolution tiers like 720p or 1080p. This model is not suitable for standard image generation pricing tiers.",
+        "supportedDurationRange": []
+      },
+      {
+        "endpointId": "fal-ai/flux-control-lora-canny/image-to-image",
+        "aiModelPriceList": [
+          {
+            "unit": "image_720p",
+            "price_per_unit": 0.04
+          },
+          {
+            "unit": "image_1080p",
+            "price_per_unit": 0.08
+          }
+        ],
+        "isValuable": true,
+        "isValuableReasoning": "",
+        "supportedDurationRange": []
+      },
+      {
+        "endpointId": "fal-ai/flux-2/klein/4b/edit/lora",
+        "aiModelPriceList": [
+          {
+            "unit": "image_720p",
+            "price_per_unit": 0.02
+          },
+          {
+            "unit": "image_1080p",
+            "price_per_unit": 0.04
+          }
+        ],
+        "isValuable": true,
+        "isValuableReasoning": "",
+        "supportedDurationRange": []
+      },
+      {
+        "endpointId": "rundiffusion-fal/juggernaut-flux/pro/image-to-image",
+        "aiModelPriceList": [
+          {
+            "unit": "image_720p",
+            "price_per_unit": 0.055
+          },
+          {
+            "unit": "image_1080p",
+            "price_per_unit": 0.115
+          }
+        ],
+        "isValuable": true,
+        "isValuableReasoning": "",
+        "supportedDurationRange": []
+      },
+      {
+        "endpointId": "fal-ai/vidu/q2/reference-to-image",
+        "aiModelPriceList": [
+          {
+            "unit": "image_720p",
+            "price_per_unit": 0.1
+          },
+          {
+            "unit": "image_1080p",
+            "price_per_unit": 0.1
+          }
+        ],
+        "isValuable": true,
+        "isValuableReasoning": "",
+        "supportedDurationRange": []
+      },
+      {
+        "endpointId": "fal-ai/vidu/reference-to-image",
+        "aiModelPriceList": [
+          {
+            "unit": "image_720p",
+            "price_per_unit": 0.1
+          },
+          {
+            "unit": "image_1080p",
+            "price_per_unit": 0.1
+          }
+        ],
+        "isValuable": true,
+        "isValuableReasoning": "",
+        "supportedDurationRange": []
+      },
+      {
+        "endpointId": "fal-ai/flux/srpo/image-to-image",
+        "aiModelPriceList": [
+          {
+            "unit": "image_720p",
+            "price_per_unit": 0.025
+          },
+          {
+            "unit": "image_1080p",
+            "price_per_unit": 0.05
+          }
+        ],
+        "isValuable": true,
+        "isValuableReasoning": "",
+        "supportedDurationRange": []
+      },
+      {
+        "endpointId": "fal-ai/flux-1/srpo/image-to-image",
+        "aiModelPriceList": [
+          {
+            "unit": "image_720p",
+            "price_per_unit": 0.025
+          },
+          {
+            "unit": "image_1080p",
+            "price_per_unit": 0.05
+          }
+        ],
+        "isValuable": true,
+        "isValuableReasoning": "",
+        "supportedDurationRange": []
+      },
+      {
+        "endpointId": "fal-ai/longcat-image/edit",
+        "aiModelPriceList": [
+          {
+            "unit": "image_720p",
+            "price_per_unit": 0.15
+          },
+          {
+            "unit": "image_1080p",
+            "price_per_unit": 0.3
+          }
+        ],
+        "isValuable": true,
+        "isValuableReasoning": "",
+        "supportedDurationRange": []
+      },
+      {
+        "endpointId": "fal-ai/bagel/edit",
+        "aiModelPriceList": [
+          {
+            "unit": "image_720p",
+            "price_per_unit": 0.1
+          },
+          {
+            "unit": "image_1080p",
+            "price_per_unit": 0.1
+          }
+        ],
+        "isValuable": true,
+        "isValuableReasoning": "",
+        "supportedDurationRange": []
+      },
+      {
+        "endpointId": "fal-ai/flux-control-lora-depth/image-to-image",
+        "aiModelPriceList": [
+          {
+            "unit": "image_720p",
+            "price_per_unit": 0.04
+          },
+          {
+            "unit": "image_1080p",
+            "price_per_unit": 0.08
+          }
+        ],
+        "isValuable": true,
+        "isValuableReasoning": "",
+        "supportedDurationRange": []
+      },
+      {
+        "endpointId": "fal-ai/hidream-i1-full/image-to-image",
+        "aiModelPriceList": [
+          {
+            "unit": "image_720p",
+            "price_per_unit": 0.05
+          },
+          {
+            "unit": "image_1080p",
+            "price_per_unit": 0.1
+          }
+        ],
+        "isValuable": true,
+        "isValuableReasoning": "",
+        "supportedDurationRange": []
+      },
+      {
+        "endpointId": "fal-ai/emu-3.5-image/edit-image",
+        "aiModelPriceList": [
+          {
+            "unit": "image_720p",
+            "price_per_unit": 0.3
+          }
+        ],
+        "isValuable": true,
+        "isValuableReasoning": "",
+        "supportedDurationRange": []
+      },
+      {
+        "endpointId": "rundiffusion-fal/juggernaut-flux/base/image-to-image",
+        "aiModelPriceList": [
+          {
+            "unit": "image_720p",
+            "price_per_unit": 0.035
+          },
+          {
+            "unit": "image_1080p",
+            "price_per_unit": 0.07
+          }
+        ],
+        "isValuable": true,
+        "isValuableReasoning": "",
+        "supportedDurationRange": []
+      }
+    ]
+  }
+}

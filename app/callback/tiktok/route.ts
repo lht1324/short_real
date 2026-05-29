@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { internalFireAndForgetFetch } from '@/utils/internalFetch';
+import { internalFireAndForgetFetch } from '@/lib/utils/internalFetch';
 import { createSupabaseServiceRoleClient } from "@/lib/supabaseServiceRole";
 import {videoGenerationTasksServerAPI} from "@/lib/api/server/videoGenerationTasksServerAPI";
 import {ExportPlatform, ExportStatus} from "@/lib/api/types/supabase/VideoGenerationTasks";
@@ -49,10 +49,13 @@ export async function GET(request: NextRequest) {
             return NextResponse.redirect(`${originUrl}/workspace/dashboard`);
         }
 
-        // 2. 쿠키에서 state, taskId, userId 추출 및 검증
-        const { taskId, userId } = JSON.parse(state);
+        // 2. State에서 데이터 추출
+        const stateData = JSON.parse(state);
+        const { taskId, userId, seriesId, mode } = stateData;
+        const isAutopilot = mode === 'autopilot';
 
-        if (!taskId || !userId) {
+        // 필수 파라미터 체크: 오토파일럿은 userId만 있으면 됨, 매뉴얼은 taskId 필수
+        if (!userId || (!isAutopilot && !taskId)) {
             console.error('Invalid token or missing taskId/userId');
             if (taskId) {
                 await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, {
@@ -60,7 +63,7 @@ export async function GET(request: NextRequest) {
                     export_platform: ExportPlatform.TIKTOK,
                 });
             }
-            return NextResponse.redirect(`${originUrl}/workspace/dashboard`);
+            return NextResponse.redirect(isAutopilot ? `${originUrl}/workspace/autopilot?seriesId=${seriesId}` : `${originUrl}/workspace/dashboard`);
         }
 
         // 3. code → access_token 교환
@@ -81,16 +84,36 @@ export async function GET(request: NextRequest) {
         if (!tokens.access_token) {
             console.error('TikTok token exchange error:', tokens);
 
-            await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, {
-                export_status: ExportStatus.FAILED,
-                export_platform: ExportPlatform.TIKTOK,
-            });
+            if (taskId) {
+                await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, {
+                    export_status: ExportStatus.FAILED,
+                    export_platform: ExportPlatform.TIKTOK,
+                });
+            }
 
-            return NextResponse.redirect(`${originUrl}/workspace/dashboard`);
+            return NextResponse.redirect(isAutopilot ? `${originUrl}/workspace/autopilot?seriesId=${seriesId}` : `${originUrl}/workspace/dashboard`);
         }
 
         // 4. Supabase에 토큰 저장
         const supabase = createSupabaseServiceRoleClient();
+
+        // [추가] TikTok 사용자 정보 조회 (Display Name)
+        let displayName = null;
+        try {
+            const userRes = await fetch('https://open.tiktokapis.com/v2/user/info/?fields=display_name', {
+                headers: { Authorization: `Bearer ${tokens.access_token}` }
+            });
+            if (userRes.ok) {
+                const userData = await userRes.json();
+                if (userData.data?.user) {
+                    displayName = userData.data.user.display_name || null;
+                    console.log(`[TikTok Callback] Fetched profile: ${displayName}`);
+                }
+            }
+        } catch (e) {
+            console.error('[TikTok Callback] Failed to fetch user info:', e);
+        }
+
         const { error: dbError } = await supabase
             .from('user_tiktok_tokens')
             .upsert({
@@ -100,6 +123,7 @@ export async function GET(request: NextRequest) {
                 expires_at: new Date(Date.now() + tokens.expires_in * 1000).toISOString(),
                 refresh_expires_at: new Date(Date.now() + tokens.refresh_expires_in * 1000).toISOString(),
                 tiktok_user_id: tokens.open_id,
+                display_name: displayName,
                 updated_at: new Date().toISOString(),
                 last_used_at: new Date().toISOString(),
             });
@@ -107,15 +131,22 @@ export async function GET(request: NextRequest) {
         if (dbError) {
             console.error('Database error:', dbError);
 
-            await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, {
-                export_status: ExportStatus.FAILED,
-                export_platform: ExportPlatform.TIKTOK,
-            });
+            if (taskId) {
+                await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, {
+                    export_status: ExportStatus.FAILED,
+                    export_platform: ExportPlatform.TIKTOK,
+                });
+            }
 
-            return NextResponse.redirect(`${originUrl}/workspace/dashboard`);
+            return NextResponse.redirect(isAutopilot ? `${originUrl}/workspace/autopilot?seriesId=${seriesId}` : `${originUrl}/workspace/dashboard`);
         }
 
-        // 5. 업로드 트리거
+        // 5. 모드에 따른 후속 작업 및 리다이렉트
+        if (isAutopilot) {
+            return NextResponse.redirect(`${originUrl}/workspace/autopilot?seriesId=${seriesId}`);
+        }
+
+        // 수동 업로드 모드인 경우
         internalFireAndForgetFetch(
             `${process.env.BASE_URL}/api/video/export/tiktok/upload?taskId=${taskId}`,
             { method: 'POST' },
@@ -131,7 +162,6 @@ export async function GET(request: NextRequest) {
 
     } catch (error) {
         console.error('TikTok callback error:', error);
-
         return NextResponse.redirect(`${originUrl}/workspace/dashboard`);
     }
 }

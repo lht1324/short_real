@@ -1,0 +1,2913 @@
+[
+  {
+    "endpoint_id": "fal-ai/nano-banana-2",
+    "provider": "fal.ai",
+    "display_name": "Nano Banana 2",
+    "description": "Nano Banana 2 is Google's new state-of-the-art fast image generation and editing model",
+    "category": "text-to-image",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/0a900b9e/ptbZcVWIQ_fXGGHfv8Zez_0ea5ca41bdf143a29e21e30a53120672.jpg",
+    "model_url": "https://fal.run/fal-ai/nano-banana-2",
+    "ai_model_price_list": [
+      {
+        "unit": "image_720p",
+        "price_per_unit": 0.08
+      },
+      {
+        "unit": "image_1080p",
+        "price_per_unit": 0.12
+      }
+    ],
+    "isValuable": true,
+    "supported_durations": [],
+    "pricingText": "Your request will cost $0.08 per image. For $1.00, you can run this model 12 times. 2K and 4K outputs will be charged at 1.5 times and 2 times the standard rate, respectively. 0.5K (512px) resolution outputs will be charged at 0.75 times the standard rate. If web search is used, an additional $0.015 will be charged. If high thinking is used, an additional $0.002 will be charged. Note: Pricing is subject to change."
+  },
+  {
+    "endpoint_id": "fal-ai/nano-banana-2/edit",
+    "provider": "fal.ai",
+    "display_name": "Nano Banana 2",
+    "description": "Nano Banana 2 is Google's new state-of-the-art image generation and editing model\n",
+    "category": "image-to-image",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/0a900b75/DHb_RgXoXsYLdvzQz6mdn_95e87a44239c43448939b4c382dd957c.jpg",
+    "model_url": "https://fal.run/fal-ai/nano-banana-2/edit",
+    "ai_model_price_list": [
+      {
+        "unit": "image_720p",
+        "price_per_unit": 0.08
+      },
+      {
+        "unit": "image_1080p",
+        "price_per_unit": 0.12
+      }
+    ],
+    "isValuable": true,
+    "supported_durations": [],
+    "pricingText": "Your request will cost $0.08 per image. For $1.00, you can run this model 12 times. 2K and 4K outputs will be charged at 1.5 times and 2 times the standard rate, respectively. 0.5K (512px) resolution outputs will be charged at 0.75 times the standard rate. If web search is used, an additional $0.015 will be charged. If high thinking is used, an additional $0.002 will be charged. Note: Pricing is subject to change."
+  },
+  {
+    "endpoint_id": "fal-ai/nano-banana-pro",
+    "provider": "fal.ai",
+    "display_name": "Nano Banana Pro",
+    "description": "Nano Banana Pro is Google's new state-of-the-art image generation and editing model",
+    "category": "text-to-image",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/0a8691ce/SR0_u1zPJbx8jCIO6bJR0_8c83f0d66bbd48f3b55f825117941f84.jpg",
+    "model_url": "https://fal.run/fal-ai/nano-banana-pro",
+    "ai_model_price_list": [
+      {
+        "unit": "image_720p",
+        "price_per_unit": 0.15
+      },
+      {
+        "unit": "image_1080p",
+        "price_per_unit": 0.15
+      }
+    ],
+    "isValuable": true,
+    "supported_durations": [],
+    "pricingText": "Your request will cost $0.15 per image. For $1.00, you can run this model 7 times. 4K outputs will be charged at double the standard rate. If web search is used, an additional $0.015 will be charged. Note: Pricing may change in the future."
+  },
+  {
+    "endpoint_id": "fal-ai/nano-banana-pro/edit",
+    "provider": "fal.ai",
+    "display_name": "Nano Banana Pro",
+    "description": "Nano Banana Pro is Google's new state-of-the-art image generation and editing model",
+    "category": "image-to-image",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/0a86920c/NHZJWHJsy3Sve0Kroa6hV_8767c85d62f6486495d2d4978c1b1de3.jpg",
+    "model_url": "https://fal.run/fal-ai/nano-banana-pro/edit",
+    "ai_model_price_list": [
+      {
+        "unit": "image_720p",
+        "price_per_unit": 0.15
+      },
+      {
+        "unit": "image_1080p",
+        "price_per_unit": 0.15
+      }
+    ],
+    "isValuable": true,
+    "supported_durations": [],
+    "pricingText": "Your request will cost $0.15 per image. For $1.00, you can run this model 7 times. 4K outputs will be charged at double the standard rate. If web search is used, an additional $0.015 will be charged. Note: Pricing may change in the future."
+  },
+  {
+    "endpoint_id": "openai/gpt-image-2",
+    "provider": "fal.ai",
+    "display_name": "GPT Image 2 API",
+    "description": "GPT Image 2, OpenAI's latest image model, is capable of creating extremely detailed images with fine typography.",
+    "category": "text-to-image",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/0a970c4a/BkrYELYOiaZMXCw-pgRcB_QlgOenEx.png",
+    "model_url": "https://fal.run/openai/gpt-image-2",
+    "ai_model_price_list": [],
+    "isValuable": false,
+    "supported_durations": [],
+    "pricingText": "Text tokens (per 1M): $5.00 input, $1.25 cached, $10.00 output. Image tokens (per 1M): $8.00 input, $2.00 cached, $30.00 output. Changing the quality parameter significantly affects cost; by default we use high. Adjust it to your preference. See the description at the bottom of this page for more details on how much canonical image sizes cost. Token cost is ceiled to the closest cent."
+  },
+  {
+    "endpoint_id": "openai/gpt-image-2/edit",
+    "provider": "fal.ai",
+    "display_name": "GPT Image 2 API",
+    "description": "GPT Image 2, OpenAI's latest image model, is capable of making fine-grained, detailed edits to images.",
+    "category": "image-to-image",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/0a970ca7/h21vQiaCI7BvqywyJILfi_3FN3NQO0.png",
+    "model_url": "https://fal.run/openai/gpt-image-2/edit",
+    "ai_model_price_list": [],
+    "isValuable": false,
+    "supported_durations": [],
+    "pricingText": "Text tokens (per 1M): $5.00 input, $1.25 cached, $10.00 output. Image tokens (per 1M): $8.00 input, $2.00 cached, $30.00 output. Changing the quality parameter significantly affects cost; by default we use high. Adjust it to your preference. See the description at the bottom of this page for more details on how much canonical image sizes cost. Token cost is ceiled to the closest cent."
+  },
+  {
+    "endpoint_id": "fal-ai/nano-banana",
+    "provider": "fal.ai",
+    "display_name": "Nano Banana",
+    "description": "Google's famous original image generation and editing model",
+    "category": "text-to-image",
+    "status": "active",
+    "thumbnail_url": "https://fal.media/files/zebra/eLGB_Z0WHjbSD4Ad5aY-g_83f5f6da4f09426489042866cb0e4e9c.jpg",
+    "model_url": "https://fal.run/fal-ai/nano-banana",
+    "ai_model_price_list": [
+      {
+        "unit": "image_720p",
+        "price_per_unit": 0.039
+      },
+      {
+        "unit": "image_1080p",
+        "price_per_unit": 0.039
+      }
+    ],
+    "isValuable": true,
+    "supported_durations": [],
+    "pricingText": "Your request will cost $0.039 per image. For $1.00, you can run this model 25 times."
+  },
+  {
+    "endpoint_id": "fal-ai/nano-banana/edit",
+    "provider": "fal.ai",
+    "display_name": "Nano Banana",
+    "description": "Google's famous original image generation and editing model",
+    "category": "image-to-image",
+    "status": "active",
+    "thumbnail_url": "https://fal.media/files/koala/1iXUmtPWBg9oNTpkAv48W_ce1da4146f99452f8c1dfe58dd2b150e.jpg",
+    "model_url": "https://fal.run/fal-ai/nano-banana/edit",
+    "ai_model_price_list": [
+      {
+        "unit": "image_720p",
+        "price_per_unit": 0.039
+      },
+      {
+        "unit": "image_1080p",
+        "price_per_unit": 0.039
+      }
+    ],
+    "isValuable": true,
+    "supported_durations": [],
+    "pricingText": "Your request will cost $0.039 per image. For $1.00, you can run this model 25 times."
+  },
+  {
+    "endpoint_id": "fal-ai/flux-pro/kontext/text-to-image",
+    "provider": "fal.ai",
+    "display_name": "FLUX.1 Kontext [pro]",
+    "description": "The FLUX.1 Kontext [pro] text-to-image delivers state-of-the-art image generation results with unprecedented prompt following, photorealistic rendering, and flawless typography.",
+    "category": "text-to-image",
+    "status": "active",
+    "thumbnail_url": "https://fal.media/files/zebra/VOrzt92hNVLX9m9jB-7-4_deea28b6b45344d4aa4eb3be14b3478e.jpg",
+    "model_url": "https://fal.run/fal-ai/flux-pro/kontext/text-to-image",
+    "ai_model_price_list": [
+      {
+        "unit": "image_720p",
+        "price_per_unit": 0.04
+      },
+      {
+        "unit": "image_1080p",
+        "price_per_unit": 0.04
+      }
+    ],
+    "isValuable": true,
+    "supported_durations": [],
+    "pricingText": "Your request will cost $0.04 per image."
+  },
+  {
+    "endpoint_id": "fal-ai/flux-pro/kontext",
+    "provider": "fal.ai",
+    "display_name": "FLUX.1 Kontext [pro]",
+    "description": "FLUX.1 Kontext [pro] handles both text and reference images as inputs, seamlessly enabling targeted, local edits and complex transformations of entire scenes.",
+    "category": "image-to-image",
+    "status": "active",
+    "thumbnail_url": "https://storage.googleapis.com/fal_cdn/fal/Training-2.jpg",
+    "model_url": "https://fal.run/fal-ai/flux-pro/kontext",
+    "ai_model_price_list": [
+      {
+        "unit": "image_720p",
+        "price_per_unit": 0.04
+      },
+      {
+        "unit": "image_1080p",
+        "price_per_unit": 0.04
+      }
+    ],
+    "isValuable": true,
+    "supported_durations": [],
+    "pricingText": "Your request will cost $0.04 per image."
+  },
+  {
+    "endpoint_id": "fal-ai/flux-pro/kontext/multi",
+    "provider": "fal.ai",
+    "display_name": "FLUX.1 Kontext [pro]",
+    "description": "Experimental version of FLUX.1 Kontext [pro] with multi image handling capabilities",
+    "category": "image-to-image",
+    "status": "active",
+    "thumbnail_url": "https://storage.googleapis.com/fal_cdn/fal/Upscale-2.jpg",
+    "model_url": "https://fal.run/fal-ai/flux-pro/kontext/multi",
+    "ai_model_price_list": [
+      {
+        "unit": "image_720p",
+        "price_per_unit": 0.04
+      },
+      {
+        "unit": "image_1080p",
+        "price_per_unit": 0.04
+      }
+    ],
+    "isValuable": true,
+    "supported_durations": [],
+    "pricingText": "Waiting for your input...\nYour request will cost $0.04 per image."
+  },
+  {
+    "endpoint_id": "xai/grok-imagine-image",
+    "provider": "fal.ai",
+    "display_name": "Grok Imagine Image",
+    "description": "Generate highly aesthetic images with xAI's Grok Imagine Image generation model.",
+    "category": "text-to-image",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/0a8c4b97/vZlFRoT1SBs5XMoVqN_P5_f4b2e3f42dcc4f06a18953fda2b5c942.jpg",
+    "model_url": "https://fal.run/xai/grok-imagine-image",
+    "ai_model_price_list": [
+      {
+        "unit": "image_720p",
+        "price_per_unit": 0.022
+      },
+      {
+        "unit": "image_1080p",
+        "price_per_unit": 0.022
+      }
+    ],
+    "isValuable": true,
+    "supported_durations": [],
+    "pricingText": "Your request will cost $0.02 per image."
+  },
+  {
+    "endpoint_id": "xai/grok-imagine-image/quality/text-to-image",
+    "provider": "fal.ai",
+    "display_name": "Grok Imagine Image",
+    "description": "Grok Imagine Pro is an advanced AI model from xAI that creates high-quality visuals from text prompts and allows you to edit or analyze existing images.",
+    "category": "text-to-image",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/0a959ac2/BbRJ1XroSH1gwHzPYc_t8_8ba16f7ab525499aaa149fba1039b4a4.jpg",
+    "model_url": "https://fal.run/xai/grok-imagine-image/quality/text-to-image",
+    "ai_model_price_list": [
+      {
+        "unit": "image_720p",
+        "price_per_unit": 0.022
+      },
+      {
+        "unit": "image_1080p",
+        "price_per_unit": 0.022
+      }
+    ],
+    "isValuable": true,
+    "supported_durations": [],
+    "pricingText": "Your request with cost $0.05 per image for 1K and $0.07 per image for 2K."
+  },
+  {
+    "endpoint_id": "xai/grok-imagine-image/edit",
+    "provider": "fal.ai",
+    "display_name": "Grok Imagine Image",
+    "description": "Edit images precisely with xAI's Grok Imagine model",
+    "category": "image-to-image",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/0a8a0dc7/kv2XmZ5em8Kb2-7oXZndp_b897f79cbc564e1d8f4e5d5c71710c2b.jpg",
+    "model_url": "https://fal.run/xai/grok-imagine-image/edit",
+    "ai_model_price_list": [
+      {
+        "unit": "image_720p",
+        "price_per_unit": 0.022
+      },
+      {
+        "unit": "image_1080p",
+        "price_per_unit": 0.022
+      }
+    ],
+    "isValuable": true,
+    "supported_durations": [],
+    "pricingText": "Your request will cost $0.022 per image ($0.02 for image output + $0.002 for image input)."
+  },
+  {
+    "endpoint_id": "fal-ai/gemini-3-pro-image-preview",
+    "provider": "fal.ai",
+    "display_name": "Gemini 3 Pro Image Preview",
+    "description": "Gemini 3 Pro Image (a.k.a Nano Banana Pro) is Google's state-of-the-art high-fidelity image generation and editing model",
+    "category": "text-to-image",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/koala/Neuz3jAvI1MSVxj3tCrTU_afda4e7f4bc14945a716e864e1f609d8.jpg",
+    "model_url": "https://fal.run/fal-ai/gemini-3-pro-image-preview",
+    "ai_model_price_list": [
+      {
+        "unit": "image_720p",
+        "price_per_unit": 0.15
+      },
+      {
+        "unit": "image_1080p",
+        "price_per_unit": 0.15
+      }
+    ],
+    "isValuable": true,
+    "supported_durations": [],
+    "pricingText": "Your request will cost $0.15 per image. For $1.00, you can run this model 7 times. 4K outputs will be charged at double the standard rate. Note: Pricing may change in the future."
+  },
+  {
+    "endpoint_id": "fal-ai/gemini-3-pro-image-preview/edit",
+    "provider": "fal.ai",
+    "display_name": "Gemini 3 Pro Image Preview",
+    "description": "Gemini 3 Pro Image (a.k.a Nano Banana Pro) is Google's state-of-the-art high-fidelity image generation and editing model",
+    "category": "image-to-image",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/penguin/Vp2KdBwHgd4Qp0ixnsOue_eb81afc63ac24064bc9d3e9ed48f9b74.jpg",
+    "model_url": "https://fal.run/fal-ai/gemini-3-pro-image-preview/edit",
+    "ai_model_price_list": [
+      {
+        "unit": "image_720p",
+        "price_per_unit": 0.15
+      },
+      {
+        "unit": "image_1080p",
+        "price_per_unit": 0.15
+      }
+    ],
+    "isValuable": true,
+    "supported_durations": [],
+    "pricingText": "Your request will cost $0.15 per image. For $1.00, you can run this model 7 times. 4K outputs will be charged at double the standard rate. Note: Pricing may change in the future."
+  },
+  {
+    "endpoint_id": "fal-ai/gpt-image-1.5",
+    "provider": "fal.ai",
+    "display_name": "GPT-Image 1.5",
+    "description": "GPT Image 1.5 generates high-fidelity images with strong prompt adherence, preserving composition, lighting, and fine-grained detail.",
+    "category": "text-to-image",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/0a87580d/tNVCM7rX3ST05Lko3RnxC_46dfd21f89e34bf99546dce50117a568.jpg",
+    "model_url": "https://fal.run/fal-ai/gpt-image-1.5",
+    "ai_model_price_list": [],
+    "isValuable": false,
+    "supported_durations": [],
+    "pricingText": "Your request will cost different amounts based on the number of images, quality, and size."
+  },
+  {
+    "endpoint_id": "fal-ai/gpt-image-1.5/edit",
+    "provider": "fal.ai",
+    "display_name": "GPT-Image 1.5",
+    "description": "GPT Image 1.5 generates high-fidelity images with strong prompt adherence, preserving composition, lighting, and fine-grained detail.",
+    "category": "image-to-image",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/0a875814/3KvlvWItvogHIOuPRWIVl_001c9e77742a4ff2a829a8ece127c0d1.jpg",
+    "model_url": "https://fal.run/fal-ai/gpt-image-1.5/edit",
+    "ai_model_price_list": [],
+    "isValuable": false,
+    "supported_durations": [],
+    "pricingText": "Your request will cost different amounts based on the number of images, quality, and size."
+  },
+  {
+    "endpoint_id": "fal-ai/gemini-25-flash-image",
+    "provider": "fal.ai",
+    "display_name": "Gemini 2.5 Flash Image",
+    "description": "Google's famous original image generation and editing model, a.k.a Nano Banana",
+    "category": "text-to-image",
+    "status": "active",
+    "thumbnail_url": "https://fal.media/files/penguin/f0TePjwvxUJQ2MJ4kDDtC_dba951a1d05a4c8f9324127e7751181e.jpg",
+    "model_url": "https://fal.run/fal-ai/gemini-25-flash-image",
+    "ai_model_price_list": [
+      {
+        "unit": "image_720p",
+        "price_per_unit": 0.039
+      },
+      {
+        "unit": "image_1080p",
+        "price_per_unit": 0.039
+      }
+    ],
+    "isValuable": true,
+    "supported_durations": [],
+    "pricingText": "Your request will cost $0.039 per image. For $1.00, you can run this model 25 times."
+  },
+  {
+    "endpoint_id": "fal-ai/gemini-25-flash-image/edit",
+    "provider": "fal.ai",
+    "display_name": "Gemini 2.5 Flash Image",
+    "description": "Google's famous original image generation and editing model, a.k.a Nano Banana",
+    "category": "image-to-image",
+    "status": "active",
+    "thumbnail_url": "https://fal.media/files/tiger/w7rvVqvAQiYg2cDSZTn2i_b6895b8a0f864c42a33bfd040dc1228c.jpg",
+    "model_url": "https://fal.run/fal-ai/gemini-25-flash-image/edit",
+    "ai_model_price_list": [
+      {
+        "unit": "image_720p",
+        "price_per_unit": 0.039
+      },
+      {
+        "unit": "image_1080p",
+        "price_per_unit": 0.039
+      }
+    ],
+    "isValuable": true,
+    "supported_durations": [],
+    "pricingText": "Your request will cost $0.039 per image. For $1.00, you can run this model 25 times."
+  },
+  {
+    "endpoint_id": "fal-ai/flux-pro/kontext/max/text-to-image",
+    "provider": "fal.ai",
+    "display_name": "FLUX.1 Kontext [max]",
+    "description": "FLUX.1 Kontext [max] text-to-image is a new premium model brings maximum performance across all aspects – greatly improved prompt adherence.",
+    "category": "text-to-image",
+    "status": "active",
+    "thumbnail_url": "https://storage.googleapis.com/fal_cdn/fal/Sound-3.jpg",
+    "model_url": "https://fal.run/fal-ai/flux-pro/kontext/max/text-to-image",
+    "ai_model_price_list": [
+      {
+        "unit": "image_720p",
+        "price_per_unit": 0.08
+      },
+      {
+        "unit": "image_1080p",
+        "price_per_unit": 0.08
+      }
+    ],
+    "isValuable": true,
+    "supported_durations": [],
+    "pricingText": "Your request will cost $0.08 per image."
+  },
+  {
+    "endpoint_id": "fal-ai/flux-pro/kontext/max",
+    "provider": "fal.ai",
+    "display_name": "FLUX.1 Kontext [max]",
+    "description": "FLUX.1 Kontext [max] is a model with greatly improved prompt adherence and typography generation meet premium consistency for editing without compromise on speed. \n ",
+    "category": "image-to-image",
+    "status": "active",
+    "thumbnail_url": "https://fal.media/files/tiger/9Ke6Di1rRqryqOR1SreQJ_33e684b4511644179b7429bb9c4cf592.jpg",
+    "model_url": "https://fal.run/fal-ai/flux-pro/kontext/max",
+    "ai_model_price_list": [
+      {
+        "unit": "image_720p",
+        "price_per_unit": 0.08
+      },
+      {
+        "unit": "image_1080p",
+        "price_per_unit": 0.08
+      }
+    ],
+    "isValuable": true,
+    "supported_durations": [],
+    "pricingText": "Your request will cost $0.08 per image."
+  },
+  {
+    "endpoint_id": "fal-ai/flux-pro/kontext/max/multi",
+    "provider": "fal.ai",
+    "display_name": "FLUX.1 Kontext [max]",
+    "description": "Experimental version of FLUX.1 Kontext [max] with multi image handling capabilities",
+    "category": "image-to-image",
+    "status": "active",
+    "thumbnail_url": "https://fal.media/files/koala/K-CKzmh6JmZz5D0L9ar6u_ad445c7c4de54d3fb05b5f72305ffff3.jpg",
+    "model_url": "https://fal.run/fal-ai/flux-pro/kontext/max/multi",
+    "ai_model_price_list": [
+      {
+        "unit": "image_720p",
+        "price_per_unit": 0.08
+      },
+      {
+        "unit": "image_1080p",
+        "price_per_unit": 0.08
+      }
+    ],
+    "isValuable": true,
+    "supported_durations": [],
+    "pricingText": "Waiting for your input...\nYour request will cost $0.08 per image."
+  },
+  {
+    "endpoint_id": "fal-ai/gemini-3.1-flash-image-preview",
+    "provider": "fal.ai",
+    "display_name": "Gemini 3.1 Flash Image Preview",
+    "description": "Gemini 3.1 Flash Image (a.k.a Nano Banana 2) is Google's new state-of-the-art fast image generation and editing model",
+    "category": "text-to-image",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/0a8ffadd/4fWGbdMY93hLdUwrA2-8S_5e33c8db6e0243ad8ec1164517de37d3.jpg",
+    "model_url": "https://fal.run/fal-ai/gemini-3.1-flash-image-preview",
+    "ai_model_price_list": [
+      {
+        "unit": "image_720p",
+        "price_per_unit": 0.08
+      },
+      {
+        "unit": "image_1080p",
+        "price_per_unit": 0.08
+      }
+    ],
+    "isValuable": true,
+    "supported_durations": [],
+    "pricingText": "Your request will cost $0.08 per image. For $1.00, you can run this model 12 times. 2K and 4K outputs will be charged at 1.5 times and 2 times the standard rate, respectively. 512x512 resolution outputs will be charged at 0.75 times the standard rate. If web search is used, an additional $0.015 will be charged. Note: Pricing is subject to change."
+  },
+  {
+    "endpoint_id": "fal-ai/gemini-3.1-flash-image-preview/edit",
+    "provider": "fal.ai",
+    "display_name": "Gemini 3.1 Flash Image Preview",
+    "description": "Gemini 3.1 Flash Image (a.k.a. Nano Banana 2) is Google's new state-of-the-art fast image generation and editing model",
+    "category": "image-to-image",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/0a90149a/wFO334Fx1uSWISNJNiWX8_0c3e76b1c53f483397ae8a6e2f6cc383.jpg",
+    "model_url": "https://fal.run/fal-ai/gemini-3.1-flash-image-preview/edit",
+    "ai_model_price_list": [
+      {
+        "unit": "image_720p",
+        "price_per_unit": 0.08
+      },
+      {
+        "unit": "image_1080p",
+        "price_per_unit": 0.08
+      }
+    ],
+    "isValuable": true,
+    "supported_durations": [],
+    "pricingText": "Your request will cost $0.08 per image. For $1.00, you can run this model 12 times. 2K and 4K outputs will be charged at 1.5 times and 2 times the standard rate, respectively. 512x512 resolution outputs will be charged at 0.75 times the standard rate. If web search is used, an additional $0.015 will be charged. Note: Pricing is subject to change."
+  },
+  {
+    "endpoint_id": "fal-ai/flux-2-max",
+    "provider": "fal.ai",
+    "display_name": "Flux 2 Max",
+    "description": "FLUX.2 [max] delivers state-of-the-art image generation and advanced image editing with exceptional realism, precision, and consistency.",
+    "category": "text-to-image",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/0a868a0f/zL7LNUIqnPPhZNy_PtHJq_330f66115240460788092cb9523b6aba.jpg",
+    "model_url": "https://fal.run/fal-ai/flux-2-max",
+    "ai_model_price_list": [
+      {
+        "unit": "image_720p",
+        "price_per_unit": 0.073
+      },
+      {
+        "unit": "image_1080p",
+        "price_per_unit": 0.141
+      }
+    ],
+    "isValuable": true,
+    "supported_durations": [],
+    "pricingText": "The first processed megapixel will cost $0.07. Each additional megapixel will cost 0.03"
+  },
+  {
+    "endpoint_id": "fal-ai/flux-2-max/edit",
+    "provider": "fal.ai",
+    "display_name": "Flux 2 Max",
+    "description": "FLUX.2 [max] delivers state-of-the-art image generation and advanced image editing with exceptional realism, precision, and consistency.",
+    "category": "image-to-image",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/0a8689a8/bbcmo6U5xg_RxDXijtxNA_55df705e1b1b4535a90bccd70887680e.jpg",
+    "model_url": "https://fal.run/fal-ai/flux-2-max/edit",
+    "ai_model_price_list": [
+      {
+        "unit": "image_720p",
+        "price_per_unit": 0.073
+      },
+      {
+        "unit": "image_1080p",
+        "price_per_unit": 0.141
+      }
+    ],
+    "isValuable": true,
+    "supported_durations": [],
+    "pricingText": "The first processed megapixel will cost $0.07. Each additional megapixel will cost 0.03. Input images counted as processed megapixel."
+  },
+  {
+    "endpoint_id": "fal-ai/flux-2/klein/9b",
+    "provider": "fal.ai",
+    "display_name": "FLUX.2 [klein] 9B",
+    "description": "Text-to-image generation with FLUX.2 [klein] 9B from Black Forest Labs. Enhanced realism, crisper text generation, and native editing capabilities.",
+    "category": "text-to-image",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/0a8a7f3c/90FKDpwtSCZTqOu0jUI-V_64c1a6ec0f9343908d9efa61b7f2444b.jpg",
+    "model_url": "https://fal.run/fal-ai/flux-2/klein/9b",
+    "ai_model_price_list": [
+      {
+        "unit": "image_720p",
+        "price_per_unit": 0.021
+      },
+      {
+        "unit": "image_1080p",
+        "price_per_unit": 0.034
+      }
+    ],
+    "isValuable": true,
+    "supported_durations": [],
+    "pricingText": "Your request will cost $0.006 per megapixel."
+  },
+  {
+    "endpoint_id": "fal-ai/flux-2/klein/9b/edit",
+    "provider": "fal.ai",
+    "display_name": "FLUX.2 [klein] 9B",
+    "description": "Image-to-image editing with FLUX.2 [klein] 9B from Black Forest Labs. Precise modifications using natural language descriptions and hex color control.",
+    "category": "image-to-image",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/0a8a7f50/X8ffS5h55gcigsNZoNC7O_52e6b383ac214d2abe0a2e023f03de88.jpg",
+    "model_url": "https://fal.run/fal-ai/flux-2/klein/9b/edit",
+    "ai_model_price_list": [
+      {
+        "unit": "image_720p",
+        "price_per_unit": 0.021
+      },
+      {
+        "unit": "image_1080p",
+        "price_per_unit": 0.034
+      }
+    ],
+    "isValuable": true,
+    "supported_durations": [],
+    "pricingText": "Waiting for your input...\nRequests cost $0.011 per megapixel of input and output. Input images will be resized to 1MP. For example, a 1024×1024 generation with a 512×512 input image will cost $0.022 (1 MP input + 1 MP output, each costing $0.011)."
+  },
+  {
+    "endpoint_id": "fal-ai/qwen-image-2/text-to-image",
+    "provider": "fal.ai",
+    "display_name": "Qwen Image 2",
+    "description": "Qwen-Image-2.0 is a next-generation foundational unified generation-and-editing model",
+    "category": "text-to-image",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/0a90b317/m9a3NQEWM3KLDsoytKr9C_39eb7747f7cb475089d31bfee934a120.jpg",
+    "model_url": "https://fal.run/fal-ai/qwen-image-2/text-to-image",
+    "ai_model_price_list": [
+      {
+        "unit": "image_720p",
+        "price_per_unit": 0.035
+      },
+      {
+        "unit": "image_1080p",
+        "price_per_unit": 0.035
+      }
+    ],
+    "isValuable": true,
+    "supported_durations": [],
+    "pricingText": "Your request will cost $0.035 per image."
+  },
+  {
+    "endpoint_id": "fal-ai/qwen-image-2/pro/text-to-image",
+    "provider": "fal.ai",
+    "display_name": "Qwen Image 2",
+    "description": "Qwen-Image-2.0 is a next-generation foundational unified generation-and-editing model",
+    "category": "text-to-image",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/0a90b320/-wZWpEebEQi20T6Z5ewms_ab61b57446c945a4beb6d3cab6b9367c.jpg",
+    "model_url": "https://fal.run/fal-ai/qwen-image-2/pro/text-to-image",
+    "ai_model_price_list": [
+      {
+        "unit": "image_720p",
+        "price_per_unit": 0.035
+      },
+      {
+        "unit": "image_1080p",
+        "price_per_unit": 0.035
+      }
+    ],
+    "isValuable": true,
+    "supported_durations": [],
+    "pricingText": "Your request will cost $0.075 per image."
+  },
+  {
+    "endpoint_id": "fal-ai/qwen-image-2/edit",
+    "provider": "fal.ai",
+    "display_name": "Qwen Image 2",
+    "description": "Qwen-Image-2.0 is a next-generation foundational unified generation-and-editing model",
+    "category": "image-to-image",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/0a90b2fc/Ktwh3M7POlvD59oS7rW2G_b395be4ae04343aaaf35a68bb92502c3.jpg",
+    "model_url": "https://fal.run/fal-ai/qwen-image-2/edit",
+    "ai_model_price_list": [
+      {
+        "unit": "image_720p",
+        "price_per_unit": 0.035
+      },
+      {
+        "unit": "image_1080p",
+        "price_per_unit": 0.035
+      }
+    ],
+    "isValuable": true,
+    "supported_durations": [],
+    "pricingText": "Your request will cost $0.035 per image."
+  },
+  {
+    "endpoint_id": "fal-ai/qwen-image-2/pro/edit",
+    "provider": "fal.ai",
+    "display_name": "Qwen Image 2",
+    "description": "Qwen-Image-2.0 is a next-generation foundational unified generation-and-editing model",
+    "category": "image-to-image",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/0a90b308/MaD9dwwc6YSa92Jhkhk0u_e29246f04f9646428d2ea04079417985.jpg",
+    "model_url": "https://fal.run/fal-ai/qwen-image-2/pro/edit",
+    "ai_model_price_list": [
+      {
+        "unit": "image_720p",
+        "price_per_unit": 0.035
+      },
+      {
+        "unit": "image_1080p",
+        "price_per_unit": 0.035
+      }
+    ],
+    "isValuable": true,
+    "supported_durations": [],
+    "pricingText": "Your request will cost $0.075 per image."
+  },
+  {
+    "endpoint_id": "fal-ai/flux-2-flex",
+    "provider": "fal.ai",
+    "display_name": "Flux 2 Flex",
+    "description": "Text-to-image generation with FLUX.2 [flex] from Black Forest Labs. Features adjustable inference steps and guidance scale for fine-tuned control. Enhanced typography and text rendering capabilities.",
+    "category": "text-to-image",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/panda/LqyVE8NElm_vf-t27Yfkz_6c1dd3323df343e4a3ec968d8f67024c.jpg",
+    "model_url": "https://fal.run/fal-ai/flux-2-flex",
+    "ai_model_price_list": [
+      {
+        "unit": "image_720p",
+        "price_per_unit": 0.05
+      },
+      {
+        "unit": "image_1080p",
+        "price_per_unit": 0.1
+      }
+    ],
+    "isValuable": true,
+    "supported_durations": [],
+    "pricingText": "Your request will cost $0.05 per megapixel on both input and output side, rounded up to the nearest megapixel. For example, a 1024x1024 image will cost $0.05, and a 1920x1080 image will cost $0.10 ($0.06 × 2 megapixels). Similarly, a 512x512 output will cost $0.05 ($0.05 for 0.26 megapixels, rounded to 1 megapixel)."
+  },
+  {
+    "endpoint_id": "fal-ai/flux-2-flex/edit",
+    "provider": "fal.ai",
+    "display_name": "Flux 2 Flex",
+    "description": "Image editing with FLUX.2 [flex] from Black Forest Labs. Supports multi-reference editing with customizable inference steps and enhanced text rendering.",
+    "category": "image-to-image",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/elephant/NXNJkZllyE8XTyMrtEALf_90206edd3ddb4ba793758a26bde823c7.jpg",
+    "model_url": "https://fal.run/fal-ai/flux-2-flex/edit",
+    "ai_model_price_list": [
+      {
+        "unit": "image_720p",
+        "price_per_unit": 0.05
+      },
+      {
+        "unit": "image_1080p",
+        "price_per_unit": 0.1
+      }
+    ],
+    "isValuable": true,
+    "supported_durations": [],
+    "pricingText": "Your request will cost $0.05 per megapixel on both input and output side, rounded up to the nearest megapixel. For example, a 1024x1024 image will cost $0.05, and a 1920x1080 image will cost $0.10 ($0.05 × 2 megapixels). Similarly, a 512x512 output will cost $0.06 ($0.05 for 0.26 megapixels, rounded to 1 megapixel)."
+  },
+  {
+    "endpoint_id": "fal-ai/kling-image/v3/text-to-image",
+    "provider": "fal.ai",
+    "display_name": "Kling Image",
+    "description": "Kling V3: Latest Kling Image model",
+    "category": "text-to-image",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/0a8cfd08/Ji4e0i6Afbeql3Wr5UTz6_ab60b14661424612bf19059e97e996a5.jpg",
+    "model_url": "https://fal.run/fal-ai/kling-image/v3/text-to-image",
+    "ai_model_price_list": [
+      {
+        "unit": "image_720p",
+        "price_per_unit": 0.028
+      },
+      {
+        "unit": "image_1080p",
+        "price_per_unit": 0.028
+      }
+    ],
+    "isValuable": true,
+    "supported_durations": [],
+    "pricingText": "Your request will cost $0.028 per image."
+  },
+  {
+    "endpoint_id": "fal-ai/kling-image/o3/text-to-image",
+    "provider": "fal.ai",
+    "display_name": "Kling Image",
+    "description": "Kling Omni 3: Top-tier text-to-image with flawless consistency.",
+    "category": "text-to-image",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/0a8cfcbc/DK-poq8omK9dUDtf0KCbr_41eb518e86be4c40ac1864a4a4fba2be.jpg",
+    "model_url": "https://fal.run/fal-ai/kling-image/o3/text-to-image",
+    "ai_model_price_list": [
+      {
+        "unit": "image_720p",
+        "price_per_unit": 0.028
+      },
+      {
+        "unit": "image_1080p",
+        "price_per_unit": 0.028
+      }
+    ],
+    "isValuable": true,
+    "supported_durations": [],
+    "pricingText": "Your request will cost $0.028 per image for 1K/2K, price will be double for 4K"
+  },
+  {
+    "endpoint_id": "fal-ai/kling-image/o3/image-to-image",
+    "provider": "fal.ai",
+    "display_name": "Kling Image",
+    "description": "Kling Omni 3: Top-tier image-to-image with flawless consistency.",
+    "category": "image-to-image",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/0a8d24a0/FX4gbFjRsBJPDJ2WkPMFa_9f3aa39f5fd84be395b5ce3dee7e4dd1.jpg",
+    "model_url": "https://fal.run/fal-ai/kling-image/o3/image-to-image",
+    "ai_model_price_list": [
+      {
+        "unit": "image_720p",
+        "price_per_unit": 0.028
+      },
+      {
+        "unit": "image_1080p",
+        "price_per_unit": 0.028
+      }
+    ],
+    "isValuable": true,
+    "supported_durations": [],
+    "pricingText": "Your request will cost $0.028 per image for 1K/2K, price will be double for 4K"
+  },
+  {
+    "endpoint_id": "fal-ai/kling-image/v3/image-to-image",
+    "provider": "fal.ai",
+    "display_name": "Kling Image",
+    "description": "Kling Image V3: Latest kling image model",
+    "category": "image-to-image",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/0a8cfd13/t6TSkWzl6cFAzvO1PCdDu_f38263f637d245929f03881454951540.jpg",
+    "model_url": "https://fal.run/fal-ai/kling-image/v3/image-to-image",
+    "ai_model_price_list": [
+      {
+        "unit": "image_720p",
+        "price_per_unit": 0.028
+      },
+      {
+        "unit": "image_1080p",
+        "price_per_unit": 0.028
+      }
+    ],
+    "isValuable": true,
+    "supported_durations": [],
+    "pricingText": "Your request will cost $0.028 per image."
+  },
+  {
+    "endpoint_id": "fal-ai/flux-kontext-lora/text-to-image",
+    "provider": "fal.ai",
+    "display_name": "Flux Kontext Lora",
+    "description": "Super fast text-to-image endpoint for the FLUX.1 Kontext [dev] model with LoRA support, enabling rapid and high-quality image generation using pre-trained LoRA adaptations for personalization, specific styles, brand identities, and product-specific outputs.",
+    "category": "text-to-image",
+    "status": "active",
+    "thumbnail_url": "https://storage.googleapis.com/fal_cdn/fal/Training-4.jpg",
+    "model_url": "https://fal.run/fal-ai/flux-kontext-lora/text-to-image",
+    "ai_model_price_list": [
+      {
+        "unit": "image_720p",
+        "price_per_unit": 0.035
+      },
+      {
+        "unit": "image_1080p",
+        "price_per_unit": 0.07
+      }
+    ],
+    "isValuable": true,
+    "supported_durations": [],
+    "pricingText": "Your request will cost $0.035 per megapixel."
+  },
+  {
+    "endpoint_id": "fal-ai/flux-kontext-lora",
+    "provider": "fal.ai",
+    "display_name": "Flux Kontext Lora",
+    "description": "Fast endpoint for the FLUX.1 Kontext [dev] model with LoRA support, enabling rapid and high-quality image editing using pre-trained LoRA adaptations for specific styles, brand identities, and product-specific outputs.",
+    "category": "image-to-image",
+    "status": "active",
+    "thumbnail_url": "https://storage.googleapis.com/fal_cdn/fal/Upscale-3.jpeg",
+    "model_url": "https://fal.run/fal-ai/flux-kontext-lora",
+    "ai_model_price_list": [
+      {
+        "unit": "image_720p",
+        "price_per_unit": 0.035
+      },
+      {
+        "unit": "image_1080p",
+        "price_per_unit": 0.07
+      }
+    ],
+    "isValuable": true,
+    "supported_durations": [],
+    "pricingText": "Your request will cost $0.035 per megapixel.\nImages are billed by rounding up to the nearest megapixel."
+  },
+  {
+    "endpoint_id": "fal-ai/flux-kontext-lora/inpaint",
+    "provider": "fal.ai",
+    "display_name": "Flux Kontext Lora",
+    "description": "Fast inpainting endpoint for the FLUX.1 Kontext [dev] model with LoRA support, enabling rapid and high-quality image inpainting with reference images, while using pre-trained LoRA adaptations for specific styles, brand identities, and product-specific outputs.",
+    "category": "image-to-image",
+    "status": "active",
+    "thumbnail_url": "https://storage.googleapis.com/fal_cdn/fal/Sound-1.jpg",
+    "model_url": "https://fal.run/fal-ai/flux-kontext-lora/inpaint",
+    "ai_model_price_list": [
+      {
+        "unit": "image_720p",
+        "price_per_unit": 0.035
+      },
+      {
+        "unit": "image_1080p",
+        "price_per_unit": 0.07
+      }
+    ],
+    "isValuable": true,
+    "supported_durations": [],
+    "pricingText": "Your request will cost $0.035 per megapixel.\nImages are billed by rounding up to the nearest megapixel."
+  },
+  {
+    "endpoint_id": "fal-ai/wan/v2.7/text-to-image",
+    "provider": "fal.ai",
+    "display_name": "Wan",
+    "description": "Generate high-quality images from text prompts using the WAN 2.7 model with advanced prompt understanding and detailed output.",
+    "category": "text-to-image",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/0a948152/0UucVYSOBXiyibwSyN3HT_38400743f04344a5b25b1cd9b551a625.jpg",
+    "model_url": "https://fal.run/fal-ai/wan/v2.7/text-to-image",
+    "ai_model_price_list": [
+      {
+        "unit": "image_720p",
+        "price_per_unit": 0.075
+      },
+      {
+        "unit": "image_1080p",
+        "price_per_unit": 0.075
+      }
+    ],
+    "isValuable": true,
+    "supported_durations": [],
+    "pricingText": "Waiting for your input...\nYour request will cost $0.03 per image."
+  },
+  {
+    "endpoint_id": "fal-ai/wan/v2.7/pro/text-to-image",
+    "provider": "fal.ai",
+    "display_name": "Wan",
+    "description": "Generate premium-quality images from text prompts using the enhanced WAN 2.7 Pro model with superior detail and composition.",
+    "category": "text-to-image",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/0a94814a/vKQfFX-pXcXv4MDvgtybu_d79aaa7e8534459281ac0bb474872f4b.jpg",
+    "model_url": "https://fal.run/fal-ai/wan/v2.7/pro/text-to-image",
+    "ai_model_price_list": [
+      {
+        "unit": "image_720p",
+        "price_per_unit": 0.075
+      },
+      {
+        "unit": "image_1080p",
+        "price_per_unit": 0.075
+      }
+    ],
+    "isValuable": true,
+    "supported_durations": [],
+    "pricingText": "Waiting for your input...\nYour request will cost $0.075 per image."
+  },
+  {
+    "endpoint_id": "fal-ai/wan/v2.2-a14b/text-to-image",
+    "provider": "fal.ai",
+    "display_name": "Wan",
+    "description": "Wan 2.2's 14B model generates high-resolution, photorealistic images with powerful prompt understanding and fine-grained visual detail",
+    "category": "text-to-image",
+    "status": "active",
+    "thumbnail_url": "https://storage.googleapis.com/fal_cdn/fal/Sound-2.jpg",
+    "model_url": "https://fal.run/fal-ai/wan/v2.2-a14b/text-to-image",
+    "ai_model_price_list": [
+      {
+        "unit": "image_720p",
+        "price_per_unit": 0.075
+      },
+      {
+        "unit": "image_1080p",
+        "price_per_unit": 0.075
+      }
+    ],
+    "isValuable": true,
+    "supported_durations": [],
+    "pricingText": "Your request will cost $0.025 per image."
+  },
+  {
+    "endpoint_id": "fal-ai/wan/v2.2-5b/text-to-image",
+    "provider": "fal.ai",
+    "display_name": "Wan",
+    "description": "Wan 2.2's 5B model generates high-resolution, photorealistic images with powerful prompt understanding and fine-grained visual detail",
+    "category": "text-to-image",
+    "status": "active",
+    "thumbnail_url": "https://fal.media/files/kangaroo/xvsySaKCeM5ZulogiaTX2_f6fa9b031e374468bcb9e426528807e4.jpg",
+    "model_url": "https://fal.run/fal-ai/wan/v2.2-5b/text-to-image",
+    "ai_model_price_list": [
+      {
+        "unit": "image_720p",
+        "price_per_unit": 0.075
+      },
+      {
+        "unit": "image_1080p",
+        "price_per_unit": 0.075
+      }
+    ],
+    "isValuable": true,
+    "supported_durations": [],
+    "pricingText": "Your request will cost $0.016 per image."
+  },
+  {
+    "endpoint_id": "fal-ai/wan/v2.7/pro/edit",
+    "provider": "fal.ai",
+    "display_name": "Wan",
+    "description": "Edit and transform images using text instructions with the WAN 2.7 Pro model for precise, professional-grade image modifications.",
+    "category": "image-to-image",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/0a94816f/BhHA2kmKyAQ8vJxw_HPQ4_2b4b35f0fbb0449195d84178ba988112.jpg",
+    "model_url": "https://fal.run/fal-ai/wan/v2.7/pro/edit",
+    "ai_model_price_list": [
+      {
+        "unit": "image_720p",
+        "price_per_unit": 0.075
+      },
+      {
+        "unit": "image_1080p",
+        "price_per_unit": 0.075
+      }
+    ],
+    "isValuable": true,
+    "supported_durations": [],
+    "pricingText": "Waiting for your input...\nYour request will cost $0.075 per image."
+  },
+  {
+    "endpoint_id": "fal-ai/wan/v2.7/edit",
+    "provider": "fal.ai",
+    "display_name": "Wan",
+    "description": "Transform and edit existing images with text-guided instructions using the WAN 2.7 model for creative image manipulation.",
+    "category": "image-to-image",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/0a948161/E43snBsqtEWRB2KGM6723_8b2971637e504a00b4bcf2cec7d544b6.jpg",
+    "model_url": "https://fal.run/fal-ai/wan/v2.7/edit",
+    "ai_model_price_list": [
+      {
+        "unit": "image_720p",
+        "price_per_unit": 0.075
+      },
+      {
+        "unit": "image_1080p",
+        "price_per_unit": 0.075
+      }
+    ],
+    "isValuable": true,
+    "supported_durations": [],
+    "pricingText": "Waiting for your input...\nYour request will cost $0.03 per image."
+  },
+  {
+    "endpoint_id": "fal-ai/wan/v2.2-a14b/image-to-image",
+    "provider": "fal.ai",
+    "display_name": "Wan",
+    "description": "Wan 2.2's 14B model edit high-resolution, photorealistic images with powerful prompt understanding and fine-grained visual detail",
+    "category": "image-to-image",
+    "status": "active",
+    "thumbnail_url": "https://storage.googleapis.com/fal_cdn/fal/Sound-2.jpg",
+    "model_url": "https://fal.run/fal-ai/wan/v2.2-a14b/image-to-image",
+    "ai_model_price_list": [
+      {
+        "unit": "image_720p",
+        "price_per_unit": 0.075
+      },
+      {
+        "unit": "image_1080p",
+        "price_per_unit": 0.075
+      }
+    ],
+    "isValuable": true,
+    "supported_durations": [],
+    "pricingText": "Your request will cost $0.05 per image."
+  },
+  {
+    "endpoint_id": "fal-ai/hunyuan-image/v3/text-to-image",
+    "provider": "fal.ai",
+    "display_name": "Hunyuan Image",
+    "description": "Leverage the state-of-the-art capabilities of Hunyuan Image 3.0 to generate visual content that effectively conveys the messaging of your written material.",
+    "category": "text-to-image",
+    "status": "active",
+    "thumbnail_url": "https://v3.fal.media/files/kangaroo/en7kxz5HNAQKg5QuONGDH_760708cdbc4b49e1a96e6b7628e43c35.jpg",
+    "model_url": "https://fal.run/fal-ai/hunyuan-image/v3/text-to-image",
+    "ai_model_price_list": [
+      {
+        "unit": "image_720p",
+        "price_per_unit": 0.082944
+      },
+      {
+        "unit": "image_1080p",
+        "price_per_unit": 0.186624
+      }
+    ],
+    "isValuable": true,
+    "supported_durations": [],
+    "pricingText": "Your request will cost $0.1 per megapixel."
+  },
+  {
+    "endpoint_id": "fal-ai/hunyuan-image/v2.1/text-to-image",
+    "provider": "fal.ai",
+    "display_name": "Hunyuan Image",
+    "description": "Use the amazing capabilities of hunyuan image 2.1 to generate images that express the feelings of your text.",
+    "category": "text-to-image",
+    "status": "active",
+    "thumbnail_url": "https://fal.media/files/monkey/fl_uWB5P9sMjDBhq_7hG0_644c0f46ad94482d8e2e09e180e64c88.jpg",
+    "model_url": "https://fal.run/fal-ai/hunyuan-image/v2.1/text-to-image",
+    "ai_model_price_list": [
+      {
+        "unit": "image_720p",
+        "price_per_unit": 0.082944
+      },
+      {
+        "unit": "image_1080p",
+        "price_per_unit": 0.186624
+      }
+    ],
+    "isValuable": true,
+    "supported_durations": [],
+    "pricingText": "Waiting for your input...\nYour request will cost $0.1 per megapixel."
+  },
+  {
+    "endpoint_id": "fal-ai/hunyuan-image/v3/instruct/edit",
+    "provider": "fal.ai",
+    "display_name": "Hunyuan Image",
+    "description": "Image editing endpoint for Hunyuan Image 3.0 Instruct.",
+    "category": "image-to-image",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/0a8c3dc2/kFAFxnTUhioIU9gO4SE5x_6ab7631c86e84c4ab9645aea5a90242b.jpg",
+    "model_url": "https://fal.run/fal-ai/hunyuan-image/v3/instruct/edit",
+    "ai_model_price_list": [
+      {
+        "unit": "image_720p",
+        "price_per_unit": 0.082944
+      },
+      {
+        "unit": "image_1080p",
+        "price_per_unit": 0.186624
+      }
+    ],
+    "isValuable": true,
+    "supported_durations": [],
+    "pricingText": "Your request will cost $0.09 per megapixel."
+  },
+  {
+    "endpoint_id": "fal-ai/gpt-image-1/text-to-image",
+    "provider": "fal.ai",
+    "display_name": "gpt-image-1",
+    "description": "OpenAI's latest image generation and editing model: gpt-1-image.",
+    "category": "text-to-image",
+    "status": "active",
+    "thumbnail_url": "https://storage.googleapis.com/fal_cdn/fal/for%20videos-2.jpg",
+    "model_url": "https://fal.run/fal-ai/gpt-image-1/text-to-image",
+    "ai_model_price_list": [],
+    "isValuable": false,
+    "supported_durations": [],
+    "pricingText": "Your request will cost different amounts based on the input and output."
+  },
+  {
+    "endpoint_id": "fal-ai/gpt-image-1/edit-image",
+    "provider": "fal.ai",
+    "display_name": "gpt-image-1",
+    "description": "OpenAI's latest image generation and editing model: gpt-1-image.",
+    "category": "image-to-image",
+    "status": "active",
+    "thumbnail_url": "https://storage.googleapis.com/fal_cdn/fal/Upscale-2.jpg",
+    "model_url": "https://fal.run/fal-ai/gpt-image-1/edit-image",
+    "ai_model_price_list": [],
+    "isValuable": false,
+    "supported_durations": [],
+    "pricingText": "Your request will cost different amounts based on the input and output."
+  },
+  {
+    "endpoint_id": "fal-ai/flux-2/klein/4b",
+    "provider": "fal.ai",
+    "display_name": "FLUX.2 [klein] 4B",
+    "description": "Text-to-image generation with FLUX.2 [klein] 4B from Black Forest Labs. Enhanced realism, crisper text generation, and native editing capabilities.",
+    "category": "text-to-image",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/0a8a7f30/UwGq5qBE9zqd4r6QI7En0_082c2d0376a646378870218b6c0589f9.jpg",
+    "model_url": "https://fal.run/fal-ai/flux-2/klein/4b",
+    "ai_model_price_list": [
+      {
+        "unit": "image_720p",
+        "price_per_unit": 0.009216
+      },
+      {
+        "unit": "image_1080p",
+        "price_per_unit": 0.020736
+      }
+    ],
+    "isValuable": true,
+    "supported_durations": [],
+    "pricingText": "Your request will cost $0.005 per megapixel."
+  },
+  {
+    "endpoint_id": "fal-ai/flux-2/klein/4b/edit",
+    "provider": "fal.ai",
+    "display_name": "FLUX.2 [klein] 4B",
+    "description": "Image-to-image editing with FLUX.2 [klein] 4B from Black Forest Labs. Precise modifications using natural language descriptions and hex color control.",
+    "category": "image-to-image",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/0a8a7f40/-9rbLPCsz36IFb-4t3J2L_76750002c0db4ce899b77e98321ffe30.jpg",
+    "model_url": "https://fal.run/fal-ai/flux-2/klein/4b/edit",
+    "ai_model_price_list": [
+      {
+        "unit": "image_720p",
+        "price_per_unit": 0.009216
+      },
+      {
+        "unit": "image_1080p",
+        "price_per_unit": 0.020736
+      }
+    ],
+    "isValuable": true,
+    "supported_durations": [],
+    "pricingText": "Your request will cost $0.01 per megapixel."
+  },
+  {
+    "endpoint_id": "fal-ai/flux-2/klein/9b/base",
+    "provider": "fal.ai",
+    "display_name": "FLUX.2 [klein] 9B Base",
+    "description": "Text-to-image generation with FLUX.2 [klein] 9B Base from Black Forest Labs. Enhanced realism, crisper text generation, and native editing capabilities.",
+    "category": "text-to-image",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/0a8a7f3c/90FKDpwtSCZTqOu0jUI-V_64c1a6ec0f9343908d9efa61b7f2444b.jpg",
+    "model_url": "https://fal.run/fal-ai/flux-2/klein/9b/base",
+    "ai_model_price_list": [
+      {
+        "unit": "image_720p",
+        "price_per_unit": 0.0211312
+      },
+      {
+        "unit": "image_1080p",
+        "price_per_unit": 0.0338096
+      }
+    ],
+    "isValuable": true,
+    "supported_durations": [],
+    "pricingText": "Your request will cost $0.011 per megapixel."
+  },
+  {
+    "endpoint_id": "fal-ai/flux-2/klein/9b/base/edit",
+    "provider": "fal.ai",
+    "display_name": "FLUX.2 [klein] 9B Base",
+    "description": "Image-to-image editing with Flux 2 [klein] 9B Base from Black Forest Labs. Precise modifications using natural language descriptions and hex color control.",
+    "category": "image-to-image",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/0a8a7f50/X8ffS5h55gcigsNZoNC7O_52e6b383ac214d2abe0a2e023f03de88.jpg",
+    "model_url": "https://fal.run/fal-ai/flux-2/klein/9b/base/edit",
+    "ai_model_price_list": [
+      {
+        "unit": "image_720p",
+        "price_per_unit": 0.0211312
+      },
+      {
+        "unit": "image_1080p",
+        "price_per_unit": 0.0338096
+      }
+    ],
+    "isValuable": true,
+    "supported_durations": [],
+    "pricingText": "Requests cost $0.011 per megapixel of input and output. Input images will be resized to 1MP. For example, a 1024×1024 generation with a 512×512 input image will cost $0.022 (1 MP input + 1 MP output, each costing $0.011)."
+  },
+  {
+    "endpoint_id": "fal-ai/flux-2/klein/9b/base/lora",
+    "provider": "fal.ai",
+    "display_name": "FLUX.2 [klein] 9B Base LoRA",
+    "description": "Text-to-image generation with LoRA support for FLUX.2 [klein] 9B Base from Black Forest Labs. Custom style adaptation and fine-tuned model variations.",
+    "category": "text-to-image",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/0a8b09ab/3my7lbot7weIdE03-d5xc_2da235d3c4d14924b2c7a03f47e1bd65.jpg",
+    "model_url": "https://fal.run/fal-ai/flux-2/klein/9b/base/lora",
+    "ai_model_price_list": [
+      {
+        "unit": "image_720p",
+        "price_per_unit": 0.038432
+      },
+      {
+        "unit": "image_1080p",
+        "price_per_unit": 0.061472
+      }
+    ],
+    "isValuable": true,
+    "supported_durations": [],
+    "pricingText": "Waiting for your input...\nYour request will cost $0.02 per megapixel."
+  },
+  {
+    "endpoint_id": "fal-ai/flux-2/klein/9b/base/edit/lora",
+    "provider": "fal.ai",
+    "display_name": "FLUX.2 [klein] 9B Base LoRA",
+    "description": "Image-to-image editing with LoRA support for FLUX.2 [klein] 9B Base from Black Forest Labs. Specialized style transfer and domain-specific modifications.",
+    "category": "image-to-image",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/0a8b09b1/1lRmcLX6NOxTZp285RGPN_85a165d7a3cd4fbfba4c6302d341f0aa.jpg",
+    "model_url": "https://fal.run/fal-ai/flux-2/klein/9b/base/edit/lora",
+    "ai_model_price_list": [
+      {
+        "unit": "image_720p",
+        "price_per_unit": 0.038432
+      },
+      {
+        "unit": "image_1080p",
+        "price_per_unit": 0.061472
+      }
+    ],
+    "isValuable": true,
+    "supported_durations": [],
+    "pricingText": "Waiting for your input...\nRequests cost $0.02 per megapixel of input and output. Input images will be resized to 1MP. For example, a 1024x1024 generation with 512*512 size image input will cost 0.04 (1 MP input + 1 MP output, each costing 0.02)."
+  },
+  {
+    "endpoint_id": "fal-ai/recraft/v3/text-to-image",
+    "provider": "fal.ai",
+    "display_name": "Recraft V3",
+    "description": "Recraft V3 is a text-to-image model with the ability to generate long texts, vector art, images in brand style, and much more. As of today, it is SOTA in image generation, proven by Hugging Face's industry-leading Text-to-Image Benchmark by Artificial Analysis.",
+    "category": "text-to-image",
+    "status": "active",
+    "thumbnail_url": "https://storage.googleapis.com/falserverless/gallery/recraft-v3.webp",
+    "model_url": "https://fal.run/fal-ai/recraft/v3/text-to-image",
+    "ai_model_price_list": [
+      {
+        "unit": "image_720p",
+        "price_per_unit": 0.04
+      },
+      {
+        "unit": "image_1080p",
+        "price_per_unit": 0.04
+      }
+    ],
+    "isValuable": true,
+    "supported_durations": [],
+    "pricingText": "Your request will cost $0.04 per image (or $0.08 if you are using a vector style). For $1 you can run this model approximately 25 times."
+  },
+  {
+    "endpoint_id": "fal-ai/recraft/v3/image-to-image",
+    "provider": "fal.ai",
+    "display_name": "Recraft V3",
+    "description": "Recraft V3 is a text-to-image model with the ability to generate long texts, vector art, images in brand style, and much more. As of today, it is SOTA in image generation, proven by Hugging Face's industry-leading Text-to-Image Benchmark by Artificial Analysis.",
+    "category": "image-to-image",
+    "status": "active",
+    "thumbnail_url": "https://storage.googleapis.com/falserverless/gallery/recraft-v3.webp",
+    "model_url": "https://fal.run/fal-ai/recraft/v3/image-to-image",
+    "ai_model_price_list": [
+      {
+        "unit": "image_720p",
+        "price_per_unit": 0.04
+      },
+      {
+        "unit": "image_1080p",
+        "price_per_unit": 0.04
+      }
+    ],
+    "isValuable": true,
+    "supported_durations": [],
+    "pricingText": "Your request will cost $0.04 per image (or $0.08 if you are using a vector style). For $1 you can run this model approximately 25 times."
+  },
+  {
+    "endpoint_id": "fal-ai/ideogram/custom-models/generate",
+    "provider": "fal.ai",
+    "display_name": "Ideogram",
+    "description": "Train Ideogram on your photos, your style, your subject, your look, from a small set of reference images to images that feel consistently yours ",
+    "category": "text-to-image",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/0a97523a/X8mgYPEqIN_O5iBJzNxjF_bd259b2ee58d4514a4fbc2e39a1f5c4f.jpg",
+    "model_url": "https://fal.run/fal-ai/ideogram/custom-models/generate",
+    "ai_model_price_list": [
+      {
+        "unit": "image_720p",
+        "price_per_unit": 0.03
+      },
+      {
+        "unit": "image_1080p",
+        "price_per_unit": 0.03
+      }
+    ],
+    "isValuable": true,
+    "supported_durations": [],
+    "pricingText": "Your request will cost $0.03 with TURBO, $0.06 with BALANCED, and $0.09 with QUALITY."
+  },
+  {
+    "endpoint_id": "fal-ai/ideogram/v3/reframe",
+    "provider": "fal.ai",
+    "display_name": "Ideogram",
+    "description": "Extend existing images with Ideogram V3's reframe feature. Create expanded versions and adaptations while preserving main image and adding new creative directions through prompt guidance.",
+    "category": "image-to-image",
+    "status": "active",
+    "thumbnail_url": "https://fal.media/files/monkey/o7F_OomTu8c7O949nQZKc_7fca2610b9844c7086fedcf2e8df707b.jpg",
+    "model_url": "https://fal.run/fal-ai/ideogram/v3/reframe",
+    "ai_model_price_list": [
+      {
+        "unit": "image_720p",
+        "price_per_unit": 0.03
+      },
+      {
+        "unit": "image_1080p",
+        "price_per_unit": 0.03
+      }
+    ],
+    "isValuable": true,
+    "supported_durations": [],
+    "pricingText": "Your request will cost $0.03 with TURBO, $0.06 with BALANCED, and $0.09 with QUALITY."
+  },
+  {
+    "endpoint_id": "fal-ai/ideogram/v3/remix",
+    "provider": "fal.ai",
+    "display_name": "Ideogram",
+    "description": "Reimagine existing images with Ideogram V3's remix feature. Create variations and adaptations while preserving core elements and adding new creative directions through prompt guidance.",
+    "category": "image-to-image",
+    "status": "active",
+    "thumbnail_url": "https://fal.media/files/tiger/H2-lBMLTJ9R_pMJKy1N1c_078a7fbed0f241d5a81afd34cc3d7233.jpg",
+    "model_url": "https://fal.run/fal-ai/ideogram/v3/remix",
+    "ai_model_price_list": [
+      {
+        "unit": "image_720p",
+        "price_per_unit": 0.03
+      },
+      {
+        "unit": "image_1080p",
+        "price_per_unit": 0.03
+      }
+    ],
+    "isValuable": true,
+    "supported_durations": [],
+    "pricingText": "Your request will cost $0.03 with TURBO, $0.06 with BALANCED, and $0.09 with QUALITY."
+  },
+  {
+    "endpoint_id": "fal-ai/ideogram/v3/layerize-text",
+    "provider": "fal.ai",
+    "display_name": "Ideogram",
+    "description": "Ideogram Layerize takes an existing flat graphic, removes text, and returns structured text containers you can edit/recompose in html or json format.",
+    "category": "image-to-image",
+    "status": "active",
+    "thumbnail_url": "https://refinery.fal.media/url/https%3A%2F%2Fv3b.fal.media%2Ffiles%2Fb%2F0a9460fc%2FqOhhsjsE6IMg_rU1F0CVn_1a3a46a9131e4cbeaacf3314339c8d35.jpg/tr:w-1920,q-80/qOhhsjsE6IMg_rU1F0CVn_1a3a46a9131e4cbeaacf3314339c8d35.webp",
+    "model_url": "https://fal.run/fal-ai/ideogram/v3/layerize-text",
+    "ai_model_price_list": [
+      {
+        "unit": "image_720p",
+        "price_per_unit": 0.03
+      },
+      {
+        "unit": "image_1080p",
+        "price_per_unit": 0.03
+      }
+    ],
+    "isValuable": true,
+    "supported_durations": [],
+    "pricingText": "Waiting for your input...\nYour request will cost $0.09 per image."
+  },
+  {
+    "endpoint_id": "fal-ai/flux-2/klein/9b/lora",
+    "provider": "fal.ai",
+    "display_name": "FLUX.2 [klein] 9B LoRA",
+    "description": "Text-to-image generation with FLUX.2 [klein] 9B from Black Forest Labs and custom LoRA. ",
+    "category": "text-to-image",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/0a928e3b/sIC-Ne9BMwZZtBvR3FwKN_9a724704a550471a9df59999e9e1017f.jpg",
+    "model_url": "https://fal.run/fal-ai/flux-2/klein/9b/lora",
+    "ai_model_price_list": [
+      {
+        "unit": "image_720p",
+        "price_per_unit": 0.0276
+      },
+      {
+        "unit": "image_1080p",
+        "price_per_unit": 0.0461
+      }
+    ],
+    "isValuable": true,
+    "supported_durations": [],
+    "pricingText": "Requests cost $0.015 per megapixel"
+  },
+  {
+    "endpoint_id": "fal-ai/flux-2/klein/9b/edit/lora",
+    "provider": "fal.ai",
+    "display_name": "FLUX.2 [klein] 9B LoRA",
+    "description": "Image-to-image editing with FLUX.2 [klein] 9B from Black Forest Labs and custom LoRA. Precise modifications using natural language descriptions and hex color control.",
+    "category": "image-to-image",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/0a928dd2/yFNW07YLHtp5zuE4eJAW1_e2f89915a1b740559b3c652b0b028296.jpg",
+    "model_url": "https://fal.run/fal-ai/flux-2/klein/9b/edit/lora",
+    "ai_model_price_list": [
+      {
+        "unit": "image_720p",
+        "price_per_unit": 0.0276
+      },
+      {
+        "unit": "image_1080p",
+        "price_per_unit": 0.0461
+      }
+    ],
+    "isValuable": true,
+    "supported_durations": [],
+    "pricingText": "Waiting for your input...\nRequests cost $0.015 per megapixel of input and output. Input images will be resized to 1MP. For example, a 1024x1024 generation with 512*512 size image input will cost 0.03 (1 MP input + 1 MP output, each costing 0.015)."
+  },
+  {
+    "endpoint_id": "fal-ai/flux-2/klein/4b/base",
+    "provider": "fal.ai",
+    "display_name": "FLUX.2 [klein] 4B Base",
+    "description": "Text-to-image generation with FLUX.2 [klein] 4B Base from Black Forest Labs. Enhanced realism, crisper text generation, and native editing capabilities.",
+    "category": "text-to-image",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/0a8a7f36/bYUAh_nzYUAUa_yCBkrP1_2dd84022eeda49e99db95e13fc588e47.jpg",
+    "model_url": "https://fal.run/fal-ai/flux-2/klein/4b/base",
+    "ai_model_price_list": [
+      {
+        "unit": "image_720p",
+        "price_per_unit": 0.0166
+      },
+      {
+        "unit": "image_1080p",
+        "price_per_unit": 0.0277
+      }
+    ],
+    "isValuable": true,
+    "supported_durations": [],
+    "pricingText": "Your request will cost $0.009 per megapixel."
+  },
+  {
+    "endpoint_id": "fal-ai/flux-2/klein/4b/base/edit",
+    "provider": "fal.ai",
+    "display_name": "FLUX.2 [klein] 4B Base",
+    "description": "Image-to-image editing with FLUX.2 [klein] 4B Base from Black Forest Labs. Precise modifications using natural language descriptions and hex color control.",
+    "category": "image-to-image",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/0a8a7f49/nKsGN6UMAi6IjaYdkmILC_e20d2097bb984ad589518cf915fe54b4.jpg",
+    "model_url": "https://fal.run/fal-ai/flux-2/klein/4b/base/edit",
+    "ai_model_price_list": [
+      {
+        "unit": "image_720p",
+        "price_per_unit": 0.0166
+      },
+      {
+        "unit": "image_1080p",
+        "price_per_unit": 0.0277
+      }
+    ],
+    "isValuable": true,
+    "supported_durations": [],
+    "pricingText": "Requests cost $0.009 per megapixel of input and output. Input images will be resized to 1MP. For example, a 1024×1024 generation with a 512×512 input image will cost $0.018 (1 MP input + 1 MP output, each costing $0.009)."
+  },
+  {
+    "endpoint_id": "fal-ai/gpt-image-1-mini",
+    "provider": "fal.ai",
+    "display_name": "GPT Image 1 Mini",
+    "description": "GPT Image 1 mini combines OpenAI's advanced language capabilities, powered by GPT-5, with GPT Image 1 Mini for efficient image generation. ",
+    "category": "text-to-image",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/monkey/Z7Y5fVvUXaT1XzWGqVngY_f333390b078a4bed9491ccda3b9f0e90.jpg",
+    "model_url": "https://fal.run/fal-ai/gpt-image-1-mini",
+    "ai_model_price_list": [],
+    "isValuable": false,
+    "supported_durations": [],
+    "pricingText": "Your request will cost different amounts based on the input and output."
+  },
+  {
+    "endpoint_id": "fal-ai/gpt-image-1-mini/edit",
+    "provider": "fal.ai",
+    "display_name": "GPT Image 1 Mini",
+    "description": "GPT Image 1 mini combines OpenAI's advanced language capabilities, powered by GPT-5, with GPT Image 1 Mini for efficient image generation. ",
+    "category": "image-to-image",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/lion/cG0uNtODkeDPtNDUXms1H_63d395581f334382bf6806b78849ffb0.jpg",
+    "model_url": "https://fal.run/fal-ai/gpt-image-1-mini/edit",
+    "ai_model_price_list": [],
+    "isValuable": false,
+    "supported_durations": [],
+    "pricingText": "Your request will cost different amounts based on the input and output."
+  },
+  {
+    "endpoint_id": "fal-ai/patina/material",
+    "provider": "fal.ai",
+    "display_name": "PATINA",
+    "description": "Generate complete seamlessly tiling PBR materials including normal, roughness, basecolor, height and metalness maps up to 8K",
+    "category": "text-to-image",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/0a9596f4/U3y78FMFLx6ZDukI2cHTK_2f621082b5f940d3a0276f1cb37a3eaf.jpg",
+    "model_url": "https://fal.run/fal-ai/patina/material",
+    "ai_model_price_list": [],
+    "isValuable": false,
+    "supported_durations": [],
+    "pricingText": "Your request will cost $0.01 plus $0.02 per megapixel plus $0.01 per megapixel per map type. When using 2x upscaling, an additional $0.004 per (pre-upscaling) megapixel per map will be charged, and when using 4x upscaling, an additional $0.016 per (pre-upscaling) megapixel per map will be charged. For example, A 1024x1024 material with all 5 maps and no upscaling (1K) will cost $0.08, and a 2048x2048 material with all 5 maps and 4x upscaling (8K) will cost $0.61."
+  },
+  {
+    "endpoint_id": "fal-ai/patina",
+    "provider": "fal.ai",
+    "display_name": "PATINA",
+    "description": "PATINA creates seamless high-resolution normal, roughness, basecolor (albedo), height (displacement) and metalness maps from images",
+    "category": "image-to-image",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/0a9596de/rM98s4o9rBuzShY5_OvHz_50bff4e15999429a8c8c68fa8d931c5d.jpg",
+    "model_url": "https://fal.run/fal-ai/patina",
+    "ai_model_price_list": [],
+    "isValuable": false,
+    "supported_durations": [],
+    "pricingText": "Your request will cost $0.01 plus $0.01 per megapixel, per output map. For example, a 1024x1024 input image generating all 5 map types will cost $0.06"
+  },
+  {
+    "endpoint_id": "fal-ai/patina/material/extract",
+    "provider": "fal.ai",
+    "display_name": "PATINA",
+    "description": "Extract seamless tiling textures with PBR attribute maps from images",
+    "category": "image-to-image",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/0a9596fb/hGlZRKSg6METXKPyJr-7D_7152ffc4674342699bff539ff28f7d77.jpg",
+    "model_url": "https://fal.run/fal-ai/patina/material/extract",
+    "ai_model_price_list": [],
+    "isValuable": false,
+    "supported_durations": [],
+    "pricingText": "Your request will cost $0.10 plus $0.02 per megapixel plus $0.01 per megapixel per map type. When using 2x upscaling, an additional $0.004 per (pre-upscaling) megapixel per map will be charged, and when using 4x upscaling, an additional $0.016 per (pre-upscaling) megapixel per map will be charged. For example, A 1024x1024 material with all 5 maps and no upscaling (1K) will cost $0.17, and a 2048x2048 material with all 5 maps and 4x upscaling (8K) will cost $0.70."
+  },
+  {
+    "endpoint_id": "fal-ai/hidream-o1-image",
+    "provider": "fal.ai",
+    "display_name": "Hidream O1 Image",
+    "description": "Unified image generation with HiDream-O1-Image. Create, edit, and personalize high-resolution images up to 2K—single native model handles text-to-image, editing, and custom subjects without external components.",
+    "category": "text-to-image",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/0a999217/79hRTD17Is8llel4R5GvK_fb7bcffb53ea405198c7978f9886a668.jpg",
+    "model_url": "https://fal.run/fal-ai/hidream-o1-image",
+    "ai_model_price_list": [
+      {
+        "unit": "image_720p",
+        "price_per_unit": 0.009216
+      },
+      {
+        "unit": "image_1080p",
+        "price_per_unit": 0.020736
+      }
+    ],
+    "isValuable": true,
+    "supported_durations": [],
+    "pricingText": "Your request will cost $0.01 per megapixel."
+  },
+  {
+    "endpoint_id": "fal-ai/hidream-o1-image/dev",
+    "provider": "fal.ai",
+    "display_name": "Hidream O1 Image",
+    "description": "Unified image generation with HiDream-O1-Image. Create, edit, and personalize high-resolution images up to 2K—single native model handles text-to-image, editing, and custom subjects without external components.",
+    "category": "text-to-image",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/0a9991f9/vvcIi5jpPDoJJ_j-Mqjet_714dcf611a2d446381e3b2a8eb084c21.jpg",
+    "model_url": "https://fal.run/fal-ai/hidream-o1-image/dev",
+    "ai_model_price_list": [
+      {
+        "unit": "image_720p",
+        "price_per_unit": 0.009216
+      },
+      {
+        "unit": "image_1080p",
+        "price_per_unit": 0.020736
+      }
+    ],
+    "isValuable": true,
+    "supported_durations": [],
+    "pricingText": "Your request will cost $0.005 per megapixel."
+  },
+  {
+    "endpoint_id": "fal-ai/hidream-o1-image/edit",
+    "provider": "fal.ai",
+    "display_name": "Hidream O1 Image",
+    "description": "Unified image generation with HiDream-O1-Image. Create, edit, and personalize high-resolution images up to 2K—single native model handles text-to-image, editing, and custom subjects without external components.",
+    "category": "image-to-image",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/0a99921e/VChBoBpjrCe5lbXHv97mB_220119a1d12448c2bb216d8e8ec6245e.jpg",
+    "model_url": "https://fal.run/fal-ai/hidream-o1-image/edit",
+    "ai_model_price_list": [
+      {
+        "unit": "image_720p",
+        "price_per_unit": 0.009216
+      },
+      {
+        "unit": "image_1080p",
+        "price_per_unit": 0.020736
+      }
+    ],
+    "isValuable": true,
+    "supported_durations": [],
+    "pricingText": "Your request will cost $0.01 per megapixel."
+  },
+  {
+    "endpoint_id": "fal-ai/hidream-o1-image/dev/edit",
+    "provider": "fal.ai",
+    "display_name": "Hidream O1 Image",
+    "description": "Unified image generation with HiDream-O1-Image. Create, edit, and personalize high-resolution images up to 2K—single native model handles text-to-image, editing, and custom subjects without external components.",
+    "category": "image-to-image",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/0a999225/QmwooLH3hpHa3255JhRoC_d6e5053b73d44e4a9b4593a043360e66.jpg",
+    "model_url": "https://fal.run/fal-ai/hidream-o1-image/dev/edit",
+    "ai_model_price_list": [
+      {
+        "unit": "image_720p",
+        "price_per_unit": 0.009216
+      },
+      {
+        "unit": "image_1080p",
+        "price_per_unit": 0.020736
+      }
+    ],
+    "isValuable": true,
+    "supported_durations": [],
+    "pricingText": "Your request will cost $0.005 per megapixel."
+  },
+  {
+    "endpoint_id": "fal-ai/flux-2/klein/4b/base/lora",
+    "provider": "fal.ai",
+    "display_name": "FLUX.2 [klein] 4B Base LoRA",
+    "description": "Text-to-image generation with LoRA support for FLUX.2 [klein] 4B Base from Black Forest Labs. Custom style adaptation and fine-tuned model variations.",
+    "category": "text-to-image",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/0a8b09ad/V8uFhTiTNXdAgvt1tbJmB_1335a918cf5542539d5954c13b7d0fef.jpg",
+    "model_url": "https://fal.run/fal-ai/flux-2/klein/4b/base/lora",
+    "ai_model_price_list": [
+      {
+        "unit": "image_720p",
+        "price_per_unit": 0.0294912
+      },
+      {
+        "unit": "image_1080p",
+        "price_per_unit": 0.0663552
+      }
+    ],
+    "isValuable": true,
+    "supported_durations": [],
+    "pricingText": "Waiting for your input...\nYour request will cost $0.016 per megapixel."
+  },
+  {
+    "endpoint_id": "fal-ai/flux-2/klein/4b/base/edit/lora",
+    "provider": "fal.ai",
+    "display_name": "FLUX.2 [klein] 4B Base LoRA",
+    "description": "Image-to-image editing with LoRA support for FLUX.2 [klein] 4B Base from Black Forest Labs. Specialized style transfer and domain-specific modifications.",
+    "category": "image-to-image",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/0a8b09b3/ck_nRVKlUom4-4_5qfG7t_117a3ccf9f9541aeb83e5ffa75564e6d.jpg",
+    "model_url": "https://fal.run/fal-ai/flux-2/klein/4b/base/edit/lora",
+    "ai_model_price_list": [
+      {
+        "unit": "image_720p",
+        "price_per_unit": 0.0294912
+      },
+      {
+        "unit": "image_1080p",
+        "price_per_unit": 0.0663552
+      }
+    ],
+    "isValuable": true,
+    "supported_durations": [],
+    "pricingText": "Waiting for your input...\nRequests cost $0.016 per megapixel of input and output. Input images will be resized to 1MP. For example, a 1024x1024 generation with 512*512 size image input will cost 0.032 (1 MP input + 1 MP output, each costing 0.016)."
+  },
+  {
+    "endpoint_id": "fal-ai/flux-2-lora-gallery/ballpoint-pen-sketch",
+    "provider": "fal.ai",
+    "display_name": "Flux 2 Lora Gallery",
+    "description": "Ballpoint pen sketch drawing style",
+    "category": "text-to-image",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/kangaroo/G7xRP2MFaynDxvtM3tDIf_8f3d89b67c234182bd704e3349162883.jpg",
+    "model_url": "https://fal.run/fal-ai/flux-2-lora-gallery/ballpoint-pen-sketch",
+    "ai_model_price_list": [
+      {
+        "unit": "image_720p",
+        "price_per_unit": 0.0193536
+      },
+      {
+        "unit": "image_1080p",
+        "price_per_unit": 0.0435456
+      }
+    ],
+    "isValuable": true,
+    "supported_durations": [],
+    "pricingText": "Your request will cost $0.021 per megapixel."
+  },
+  {
+    "endpoint_id": "fal-ai/flux-2-lora-gallery/digital-comic-art",
+    "provider": "fal.ai",
+    "display_name": "Flux 2 Lora Gallery",
+    "description": "Transforms images into comic book style",
+    "category": "text-to-image",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/koala/-C_LrtBKqv1kuA3PkybTA_60142c0dc6da4ba8905165de61daacaf.jpg",
+    "model_url": "https://fal.run/fal-ai/flux-2-lora-gallery/digital-comic-art",
+    "ai_model_price_list": [
+      {
+        "unit": "image_720p",
+        "price_per_unit": 0.0193536
+      },
+      {
+        "unit": "image_1080p",
+        "price_per_unit": 0.0435456
+      }
+    ],
+    "isValuable": true,
+    "supported_durations": [],
+    "pricingText": "Your request will cost $0.021 per megapixel."
+  },
+  {
+    "endpoint_id": "fal-ai/flux-2-lora-gallery/sepia-vintage",
+    "provider": "fal.ai",
+    "display_name": "Flux 2 Lora Gallery",
+    "description": "Applies sepia vintage effect to images",
+    "category": "text-to-image",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/penguin/qyhINx709mN5xIBjraXXQ_af4667229d1d44b2912f6becc366d6d9.jpg",
+    "model_url": "https://fal.run/fal-ai/flux-2-lora-gallery/sepia-vintage",
+    "ai_model_price_list": [
+      {
+        "unit": "image_720p",
+        "price_per_unit": 0.0193536
+      },
+      {
+        "unit": "image_1080p",
+        "price_per_unit": 0.0435456
+      }
+    ],
+    "isValuable": true,
+    "supported_durations": [],
+    "pricingText": "Your request will cost $0.021 per megapixel."
+  },
+  {
+    "endpoint_id": "fal-ai/flux-2-lora-gallery/satellite-view-style",
+    "provider": "fal.ai",
+    "display_name": "Flux 2 Lora Gallery",
+    "description": "Generates satellite/aerial view style images",
+    "category": "text-to-image",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/kangaroo/BPMCo8jjOVngBxqYDK7sK_9b09e8f629d74207bcb6cab302cff659.jpg",
+    "model_url": "https://fal.run/fal-ai/flux-2-lora-gallery/satellite-view-style",
+    "ai_model_price_list": [
+      {
+        "unit": "image_720p",
+        "price_per_unit": 0.0193536
+      },
+      {
+        "unit": "image_1080p",
+        "price_per_unit": 0.0435456
+      }
+    ],
+    "isValuable": true,
+    "supported_durations": [],
+    "pricingText": "Your request will cost $0.021 per megapixel."
+  },
+  {
+    "endpoint_id": "fal-ai/flux-2-lora-gallery/virtual-tryon",
+    "provider": "fal.ai",
+    "display_name": "Flux 2 Lora Gallery",
+    "description": "Virtual clothing try-on (2 images: person + garment)",
+    "category": "image-to-image",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/penguin/l4pNPFFxYpTn4dDetQB3H_0e3817198ad1498db78841fba7eefff9.jpg",
+    "model_url": "https://fal.run/fal-ai/flux-2-lora-gallery/virtual-tryon",
+    "ai_model_price_list": [
+      {
+        "unit": "image_720p",
+        "price_per_unit": 0.0193536
+      },
+      {
+        "unit": "image_1080p",
+        "price_per_unit": 0.0435456
+      }
+    ],
+    "isValuable": true,
+    "supported_durations": [],
+    "pricingText": "Your request will cost $0.021 per processed megapixel."
+  },
+  {
+    "endpoint_id": "fal-ai/flux-2-lora-gallery/multiple-angles",
+    "provider": "fal.ai",
+    "display_name": "Flux 2 Lora Gallery",
+    "description": "Generates same object from different angles (azimuth/elevation)",
+    "category": "image-to-image",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/tiger/uGB7v3AfMfHnqXp04NAzY_c730bfb4d81848338df88c8b6db41927.jpg",
+    "model_url": "https://fal.run/fal-ai/flux-2-lora-gallery/multiple-angles",
+    "ai_model_price_list": [
+      {
+        "unit": "image_720p",
+        "price_per_unit": 0.0193536
+      },
+      {
+        "unit": "image_1080p",
+        "price_per_unit": 0.0435456
+      }
+    ],
+    "isValuable": true,
+    "supported_durations": [],
+    "pricingText": "Your request will cost $0.021 per processed megapixel."
+  },
+  {
+    "endpoint_id": "fal-ai/flux-2-lora-gallery/apartment-staging",
+    "provider": "fal.ai",
+    "display_name": "Flux 2 Lora Gallery",
+    "description": "Virtually furnishes an empty apartment",
+    "category": "image-to-image",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/zebra/B8oJR3Fdg-dqVxbhAJsa1_c6599007f202434b8bda0349f863ebfc.jpg",
+    "model_url": "https://fal.run/fal-ai/flux-2-lora-gallery/apartment-staging",
+    "ai_model_price_list": [
+      {
+        "unit": "image_720p",
+        "price_per_unit": 0.0193536
+      },
+      {
+        "unit": "image_1080p",
+        "price_per_unit": 0.0435456
+      }
+    ],
+    "isValuable": true,
+    "supported_durations": [],
+    "pricingText": "Your request will cost $0.021 per processed megapixel."
+  },
+  {
+    "endpoint_id": "fal-ai/flux-2-lora-gallery/face-to-full-portrait",
+    "provider": "fal.ai",
+    "display_name": "Flux 2 Lora Gallery",
+    "description": "Extends a face into a full body portrait",
+    "category": "image-to-image",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/tiger/S6rY_7j8Q-hCTWtn0Wb4k_99665a8ac4584b36b382565ef1ba20e3.jpg",
+    "model_url": "https://fal.run/fal-ai/flux-2-lora-gallery/face-to-full-portrait",
+    "ai_model_price_list": [
+      {
+        "unit": "image_720p",
+        "price_per_unit": 0.0193536
+      },
+      {
+        "unit": "image_1080p",
+        "price_per_unit": 0.0435456
+      }
+    ],
+    "isValuable": true,
+    "supported_durations": [],
+    "pricingText": "Your request will cost $0.021 per processed megapixel."
+  },
+  {
+    "endpoint_id": "fal-ai/flux-2-lora-gallery/add-background",
+    "provider": "fal.ai",
+    "display_name": "Flux 2 Lora Gallery",
+    "description": "Add a background to images with white/clean background",
+    "category": "image-to-image",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/penguin/-soa1BLI68gem3r7qatcf_ec7fab33b28040238c41b8f80546e89b.jpg",
+    "model_url": "https://fal.run/fal-ai/flux-2-lora-gallery/add-background",
+    "ai_model_price_list": [
+      {
+        "unit": "image_720p",
+        "price_per_unit": 0.0193536
+      },
+      {
+        "unit": "image_1080p",
+        "price_per_unit": 0.0435456
+      }
+    ],
+    "isValuable": true,
+    "supported_durations": [],
+    "pricingText": "Your request will cost $0.021 per processed megapixel."
+  },
+  {
+    "endpoint_id": "fal-ai/glm-image",
+    "provider": "fal.ai",
+    "display_name": "Glm Image",
+    "description": "Create high-quality images with accurate text rendering and rich knowledge details—supports editing, style transfer, and maintaining consistent characters across multiple images.",
+    "category": "text-to-image",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/0a8a4c6f/XY6gc2c6YgtIKHKiTKRfO_c7be09cba1eb4ebe850aea98676df98d.jpg",
+    "model_url": "https://fal.run/fal-ai/glm-image",
+    "ai_model_price_list": [
+      {
+        "unit": "image_720p",
+        "price_per_unit": 0.04608
+      },
+      {
+        "unit": "image_1080p",
+        "price_per_unit": 0.10368
+      }
+    ],
+    "isValuable": true,
+    "supported_durations": [],
+    "pricingText": "Your request will cost $0.05 per megapixel."
+  },
+  {
+    "endpoint_id": "fal-ai/glm-image/image-to-image",
+    "provider": "fal.ai",
+    "display_name": "Glm Image",
+    "description": "Create high-quality images with accurate text rendering and rich knowledge details—supports editing, style transfer, and maintaining consistent characters across multiple images.",
+    "category": "image-to-image",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/0a8a4d0f/umwWSuRRBSyt9U_bdGB9i_2de7b25b3997468f8166d372a12dff93.jpg",
+    "model_url": "https://fal.run/fal-ai/glm-image/image-to-image",
+    "ai_model_price_list": [
+      {
+        "unit": "image_720p",
+        "price_per_unit": 0.04608
+      },
+      {
+        "unit": "image_1080p",
+        "price_per_unit": 0.10368
+      }
+    ],
+    "isValuable": true,
+    "supported_durations": [],
+    "pricingText": "Your request will cost $0.05 per megapixel."
+  },
+  {
+    "endpoint_id": "fal-ai/qwen-image",
+    "provider": "fal.ai",
+    "display_name": "Qwen Image",
+    "description": "Qwen-Image is an image generation foundation model in the Qwen series that achieves significant advances in complex text rendering and precise image editing. ",
+    "category": "text-to-image",
+    "status": "active",
+    "thumbnail_url": "https://fal.media/files/koala/6JAMNCSti-vm-zJeZi6hA_626cdc11d4d04560ac9523fbd61f2eac.jpg",
+    "model_url": "https://fal.run/fal-ai/qwen-image",
+    "ai_model_price_list": [
+      {
+        "unit": "image_720p",
+        "price_per_unit": 0.0184
+      },
+      {
+        "unit": "image_1080p",
+        "price_per_unit": 0.0415
+      }
+    ],
+    "isValuable": true,
+    "supported_durations": [],
+    "pricingText": "Your request will cost $0.02 per megapixel.\nImages are billed by rounding up to the nearest megapixel."
+  },
+  {
+    "endpoint_id": "fal-ai/qwen-image/image-to-image",
+    "provider": "fal.ai",
+    "display_name": "Qwen Image",
+    "description": "Qwen-Image (Image-to-Image) transforms and edits input images with high fidelity, enabling precise style transfer, enhancement, and creative modification.",
+    "category": "image-to-image",
+    "status": "active",
+    "thumbnail_url": "https://fal.media/files/koala/6JAMNCSti-vm-zJeZi6hA_626cdc11d4d04560ac9523fbd61f2eac.jpg",
+    "model_url": "https://fal.run/fal-ai/qwen-image/image-to-image",
+    "ai_model_price_list": [
+      {
+        "unit": "image_720p",
+        "price_per_unit": 0.0184
+      },
+      {
+        "unit": "image_1080p",
+        "price_per_unit": 0.0415
+      }
+    ],
+    "isValuable": true,
+    "supported_durations": [],
+    "pricingText": "Your request will cost $0.02 per megapixel."
+  },
+  {
+    "endpoint_id": "fal-ai/flux/krea",
+    "provider": "fal.ai",
+    "display_name": "FLUX.1 Krea [dev]",
+    "description": "FLUX.1 Krea [dev] is a 12 billion parameter flow transformer that generates high-quality images from text with incredible aesthetics. It is suitable for personal and commercial use.",
+    "category": "text-to-image",
+    "status": "active",
+    "thumbnail_url": "https://storage.googleapis.com/fal_cdn/fal/Upscale-2.jpg",
+    "model_url": "https://fal.run/fal-ai/flux/krea",
+    "ai_model_price_list": [
+      {
+        "unit": "image_720p",
+        "price_per_unit": 0.025
+      },
+      {
+        "unit": "image_1080p",
+        "price_per_unit": 0.075
+      }
+    ],
+    "isValuable": true,
+    "supported_durations": [],
+    "pricingText": "Your request will cost $0.025 per megapixel.\nImages are billed by rounding up to the nearest megapixel."
+  },
+  {
+    "endpoint_id": "fal-ai/flux-1/krea",
+    "provider": "fal.ai",
+    "display_name": "FLUX.1 Krea [dev]",
+    "description": "FLUX.1 Krea [dev] is a 12 billion parameter flow transformer that generates high-quality images from text with incredible aesthetics. It is suitable for personal and commercial use.",
+    "category": "text-to-image",
+    "status": "active",
+    "thumbnail_url": "https://storage.googleapis.com/fal_cdn/fal/Sound-5.jpg",
+    "model_url": "https://fal.run/fal-ai/flux-1/krea",
+    "ai_model_price_list": [
+      {
+        "unit": "image_720p",
+        "price_per_unit": 0.025
+      },
+      {
+        "unit": "image_1080p",
+        "price_per_unit": 0.075
+      }
+    ],
+    "isValuable": true,
+    "supported_durations": [],
+    "pricingText": "Your request will cost $0.025 per megapixel.\nImages are billed by rounding up to the nearest megapixel."
+  },
+  {
+    "endpoint_id": "fal-ai/flux/krea/image-to-image",
+    "provider": "fal.ai",
+    "display_name": "FLUX.1 Krea [dev]",
+    "description": "FLUX.1 Krea [dev] is a 12 billion parameter flow transformer that generates high-quality images from text with incredible aesthetics. It is suitable for personal and commercial use.\n",
+    "category": "image-to-image",
+    "status": "active",
+    "thumbnail_url": "https://storage.googleapis.com/fal_cdn/fal/Upscale-4.jpeg",
+    "model_url": "https://fal.run/fal-ai/flux/krea/image-to-image",
+    "ai_model_price_list": [
+      {
+        "unit": "image_720p",
+        "price_per_unit": 0.025
+      },
+      {
+        "unit": "image_1080p",
+        "price_per_unit": 0.075
+      }
+    ],
+    "isValuable": true,
+    "supported_durations": [],
+    "pricingText": "Waiting for your input...\nYour request will cost $0.025 per megapixel.\nImages are billed by rounding up to the nearest megapixel."
+  },
+  {
+    "endpoint_id": "fal-ai/flux-1/krea/image-to-image",
+    "provider": "fal.ai",
+    "display_name": "FLUX.1 Krea [dev]",
+    "description": "FLUX.1 Krea [dev] is a 12 billion parameter flow transformer that generates high-quality images from text with incredible aesthetics. It is suitable for personal and commercial use.\n",
+    "category": "image-to-image",
+    "status": "active",
+    "thumbnail_url": "https://storage.googleapis.com/fal_cdn/fal/Training-5.jpg",
+    "model_url": "https://fal.run/fal-ai/flux-1/krea/image-to-image",
+    "ai_model_price_list": [
+      {
+        "unit": "image_720p",
+        "price_per_unit": 0.025
+      },
+      {
+        "unit": "image_1080p",
+        "price_per_unit": 0.075
+      }
+    ],
+    "isValuable": true,
+    "supported_durations": [],
+    "pricingText": "Waiting for your input...\nYour request will cost $0.025 per megapixel.\nImages are billed by rounding up to the nearest megapixel."
+  },
+  {
+    "endpoint_id": "fal-ai/flux-krea-lora",
+    "provider": "fal.ai",
+    "display_name": "FLUX.1 Krea [dev] with LoRAs",
+    "description": "Super fast endpoint for the FLUX.1 [dev] model with LoRA support, enabling rapid and high-quality image generation using pre-trained LoRA adaptations for personalization, specific styles, brand identities, and product-specific outputs.",
+    "category": "text-to-image",
+    "status": "active",
+    "thumbnail_url": "https://v3.fal.media/files/tiger/fB-RsJ-BW4mrUVAH8oKF2_LOuGVDgg07U8OWbOhhMFt_d6ab08c96ab94da8b6d3e979d634af16.jpg",
+    "model_url": "https://fal.run/fal-ai/flux-krea-lora",
+    "ai_model_price_list": [
+      {
+        "unit": "image_720p",
+        "price_per_unit": 0.035
+      },
+      {
+        "unit": "image_1080p",
+        "price_per_unit": 0.105
+      }
+    ],
+    "isValuable": true,
+    "supported_durations": [],
+    "pricingText": "Waiting for your input...\nYour request will cost $0.035 per megapixel.\nImages are billed by rounding up to the nearest megapixel."
+  },
+  {
+    "endpoint_id": "fal-ai/flux-krea-lora/image-to-image",
+    "provider": "fal.ai",
+    "display_name": "FLUX.1 Krea [dev] with LoRAs",
+    "description": "FLUX LoRA Image-to-Image is a high-performance endpoint that transforms existing images using FLUX models, leveraging LoRA adaptations to enable rapid and precise image style transfer, modifications, and artistic variations.",
+    "category": "image-to-image",
+    "status": "active",
+    "thumbnail_url": "https://storage.googleapis.com/fal_cdn/fal/Sound.jpg",
+    "model_url": "https://fal.run/fal-ai/flux-krea-lora/image-to-image",
+    "ai_model_price_list": [
+      {
+        "unit": "image_720p",
+        "price_per_unit": 0.035
+      },
+      {
+        "unit": "image_1080p",
+        "price_per_unit": 0.105
+      }
+    ],
+    "isValuable": true,
+    "supported_durations": [],
+    "pricingText": "Waiting for your input...\nYour request will cost $0.035 per megapixel.\nImages are billed by rounding up to the nearest megapixel."
+  },
+  {
+    "endpoint_id": "fal-ai/qwen-image-max/text-to-image",
+    "provider": "fal.ai",
+    "display_name": "Qwen Image Max",
+    "description": "Text-to-Image endpoint for Qwen-Image-Max. Qwen Image Max improves upon the Qwen Image Plus series by enhancing the realism and naturalness of images.",
+    "category": "text-to-image",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/0a8c1c98/tClMYMPB6OkHzUHKQC6qf_65124fde152b47c9ab2db7bdf95340a0.jpg",
+    "model_url": "https://fal.run/fal-ai/qwen-image-max/text-to-image",
+    "ai_model_price_list": [
+      {
+        "unit": "image_720p",
+        "price_per_unit": 0.075
+      },
+      {
+        "unit": "image_1080p",
+        "price_per_unit": 0.075
+      }
+    ],
+    "isValuable": true,
+    "supported_durations": [],
+    "pricingText": "Your request will cost $0.075 per image."
+  },
+  {
+    "endpoint_id": "fal-ai/qwen-image-max/edit",
+    "provider": "fal.ai",
+    "display_name": "Qwen Image Max",
+    "description": "Image editing endpoint for Qwen-Image-Max. Qwen Image Max improves upon the Qwen Image Plus series by enhancing the realism and naturalness of images.",
+    "category": "image-to-image",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/0a8c1c81/hMoPEMrnsMl-BPesZ3v02_cb7c0df16e074d0fb5959090fc670856.jpg",
+    "model_url": "https://fal.run/fal-ai/qwen-image-max/edit",
+    "ai_model_price_list": [
+      {
+        "unit": "image_720p",
+        "price_per_unit": 0.075
+      },
+      {
+        "unit": "image_1080p",
+        "price_per_unit": 0.075
+      }
+    ],
+    "isValuable": true,
+    "supported_durations": [],
+    "pricingText": "Your request will cost $0.075 per image."
+  },
+  {
+    "endpoint_id": "fal-ai/flux/dev",
+    "provider": "fal.ai",
+    "display_name": "FLUX.1 [dev]",
+    "description": "FLUX.1 [dev] is a 12 billion parameter flow transformer that generates high-quality images from text. It is suitable for personal and commercial use.",
+    "category": "text-to-image",
+    "status": "active",
+    "thumbnail_url": "https://storage.googleapis.com/fal_cdn/fal/Upscale-1.jpeg",
+    "model_url": "https://fal.run/fal-ai/flux/dev",
+    "ai_model_price_list": [
+      {
+        "unit": "image_720p",
+        "price_per_unit": 0.025
+      },
+      {
+        "unit": "image_1080p",
+        "price_per_unit": 0.055
+      }
+    ],
+    "isValuable": true,
+    "supported_durations": [],
+    "pricingText": "Waiting for your input...\nYour request will cost $0.025 per megapixel.\nImages are billed by rounding up to the nearest megapixel."
+  },
+  {
+    "endpoint_id": "fal-ai/flux-1/dev",
+    "provider": "fal.ai",
+    "display_name": "FLUX.1 [dev]",
+    "description": "FLUX.1 [dev] is a 12 billion parameter flow transformer that generates high-quality images from text. It is suitable for personal and commercial use.\n",
+    "category": "text-to-image",
+    "status": "active",
+    "thumbnail_url": "https://storage.googleapis.com/fal_cdn/fal/for%20videos-4.jpg",
+    "model_url": "https://fal.run/fal-ai/flux-1/dev",
+    "ai_model_price_list": [
+      {
+        "unit": "image_720p",
+        "price_per_unit": 0.025
+      },
+      {
+        "unit": "image_1080p",
+        "price_per_unit": 0.055
+      }
+    ],
+    "isValuable": true,
+    "supported_durations": [],
+    "pricingText": "Waiting for your input...\nYour request will cost $0.025 per megapixel.\nImages are billed by rounding up to the nearest megapixel."
+  },
+  {
+    "endpoint_id": "fal-ai/flux-1/dev/image-to-image",
+    "provider": "fal.ai",
+    "display_name": "FLUX.1 [dev]",
+    "description": "FLUX.1 [dev] is a 12 billion parameter flow transformer that generates high-quality images from text. It is suitable for personal and commercial use.\n",
+    "category": "image-to-image",
+    "status": "active",
+    "thumbnail_url": "https://storage.googleapis.com/fal_cdn/fal/Upscale-2.jpg",
+    "model_url": "https://fal.run/fal-ai/flux-1/dev/image-to-image",
+    "ai_model_price_list": [
+      {
+        "unit": "image_720p",
+        "price_per_unit": 0.025
+      },
+      {
+        "unit": "image_1080p",
+        "price_per_unit": 0.055
+      }
+    ],
+    "isValuable": true,
+    "supported_durations": [],
+    "pricingText": "Waiting for your input...\nYour request will cost $0.025 per megapixel.\nImages are billed by rounding up to the nearest megapixel."
+  },
+  {
+    "endpoint_id": "fal-ai/vecglypher",
+    "provider": "fal.ai",
+    "display_name": "Vecglypher",
+    "description": "Vector font generation with VecGlypher. Create custom glyphs from text descriptions or reference images—outputs clean SVG paths directly without raster-to-vector conversion.",
+    "category": "text-to-image",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/0a91a434/p1JeV9wEtYCVNj0lk8WDC_96d2268e79fd4d719129475804c98afc.jpg",
+    "model_url": "https://fal.run/fal-ai/vecglypher",
+    "ai_model_price_list": [],
+    "isValuable": false,
+    "supported_durations": [],
+    "pricingText": "Your request will cost $0.005 per image."
+  },
+  {
+    "endpoint_id": "fal-ai/vecglypher/image-to-svg",
+    "provider": "fal.ai",
+    "display_name": "Vecglypher",
+    "description": "Vector font generation with VecGlypher. Create custom glyphs from text descriptions or reference images—outputs clean SVG paths directly without raster-to-vector conversion.",
+    "category": "image-to-image",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/0a91a444/qeByp1NsOsAZiuxSxk6TG_43a15def55bb4c78b38f6f4b8ed8e6f7.jpg",
+    "model_url": "https://fal.run/fal-ai/vecglypher/image-to-svg",
+    "ai_model_price_list": [],
+    "isValuable": false,
+    "supported_durations": [],
+    "pricingText": "Your request will cost $0.005 per image."
+  },
+  {
+    "endpoint_id": "fal-ai/flux-control-lora-canny",
+    "provider": "fal.ai",
+    "display_name": "FLUX.1 [dev] Control LoRA Canny",
+    "description": "FLUX Control LoRA Canny is a high-performance endpoint that uses a control image to transfer structure to the generated image, using a Canny edge map.",
+    "category": "text-to-image",
+    "status": "active",
+    "thumbnail_url": "https://storage.googleapis.com/falserverless/gallery/control-lora-canny.jpeg",
+    "model_url": "https://fal.run/fal-ai/flux-control-lora-canny",
+    "ai_model_price_list": [
+      {
+        "unit": "image_720p",
+        "price_per_unit": 0.04
+      },
+      {
+        "unit": "image_1080p",
+        "price_per_unit": 0.08
+      }
+    ],
+    "isValuable": true,
+    "supported_durations": [],
+    "pricingText": "Waiting for your input...\nYour request will cost $0.04 per megapixel.\nImages are billed by rounding up to the nearest megapixel."
+  },
+  {
+    "endpoint_id": "fal-ai/flux-control-lora-canny/image-to-image",
+    "provider": "fal.ai",
+    "display_name": "FLUX.1 [dev] Control LoRA Canny",
+    "description": "FLUX Control LoRA Canny is a high-performance endpoint that uses a control image using a Canny edge map to transfer structure to the generated image and another initial image to guide color.",
+    "category": "image-to-image",
+    "status": "active",
+    "thumbnail_url": "https://storage.googleapis.com/falserverless/gallery/control-lora-canny.jpeg",
+    "model_url": "https://fal.run/fal-ai/flux-control-lora-canny/image-to-image",
+    "ai_model_price_list": [
+      {
+        "unit": "image_720p",
+        "price_per_unit": 0.04
+      },
+      {
+        "unit": "image_1080p",
+        "price_per_unit": 0.08
+      }
+    ],
+    "isValuable": true,
+    "supported_durations": [],
+    "pricingText": "Waiting for your input...\nYour request will cost $0.04 per megapixel.\nImages are billed by rounding up to the nearest megapixel."
+  },
+  {
+    "endpoint_id": "fal-ai/flux-2/klein/4b/lora",
+    "provider": "fal.ai",
+    "display_name": "FLUX.2 [klein] 4B LoRA",
+    "description": "Text-to-image generation with FLUX.2 [klein] 4B from Black Forest Labs and custom LoRA. Enhanced realism, crisper text generation, and native editing capabilities.",
+    "category": "text-to-image",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/0a928da0/57Gi1qonPRBT6XhWAvMAH_ac391991cfe0414199ae74f054947eef.jpg",
+    "model_url": "https://fal.run/fal-ai/flux-2/klein/4b/lora",
+    "ai_model_price_list": [
+      {
+        "unit": "image_720p",
+        "price_per_unit": 0.02
+      },
+      {
+        "unit": "image_1080p",
+        "price_per_unit": 0.04
+      }
+    ],
+    "isValuable": true,
+    "supported_durations": [],
+    "pricingText": "Requests cost $0.01 per megapixel"
+  },
+  {
+    "endpoint_id": "fal-ai/flux-2/klein/4b/edit/lora",
+    "provider": "fal.ai",
+    "display_name": "FLUX.2 [klein] 4B LoRA",
+    "description": "Image-to-image editing with FLUX.2 [klein] 4B from Black Forest Labs and custom LoRA. Precise modifications using natural language descriptions and hex color control.",
+    "category": "image-to-image",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/0a928e1f/c62zNs4MhBXgm-5w7n0C5_90bad8837ecc451e96f91da93b78f564.jpg",
+    "model_url": "https://fal.run/fal-ai/flux-2/klein/4b/edit/lora",
+    "ai_model_price_list": [
+      {
+        "unit": "image_720p",
+        "price_per_unit": 0.02
+      },
+      {
+        "unit": "image_1080p",
+        "price_per_unit": 0.04
+      }
+    ],
+    "isValuable": true,
+    "supported_durations": [],
+    "pricingText": "Requests cost $0.01 per megapixel of input and output. Input images will be resized to 1MP. For example, a 1024x1024 generation with 512*512 size image input will cost 0.02 (1 MP input + 1 MP output, each costing 0.01)."
+  },
+  {
+    "endpoint_id": "rundiffusion-fal/juggernaut-flux/pro",
+    "provider": "fal.ai",
+    "display_name": "Juggernaut Flux Pro",
+    "description": "Juggernaut Pro Flux by RunDiffusion is the flagship Juggernaut model rivaling some of the most advanced image models available, often surpassing them in realism. It combines Juggernaut Base with RunDiffusion Photo and features enhancements like reduced background blurriness.",
+    "category": "text-to-image",
+    "status": "active",
+    "thumbnail_url": "https://storage.googleapis.com/falserverless/gallery/juggernaut-flux-pro.webp",
+    "model_url": "https://fal.run/rundiffusion-fal/juggernaut-flux/pro",
+    "ai_model_price_list": [
+      {
+        "unit": "image_720p",
+        "price_per_unit": 0.055
+      },
+      {
+        "unit": "image_1080p",
+        "price_per_unit": 0.115
+      }
+    ],
+    "isValuable": true,
+    "supported_durations": [],
+    "pricingText": "Waiting for your input...\nYour request will cost $0.055 per megapixel."
+  },
+  {
+    "endpoint_id": "rundiffusion-fal/juggernaut-flux/pro/image-to-image",
+    "provider": "fal.ai",
+    "display_name": "Juggernaut Flux Pro",
+    "description": "Juggernaut Pro Flux by RunDiffusion is the flagship Juggernaut model rivaling some of the most advanced image models available, often surpassing them in realism. It combines Juggernaut Base with RunDiffusion Photo and features enhancements like reduced background blurriness.",
+    "category": "image-to-image",
+    "status": "active",
+    "thumbnail_url": "https://storage.googleapis.com/falserverless/gallery/juggernaut-flux-pro.webp",
+    "model_url": "https://fal.run/rundiffusion-fal/juggernaut-flux/pro/image-to-image",
+    "ai_model_price_list": [
+      {
+        "unit": "image_720p",
+        "price_per_unit": 0.055
+      },
+      {
+        "unit": "image_1080p",
+        "price_per_unit": 0.115
+      }
+    ],
+    "isValuable": true,
+    "supported_durations": [],
+    "pricingText": "Waiting for your input...\nYour request will cost $0.055 per megapixel."
+  },
+  {
+    "endpoint_id": "fal-ai/vidu/q2/text-to-image",
+    "provider": "fal.ai",
+    "display_name": "Vidu",
+    "description": "Use vidu Text-to-Image to turn your prompts into reality.",
+    "category": "text-to-image",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/0a85892d/ODEhamwEyaZ8NSG6ShAdS_055c7fbf76db47deb35ee6042014bc91.jpg",
+    "model_url": "https://fal.run/fal-ai/vidu/q2/text-to-image",
+    "ai_model_price_list": [
+      {
+        "unit": "image_720p",
+        "price_per_unit": 0.1
+      },
+      {
+        "unit": "image_1080p",
+        "price_per_unit": 0.1
+      }
+    ],
+    "isValuable": true,
+    "supported_durations": [],
+    "pricingText": "Your request will cost $0.1 per image."
+  },
+  {
+    "endpoint_id": "fal-ai/vidu/q2/reference-to-image",
+    "provider": "fal.ai",
+    "display_name": "Vidu",
+    "description": "Vidu Reference-to-Image creates images by using a reference images and combining them with a prompt.",
+    "category": "image-to-image",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/0a859c0c/hJyZYTr1Sq5HbwhEJWXid_90a9e24d19b4422cbb62fe49229a9266.jpg",
+    "model_url": "https://fal.run/fal-ai/vidu/q2/reference-to-image",
+    "ai_model_price_list": [
+      {
+        "unit": "image_720p",
+        "price_per_unit": 0.1
+      },
+      {
+        "unit": "image_1080p",
+        "price_per_unit": 0.1
+      }
+    ],
+    "isValuable": true,
+    "supported_durations": [],
+    "pricingText": "Your request will cost $0.1 per image."
+  },
+  {
+    "endpoint_id": "fal-ai/vidu/reference-to-image",
+    "provider": "fal.ai",
+    "display_name": "Vidu",
+    "description": "Vidu Reference-to-Image creates images by using a reference images and combining them with a prompt.",
+    "category": "image-to-image",
+    "status": "active",
+    "thumbnail_url": "https://storage.googleapis.com/falserverless/web-examples/vidu/vidu.webp",
+    "model_url": "https://fal.run/fal-ai/vidu/reference-to-image",
+    "ai_model_price_list": [
+      {
+        "unit": "image_720p",
+        "price_per_unit": 0.1
+      },
+      {
+        "unit": "image_1080p",
+        "price_per_unit": 0.1
+      }
+    ],
+    "isValuable": true,
+    "supported_durations": [],
+    "pricingText": "Your request will cost $0.1 per image."
+  },
+  {
+    "endpoint_id": "fal-ai/flux/srpo",
+    "provider": "fal.ai",
+    "display_name": "FLUX.1 SRPO [dev]",
+    "description": "FLUX.1 SRPO [dev] is a 12 billion parameter flow transformer that generates high-quality images from text with incredible aesthetics. It is suitable for personal and commercial use.",
+    "category": "text-to-image",
+    "status": "active",
+    "thumbnail_url": "https://fal.media/files/lion/ZNXdbSzAuCKiNcAobhmuq_433a1adbd71044199027c873cac81298.jpg",
+    "model_url": "https://fal.run/fal-ai/flux/srpo",
+    "ai_model_price_list": [
+      {
+        "unit": "image_720p",
+        "price_per_unit": 0.025
+      },
+      {
+        "unit": "image_1080p",
+        "price_per_unit": 0.05
+      }
+    ],
+    "isValuable": true,
+    "supported_durations": [],
+    "pricingText": "Your request will cost $0.025 per megapixel.\nImages are billed by rounding up to the nearest megapixel."
+  },
+  {
+    "endpoint_id": "fal-ai/flux-1/srpo",
+    "provider": "fal.ai",
+    "display_name": "FLUX.1 SRPO [dev]",
+    "description": "FLUX.1 SRPO [dev] is a 12 billion parameter flow transformer that generates high-quality images from text with incredible aesthetics. It is suitable for personal and commercial use.",
+    "category": "text-to-image",
+    "status": "active",
+    "thumbnail_url": "https://fal.media/files/elephant/sc5nHfAUsSmVjmNNzoHDo_0b10ed5de0c24d9f88df8ed0a350f49f.jpg",
+    "model_url": "https://fal.run/fal-ai/flux-1/srpo",
+    "ai_model_price_list": [
+      {
+        "unit": "image_720p",
+        "price_per_unit": 0.025
+      },
+      {
+        "unit": "image_1080p",
+        "price_per_unit": 0.05
+      }
+    ],
+    "isValuable": true,
+    "supported_durations": [],
+    "pricingText": "Your request will cost $0.025 per megapixel.\nImages are billed by rounding up to the nearest megapixel."
+  },
+  {
+    "endpoint_id": "fal-ai/flux/srpo/image-to-image",
+    "provider": "fal.ai",
+    "display_name": "FLUX.1 SRPO [dev]",
+    "description": "FLUX.1 SRPO [dev] is a 12 billion parameter flow transformer that generates high-quality images from text with incredible aesthetics. It is suitable for personal and commercial use.\n",
+    "category": "image-to-image",
+    "status": "active",
+    "thumbnail_url": "https://fal.media/files/lion/h6ZndwWNcRsiobOzKCSmL_4ab6291336a74f78b4c90d9b42e97ab0.jpg",
+    "model_url": "https://fal.run/fal-ai/flux/srpo/image-to-image",
+    "ai_model_price_list": [
+      {
+        "unit": "image_720p",
+        "price_per_unit": 0.025
+      },
+      {
+        "unit": "image_1080p",
+        "price_per_unit": 0.05
+      }
+    ],
+    "isValuable": true,
+    "supported_durations": [],
+    "pricingText": "Waiting for your input...\nYour request will cost $0.025 per megapixel.\nImages are billed by rounding up to the nearest megapixel."
+  },
+  {
+    "endpoint_id": "fal-ai/flux-1/srpo/image-to-image",
+    "provider": "fal.ai",
+    "display_name": "FLUX.1 SRPO [dev]",
+    "description": "FLUX.1 SRPO [dev] is a 12 billion parameter flow transformer that generates high-quality images from text with incredible aesthetics. It is suitable for personal and commercial use.\n",
+    "category": "image-to-image",
+    "status": "active",
+    "thumbnail_url": "https://fal.media/files/panda/Lw4P1PGZPkZkAPI3u_Mxt_709597e8d0024e10ab25dfdf31963d0a.jpg",
+    "model_url": "https://fal.run/fal-ai/flux-1/srpo/image-to-image",
+    "ai_model_price_list": [
+      {
+        "unit": "image_720p",
+        "price_per_unit": 0.025
+      },
+      {
+        "unit": "image_1080p",
+        "price_per_unit": 0.05
+      }
+    ],
+    "isValuable": true,
+    "supported_durations": [],
+    "pricingText": "Waiting for your input...\nYour request will cost $0.025 per megapixel.\nImages are billed by rounding up to the nearest megapixel."
+  },
+  {
+    "endpoint_id": "fal-ai/longcat-image",
+    "provider": "fal.ai",
+    "display_name": "Longcat Image",
+    "description": "LongCat image is a 6B parameter model excelling at multilingual text rendering, photorealism and deployment efficiency.",
+    "category": "text-to-image",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/0a851b6e/FRYO5MwzWRxk8dt0FR5Ib_bb0a8072b65d4af59dbb8fccdd52b02b.jpg",
+    "model_url": "https://fal.run/fal-ai/longcat-image",
+    "ai_model_price_list": [
+      {
+        "unit": "image_720p",
+        "price_per_unit": 0.15
+      },
+      {
+        "unit": "image_1080p",
+        "price_per_unit": 0.3
+      }
+    ],
+    "isValuable": true,
+    "supported_durations": [],
+    "pricingText": "Your request will cost $0.13 per megapixel."
+  },
+  {
+    "endpoint_id": "fal-ai/longcat-image/edit",
+    "provider": "fal.ai",
+    "display_name": "Longcat Image",
+    "description": "LongCat image Edit is a 6B parameter image editing model excelling at multilingual text rendering, photorealism and deployment efficiency.",
+    "category": "image-to-image",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/0a859c1b/mdsG5LYIfadIqFJkLMWbo_b0fd88a073a64e0eb378a3f1ba907087.jpg",
+    "model_url": "https://fal.run/fal-ai/longcat-image/edit",
+    "ai_model_price_list": [
+      {
+        "unit": "image_720p",
+        "price_per_unit": 0.15
+      },
+      {
+        "unit": "image_1080p",
+        "price_per_unit": 0.3
+      }
+    ],
+    "isValuable": true,
+    "supported_durations": [],
+    "pricingText": "Your request will cost $0.15 per megapixel."
+  },
+  {
+    "endpoint_id": "fal-ai/bagel",
+    "provider": "fal.ai",
+    "display_name": "Bagel",
+    "description": "Bagel is a 7B parameter from Bytedance-Seed multimodal model that can generate both text and images.",
+    "category": "text-to-image",
+    "status": "active",
+    "thumbnail_url": "https://storage.googleapis.com/falserverless/gallery/bagel.webp",
+    "model_url": "https://fal.run/fal-ai/bagel",
+    "ai_model_price_list": [
+      {
+        "unit": "image_720p",
+        "price_per_unit": 0.1
+      },
+      {
+        "unit": "image_1080p",
+        "price_per_unit": 0.1
+      }
+    ],
+    "isValuable": true,
+    "supported_durations": [],
+    "pricingText": "Your request will cost $0.1 per image."
+  },
+  {
+    "endpoint_id": "fal-ai/bagel/edit",
+    "provider": "fal.ai",
+    "display_name": "Bagel",
+    "description": "Bagel is a 7B parameter multimodal model from Bytedance-Seed that can generate both images and text.",
+    "category": "image-to-image",
+    "status": "active",
+    "thumbnail_url": "https://storage.googleapis.com/falserverless/gallery/bagel.webp",
+    "model_url": "https://fal.run/fal-ai/bagel/edit",
+    "ai_model_price_list": [
+      {
+        "unit": "image_720p",
+        "price_per_unit": 0.1
+      },
+      {
+        "unit": "image_1080p",
+        "price_per_unit": 0.1
+      }
+    ],
+    "isValuable": true,
+    "supported_durations": [],
+    "pricingText": "Your request will cost $0.1 per image."
+  },
+  {
+    "endpoint_id": "fal-ai/flux-control-lora-depth",
+    "provider": "fal.ai",
+    "display_name": "FLUX.1 [dev] Control LoRA Depth",
+    "description": "FLUX Control LoRA Depth is a high-performance endpoint that uses a control image to transfer structure to the generated image, using a depth map.",
+    "category": "text-to-image",
+    "status": "active",
+    "thumbnail_url": "https://storage.googleapis.com/falserverless/gallery/control-lora-depth.jpeg",
+    "model_url": "https://fal.run/fal-ai/flux-control-lora-depth",
+    "ai_model_price_list": [
+      {
+        "unit": "image_720p",
+        "price_per_unit": 0.04
+      },
+      {
+        "unit": "image_1080p",
+        "price_per_unit": 0.08
+      }
+    ],
+    "isValuable": true,
+    "supported_durations": [],
+    "pricingText": "Waiting for your input...\nYour request will cost $0.04 per megapixel.\nImages are billed by rounding up to the nearest megapixel."
+  },
+  {
+    "endpoint_id": "fal-ai/flux-control-lora-depth/image-to-image",
+    "provider": "fal.ai",
+    "display_name": "FLUX.1 [dev] Control LoRA Depth",
+    "description": "FLUX Control LoRA Depth is a high-performance endpoint that uses a control image using a depth map to transfer structure to the generated image and another initial image to guide color.",
+    "category": "image-to-image",
+    "status": "active",
+    "thumbnail_url": "https://storage.googleapis.com/falserverless/gallery/control-lora-depth.jpeg",
+    "model_url": "https://fal.run/fal-ai/flux-control-lora-depth/image-to-image",
+    "ai_model_price_list": [
+      {
+        "unit": "image_720p",
+        "price_per_unit": 0.04
+      },
+      {
+        "unit": "image_1080p",
+        "price_per_unit": 0.08
+      }
+    ],
+    "isValuable": true,
+    "supported_durations": [],
+    "pricingText": "Waiting for your input...\nYour request will cost $0.04 per megapixel.\nImages are billed by rounding up to the nearest megapixel."
+  },
+  {
+    "endpoint_id": "fal-ai/hidream-i1-full",
+    "provider": "fal.ai",
+    "display_name": "Hidream I1 Full",
+    "description": "HiDream-I1 full is a new open-source image generative foundation model with 17B parameters that achieves state-of-the-art image generation quality within seconds.",
+    "category": "text-to-image",
+    "status": "active",
+    "thumbnail_url": "https://fal.media/files/monkey/HzdkkAoX8-PqrYZUV0zOW_1efb1b99d0e84ce78dd35e8edc69fe09.jpg",
+    "model_url": "https://fal.run/fal-ai/hidream-i1-full",
+    "ai_model_price_list": [
+      {
+        "unit": "image_720p",
+        "price_per_unit": 0.05
+      },
+      {
+        "unit": "image_1080p",
+        "price_per_unit": 0.1
+      }
+    ],
+    "isValuable": true,
+    "supported_durations": [],
+    "pricingText": "Waiting for your input...\nYour request will cost $0.05 per megapixel."
+  },
+  {
+    "endpoint_id": "fal-ai/hidream-i1-full/image-to-image",
+    "provider": "fal.ai",
+    "display_name": "Hidream I1 Full",
+    "description": "HiDream-I1 full is a new open-source image generative foundation model with 17B parameters that achieves state-of-the-art image generation quality within seconds.",
+    "category": "image-to-image",
+    "status": "active",
+    "thumbnail_url": "https://storage.googleapis.com/fal_cdn/fal/Upscale-1.jpeg",
+    "model_url": "https://fal.run/fal-ai/hidream-i1-full/image-to-image",
+    "ai_model_price_list": [
+      {
+        "unit": "image_720p",
+        "price_per_unit": 0.05
+      },
+      {
+        "unit": "image_1080p",
+        "price_per_unit": 0.1
+      }
+    ],
+    "isValuable": true,
+    "supported_durations": [],
+    "pricingText": "Your request will cost $0.05 per megapixel."
+  },
+  {
+    "endpoint_id": "fal-ai/emu-3.5-image/text-to-image",
+    "provider": "fal.ai",
+    "display_name": "Emu 3.5 Image",
+    "description": "Generate images from text using Emu 3.5 Image",
+    "category": "text-to-image",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/elephant/vIz3smWaozr97-oRkQBRu_de31d4d13d5d47d99814d2afe57cde1f.jpg",
+    "model_url": "https://fal.run/fal-ai/emu-3.5-image/text-to-image",
+    "ai_model_price_list": [
+      {
+        "unit": "image_720p",
+        "price_per_unit": 0.3
+      }
+    ],
+    "isValuable": true,
+    "supported_durations": [],
+    "pricingText": "Your request will cost $0.15 for 480p or $0.30 for 720p."
+  },
+  {
+    "endpoint_id": "fal-ai/emu-3.5-image/edit-image",
+    "provider": "fal.ai",
+    "display_name": "Emu 3.5 Image",
+    "description": "Edit images with a text prompt using Emu 3.5 Image",
+    "category": "image-to-image",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/monkey/tQyERUtskH6UgoJDqvDof_a8481b37918840948487c1ae79050bab.jpg",
+    "model_url": "https://fal.run/fal-ai/emu-3.5-image/edit-image",
+    "ai_model_price_list": [
+      {
+        "unit": "image_720p",
+        "price_per_unit": 0.3
+      }
+    ],
+    "isValuable": true,
+    "supported_durations": [],
+    "pricingText": "Your request will cost $0.15 for 480p or $0.30 for 720p."
+  },
+  {
+    "endpoint_id": "rundiffusion-fal/juggernaut-flux/base",
+    "provider": "fal.ai",
+    "display_name": "Juggernaut Flux Base",
+    "description": "Juggernaut Base Flux by RunDiffusion is a drop-in replacement for Flux [Dev] that delivers sharper details, richer colors, and enhanced realism, while instantly boosting LoRAs and LyCORIS with full compatibility.",
+    "category": "text-to-image",
+    "status": "active",
+    "thumbnail_url": "https://storage.googleapis.com/falserverless/gallery/juggernaut-flux-base.webp",
+    "model_url": "https://fal.run/rundiffusion-fal/juggernaut-flux/base",
+    "ai_model_price_list": [
+      {
+        "unit": "image_720p",
+        "price_per_unit": 0.035
+      },
+      {
+        "unit": "image_1080p",
+        "price_per_unit": 0.07
+      }
+    ],
+    "isValuable": true,
+    "supported_durations": [],
+    "pricingText": "Waiting for your input...\nYour request will cost $0.035 per megapixel."
+  },
+  {
+    "endpoint_id": "rundiffusion-fal/juggernaut-flux/base/image-to-image",
+    "provider": "fal.ai",
+    "display_name": "Juggernaut Flux Base",
+    "description": "Juggernaut Base Flux by RunDiffusion is a drop-in replacement for Flux [Dev] that delivers sharper details, richer colors, and enhanced realism, while instantly boosting LoRAs and LyCORIS with full compatibility.",
+    "category": "image-to-image",
+    "status": "active",
+    "thumbnail_url": "https://storage.googleapis.com/falserverless/gallery/juggernaut-flux-base.webp",
+    "model_url": "https://fal.run/rundiffusion-fal/juggernaut-flux/base/image-to-image",
+    "ai_model_price_list": [
+      {
+        "unit": "image_720p",
+        "price_per_unit": 0.035
+      },
+      {
+        "unit": "image_1080p",
+        "price_per_unit": 0.07
+      }
+    ],
+    "isValuable": true,
+    "supported_durations": [],
+    "pricingText": "Waiting for your input...\nYour request will cost $0.035 per megapixel."
+  }
+]

@@ -135,6 +135,50 @@ function ProfilePageClient() {
         return `${currency} $${amount}`;
     }, [scheduledDowngradeProductData]);
 
+    const loadOrders = useCallback(async (email: string) => {
+        const orders = await polarClientAPI.getPolarOrders(email);
+        setOrderList(orders?.sort((a, b) => {
+            return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+        }) ?? []);
+    }, []);
+
+    const loadSubscription = useCallback(async (email: string) => {
+        const subscription = await polarClientAPI.getPolarSubscriptionByEmail(email);
+        setSubscriptionData(subscription);
+    }, []);
+
+    const loadScheduledProduct = useCallback(async () => {
+        if (!isDowngradeScheduled || !user?.downgrade_target_plan_id) {
+            setScheduledDowngradeProductData(null);
+            return;
+        }
+        const products = await polarClientAPI.getPolarProducts();
+        const scheduledProduct = products?.find((p) => p.id === user.downgrade_target_plan_id) ?? null;
+        setScheduledDowngradeProductData(scheduledProduct);
+    }, [isDowngradeScheduled, user?.downgrade_target_plan_id]);
+
+    const loadAllData = useCallback(async () => {
+        if (!user?.email) return;
+        
+        setIsLoading(true);
+        try {
+            await Promise.all([
+                loadOrders(user.email),
+                loadSubscription(user.email),
+                loadScheduledProduct()
+            ]);
+        } catch (error) {
+            console.error("Error loading profile data:", error);
+            router.refresh();
+        } finally {
+            setIsLoading(false);
+        }
+    }, [user?.email, loadOrders, loadSubscription, loadScheduledProduct, router]);
+
+    useEffect(() => {
+        loadAllData();
+    }, [loadAllData]);
+
     const onClickChangePlan = useCallback(() => {
         setShowChangePlanModal(true);
     }, []);
@@ -187,17 +231,14 @@ function ProfilePageClient() {
             setShowChangePlanModal(false);
 
             // 구독 데이터 새로고침
-            if (user?.email) {
-                const updatedSubscriptionData = await polarClientAPI.getPolarSubscriptionByEmail(user.email);
-                setSubscriptionData(updatedSubscriptionData);
-            }
+            await loadAllData();
         } catch (error) {
             console.error("Error changing subscription plan:", error);
             alert("An unexpected error occurred. Please try again later.");
         } finally {
             setIsLoading(false);
         }
-    }, [user?.id, user?.email, subscriptionData?.id, subscriptionData?.productId]);
+    }, [user?.id, subscriptionData?.id, subscriptionData?.productId, loadAllData]);
 
     const onConfirmCancelSubscription = useCallback(async () => {
         setShowCancelSubscriptionModal(false);
@@ -216,64 +257,16 @@ function ProfilePageClient() {
 
         const deletePolarSubscriptionsCancelResult = await polarClientAPI.deletePolarSubscriptionsCancel(subscriptionData?.id);
 
-        setIsLoading(false);
-
         if (deletePolarSubscriptionsCancelResult) {
             alert("Your subscription has been canceled successfully. It will remain active until the end of the current billing period.");
+            // 구독 데이터 새로고침
+            if (user?.email) await loadSubscription(user.email);
         } else {
             alert("Failed to cancel subscription. Please try again later.");
         }
-    }, [subscriptionData?.id, subscriptionData?.cancelAtPeriodEnd]);
-
-    useEffect(() => {
-        if (user?.email) {
-            const loadData = async () => {
-                const orderList = await polarClientAPI.getPolarOrders(user.email);
-                const subscriptionData = await polarClientAPI.getPolarSubscriptionByEmail(user.email);
-
-                setOrderList(orderList?.sort((a, b) => {
-                    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-                }) ?? []);
-                setSubscriptionData(subscriptionData);
-            }
-
-            loadData().then(() => {
-                setIsLoading(false);
-            }).catch(() => {
-                router.refresh();
-            });
-        }
-    }, [user?.email, router]);
-
-    useEffect(() => {
-        if (!user?.email) return;
-
-        const loadSubscriptionData = async () => {
-            const newSubscriptionData = await polarClientAPI.getPolarSubscriptionByEmail(user.email);
-
-            if (!newSubscriptionData) return;
-
-            setSubscriptionData(newSubscriptionData);
-        }
-
-        loadSubscriptionData().then();
-    }, [user?.downgrade_target_plan_id, user?.email]);
-
-    useEffect(() => {
-        if (isDowngradeScheduled) {
-            const loadProductDataList = async () => {
-                const newProductDataList = await polarClientAPI.getPolarProducts();
-
-                const scheduledProductData = newProductDataList?.find((productData) => {
-                    return productData.id === user?.downgrade_target_plan_id;
-                }) ?? null;
-
-                setScheduledDowngradeProductData(scheduledProductData);
-            }
-
-            loadProductDataList().then();
-        }
-    }, [isDowngradeScheduled, user?.downgrade_target_plan_id]);
+        
+        setIsLoading(false);
+    }, [subscriptionData?.id, subscriptionData?.cancelAtPeriodEnd, user?.email, loadSubscription]);
 
     return (
         <div className="min-h-screen pt-16 bg-black text-white">

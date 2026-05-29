@@ -1,19 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getIsValidRequestC2S } from '@/utils/getIsValidRequest';
-import { getNextBaseResponse } from '@/utils/getNextBaseResponse';
+import { getIsValidRequestC2S } from '@/lib/utils/getIsValidRequest';
+import { getNextBaseResponse } from '@/lib/utils/getNextBaseResponse';
 
 export async function GET(request: NextRequest) {
-    const { user, isValidRequest } = await getIsValidRequestC2S();
+    const { isValidRequest, user } = await getIsValidRequestC2S();
 
-    if (!isValidRequest || !user?.id) {
+    if (!isValidRequest || !user || !user.id) {
         return getNextBaseResponse({
             success: false,
             status: 401,
-            error: 'Unauthorized request.',
+            error: 'Unauthorized. Sign-in required.',
         });
     }
 
-    const taskId = request.nextUrl.searchParams.get('taskId');
+    const searchParams = request.nextUrl.searchParams;
+
+    const taskId = searchParams.get('taskId');
 
     if (!taskId) {
         return getNextBaseResponse({

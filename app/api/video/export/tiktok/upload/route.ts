@@ -2,14 +2,14 @@
 
 import { NextRequest } from 'next/server';
 import { createSupabaseServiceRoleClient } from '@/lib/supabaseServiceRole';
-import { getNextBaseResponse } from '@/utils/getNextBaseResponse';
+import { getNextBaseResponse } from '@/lib/utils/getNextBaseResponse';
 import { PostgrestSingleResponse } from '@supabase/supabase-js';
 import { DownloadResult } from '@supabase/storage-js';
 import { videoGenerationTasksServerAPI } from '@/lib/api/server/videoGenerationTasksServerAPI';
 import { UserTikTokToken } from '@/lib/api/types/supabase/UserTikTokToken';
-import {getIsValidRequestS2S} from "@/utils/getIsValidRequest";
+import {getIsValidRequestS2S} from "@/lib/utils/getIsValidRequest";
 import {ExportPlatform, ExportStatus} from "@/lib/api/types/supabase/VideoGenerationTasks";
-
+import JSONbig from 'json-bigint';
 
 const MIN_CHUNK = 5 * 1024 * 1024;  // 5MB
 const MAX_CHUNK = 64 * 1024 * 1024; // 64MB
@@ -37,22 +37,8 @@ export async function POST(request: NextRequest) {
     }
 
     try {
-        const { userId } = await request.json();
-
-        if (!userId) {
-            await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, {
-                export_status: ExportStatus.FAILED,
-                export_platform: ExportPlatform.TIKTOK,
-            });
-
-            return getNextBaseResponse({
-                success: false,
-                status: 400,
-                error: 'userId is required',
-            });
-        }
-
         const videoGenerationTask = await videoGenerationTasksServerAPI.getVideoGenerationTaskById(taskId);
+
         if (!videoGenerationTask) {
             await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, {
                 export_status: ExportStatus.FAILED,
@@ -65,6 +51,8 @@ export async function POST(request: NextRequest) {
                 error: 'Task not found.',
             });
         }
+
+        const userId = videoGenerationTask.user_id;
 
         console.log(`[TikTok Upload] Starting for userId=${userId}`);
 
@@ -326,7 +314,8 @@ async function pollPublishStatus(
             body: JSON.stringify({ publish_id: publishId }),
         });
 
-        const data = await res.json();
+        const raw = await res.text();
+        const data = JSONbig.parse(raw);
         const status = data.data?.status;
 
         console.log(`[TikTok Upload] Publish status: ${status} (attempt ${i + 1})`);
