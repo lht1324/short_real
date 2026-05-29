@@ -11,18 +11,22 @@ import HeroSection from "@/components/page/landing/hero-section/HeroSection";
 import FeaturesSection from "@/components/page/landing/features-section/FeaturesSection";
 import ComparisonSection from "@/components/page/landing/comparison-section/ComparisonSection";
 import HowItWorksSection from "@/components/page/landing/how-it-works-section/HowItWorksSection";
+import CostStructureSection from "@/components/page/landing/cost-structure-section/CostStructureSection";
 import PricingSection from "@/components/page/landing/pricing-section/PricingSection";
 import FAQSection from "@/components/page/landing/faq-section/FAQSection";
 import Footer from "@/components/public/footer/Footer";
 import FloatingRoadmap from "@/components/page/landing/FloatingRoadmap";
 import {RoadmapItem} from "@/lib/api/types/supabase/RoadmapItem";
 import {roadmapClientAPI} from "@/lib/api/client/roadmapClientAPI";
+import { aiModelDataClient } from "@/lib/api/client/aiModelDataClient";
+import { AIModelData } from "@/lib/api/types/supabase/AIModelData";
 
 function LandingPageClient() {
     const router = useRouter();
     const { user } = useAuth();
     const [productDataList, setProductDataList] = useState<ProductData[]>([]);
     const [roadmapItemList, setRoadmapItemList] = useState<RoadmapItem[]>([]);
+    const [aiModelDataList, setAiModelDataList] = useState<AIModelData[]>([]);
 
     const [isLoadingRoadmapItemList, setIsLoadingRoadmapItemList] = useState(false);
 
@@ -68,10 +72,15 @@ function LandingPageClient() {
             }
             setRoadmapItemList(roadmapItemList);
         }
+        const loadAiModelDataList = async () => {
+            const dataList = await aiModelDataClient.getAIModelData();
+            setAiModelDataList(dataList || []);
+        }
         loadProductDataList().then();
         loadRoadmapItemList().then(() => {
             setIsLoadingRoadmapItemList(false);
         });
+        loadAiModelDataList().then();
     }, []);
 
     return (
@@ -114,6 +123,8 @@ function LandingPageClient() {
                 <ComparisonSection />
 
                 <HowItWorksSection />
+
+                <CostStructureSection aiModelDataList={aiModelDataList} />
 
                 <PricingSection
                     productDataList={productDataList}
