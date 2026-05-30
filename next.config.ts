@@ -1,3 +1,4 @@
+import {withNextVideo} from "next-video/process";
 import type { NextConfig } from "next";
 
 const isDev = process.env.NODE_ENV === 'development';
@@ -62,4 +63,4 @@ const nextConfig: NextConfig = {
     }
 };
 
-export default nextConfig;
+module.exports = withNextVideo(nextConfig);

@@ -1,9 +1,10 @@
 'use client'
 
 import { memo, useState, useRef, useEffect, useCallback } from "react";
-import { AlertTriangle, CheckCircle2, Terminal, Loader2, Volume2, VolumeX } from "lucide-react";
-import TypeWriter from "@/components/page/landing/comparison-section/TypeWriter";
-import {useVideoCleanup} from "@/hooks/videoHooks";
+import { AlertTriangle, CheckCircle2, Loader2, Volume2, VolumeX } from "lucide-react";
+import { motion } from "framer-motion";
+import { useVideoCleanup } from "@/hooks/videoHooks";
+import Video from 'next-video';
 
 // 대본 데이터
 const scriptLines = [
@@ -19,6 +20,8 @@ const TOTAL_DURATION = 17.5;
 function ComparisonSection() {
     const badVideoRef = useRef<HTMLVideoElement>(null);
     const goodVideoRef = useRef<HTMLVideoElement>(null);
+    const progressRef = useRef<HTMLDivElement>(null);
+    const scriptRefs = useRef<(HTMLParagraphElement | null)[]>([]);
 
     // [최적화] requestAnimationFrame ID 관리용 Ref
     const rafRef = useRef<number | null>(null);
@@ -31,8 +34,8 @@ function ComparisonSection() {
     // 뮤트 상태
     const [isMuted, setIsMuted] = useState(true);
 
-    const [currentLine, setCurrentLine] = useState(scriptLines[0].text);
-    const [progress, setProgress] = useState(0);
+    // [성능 최적화] activeIndex를 상태가 아닌 ref로 관리하여 리렌더링 방지
+    const activeIndexRef = useRef(0);
 
     // [최적화] 안전하게 루프를 멈추는 함수
     const stopLoop = useCallback(() => {
@@ -42,17 +45,15 @@ function ComparisonSection() {
         }
     }, []);
 
-    // [최적화] 탭 비활성화(백그라운드) 감지하여 재생/루프 중단 (메모리 누수 방지 핵심)
+    // [최적화] 탭 비활성화(백그라운드) 감지하여 재생/루프 중단
     useEffect(() => {
         const handleVisibilityChange = () => {
             if (document.hidden) {
-                // 백그라운드로 가면 정지
                 stopLoop();
                 badVideoRef.current?.pause();
                 goodVideoRef.current?.pause();
                 setIsPlaying(false);
             } else {
-                // 돌아올 때 ready 상태 리셋 → canplaythrough 재발화 유도
                 setIsBadReady(false);
                 setIsGoodReady(false);
                 badVideoRef.current?.load();
@@ -63,15 +64,14 @@ function ComparisonSection() {
         document.addEventListener("visibilitychange", handleVisibilityChange);
         return () => {
             document.removeEventListener("visibilitychange", handleVisibilityChange);
-            stopLoop(); // 언마운트 시 루프 확실히 제거
+            stopLoop();
         };
     }, [stopLoop]);
 
-    // 1. 동시 재생 로직 (준비 완료 시 자동 재생)
+    // 1. 동시 재생 로직
     useEffect(() => {
         if (isBadReady && isGoodReady && !isPlaying) {
             const startTimeout = setTimeout(() => {
-                // 문서가 보일 때만 재생 시작
                 if (!document.hidden && badVideoRef.current && goodVideoRef.current) {
                     Promise.all([
                         badVideoRef.current.play().catch(() => {}),
@@ -92,7 +92,7 @@ function ComparisonSection() {
         }
     }, [isMuted]);
 
-    // 2. 싱크 루프 (최적화됨)
+    // 2. 싱크 루프 (고강도 성능 최적화: 직접 DOM 조작)
     useEffect(() => {
         if (!isPlaying) {
             stopLoop();
@@ -103,7 +103,6 @@ function ComparisonSection() {
             const mainVideo = goodVideoRef.current;
             const subVideo = badVideoRef.current;
 
-            // 비디오가 없거나, 언마운트 된 경우 루프 종료
             if (!mainVideo || !subVideo) {
                 stopLoop();
                 return;
@@ -111,19 +110,40 @@ function ComparisonSection() {
 
             const currentTime = mainVideo.currentTime;
 
-            // UI 업데이트
-            const percent = Math.min((currentTime / TOTAL_DURATION) * 100, 100);
-            setProgress(percent);
+            // [성능] 직접 DOM Ref를 조작하여 리액트 리렌더링 없이 프로그레스 바 업데이트
+            if (progressRef.current) {
+                const percent = Math.min((currentTime / TOTAL_DURATION) * 100, 100);
+                progressRef.current.style.width = `${percent}%`;
+            }
 
-            const activeLine = scriptLines.find(
+            // [성능] 텍스트 하이라이팅 직접 조작
+            const newIndex = scriptLines.findIndex(
                 line => currentTime >= line.start && currentTime < line.end
             );
 
-            if (activeLine && activeLine.text !== currentLine) {
-                setCurrentLine(activeLine.text);
+            if (newIndex !== -1 && newIndex !== activeIndexRef.current) {
+                const prevIndex = activeIndexRef.current;
+                
+                // 이전 엘리먼트 비활성화
+                const prevEl = scriptRefs.current[prevIndex];
+                if (prevEl) {
+                    prevEl.style.color = '#71717a'; // zinc-400
+                    prevEl.style.opacity = '0.8';
+                    prevEl.style.transform = 'translateX(0)';
+                }
+
+                // 현재 엘리먼트 활성화
+                const currEl = scriptRefs.current[newIndex];
+                if (currEl) {
+                    currEl.style.color = '#ffffff'; // white
+                    currEl.style.opacity = '1';
+                    currEl.style.transform = 'translateX(8px)';
+                }
+
+                activeIndexRef.current = newIndex;
             }
 
-            // Sync Correction (너무 잦은 보정 방지, 오차 범위 0.15로 완화)
+            // Sync Correction
             if (Math.abs(mainVideo.currentTime - subVideo.currentTime) > 0.15) {
                 subVideo.currentTime = mainVideo.currentTime;
             }
@@ -136,16 +156,13 @@ function ComparisonSection() {
                 subVideo.play().catch(() => {});
             }
 
-            // 재귀 호출
             rafRef.current = requestAnimationFrame(updateLoop);
         };
 
-        // 루프 시작
         rafRef.current = requestAnimationFrame(updateLoop);
 
-        // Cleanup: 컴포넌트 언마운트나 isPlaying 변경 시 루프 정지
         return () => stopLoop();
-    }, [currentLine, isPlaying, stopLoop]);
+    }, [isPlaying, stopLoop]);
 
     useEffect(() => {
         if (badVideoRef.current) {
@@ -159,125 +176,138 @@ function ComparisonSection() {
     return (
         <section
             id="comparison"
-            className="relative py-16 px-4 sm:px-6 lg:px-8 overflow-hidden"
+            className="relative py-24 md:py-32 px-4 sm:px-6 lg:px-8 overflow-hidden"
         >
-            {/* Header */}
-            <div className="text-center mb-16 relative z-10">
-                <h2 className="text-4xl sm:text-6xl font-black text-white tracking-tight mb-4">
-                    Same Script. <br/>
-                    <span className="bg-gradient-to-r from-red-500 to-cyan-500 bg-clip-text text-transparent">
-                        Different Reality.
-                    </span>
-                </h2>
-                <p className="text-gray-400 text-lg">
-                    See how ShortReal AI interprets your story compared to others.
-                </p>
-            </div>
+            <div className="max-w-[1400px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center relative z-10">
 
-            <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 items-center relative z-10">
+                {/* LEFT: Editorial Text */}
+                <div className="lg:col-span-5 flex flex-col justify-center order-2 lg:order-1">
+                    <motion.h2 
+                        initial={{ opacity: 0, y: 20 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+                        className="text-4xl md:text-5xl lg:text-6xl font-black text-white tracking-tight mb-8 leading-[1.1]"
+                    >
+                        Same Script.<br/>
+                        <span className="text-zinc-600">Different Reality.</span>
+                    </motion.h2>
 
-                {/* 배경 연결선 */}
-                <div className="hidden lg:block absolute top-1/2 left-0 w-full h-[2px] bg-gradient-to-r from-red-900/50 via-gray-700 to-cyan-900/50 -z-10" />
+                    <motion.div 
+                        initial={{ opacity: 0, y: 20 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 0.6, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
+                        className="space-y-5 text-lg md:text-xl font-medium leading-relaxed max-w-md mb-12"
+                    >
+                        {scriptLines.map((line, idx) => (
+                            <p 
+                                key={idx} 
+                                ref={el => { scriptRefs.current[idx] = el; }}
+                                style={{
+                                    transition: 'all 0.5s ease',
+                                    color: idx === 0 ? '#ffffff' : '#71717a',
+                                    opacity: idx === 0 ? '1' : '0.8',
+                                    transform: idx === 0 ? 'translateX(8px)' : 'translateX(0)'
+                                }}
+                            >
+                                {line.text}
+                            </p>
+                        ))}
+                    </motion.div>
 
-                {/* --- LEFT: BAD EXAMPLE --- */}
-                <div className="lg:col-span-4 flex flex-col items-center gap-4 order-2 lg:order-1">
-                    <div className="relative w-[240px] sm:w-[280px] aspect-[9/16] rounded-2xl border-2 border-red-500/30 bg-gray-900 shadow-[0_0_40px_-10px_rgba(220,38,38,0.2)] overflow-hidden group">
+                    <motion.div 
+                        initial={{ opacity: 0, y: 20 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 0.6, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                        className="flex items-center gap-6"
+                    >
+                        <button
+                            onClick={() => setIsMuted(!isMuted)}
+                            className="flex items-center gap-3 px-5 py-3 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition-colors group"
+                        >
+                            {isMuted ? (
+                                <VolumeX size={18} className="text-zinc-400 group-hover:text-white transition-colors" />
+                            ) : (
+                                <Volume2 size={18} className="text-white" />
+                            )}
+                            <span className={`text-sm font-bold tracking-wider ${isMuted ? 'text-zinc-400 group-hover:text-white' : 'text-white'}`}>
+                                {isMuted ? "SOUND OFF" : "SOUND ON"}
+                            </span>
+                        </button>
+                        
+                        {/* Progress Line */}
+                        <div className="flex-1 h-1 bg-zinc-800 rounded-full overflow-hidden max-w-[200px]">
+                            <div 
+                                ref={progressRef}
+                                className="h-full bg-white transition-all duration-75 ease-linear"
+                                style={{ width: '0%' }}
+                            />
+                        </div>
+                    </motion.div>
+                </div>
+
+                {/* RIGHT: Videos Comparison */}
+                <div className="lg:col-span-7 grid grid-cols-2 gap-4 md:gap-6 order-1 lg:order-2">
+                    
+                    {/* BAD EXAMPLE */}
+                    <motion.div 
+                        initial={{ opacity: 0, y: 40 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+                        className="relative w-full aspect-[9/16] rounded-3xl overflow-hidden border border-white/5 bg-zinc-900 shadow-2xl"
+                    >
                         {!isPlaying && (
                             <div className="absolute inset-0 flex items-center justify-center bg-black/80 z-20">
-                                <Loader2 className="w-8 h-8 text-red-500 animate-spin" />
+                                <Loader2 className="w-8 h-8 text-zinc-500 animate-spin" />
                             </div>
                         )}
-                        <video
+                        <Video
                             ref={badVideoRef}
-                            src="/assets/demo/demo_bad_example.mp4"
-                            className="w-full h-full object-cover transition-all duration-500"
-                            muted
+                            src={`${process.env.NEXT_PUBLIC_DEMO_ASSETS_URL}/demo_bad_example.mp4`}
+                            className="w-full h-full object-cover grayscale opacity-80"
+                            muted={true}
                             loop
-                            playsInline // [중요] iOS/모바일 메모리 최적화
-                            onCanPlayThrough={() => setIsBadReady(true)}
+                            playsInline
+                            controls={false}
                         />
-                        <div className="absolute top-4 left-1/2 -translate-x-1/2 px-3 py-1 bg-red-950/80 border border-red-500/50 rounded-full flex items-center gap-2 backdrop-blur-md z-30">
-                            <AlertTriangle size={12} className="text-red-500" />
-                            <span className="text-red-400 text-xs font-bold tracking-wider">SLIDESHOW</span>
+                        <div className="absolute top-4 md:top-6 left-4 md:left-6 px-3 py-1.5 bg-black/50 border border-white/10 rounded-full flex items-center gap-2 backdrop-blur-md z-30">
+                            <AlertTriangle size={14} className="text-zinc-400" />
+                            <span className="text-zinc-400 text-xs font-bold tracking-wider">SLIDESHOW</span>
                         </div>
-                    </div>
-                </div>
+                    </motion.div>
 
-                {/* --- CENTER: SCRIPT TERMINAL --- */}
-                <div className="lg:col-span-4 flex flex-col items-center justify-center order-1 lg:order-2 w-full">
-                    <div className="relative w-full max-w-md p-1 rounded-xl bg-gradient-to-b from-gray-700 to-gray-900 shadow-2xl">
-                        <div className="bg-[#050505] rounded-lg p-6 border border-white/10 min-h-[200px] flex flex-col justify-between relative overflow-hidden">
-
-                            {/* Terminal Header & Mute Button */}
-                            <div className="flex items-center justify-between mb-4 border-b border-white/10 pb-2">
-                                <div className="flex items-center gap-2">
-                                    <Terminal size={16} className="text-gray-500" />
-                                    <span className="text-xs text-gray-500 font-mono">LIVE_NARRATION</span>
-                                </div>
-
-                                <button
-                                    onClick={() => setIsMuted(!isMuted)}
-                                    className="flex items-center gap-2 px-2 py-1 rounded hover:bg-white/10 transition-colors group"
-                                >
-                                    <span className={`text-[10px] font-bold tracking-wider ${isMuted ? 'text-gray-600' : 'text-cyan-500'}`}>
-                                        {isMuted ? "SOUND OFF" : "SOUND ON"}
-                                    </span>
-                                    {isMuted ? (
-                                        <VolumeX size={14} className="text-gray-600 group-hover:text-gray-400" />
-                                    ) : (
-                                        <Volume2 size={14} className="text-cyan-500 group-hover:text-cyan-400" />
-                                    )}
-                                </button>
-                            </div>
-
-                            {/* Typing Text Area */}
-                            <div className="font-mono text-lg sm:text-xl text-white leading-relaxed min-h-[80px]">
-                                <span className="text-gray-500 mr-2">&gt;</span>
-                                {isPlaying ? (
-                                    <TypeWriter text={currentLine} />
-                                ) : (
-                                    <span className="text-gray-500 animate-pulse">INITIALIZING SYSTEM...</span>
-                                )}
-                                <span className="animate-pulse text-cyan-500">_</span>
-                            </div>
-
-                            <div className="absolute bottom-0 left-0 h-1 bg-gray-800 w-full">
-                                <div
-                                    className="h-full bg-gradient-to-r from-red-500 via-purple-500 to-cyan-500"
-                                    style={{ width: `${progress}%` }}
-                                />
-                            </div>
-                        </div>
-
-                        <div className="hidden lg:block absolute top-1/2 -left-3 w-3 h-3 bg-gray-500 rounded-full" />
-                        <div className="hidden lg:block absolute top-1/2 -right-3 w-3 h-3 bg-gray-500 rounded-full" />
-                    </div>
-                </div>
-
-                {/* --- RIGHT: GOOD EXAMPLE --- */}
-                <div className="lg:col-span-4 flex flex-col items-center gap-4 order-3">
-                    <div className="relative w-[240px] sm:w-[280px] aspect-[9/16] rounded-2xl border-2 border-cyan-500/50 bg-gray-900 shadow-[0_0_60px_-10px_rgba(6,182,212,0.4)] overflow-hidden transform scale-105 z-10">
+                    {/* GOOD EXAMPLE */}
+                    <motion.div 
+                        initial={{ opacity: 0, y: 40 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 0.8, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
+                        className="relative w-full aspect-[9/16] rounded-3xl overflow-hidden border border-white/10 bg-zinc-900 shadow-2xl scale-105 origin-bottom"
+                    >
                         {!isPlaying && (
                             <div className="absolute inset-0 flex items-center justify-center bg-black/80 z-20">
-                                <Loader2 className="w-8 h-8 text-cyan-500 animate-spin" />
+                                <Loader2 className="w-8 h-8 text-white animate-spin" />
                             </div>
                         )}
-                        <video
+                        <Video
                             ref={goodVideoRef}
                             src={`${process.env.NEXT_PUBLIC_DEMO_ASSETS_URL}/demo_good_example.mp4`}
                             className="w-full h-full object-cover"
                             muted={isMuted}
                             loop
-                            playsInline // [중요] iOS/모바일 메모리 최적화
-                            onCanPlayThrough={() => setIsGoodReady(true)}
+                            playsInline
+                            controls={false}
                         />
-                        <div className="absolute top-4 left-1/2 -translate-x-1/2 px-3 py-1 bg-cyan-950/80 border border-cyan-500/50 rounded-full flex items-center gap-2 backdrop-blur-md z-30">
-                            <CheckCircle2 size={12} className="text-cyan-400" />
-                            <span className="text-cyan-400 text-xs font-bold tracking-wider">TRUE MOTION</span>
+                        <div className="absolute top-4 md:top-6 left-4 md:left-6 px-3 py-1.5 bg-white/10 border border-white/20 rounded-full flex items-center gap-2 backdrop-blur-md z-30">
+                            <CheckCircle2 size={14} className="text-white" />
+                            <span className="text-white text-xs font-bold tracking-wider">TRUE MOTION</span>
                         </div>
-                    </div>
-                </div>
+                    </motion.div>
 
+                </div>
             </div>
         </section>
     );

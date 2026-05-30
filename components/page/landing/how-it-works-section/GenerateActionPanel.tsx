@@ -25,8 +25,6 @@ function GenerateActionPanel({
 
     return (
         <div className="h-[240px] bg-gradient-to-br from-[#12121a] to-[#0f0f16] border border-white/10 rounded-3xl p-6 relative overflow-visible flex flex-col justify-between group">
-            <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10 pointer-events-none overflow-hidden rounded-3xl" />
-
             <div className="relative z-10">
                 <div className="flex justify-between items-start mb-2">
                     <div className="flex items-center gap-2 text-cyan-400">

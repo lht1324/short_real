@@ -1,6 +1,6 @@
 'use client'
 
-import { memo, useMemo, useState, useEffect } from "react";
+import { memo, useMemo, useState, useEffect, useCallback, ChangeEvent } from "react";
 import { AIModelData } from "@/lib/api/types/supabase/AIModelData";
 import { Calculator, Users, Image as ImageIcon, Video, Key, CheckCircle2 } from "lucide-react";
 import Image from "next/image";
@@ -8,6 +8,8 @@ import Image from "next/image";
 interface CostStructureSectionProps {
     aiModelDataList: AIModelData[];
 }
+
+const SUPPORTED_PROVIDERS = ['fal.ai', 'Replicate', 'OpenRouter', 'ElevenLabs'];
 
 function CostStructureSection({ aiModelDataList }: CostStructureSectionProps) {
     const t2iModels = useMemo(() => aiModelDataList.filter(m => m.category === 'text-to-image'), [aiModelDataList]);
@@ -29,21 +31,47 @@ function CostStructureSection({ aiModelDataList }: CostStructureSectionProps) {
     const [sceneCount, setSceneCount] = useState<number>(6);
     const [videoDuration, setVideoDuration] = useState<number>(30);
 
-    const getPrice = (models: AIModelData[], id: string) => {
+    const getPrice = useCallback((models: AIModelData[], id: string) => {
         const model = models.find(m => (m.id || m.endpoint_id) === id);
         if (!model || !model.ai_model_price_list || model.ai_model_price_list.length === 0) return 0;
         const price1080 = model.ai_model_price_list.find(p => p.unit.includes('1080p'));
         return price1080?.price_per_unit || model.ai_model_price_list[0].price_per_unit || 0;
-    };
+    }, []);
 
-    const t2iPrice = getPrice(t2iModels, selectedT2iId);
-    const i2iPrice = getPrice(i2iModels, selectedI2iId);
-    const i2vPrice = getPrice(i2vModels, selectedI2vId);
+    const t2iPrice = useMemo(() => getPrice(t2iModels, selectedT2iId), [getPrice, t2iModels, selectedT2iId]);
+    const i2iPrice = useMemo(() => getPrice(i2iModels, selectedI2iId), [getPrice, i2iModels, selectedI2iId]);
+    const i2vPrice = useMemo(() => getPrice(i2vModels, selectedI2vId), [getPrice, i2vModels, selectedI2vId]);
 
-    const t2iCost = t2iPrice * characterCount;
-    const i2iCost = i2iPrice * sceneCount;
-    const i2vCost = i2vPrice * videoDuration;
-    const totalCost = t2iCost + i2iCost + i2vCost;
+    const totalCost = useMemo(() => {
+        const t2iCost = t2iPrice * characterCount;
+        const i2iCost = i2iPrice * sceneCount;
+        const i2vCost = i2vPrice * videoDuration;
+        return t2iCost + i2iCost + i2vCost;
+    }, [t2iPrice, characterCount, i2iPrice, sceneCount, i2vPrice, videoDuration]);
+
+    const onChangeSelectedT2iId = useCallback((e: ChangeEvent<HTMLSelectElement>) => {
+        setSelectedT2iId(e.target.value);
+    }, []);
+
+    const onChangeSelectedI2iId = useCallback((e: ChangeEvent<HTMLSelectElement>) => {
+        setSelectedI2iId(e.target.value);
+    }, []);
+
+    const onChangeSelectedI2vId = useCallback((e: ChangeEvent<HTMLSelectElement>) => {
+        setSelectedI2vId(e.target.value);
+    }, []);
+
+    const onChangeCharacterCount = useCallback((e: ChangeEvent<HTMLInputElement>) => {
+        setCharacterCount(Number(e.target.value));
+    }, []);
+
+    const onChangeSceneCount = useCallback((e: ChangeEvent<HTMLInputElement>) => {
+        setSceneCount(Number(e.target.value));
+    }, []);
+
+    const onChangeVideoDuration = useCallback((e: ChangeEvent<HTMLInputElement>) => {
+        setVideoDuration(Number(e.target.value));
+    }, []);
 
     return (
         <section className="relative w-full py-24 md:py-32 overflow-hidden z-10">
@@ -84,7 +112,7 @@ function CostStructureSection({ aiModelDataList }: CostStructureSectionProps) {
                                             </label>
                                             <select 
                                                 value={selectedT2iId} 
-                                                onChange={(e) => setSelectedT2iId(e.target.value)}
+                                                onChange={onChangeSelectedT2iId}
                                                 className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-pink-500/50 appearance-none"
                                             >
                                                 {t2iModels.map(m => (
@@ -100,7 +128,7 @@ function CostStructureSection({ aiModelDataList }: CostStructureSectionProps) {
                                             </label>
                                             <select 
                                                 value={selectedI2iId} 
-                                                onChange={(e) => setSelectedI2iId(e.target.value)}
+                                                onChange={onChangeSelectedI2iId}
                                                 className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-pink-500/50 appearance-none"
                                             >
                                                 {i2iModels.map(m => (
@@ -116,7 +144,7 @@ function CostStructureSection({ aiModelDataList }: CostStructureSectionProps) {
                                             </label>
                                             <select 
                                                 value={selectedI2vId} 
-                                                onChange={(e) => setSelectedI2vId(e.target.value)}
+                                                onChange={onChangeSelectedI2vId}
                                                 className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-pink-500/50 appearance-none"
                                             >
                                                 {i2vModels.map(m => (
@@ -141,7 +169,7 @@ function CostStructureSection({ aiModelDataList }: CostStructureSectionProps) {
                                             </div>
                                             <input 
                                                 type="range" min="1" max="10" step="1" 
-                                                value={characterCount} onChange={(e) => setCharacterCount(Number(e.target.value))}
+                                                value={characterCount} onChange={onChangeCharacterCount}
                                                 className="w-full accent-pink-500"
                                             />
                                         </div>
@@ -153,7 +181,7 @@ function CostStructureSection({ aiModelDataList }: CostStructureSectionProps) {
                                             </div>
                                             <input 
                                                 type="range" min="1" max="30" step="1" 
-                                                value={sceneCount} onChange={(e) => setSceneCount(Number(e.target.value))}
+                                                value={sceneCount} onChange={onChangeSceneCount}
                                                 className="w-full accent-pink-500"
                                             />
                                         </div>
@@ -165,7 +193,7 @@ function CostStructureSection({ aiModelDataList }: CostStructureSectionProps) {
                                             </div>
                                             <input 
                                                 type="range" min="5" max="60" step="1" 
-                                                value={videoDuration} onChange={(e) => setVideoDuration(Number(e.target.value))}
+                                                value={videoDuration} onChange={onChangeVideoDuration}
                                                 className="w-full accent-pink-500"
                                             />
                                         </div>
@@ -204,7 +232,7 @@ function CostStructureSection({ aiModelDataList }: CostStructureSectionProps) {
                             <div className="space-y-4">
                                 <h4 className="text-sm font-medium text-gray-400 uppercase tracking-widest mb-4">Supported Providers</h4>
                                 
-                                {['fal.ai', 'Replicate', 'OpenRouter', 'ElevenLabs'].map((provider) => (
+                                {SUPPORTED_PROVIDERS.map((provider) => (
                                     <div key={provider} className="flex items-center gap-4 bg-white/5 border border-white/5 rounded-xl p-3">
                                         <div className="w-10 h-10 rounded-lg bg-white/5 flex items-center justify-center flex-shrink-0">
                                             <Image src="/icons/google-g-light.svg" alt={`${provider} logo`} width={20} height={20} className="opacity-70" />

@@ -64,9 +64,6 @@ function PricingSectionItem({
             `}
             style={{ animationDelay: `${index * 0.1}s` }}
         >
-            {/* Background Grid Pattern (Optional Texture) */}
-            <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-[0.03] pointer-events-none" />
-
             {/* Popular 배지 & Glow */}
             {isPopular && (
                 <>
