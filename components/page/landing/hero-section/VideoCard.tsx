@@ -1,8 +1,7 @@
 'use client'
 
-import {useRef, useState, MouseEvent, useCallback, memo, useEffect} from "react";
+import {useState, MouseEvent, useCallback, memo} from "react";
 import {Volume2, VolumeX} from "lucide-react";
-import {useIntersectionPlay, useVideoCleanup} from "@/hooks/videoHooks";
 import Video from 'next-video';
 
 interface VideoCardProps {
@@ -16,8 +15,8 @@ function VideoCard({
     src,
     className = "",
     isMutedOverride,
+    preload = "auto",
 }: VideoCardProps) {
-    const videoRef = useRef<HTMLVideoElement>(null);
     const [isMutedLocal, setIsMutedLocal] = useState(true);
 
     const isMuted = isMutedOverride !== undefined ? isMutedOverride : isMutedLocal;
@@ -29,21 +28,17 @@ function VideoCard({
         }
     }, [isMutedOverride]);
 
-    // next-video component manages the video element. 
-    // We can still use hooks but need to be careful with the ref.
-    useIntersectionPlay(videoRef);
-    useVideoCleanup(videoRef);
-
     return (
         <div
             className={`relative rounded-2xl overflow-hidden bg-zinc-900 border border-white/10 shadow-2xl group w-full h-full ${className}`}
         >
             <Video
-                ref={videoRef}
                 src={src}
                 muted={isMuted}
                 loop
+                autoPlay
                 playsInline
+                preload={preload}
                 controls={false}
                 className="w-full h-full object-cover"
             />

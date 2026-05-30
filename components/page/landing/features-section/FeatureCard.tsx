@@ -1,11 +1,9 @@
-import {memo, useCallback, useRef, useState, MouseEvent, useEffect} from "react";
+import {memo, useCallback, useState, MouseEvent} from "react";
 import {Volume2, VolumeX} from "lucide-react";
 import {Feature} from "@/components/page/landing/features-section/FeaturesSection";
-import {useIntersectionPlay, useVideoCleanup} from "@/hooks/videoHooks";
 import Video from 'next-video';
 
 function FeatureCard({ feature, index, className }: { feature: Feature, index: number, className?: string }) {
-    const videoRef = useRef<HTMLVideoElement>(null);
     const [isMuted, setIsMuted] = useState(true);
     const [isHovered, setIsHovered] = useState(false);
 
@@ -15,10 +13,6 @@ function FeatureCard({ feature, index, className }: { feature: Feature, index: n
         setIsMuted(!isMuted);
     }, [isMuted]);
 
-    // [최적화] 뷰포트 진입 시에만 재생
-    useIntersectionPlay(videoRef);
-    useVideoCleanup(videoRef);
-
     return (
         <div
             className={`group relative rounded-3xl overflow-hidden border border-white/10 bg-zinc-900/50 transition-all duration-500 hover:border-white/20 ${className || 'w-full h-full'}`}
@@ -27,10 +21,11 @@ function FeatureCard({ feature, index, className }: { feature: Feature, index: n
         >
             {/* next-video optimized background */}
             <Video
-                ref={videoRef}
                 className="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:opacity-100 group-hover:scale-105 transition-all duration-700 ease-out"
                 src={feature.videoSrc}
                 muted={isMuted}
+                preload="auto"
+                autoPlay
                 loop
                 playsInline
                 controls={false}

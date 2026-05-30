@@ -34,8 +34,8 @@ export const useIntersectionPlay = (
         const observer = new IntersectionObserver((entries) => {
             entries.forEach((entry) => {
                 if (entry.isIntersecting) {
-                    video.play().catch(() => {
-                        // 자동재생 정책 등으로 실패 시 무시
+                    video.play().catch((err) => {
+                        console.warn("IntersectionPlay: Autoplay prevented or failed:", err);
                     });
                 } else {
                     video.pause();

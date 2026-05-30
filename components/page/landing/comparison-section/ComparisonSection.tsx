@@ -3,7 +3,6 @@
 import { memo, useState, useRef, useEffect, useCallback } from "react";
 import { AlertTriangle, CheckCircle2, Loader2, Volume2, VolumeX } from "lucide-react";
 import { motion } from "framer-motion";
-import { useVideoCleanup } from "@/hooks/videoHooks";
 import Video from 'next-video';
 
 // 대본 데이터
@@ -269,6 +268,8 @@ function ComparisonSection() {
                             src={`${process.env.NEXT_PUBLIC_DEMO_ASSETS_URL}/demo_bad_example.mp4`}
                             className="w-full h-full object-cover grayscale opacity-80"
                             muted={true}
+                            preload="auto"
+                            onCanPlay={() => setIsBadReady(true)}
                             loop
                             playsInline
                             controls={false}
@@ -297,6 +298,8 @@ function ComparisonSection() {
                             src={`${process.env.NEXT_PUBLIC_DEMO_ASSETS_URL}/demo_good_example.mp4`}
                             className="w-full h-full object-cover"
                             muted={isMuted}
+                            preload="auto"
+                            onCanPlay={() => setIsGoodReady(true)}
                             loop
                             playsInline
                             controls={false}
