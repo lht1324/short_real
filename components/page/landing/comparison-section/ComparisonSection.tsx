@@ -3,7 +3,7 @@
 import { memo, useState, useRef, useEffect, useCallback } from "react";
 import { AlertTriangle, CheckCircle2, Loader2, Volume2, VolumeX } from "lucide-react";
 import { motion } from "framer-motion";
-import Video from 'next-video';
+import { useIntersectionObserver } from "@/hooks/useIntersectionObserver";
 
 // 대본 데이터
 const scriptLines = [
@@ -21,6 +21,9 @@ function ComparisonSection() {
     const goodVideoRef = useRef<HTMLVideoElement>(null);
     const progressRef = useRef<HTMLDivElement>(null);
     const scriptRefs = useRef<(HTMLParagraphElement | null)[]>([]);
+
+    // Intersection Observer (20% 노출 시 로딩 시작)
+    const { targetRef, isIntersecting, hasIntersected } = useIntersectionObserver(0.2);
 
     // [최적화] requestAnimationFrame ID 관리용 Ref
     const rafRef = useRef<number | null>(null);
@@ -163,19 +166,28 @@ function ComparisonSection() {
         return () => stopLoop();
     }, [isPlaying, stopLoop]);
 
+    // 화면 진입 시 비디오 재생/일시정지 제어
     useEffect(() => {
-        if (badVideoRef.current) {
-            badVideoRef.current.load();
+        if (!hasIntersected) return;
+        
+        if (isIntersecting) {
+            if (isBadReady && isGoodReady) {
+                badVideoRef.current?.play().catch(() => {});
+                goodVideoRef.current?.play().catch(() => {});
+                setIsPlaying(true);
+            }
+        } else {
+            badVideoRef.current?.pause();
+            goodVideoRef.current?.pause();
+            setIsPlaying(false);
         }
-        if (goodVideoRef.current) {
-            goodVideoRef.current.load();
-        }
-    }, []);
+    }, [isIntersecting, hasIntersected, isBadReady, isGoodReady]);
 
     return (
         <section
             id="comparison"
-            className="relative py-24 md:py-32 px-4 sm:px-6 lg:px-8 overflow-hidden"
+            ref={targetRef}
+            className="relative py-24 md:py-32 px-4 sm:px-6 lg:px-8 overflow-hidden min-h-[600px]"
         >
             <div className="max-w-[1400px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center relative z-10">
 
@@ -258,21 +270,36 @@ function ComparisonSection() {
                         transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
                         className="relative w-full aspect-[9/16] rounded-3xl overflow-hidden border border-white/5 bg-zinc-900 shadow-2xl"
                     >
+                        <a 
+                            href={`${process.env.NEXT_PUBLIC_DEMO_ASSETS_URL}/demo_bad_example.mp4`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="absolute inset-0 z-10 block cursor-default"
+                            onClick={(e) => e.preventDefault()}
+                        >
+                            <span className="sr-only">Open Original Bad Example</span>
+                        </a>
+
                         {!isPlaying && (
                             <div className="absolute inset-0 flex items-center justify-center bg-black/80 z-20">
-                                <Loader2 className="w-8 h-8 text-zinc-500 animate-spin" />
+                                <img 
+                                    src="/preview/demo_bad_example.webp" 
+                                    className="absolute inset-0 w-full h-full object-cover opacity-30 grayscale" 
+                                    alt="loading"
+                                />
+                                <Loader2 className="w-8 h-8 text-zinc-500 animate-spin relative z-10" />
                             </div>
                         )}
-                        <Video
+                        <video
                             ref={badVideoRef}
-                            src={`${process.env.NEXT_PUBLIC_DEMO_ASSETS_URL}/demo_bad_example.mp4`}
-                            className="w-full h-full object-cover grayscale opacity-80"
+                            src={hasIntersected ? `${process.env.NEXT_PUBLIC_DEMO_ASSETS_URL}/demo_bad_example_low.mp4` : undefined}
+                            poster="/preview/demo_bad_example.webp"
+                            className="w-full h-full object-cover grayscale opacity-80 pointer-events-none"
                             muted={true}
-                            preload="auto"
+                            preload={hasIntersected ? "auto" : "none"}
                             onCanPlay={() => setIsBadReady(true)}
                             loop
                             playsInline
-                            controls={false}
                         />
                         <div className="absolute top-4 md:top-6 left-4 md:left-6 px-3 py-1.5 bg-black/50 border border-white/10 rounded-full flex items-center gap-2 backdrop-blur-md z-30">
                             <AlertTriangle size={14} className="text-zinc-400" />
@@ -288,21 +315,36 @@ function ComparisonSection() {
                         transition={{ duration: 0.8, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
                         className="relative w-full aspect-[9/16] rounded-3xl overflow-hidden border border-white/10 bg-zinc-900 shadow-2xl scale-105 origin-bottom"
                     >
+                        <a 
+                            href={`${process.env.NEXT_PUBLIC_DEMO_ASSETS_URL}/demo_good_example.mp4`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="absolute inset-0 z-10 block cursor-default"
+                            onClick={(e) => e.preventDefault()}
+                        >
+                            <span className="sr-only">Open Original Good Example</span>
+                        </a>
+
                         {!isPlaying && (
                             <div className="absolute inset-0 flex items-center justify-center bg-black/80 z-20">
-                                <Loader2 className="w-8 h-8 text-white animate-spin" />
+                                <img 
+                                    src="/preview/demo_good_example.webp" 
+                                    className="absolute inset-0 w-full h-full object-cover opacity-30" 
+                                    alt="loading"
+                                />
+                                <Loader2 className="w-8 h-8 text-white animate-spin relative z-10" />
                             </div>
                         )}
-                        <Video
+                        <video
                             ref={goodVideoRef}
-                            src={`${process.env.NEXT_PUBLIC_DEMO_ASSETS_URL}/demo_good_example.mp4`}
-                            className="w-full h-full object-cover"
+                            src={hasIntersected ? `${process.env.NEXT_PUBLIC_DEMO_ASSETS_URL}/demo_good_example_low.mp4` : undefined}
+                            poster="/preview/demo_good_example.webp"
+                            className="w-full h-full object-cover pointer-events-none"
                             muted={isMuted}
-                            preload="auto"
+                            preload={hasIntersected ? "auto" : "none"}
                             onCanPlay={() => setIsGoodReady(true)}
                             loop
                             playsInline
-                            controls={false}
                         />
                         <div className="absolute top-4 md:top-6 left-4 md:left-6 px-3 py-1.5 bg-white/10 border border-white/20 rounded-full flex items-center gap-2 backdrop-blur-md z-30">
                             <CheckCircle2 size={14} className="text-white" />

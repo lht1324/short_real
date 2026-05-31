@@ -1,11 +1,15 @@
-import {memo, useCallback, useState, MouseEvent} from "react";
+import {memo, useCallback, useState, MouseEvent, useRef, useEffect} from "react";
 import {Volume2, VolumeX} from "lucide-react";
 import {Feature} from "@/components/page/landing/features-section/FeaturesSection";
-import Video from 'next-video';
+import { useIntersectionObserver } from "@/hooks/useIntersectionObserver";
 
 function FeatureCard({ feature, index, className }: { feature: Feature, index: number, className?: string }) {
     const [isMuted, setIsMuted] = useState(true);
     const [isHovered, setIsHovered] = useState(false);
+    const videoRef = useRef<HTMLVideoElement>(null);
+    
+    // Intersection Observer (10% 화면 노출 시 트리거)
+    const { targetRef, isIntersecting, hasIntersected } = useIntersectionObserver(0.1);
 
     // 소리 토글 핸들러
     const toggleMute = useCallback((e: MouseEvent) => {
@@ -13,22 +17,48 @@ function FeatureCard({ feature, index, className }: { feature: Feature, index: n
         setIsMuted(!isMuted);
     }, [isMuted]);
 
+    // 화면 진입/이탈 시 재생 상태 제어
+    useEffect(() => {
+        if (!videoRef.current) return;
+        
+        if (isIntersecting) {
+            videoRef.current.play().catch(() => {});
+        } else {
+            videoRef.current.pause();
+        }
+    }, [isIntersecting]);
+
+    // 원본 영상 경로 생성
+    const originalUrl = feature.videoSrc;
+
     return (
         <div
+            ref={targetRef}
             className={`group relative rounded-3xl overflow-hidden border border-white/10 bg-zinc-900/50 transition-all duration-500 hover:border-white/20 ${className || 'w-full h-full'}`}
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
         >
-            {/* next-video optimized background */}
-            <Video
-                className="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:opacity-100 group-hover:scale-105 transition-all duration-700 ease-out"
-                src={feature.videoSrc}
+            <a 
+                href={originalUrl} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="absolute inset-0 z-40 block cursor-default"
+                onClick={(e) => e.preventDefault()}
+            >
+                <span className="sr-only">Open Original Resolution Video</span>
+            </a>
+
+            {/* native video optimized background with Lazy Loading */}
+            <video
+                ref={videoRef}
+                className="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:opacity-100 group-hover:scale-105 transition-all duration-700 ease-out pointer-events-none"
+                src={hasIntersected ? feature.videoSrc.replace('.mp4', '_low.mp4') : undefined}
+                poster={`/preview/demo_${feature.title.toLowerCase()}.webp`}
                 muted={isMuted}
-                preload="auto"
+                preload={!hasIntersected ? "none" : "auto"}
                 autoPlay
                 loop
                 playsInline
-                controls={false}
             />
 
             {/* Default Label (Bottom) */}

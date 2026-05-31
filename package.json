@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "next dev & npx next-video sync -w",
+    "dev": "next dev",
     "dev:worker": "next dev --webpack",
     "build": "next build",
     "start": "next start",
@@ -25,7 +25,6 @@
     "lucide-react": "^0.539.0",
     "mediabunny": "^1.15.1",
     "next": "^16.1.0",
-    "next-video": "^2.8.0",
     "openai": "^6.19.0",
     "peaks.js": "^4.0.0",
     "react": "19.1.0",

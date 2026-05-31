@@ -62,6 +62,8 @@ function HeroSection() {
                         <div className="snap-center shrink-0 w-[80%] max-w-[300px] lg:w-[55%] lg:max-w-[380px] xl:max-w-[420px] aspect-[9/16] relative z-30 shadow-[0_0_80px_-15px_rgba(255,255,255,0.15)] transition-transform duration-500 hover:scale-105 lg:order-2 ml-4 lg:ml-0">
                             <VideoCard
                                 src={`${process.env.NEXT_PUBLIC_DEMO_ASSETS_URL}/demo_main_center.mp4`}
+                                posterSrc="/preview/demo_main_center.webp"
+                                lazyLoad={false}
                                 className="w-full h-full border-white/20"
                                 isMutedOverride={true}
                                 preload="auto"
@@ -72,6 +74,10 @@ function HeroSection() {
                         <div className="snap-center shrink-0 w-[80%] max-w-[300px] lg:w-[32%] lg:max-w-[240px] aspect-[9/16] lg:absolute lg:left-0 lg:xl:left-[2%] z-10 lg:opacity-70 lg:hover:opacity-100 transition-all duration-500 lg:hover:z-40 lg:hover:-translate-y-2 lg:hover:scale-110 lg:drop-shadow-2xl lg:order-1 opacity-80">
                             <VideoCard
                                 src={`${process.env.NEXT_PUBLIC_DEMO_ASSETS_URL}/demo_main_left.mp4`}
+                                posterSrc="/preview/demo_main_left.webp"
+                                lazyLoad={true}
+                                preload="none"
+                                threshold={0.5}
                                 className="w-full h-full border-white/10"
                                 isMutedOverride={true}
                             />
@@ -81,6 +87,10 @@ function HeroSection() {
                         <div className="snap-center shrink-0 w-[80%] max-w-[300px] aspect-[9/16] lg:w-[32%] lg:max-w-[240px] lg:absolute lg:right-0 lg:xl:right-[2%] z-10 lg:opacity-70 lg:hover:opacity-100 transition-all duration-500 lg:hover:z-40 lg:hover:-translate-y-2 lg:hover:scale-110 lg:drop-shadow-2xl lg:order-3 opacity-80 pr-4 lg:p-0">
                             <VideoCard
                                 src={`${process.env.NEXT_PUBLIC_DEMO_ASSETS_URL}/demo_main_right.mp4`}
+                                posterSrc="/preview/demo_main_right.webp"
+                                lazyLoad={true}
+                                preload="none"
+                                threshold={0.5}
                                 className="w-full h-full border-white/10"
                                 isMutedOverride={true}
                             />
