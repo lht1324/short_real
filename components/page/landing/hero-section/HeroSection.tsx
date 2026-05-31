@@ -65,7 +65,6 @@ function HeroSection() {
                                 posterSrc="/preview/demo_main_center.webp"
                                 lazyLoad={false}
                                 className="w-full h-full border-white/20"
-                                isMutedOverride={true}
                                 preload="auto"
                             />
                         </div>
@@ -79,7 +78,6 @@ function HeroSection() {
                                 preload="none"
                                 threshold={0.5}
                                 className="w-full h-full border-white/10"
-                                isMutedOverride={true}
                             />
                         </div>
 
@@ -92,7 +90,6 @@ function HeroSection() {
                                 preload="none"
                                 threshold={0.5}
                                 className="w-full h-full border-white/10"
-                                isMutedOverride={true}
                             />
                         </div>
                     </div>
