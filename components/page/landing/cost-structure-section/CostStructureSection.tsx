@@ -232,15 +232,25 @@ function CostStructureSection({ aiModelDataList }: CostStructureSectionProps) {
                             <div className="space-y-4">
                                 <h4 className="text-sm font-medium text-gray-400 uppercase tracking-widest mb-4">Supported Providers</h4>
                                 
-                                {SUPPORTED_PROVIDERS.map((provider) => (
-                                    <div key={provider} className="flex items-center gap-4 bg-white/5 border border-white/5 rounded-xl p-3">
-                                        <div className="w-10 h-10 rounded-lg bg-white/5 flex items-center justify-center flex-shrink-0">
-                                            <Image src="/icons/google-g-light.svg" alt={`${provider} logo`} width={20} height={20} className="opacity-70" />
+                                {SUPPORTED_PROVIDERS.map((provider) => {
+                                    const iconMap: Record<string, string> = {
+                                        'fal.ai': 'icon-fal.svg',
+                                        'Replicate': 'icon-replicate.svg',
+                                        'OpenRouter': 'icon-openrouter.svg',
+                                        'ElevenLabs': 'icon-elevenlabs.png'
+                                    };
+                                    const iconSrc = `/icons/${iconMap[provider] || 'google-g-light.svg'}`;
+                                    
+                                    return (
+                                        <div key={provider} className="flex items-center gap-4 bg-white/5 border border-white/5 rounded-xl p-3">
+                                            <div className="w-10 h-10 rounded-lg bg-white flex items-center justify-center flex-shrink-0">
+                                                <Image src={iconSrc} alt={`${provider} logo`} width={40} height={40} className="opacity-90 rounded-md" />
+                                            </div>
+                                            <span className="text-white font-medium">{provider}</span>
+                                            <CheckCircle2 className="w-4 h-4 text-emerald-400 ml-auto opacity-70" />
                                         </div>
-                                        <span className="text-white font-medium">{provider}</span>
-                                        <CheckCircle2 className="w-4 h-4 text-emerald-400 ml-auto opacity-70" />
-                                    </div>
-                                ))}
+                                    );
+                                })}
                             </div>
                         </div>
                     </div>

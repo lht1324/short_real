@@ -42,7 +42,7 @@ function FeatureCard({ feature, index, className }: { feature: Feature, index: n
                 href={originalUrl} 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className="absolute inset-0 z-40 block cursor-default"
+                className="absolute inset-0 z-10 block cursor-default"
                 onClick={(e) => e.preventDefault()}
             >
                 <span className="sr-only">Open Original Resolution Video</span>
