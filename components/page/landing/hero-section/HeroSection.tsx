@@ -13,8 +13,8 @@ function HeroSection() {
     }, []);
 
     return (
-        <section className="relative w-full flex flex-col justify-center overflow-hidden py-12 lg:py-24 px-4 sm:px-6 lg:px-8">
-            <div className="relative z-10 w-full max-w-[1400px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-8 items-center">
+        <section className="relative pt-6 pb-12 lg:pt-10 lg:pb-24 px-4 sm:px-6 lg:px-8 overflow-hidden z-10">
+            <div className="max-w-[1400px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 items-center relative z-10">
                 
                 {/* LEFT: Typography & CTA */}
                 <div className="lg:col-span-6 flex flex-col items-center lg:items-start text-center lg:text-left space-y-6 lg:space-y-8 order-1 lg:pr-8">

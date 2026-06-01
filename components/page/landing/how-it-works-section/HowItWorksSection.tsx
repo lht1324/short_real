@@ -191,14 +191,15 @@ function HowItWorksSection() {
     return (
         <section
             id="howitworks"
-            className="relative py-8 px-4 max-w-7xl mx-auto overflow-hidden"
+            className="relative py-24 md:py-32 px-4 sm:px-6 lg:px-8 overflow-hidden"
         >
-            <div className="mb-8 text-center relative z-10">
-                <h2 className="text-4xl md:text-5xl font-bold text-white mb-6 tracking-tight">
+            <div className="max-w-[1400px] mx-auto relative z-10">
+                <div className="mb-16 md:mb-24 max-w-3xl relative z-10">
+                <h2 className="text-4xl md:text-5xl lg:text-6xl font-black text-white mb-6 tracking-tight leading-[1.1]">
                     Don&apos;t Prompt.<br/>
-                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">Just Write.</span>
+                    <span className="text-zinc-600">Just Write.</span>
                 </h2>
-                <p className="text-gray-400 text-lg max-w-2xl mx-auto">
+                <p className="text-lg md:text-xl text-zinc-400 max-w-2xl leading-relaxed">
                     Experience the engine right here. Type your story, and watch how we structure it instantly.
                 </p>
             </div>
@@ -206,15 +207,15 @@ function HowItWorksSection() {
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 h-auto lg:h-[700px] relative z-10">
 
                 {/* LEFT PANEL */}
-                <div className="lg:col-span-7 bg-[#0f0f16] border border-white/10 rounded-3xl p-1 flex flex-col relative overflow-hidden group ring-1 ring-white/5 hover:ring-purple-500/30 transition-all duration-500">
-                    <div className="flex flex-col h-full rounded-[20px] bg-[#13131d] overflow-hidden">
-                        <div className="p-6 border-b border-white/5 bg-[#181825] relative z-20 flex flex-col h-[45%]">
+                <div className="lg:col-span-7 bg-[#0f0f16] border border-white/10 rounded-3xl flex flex-col relative overflow-hidden transition-all duration-500">
+                    <div className="flex flex-col h-full overflow-hidden">
+                        <div className="p-6 border-b border-white/5 bg-[#13131d] relative z-20 flex flex-col h-[45%]">
                             <div className="flex justify-between items-center mb-4 shrink-0">
-                                <div className="flex items-center gap-2 text-purple-400">
-                                    <div className="p-1.5 bg-purple-500/10 rounded-md">
+                                <div className="flex items-center gap-2 text-zinc-300">
+                                    <div className="p-1.5 bg-white/5 rounded-md">
                                         <Wand2 size={16} />
                                     </div>
-                                    <span className="text-sm font-bold tracking-wide">STEP 1: SCRIPTING</span>
+                                    <span className="text-sm font-bold tracking-wide">Script Editor</span>
                                 </div>
                                 <span className="text-xs text-gray-500 bg-black/30 px-2 py-1 rounded border border-white/5 hidden sm:inline-block">
                                    Type your story below 👇
@@ -233,7 +234,7 @@ function HowItWorksSection() {
                                 <button
                                     onClick={handleGenerateStoryboard}
                                     disabled={isSplitting || !script.trim()}
-                                    className="flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-500 disabled:bg-gray-700 disabled:text-gray-500 text-white text-xs font-bold rounded-lg transition-colors shadow-lg shadow-purple-900/20"
+                                    className="flex items-center gap-2 px-4 py-2 bg-white text-black hover:bg-zinc-200 disabled:bg-zinc-800 disabled:text-zinc-500 text-xs font-bold rounded-lg transition-colors shadow-lg shadow-white/5"
                                 >
                                     {isSplitting ? (
                                         <>
@@ -251,15 +252,15 @@ function HowItWorksSection() {
                         </div>
 
                         <div className="absolute top-[45%] left-1/2 -translate-x-1/2 -translate-y-1/2 z-30 pointer-events-none">
-                            <div className={`rounded-full p-1 border shadow-lg transition-colors duration-500 bg-[#13131d] ${hasGenerated ? 'border-purple-500 text-purple-400' : 'border-white/10 text-gray-400'}`}>
+                            <div className={`rounded-full p-1 border shadow-lg transition-colors duration-500 bg-[#13131d] ${hasGenerated ? 'border-zinc-300 text-zinc-300' : 'border-white/10 text-gray-400'}`}>
                                 <ArrowDown size={14} />
                             </div>
                         </div>
 
                         <div className="flex-1 flex flex-col bg-[#13131d] overflow-hidden relative h-[55%]">
                             <div className="px-6 pt-2 pb-2 flex items-center justify-between border-b border-white/5 bg-[#13131d] z-10">
-                                <span className="text-[10px] font-bold text-gray-500 tracking-widest uppercase">
-                                    Auto-Generated Storyboard
+                                <span className="text-xs font-bold text-zinc-400">
+                                    Storyboard
                                 </span>
                                 {hasGenerated && (
                                     <span className="text-[10px] text-gray-600 font-mono">
@@ -285,7 +286,7 @@ function HowItWorksSection() {
                                                 initial={{ opacity: 0, y: 20, scale: 0.95 }}
                                                 animate={{ opacity: 1, y: 0, scale: 1 }}
                                                 transition={{ duration: 0.3, delay: scene.id * 0.05 }}
-                                                className="relative p-4 rounded-xl border border-white/10 bg-[#1a1a24] hover:border-purple-500/30 transition-colors group/card flex flex-col justify-between h-full"
+                                                className="relative p-4 rounded-xl border border-white/10 bg-[#1a1a24] hover:border-white/30 transition-colors group/card flex flex-col justify-between h-full"
                                             >
                                                 <div className="flex justify-between items-start mb-2">
                                                     <div className="flex items-center gap-2">
@@ -340,6 +341,7 @@ function HowItWorksSection() {
                     onClickGoToPricing={onClickGoToPricing}
                     onClickClose={onClickCloseModal}
                 />
+            </div>
             </div>
         </section>
     );

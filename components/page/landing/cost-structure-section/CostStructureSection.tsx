@@ -74,14 +74,14 @@ function CostStructureSection({ aiModelDataList }: CostStructureSectionProps) {
     }, []);
 
     return (
-        <section className="relative w-full py-24 md:py-32 overflow-hidden z-10">
-            <div className="max-w-[1400px] mx-auto px-4 md:px-8">
+        <section className="relative py-24 md:py-32 px-4 sm:px-6 lg:px-8 overflow-hidden z-10">
+            <div className="max-w-[1400px] mx-auto relative z-10">
                 {/* Header */}
-                <div className="max-w-2xl mb-16">
-                    <h2 className="text-4xl md:text-5xl font-bold tracking-tight text-white mb-6">
+                <div className="mb-16 md:mb-24 max-w-3xl relative z-10">
+                    <h2 className="text-4xl md:text-5xl lg:text-6xl font-black text-white mb-6 tracking-tight leading-[1.1]">
                         Transparent, usage-based cost structure.
                     </h2>
-                    <p className="text-lg text-gray-400 leading-relaxed max-w-[65ch]">
+                    <p className="text-lg md:text-xl text-zinc-400 max-w-2xl leading-relaxed">
                         See exactly how your budget translates into high-quality video generation. Adjust the parameters below to estimate your costs based on your actual production needs.
                     </p>
                 </div>

@@ -47,52 +47,54 @@ Credits are cumulative and added to your balance each month.`
 ];
 
 function FAQSection() {
-    const [openIndexList, setOpenIndexList] = useState<number[]>([]);
-
-    const handleToggle = (toggledIndex: number) => {
-        setOpenIndexList((prevOpenIndexList) => {
-            return !prevOpenIndexList.includes(toggledIndex)
-                ? [...prevOpenIndexList, toggledIndex]
-                : prevOpenIndexList.filter((openIndex) => openIndex !== toggledIndex);
-        });
-    };
-
     return (
         <section
             id="faq"
-            className="py-24 px-4 sm:px-6 lg:px-8 relative overflow-hidden"
+            className="py-24 md:py-32 px-4 sm:px-6 lg:px-8 relative overflow-hidden"
             style={{ overflowAnchor: 'none' }}
         >
-            <div className="max-w-3xl mx-auto relative z-10">
-                <div className="text-center mb-16">
-                    <h2 className="text-4xl sm:text-5xl font-black mb-6 tracking-tight text-white">
-                        Frequently Asked <span className="bg-gradient-to-r from-pink-500 to-purple-600 bg-clip-text text-transparent">Questions</span>
-                    </h2>
-                    <p className="text-xl text-gray-400 max-w-2xl mx-auto">
-                        Everything you need to know about the product and billing.
-                    </p>
-                </div>
+            <div className="max-w-[1400px] mx-auto relative z-10">
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-start">
+                    
+                    {/* 좌측: 타이틀 (Sticky 래퍼를 주어 스크롤 시 따라오게 할 수도 있음) */}
+                    <div className="lg:col-span-5 lg:sticky lg:top-32">
+                        <h2 className="text-4xl md:text-5xl lg:text-6xl font-black text-white mb-6 tracking-tight leading-[1.1]">
+                            Frequently Asked<br />
+                            <span className="text-zinc-600">Questions</span>
+                        </h2>
+                        <p className="text-lg md:text-xl text-zinc-400 max-w-md leading-relaxed mb-8">
+                            Everything you need to know about the product and billing.
+                        </p>
+                        
+                        <div className="hidden lg:block">
+                            <p className="text-sm text-gray-500">
+                                Still have questions?<br />
+                                <a href="mailto:support@shortreal.ai" className="text-white underline underline-offset-4 decoration-white/30 hover:decoration-white transition-all font-medium mt-2 inline-block">
+                                    Contact Support
+                                </a>
+                            </p>
+                        </div>
+                    </div>
 
-                <div
-                    className="space-y-4 overflow-anchor-none"
-                >
-                    {FAQ_LIST.map((faq, index) => (
-                        <FAQItem
-                            key={index}
-                            data={faq}
-                            isOpen={openIndexList.includes(index)}
-                            onToggle={() => handleToggle(index)}
-                        />
-                    ))}
-                </div>
+                    {/* 우측: FAQ 아코디언 리스트 */}
+                    <div className="lg:col-span-7 space-y-4 overflow-anchor-none">
+                        {FAQ_LIST.map((faq, index) => (
+                            <FAQItem
+                                key={index}
+                                data={faq}
+                            />
+                        ))}
 
-                <div className="mt-12 text-center">
-                    <p className="text-gray-500">
-                        Still have questions?{' '}
-                        <a href="mailto:support@shortreal.ai" className="text-purple-400 hover:text-purple-300 font-medium transition-colors">
-                            Contact Support
-                        </a>
-                    </p>
+                        {/* 모바일용 하단 연락처 */}
+                        <div className="mt-12 pt-8 border-t border-white/5 lg:hidden text-center">
+                            <p className="text-gray-500">
+                                Still have questions?{' '}
+                                <a href="mailto:support@shortreal.ai" className="text-white underline underline-offset-4 decoration-white/30 hover:decoration-white font-medium transition-colors">
+                                    Contact Support
+                                </a>
+                            </p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </section>

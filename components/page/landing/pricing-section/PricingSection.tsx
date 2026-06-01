@@ -30,24 +30,33 @@ function PricingSection({
         onClickPurchasePlan(productId);
     }, [onClickPurchasePlan]);
 
+    const gridClass = useMemo(() => {
+        const length = productDataList.length;
+        if (length === 0) return "grid-cols-1 md:grid-cols-2 lg:grid-cols-4 max-w-7xl"; // Skeleton state
+        if (length === 1) return "grid-cols-1 max-w-sm";
+        if (length === 2) return "grid-cols-1 md:grid-cols-2 max-w-4xl";
+        if (length === 3) return "grid-cols-1 md:grid-cols-3 max-w-6xl";
+        return "grid-cols-1 md:grid-cols-2 lg:grid-cols-4";
+    }, [productDataList.length]);
+
     return (
         <section
             id="pricing"
-            className="py-24 px-4 sm:px-6 lg:px-8 relative overflow-hidden"
+            className="relative py-24 md:py-32 px-4 sm:px-6 lg:px-8 overflow-hidden"
         >
-            <div className="max-w-7xl mx-auto relative z-10">
+            <div className="max-w-[1400px] mx-auto relative z-10">
                 {/* 헤더 */}
-                <div className="text-center mb-16">
-                    <h2 className="text-4xl sm:text-5xl font-black mb-6 tracking-tight text-white">
-                        Choose Your <span className="bg-gradient-to-r from-pink-500 to-purple-600 bg-clip-text text-transparent">Power</span>
+                <div className="mb-16 md:mb-24 max-w-3xl relative z-10">
+                    <h2 className="text-4xl md:text-5xl lg:text-6xl font-black text-white mb-6 tracking-tight leading-[1.1]">
+                        Choose Your <span className="text-zinc-600">Power</span>
                     </h2>
-                    <p className="text-xl text-gray-400 max-w-2xl mx-auto">
+                    <p className="text-lg md:text-xl text-zinc-400 max-w-2xl leading-relaxed">
                         Unlock the full potential of the ShortReal AI engine.
                     </p>
                 </div>
 
                 {/* Pricing Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div className={`grid gap-6 ${gridClass}`}>
                     {productDataList.length !== 0 ? (productDataList.map((productData, index) => (
                         <PricingSectionItem
                             key={productData.id}

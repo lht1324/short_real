@@ -1,45 +1,23 @@
 'use client';
 
-import { memo, useRef, useEffect } from "react";
+import { memo, useState } from "react";
 import { ChevronDown } from "lucide-react";
 import { FAQItemData } from "./FAQSection";
 
 interface FAQItemProps {
     data: FAQItemData;
-    isOpen: boolean;
-    onToggle: () => void;
 }
 
-function FAQItem({ data, isOpen, onToggle }: FAQItemProps) {
-    const contentRef = useRef<HTMLDivElement>(null);
-    const innerRef = useRef<HTMLDivElement>(null);
+function FAQItem({ data }: FAQItemProps) {
+    const [isOpen, setIsOpen] = useState(false);
 
-    useEffect(() => {
-        const content = contentRef.current;
-        const inner = innerRef.current;
-        if (!content || !inner) return;
-
-        if (isOpen) {
-            // 펼칠 때: 실제 높이 측정 후 적용
-            const height = inner.scrollHeight;
-            content.style.maxHeight = `${height}px`;
-        } else {
-            // 접을 때: 현재 높이 먼저 고정, 그 다음 0으로
-            const height = content.scrollHeight;
-            content.style.maxHeight = `${height}px`;
-
-            // 다음 프레임에 0으로 변경 (애니메이션 트리거)
-            requestAnimationFrame(() => {
-                content.style.maxHeight = '0px';
-            });
-        }
-    }, [isOpen]);
+    const onToggle = () => setIsOpen(!isOpen);
 
     return (
         <div
             className={`rounded-2xl border transition-colors duration-300 ${
                 isOpen
-                    ? 'bg-white/[0.03] border-purple-500/30 shadow-lg shadow-purple-900/10'
+                    ? 'bg-white/[0.03] border-white/20 shadow-[0_0_30px_-5px_rgba(255,255,255,0.05)]'
                     : 'bg-[#0f0f16] border-white/5 hover:border-white/10 hover:bg-white/[0.02]'
             }`}
         >
@@ -55,7 +33,7 @@ function FAQItem({ data, isOpen, onToggle }: FAQItemProps) {
 
                 <span className={`ml-4 shrink-0 flex items-center justify-center w-8 h-8 rounded-full border transition-colors duration-300 ${
                     isOpen
-                        ? 'bg-purple-500/10 text-purple-400 border-purple-500'
+                        ? 'bg-white text-black border-transparent'
                         : 'border-white/10 text-gray-500 bg-white/5 group-hover:border-white/20 group-hover:text-gray-300'
                 }`}>
                     <div
@@ -67,19 +45,19 @@ function FAQItem({ data, isOpen, onToggle }: FAQItemProps) {
                 </span>
             </button>
 
-            {/* 실제 높이로 애니메이션 */}
+            {/* CSS Grid Animation Trick: JS 계산 없이 브라우저 네이티브로 60fps 보장 */}
             <div
-                ref={contentRef}
-                style={{
-                    maxHeight: '0px',
-                    transition: 'max-height 0.3s cubic-bezier(0.04, 0.62, 0.23, 0.98)',
-                    overflow: 'hidden'
-                }}
+                className="grid transition-[grid-template-rows] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]"
+                style={{ gridTemplateRows: isOpen ? "1fr" : "0fr" }}
             >
-                <div ref={innerRef}>
+                <div className="overflow-hidden">
                     <div className="px-6 pb-6 pt-0">
                         <div className="border-t border-white/5 pt-4">
-                            <p className="text-gray-400 leading-relaxed text-base whitespace-pre-line">
+                            <p 
+                                className={`text-gray-400 leading-relaxed text-base whitespace-pre-line transition-opacity duration-300 ${
+                                    isOpen ? "opacity-100 delay-100" : "opacity-0"
+                                }`}
+                            >
                                 {data.answer}
                             </p>
                         </div>
