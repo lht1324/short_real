@@ -19,22 +19,22 @@ function HeroSection() {
                 {/* LEFT: Typography & CTA */}
                 <div className="lg:col-span-6 flex flex-col items-center lg:items-start text-center lg:text-left space-y-6 lg:space-y-8 order-1 lg:pr-8">
                     <h1 className="relative leading-[1] md:leading-[0.95] flex flex-col items-center lg:items-start">
-                        <span className="block text-[4rem] sm:text-7xl md:text-8xl lg:text-[7.5rem] font-black tracking-tighter text-white">
+                        <span className="block text-[4rem] sm:text-7xl md:text-8xl lg:text-[7.5rem] font-black tracking-tighter text-white cursor-default select-none">
                             F*ck AI
                         </span>
                         <div className="relative mt-1 md:mt-2 inline-block">
                             <div className="relative overflow-visible">
                                 {/* UPPER SLICE (The Master Blade Strategy) */}
                                 <span 
-                                    className="block text-[3.5rem] sm:text-6xl md:text-7xl lg:text-[6.5rem] font-black tracking-tighter text-zinc-500/80 uppercase [clip-path:polygon(0_0,100%_0,100%_15%,0_70%)]"
+                                    className="block text-[3.5rem] sm:text-6xl md:text-7xl lg:text-[6.5rem] font-black tracking-tighter text-zinc-500/80 uppercase [clip-path:polygon(0_0,100%_0,100%_15%,0_70%)] cursor-default select-none"
                                     aria-hidden="true"
                                 >
                                     slideshows.
                                 </span>
                                 
                                 {/* LOWER SLICE (The Master Blade Strategy) */}
-                                <span className="absolute inset-0 text-[3.5rem] left-[1%] sm:text-6xl md:text-7xl lg:text-[6.5rem] font-black tracking-tighter text-zinc-500/60 uppercase [clip-path:polygon(0_80%,100%_25%,100%_100%,0_100%)] translate-x-[1px]">
-                                    slideshows.
+                                <span className="absolute inset-0 text-[3.5rem] left-[1%] sm:text-6xl md:text-7xl lg:text-[6.5rem] font-black tracking-tighter text-zinc-500/60 uppercase [clip-path:polygon(0_80%,100%_25%,100%_100%,0_100%)] translate-x-[1px] cursor-default select-none">
+                                    slideshows
                                 </span>
 
                                 {/* MASTER BLADE (Sharpened and Centered) */}
@@ -46,7 +46,7 @@ function HeroSection() {
                         </div>
                     </h1>
 
-                    <p className="text-base sm:text-lg lg:text-2xl font-medium text-zinc-400 tracking-wide max-w-[40ch] mx-auto lg:mx-0">
+                    <p className="text-base sm:text-lg lg:text-2xl font-medium text-zinc-400 tracking-wide max-w-[40ch] mx-auto lg:mx-0 cursor-default select-none">
                         Finally, <span className="text-white font-bold border-b border-zinc-700 pb-0.5">True Motion</span> Generation.<br className="hidden lg:block"/>
                         Don&#39;t settle for zooming images.
                     </p>
