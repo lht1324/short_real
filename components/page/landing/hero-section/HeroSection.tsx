@@ -23,14 +23,26 @@ function HeroSection() {
                             F*ck AI
                         </span>
                         <div className="relative mt-1 md:mt-2 inline-block">
-                            <span className="text-[3.5rem] sm:text-6xl md:text-7xl lg:text-[6.5rem] font-black tracking-tighter text-zinc-500/80 uppercase">
-                                slideshows.
-                            </span>
-                            {/* ENHANCED STRIKE-THROUGH (칼자국) */}
-                            <div
-                                className="absolute top-1/2 left-[-5%] w-[110%] h-3 sm:h-4 lg:h-5 bg-gradient-to-r from-red-600 via-pink-500 to-purple-600 -rotate-3 transform -translate-y-1/2 shadow-[0_0_30px_rgba(236,72,153,0.6)] mix-blend-screen z-10"
-                                style={{ clipPath: "polygon(0% 40%, 100% 0%, 98% 60%, 0% 100%)" }}
-                            ></div>
+                            <div className="relative overflow-visible">
+                                {/* UPPER SLICE (The Master Blade Strategy) */}
+                                <span 
+                                    className="block text-[3.5rem] sm:text-6xl md:text-7xl lg:text-[6.5rem] font-black tracking-tighter text-zinc-500/80 uppercase [clip-path:polygon(0_0,100%_0,100%_15%,0_70%)]"
+                                    aria-hidden="true"
+                                >
+                                    slideshows.
+                                </span>
+                                
+                                {/* LOWER SLICE (The Master Blade Strategy) */}
+                                <span className="absolute inset-0 text-[3.5rem] left-[1%] sm:text-6xl md:text-7xl lg:text-[6.5rem] font-black tracking-tighter text-zinc-500/60 uppercase [clip-path:polygon(0_80%,100%_25%,100%_100%,0_100%)] translate-x-[1px]">
+                                    slideshows.
+                                </span>
+
+                                {/* MASTER BLADE (Sharpened and Centered) */}
+                                <div
+                                    className="absolute top-[48%] left-[-5%] w-[110%] h-[1.5px] lg:h-[3.4px] bg-gradient-to-r from-red-600 via-pink-500 to-purple-600 -rotate-[6.5deg] transform -translate-y-1/2 z-10 mix-blend-screen [clip-path:polygon(0%_50%,2%_0%,98%_0%,100%_50%,98%_100%,2%_100%)]"
+                                    style={{ filter: 'drop-shadow(0 0 15px rgba(236,72,153,0.9))' }}
+                                ></div>
+                            </div>
                         </div>
                     </h1>
 
