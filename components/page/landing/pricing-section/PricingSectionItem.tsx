@@ -12,8 +12,6 @@ interface PricingSectionItemProps {
         icon: ReactNode;
     }[];
     isPopular?: boolean;
-    videosPerDay: number;
-    minimumPrice: number;
     index: number;
     isLoggedIn: boolean;
     onClickSubscribe?: () => void;
@@ -27,8 +25,6 @@ function PricingSectionItem({
     description,
     benefits,
     isPopular = false,
-    videosPerDay,
-    minimumPrice,
     index,
     isLoggedIn,
     onClickSubscribe,

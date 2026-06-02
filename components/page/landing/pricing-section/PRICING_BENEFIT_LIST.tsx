@@ -14,24 +14,19 @@ const ICON_SIZE = 18;
 const ICON_CLASS = "text-primary-500"; // 테마 색상에 맞춰 조정
 
 export const PRICING_BENEFIT_LIST = [
-    // 1. 영상 개수 (Clapperboard 아이콘 추천)
+    // 1. 오토파일럿 시리즈 개수 (Clapperboard 아이콘 추천)
     {
-        description: <span className="text-gray-300">30 videos per month</span>,
+        description: <span className="text-gray-300">1 Autopilot Series</span>,
         includedPlanList: ['plan-1'],
         icon: <Clapperboard size={ICON_SIZE} className={ICON_CLASS} />,
     },
     {
-        description: <span className="text-gray-300">60 videos per month</span>,
+        description: <span className="text-gray-300">2 Autopilot Series</span>,
         includedPlanList: ['plan-2'],
         icon: <Clapperboard size={ICON_SIZE} className={ICON_CLASS} />,
     },
     {
-        description: <span className="text-gray-300">90 videos per month</span>,
-        includedPlanList: ['plan-3'],
-        icon: <Clapperboard size={ICON_SIZE} className={ICON_CLASS} />,
-    },
-    {
-        description: <span className="text-gray-300">120 videos per month</span>,
+        description: <span className="text-gray-300">Unlimited Autopilot Series</span>,
         includedPlanList: ['plan-4'],
         icon: <Clapperboard size={ICON_SIZE} className={ICON_CLASS} />,
     },

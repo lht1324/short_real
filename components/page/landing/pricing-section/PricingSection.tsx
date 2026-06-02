@@ -16,16 +16,6 @@ function PricingSection({
     isLoggedIn,
     onClickPurchasePlan,
 }: PricingSectionProps) {
-    const minimumPrice = useMemo(() => {
-        return productDataList.map((productData) => {
-            return productData.price;
-        }).reduce((minValue, price) => {
-            return minValue > price
-                ? price
-                : minValue;
-        }, Number.MAX_VALUE);
-    }, [productDataList]);
-
     const onClickSubscribe = useCallback(async (productId: string) => {
         onClickPurchasePlan(productId);
     }, [onClickPurchasePlan]);
@@ -66,7 +56,7 @@ function PricingSection({
                             interval={productData.interval}
                             description={productData.description}
                             benefits={PRICING_BENEFIT_LIST.filter((benefit) => {
-                                return benefit.includedPlanList.includes(productData.planData.planId);
+                                return benefit.includedPlanList.includes(productData.planId);
                             }).map((benefit) => {
                                 return {
                                     description: benefit.description,
@@ -74,8 +64,6 @@ function PricingSection({
                                 };
                             })}
                             isPopular={productData.isPopular}
-                            videosPerDay={productData.videosPerDay}
-                            minimumPrice={minimumPrice}
                             index={index}
                             isLoggedIn={isLoggedIn}
                             onClickSubscribe={async () => {

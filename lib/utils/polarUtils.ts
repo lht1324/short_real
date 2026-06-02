@@ -19,11 +19,10 @@ export function processProducts(items: Product[]): ProductData[] {
             }
         }
 
-        const planData: { creditCount: number, planId: SubscriptionPlan } = JSON.parse(product.metadata.planData.toString());
+        console.log(`product[${product.name}]`)
+
+        const planId: string = product.metadata.planId.toString();
         const isPopular = product.metadata?.isPopular === true || product.metadata?.isPopular === "true";
-        const videosPerDay = typeof product.metadata?.videosPerDay === "number"
-            ? product.metadata.videosPerDay
-            : parseInt(product.metadata?.videosPerDay as string) || 0;
 
         return {
             id: product.id,
@@ -32,9 +31,8 @@ export function processProducts(items: Product[]): ProductData[] {
             currency: currency,
             interval: product.recurringInterval as "month" | "year",
             description: product.description ?? "",
-            planData: planData,
+            planId: planId,
             isPopular: isPopular,
-            videosPerDay: videosPerDay,
         } satisfies ProductData;
     });
 }

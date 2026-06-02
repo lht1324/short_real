@@ -169,7 +169,7 @@ function ChangePlanModal({
                                     productDescription={productData.description}
                                     price={productData.price}
                                     benefits={PRICING_BENEFIT_LIST.filter((benefit) => {
-                                        return benefit.includedPlanList.includes(productData.planData.planId);
+                                        return benefit.includedPlanList.includes(productData.planId);
                                     }).map((benefit) => {
                                         return {
                                             description: benefit.description,
