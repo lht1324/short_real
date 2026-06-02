@@ -32,10 +32,10 @@ function PricingSection({
 
     const gridClass = useMemo(() => {
         const length = productDataList.length;
-        if (length === 0) return "grid-cols-1 md:grid-cols-2 lg:grid-cols-4 max-w-7xl"; // Skeleton state
-        if (length === 1) return "grid-cols-1 max-w-sm";
-        if (length === 2) return "grid-cols-1 md:grid-cols-2 max-w-4xl";
-        if (length === 3) return "grid-cols-1 md:grid-cols-3 max-w-6xl";
+        if (length === 0) return "grid-cols-1 md:grid-cols-2 lg:grid-cols-4"; // Skeleton state
+        if (length === 1) return "grid-cols-1 max-w-sm mx-auto";
+        if (length === 2) return "grid-cols-1 md:grid-cols-2 max-w-4xl mx-auto";
+        if (length === 3) return "grid-cols-1 md:grid-cols-3 max-w-6xl mx-auto";
         return "grid-cols-1 md:grid-cols-2 lg:grid-cols-4";
     }, [productDataList.length]);
 
@@ -87,33 +87,35 @@ function PricingSection({
                         Array.from({ length: 4 }).map((_, i) => (
                             <div
                                 key={i}
-                                className="relative flex flex-col p-6 rounded-3xl border border-white/5 bg-[#0f0f16] h-[580px] overflow-hidden"
+                                className="relative flex flex-col p-6 rounded-3xl border border-white/5 bg-[#0f0f16] overflow-hidden"
                             >
                                 {/* Shimmer Effect */}
                                 <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-transparent -translate-x-full animate-[shimmer_2s_infinite]" />
 
                                 {/* Title Skeleton */}
-                                <div className="w-24 h-6 bg-white/10 rounded mb-10 animate-pulse" />
+                                <div className="w-24 h-6 bg-white/10 rounded mb-4 animate-pulse relative z-10" />
 
                                 {/* Price Skeleton */}
-                                <div className="flex items-baseline gap-2 mb-8">
-                                    <div className="w-32 h-12 bg-white/10 rounded animate-pulse" />
+                                <div className="flex items-baseline gap-2 mb-6 relative z-10">
+                                    <div className="w-32 h-12 sm:h-14 bg-white/10 rounded animate-pulse" />
                                     <div className="w-12 h-4 bg-white/5 rounded animate-pulse" />
                                 </div>
 
                                 {/* Button Skeleton */}
-                                <div className="w-full h-12 bg-white/10 rounded-xl mb-8 animate-pulse" />
+                                <div className="w-full h-12 bg-white/10 rounded-xl mb-8 border border-white/5 animate-pulse relative z-10" />
 
-                                {/* Description Skeleton */}
-                                <div className="w-full h-4 bg-white/5 rounded mb-2 animate-pulse" />
-                                <div className="w-2/3 h-4 bg-white/5 rounded mb-8 animate-pulse" />
+                                {/* Description Skeleton (matches border-t in real card) */}
+                                <div className="border-t border-white/5 pt-6 mb-6 relative z-10">
+                                    <div className="w-full h-4 bg-white/5 rounded mb-2 animate-pulse" />
+                                    <div className="w-2/3 h-4 bg-white/5 rounded animate-pulse" />
+                                </div>
 
-                                {/* Benefits List Skeleton */}
-                                <div className="space-y-4 mt-auto">
-                                    {[1, 2, 3, 4, 5].map((line) => (
-                                        <div key={line} className="flex items-center gap-3">
-                                            <div className="w-4 h-4 rounded-full bg-white/10 animate-pulse shrink-0" />
-                                            <div className="w-full h-3 bg-white/5 rounded animate-pulse" />
+                                {/* Benefits List Skeleton (matches space-y-4 flex-1 in real card) */}
+                                <div className="space-y-4 flex-1 relative z-10">
+                                    {[1, 2, 3, 4, 5, 6, 7].map((line) => (
+                                        <div key={line} className="flex items-start gap-3">
+                                            <div className="w-5 h-5 rounded-md bg-white/10 animate-pulse shrink-0" />
+                                            <div className="w-3/4 h-4 bg-white/5 rounded animate-pulse mt-0.5" />
                                         </div>
                                     ))}
                                 </div>
