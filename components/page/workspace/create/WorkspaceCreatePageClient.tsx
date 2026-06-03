@@ -1,14 +1,10 @@
 'use client'
 
 import {ChangeEvent, memo, useCallback, useEffect, useMemo, useState} from "react";
-import Link from "next/link";
 import Image from "next/image";
 import {
     Coins,
-    ListTodo,
-    Plus,
-    Sparkles,
-    Zap,
+    Loader2,
 } from 'lucide-react';
 import {openAIClientAPI} from '@/lib/api/client/openAIClientAPI';
 import {Style} from "@/lib/api/types/supabase/Styles";
@@ -387,85 +383,55 @@ function WorkspaceCreatePageClient() {
     }, [user, router]);
 
     return (
-        <div className="min-h-screen bg-black text-white">
+        <div className="min-h-screen bg-zinc-950 text-white relative overflow-hidden">
             {/* Loading Overlay */}
             {isLoading && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md">
-                    <div className="flex flex-col items-center space-y-6">
-                        {/* 로딩 스피너 */}
-                        <div className="relative w-24 h-24">
-                            {/* 외부 링 */}
-                            <div className="absolute inset-0 border-4 border-purple-200/20 rounded-full"></div>
-                            {/* 회전하는 그라디언트 링 */}
-                            <div className="absolute inset-0 border-4 border-transparent border-t-pink-500 border-r-purple-500 rounded-full animate-spin"></div>
-                            {/* 내부 역방향 회전 링 */}
-                            <div className="absolute inset-3 border-2 border-transparent border-b-purple-400 border-l-pink-400 rounded-full animate-spin" style={{animationDirection: 'reverse', animationDuration: '1.5s'}}></div>
-                            {/* 중앙 아이콘 */}
-                            <div className="absolute inset-0 flex items-center justify-center">
-                                <Sparkles className="w-8 h-8 text-purple-400 animate-pulse" />
-                            </div>
-                        </div>
-
-                        {/* 로딩 텍스트 */}
-                        <div className="text-center space-y-2">
-                            <h3 className="text-2xl font-semibold bg-gradient-to-r from-pink-400 to-purple-500 bg-clip-text text-transparent">
-                                Loading Create Studio
-                            </h3>
-                            <p className="text-gray-400 text-sm">
-                                Preparing your creative workspace...
-                            </p>
-                        </div>
-
-                        {/* 애니메이션 도트 */}
-                        <div className="flex space-x-2">
-                            <div className="w-2 h-2 bg-pink-500 rounded-full animate-bounce" style={{animationDelay: '0ms'}}></div>
-                            <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style={{animationDelay: '150ms'}}></div>
-                            <div className="w-2 h-2 bg-indigo-500 rounded-full animate-bounce" style={{animationDelay: '300ms'}}></div>
-                        </div>
+                <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center">
+                    <div className="flex flex-col items-center gap-4 p-8 rounded-3xl bg-zinc-900/80 border border-white/10 shadow-2xl">
+                        <Loader2 className="w-10 h-10 animate-spin text-zinc-400" />
+                        <p className="text-sm font-medium text-zinc-300">Loading Workspace...</p>
                     </div>
                 </div>
             )}
 
-            {/* Top Header - Same as Editor */}
-            <div className="flex items-center justify-between py-4 border-b border-purple-500/20 bg-gray-900/50 backdrop-blur-sm">
+            {/* Top Header - Matched to Autopilot & Dashboard */}
+            <div className="flex items-center justify-between py-3 border-b border-white/5 bg-zinc-950/80 backdrop-blur-md relative z-20">
                 <div className="flex items-center" style={{paddingLeft: '16px'}}>
                     <Image
                         src="/logo/logo-64.png"
                         alt="Short Real"
-                        width={64}
-                        height={64}
-                        className="w-16 h-16 cursor-pointer"
+                        width={48}
+                        height={48}
+                        className="w-12 h-12 cursor-pointer"
                         onClick={() => {
                             router.push('/');
                         }}
                     />
-                    <div className="flex flex-col ml-4">
-                        <span className="text-4xl font-bold bg-gradient-to-r from-pink-400 to-purple-500 bg-clip-text text-transparent cursor-default">
+                    <div className="flex flex-col ml-3">
+                        <span className="text-2xl font-bold bg-gradient-to-r from-zinc-100 to-zinc-400 bg-clip-text text-transparent cursor-default leading-none">
                             Create Video
                         </span>
-                        <p className="text-gray-400 text-base pl-0.5 cursor-default">
+                        <p className="text-zinc-500 text-[13px] mt-0.5 cursor-default">
                             Tell AI what you want to create.
                         </p>
                     </div>
                 </div>
 
-                <div className="flex items-center space-x-2 mr-6 px-4 py-2 bg-gray-900/50 border border-purple-500/30 rounded-lg backdrop-blur-sm hover:border-purple-400/50 transition-all">
-                    <Coins className="w-5 h-5 text-yellow-400" />
-                    <div className="flex flex-col">
-                        <span className="text-xs text-purple-300">Credits</span>
-                        <span className="text-lg font-bold text-yellow-400">{userCreditCount.toLocaleString()}</span>
+                <div className="flex items-center space-x-2 mr-6 px-3 py-1.5 bg-zinc-900/50 border border-white/10 rounded-lg">
+                    <Coins className="w-4 h-4 text-zinc-400" />
+                    <div className="flex items-baseline gap-1.5">
+                        <span className="text-[11px] text-zinc-500 font-medium">Credits</span>
+                        <span className="text-[13px] font-medium text-zinc-200">{userCreditCount.toLocaleString()}</span>
                     </div>
                 </div>
             </div>
 
-            {/* Vaporwave Background Effects */}
-            <div className="absolute inset-0 opacity-10 pointer-events-none">
-                <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-gradient-to-r from-pink-500 to-purple-600 rounded-full blur-3xl"></div>
-                <div className="absolute bottom-1/4 right-1/4 w-52 h-52 bg-gradient-to-r from-purple-500 to-indigo-600 rounded-full blur-3xl"></div>
-                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-48 h-48 bg-gradient-to-r from-indigo-500 to-cyan-500 rounded-full blur-3xl"></div>
+            {/* Background Effects - Toned down significantly */}
+            <div className="absolute inset-0 opacity-[0.03] pointer-events-none z-0">
+                <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-indigo-500 rounded-full blur-[120px]"></div>
             </div>
 
-            <div className="flex h-[calc(100vh-97px)]">
+            <div className="flex h-[calc(100vh-73px)] relative z-10">
                 {/* Left Virtual Tab Sidebar */}
                 <WorkspaceSidebar activeItem={WorkspaceSidebarItem.CREATE} />
 

@@ -32,7 +32,7 @@ function WorkspaceSidebar({ activeItem }: WorkspaceSidebarProps) {
     ], []);
 
     return (
-        <div className="w-20 bg-gray-900/50 backdrop-blur-sm border-r border-purple-500/20 flex flex-col items-center py-4 space-y-4 relative z-20">
+        <div className="w-20 bg-zinc-950/80 backdrop-blur-md border-r border-white/5 flex flex-col items-center py-4 space-y-3 relative z-20">
             {menuItems.map((item) => {
                 const IconComponent = item.icon;
                 const isActive = activeItem === item.id;
@@ -41,15 +41,15 @@ function WorkspaceSidebar({ activeItem }: WorkspaceSidebarProps) {
                     <Link
                         key={item.id}
                         href={item.href}
-                        className={`w-16 h-16 rounded-lg flex flex-col items-center justify-center transition-all border ${
+                        className={`w-14 h-14 rounded-xl flex flex-col items-center justify-center transition-all border ${
                             isActive 
-                                ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white border-purple-400/50 shadow-lg' 
-                                : 'text-gray-400 hover:text-pink-400 hover:bg-gray-800/50 border-transparent hover:border-purple-500/30'
+                                ? 'bg-white/10 text-zinc-100 border-white/10 shadow-sm' 
+                                : 'text-zinc-500 hover:text-zinc-200 hover:bg-white/5 border-transparent'
                         }`}
                         title={item.name}
                     >
-                        <IconComponent size={24} />
-                        <span className="text-xs mt-1 leading-tight">{item.name}</span>
+                        <IconComponent size={20} className="mb-1" />
+                        <span className="text-[10px] font-medium tracking-wide">{item.name}</span>
                     </Link>
                 );
             })}

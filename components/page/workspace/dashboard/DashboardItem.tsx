@@ -16,6 +16,15 @@ import {
     Share2,
     Wrench,
     X,
+    FileText,
+    Palette,
+    Video,
+    Mic,
+    Music,
+    MonitorPlay,
+    Sparkles,
+    CheckCircle2,
+    HelpCircle
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
@@ -71,17 +80,16 @@ function DashboardItem({
                 return StatusGroup.EDITING;
             case VideoGenerationTaskStatus.COMPLETED:
                 return StatusGroup.COMPLETED;
-            // case VideoGenerationTaskStatus.FAILED:
-            //     return StatusGroup.FAILED;
             default:
                 return StatusGroup.UNKNOWN;
         }
     }, [taskData.status]);
 
     const statusData = useMemo((): {
-        tailWindGradient: string;
+        colorClass: string;
+        bgClass: string;
         description: string;
-        emoji: string;
+        icon: ReactNode;
     } => {
         const status = taskData.status;
         const sceneCount = taskData.sceneCount;
@@ -89,70 +97,80 @@ function DashboardItem({
 
         if (!taskData.isGenerationFailed) {
             switch (status) {
-                // 의도됨
                 case VideoGenerationTaskStatus.DRAFTING:
                 case VideoGenerationTaskStatus.GENERATING_VOICE: return {
-                    tailWindGradient: 'from-slate-500 to-zinc-400',
+                    colorClass: 'text-zinc-400',
+                    bgClass: 'bg-zinc-500/10 border-zinc-500/20',
                     description: 'Drafting script...',
-                    emoji: '📝'
+                    icon: <FileText size={14} />
                 };
                 case VideoGenerationTaskStatus.GENERATING_MASTER_STYLE_PROMPT: return {
-                    tailWindGradient: 'from-violet-500 to-purple-600',
-                    description: 'Art director is crafting style guide',
-                    emoji: '🎨'
+                    colorClass: 'text-purple-400',
+                    bgClass: 'bg-purple-500/10 border-purple-500/20',
+                    description: 'Crafting style guide',
+                    icon: <Palette size={14} />
                 };
                 case VideoGenerationTaskStatus.GENERATING_IMAGE_PROMPT: return {
-                    tailWindGradient: 'from-fuchsia-500 to-pink-600',
-                    description: 'Storyboard artist is designing scenes',
-                    emoji: '🖼️'
+                    colorClass: 'text-pink-400',
+                    bgClass: 'bg-pink-500/10 border-pink-500/20',
+                    description: 'Designing scenes',
+                    icon: <ImageIcon size={14} />
                 };
                 case VideoGenerationTaskStatus.GENERATING_VIDEO_PROMPT: return {
-                    tailWindGradient: 'from-indigo-500 to-blue-600',
-                    description: 'Cinematographer is planning camera work',
-                    emoji: '🎬'
+                    colorClass: 'text-indigo-400',
+                    bgClass: 'bg-indigo-500/10 border-indigo-500/20',
+                    description: 'Planning camera work',
+                    icon: <Video size={14} />
                 };
                 case VideoGenerationTaskStatus.GENERATING_VIDEO: return {
-                    tailWindGradient: 'from-amber-400 to-yellow-500',
-                    description: `Director is shooting scenes (${processedSceneCount}/${sceneCount})`,
-                    emoji: '🎥'
+                    colorClass: 'text-amber-400',
+                    bgClass: 'bg-amber-500/10 border-amber-500/20',
+                    description: `Shooting scenes (${processedSceneCount}/${sceneCount})`,
+                    icon: <FileVideo size={14} />
                 };
-                // 의도됨
                 case VideoGenerationTaskStatus.STITCHING_VIDEOS: return {
-                    tailWindGradient: 'from-blue-500 to-indigo-500',
-                    description: 'Voice actor is recording into video',
-                    emoji: '🎤'
+                    colorClass: 'text-blue-400',
+                    bgClass: 'bg-blue-500/10 border-blue-500/20',
+                    description: 'Recording voiceover',
+                    icon: <Mic size={14} />
                 };
                 case VideoGenerationTaskStatus.COMPOSING_MUSIC: return {
-                    tailWindGradient: 'from-rose-500 to-red-500',
-                    description: 'Composer is creating background music',
-                    emoji: '🎹'
+                    colorClass: 'text-rose-400',
+                    bgClass: 'bg-rose-500/10 border-rose-500/20',
+                    description: 'Creating background music',
+                    icon: <Music size={14} />
                 };
                 case VideoGenerationTaskStatus.EDITOR: return {
-                    tailWindGradient: 'from-cyan-500 to-blue-500',
+                    colorClass: 'text-cyan-400',
+                    bgClass: 'bg-cyan-500/10 border-cyan-500/20',
                     description: 'Ready for editing',
-                    emoji: '💻'
+                    icon: <MonitorPlay size={14} />
                 };
                 case VideoGenerationTaskStatus.FINALIZING: return {
-                    tailWindGradient: 'from-violet-500 to-purple-500',
-                    description: 'Producer is putting finishing touches',
-                    emoji: '✨'
+                    colorClass: 'text-violet-400',
+                    bgClass: 'bg-violet-500/10 border-violet-500/20',
+                    description: 'Finishing touches',
+                    icon: <Sparkles size={14} />
                 };
                 case VideoGenerationTaskStatus.COMPLETED: return {
-                    tailWindGradient: 'from-green-500 to-emerald-500',
+                    colorClass: 'text-emerald-400',
+                    bgClass: 'bg-emerald-500/10 border-emerald-500/20',
                     description: 'Completed',
-                    emoji: '✅'
+                    icon: <CheckCircle2 size={14} />
                 };
                 default: return {
-                    tailWindGradient: 'from-gray-500 to-gray-600',
+                    colorClass: 'text-zinc-500',
+                    bgClass: 'bg-white/5 border-white/10',
                     description: 'Unknown status',
-                    emoji: '❓'
+                    icon: <HelpCircle size={14} />
                 };
             }
         } else {
             return {
-                tailWindGradient: 'from-red-500 to-pink-600',
+                colorClass: 'text-red-400',
+                bgClass: 'bg-red-500/10 border-red-500/20',
                 description: 'Failed',
-                emoji: '❌'
+                icon: <AlertCircle size={14} />
             };
         }
     }, [taskData]);
@@ -186,10 +204,10 @@ function DashboardItem({
 
         if (!taskData.isGenerationFailed) return null;
 
-        const containerClasses = "bg-gray-900/95 border border-white/10 rounded-lg shadow-xl p-3 min-w-[180px] backdrop-blur-md";
-        const headerClasses = "flex items-center gap-2 mb-2 pb-2 border-b border-white/10 text-base font-semibold";
-        const rowClasses = "flex justify-between items-center text-sm text-white/90 mb-1";
-        const totalRowClasses = "flex justify-between items-center pt-2 mt-2 border-t border-white/10 text-sm font-bold text-white";
+        const containerClasses = "bg-zinc-900 border border-white/10 rounded-lg shadow-xl p-3 min-w-[180px] z-50";
+        const headerClasses = "flex items-center gap-1.5 mb-2 pb-2 border-b border-white/5 text-[13px] font-medium";
+        const rowClasses = "flex justify-between items-center text-xs text-zinc-400 mb-1.5";
+        const totalRowClasses = "flex justify-between items-center pt-2 mt-2 border-t border-white/5 text-xs font-medium text-zinc-200";
 
         const renderReceipt = (title: string, colorClass: string, icon: ReactNode, details: { label: ReactNode; value: ReactNode }[], total: number | null) => (
             <div className={containerClasses}>
@@ -200,13 +218,13 @@ function DashboardItem({
                 {details.map((detail, index) => (
                     <div key={index} className={rowClasses}>
                         <span>{detail.label}</span>
-                        <span className="text-gray-200 flex items-center gap-1">{detail.value}</span>
+                        <span className="text-zinc-300 flex items-center gap-1">{detail.value}</span>
                     </div>
                 ))}
                 <div className={totalRowClasses}>
-                    <span>Total Cost</span>
-                    <div className="flex items-center text-yellow-400">
-                        <Coins size={12} className="mr-1" />
+                    <span>Est. Retry Cost</span>
+                    <div className="flex items-center text-zinc-300">
+                        <Coins size={12} className="mr-1 text-zinc-500" />
                         {total}
                     </div>
                 </div>
@@ -214,15 +232,14 @@ function DashboardItem({
         );
 
         const CostLabel = ({ suffix }: { suffix: string }) => (
-            <div className="flex items-center gap-1 text-white/90">
-                <Coins size={12} className="text-yellow-300/90" />
-                <span>per {suffix}</span>
+            <div className="flex items-center gap-1 text-zinc-400">
+                <Coins size={10} className="text-zinc-500" />
+                <span>/ {suffix}</span>
             </div>
         );
 
         const CreditValue = ({ value }: { value: number | string }) => (
             <div className="flex items-center gap-1">
-                <Coins size={12} className="text-yellow-300/90" />
                 <span>{value}</span>
             </div>
         );
@@ -266,7 +283,7 @@ function DashboardItem({
             default:
                 return renderReceipt(
                     "Regeneration",
-                    "text-gray-300",
+                    "text-zinc-400",
                     <Loader2 size={14} />,
                     [
                         { label: "Type", value: "Estimated" },
@@ -282,20 +299,15 @@ function DashboardItem({
         if (!taskData.description) return null;
         const text = taskData.description;
 
-        // 첫 해시태그 찾기 (문자열 시작 혹은 공백 뒤에 오는 #)
         const match = text.match(/(?:^|\s)(#)/);
 
         if (match && match.index !== undefined) {
             const splitIndex = match.index;
             const part1 = text.substring(0, splitIndex).trimEnd();
-            // splitIndex 이후 첫 '#' 위치 찾기
             const hashIndex = text.indexOf('#', splitIndex);
             const part2 = text.substring(hashIndex);
 
-            // 앞부분이 비어있지 않으면 개행 추가, 비어있으면(해시태그로 시작) 그대로 혹은 취향껏
-            // 요청사항: "첫 해시태그 앞에 줄바꿈 두 개"
-            // part1이 빈 문자열이어도 \n\n#tag가 됨.
-            if (part1.length === 0) return part2; // 해시태그로 시작하면 굳이 줄바꿈 안 함 (선택사항, 하지만 보통 이게 자연스러움)
+            if (part1.length === 0) return part2; 
             return `${part1}\n\n${part2}`;
         }
 
@@ -319,9 +331,9 @@ function DashboardItem({
         const diffDays = Math.floor(diffHours / 24);
 
         if (diffMins < 1) return 'Just now';
-        if (diffMins < 60) return `${diffMins} minute${diffMins > 1 ? 's' : ''} ago`;
-        if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
-        return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
+        if (diffMins < 60) return `${diffMins}m ago`;
+        if (diffHours < 24) return `${diffHours}h ago`;
+        return `${diffDays}d ago`;
     }, []);
 
     // ==================== 팝오버 상태 ====================
@@ -342,91 +354,88 @@ function DashboardItem({
     }, [taskData.id, onClickRetry]);
 
     return (
-        <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl border border-purple-500/20 p-6 hover:bg-gray-800/70 transition-all duration-300">
+        <div className="bg-zinc-900/40 rounded-xl border border-white/5 p-5 hover:bg-zinc-900/60 transition-colors duration-200">
             <div className="flex items-start justify-between">
                 {/* ==================== 왼쪽: 정보 영역 ==================== */}
-                <div className="flex-1">
+                <div className="flex-1 min-w-0 pr-4">
                     {/* 제목 */}
-                    <div className={`flex items-center gap-2 ${taskData.description ? 'mb-1' : 'mb-3'}`}>
-                        <h3 className="text-xl font-semibold text-white truncate">
+                    <div className={`flex items-center gap-2 ${taskData.description ? 'mb-1.5' : 'mb-3'}`}>
+                        <h3 className="text-[15px] font-medium text-zinc-100 truncate">
                             {taskData.title || 'Untitled Task'}
                         </h3>
                         <button
-                            className="text-gray-500 hover:text-white transition-colors p-1.5 rounded-lg hover:bg-white/10 flex-shrink-0"
+                            className="text-zinc-500 hover:text-zinc-300 transition-colors p-1 rounded hover:bg-white/5 flex-shrink-0"
                             aria-label="Edit title and description"
                             onClick={() => {
                                 onClickEdit(taskData.id);
                             }}
                         >
-                            <Pencil size={14} />
+                            <Pencil size={12} />
                         </button>
                     </div>
 
                     {/* 설명 */}
                     {formattedDescription && (
-                        <p className="text-sm text-gray-400 mb-3 whitespace-pre-wrap leading-relaxed">
+                        <p className="text-[13px] text-zinc-500 mb-3.5 whitespace-pre-wrap leading-relaxed line-clamp-2">
                             {formattedDescription}
                         </p>
                     )}
 
-                    {/* 메타 정보 행 1: 날짜, 씬 개수 */}
-                    {(taskData.sceneCount) && <div className="flex items-center space-x-6 text-gray-300 mb-2">
-                        <span className="flex items-center space-x-2">
-                            <Calendar size={16} className="text-purple-400" />
-                            <span>Started: {formatDate(taskData.createdAt)}</span>
+                    {/* 메타 정보 */}
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-zinc-500 text-[11px] mb-3.5">
+                        <span className="flex items-center gap-1.5">
+                            <Clock size={12} className="text-zinc-600" />
+                            <span>{formatRelativeTime(taskData.updatedAt)}</span>
                         </span>
-                        {taskData.sceneCount && <span className="flex items-center space-x-2">
-                            <FileVideo size={16} className="text-cyan-400" />
-                            <span>{taskData.sceneCount} scenes</span>
-                        </span>}
-                    </div>}
-
-                    {/* 메타 정보 행 2: 업데이트 시간 */}
-                    <div className="flex items-center space-x-2 text-gray-400 text-sm mb-3">
-                        <Clock size={14} className="text-gray-500" />
-                        <span>Last updated: {formatRelativeTime(taskData.updatedAt)}</span>
+                        <span className="flex items-center gap-1.5">
+                            <Calendar size={12} className="text-zinc-600" />
+                            <span>{formatDate(taskData.createdAt)}</span>
+                        </span>
+                        {taskData.sceneCount && (
+                            <span className="flex items-center gap-1.5">
+                                <FileVideo size={12} className="text-zinc-600" />
+                                <span>{taskData.sceneCount} scenes</span>
+                            </span>
+                        )}
                     </div>
 
                     {/* 상태 텍스트 */}
-                    <div className="flex items-center space-x-2">
-                        <div className="flex p-1 w-8 h-8 rounded-full bg-white items-center justify-center">
-                            <span className="text-base">
-                                {statusData.emoji}
+                    <div className="flex items-center gap-2">
+                        <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md border ${statusData.bgClass} ${statusData.colorClass}`}>
+                            {statusData.icon}
+                            <span className="text-[11px] font-medium tracking-wide uppercase">
+                                {statusData.description}
                             </span>
                         </div>
-                        <span className={`px-3 py-1 rounded-full text-sm font-medium bg-gradient-to-r ${statusData.tailWindGradient} text-white backdrop-blur-sm`}>
-                            {statusData.description}
-                        </span>
                     </div>
 
                     {/* ==================== Processing 상태: 진행률 바 ==================== */}
-                    <div className="mt-4">
-                        <div className="flex items-center justify-between mb-1">
-                                <span className="text-xs text-gray-400">
-                                    {taskData.currentStep} / {taskData.totalStep}
+                    {statusGroup === StatusGroup.PROCESSING && !taskData.isGenerationFailed && (
+                        <div className="mt-4 max-w-sm">
+                            <div className="flex items-center justify-between mb-1.5">
+                                <span className="text-[10px] font-medium text-zinc-500 uppercase tracking-wider">
+                                    Step {taskData.currentStep} of {taskData.totalStep}
                                 </span>
-                            <span className="text-xs text-gray-400">
+                                <span className="text-[10px] font-medium text-zinc-400">
                                     {taskData.progress}%
                                 </span>
-                        </div>
-                        <div className="w-full bg-gray-700/50 rounded-full h-2 overflow-hidden relative">
-                            <div
-                                className={`bg-gradient-to-r ${statusData.tailWindGradient} rounded-full h-full transition-all duration-500 relative overflow-hidden`}
-                                style={{ width: `${taskData.progress}%` }}
-                            >
-                                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer" />
+                            </div>
+                            <div className="w-full bg-black/40 rounded-full h-1.5 overflow-hidden">
+                                <div
+                                    className="bg-indigo-500 rounded-full h-full transition-all duration-500"
+                                    style={{ width: `${taskData.progress}%` }}
+                                />
                             </div>
                         </div>
-                    </div>
+                    )}
 
                     {/* ==================== Failed 상태: 에러 메시지 ==================== */}
-                    {/*{statusGroup === StatusGroup.FAILED && (*/}
                     {taskData.isGenerationFailed && (
-                        <div className="mt-4 flex items-start space-x-2 bg-red-500/10 border border-red-500/30 rounded-lg p-3">
-                            <AlertCircle size={16} className="text-red-400 mt-0.5 flex-shrink-0" />
+                        <div className="mt-4 flex items-start gap-2 bg-red-500/5 border border-red-500/10 rounded-lg p-2.5 max-w-sm">
+                            <AlertCircle size={14} className="text-red-400 mt-0.5 flex-shrink-0" />
                             <div className="flex-1">
-                                <p className="text-red-400 text-sm font-medium mb-1">Task failed</p>
-                                <p className="text-gray-400 text-xs">
+                                <p className="text-red-400 text-xs font-medium mb-0.5">Task failed</p>
+                                <p className="text-zinc-500 text-[11px]">
                                     An error occurred during video generation. Please try again.
                                 </p>
                             </div>
@@ -435,24 +444,23 @@ function DashboardItem({
                 </div>
 
                 {/* ==================== 오른쪽: 액션 버튼 영역 ==================== */}
-                <div className="flex items-center space-x-3 ml-6">
+                <div className="flex flex-col sm:flex-row items-end sm:items-center gap-2">
                     {/* Drafting 상태: Continue Draft 버튼 */}
                     {taskData.status === VideoGenerationTaskStatus.DRAFTING && taskData.id && (
                         <Link
                             href={`/workspace/create?taskId=${taskData.id}`}
-                            className="group bg-gradient-to-r from-purple-500 to-pink-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:from-purple-600 hover:to-pink-700 transition-all duration-300 transform hover:scale-105 shadow-lg shadow-purple-500/25 flex items-center space-x-2"
+                            className="bg-white/10 hover:bg-white/20 text-zinc-200 px-3 py-1.5 rounded-lg text-[13px] font-medium transition-colors flex items-center gap-1.5 border border-white/5"
                         >
                             <Edit size={14} />
-                            <span>Continue Draft</span>
+                            <span>Continue</span>
                         </Link>
                     )}
 
                     {/* Editing 상태: Edit 버튼 */}
-                    {/*{statusGroup === StatusGroup.EDITING && (*/}
                     {taskData.status === VideoGenerationTaskStatus.EDITOR && !taskData.isGenerationFailed && (
                         <Link
                             href={`/workspace/editor?taskId=${taskData.id}`}
-                            className="group bg-gradient-to-r from-green-500 to-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:from-green-600 hover:to-emerald-700 transition-all duration-300 transform hover:scale-105 shadow-lg shadow-green-500/25 flex items-center space-x-2"
+                            className="bg-white text-black px-3 py-1.5 rounded-lg text-[13px] font-medium hover:bg-zinc-200 transition-colors flex items-center gap-1.5"
                         >
                             <Edit size={14} />
                             <span>Edit Video</span>
@@ -463,7 +471,7 @@ function DashboardItem({
                     {statusGroup === StatusGroup.COMPLETED && (
                         <button
                             onClick={handleDownload}
-                            className="group bg-gradient-to-r from-indigo-500 to-purple-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:from-indigo-600 hover:to-purple-700 transition-all duration-300 transform hover:scale-105 shadow-lg shadow-purple-500/25 flex items-center space-x-2"
+                            className="bg-white/5 hover:bg-white/10 text-zinc-300 px-3 py-1.5 rounded-lg text-[13px] font-medium transition-colors flex items-center gap-1.5 border border-white/5"
                         >
                             <Download size={14} />
                             <span>Download</span>
@@ -478,7 +486,7 @@ function DashboardItem({
                             onMouseLeave={() => setShowExportPopover(false)}
                         >
                             <button
-                                className="group bg-gradient-to-r from-cyan-500 to-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:from-cyan-600 hover:to-blue-700 transition-all duration-300 transform hover:scale-105 shadow-lg shadow-cyan-500/25 flex items-center space-x-2"
+                                className="bg-white text-black px-3 py-1.5 rounded-lg text-[13px] font-medium hover:bg-zinc-200 transition-colors flex items-center gap-1.5"
                             >
                                 <Share2 size={14} />
                                 <span>Export</span>
@@ -486,69 +494,65 @@ function DashboardItem({
 
                             {showExportPopover && (
                                 <div className="absolute top-full right-0 pt-2 z-50">
-                                    <div className="bg-gray-800 border border-purple-500/30 rounded-lg shadow-xl overflow-hidden min-w-[200px]">
+                                    <div className="bg-zinc-900 border border-white/10 rounded-xl shadow-xl overflow-hidden min-w-[180px]">
                                         {/* YouTube Shorts */}
                                         <button
-                                            className="w-full h-14 flex items-center text-white hover:bg-gray-700/50 transition-colors"
+                                            className="w-full px-4 py-3 flex items-center text-zinc-300 hover:bg-white/5 hover:text-zinc-100 transition-colors group"
                                             onClick={async () => { await onClickExport(taskData.id, ExportPlatform.YOUTUBE); }}
                                         >
-                                            <div className="w-14 h-14 flex items-center justify-center flex-shrink-0">
+                                            <div className="w-6 h-6 flex items-center justify-center flex-shrink-0 opacity-80 group-hover:opacity-100 transition-opacity">
                                                 <Image
                                                     src="/icons/youtube-logo.png"
                                                     alt="YouTube"
-                                                    width={36}
-                                                    height={32}
+                                                    width={20}
+                                                    height={16}
                                                     className="object-contain"
                                                 />
                                             </div>
-                                            <span className="text-sm flex-1 text-left pl-2">YouTube Shorts</span>
+                                            <span className="text-[13px] font-medium flex-1 text-left pl-2">YouTube Shorts</span>
                                         </button>
 
-                                        <div className="border-t border-purple-500/20" />
+                                        <div className="h-px w-full bg-white/5" />
 
                                         {/* TikTok */}
                                         <button
-                                            className="w-full h-14 flex items-center text-white hover:bg-gray-700/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+                                            className="w-full px-4 py-3 flex items-center text-zinc-300 hover:bg-white/5 hover:text-zinc-100 transition-colors group disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent"
                                             onClick={async () => { await onClickExport(taskData.id, ExportPlatform.TIKTOK); }}
                                         >
-                                            <div className="w-14 h-14 flex items-center justify-center flex-shrink-0">
+                                            <div className="w-6 h-6 flex items-center justify-center flex-shrink-0 opacity-80 group-hover:opacity-100 transition-opacity">
                                                 <Image
                                                     src="/icons/tiktok-logo-white.svg"
                                                     alt="TikTok"
-                                                    width={32}
-                                                    height={32}
+                                                    width={18}
+                                                    height={18}
                                                     className="object-contain"
                                                 />
                                             </div>
-                                            <span className="text-sm flex-1 text-left pl-2 flex items-center gap-2">TikTok</span>
+                                            <span className="text-[13px] font-medium flex-1 text-left pl-2">TikTok</span>
                                         </button>
 
-                                        <div className="border-t border-purple-500/20" />
+                                        <div className="h-px w-full bg-white/5" />
 
                                         {/* Instagram Reels */}
                                         <button
                                             disabled={true}
-                                            className="w-full h-14 flex items-center text-white hover:bg-gray-700/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+                                            className="w-full px-4 py-3 flex items-center text-zinc-500 transition-colors cursor-not-allowed"
                                             onClick={async () => { await onClickExport(taskData.id, ExportPlatform.INSTAGRAM); }}
                                         >
-                                            <div className="w-14 h-14 flex items-center justify-center flex-shrink-0">
+                                            <div className="w-6 h-6 flex items-center justify-center flex-shrink-0 opacity-50">
                                                 <Image
                                                     src="/icons/instagram-logo.png"
                                                     alt="Instagram"
-                                                    width={28}
-                                                    height={28}
-                                                    className="object-contain"
+                                                    width={16}
+                                                    height={16}
+                                                    className="object-contain grayscale"
                                                 />
                                             </div>
-                                            <span className="text-sm flex-1 text-left pl-2 flex items-center gap-2">
-                                                Instagram Reels
-                                                <span className="px-1.5 py-1 bg-gray-600/50 rounded-full flex items-center opacity-100">
-                                                    <Wrench size={12} className="text-yellow-300" />
-                                                </span>
+                                            <span className="text-[13px] font-medium flex-1 text-left pl-2 flex items-center gap-1.5">
+                                                Instagram
+                                                <Wrench size={10} className="text-zinc-600" />
                                             </span>
                                         </button>
-
-                                        <div className="border-t border-purple-500/20" />
                                     </div>
                                 </div>
                             )}
@@ -556,7 +560,6 @@ function DashboardItem({
                     )}
 
                     {/* Failed 상태: Retry 버튼 */}
-                    {/*{statusGroup === StatusGroup.FAILED && (*/}
                     {taskData.isGenerationFailed && (
                         <div
                             className="relative"
@@ -565,14 +568,10 @@ function DashboardItem({
                         >
                             <button
                                 onClick={handleRetry}
-                                className="group bg-gradient-to-r from-orange-500 to-yellow-600 text-white px-3 py-2 rounded-lg text-sm font-semibold hover:from-orange-600 hover:to-yellow-700 transition-all duration-300 transform hover:scale-105 shadow-lg shadow-orange-500/25 flex items-center gap-1.5"
+                                className="bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/20 px-3 py-1.5 rounded-lg text-[13px] font-medium transition-colors flex items-center gap-1.5"
                             >
-                                <Loader2 size={16} />
+                                <Loader2 size={14} />
                                 <span>Retry</span>
-                                <span className="flex items-center text-xs opacity-90 border-l border-white/30 pl-1.5 ml-0.5">
-                                    <Coins size={12} className="mr-0.5 text-yellow-200" />
-                                    {retryPrice}
-                                </span>
                             </button>
                             {showRetryTooltip && retryTooltipContent && (
                                 <div className={`absolute right-0 ${index !== 0 ? "bottom-full mb-2" : "top-full mt-2"} z-50`}>
@@ -582,14 +581,14 @@ function DashboardItem({
                         </div>
                     )}
 
-                    {/* Processing/Editing 상태: Cancel 버튼 */}
+                    {/* Cancel 버튼 (항상 마지막에) */}
                     {statusGroup !== StatusGroup.COMPLETED && (
                         <button
                             onClick={handleCancel}
-                            className="group bg-gradient-to-r from-red-500 to-pink-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:from-red-600 hover:to-pink-700 transition-all duration-300 transform hover:scale-105 shadow-lg shadow-red-500/25 flex items-center space-x-2"
+                            className="text-zinc-500 hover:text-red-400 px-2 py-1.5 rounded-lg text-[13px] font-medium transition-colors flex items-center gap-1"
+                            title="Cancel task"
                         >
-                            <X size={14} />
-                            <span>Cancel</span>
+                            <X size={16} />
                         </button>
                     )}
                 </div>

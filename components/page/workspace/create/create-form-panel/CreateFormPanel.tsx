@@ -40,21 +40,19 @@ function CreateFormPanel({
     }, [script]);
 
     return (
-        <div className="flex-[4.3] bg-gray-900/30 backdrop-blur-sm border-r border-purple-500/20 overflow-y-auto">
-            <div className="p-6">
-                <div className="text-purple-300 text-2xl font-medium mb-6">Create New Video</div>
-
-                <div className="space-y-6">
+        <div className="flex-[4.3] bg-transparent border-r border-white/5 overflow-y-auto custom-scrollbar">
+            <div className="p-8">
+                <div className="space-y-8">
 
                     {/* Script Section */}
                     <div>
-                        <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center justify-between mb-4">
                             <div className="flex items-center space-x-3">
-                                <label className="block text-xl font-semibold text-purple-300">
+                                <label className="block text-[15px] font-medium text-zinc-100 uppercase tracking-wider">
                                     Script
                                 </label>
                                 {script.trim() && (
-                                    <span className="px-2 py-1 bg-blue-500/20 text-blue-300 text-sm font-medium rounded border border-blue-400/30">
+                                    <span className="px-2 py-0.5 bg-zinc-800/80 text-zinc-300 text-xs font-medium rounded border border-white/5">
                                         ~{estimatedDuration}s
                                     </span>
                                 )}
@@ -62,9 +60,9 @@ function CreateFormPanel({
                             <button
                                 type="button"
                                 onClick={onClickGenerateWithAI}
-                                className="px-3 py-1.5 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg text-sm font-medium hover:from-purple-600 hover:to-pink-600 transition-all duration-300 flex items-center space-x-1"
+                                className="px-3 py-1.5 bg-white/5 border border-white/10 text-zinc-300 rounded-lg text-sm font-medium hover:bg-white/10 hover:text-white transition-colors flex items-center space-x-1.5"
                             >
-                                <Sparkles size={14} />
+                                <Sparkles size={14} className="text-indigo-400" />
                                 <span>Generate with AI</span>
                             </button>
                         </div>
@@ -72,8 +70,8 @@ function CreateFormPanel({
                             value={script}
                             onChange={onChangeScript}
                             placeholder="Describe what you want to create. Be as detailed as possible..."
-                            rows={6}
-                            className="w-full px-4 py-3 rounded-xl bg-gray-800/50 border border-purple-500/30 text-white placeholder-gray-400 focus:border-purple-400 focus:ring-2 focus:ring-purple-400/20 focus:outline-none transition-all resize-none text-base"
+                            rows={8}
+                            className="w-full px-4 py-3 rounded-xl bg-zinc-900/40 border border-white/10 text-zinc-100 placeholder-zinc-600 focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 focus:outline-none transition-colors resize-none text-[15px] leading-relaxed"
                         />
                     </div>
 
@@ -91,37 +89,6 @@ function CreateFormPanel({
                         onClickGenerateStoryboard={onClickGenerateStoryboard}
                     />
 
-                    {/* Visual Style Selection */}
-                    {/*<div>*/}
-                    {/*    <button*/}
-                    {/*        type="button"*/}
-                    {/*        onClick={() => setIsStyleExpanded(!isStyleExpanded)}*/}
-                    {/*        className="flex items-center text-xl font-semibold text-purple-300 mb-4 hover:text-purple-200 transition-colors"*/}
-                    {/*    >*/}
-                    {/*        <span>Visual Style</span>*/}
-                    {/*        <span className="ml-2">*/}
-                    {/*            {isStyleExpanded ? <ChevronDown size={20} /> : <ChevronRight size={20} />}*/}
-                    {/*        </span>*/}
-                    {/*    </button>*/}
-                    {/*    {isStyleExpanded && (*/}
-                    {/*        <div className="grid grid-cols-2 gap-3">*/}
-                    {/*        {styleList.map((style) => (*/}
-                    {/*            <button*/}
-                    {/*                key={style.id}*/}
-                    {/*                onClick={() => { setSelectedStyleId(style.id); }}*/}
-                    {/*                className={`w-full p-3 rounded-lg border transition-all text-left ${*/}
-                    {/*                    selectedStyleId === style.id*/}
-                    {/*                        ? 'border-pink-500 bg-pink-500/10'*/}
-                    {/*                        : 'border-purple-500/30 bg-gray-800/30 hover:border-purple-400/50'*/}
-                    {/*                }`}*/}
-                    {/*            >*/}
-                    {/*                <div className="text-white font-medium text-base">{style.name}</div>*/}
-                    {/*                <div className="text-gray-400 text-sm mt-1">{style.description}</div>*/}
-                    {/*            </button>*/}
-                    {/*        ))}*/}
-                    {/*        </div>*/}
-                    {/*    )}*/}
-                    {/*</div>*/}
                 </div>
             </div>
         </div>

@@ -546,84 +546,83 @@ function WorkspaceDashboardPageClient() {
     }, [user, router]);
 
     return (
-        <div className="min-h-screen bg-black text-white">
-            {/* Top Header - Same as Create */}
-            <div className="flex items-center justify-between py-4 border-b border-purple-500/20 bg-gray-900/50 backdrop-blur-sm">
+        <div className="min-h-screen bg-zinc-950 text-white relative overflow-hidden">
+            {/* Top Header - Matched to Autopilot */}
+            <div className="flex items-center justify-between py-3 border-b border-white/5 bg-zinc-950/80 backdrop-blur-md relative z-20">
                 <div className="flex items-center" style={{paddingLeft: '16px'}}>
                     <Image
                         src="/logo/logo-64.png"
                         alt="Short Real"
-                        width={64}
-                        height={64}
-                        className="w-16 h-16 cursor-pointer"
+                        width={48}
+                        height={48}
+                        className="w-12 h-12 cursor-pointer"
                         onClick={() => {
                             router.push('/');
                         }}
                     />
-                    <div className="flex flex-col ml-4">
-                        <span className="text-4xl font-bold bg-gradient-to-r from-pink-400 to-purple-500 bg-clip-text text-transparent">
+                    <div className="flex flex-col ml-3">
+                        <span className="text-2xl font-bold bg-gradient-to-r from-zinc-100 to-zinc-400 bg-clip-text text-transparent cursor-default leading-none">
                             Dashboard
                         </span>
-                        <p className="text-gray-400 text-base pl-0.5">
+                        <p className="text-zinc-500 text-[13px] mt-0.5 cursor-default">
                             Your tasks&#39; progresses here.
                         </p>
                     </div>
                 </div>
 
                 <div className="flex flex-row w-fit items-center gap-2">
-                    <div className="flex items-center space-x-2 mr-6 px-4 py-2 bg-gray-900/50 border border-purple-500/30 rounded-lg backdrop-blur-sm hover:border-purple-400/50 transition-all">
-                        <Coins className="w-5 h-5 text-yellow-400" />
-                        <div className="flex flex-col">
-                            <span className="text-xs text-purple-300">Credits</span>
-                            <span className="text-lg font-bold text-yellow-400">{userCreditCount.toLocaleString()}</span>
+                    <div className="flex items-center space-x-2 mr-6 px-3 py-1.5 bg-zinc-900/50 border border-white/10 rounded-lg">
+                        <Coins className="w-4 h-4 text-zinc-400" />
+                        <div className="flex items-baseline gap-1.5">
+                            <span className="text-[11px] text-zinc-500 font-medium">Credits</span>
+                            <span className="text-[13px] font-medium text-zinc-200">{userCreditCount.toLocaleString()}</span>
                         </div>
                     </div>
                     <div className="pr-6">
                         <Link
                             href="/workspace/create"
-                            className="group bg-gradient-to-r from-pink-500 to-purple-600 text-white px-6 py-3 rounded-xl text-lg font-semibold hover:from-pink-600 hover:to-purple-700 transition-all duration-300 transform hover:scale-105 flex items-center space-x-2 shadow-lg shadow-purple-500/25"
+                            className="bg-white text-black px-4 py-2 rounded-lg text-sm font-medium hover:bg-zinc-200 transition-colors flex items-center space-x-1.5 shadow-sm"
                         >
-                            <Plus size={20} />
+                            <Plus size={16} />
                             <span>Start New Task</span>
                         </Link>
                     </div>
                 </div>
             </div>
 
-            {/* Vaporwave Background Effects */}
-            <div className="absolute inset-0 opacity-10 pointer-events-none">
-                <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-gradient-to-r from-pink-500 to-purple-600 rounded-full blur-3xl"></div>
-                <div className="absolute bottom-1/4 right-1/4 w-52 h-52 bg-gradient-to-r from-purple-500 to-indigo-600 rounded-full blur-3xl"></div>
-                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-48 h-48 bg-gradient-to-r from-indigo-500 to-cyan-500 rounded-full blur-3xl"></div>
+            {/* Background Effects - Toned down significantly */}
+            <div className="absolute inset-0 opacity-[0.03] pointer-events-none z-0">
+                <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-indigo-500 rounded-full blur-[120px]"></div>
             </div>
 
-            <div className="flex h-[calc(100vh-97px)]">
+            <div className="flex h-[calc(100vh-73px)] relative z-10">
                 {/* Left Virtual Tab Sidebar */}
                 <WorkspaceSidebar activeItem={WorkspaceSidebarItem.DASHBOARD} />
 
                 {/* Main Content Panel */}
-                <div className="flex-1 bg-gray-900/30 backdrop-blur-sm overflow-y-auto">
-                    <div className="p-6">
-                        <div className="text-purple-300 text-2xl font-medium mb-6">Current Video Tasks</div>
+                <div className="flex-1 bg-transparent overflow-y-auto">
+                    <div className="p-8 max-w-[1200px] mx-auto">
+                        <div className="text-zinc-100 text-xl font-medium mb-6 tracking-tight">Current Tasks</div>
 
                         {taskDataList.length === 0 ? (
-                            <div className="max-w-4xl">
-                                <div className="text-center py-16">
-                                    <div className="w-16 h-16 bg-gradient-to-r from-pink-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                                        <Plus size={24} className="text-white" />
-                                    </div>
-                                    <p className="text-gray-400 text-lg mb-4">No tasks yet</p>
-                                    <Link
-                                        href="/workspace/create"
-                                        className="inline-flex items-center space-x-2 bg-gradient-to-r from-pink-500 to-purple-600 text-white px-6 py-3 rounded-xl text-base font-semibold hover:from-pink-600 hover:to-purple-700 transition-all duration-300 transform hover:scale-105 shadow-lg shadow-purple-500/25"
-                                    >
-                                        <Plus size={16} />
-                                        <span>Start New Task</span>
-                                    </Link>
+                            <div className="mt-12 p-8 bg-zinc-900/30 border border-white/5 rounded-2xl text-center space-y-4 max-w-sm mx-auto">
+                                <div className="w-12 h-12 bg-white/5 border border-white/10 rounded-full flex items-center justify-center mx-auto mb-2">
+                                    <ListTodo size={20} className="text-zinc-500" />
                                 </div>
+                                <h2 className="text-lg font-medium text-zinc-200">No tasks yet</h2>
+                                <p className="text-[13px] text-zinc-500 leading-relaxed">
+                                    You haven&#39;t created any videos yet. Start your first task to see it here.
+                                </p>
+                                <Link
+                                    href="/workspace/create"
+                                    className="inline-flex items-center space-x-1.5 bg-white text-black px-5 py-2.5 rounded-lg text-sm font-medium hover:bg-zinc-200 transition-colors mt-2"
+                                >
+                                    <Plus size={16} />
+                                    <span>Create Video</span>
+                                </Link>
                             </div>
                         ) : (
-                            <div className="space-y-4 max-w-4xl">
+                            <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
                                 {taskDataList.sort((a, b) => {
                                     return b.updatedAt.getTime() - a.updatedAt.getTime();
                                 }).map((taskData, index) => {
@@ -694,10 +693,9 @@ function WorkspaceDashboardPageClient() {
             {/* Loading Overlay */}
             {isLoading && (
                 <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center">
-                    <div className="text-center">
-                        <div className="w-16 h-16 border-4 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto mb-6"></div>
-                        <p className="text-gray-300 text-xl font-medium">Loading tasks...</p>
-                        <p className="text-gray-500 text-sm mt-2">Please wait a moment</p>
+                    <div className="flex flex-col items-center gap-4 p-8 rounded-3xl bg-zinc-900/80 border border-white/10 shadow-2xl">
+                        <Loader2 className="w-10 h-10 animate-spin text-zinc-400" />
+                        <p className="text-sm font-medium text-zinc-300">Loading tasks...</p>
                     </div>
                 </div>
             )}
@@ -719,14 +717,13 @@ function WorkspaceDashboardPageClient() {
 
             {/* Video Exporting Floating Indicator */}
             {isExportingVideo && (
-                <div className="fixed bottom-8 right-8 z-50 flex items-center gap-4 bg-gray-900/90 backdrop-blur-md border border-purple-500/30 rounded-2xl p-4 shadow-2xl shadow-purple-500/10 animate-in fade-in slide-in-from-bottom-4 duration-300">
-                    <div className="relative flex items-center justify-center w-10 h-10 bg-purple-500/10 rounded-full">
-                        <Loader2 className="w-5 h-5 text-purple-400 animate-spin" />
-                        <span className="absolute top-0.5 right-0.5 w-2.5 h-2.5 bg-green-500 border-2 border-gray-900 rounded-full animate-pulse"></span>
+                <div className="fixed bottom-8 right-8 z-50 flex items-center gap-3 bg-zinc-900/90 backdrop-blur-md border border-white/10 rounded-xl p-4 shadow-xl animate-in fade-in slide-in-from-bottom-4 duration-300">
+                    <div className="relative flex items-center justify-center w-8 h-8 bg-indigo-500/10 rounded-full">
+                        <Loader2 className="w-4 h-4 text-indigo-400 animate-spin" />
                     </div>
                     <div className="flex flex-col">
-                        <span className="text-base font-bold text-white">Exporting Video...</span>
-                        <span className="text-sm text-purple-200/70">Sending to platform</span>
+                        <span className="text-[13px] font-medium text-zinc-100">Exporting Video...</span>
+                        <span className="text-[11px] text-zinc-500">Sending to platform</span>
                     </div>
                 </div>
             )}

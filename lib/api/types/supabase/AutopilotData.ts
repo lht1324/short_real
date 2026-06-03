@@ -1,4 +1,4 @@
-import { ExportPlatform } from "@/lib/api/types/supabase/VideoGenerationTasks";
+import {AIModelConfig, ExportPlatform} from "@/lib/api/types/supabase/VideoGenerationTasks";
 import { CaptionConfigState } from "@/components/page/workspace/editor/WorkspaceEditorPageClient";
 import {ExportPrivacySetting} from "@/components/page/workspace/dashboard/export-settings-modal/ExportPrivacySetting";
 
@@ -21,6 +21,9 @@ export interface AutopilotData {
     // Platform Setting
     youtube_privacy?: ExportPrivacySetting | null;
     tiktok_privacy?: ExportPrivacySetting | null;
+
+    // Model Setting
+    ai_model_config?: AIModelConfig | null;
 
     last_run_at?: string | null; // timestamptz
     created_at?: string; // timestamptz

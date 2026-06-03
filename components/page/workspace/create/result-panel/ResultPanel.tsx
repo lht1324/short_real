@@ -1,5 +1,5 @@
 import {memo} from "react";
-import {AlertTriangle, Coins, Film, Save, Sparkles} from "lucide-react";
+import {AlertTriangle, Coins, Film, Save, Sparkles, Loader2, CheckCircle2, Circle} from "lucide-react";
 import CreditUsageCard from "@/components/page/workspace/create/result-panel/CreditUsageCard";
 
 interface ResultPanelProps {
@@ -42,29 +42,22 @@ function ResultPanel({
     onClickGenerateVideo,
 }: ResultPanelProps) {
     return (
-        <div className="flex-[3] bg-black flex flex-col relative">
-            {/* Vaporwave Background Effects */}
-            <div className="absolute inset-0 opacity-10">
-                <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-gradient-to-r from-pink-500 to-purple-600 rounded-full blur-3xl"></div>
-                <div className="absolute bottom-1/4 right-1/4 w-52 h-52 bg-gradient-to-r from-purple-500 to-indigo-600 rounded-full blur-3xl"></div>
-                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-48 h-48 bg-gradient-to-r from-indigo-500 to-cyan-500 rounded-full blur-3xl"></div>
-            </div>
-
-            <div className="flex-1 flex p-8 items-center justify-center relative z-10">
-                {(isStoryboardGenerated && videoTitle && videoDescription) ? (<div>
+        <div className="flex-[3] bg-transparent flex flex-col relative border-l border-white/5">
+            <div className="flex-1 flex p-8 items-center justify-center relative z-10 overflow-y-auto custom-scrollbar">
+                {(isStoryboardGenerated && videoTitle && videoDescription) ? (<div className="w-full max-w-2xl">
                     {/* Video Metadata Section */}
                     <div className="mb-4 space-y-3">
                         {/* Title Card */}
-                        <div className="group relative rounded-xl border border-purple-500/30 bg-gradient-to-r from-purple-500/5 via-pink-500/5 to-purple-500/5 p-4 backdrop-blur-sm transition-all hover:border-purple-400/50 hover:shadow-lg hover:shadow-purple-500/10">
+                        <div className="rounded-xl border border-white/5 bg-zinc-900/40 p-5 transition-colors hover:bg-zinc-900/60">
                             <div className="flex items-start space-x-3">
                                 <div className="flex-shrink-0 mt-0.5">
-                                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center shadow-lg">
-                                        <Film className="w-4 h-4 text-white" />
+                                    <div className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center">
+                                        <Film className="w-4 h-4 text-zinc-400" />
                                     </div>
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                    <div className="text-sm font-medium text-purple-300 mb-1.5">Video Title</div>
-                                    <h3 className="text-lg font-bold leading-snug text-white">
+                                    <div className="text-[11px] font-medium text-zinc-500 mb-1 uppercase tracking-wider">Video Title</div>
+                                    <h3 className="text-[15px] font-medium leading-snug text-zinc-100">
                                         {videoTitle}
                                     </h3>
                                 </div>
@@ -72,16 +65,16 @@ function ResultPanel({
                         </div>
 
                         {/* Description Card */}
-                        <div className="group relative rounded-xl border border-purple-500/30 bg-gradient-to-r from-pink-500/5 via-purple-500/5 to-pink-500/5 p-4 backdrop-blur-sm transition-all hover:border-purple-400/50 hover:shadow-lg hover:shadow-pink-500/10">
+                        <div className="rounded-xl border border-white/5 bg-zinc-900/40 p-5 transition-colors hover:bg-zinc-900/60">
                             <div className="flex items-start space-x-3">
                                 <div className="flex-shrink-0 mt-0.5">
-                                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-600 to-pink-500 flex items-center justify-center shadow-lg">
-                                        <Sparkles className="w-4 h-4 text-white" />
+                                    <div className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center">
+                                        <FileText className="w-4 h-4 text-zinc-400" />
                                     </div>
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                    <div className="text-sm font-medium text-purple-300 mb-1.5">Description</div>
-                                    <p className="whitespace-pre-wrap text-base leading-relaxed text-gray-300">
+                                    <div className="text-[11px] font-medium text-zinc-500 mb-1 uppercase tracking-wider">Description</div>
+                                    <p className="whitespace-pre-wrap text-[13px] leading-relaxed text-zinc-400">
                                         {videoDescription}
                                     </p>
                                 </div>
@@ -99,97 +92,94 @@ function ResultPanel({
                     />
                 </div>) : (
                     <div className="text-center">
-                        <div className="text-gray-400 mb-4">
-                            <Sparkles className="w-16 h-16 mx-auto mb-3 opacity-50" />
+                        <div className="w-16 h-16 bg-white/5 border border-white/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <Sparkles className="w-6 h-6 text-zinc-600" />
                         </div>
-                        <p className="text-base text-gray-400 font-medium">No results yet</p>
-                        <p className="text-sm text-gray-500 mt-1">Generate a storyboard to see your video details</p>
+                        <p className="text-sm font-medium text-zinc-300">No storyboard yet</p>
+                        <p className="text-[13px] text-zinc-500 mt-1.5">Generate a storyboard to preview your video details.</p>
                     </div>
                 )}
             </div>
 
-            <div className="p-6 border-t border-purple-500/20 bg-gray-900/50 backdrop-blur-sm relative z-10">
-                <div className="flex w-fit items-center space-x-4 max-w-2xl mx-auto">
+            <div className="p-6 border-t border-white/5 bg-zinc-950/80 backdrop-blur-md relative z-10">
+                <div className="flex w-full items-center space-x-4 max-w-2xl mx-auto">
                     {/* Save Draft 버튼 */}
                     <button
                         onClick={onClickSaveDraft}
                         disabled={isSaving}
-                        className="flex items-center space-x-2 px-4 py-3 bg-gray-800/50 hover:bg-gray-800 border border-gray-600/50 hover:border-gray-500/50 text-gray-300 hover:text-white rounded-lg font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="flex items-center justify-center space-x-2 w-32 py-2.5 bg-zinc-900 hover:bg-zinc-800 border border-white/10 text-zinc-300 hover:text-white rounded-lg font-medium text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         {isSaving ? (
                             <>
-                                <div className="w-4 h-4 border-2 border-gray-400/30 border-t-gray-400 rounded-full animate-spin"></div>
-                                <span className="text-sm">Saving...</span>
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                                <span>Saving...</span>
                             </>
                         ) : (
                             <>
                                 <Save size={16} />
-                                <span className="text-sm">Save Draft</span>
+                                <span>Save Draft</span>
                             </>
                         )}
                     </button>
 
                     {/* Generate Video 버튼 */}
-                    <div className="relative group">
+                    <div className="relative group flex-1">
                         <button
                             onClick={onClickGenerateVideo}
                             disabled={!isVideoGenerationEnabled || isSubmitting}
-                            className={`flex-1 min-w-[280px] group px-6 py-3 rounded-xl text-lg font-semibold transition-all duration-300 transform hover:scale-105 flex items-center justify-center space-x-2 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none ${
+                            className={`w-full py-2.5 rounded-lg text-sm font-medium transition-all flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed ${
                                 isCreditInsufficient
-                                    ? 'bg-red-500/10 border-2 border-red-500 text-red-500 hover:bg-red-500/20 shadow-red-500/25'
-                                    : 'bg-gradient-to-r from-pink-500 to-purple-600 text-white hover:from-pink-600 hover:to-purple-700 shadow-purple-500/25'
+                                    ? 'bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500/20'
+                                    : 'bg-white text-black hover:bg-zinc-200 shadow-sm'
                             }`}
                         >
                             {isSubmitting ? (
                                 <>
-                                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                                    <Loader2 className="w-4 h-4 animate-spin" />
                                     <span>Requesting...</span>
                                 </>
                             ) : isCreditInsufficient ? (
                                 <>
-                                    <AlertTriangle className="w-5 h-5" />
+                                    <AlertTriangle className="w-4 h-4" />
                                     <span>Not Enough Credits</span>
                                 </>
                             ) : (
                                 <>
-                                    <div className="flex items-center space-x-1 px-2 py-1 bg-black/40 rounded-lg">
-                                        <Coins className="w-3.5 h-3.5 text-yellow-400" />
-                                        <span className="text-xs font-medium">-{expectedCreditUsage}</span>
+                                    <div className="flex items-center space-x-1 px-2 py-0.5 bg-black/10 rounded-md">
+                                        <Coins className="w-3.5 h-3.5 text-zinc-700" />
+                                        <span className="text-[11px] font-bold">-{expectedCreditUsage}</span>
                                     </div>
                                     <span>Generate Video</span>
-                                    <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                                    </svg>
                                 </>
                             )}
                         </button>
 
                         {/* 툴팁 오버레이 */}
                         {!isVideoGenerationEnabled && (
-                            <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-64 bg-gray-900/95 backdrop-blur-sm border border-purple-500/30 rounded-lg p-3 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-10 shadow-xl">
-                                <div className="text-xs font-medium text-purple-300 mb-2">Requirements</div>
-                                <div className="space-y-1.5">
-                                    <div className="flex items-center space-x-2 text-xs">
-                                        <span>{script.trim() ? '🟢' : '🔴'}</span>
-                                        <span className={script.trim() ? 'text-green-300' : 'text-gray-400'}>
-                                                    Script written
-                                                </span>
+                            <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-3 w-56 bg-zinc-900 border border-white/10 rounded-lg p-3.5 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 shadow-xl">
+                                <div className="text-[10px] font-medium text-zinc-500 uppercase tracking-wider mb-2">Requirements</div>
+                                <div className="space-y-2">
+                                    <div className="flex items-center space-x-2 text-[13px]">
+                                        {script.trim() ? <CheckCircle2 size={14} className="text-emerald-500" /> : <Circle size={14} className="text-zinc-700" />}
+                                        <span className={script.trim() ? 'text-zinc-200' : 'text-zinc-500'}>
+                                            Script written
+                                        </span>
                                     </div>
-                                    <div className="flex items-center space-x-2 text-xs">
-                                        <span>{isStoryboardGenerated && videoTitle ? '🟢' : '🔴'}</span>
-                                        <span className={isStoryboardGenerated && videoTitle ? 'text-green-300' : 'text-gray-400'}>
+                                    <div className="flex items-center space-x-2 text-[13px]">
+                                        {isStoryboardGenerated && videoTitle ? <CheckCircle2 size={14} className="text-emerald-500" /> : <Circle size={14} className="text-zinc-700" />}
+                                        <span className={isStoryboardGenerated && videoTitle ? 'text-zinc-200' : 'text-zinc-500'}>
                                             Storyboard generated
                                         </span>
                                     </div>
-                                    <div className="flex items-center space-x-2 text-xs">
-                                        <span>{selectedVoiceId ? '🟢' : '🔴'}</span>
-                                        <span className={selectedVoiceId ? 'text-green-300' : 'text-gray-400'}>
+                                    <div className="flex items-center space-x-2 text-[13px]">
+                                        {selectedVoiceId ? <CheckCircle2 size={14} className="text-emerald-500" /> : <Circle size={14} className="text-zinc-700" />}
+                                        <span className={selectedVoiceId ? 'text-zinc-200' : 'text-zinc-500'}>
                                             Voice selected
                                         </span>
                                     </div>
-                                    <div className="flex items-center space-x-2 text-xs">
-                                        <span>{selectedStyleId ? '🟢' : '🔴'}</span>
-                                        <span className={selectedStyleId ? 'text-green-300' : 'text-gray-400'}>
+                                    <div className="flex items-center space-x-2 text-[13px]">
+                                        {selectedStyleId ? <CheckCircle2 size={14} className="text-emerald-500" /> : <Circle size={14} className="text-zinc-700" />}
+                                        <span className={selectedStyleId ? 'text-zinc-200' : 'text-zinc-500'}>
                                             Style selected
                                         </span>
                                     </div>
