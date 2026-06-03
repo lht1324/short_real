@@ -38,8 +38,8 @@ function SceneSequenceItem({
         <div
             key={captionData.sceneNumber}
             className={`
-                        relative p-4 rounded-xl border transition-all cursor-pointer backdrop-blur-sm bg-gray-800/30
-                        ${isCurrentScene ? "border-pink-500" : "border-purple-500/20 hover:border-purple-400/40"}
+                        relative p-4 rounded-xl border transition-all cursor-pointer backdrop-blur-sm bg-zinc-900/40 hover:bg-zinc-900/60
+                        ${isCurrentScene ? "border-zinc-500 shadow-sm" : "border-white/5"}
                         ${isHovered ? 'z-50' : 'z-0'}
                     `}
             onClick={() => {
@@ -49,16 +49,16 @@ function SceneSequenceItem({
             <div className="flex items-stretch justify-between">
                 <div className="flex flex-1 flex-col justify-between mr-4">
                     <div className="space-y-3">
-                        <div className="text-purple-300 text-lg font-medium">Scene #{captionData.sceneNumber}</div>
-                        <p className="text-white text-base leading-relaxed">
+                        <div className="text-zinc-100 text-[13px] font-medium tracking-wide">Scene #{captionData.sceneNumber}</div>
+                        <p className="text-zinc-400 text-[13px] leading-relaxed">
                             {captionData.script}
                         </p>
                     </div>
-                    <span className="text-purple-300 text-base pt-3">⏱ {sceneStartSec.toFixed(2)}s ~ {sceneEndSec.toFixed(2)}s</span>
+                    <span className="text-zinc-500 text-xs font-mono pt-3">⏱ {sceneStartSec.toFixed(2)}s ~ {sceneEndSec.toFixed(2)}s</span>
                 </div>
                 <div className="relative">
                     <div
-                        className="relative w-32 rounded-lg overflow-hidden border border-purple-500/30 flex-shrink-0 cursor-pointer hover:border-purple-400/50 transition-all"
+                        className="relative w-32 rounded-lg overflow-hidden border border-white/10 flex-shrink-0 cursor-pointer transition-all"
                         style={{aspectRatio: '9/16'}}
                         onMouseEnter={() => {
                              onMouseEnter();
@@ -77,7 +77,7 @@ function SceneSequenceItem({
                                 onLoad={() => { onLoadImage() }}
                             />
                         ) : (
-                            <div className="w-full h-full bg-gradient-to-br from-pink-400 via-purple-500 to-indigo-600">
+                            <div className="w-full h-full bg-zinc-800">
                                 <div className="w-full h-full bg-gradient-to-t from-black/20 to-transparent"></div>
                             </div>
                         )}
@@ -87,8 +87,8 @@ function SceneSequenceItem({
                     {isHovered && imageUrl && (
                         <div
                             className={!isLastItem
-                                ? "absolute right-0 top-0 w-64 rounded-lg overflow-hidden border-2 border-purple-400/80 shadow-2xl z-50 pointer-events-none"
-                                : "absolute right-0 bottom-0 w-64 rounded-lg overflow-hidden border-2 border-purple-400/80 shadow-2xl z-50 pointer-events-none"
+                                ? "absolute right-0 top-0 w-64 rounded-xl overflow-hidden border border-white/10 shadow-2xl z-50 pointer-events-none"
+                                : "absolute right-0 bottom-0 w-64 rounded-xl overflow-hidden border border-white/10 shadow-2xl z-50 pointer-events-none"
                             }
                             style={{aspectRatio: '9/16'}}
                         >

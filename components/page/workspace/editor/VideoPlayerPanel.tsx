@@ -535,17 +535,10 @@ const VideoPlayerPanel = forwardRef<VideoPlayerHandle, VideoPlayerPanelProps>(({
 
     return (
         <div
-            className="h-full bg-black flex flex-col relative"
+            className="h-full bg-zinc-950 flex flex-col relative"
             style={{ pointerEvents: isDraggingTimeline ? 'none' : 'auto' }}
             ref={containerRef}
         >
-            {/* Vaporwave Background Effects */}
-            <div className="absolute inset-0 opacity-10" style={{ pointerEvents: 'none' }}>
-                <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-gradient-to-r from-pink-500 to-purple-600 rounded-full blur-3xl"></div>
-                <div className="absolute bottom-1/4 right-1/4 w-52 h-52 bg-gradient-to-r from-purple-500 to-indigo-600 rounded-full blur-3xl"></div>
-                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-48 h-48 bg-gradient-to-r from-indigo-500 to-cyan-500 rounded-full blur-3xl"></div>
-            </div>
-
             <div className="flex flex-row p-8 justify-center z-10">
                 {/* Caption Position Slider */}
                 {/* w-6 + w-2 + w-6 */}
@@ -556,7 +549,7 @@ const VideoPlayerPanel = forwardRef<VideoPlayerHandle, VideoPlayerPanelProps>(({
                     {/* Caption Position Toggle Button */}
                     <button
                         onClick={onToggleShowCaptionLine}
-                        className="absolute flex w-6 h-6 rounded-full bg-gray-800/50 hover:bg-gray-700/70 border border-gray-600/50 items-center justify-center transition-none"
+                        className="absolute flex w-6 h-6 rounded-full bg-zinc-800/80 hover:bg-zinc-700 border border-white/10 items-center justify-center transition-none"
                         title={showCaptionLine ? "Hide caption guideline" : "Show caption guideline"}
                         style={{
                             top: `${captionAreaTop - (CAPTION_POSITION_SLIDER_PADDING_PX + CAPTION_POSITION_SLIDER_TRACK_SIZE_PX / 2)}px`,
@@ -564,9 +557,9 @@ const VideoPlayerPanel = forwardRef<VideoPlayerHandle, VideoPlayerPanelProps>(({
                         }}
                     >
                         {showCaptionLine ? (
-                            <Eye size={14} className="text-gray-300"/>
+                            <Eye size={14} className="text-zinc-300"/>
                         ) : (
-                            <EyeOff size={14} className="text-gray-500"/>
+                            <EyeOff size={14} className="text-zinc-600"/>
                         )}
                     </button>
                     <input
@@ -578,11 +571,11 @@ const VideoPlayerPanel = forwardRef<VideoPlayerHandle, VideoPlayerPanelProps>(({
                         className="absolute w-6 h-full cursor-grab active:cursor-grabbing
                                 [&::-webkit-slider-runnable-track]:px-0.5
                                 [&::-webkit-slider-runnable-track]:py-0.5
-                                [&::-webkit-slider-runnable-track]:bg-white
+                                [&::-webkit-slider-runnable-track]:bg-white/20
                                 [&::-webkit-slider-runnable-track]:rounded-md
                                 [&::-moz-range-track]:px-0.5
                                 [&::-moz-range-track]:py-0.5
-                                [&::-moz-range-track]:bg-white
+                                [&::-moz-range-track]:bg-white/20
                                 [&::-moz-range-track]:rounded-md
                             "
                         style={{
@@ -590,7 +583,7 @@ const VideoPlayerPanel = forwardRef<VideoPlayerHandle, VideoPlayerPanelProps>(({
                             left: CAPTION_AREA_LINE_TOGGLE_BUTTON_SIZE + 8,
                             writingMode: 'vertical-lr',
                             direction: 'rtl',
-                            accentColor: "#A855F7",
+                            accentColor: "#a1a1aa",
                         }}
                     />
                 </div>}
@@ -603,7 +596,7 @@ const VideoPlayerPanel = forwardRef<VideoPlayerHandle, VideoPlayerPanelProps>(({
                 >
                     {/* Video Area */}
                     <div
-                        className="relative bg-gradient-to-br from-gray-900 to-black rounded-2xl border border-purple-500/30 overflow-hidden shadow-2xl"
+                        className="relative bg-zinc-900 rounded-2xl border border-white/10 overflow-hidden shadow-2xl"
                         style={{
                             width: `${videoContainerWidth}px`,
                             height: `${videoContainerHeight}px`
@@ -631,37 +624,37 @@ const VideoPlayerPanel = forwardRef<VideoPlayerHandle, VideoPlayerPanelProps>(({
                                     />
                                 )}
 
-                                <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent pointer-events-none"></div>
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent pointer-events-none"></div>
                                 <div className={`absolute inset-0 flex items-center justify-center z-30 pointer-events-none transition-opacity duration-200 ${
                                     (videoRef.current?.currentTime === 0 || isHoveringVideo || isVideoEnded) ? 'opacity-100' : 'opacity-0'
                                 }`}>
                                     <button
                                         onClick={isVideoEnded ? onClickReplay : onClickPlayAndPause}
-                                        className="w-16 h-16 bg-black/40 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-black/60 transition-all border border-purple-400/50 pointer-events-auto"
+                                        className="w-16 h-16 bg-black/40 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-black/60 transition-all border border-white/10 pointer-events-auto shadow-xl"
                                     >
                                         {isVideoEnded ? (
-                                            <RotateCcw size={24} className="text-white" />
+                                            <RotateCcw size={24} className="text-zinc-100" />
                                         ) : isPlayingVideo ? (
-                                            <Pause size={24} className="text-white" />
+                                            <Pause size={24} className="text-zinc-100" />
                                         ) : (
-                                            <Play size={24} className="text-white ml-1" />
+                                            <Play size={24} className="text-zinc-100 ml-1" />
                                         )}
                                     </button>
                                 </div>
                                 <div className="absolute bottom-4 left-4 right-4 z-30">
-                                    <div className="flex items-center justify-between text-white text-sm mb-2">
+                                    <div className="flex items-center justify-between text-zinc-300 text-xs font-medium tracking-wide mb-2 px-1">
                                         <span>{timelineCurrentSec}</span>
                                         <span>{timelineEndSec}</span>
                                     </div>
                                     <div
                                         ref={timelineRef}
-                                        className="w-full h-2 bg-white/20 rounded-full cursor-pointer relative"
+                                        className="w-full h-1.5 bg-white/20 rounded-full cursor-pointer relative hover:h-2 transition-all duration-200 group/timeline"
                                         onClick={onClickTimeline}
                                         onMouseDown={onMouseDownTimeline}
                                         style={{ pointerEvents: 'auto' }}
                                     >
                                         <div
-                                            className="h-full bg-gradient-to-r from-pink-400 to-purple-500 rounded-full relative"
+                                            className="h-full bg-indigo-500 rounded-full relative"
                                             style={{
                                                 width: `${progressPercentage}%`,
                                                 transition: 'none',
@@ -669,10 +662,9 @@ const VideoPlayerPanel = forwardRef<VideoPlayerHandle, VideoPlayerPanelProps>(({
                                         >
                                             {/* 인디케이터 */}
                                             <div
-                                                className="absolute top-1/2 left-full w-4 h-4 bg-white rounded-full shadow-lg"
+                                                className="absolute top-1/2 left-full w-0 h-0 group-hover/timeline:w-3 group-hover/timeline:h-3 bg-white rounded-full shadow-lg pointer-events-none transition-all duration-200"
                                                 style={{
                                                     transform: 'translate(-50%, -50%)',
-                                                    boxShadow: '0 0 8px rgba(168, 85, 247, 0.6)'
                                                 }}
                                             ></div>
                                         </div>
@@ -680,8 +672,8 @@ const VideoPlayerPanel = forwardRef<VideoPlayerHandle, VideoPlayerPanelProps>(({
                                 </div>
                             </div>
                         ) : (
-                            <div className="w-full h-full flex items-center justify-center text-gray-500 bg-gradient-to-br from-gray-800 to-gray-900">
-                                <p className="text-sm">No video generated yet</p>
+                            <div className="w-full h-full flex items-center justify-center text-zinc-500 bg-zinc-900">
+                                <p className="text-[13px] font-medium">No video generated yet</p>
                             </div>
                         )}
                     </div>

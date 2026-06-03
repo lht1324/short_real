@@ -68,7 +68,7 @@ function SceneSequencePanel({
 
     return (
         <div className="p-4 space-y-4">
-            <div className="text-purple-300 text-2xl font-medium mb-4">Scene</div>
+            <div className="text-zinc-100 text-[15px] uppercase tracking-wider font-medium mb-4">Scene</div>
             {captionDataList.map((captionData, index) => {
                 return <SceneSequenceItem
                     key={index}

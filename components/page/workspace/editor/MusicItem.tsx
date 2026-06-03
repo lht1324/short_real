@@ -114,15 +114,15 @@ function MusicItem({
             className={`
                 relative p-4 rounded-xl border transition-all cursor-pointer backdrop-blur-sm
                 ${isSelected
-                ? 'border-pink-500 bg-pink-500/10'
-                : 'border-purple-500/20 bg-gray-800/30 hover:border-purple-400/40 hover:bg-gray-800/50'
+                ? 'border-zinc-500 bg-zinc-800/80 shadow-sm'
+                : 'border-white/5 bg-zinc-900/40 hover:border-white/10 hover:bg-zinc-900/60'
             }`}
             onClick={onClickItemInternal}
         >
             <div className="space-y-3">
                 {/* Row 1: 이미지 + 타이틀 */}
                 <div className="flex items-center gap-4">
-                    <div className="relative w-24 h-24 rounded-lg overflow-hidden border border-purple-500/30 flex-shrink-0">
+                    <div className="relative w-24 h-24 rounded-lg overflow-hidden border border-white/5 flex-shrink-0">
                         {musicData.imageUrl ? (
                             <Image
                                 src={musicData.imageUrl}
@@ -132,14 +132,14 @@ function MusicItem({
                                 height={96}
                             />
                         ) : (
-                            <div className="w-full h-full bg-gradient-to-br from-pink-400 via-purple-500 to-indigo-600 flex items-center justify-center">
-                                <svg className="w-12 h-12 text-white" fill="currentColor" viewBox="0 0 24 24">
+                            <div className="w-full h-full bg-zinc-800 flex items-center justify-center">
+                                <svg className="w-12 h-12 text-zinc-600" fill="currentColor" viewBox="0 0 24 24">
                                     <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>
                                 </svg>
                             </div>
                         )}
                     </div>
-                    <div className="text-white text-lg font-medium">{musicData.title}</div>
+                    <div className="text-zinc-100 text-[15px] font-medium">{musicData.title}</div>
                 </div>
 
                 {/* Row 2: 태그 리스트 */}
@@ -147,7 +147,7 @@ function MusicItem({
                     {musicData.tagList.map((tag, index) => (
                         <span
                             key={index}
-                            className="px-2 py-1 text-xs rounded-md bg-purple-500/20 text-purple-300 border border-purple-500/30"
+                            className="px-2 py-1 text-[11px] font-medium rounded-md bg-white/5 text-zinc-400 border border-white/5"
                         >
                             {tag}
                         </span>
@@ -157,18 +157,18 @@ function MusicItem({
                 {/* Row 3: 타임라인 + 재생/편집 버튼 */}
                 <div className="flex items-center gap-3">
                     <div className="flex-1 space-y-1">
-                        <div className="flex items-center justify-between text-white text-xs">
+                        <div className="flex items-center justify-between text-zinc-400 text-[11px] font-medium tracking-wide">
                             <span>0:00</span>
                             <span>{formattedDuration}</span>
                         </div>
                         <div
                             ref={timelineRef}
-                            className="w-full h-2 bg-white/20 rounded-full relative cursor-pointer hover:bg-white/30 transition-colors"
+                            className="w-full h-1.5 bg-white/10 rounded-full relative cursor-pointer hover:bg-white/20 transition-colors group/timeline"
                             onMouseDown={onMouseDownTimeline}
                             onClick={onClickTimeline}
                         >
                             <div
-                                className="h-full bg-gradient-to-r from-pink-400 to-purple-500 rounded-full relative pointer-events-none"
+                                className="h-full bg-indigo-500 rounded-full relative pointer-events-none"
                                 style={{
                                     width: `${progress}%`,
                                     transition: isDragging ? 'none' : 'width 0.1s linear',
@@ -177,10 +177,9 @@ function MusicItem({
                                 {/* 인디케이터 */}
                                 {progress > 0 && (
                                     <div
-                                        className="absolute top-1/2 left-full w-3 h-3 bg-white rounded-full shadow-lg pointer-events-none"
+                                        className="absolute top-1/2 left-full w-0 h-0 group-hover/timeline:w-3 group-hover/timeline:h-3 bg-white rounded-full shadow-lg pointer-events-none transition-all duration-200"
                                         style={{
                                             transform: 'translate(-50%, -50%)',
-                                            boxShadow: '0 0 6px rgba(168, 85, 247, 0.6)'
                                         }}
                                     ></div>
                                 )}
@@ -188,15 +187,15 @@ function MusicItem({
                         </div>
                     </div>
                     <button
-                        className="flex-shrink-0 p-2 rounded-full bg-gray-700/50 hover:bg-purple-500/50 transition-colors"
+                        className="flex-shrink-0 p-2 rounded-full bg-zinc-800 hover:bg-zinc-700 transition-colors"
                         onClick={onClickPlayButtonInternal}
                     >
                         {isPlaying ? (
-                            <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
+                            <svg className="w-4 h-4 text-zinc-200" fill="currentColor" viewBox="0 0 24 24">
                                 <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z"/>
                             </svg>
                         ) : (
-                            <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
+                            <svg className="w-4 h-4 text-zinc-200 ml-0.5" fill="currentColor" viewBox="0 0 24 24">
                                 <path d="M8 5v14l11-7z"/>
                             </svg>
                         )}

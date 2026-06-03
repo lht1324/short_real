@@ -242,7 +242,7 @@ function CaptionConfigPanel({
                         onChange={onToggleIsCaptionEnabled}
                         className="sr-only peer"
                     />
-                    <div className="w-11 h-6 bg-gray-800 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-purple-400 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all border border-purple-500/30 peer-checked:bg-gradient-to-r peer-checked:from-pink-500 peer-checked:to-purple-600"></div>
+                    <div className="w-11 h-6 bg-zinc-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-zinc-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all border border-white/5 peer-checked:bg-indigo-500"></div>
                 </label>
             </div>
 
@@ -258,7 +258,7 @@ function CaptionConfigPanel({
                             fontFamily: selectedFontFamilyFullShape,
                             fontWeight: fontWeight,
                         }}
-                        className="w-full bg-gray-800/50 border border-purple-500/30 rounded-lg px-3 py-2 text-white text-base focus:border-purple-400 focus:outline-none cursor-pointer"
+                        className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-white text-base focus:border-zinc-500 focus:outline-none cursor-pointer"
                     >
                         {fontFamilyNameList.map((fontFamilyName, index) => {
                             return <option
@@ -310,7 +310,7 @@ function CaptionConfigPanel({
                                         onChangeFontSize(36);
                                     }
                                 }}
-                                className="w-12 bg-gray-800/50 border border-purple-500/30 rounded-lg px-3 py-2 text-white text-base focus:border-purple-400 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                className="w-12 bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-white text-base focus:border-zinc-500 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                             />
                             <span className="text-gray-400 text-base">px</span>
                         </div>
@@ -320,7 +320,7 @@ function CaptionConfigPanel({
                             max="84"
                             value={fontSize}
                             onChange={(e) => onChangeFontSize(parseInt(e.target.value))}
-                            className="flex-1 accent-purple-500"
+                            className="flex-1 accent-indigo-500"
                         />
                     </div>
                 </div>
@@ -330,7 +330,7 @@ function CaptionConfigPanel({
                     <label className="text-white text-base font-medium">Font Weight</label>
                     <div className="flex items-center space-x-4">
                         <select
-                            className="w-20 bg-gray-800/50 border border-purple-500/30 rounded-lg px-3 py-2 text-white text-base focus:border-purple-400 focus:outline-none cursor-pointer"
+                            className="w-20 bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-white text-base focus:border-zinc-500 focus:outline-none cursor-pointer"
                             onChange={(e) => { onChangeFontWeight(parseInt(e.target.value)) }}
                             value={fontWeight}
                             style={{
@@ -354,7 +354,7 @@ function CaptionConfigPanel({
                             step="100"
                             value={fontWeight}
                             onChange={(e) => onChangeFontWeight(parseInt(e.target.value))}
-                            className="flex-1 accent-purple-500"
+                            className="flex-1 accent-indigo-500"
                         />
                     </div>
                 </div>
@@ -367,13 +367,13 @@ function CaptionConfigPanel({
                     <label className="text-gray-300 text-base">Active Color</label>
                     <div className="flex items-center space-x-3">
                         <div
-                            className="w-6 h-6 rounded-full border border-purple-500/30 cursor-pointer hover:scale-110 transition-transform"
+                            className="w-6 h-6 rounded-full border border-white/10 cursor-pointer hover:scale-110 transition-transform"
                             style={{backgroundColor: activeColor}}
                             onClick={(e) => onOpenColorPicker('activeColor', e.currentTarget)}
                         ></div>
                         <div className="flex items-center flex-1">
                             <span
-                                className="bg-gray-800/50 border border-purple-500/30 border-r-0 rounded-l-lg px-3 py-2 text-white text-base">#</span>
+                                className="bg-black/40 border border-white/10 border-r-0 rounded-l-lg px-3 py-2 text-white text-base">#</span>
                             <input
                                 type="text"
                                 value={activeColor.replace('#', '')}
@@ -387,7 +387,7 @@ function CaptionConfigPanel({
                                 }}
                                 placeholder="FFFFFF"
                                 maxLength={6}
-                                className="flex-1 bg-gray-800/50 border border-purple-500/30 rounded-r-lg px-3 py-2 text-white text-base focus:border-purple-400 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                className="flex-1 bg-black/40 border border-white/10 rounded-r-lg px-3 py-2 text-white text-base focus:border-zinc-500 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                             />
                         </div>
                     </div>
@@ -398,13 +398,13 @@ function CaptionConfigPanel({
                     <label className="text-gray-300 text-base">Inactive Color</label>
                     <div className="flex items-center space-x-3">
                         <div
-                            className="w-6 h-6 rounded-full border border-purple-500/30 cursor-pointer hover:scale-110 transition-transform"
+                            className="w-6 h-6 rounded-full border border-white/10 cursor-pointer hover:scale-110 transition-transform"
                             style={{backgroundColor: inactiveColor}}
                             onClick={(e) => onOpenColorPicker('inactiveColor', e.currentTarget)}
                         ></div>
                         <div className="flex items-center flex-1">
                             <span
-                                className="bg-gray-800/50 border border-purple-500/30 border-r-0 rounded-l-lg px-3 py-2 text-white text-base">#</span>
+                                className="bg-black/40 border border-white/10 border-r-0 rounded-l-lg px-3 py-2 text-white text-base">#</span>
                             <input
                                 type="text"
                                 value={inactiveColor.replace('#', '')}
@@ -418,7 +418,7 @@ function CaptionConfigPanel({
                                 }}
                                 placeholder="A0A0A0"
                                 maxLength={6}
-                                className="flex-1 bg-gray-800/50 border border-purple-500/30 rounded-r-lg px-3 py-2 text-white text-base focus:border-purple-400 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                className="flex-1 bg-black/40 border border-white/10 rounded-r-lg px-3 py-2 text-white text-base focus:border-zinc-500 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                             />
                         </div>
                     </div>
@@ -440,7 +440,7 @@ function CaptionConfigPanel({
                                 }}
                                 className="sr-only peer"
                             />
-                            <div className="w-11 h-6 bg-gray-800 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-purple-400 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all border border-purple-500/30 peer-checked:bg-gradient-to-r peer-checked:from-pink-500 peer-checked:to-purple-600"></div>
+                            <div className="w-11 h-6 bg-zinc-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-zinc-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all border border-white/5 peer-checked:bg-indigo-500"></div>
                         </label>
                     </div>
                     {activeOutlineEnabled && (
@@ -449,12 +449,12 @@ function CaptionConfigPanel({
                                 <label className="text-gray-300 text-sm">Color</label>
                                 <div className="flex items-center space-x-3">
                                     <div
-                                        className="w-6 h-6 rounded-full border border-purple-500/30 cursor-pointer hover:scale-110 transition-transform"
+                                        className="w-6 h-6 rounded-full border border-white/10 cursor-pointer hover:scale-110 transition-transform"
                                         style={{backgroundColor: activeOutlineColor}}
                                         onClick={(e) => onOpenColorPicker('activeOutlineColor', e.currentTarget)}
                                     ></div>
                                     <div className="flex items-center flex-1">
-                                        <span className="bg-gray-800/50 border border-purple-500/30 border-r-0 rounded-l-lg px-3 py-2 text-white text-base">#</span>
+                                        <span className="bg-black/40 border border-white/10 border-r-0 rounded-l-lg px-3 py-2 text-white text-base">#</span>
                                         <input
                                             type="text"
                                             value={activeOutlineColor.replace('#', '')}
@@ -468,7 +468,7 @@ function CaptionConfigPanel({
                                             }}
                                             placeholder="000000"
                                             maxLength={6}
-                                            className="flex-1 bg-gray-800/50 border border-purple-500/30 rounded-r-lg px-3 py-2 text-white text-base focus:border-purple-400 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                            className="flex-1 bg-black/40 border border-white/10 rounded-r-lg px-3 py-2 text-white text-base focus:border-zinc-500 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                                         />
                                     </div>
                                 </div>
@@ -501,7 +501,7 @@ function CaptionConfigPanel({
                                                     onChangeActiveOutlineColorThickness(Math.min(100, numValue));
                                                 }
                                             }}
-                                            className="w-20 bg-gray-800/50 border border-purple-500/30 rounded-lg px-3 py-2 text-white text-base focus:border-purple-400 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                            className="w-20 bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-white text-base focus:border-zinc-500 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                                         />
                                         <span className="text-gray-400 text-base">%</span>
                                     </div>
@@ -511,7 +511,7 @@ function CaptionConfigPanel({
                                         max="100"
                                         value={activeOutlineColorThickness}
                                         onChange={(e) => onChangeActiveOutlineColorThickness(parseInt(e.target.value))}
-                                        className="flex-1 accent-purple-500"
+                                        className="flex-1 accent-indigo-500"
                                     />
                                 </div>
                             </div>
@@ -532,7 +532,7 @@ function CaptionConfigPanel({
                                 }}
                                 className="sr-only peer"
                             />
-                            <div className="w-11 h-6 bg-gray-800 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-purple-400 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all border border-purple-500/30 peer-checked:bg-gradient-to-r peer-checked:from-pink-500 peer-checked:to-purple-600"></div>
+                            <div className="w-11 h-6 bg-zinc-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-zinc-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all border border-white/5 peer-checked:bg-indigo-500"></div>
                         </label>
                     </div>
                     {inactiveOutlineEnabled && (
@@ -541,12 +541,12 @@ function CaptionConfigPanel({
                                 <label className="text-gray-300 text-sm">Color</label>
                                 <div className="flex items-center space-x-3">
                                     <div
-                                        className="w-6 h-6 rounded-full border border-purple-500/30 cursor-pointer hover:scale-110 transition-transform"
+                                        className="w-6 h-6 rounded-full border border-white/10 cursor-pointer hover:scale-110 transition-transform"
                                         style={{backgroundColor: inactiveOutlineColor}}
                                         onClick={(e) => onOpenColorPicker('inactiveOutlineColor', e.currentTarget)}
                                     ></div>
                                     <div className="flex items-center flex-1">
-                                        <span className="bg-gray-800/50 border border-purple-500/30 border-r-0 rounded-l-lg px-3 py-2 text-white text-base">#</span>
+                                        <span className="bg-black/40 border border-white/10 border-r-0 rounded-l-lg px-3 py-2 text-white text-base">#</span>
                                         <input
                                             type="text"
                                             value={inactiveOutlineColor.replace('#', '')}
@@ -560,7 +560,7 @@ function CaptionConfigPanel({
                                             }}
                                             placeholder="404040"
                                             maxLength={6}
-                                            className="flex-1 bg-gray-800/50 border border-purple-500/30 rounded-r-lg px-3 py-2 text-white text-base focus:border-purple-400 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                            className="flex-1 bg-black/40 border border-white/10 rounded-r-lg px-3 py-2 text-white text-base focus:border-zinc-500 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                                         />
                                     </div>
                                 </div>
@@ -593,7 +593,7 @@ function CaptionConfigPanel({
                                                     onChangeInactiveOutlineColorThickness(Math.min(100, numValue));
                                                 }
                                             }}
-                                            className="w-20 bg-gray-800/50 border border-purple-500/30 rounded-lg px-3 py-2 text-white text-base focus:border-purple-400 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                            className="w-20 bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-white text-base focus:border-zinc-500 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                                         />
                                         <span className="text-gray-400 text-base">%</span>
                                     </div>
@@ -603,7 +603,7 @@ function CaptionConfigPanel({
                                         max="100"
                                         value={inactiveOutlineColorThickness}
                                         onChange={(e) => onChangeInactiveOutlineColorThickness(parseInt(e.target.value))}
-                                        className="flex-1 accent-purple-500"
+                                        className="flex-1 accent-indigo-500"
                                     />
                                 </div>
                             </div>
@@ -624,7 +624,7 @@ function CaptionConfigPanel({
             {/*                onChange={(e) => onChangeIsShadowEnabled(e.target.checked)}*/}
             {/*                className="sr-only peer"*/}
             {/*            />*/}
-            {/*            <div className="w-11 h-6 bg-gray-800 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-purple-400 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all border border-purple-500/30 peer-checked:bg-gradient-to-r peer-checked:from-pink-500 peer-checked:to-purple-600"></div>*/}
+            {/*            <div className="w-11 h-6 bg-gray-800 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-purple-400 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all border border-white/10 peer-checked:bg-gradient-to-r peer-checked:from-pink-500 peer-checked:to-purple-600"></div>*/}
             {/*        </label>*/}
             {/*    </div>*/}
 
@@ -659,7 +659,7 @@ function CaptionConfigPanel({
             {/*                                    onChangeShadowIntensity(Math.min(100, numValue));*/}
             {/*                                }*/}
             {/*                            }}*/}
-            {/*                            className="w-20 bg-gray-800/50 border border-purple-500/30 rounded-lg px-3 py-2 text-white text-base focus:border-purple-400 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"*/}
+            {/*                            className="w-20 bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-white text-base focus:border-zinc-500 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"*/}
             {/*                        />*/}
             {/*                        <span className="text-gray-400 text-base">%</span>*/}
             {/*                    </div>*/}
@@ -669,7 +669,7 @@ function CaptionConfigPanel({
             {/*                        max="100"*/}
             {/*                        value={shadowIntensity}*/}
             {/*                        onChange={(e) => onChangeShadowIntensity(parseInt(e.target.value))}*/}
-            {/*                        className="flex-1 accent-purple-500"*/}
+            {/*                        className="flex-1 accent-indigo-500"*/}
             {/*                    />*/}
             {/*                </div>*/}
             {/*            </div>*/}
@@ -703,7 +703,7 @@ function CaptionConfigPanel({
             {/*                                    onChangeShadowThickness(Math.min(100, numValue));*/}
             {/*                                }*/}
             {/*                            }}*/}
-            {/*                            className="w-20 bg-gray-800/50 border border-purple-500/30 rounded-lg px-3 py-2 text-white text-base focus:border-purple-400 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"*/}
+            {/*                            className="w-20 bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-white text-base focus:border-zinc-500 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"*/}
             {/*                        />*/}
             {/*                    </div>*/}
             {/*                    <input*/}
@@ -712,7 +712,7 @@ function CaptionConfigPanel({
             {/*                        max="100"*/}
             {/*                        value={shadowThickness}*/}
             {/*                        onChange={(e) => onChangeShadowThickness(parseInt(e.target.value))}*/}
-            {/*                        className="flex-1 accent-purple-500"*/}
+            {/*                        className="flex-1 accent-indigo-500"*/}
             {/*                    />*/}
             {/*                </div>*/}
             {/*            </div>*/}
@@ -728,7 +728,7 @@ function CaptionConfigPanel({
             {/*                            onChange={(e) => onChangeIs3DShadowEnabled(e.target.checked)}*/}
             {/*                            className="sr-only peer"*/}
             {/*                        />*/}
-            {/*                        <div className="w-11 h-6 bg-gray-800 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-purple-400 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all border border-purple-500/30 peer-checked:bg-gradient-to-r peer-checked:from-pink-500 peer-checked:to-purple-600"></div>*/}
+            {/*                        <div className="w-11 h-6 bg-zinc-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-zinc-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all border border-white/5 peer-checked:bg-indigo-500"></div>*/}
             {/*                    </label>*/}
             {/*                </div>*/}
             {/*            </div>*/}

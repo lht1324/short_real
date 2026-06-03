@@ -1,5 +1,5 @@
 import {memo} from "react";
-import {AlertTriangle, Coins, Film, Save, Sparkles, Loader2, CheckCircle2, Circle} from "lucide-react";
+import {AlertTriangle, Coins, Film, Save, Sparkles, Loader2, CheckCircle2, Circle, FileText} from "lucide-react";
 import CreditUsageCard from "@/components/page/workspace/create/result-panel/CreditUsageCard";
 
 interface ResultPanelProps {
