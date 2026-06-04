@@ -24,6 +24,9 @@ import CreateFormPanel from "@/components/page/workspace/create/create-form-pane
 import WorkspaceSidebar from "@/components/public/WorkspaceSidebar";
 import {WorkspaceSidebarItem} from "@/components/public/WorkspaceSidebarItem";
 
+import {aiModelDataClient} from "@/lib/api/client/aiModelDataClient";
+import {AIModelData} from "@/lib/api/types/supabase/AIModelData";
+
 function WorkspaceCreatePageClient() {
     const router = useRouter();
     const searchParams = useSearchParams();
@@ -31,14 +34,21 @@ function WorkspaceCreatePageClient() {
     const { user } = useAuth();
 
     const [isVoiceLoading, setIsVoiceLoading] = useState(true);
+    const [isAiModelLoading, setIsAiModelLoading] = useState(true);
     const [isGenerationTaskLoading, setIsGenerationTaskLoading] = useState(true);
     const isLoading = useMemo(() => {
-        return isVoiceLoading || isGenerationTaskLoading;
-    }, [isVoiceLoading, isGenerationTaskLoading]);
+        return isVoiceLoading || isGenerationTaskLoading || isAiModelLoading;
+    }, [isVoiceLoading, isGenerationTaskLoading, isAiModelLoading]);
 
     const taskId = useMemo(() => {
         return searchParams.get("taskId") ?? undefined;
     }, [searchParams]);
+
+    // AI Model states
+    const [aiModelList, setAiModelList] = useState<AIModelData[]>([]);
+    const [selectedT2iId, setSelectedT2iId] = useState<string | null>(null);
+    const [selectedI2iId, setSelectedI2iId] = useState<string | null>(null);
+    const [selectedI2vId, setSelectedI2vId] = useState<string | null>(null);
 
     // Section states
     const [script, setScript] = useState<string>('');
@@ -235,6 +245,17 @@ function WorkspaceCreatePageClient() {
                 throw new Error("User Id or Task Id or selected style was not found.");
             }
 
+            // Patch ai_model_config before generation
+            if (selectedT2iId && selectedI2iId && selectedI2vId) {
+                await videoClientAPI.patchVideoTaskByTaskId(taskId, {
+                    ai_model_config: {
+                        t2iModelId: selectedT2iId,
+                        i2iModelId: selectedI2iId,
+                        i2vModelId: selectedI2vId
+                    }
+                });
+            }
+
             // Video API 호출
             const postVideoResult = await videoClientAPI.postVideo(taskId, user.id as string, selectedStyleId);
 
@@ -278,6 +299,11 @@ function WorkspaceCreatePageClient() {
                 video_description: videoDescription ?? undefined,
                 selected_style_id: selectedStyleId.length !== 0 ? selectedStyleId : undefined,
                 selected_voice_id: selectedVoiceId.length !== 0 ? selectedVoiceId : undefined,
+                ai_model_config: (selectedT2iId && selectedI2iId && selectedI2vId) ? {
+                    t2iModelId: selectedT2iId,
+                    i2iModelId: selectedI2iId,
+                    i2vModelId: selectedI2vId
+                } : undefined,
             }
             const result: VideoGenerationTask | null = taskId
                 ? await videoClientAPI.patchVideoTaskByTaskId(taskId, request)
@@ -316,6 +342,30 @@ function WorkspaceCreatePageClient() {
         setShowVoiceChangeWarningModal(false);
     }, []);
 
+    useEffect(() => {
+        const fetchAIModels = async () => {
+            try {
+                const models = await aiModelDataClient.getAIModelData();
+                setAiModelList(models);
+
+                // Set default models using user preferences or specific hardcoded fallback IDs
+                const defaultT2i = user?.preferred_ai_model_config?.t2iModelId || 'ca637a97-f060-4b81-a7d4-118a6f4aac0c';
+                const defaultI2i = user?.preferred_ai_model_config?.i2iModelId || '79a506ac-eced-4643-b017-c8a2bb0f028b';
+                const defaultI2v = user?.preferred_ai_model_config?.i2vModelId || '326a9a71-26a9-4142-8371-5467f316bcd6';
+
+                setSelectedT2iId(prev => prev ?? defaultT2i);
+                setSelectedI2iId(prev => prev ?? defaultI2i);
+                setSelectedI2vId(prev => prev ?? defaultI2v);
+            } catch (error) {
+                console.error("Failed to load AI models:", error);
+            } finally {
+                setIsAiModelLoading(false);
+            }
+        };
+
+        fetchAIModels().then();
+    }, [user]);
+
     // 페이지 로드 시: taskId 있으면 데이터 복원
     useEffect(() => {
         if (taskId) {
@@ -329,6 +379,7 @@ function WorkspaceCreatePageClient() {
                     const videoDescription = videoGenerationTask.video_description;
                     const voiceId = videoGenerationTask.selected_voice_id;
                     const styleId = videoGenerationTask.selected_style_id;
+                    const aiModelConfig = videoGenerationTask.ai_model_config;
 
                     setScript(script);
                     setSceneDataList(sceneDataList);
@@ -336,6 +387,12 @@ function WorkspaceCreatePageClient() {
                     setVideoDescription(videoDescription ?? '');
                     setSelectedVoiceId(voiceId ?? '');
                     setSelectedStyleId(styleId ?? '');
+                    
+                    if (aiModelConfig) {
+                        setSelectedT2iId(aiModelConfig.t2iModelId);
+                        setSelectedI2iId(aiModelConfig.i2iModelId);
+                        setSelectedI2vId(aiModelConfig.i2vModelId);
+                    }
 
                     setIsGenerationTaskLoading(false);
                 } else {
@@ -446,9 +503,16 @@ function WorkspaceCreatePageClient() {
                     expectedVideoTotalDuration={expectedVideoTotalDuration}
                     userCredit={userCreditCount}
                     isGeneratingStoryboardData={isGeneratingStoryboardData}
+                    aiModelList={aiModelList}
+                    selectedT2iId={selectedT2iId}
+                    selectedI2iId={selectedI2iId}
+                    selectedI2vId={selectedI2vId}
                     onChangeScript={onChangeScript}
                     onClickGenerateWithAI={onClickGenerateWithAI}
                     onClickGenerateStoryboard={onClickGenerateStoryboardInCreateFormPanel}
+                    onChangeT2iId={setSelectedT2iId}
+                    onChangeI2iId={setSelectedI2iId}
+                    onChangeI2vId={setSelectedI2vId}
                 />
 
                 {/* Voice Selection Panel */}
@@ -475,6 +539,10 @@ function WorkspaceCreatePageClient() {
                     isSubmitting={isSubmitting}
                     isCreditInsufficient={isCreditInsufficient}
                     isVideoGenerationEnabled={isVideoGenerationEnabled}
+                    aiModelList={aiModelList}
+                    selectedT2iId={selectedT2iId}
+                    selectedI2iId={selectedI2iId}
+                    selectedI2vId={selectedI2vId}
                     onClickSaveDraft={onClickSaveDraft}
                     onClickGenerateVideo={onClickGenerateVideo}
                 />

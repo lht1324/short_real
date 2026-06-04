@@ -43,6 +43,7 @@ export async function getFetch(route: string) {
 export async function postFetch(route: string, body?: unknown) {
     const rootPath = getRootPath(route);
     const gatewayRoute = getGatewayRoute(route);
+    console.log(`[${route}]: ${rootPath}${gatewayRoute}`);
     const response = await fetch(`${rootPath}${gatewayRoute}`, {
         method: 'POST',
         headers: {

@@ -2,6 +2,8 @@ import {ChangeEvent, memo, useMemo} from "react";
 import {Sparkles} from "lucide-react";
 import {SceneData} from "@/lib/api/types/supabase/VideoGenerationTasks";
 import StoryboardSection from "@/components/page/workspace/create/create-form-panel/StoryboardSection";
+import BYOKModelSelector from "@/components/page/workspace/create/create-form-panel/BYOKModelSelector";
+import {AIModelData} from "@/lib/api/types/supabase/AIModelData";
 
 interface CreateFormPanelProps {
     script: string;
@@ -13,9 +15,16 @@ interface CreateFormPanelProps {
     expectedVideoTotalDuration: number;
     userCredit: number;
     isGeneratingStoryboardData: boolean;
+    aiModelList: AIModelData[];
+    selectedT2iId: string | null;
+    selectedI2iId: string | null;
+    selectedI2vId: string | null;
     onChangeScript: (e: ChangeEvent<HTMLTextAreaElement>) => void;
     onClickGenerateWithAI: () => void;
     onClickGenerateStoryboard: () => void;
+    onChangeT2iId: (id: string) => void;
+    onChangeI2iId: (id: string) => void;
+    onChangeI2vId: (id: string) => void;
 }
 
 function CreateFormPanel({
@@ -28,9 +37,16 @@ function CreateFormPanel({
     expectedVideoTotalDuration,
     userCredit,
     isGeneratingStoryboardData,
+    aiModelList,
+    selectedT2iId,
+    selectedI2iId,
+    selectedI2vId,
     onChangeScript,
     onClickGenerateWithAI,
     onClickGenerateStoryboard,
+    onChangeT2iId,
+    onChangeI2iId,
+    onChangeI2vId,
 }: CreateFormPanelProps) {
     // 예상 영상 시간 계산 (2.5단어/초 기준)
     const estimatedDuration = useMemo(() => {
@@ -74,6 +90,17 @@ function CreateFormPanel({
                             className="w-full px-4 py-3 rounded-xl bg-zinc-900/40 border border-white/10 text-zinc-100 placeholder-zinc-600 focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 focus:outline-none transition-colors resize-none text-[15px] leading-relaxed"
                         />
                     </div>
+
+                    {/* AI Model Selection Section */}
+                    <BYOKModelSelector
+                        aiModelList={aiModelList}
+                        selectedT2iId={selectedT2iId}
+                        selectedI2iId={selectedI2iId}
+                        selectedI2vId={selectedI2vId}
+                        onChangeT2iId={onChangeT2iId}
+                        onChangeI2iId={onChangeI2iId}
+                        onChangeI2vId={onChangeI2vId}
+                    />
 
                     {/* Storyboard Section */}
                     <StoryboardSection

@@ -2,8 +2,17 @@ import { NextRequest } from 'next/server';
 import { llmServerAPI } from '@/lib/api/server/llmServerAPI';
 import { ScriptGenerationRequest } from '@/lib/api/types/open-ai/ScriptGeneration';
 import {getNextBaseResponse} from "@/lib/utils/getNextBaseResponse";
+import {getIsValidRequestS2S} from "@/lib/utils/getIsValidRequest";
 
 export async function POST(request: NextRequest) {
+    if (!getIsValidRequestS2S(request)) {
+        return getNextBaseResponse({
+            success: false,
+            status: 401,
+            error: 'Unauthorized internal request',
+        });
+    }
+
     try {
         // 요청 본문 파싱
         const {

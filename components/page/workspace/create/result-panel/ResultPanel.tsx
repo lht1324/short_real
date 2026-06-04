@@ -1,6 +1,7 @@
 import {memo} from "react";
 import {AlertTriangle, Coins, Film, Save, Sparkles, Loader2, CheckCircle2, Circle, FileText} from "lucide-react";
-import CreditUsageCard from "@/components/page/workspace/create/result-panel/CreditUsageCard";
+import EstimatedCostCard from "@/components/page/workspace/create/result-panel/EstimatedCostCard";
+import {AIModelData} from "@/lib/api/types/supabase/AIModelData";
 
 interface ResultPanelProps {
     isStoryboardGenerated: boolean,
@@ -18,6 +19,10 @@ interface ResultPanelProps {
     isSubmitting: boolean;
     isCreditInsufficient: boolean;
     isVideoGenerationEnabled: boolean;
+    aiModelList: AIModelData[];
+    selectedT2iId: string | null;
+    selectedI2iId: string | null;
+    selectedI2vId: string | null;
     onClickSaveDraft: () => void;
     onClickGenerateVideo: () => void;
 }
@@ -38,6 +43,10 @@ function ResultPanel({
     isSubmitting,
     isCreditInsufficient,
     isVideoGenerationEnabled,
+    aiModelList,
+    selectedT2iId,
+    selectedI2iId,
+    selectedI2vId,
     onClickSaveDraft,
     onClickGenerateVideo,
 }: ResultPanelProps) {
@@ -82,13 +91,14 @@ function ResultPanel({
                         </div>
                     </div>
 
-                    {/* Credit Usage Card */}
-                    <CreditUsageCard
-                        expectedVideoTotalDuration={expectedVideoTotalDuration}
-                        expectedDurationUsage={expectedDurationUsage}
+                    {/* Estimated Cost Card */}
+                    <EstimatedCostCard
+                        aiModelList={aiModelList}
+                        selectedT2iId={selectedT2iId}
+                        selectedI2iId={selectedI2iId}
+                        selectedI2vId={selectedI2vId}
                         expectedVideoSceneCount={expectedVideoSceneCount}
-                        expectedSceneCountUsage={expectedSceneCountUsage}
-                        expectedCreditUsage={expectedCreditUsage}
+                        expectedVideoTotalDuration={expectedVideoTotalDuration}
                     />
                 </div>) : (
                     <div className="text-center">

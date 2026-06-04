@@ -185,14 +185,29 @@ function WorkspaceAutopilotPageClient() {
         if (!user?.id) return;
         setIsInitialLoading(true);
         const data = await autopilotDataClientAPI.getAutopilotDataByUserId(user.id);
-        setSeriesList(data);
-        setLastSavedSeriesList(JSON.parse(JSON.stringify(data)));
-        if (data.length > 0 && !currentSeriesId) {
-            setCurrentSeriesId(data[0].id);
-            setCaptionConfigState(data[0].caption_config ?? INITIAL_CAPTION_CONFIG_STATE);
+        
+        const patchedData = data.map(series => {
+            if (!series.ai_model_config || !series.ai_model_config.t2iModelId || !series.ai_model_config.i2iModelId || !series.ai_model_config.i2vModelId) {
+                return {
+                    ...series,
+                    ai_model_config: {
+                        t2iModelId: series.ai_model_config?.t2iModelId || user?.preferred_ai_model_config?.t2iModelId || 'ca637a97-f060-4b81-a7d4-118a6f4aac0c',
+                        i2iModelId: series.ai_model_config?.i2iModelId || user?.preferred_ai_model_config?.i2iModelId || '79a506ac-eced-4643-b017-c8a2bb0f028b',
+                        i2vModelId: series.ai_model_config?.i2vModelId || user?.preferred_ai_model_config?.i2vModelId || '326a9a71-26a9-4142-8371-5467f316bcd6',
+                    }
+                };
+            }
+            return series;
+        });
+
+        setSeriesList(patchedData);
+        setLastSavedSeriesList(JSON.parse(JSON.stringify(patchedData)));
+        if (patchedData.length > 0 && !currentSeriesId) {
+            setCurrentSeriesId(patchedData[0].id);
+            setCaptionConfigState(patchedData[0].caption_config ?? INITIAL_CAPTION_CONFIG_STATE);
         }
         setIsInitialLoading(false);
-    }, [user?.id, currentSeriesId]);
+    }, [user, currentSeriesId]);
 
     useEffect(() => {
         fetchAutopilotList();
@@ -266,9 +281,9 @@ function WorkspaceAutopilotPageClient() {
         if (seriesList.length >= 4 || !user?.id || isActionPending) return;
         setIsActionPending(true);
         try {
-            const defaultT2i = aiModelList.find(m => m.category === 'text-to-image')?.id || 'ca637a97-f060-4b81-a7d4-118a6f4aac0c';
-            const defaultI2i = aiModelList.find(m => m.category === 'image-to-image')?.id || '79a506ac-eced-4643-b017-c8a2bb0f028b';
-            const defaultI2v = aiModelList.find(m => m.category === 'image-to-video')?.id || '326a9a71-26a9-4142-8371-5467f316bcd6';
+            const defaultT2i = user?.preferred_ai_model_config?.t2iModelId || 'ca637a97-f060-4b81-a7d4-118a6f4aac0c';
+            const defaultI2i = user?.preferred_ai_model_config?.i2iModelId || '79a506ac-eced-4643-b017-c8a2bb0f028b';
+            const defaultI2v = user?.preferred_ai_model_config?.i2vModelId || '326a9a71-26a9-4142-8371-5467f316bcd6';
 
             const newSeriesTemplate: Partial<AutopilotData> = {
                 user_id: user.id,
@@ -303,7 +318,7 @@ function WorkspaceAutopilotPageClient() {
         } finally {
             setIsActionPending(false);
         }
-    }, [seriesList.length, user?.id, voiceList, isActionPending, aiModelList]);
+    }, [seriesList.length, user, voiceList, isActionPending]);
 
     const onClickDeleteConfig = useCallback(async () => {
         if (!currentSeries || isActionPending) return;

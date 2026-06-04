@@ -56,7 +56,7 @@ async function handleGatewayRequest(request: NextRequest) {
     const queryString = internalParams.toString();
     const internalApiUrl = `${process.env.BASE_URL}${targetPath}${queryString ? `?${queryString}` : ""}`;
 
-    console.log(internalApiUrl);
+    console.log(`[client-gateway] Proxying request to: ${internalApiUrl}`);
 
     try {
         const fetchOptions: RequestInit = {

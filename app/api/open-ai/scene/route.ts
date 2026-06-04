@@ -12,24 +12,28 @@ import {
 } from "@/lib/api/types/supabase/VideoGenerationTasks";
 import {getNextBaseResponse} from "@/lib/utils/getNextBaseResponse";
 import {usersServerAPI} from "@/lib/api/server/usersServerAPI";
-import {createSupabaseServer} from "@/lib/supabaseServer";
 import {SCENE_SEGMENTATION_STANDARD} from "@/lib/ADDITIONAL_CREDIT_AMOUNT";
+import {getIsValidRequestS2S} from "@/lib/utils/getIsValidRequest";
 
 export async function POST(request: NextRequest): Promise<NextResponse<PostOpenAISceneResponse>> {
     try {
-        const supabase = await createSupabaseServer();
-        const {data: {user: authUser}, error: authError} = await supabase.auth.getUser();
-
-        if (authError || !authUser) {
-            console.error("/api/open-ai/scene authError: ", authError);
+        if (!getIsValidRequestS2S(request)) {
             return getNextBaseResponse({
                 success: false,
                 status: 401,
-                error: 'Unauthorized request.',
+                error: 'Unauthorized internal request.',
             });
         }
 
-        const userId = authUser.id;
+        const userId = request.nextUrl.searchParams.get('userId');
+
+        if (!userId) {
+            return getNextBaseResponse({
+                success: false,
+                status: 401,
+                error: 'Missing userId in request.',
+            });
+        }
 
         const {
             taskId,
