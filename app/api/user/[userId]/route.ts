@@ -20,11 +20,25 @@ export async function GET(
             });
         }
 
+        // --- Security Masking ---
+        // Mask API keys before sending to the client (e.g., 'sk-a...********')
+        const maskKey = (key: string | null | undefined) => {
+            if (!key) return null;
+            if (key.length <= 8) return "********"; // Too short to show prefix
+            return `${key.slice(0, 4)}...${"*".repeat(8)}`;
+        };
+
+        const maskedUser: User = {
+            ...user,
+            fal_ai_api_key: maskKey(user.fal_ai_api_key),
+            replicate_api_key: maskKey(user.replicate_api_key),
+        };
+
         return getNextBaseResponse({
             success: true,
             status: 200,
             data: {
-                user: user,
+                user: maskedUser,
             },
             message: "Fetched user data successfully."
         });

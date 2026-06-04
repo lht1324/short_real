@@ -2,7 +2,7 @@
 
 import {memo, useCallback, useEffect, useMemo, useState} from "react";
 import {SubscriptionPlan} from "@/lib/api/types/supabase/Users";
-import {CreditCard, Crown, Calendar, Mail, User as UserIcon, Receipt, FileText, Settings} from "lucide-react";
+import {CreditCard, Crown, Calendar, Mail, User as UserIcon, Receipt, FileText, Settings, Sparkles, Loader2, Bot, Save, ExternalLink, CheckCircle2, Shield} from "lucide-react";
 import {useAuth} from "@/context/AuthContext";
 import {polarClientAPI} from "@/lib/api/client/polarClientAPI";
 import {OrderData} from "@/lib/api/types/api/polar/orders/GetPolarOrdersResponse";
@@ -13,13 +13,36 @@ import {useRouter} from "next/navigation";
 import {ProductData} from "@/lib/api/types/api/polar/products/ProductData";
 import Image from "next/image";
 import DefaultModal from "@/components/public/DefaultModal";
+import {aiModelDataClient} from "@/lib/api/client/aiModelDataClient";
+import {AIModelData} from "@/lib/api/types/supabase/AIModelData";
+import {usersClientAPI} from "@/lib/api/client/usersClientAPI";
+
+const FalIcon = ({ size = 20, className }: { size?: number, className?: string }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
+        <rect width="24" height="24" fill="rgb(240, 196, 216)" rx="4"/>
+        <path clipRule="evenodd" d="M15.477 0c.415 0 .749.338.788.752a7.775 7.775 0 006.985 6.984c.413.04.752.373.752.788v6.952c0 .415-.338.748-.752.788a7.775 7.775 0 00-6.985 6.984c-.04.414-.373.752-.788.752H8.525c-.416 0-.749-.338-.789-.752a7.775 7.775 0 00-6.984-6.984c-.414-.04-.752-.373-.752-.788V8.524c0-.415.338-.748.752-.788A7.775 7.775 0 007.736.752C7.776.338 8.11 0 8.526 0h6.95zM4.819 11.98a7.226 7.226 0 007.223 7.23 7.226 7.226 0 007.223-7.23c0-3.994-3.234-7.23-7.223-7.23a7.227 7.227 0 00-7.223 7.23z" fill="#EC0648" fillRule="evenodd" transform="translate(4, 4) scale(0.66)"/>
+    </svg>
+);
+
+const ReplicateIcon = ({ size = 20, className }: { size?: number, className?: string }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
+        <rect width="24" height="24" fill="rgb(202, 44, 18)" rx="4"/>
+        <path d="M22 10.552v2.26h-7.932V22H11.54V10.552H22zM22 2v2.264H4.528V22H2V2h20zm0 4.276V8.54H9.296V22H6.768V6.276H22z" fill="#ffffff" transform="translate(3, 3) scale(0.75)"/>
+    </svg>
+);
 
 function ProfilePageClient() {
     const router = useRouter();
 
-    const { user } = useAuth();
+    const { user, refreshUser } = useAuth();
 
     const [isLoading, setIsLoading] = useState(true);
+    const [isSavingPrefs, setIsSavingPrefs] = useState(false);
+    const [isSavingKeys, setIsSavingKeys] = useState(false);
+
+    // API Key Edit states
+    const [isEditingFalKey, setIsEditingFalKey] = useState(false);
+    const [falKeyInput, setFalKeyInput] = useState("");
 
     const [showChangePlanModal, setShowChangePlanModal] = useState(false);
     const [showCancelSubscriptionModal, setShowCancelSubscriptionModal] = useState(false);
@@ -28,6 +51,12 @@ function ProfilePageClient() {
     const [subscriptionData, setSubscriptionData] = useState<SubscriptionData | null>(null);
 
     const [scheduledDowngradeProductData, setScheduledDowngradeProductData] = useState<ProductData | null>(null);
+
+    // AI Model states
+    const [aiModelList, setAiModelList] = useState<AIModelData[]>([]);
+    const [selectedT2iId, setSelectedT2iId] = useState<string | null>(null);
+    const [selectedI2iId, setSelectedI2iId] = useState<string | null>(null);
+    const [selectedI2vId, setSelectedI2vId] = useState<string | null>(null);
 
     const planDisplayName = useMemo(() => {
         return subscriptionData?.productName ?? "No Subscription";
@@ -157,6 +186,21 @@ function ProfilePageClient() {
         setScheduledDowngradeProductData(scheduledProduct);
     }, [isDowngradeScheduled, user?.downgrade_target_plan_id]);
 
+    const fetchAIModels = useCallback(async () => {
+        try {
+            const models = await aiModelDataClient.getAIModelData();
+            setAiModelList(models);
+
+            if (user?.preferred_ai_model_config) {
+                setSelectedT2iId(user.preferred_ai_model_config.t2iModelId);
+                setSelectedI2iId(user.preferred_ai_model_config.i2iModelId);
+                setSelectedI2vId(user.preferred_ai_model_config.i2vModelId);
+            }
+        } catch (error) {
+            console.error("Failed to load AI models:", error);
+        }
+    }, [user?.preferred_ai_model_config]);
+
     const loadAllData = useCallback(async () => {
         if (!user?.email) return;
         
@@ -165,7 +209,8 @@ function ProfilePageClient() {
             await Promise.all([
                 loadOrders(user.email),
                 loadSubscription(user.email),
-                loadScheduledProduct()
+                loadScheduledProduct(),
+                fetchAIModels()
             ]);
         } catch (error) {
             console.error("Error loading profile data:", error);
@@ -173,7 +218,7 @@ function ProfilePageClient() {
         } finally {
             setIsLoading(false);
         }
-    }, [user?.email, loadOrders, loadSubscription, loadScheduledProduct, router]);
+    }, [user?.email, loadOrders, loadSubscription, loadScheduledProduct, fetchAIModels, router]);
 
     useEffect(() => {
         loadAllData();
@@ -268,128 +313,322 @@ function ProfilePageClient() {
         setIsLoading(false);
     }, [subscriptionData?.id, subscriptionData?.cancelAtPeriodEnd, user?.email, loadSubscription]);
 
+    const onClickSavePreferences = useCallback(async () => {
+        if (!user?.id || !selectedT2iId || !selectedI2iId || !selectedI2vId) return;
+
+        setIsSavingPrefs(true);
+        try {
+            const result = await usersClientAPI.patchUserByUserId(user.id, {
+                preferred_ai_model_config: {
+                    t2iModelId: selectedT2iId,
+                    i2iModelId: selectedI2iId,
+                    i2vModelId: selectedI2vId
+                }
+            });
+
+            if (result) {
+                await refreshUser();
+                alert("Preferences saved successfully.");
+            } else {
+                throw new Error("Failed to save preferences");
+            }
+        } catch (error) {
+            console.error("Error saving preferences:", error);
+            alert("Failed to save preferences. Please try again.");
+        } finally {
+            setIsSavingPrefs(false);
+        }
+    }, [user?.id, selectedT2iId, selectedI2iId, selectedI2vId, refreshUser]);
+
+    const onClickSaveFalKey = useCallback(async () => {
+        if (!user?.id || !falKeyInput.trim()) return;
+
+        setIsSavingKeys(true);
+        try {
+            const result = await usersClientAPI.patchUserByUserId(user.id, {
+                fal_ai_api_key: falKeyInput.trim()
+            });
+
+            if (result) {
+                await refreshUser();
+                setIsEditingFalKey(false);
+                setFalKeyInput("");
+                alert("API Key saved successfully.");
+            } else {
+                throw new Error("Failed to save key");
+            }
+        } catch (error) {
+            console.error("Error saving API Key:", error);
+            alert("Failed to save API Key. Please try again.");
+        } finally {
+            setIsSavingKeys(false);
+        }
+    }, [user?.id, falKeyInput, refreshUser]);
+
+    const t2iModels = useMemo(() => aiModelList.filter(m => m.category === 'text-to-image'), [aiModelList]);
+    const i2iModels = useMemo(() => aiModelList.filter(m => m.category === 'image-to-image'), [aiModelList]);
+    const i2vModels = useMemo(() => aiModelList.filter(m => m.category === 'image-to-video'), [aiModelList]);
+
     return (
-        <div className="min-h-screen pt-16 bg-black text-white">
-            {/* Background Effects */}
-            <div className="absolute inset-0 opacity-10 pointer-events-none">
-                <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-gradient-to-r from-pink-500 to-purple-600 rounded-full blur-3xl"></div>
-                <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-gradient-to-r from-purple-500 to-indigo-600 rounded-full blur-3xl"></div>
+        <div className="min-h-screen pt-16 bg-zinc-950 text-white relative overflow-hidden">
+            {/* Background Effects - Toned down significantly */}
+            <div className="absolute inset-0 opacity-[0.03] pointer-events-none z-0">
+                <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-indigo-500 rounded-full blur-[120px]"></div>
             </div>
 
-            <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+            <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12 z-10">
                 {/* Header Section */}
-                <div className="mb-12">
-                    <h1 className="text-4xl sm:text-5xl font-bold mb-4">
-                        My <span className="bg-gradient-to-r from-pink-400 to-purple-500 bg-clip-text text-transparent">Profile</span>
+                <div className="mb-10">
+                    <h1 className="text-4xl sm:text-5xl font-bold mb-3 text-zinc-100">
+                        My Profile
                     </h1>
-                    <p className="text-xl text-gray-400">
-                        Manage your account and subscription
+                    <p className="text-base text-zinc-500">
+                        Manage your account and workspace preferences.
                     </p>
                 </div>
 
-                {/* User Info Card */}
-                <div className="mb-8 p-8 rounded-xl border border-purple-500/20 bg-gray-900/30 backdrop-blur-sm">
-                    <div className="flex items-center gap-6">
-                        {/* Avatar */}
-                        <div className="relative">
-                            {user?.avatar_url ? (
-                                <Image
-                                    src={user.avatar_url}
-                                    alt={user.name}
-                                    width={96}
-                                    height={96}
-                                    className="w-24 h-24 rounded-full border-2 border-purple-500/50"
-                                />
-                            ) : (
-                                <div className="w-24 h-24 rounded-full bg-gradient-to-r from-pink-500 to-purple-600 flex items-center justify-center">
-                                    <UserIcon size={40} className="text-white" />
+                {/* User Info & Stats Panel */}
+                <div className="mb-8 rounded-2xl border border-white/5 bg-zinc-900/40 overflow-hidden">
+                    {/* User Profile Info */}
+                    <div className="p-8 border-b border-white/5">
+                        <div className="flex items-center gap-6">
+                            {/* Avatar */}
+                            <div className="relative">
+                                {user?.avatar_url ? (
+                                    <Image
+                                        src={user.avatar_url}
+                                        alt={user.name}
+                                        width={80}
+                                        height={80}
+                                        className="w-20 h-20 rounded-full border border-white/10 shadow-sm"
+                                    />
+                                ) : (
+                                    <div className="w-20 h-20 rounded-full bg-zinc-800/50 border border-white/5 flex items-center justify-center">
+                                        <UserIcon size={32} className="text-zinc-600" />
+                                    </div>
+                                )}
+                                {isPremiumPlan && (
+                                    <div className="absolute -top-1 -right-1 w-6 h-6 bg-zinc-100 rounded-full flex items-center justify-center border-2 border-zinc-950 shadow-lg">
+                                        <Crown size={12} className="text-zinc-950" />
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* User Details */}
+                            <div className="flex-1">
+                                <h2 className="text-2xl font-bold text-zinc-100 mb-1">{user?.name}</h2>
+                                <div className="flex items-center gap-2 text-zinc-500 text-sm">
+                                    <Mail size={14} />
+                                    <span>{user?.email}</span>
                                 </div>
-                            )}
-                            {isPremiumPlan && (
-                                <div className="absolute -top-1 -right-1 w-8 h-8 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full flex items-center justify-center border-2 border-black">
-                                    <Crown size={16} className="text-white" />
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Stats Summary Row (Flattened) */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-white/5">
+                        <div className="p-6 flex flex-col items-center md:items-start group">
+                            <div className="text-[11px] font-semibold text-zinc-500 uppercase tracking-wider mb-2">Compute Engine</div>
+                            <div className="flex items-center gap-2.5">
+                                <div className="relative">
+                                    <FalIcon size={28} />
+                                    <div className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-zinc-950 ${user?.fal_ai_api_key ? 'bg-emerald-500' : 'bg-zinc-700'}`}></div>
                                 </div>
+                                <div className="flex flex-col">
+                                    <span className="text-xl font-bold text-zinc-100 tracking-tight leading-none mb-1">fal.ai</span>
+                                    <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded border w-fit ${user?.fal_ai_api_key ? 'border-emerald-500/20 bg-emerald-500/10 text-emerald-500' : 'border-zinc-800 bg-zinc-900 text-zinc-600'} uppercase`}>
+                                        {user?.fal_ai_api_key ? 'Connected' : 'Missing'}
+                                    </span>
+                                </div>
+                            </div>
+                            {user?.fal_ai_api_key && (
+                                <a 
+                                    href="https://fal.ai/dashboard/usage-billing/credits" 
+                                    target="_blank" 
+                                    rel="noopener noreferrer"
+                                    className="flex items-center gap-1.5 mt-4 text-[11px] font-medium text-zinc-500 hover:text-zinc-300 transition-colors"
+                                >
+                                    <span>Manage billing & credits</span>
+                                    <ExternalLink size={10} />
+                                </a>
                             )}
                         </div>
-
-                        {/* User Details */}
-                        <div className="flex-1">
-                            <h2 className="text-2xl font-bold text-white mb-2">{user?.name}</h2>
-                            <div className="flex items-center gap-2 text-gray-400">
-                                <Mail size={16} />
-                                <span>{user?.email}</span>
-                            </div>
+                        <div className="p-6 flex flex-col items-center md:items-start">
+                            <div className="text-[11px] font-semibold text-zinc-500 uppercase tracking-wider mb-1">Current Plan</div>
+                            <div className="text-xl font-semibold text-zinc-200">{planDisplayName}</div>
+                            <p className="text-[11px] text-zinc-600 mt-1 truncate max-w-full">
+                                {subscriptionData?.productDescription || "Free Tier"}
+                            </p>
+                        </div>
+                        <div className="p-6 flex flex-col items-center md:items-start">
+                            <div className="text-[11px] font-semibold text-zinc-500 uppercase tracking-wider mb-1">Member Since</div>
+                            <div className="text-xl font-semibold text-zinc-200">{formattedDate}</div>
                         </div>
                     </div>
                 </div>
 
-                {/* Stats Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    {/* Credit Count Card */}
-                    <div className="p-6 rounded-xl border border-purple-500/20 bg-gray-900/30 backdrop-blur-sm hover:border-purple-400/50 hover:bg-gray-800/50 transition-all duration-300">
-                        <div className="flex items-center gap-4 mb-4">
-                            <div className="w-12 h-12 bg-gradient-to-r from-pink-500 to-purple-600 rounded-lg flex items-center justify-center">
-                                <CreditCard size={24} className="text-white" />
-                            </div>
-                            <h3 className="text-lg font-semibold text-white">Credits</h3>
+                {/* Workspace Preferences Section */}
+                <div className="mb-8 p-8 rounded-2xl border border-white/5 bg-zinc-900/40">
+                    <div className="flex items-center justify-between mb-8">
+                        <div className="flex items-center gap-2.5">
+                            <Bot size={20} className="text-zinc-500" />
+                            <h3 className="text-sm font-semibold text-zinc-100 uppercase tracking-wider">Workspace Preferences</h3>
                         </div>
-                        <div className="text-3xl font-bold bg-gradient-to-r from-pink-400 to-purple-500 bg-clip-text text-transparent">
-                            {user?.credit_count ?? 0}
-                        </div>
-                        <p className="text-sm text-gray-400 mt-2">Available credits</p>
+                        <button
+                            onClick={onClickSavePreferences}
+                            disabled={isSavingPrefs}
+                            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white text-black font-bold text-xs hover:bg-zinc-200 transition-all disabled:opacity-50"
+                        >
+                            {isSavingPrefs ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
+                            <span>Save Preferences</span>
+                        </button>
                     </div>
 
-                    {/* Plan Card */}
-                    <div className="p-6 rounded-xl border border-purple-500/20 bg-gray-900/30 backdrop-blur-sm hover:border-purple-400/50 hover:bg-gray-800/50 transition-all duration-300">
-                        <div className="flex items-center gap-4 mb-4">
-                            <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-indigo-600 rounded-lg flex items-center justify-center">
-                                <Crown size={24} className="text-white" />
-                            </div>
-                            <h3 className="text-lg font-semibold text-white">Plan</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div className="space-y-2">
+                            <label className="text-[11px] font-semibold text-zinc-500 uppercase tracking-wider ml-1">Default Character Model (T2I)</label>
+                            <select
+                                value={selectedT2iId || ''}
+                                onChange={(e) => setSelectedT2iId(e.target.value)}
+                                className="w-full bg-zinc-950 border border-white/10 rounded-xl px-4 py-3 text-sm text-zinc-200 focus:outline-none focus:border-zinc-500 appearance-none"
+                            >
+                                {t2iModels.map(m => (
+                                    <option key={m.id} value={m.id} className="bg-zinc-900">{m.display_name}</option>
+                                ))}
+                            </select>
                         </div>
-                        <div className="text-2xl font-bold text-white">
-                            {planDisplayName}
+                        <div className="space-y-2">
+                            <label className="text-[11px] font-semibold text-zinc-500 uppercase tracking-wider ml-1">Default Scene Model (I2I)</label>
+                            <select
+                                value={selectedI2iId || ''}
+                                onChange={(e) => setSelectedI2iId(e.target.value)}
+                                className="w-full bg-zinc-950 border border-white/10 rounded-xl px-4 py-3 text-sm text-zinc-200 focus:outline-none focus:border-zinc-500 appearance-none"
+                            >
+                                {i2iModels.map(m => (
+                                    <option key={m.id} value={m.id} className="bg-zinc-900">{m.display_name}</option>
+                                ))}
+                            </select>
                         </div>
-                        <p className="text-sm text-gray-400 mt-2">
-                            {subscriptionData?.productDescription ?? "No active subscription."}
-                        </p>
+                        <div className="space-y-2">
+                            <label className="text-[11px] font-semibold text-zinc-500 uppercase tracking-wider ml-1">Default Video Model (I2V)</label>
+                            <select
+                                value={selectedI2vId || ''}
+                                onChange={(e) => setSelectedI2vId(e.target.value)}
+                                className="w-full bg-zinc-950 border border-white/10 rounded-xl px-4 py-3 text-sm text-zinc-200 focus:outline-none focus:border-zinc-500 appearance-none"
+                            >
+                                {i2vModels.map(m => (
+                                    <option key={m.id} value={m.id} className="bg-zinc-900">{m.display_name}</option>
+                                ))}
+                            </select>
+                        </div>
+                    </div>
+                    <p className="mt-6 text-[11px] text-zinc-600 leading-relaxed max-w-2xl">
+                        These models will be selected by default when creating new videos or series. You can still override them individually during the creation process.
+                    </p>
+                </div>
+
+                {/* Provider Authentication Section (BYOK) */}
+                <div className="mb-8 p-8 rounded-2xl border border-white/5 bg-zinc-900/40">
+                    <div className="flex items-center gap-2.5 mb-8">
+                        <Shield size={20} className="text-zinc-500" />
+                        <h3 className="text-sm font-semibold text-zinc-100 uppercase tracking-wider">Provider Authentication</h3>
                     </div>
 
-                    {/* Member Since Card */}
-                    <div className="p-6 rounded-xl border border-purple-500/20 bg-gray-900/30 backdrop-blur-sm hover:border-purple-400/50 hover:bg-gray-800/50 transition-all duration-300">
-                        <div className="flex items-center gap-4 mb-4">
-                            <div className="w-12 h-12 bg-gradient-to-r from-indigo-500 to-cyan-500 rounded-lg flex items-center justify-center">
-                                <Calendar size={24} className="text-white" />
+                    <div className="space-y-4">
+                        {/* fal.ai Item */}
+                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-6 rounded-2xl bg-zinc-950/50 border border-white/5 hover:border-white/10 transition-colors">
+                            <div className="flex items-center gap-4 min-w-0">
+                                <div className="w-12 h-12 rounded-xl bg-zinc-900 border border-white/5 flex items-center justify-center flex-shrink-0 shadow-inner">
+                                    <FalIcon size={24} className={user?.fal_ai_api_key ? "" : "grayscale opacity-40"} />
+                                </div>
+                                <div className="min-w-0">
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <span className="text-sm font-bold text-zinc-100">fal.ai</span>
+                                        {user?.fal_ai_api_key && <CheckCircle2 size={14} className="text-emerald-500" />}
+                                    </div>
+                                    <p className="text-[11px] text-zinc-500 font-medium tracking-tight">Advanced Text-to-Image & Image-to-Video Engine</p>
+                                </div>
                             </div>
-                            <h3 className="text-lg font-semibold text-white">Member Since</h3>
+
+                            <div className="flex-1 md:max-w-md">
+                                {isEditingFalKey ? (
+                                    <div className="flex items-center gap-2">
+                                        <input
+                                            type="password"
+                                            value={falKeyInput}
+                                            onChange={(e) => setFalKeyInput(e.target.value)}
+                                            placeholder="Enter your fal.ai API Key..."
+                                            className="w-full bg-zinc-900 border border-white/10 rounded-lg px-4 py-2.5 text-sm text-zinc-200 focus:outline-none focus:border-zinc-500 transition-colors"
+                                            autoFocus
+                                        />
+                                        <div className="flex items-center gap-1.5">
+                                            <button
+                                                onClick={onClickSaveFalKey}
+                                                disabled={isSavingKeys || !falKeyInput.trim()}
+                                                className="px-4 py-2.5 bg-white text-black font-bold text-xs rounded-lg hover:bg-zinc-200 transition-all disabled:opacity-50"
+                                            >
+                                                {isSavingKeys ? <Loader2 size={14} className="animate-spin" /> : "Save"}
+                                            </button>
+                                            <button
+                                                onClick={() => { setIsEditingFalKey(false); setFalKeyInput(""); }}
+                                                className="px-3 py-2.5 text-zinc-500 hover:text-zinc-300 font-bold text-xs transition-colors"
+                                            >
+                                                Cancel
+                                            </button>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="flex items-center justify-between gap-4 px-4 py-2.5 bg-zinc-900/60 rounded-xl border border-white/5 group/key">
+                                        <span className="text-xs font-mono text-zinc-500 truncate">
+                                            {user?.fal_ai_api_key || "No Key Registered"}
+                                        </span>
+                                        <button
+                                            onClick={() => setIsEditingFalKey(true)}
+                                            className="text-[11px] font-bold text-zinc-300 hover:text-white transition-colors px-2 py-1"
+                                        >
+                                            {user?.fal_ai_api_key ? "Update" : "Register Key"}
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
                         </div>
-                        <div className="text-xl font-bold text-white">
-                            {formattedDate}
+
+                        {/* Replicate Item (Coming Soon) */}
+                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-6 rounded-2xl bg-zinc-950/20 border border-white/5 opacity-60">
+                            <div className="flex items-center gap-4">
+                                <div className="w-12 h-12 rounded-xl bg-zinc-900 border border-white/5 flex items-center justify-center flex-shrink-0 grayscale">
+                                    <ReplicateIcon size={24} />
+                                </div>
+                                <div>
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <span className="text-sm font-bold text-zinc-400">Replicate</span>
+                                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-500 border border-zinc-700/50 uppercase tracking-tighter">Coming Soon</span>
+                                    </div>
+                                    <p className="text-[11px] text-zinc-600 font-medium tracking-tight">Alternative High-Quality Generation Engine</p>
+                                </div>
+                            </div>
+                            <div className="flex-1 md:max-w-md px-4 py-2.5 bg-zinc-900/30 rounded-xl border border-white/5 italic text-[11px] text-zinc-500 text-center md:text-left">
+                                Replicate integration is currently under development.
+                            </div>
                         </div>
-                        <p className="text-sm text-gray-400 mt-2">Account creation date</p>
                     </div>
                 </div>
 
                 {/* 2 Column Layout: Subscription & Payment History */}
-                <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
-                    {/* Left Column: Subscription Details & Manage */}
-                    <div className="space-y-6 md:col-span-1">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    {/* Left Column: Subscription & Manage */}
+                    <div className="space-y-6 lg:col-span-1">
                         {/* Cancel Warning Banner */}
                         {isPremiumPlan && !isDowngradeScheduled && subscriptionData?.cancelAtPeriodEnd && (
-                            <div className="p-4 rounded-xl border border-red-500/30 bg-red-500/10 backdrop-blur-sm">
+                            <div className="p-5 rounded-xl border border-red-500/20 bg-red-500/5">
                                 <div className="flex items-start gap-3">
-                                    <div className="w-6 h-6 rounded-full bg-red-500 flex items-center justify-center flex-shrink-0 mt-0.5">
-                                        <span className="text-white text-sm font-bold">!</span>
+                                    <div className="w-5 h-5 rounded-full bg-red-500/20 border border-red-500/40 flex items-center justify-center flex-shrink-0 mt-0.5">
+                                        <span className="text-red-500 text-[10px] font-bold">!</span>
                                     </div>
                                     <div>
-                                        <h4 className="text-red-400 font-semibold mb-1">Subscription Ending</h4>
-                                        <p className="text-red-300/80 text-sm">
-                                            Your subscription will end on {nextBillingDate || 'the current period end'}.
-                                            {subscriptionData.canceledAt && (
-                                                <span className="block mt-1 text-xs text-red-400/60">
-                                                    Canceled on {new Date(subscriptionData.canceledAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
-                                                </span>
-                                            )}
+                                        <h4 className="text-red-400 text-sm font-semibold mb-1">Subscription Ending</h4>
+                                        <p className="text-red-300/60 text-xs leading-relaxed">
+                                            Your subscription will end on {nextBillingDate}.
                                         </p>
                                     </div>
                                 </div>
@@ -398,101 +637,76 @@ function ProfilePageClient() {
 
                         {/* Subscription Details Section */}
                         {isPremiumPlan && subscriptionData && (
-                            <div className="p-6 rounded-xl border border-purple-500/20 bg-gray-900/30 backdrop-blur-sm">
-                                <div className="flex items-center gap-3 mb-6">
-                                    <div className="w-10 h-10 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-lg flex items-center justify-center">
-                                        <FileText size={20} className="text-white" />
-                                    </div>
-                                    <h3 className="text-xl font-semibold text-white">Subscription Details</h3>
+                            <div className="p-6 rounded-2xl border border-white/5 bg-zinc-900/40">
+                                <div className="flex items-center gap-2.5 mb-6">
+                                    <FileText size={18} className="text-zinc-500" />
+                                    <h3 className="text-sm font-semibold text-zinc-100 uppercase tracking-wider">Subscription</h3>
                                 </div>
-                                <div className="space-y-3 text-gray-300">
-                                    <div className="flex justify-between items-center py-2 border-b border-gray-700/50">
-                                        <span className="text-gray-400">Status</span>
-                                        <span className={`font-semibold ${subscriptionStatus?.color || 'text-gray-400'}`}>
+                                <div className="space-y-3 text-sm">
+                                    <div className="flex justify-between items-center py-2 border-b border-white/5">
+                                        <span className="text-zinc-500">Status</span>
+                                        <span className={`font-medium ${subscriptionStatus?.color || 'text-zinc-400'}`}>
                                             {subscriptionStatus?.label || '-'}
                                         </span>
                                     </div>
-                                    <div className="flex justify-between items-center py-2 border-b border-gray-700/50">
-                                        <span className="text-gray-400">Current Plan</span>
-                                        <span className="font-semibold">{planDisplayName}</span>
+                                    <div className="flex justify-between items-center py-2 border-b border-white/5">
+                                        <span className="text-zinc-500">Price</span>
+                                        <span className="text-zinc-200 font-medium">{priceText || '-'}</span>
                                     </div>
-                                    <div className="flex justify-between items-center py-2 border-b border-gray-700/50">
-                                        <span className="text-gray-400">Price</span>
-                                        <span className="font-semibold">{priceText || '-'}</span>
-                                    </div>
-                                    <div className="flex justify-between items-center py-2 border-b border-gray-700/50">
-                                        <span className="text-gray-400">Billing Cycle</span>
-                                        <span className="font-semibold">{billingCycleText || '-'}</span>
+                                    <div className="flex justify-between items-center py-2 border-b border-white/5">
+                                        <span className="text-zinc-500">Billing Cycle</span>
+                                        <span className="text-zinc-200 font-medium">{billingCycleText || '-'}</span>
                                     </div>
                                     {nextBillingDate && (
-                                        <div className="flex justify-between items-center py-2 border-b border-gray-700/50">
-                                            <span className="text-gray-400">Next Billing Date</span>
-                                            <span className="font-semibold">{nextBillingDate}</span>
+                                        <div className="flex justify-between items-center py-2 border-b border-white/5">
+                                            <span className="text-zinc-500">Next Billing</span>
+                                            <span className="text-zinc-200 font-medium">{nextBillingDate}</span>
                                         </div>
                                     )}
+
                                     {subscriptionStartDate && (
-                                        <div className="flex justify-between items-center py-2 border-b border-gray-700/50">
-                                            <span className="text-gray-400">Subscription Start</span>
-                                            <span className="font-semibold">{subscriptionStartDate}</span>
+                                        <div className="flex justify-between items-center py-2 border-b border-white/5">
+                                            <span className="text-zinc-500">Started on</span>
+                                            <span className="text-zinc-200 font-medium">{subscriptionStartDate}</span>
                                         </div>
                                     )}
 
-                                    {/* 예약된 다운그레이드 정보 */}
+                                    {/* Scheduled Downgrade */}
                                     {isDowngradeScheduled && scheduledDowngradeProductData && (
-                                        <div className="mt-4 p-4 rounded-lg border border-yellow-500/30 bg-yellow-500/10">
+                                        <div className="mt-4 p-4 rounded-xl border border-amber-500/20 bg-amber-500/5">
                                             <div className="flex items-start gap-2 mb-3">
-                                                <div className="w-5 h-5 rounded-full bg-yellow-500 flex items-center justify-center flex-shrink-0 mt-0.5">
-                                                    <Calendar size={12} className="text-black" />
-                                                </div>
-                                                <h4 className="text-yellow-400 font-semibold text-sm">Scheduled Plan Change</h4>
+                                                <Calendar size={14} className="text-amber-500 mt-0.5" />
+                                                <h4 className="text-amber-500 font-semibold text-xs uppercase tracking-wider">Scheduled Change</h4>
                                             </div>
-                                            <div className="space-y-2 text-sm ml-7">
+                                            <div className="space-y-2 text-xs">
                                                 <div className="flex justify-between items-center">
-                                                    <span className="text-yellow-300/80">Next Plan</span>
-                                                    <span className="font-semibold text-yellow-200">{scheduledDowngradeProductData.name}</span>
+                                                    <span className="text-amber-200/50">Next Plan</span>
+                                                    <span className="font-semibold text-amber-200">{scheduledDowngradeProductData.name}</span>
                                                 </div>
                                                 <div className="flex justify-between items-center">
-                                                    <span className="text-yellow-300/80">New Price</span>
-                                                    <span className="font-semibold text-yellow-200">{scheduledDowngradePriceText || '-'}</span>
+                                                    <span className="text-amber-200/50">New Price</span>
+                                                    <span className="font-semibold text-amber-200">{scheduledDowngradePriceText || '-'}</span>
                                                 </div>
                                                 <div className="flex justify-between items-center">
-                                                    <span className="text-yellow-300/80">Change Date</span>
-                                                    <span className="font-semibold text-yellow-200">{scheduledDowngradeDate || '-'}</span>
+                                                    <span className="text-amber-200/50">Effective</span>
+                                                    <span className="font-semibold text-amber-200">{scheduledDowngradeDate}</span>
                                                 </div>
                                             </div>
                                         </div>
                                     )}
                                 </div>
-                            </div>
-                        )}
 
-                        {/* Subscription Manage Section */}
-                        {isPremiumPlan && (
-                            <div className="p-6 rounded-xl border border-purple-500/20 bg-gray-900/30 backdrop-blur-sm">
-                                <div className="flex items-center gap-3 mb-6">
-                                    <div className="w-10 h-10 bg-gradient-to-r from-pink-500 to-orange-500 rounded-lg flex items-center justify-center">
-                                        <Settings size={20} className="text-white" />
-                                    </div>
-                                    <h3 className="text-xl font-semibold text-white">Subscription Manage</h3>
-                                </div>
-                                <div className="space-y-3">
+                                <div className="mt-8 space-y-3">
                                     <button
                                         onClick={onClickChangePlan}
-                                        className="w-full py-3 px-4 rounded-lg bg-gradient-to-r from-pink-500 to-purple-600 text-white font-semibold hover:from-pink-600 hover:to-purple-700 transition-all duration-300 transform hover:scale-[1.02]"
+                                        className="w-full py-2.5 px-4 rounded-lg bg-white text-black font-semibold text-sm hover:bg-zinc-200 transition-colors shadow-sm"
                                     >
                                         Change Plan
                                     </button>
-                                    {subscriptionData?.cancelAtPeriodEnd ? (
-                                        <button
-                                            disabled
-                                            className="w-full py-3 px-4 rounded-lg border border-gray-500/30 text-gray-400 font-semibold cursor-not-allowed bg-gray-500/10"
-                                        >
-                                            Cancellation Scheduled
-                                        </button>
-                                    ) : (
+                                    {!subscriptionData?.cancelAtPeriodEnd && (
                                         <button
                                             onClick={onClickCancelSubscription}
-                                            className="w-full py-3 px-4 rounded-lg border border-red-500/50 text-red-400 font-semibold hover:bg-red-500/10 hover:border-red-400 transition-all duration-300"
+                                            className="w-full py-2.5 px-4 rounded-lg border border-white/5 text-zinc-500 font-medium text-sm hover:bg-red-500/10 hover:text-red-400 hover:border-red-500/20 transition-colors"
                                         >
                                             Cancel Subscription
                                         </button>
@@ -503,17 +717,17 @@ function ProfilePageClient() {
 
                         {/* Upgrade CTA for Free Users */}
                         {!isPremiumPlan && (
-                            <div className="p-8 rounded-xl border border-purple-500/30 bg-gradient-to-r from-pink-500/10 to-purple-600/10 backdrop-blur-sm text-center">
-                                <h3 className="text-2xl font-bold text-white mb-2">Make it real</h3>
-                                <p className="text-gray-300 mb-6">
-                                    Create <b>true-motion</b> faceless shorts
-                                    with no effort.
+                            <div className="p-8 rounded-2xl border border-white/5 bg-zinc-900/60 text-center">
+                                <Sparkles size={32} className="text-zinc-600 mx-auto mb-4" />
+                                <h3 className="text-xl font-bold text-white mb-2">Upgrade Now</h3>
+                                <p className="text-sm text-zinc-500 mb-6 leading-relaxed">
+                                    Create professional faceless shorts with no effort.
                                 </p>
                                 <button
                                     onClick={() => window.location.href = '/#pricing'}
-                                    className="bg-gradient-to-r from-pink-500 to-purple-600 text-white px-8 py-3 rounded-xl font-semibold hover:from-pink-600 hover:to-purple-700 transition-all duration-300 transform hover:scale-105"
+                                    className="w-full bg-white text-black py-3 rounded-xl font-bold text-sm hover:bg-zinc-200 transition-colors"
                                 >
-                                    See Pricing
+                                    View Pricing
                                 </button>
                             </div>
                         )}
@@ -521,14 +735,12 @@ function ProfilePageClient() {
 
                     {/* Right Column: Payment History */}
                     {orderList.length > 0 && (
-                        <div className="p-6 rounded-xl border border-purple-500/20 bg-gray-900/30 backdrop-blur-sm md:col-span-2">
-                            <div className="flex items-center gap-3 mb-6">
-                                <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
-                                    <Receipt size={20} className="text-white" />
-                                </div>
-                                <h3 className="text-xl font-semibold text-white">Payment History</h3>
+                        <div className="p-6 rounded-2xl border border-white/5 bg-zinc-900/40 lg:col-span-2">
+                            <div className="flex items-center gap-2.5 mb-6">
+                                <Receipt size={18} className="text-zinc-500" />
+                                <h3 className="text-sm font-semibold text-zinc-100 uppercase tracking-wider">Payment History</h3>
                             </div>
-                            <div className="space-y-3 max-h-[600px] overflow-y-auto pr-2">
+                            <div className="space-y-3 max-h-[600px] overflow-y-auto custom-scrollbar pr-2">
                                 {orderList.map((order, index) => (
                                     <OrderItem key={index} orderData={order} />
                                 ))}
@@ -548,30 +760,18 @@ function ProfilePageClient() {
             {showCancelSubscriptionModal && <DefaultModal
                 title="Cancel Subscription"
                 message="Are you sure you want to cancel your subscription? Your plan will remain active until the end of the current billing period, and you will not be charged again."
-                confirmText="Yes"
-                cancelText="No"
+                confirmText="Yes, Cancel"
+                cancelText="No, Keep it"
                 onClickConfirm={onConfirmCancelSubscription}
                 onClickCancel={() => setShowCancelSubscriptionModal(false)}
             />}
 
-            {/* Loading Overlay */}
+            {/* Loading Overlay - Minimal Version */}
             {isLoading && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/92 backdrop-blur-lg">
-                    <div className="flex flex-col items-center gap-6">
-                        {/* Spinner */}
-                        <div className="relative w-20 h-20">
-                            <div className="absolute inset-0 rounded-full border-4 border-purple-500/20"></div>
-                            <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-purple-500 border-r-pink-500 animate-spin"></div>
-                        </div>
-                        {/* Loading Text */}
-                        <div className="text-center">
-                            <p className="text-xl font-semibold bg-gradient-to-r from-pink-400 to-purple-500 bg-clip-text text-transparent">
-                                Loading...
-                            </p>
-                            <p className="text-sm text-gray-400 mt-2">
-                                Please wait while we load your profile
-                            </p>
-                        </div>
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-950/90 backdrop-blur-md">
+                    <div className="flex flex-col items-center gap-4">
+                        <Loader2 className="w-8 h-8 animate-spin text-zinc-600" />
+                        <p className="text-sm font-medium text-zinc-400">Loading Profile...</p>
                     </div>
                 </div>
             )}

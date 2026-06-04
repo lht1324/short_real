@@ -44,48 +44,55 @@ function ChangePlanModalPricingItem({
         <button
             onClick={onClickItem}
             className={`
-                w-full px-4 py-6 rounded-2xl border backdrop-blur-sm transition-all duration-300 text-left
+                w-full px-5 py-8 rounded-2xl border transition-all duration-300 text-left
                 ${isSelected
-                    ? 'border-purple-400/50 bg-gray-800/50 shadow-2xl shadow-purple-500/25 scale-105'
-                    : 'border-purple-500/20 bg-gray-900/30 hover:border-purple-400/50 hover:bg-gray-800/50 hover:scale-105'
+                    ? 'border-white/20 bg-zinc-800 shadow-2xl scale-[1.02]'
+                    : 'border-white/5 bg-zinc-900/40 hover:border-white/10 hover:bg-zinc-900/60 hover:scale-[1.02]'
                 }
             `}
         >
-            <div className="flex justify-between items-start mb-3">
-                <div className="flex-1">
-                    <h3 className="text-xl font-bold text-white">
-                        {productName}
-                    </h3>
-                    <p className="text-sm text-gray-300 mt-1">
-                        {productDescription}
-                    </p>
+            <div className="flex flex-col h-full">
+                <div className="flex justify-between items-start mb-6">
+                    <div className="flex-1">
+                        <h3 className="text-xl font-bold text-zinc-100">
+                            {productName}
+                        </h3>
+                    </div>
+                    {isSelected && (
+                        <div className="w-5 h-5 rounded-full bg-white flex items-center justify-center">
+                            <div className="w-2 h-2 rounded-full bg-black"></div>
+                        </div>
+                    )}
                 </div>
-                <div className="text-right ml-4">
-                    <p className="text-2xl font-bold bg-gradient-to-r from-pink-400 to-purple-500 bg-clip-text text-transparent">
+
+                <div className="mb-6">
+                    <p className="text-3xl font-bold text-zinc-100">
                         {formattedPrice}
                     </p>
-                    <p className="text-xs text-gray-400">per month</p>
+                    <p className="text-[11px] text-zinc-500 uppercase tracking-wider font-semibold mt-1">per month</p>
                 </div>
-            </div>
 
-            <div className="mt-4 pt-4 border-t border-purple-500/20">
-                <ul className="space-y-4 flex-1 relative z-10">
-                    {benefits.map((benefit, index) => {
-                        const {
-                            description,
-                            icon,
-                        } = benefit;
+                <p className="text-sm text-zinc-400 mb-6 leading-relaxed">
+                    {productDescription}
+                </p>
 
-                        return <li key={index} className="flex items-start gap-3 text-sm">
-                            <div
-                                className={`${isSelected ? 'text-purple-400' : 'text-gray-500'}`}
-                            >
-                                {icon}
-                            </div>
-                            {description}
-                        </li>
-                    })}
-                </ul>
+                <div className="mt-auto pt-6 border-t border-white/5">
+                    <ul className="space-y-4">
+                        {benefits.map((benefit, index) => {
+                            const {
+                                description,
+                                icon,
+                            } = benefit;
+
+                            return <li key={index} className="flex items-start gap-3 text-[13px] text-zinc-300 leading-tight">
+                                <div className="text-zinc-500 mt-0.5">
+                                    {icon}
+                                </div>
+                                {description}
+                            </li>
+                        })}
+                    </ul>
+                </div>
             </div>
         </button>
     )

@@ -63,28 +63,27 @@ function OrderItem({
     }, [orderData.status]);
 
     return (
-        <div className="grid grid-cols-4 gap-4 items-center p-4 rounded-lg border border-gray-700/50 bg-gray-800/30 hover:bg-gray-800/50 transition-all duration-300">
+        <div className="grid grid-cols-4 gap-4 items-center p-4 rounded-xl border border-white/5 bg-zinc-900/40 hover:bg-zinc-800/40 transition-all duration-300">
             {/* 제품명 */}
-            <div>
-                <p className="text-white font-medium">{orderData.productName}</p>
+            <div className="min-w-0">
+                <p className="text-zinc-100 font-medium truncate">{orderData.productName}</p>
             </div>
 
             {/* 금액 */}
             <div className="text-end">
-                <p className="text-white font-semibold">{formattedAmount}</p>
+                <p className="text-zinc-100 font-semibold">{formattedAmount}</p>
             </div>
 
             {/* 상태 */}
-            <div className="flex items-center justify-start gap-2">
-                {statusInfo.icon}
-                <span className={`text-sm font-medium ${statusInfo.color} break-words leading-tight`}>
+            <div className="flex items-center justify-start gap-2 ml-4">
+                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${statusInfo.color.replace('text-', 'border-').replace('-400', '-500/30')} ${statusInfo.color.replace('-400', '-500/10')} ${statusInfo.color} uppercase tracking-wider`}>
                     {statusInfo.text}
                 </span>
             </div>
 
             {/* 날짜 */}
             <div>
-                <p className="text-sm text-end text-gray-400">{formattedDate}</p>
+                <p className="text-[13px] text-end text-zinc-500 font-medium">{formattedDate}</p>
             </div>
         </div>
     );

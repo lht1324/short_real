@@ -22,39 +22,39 @@ function DefaultModal({
     return (
         <div
             onClick={onClickCancel}
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100]"
+            className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[100]"
         >
             <div
                 onClick={(e) => e.stopPropagation()}
-                className="bg-gray-900/95 backdrop-blur-sm border border-purple-500/30 rounded-xl max-w-md w-full mx-4 overflow-hidden shadow-2xl"
+                className="bg-zinc-950 border border-white/10 rounded-2xl max-w-md w-full mx-4 overflow-hidden shadow-2xl"
             >
-                <div className="p-6">
+                <div className="p-8">
                     {/* 제목 */}
-                    <h3 className="text-xl font-semibold text-purple-300 mb-4">
+                    <h3 className="text-xl font-bold text-zinc-100 mb-3">
                         {title}
                     </h3>
 
                     {/* 메시지 */}
-                    {message && <p className="text-gray-300 text-sm mb-6 leading-relaxed whitespace-pre-line">
+                    {message && <p className="text-zinc-400 text-sm mb-8 leading-relaxed whitespace-pre-line">
                         {message}
                     </p>}
 
                     {/* 버튼 영역 */}
                     <div className="flex items-center justify-end space-x-3">
+                        <button
+                            onClick={onClickCancel}
+                            className="px-5 py-2.5 bg-zinc-900 hover:bg-zinc-800 text-zinc-400 font-bold text-sm rounded-xl transition-all"
+                        >
+                            {cancelText}
+                        </button>
                         {confirmText && onClickConfirm && (
                             <button
                                 onClick={onClickConfirm}
-                                className="px-4 py-2 bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white rounded-lg text-sm font-medium transition-all shadow-lg shadow-purple-500/25"
+                                className="px-5 py-2.5 bg-white hover:bg-zinc-200 text-black font-bold text-sm rounded-xl transition-all shadow-xl shadow-white/5"
                             >
                                 {confirmText}
                             </button>
                         )}
-                        <button
-                            onClick={onClickCancel}
-                            className="px-4 py-2 bg-gray-800/50 hover:bg-gray-800 border border-gray-600/50 hover:border-gray-500/50 text-gray-300 rounded-lg text-sm font-medium transition-all"
-                        >
-                            {cancelText}
-                        </button>
                     </div>
                 </div>
             </div>

@@ -16,6 +16,10 @@ export interface User {
     downgrade_target_plan_id?: string;
 
     preferred_ai_model_config: AIModelConfig;
+
+    // BYOK Keys
+    fal_ai_api_key?: string | null;
+    replicate_api_key?: string | null;
 }
 
 export enum SubscriptionPlan {

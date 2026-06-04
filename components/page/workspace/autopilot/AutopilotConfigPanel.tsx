@@ -340,9 +340,10 @@ function AutopilotConfigPanel({
                         </div>
                         <span className="text-[11px] font-medium text-zinc-500 uppercase tracking-wider">Estimated BYOK Cost</span>
                         <div className="flex items-baseline gap-1">
-                            <span className="text-lg text-zinc-500 font-light">~$</span>
+                            <span className="text-lg text-zinc-300 font-light">$</span>
                             <span className="text-3xl font-bold text-zinc-100 tracking-tight">{estimatedCost.toFixed(3)}</span>
-                            <span className="text-xs text-zinc-500 font-medium ml-1">/ video</span>
+                            <span className="text-xs text-zinc-300 font-medium ml-1">/ video</span>
+                            <span className="text-lg text-zinc-300 font-light">~</span>
                         </div>
                         <p className="text-[11px] text-zinc-500 mt-0.5">
                             Billed directly to your AI providers.
