@@ -4,13 +4,7 @@ import { taskCheckAndCleanupIfCancelled } from "@/lib/utils/taskCheckAndCleanupI
 import { VideoGenerationTaskStatus } from "@/lib/api/types/supabase/VideoGenerationTasks";
 import { llmServerAPI } from "@/lib/api/server/llmServerAPI";
 import { STYLE_DATA_LIST } from "@/lib/styles";
-import { usersServerAPI } from "@/lib/api/server/usersServerAPI";
 import { internalFireAndForgetFetch } from "@/lib/utils/internalFetch";
-import {
-    BASE_CREDIT_PER_SCENE, BASE_CREDIT_PER_VIDEO_DURATION,
-    BASE_SCENE_COUNT_STANDARD,
-    BASE_VIDEO_DURATION_STANDARD
-} from "@/lib/ADDITIONAL_CREDIT_AMOUNT";
 import {imageServerAPI} from "@/lib/api/server/imageServerAPI";
 
 export const postMasterStyle = task({
@@ -204,26 +198,6 @@ export const postMasterStyle = task({
                     };
                 })
             });
-
-            // 크레딧 차감 로직
-            const sceneCount = sceneDataList.length;
-            const totalDuration = sceneDataList.reduce((acc, sceneData) => {
-                return acc + sceneData.sceneDuration;
-            }, 0);
-            const additionalTotalDurationUsage = totalDuration > BASE_VIDEO_DURATION_STANDARD
-                ? Math.ceil(totalDuration - BASE_VIDEO_DURATION_STANDARD) * BASE_CREDIT_PER_VIDEO_DURATION
-                : 0;
-            const additionalSceneCountUsage = sceneCount > BASE_SCENE_COUNT_STANDARD
-                ? (sceneCount - BASE_SCENE_COUNT_STANDARD) * BASE_CREDIT_PER_SCENE
-                : 0;
-            const creditUsage = 100 + additionalTotalDurationUsage + additionalSceneCountUsage;
-
-            const patchUserCreditCountResult = await usersServerAPI.patchUserCreditCountByUserId(videoGenerationTask.user_id, -creditUsage);
-
-            if (!patchUserCreditCountResult) {
-                // 크레딧 차감 실패 시에도 일단 진행? 혹은 에러? (기존 로직 따름)
-                throw new Error('Failed to patch user credit count.');
-            }
 
             const checkFinalResult = await taskCheckAndCleanupIfCancelled(patchVideoGenerationTaskStatusFinalResult);
             if (checkFinalResult) return { status: 'cancelled' };
