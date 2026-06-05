@@ -8,7 +8,7 @@ import {
     VoiceSettings
 } from "@/lib/api/types/eleven-labs/Voice";
 import {SubtitleSegment} from "@/lib/api/types/supabase/VideoGenerationTasks";
-import {createSupabaseServiceRoleClient} from "@/lib/supabaseServiceRole";
+import {createSupabaseServiceRoleClient} from "@/lib/supabase/supabaseServiceRole";
 import {VoiceResponseModelCategory} from "@elevenlabs/elevenlabs-js/api/types/VoiceResponseModelCategory";
 import Replicate from "replicate";
 

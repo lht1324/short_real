@@ -1,4 +1,4 @@
-import {createSupabaseServiceRoleClient} from "@/lib/supabaseServiceRole";
+import {createSupabaseServiceRoleClient} from "@/lib/supabase/supabaseServiceRole";
 import {MusicData} from "@/lib/api/types/supabase/VideoGenerationTasks";
 import Replicate from "replicate";
 import {videoGenerationTasksServerAPI} from "@/lib/api/server/videoGenerationTasksServerAPI";

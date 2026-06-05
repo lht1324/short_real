@@ -1,5 +1,5 @@
 import {NextRequest} from "next/server";
-import {createSupabaseServer} from "@/lib/supabaseServer";
+import {createSupabaseServer} from "@/lib/supabase/supabaseServer";
 
 export async function getIsValidRequestC2S() {
     const supabase = await createSupabaseServer();

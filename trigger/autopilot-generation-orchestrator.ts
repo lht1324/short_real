@@ -1,6 +1,6 @@
 import { logger, schedules } from "@trigger.dev/sdk/v3";
 import { internalFireAndForgetFetch } from "@/lib/utils/internalFetch";
-import { createSupabaseServiceRoleClient } from "@/lib/supabaseServiceRole";
+import { createSupabaseServiceRoleClient } from "@/lib/supabase/supabaseServiceRole";
 import { AutopilotData } from "@/lib/api/types/supabase/AutopilotData";
 import { getIntendedUploadTime, isSameDayInTimezone } from "@/lib/utils/dateUtils";
 

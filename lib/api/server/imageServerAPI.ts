@@ -1,4 +1,4 @@
-import {createSupabaseServiceRoleClient} from "@/lib/supabaseServiceRole";
+import {createSupabaseServiceRoleClient} from "@/lib/supabase/supabaseServiceRole";
 import {fal} from "@fal-ai/client";
 import {FluxPrompt} from "@/lib/api/types/open-ai/FluxPrompt";
 import {ImageFile} from "@fal-ai/client/endpoints";

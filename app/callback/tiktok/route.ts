@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { internalFireAndForgetFetch } from '@/lib/utils/internalFetch';
-import { createSupabaseServiceRoleClient } from "@/lib/supabaseServiceRole";
+import { createSupabaseServiceRoleClient } from "@/lib/supabase/supabaseServiceRole";
 import {videoGenerationTasksServerAPI} from "@/lib/api/server/videoGenerationTasksServerAPI";
 import {ExportPlatform, ExportStatus} from "@/lib/api/types/supabase/VideoGenerationTasks";
 

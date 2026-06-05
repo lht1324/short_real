@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { createSupabaseServiceRoleClient } from '@/lib/supabaseServiceRole';
+import { createSupabaseServiceRoleClient } from '@/lib/supabase/supabaseServiceRole';
 import { videoGenerationTasksServerAPI } from '@/lib/api/server/videoGenerationTasksServerAPI';
 import { VideoGenerationTaskStatus } from '@/lib/api/types/supabase/VideoGenerationTasks';
 import {taskCheckAndCleanupIfCancelled} from "@/lib/utils/taskCheckAndCleanupIfCancelled";

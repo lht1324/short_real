@@ -4,7 +4,7 @@ import {videoServerAPI} from "@/lib/api/server/videoServerAPI";
 import {taskCheckAndCleanupIfCancelled} from "@/lib/utils/taskCheckAndCleanupIfCancelled";
 import {getNextBaseResponse} from "@/lib/utils/getNextBaseResponse";
 import {getIsValidRequestS2S} from "@/lib/utils/getIsValidRequest";
-import {createSupabaseServiceRoleClient} from "@/lib/supabaseServiceRole";
+import {createSupabaseServiceRoleClient} from "@/lib/supabase/supabaseServiceRole";
 import {getErrorMessage} from "@/lib/utils/ErrorUtils";
 import {FalAiErrorDetail} from "@/lib/api/types/fal-ai/FalAIResponse";
 import {VideoGenerationTaskStatus} from "@/lib/api/types/supabase/VideoGenerationTasks";

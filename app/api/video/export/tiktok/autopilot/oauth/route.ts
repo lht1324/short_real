@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getIsValidRequestC2S } from '@/lib/utils/getIsValidRequest';
 import { getNextBaseResponse } from '@/lib/utils/getNextBaseResponse';
-import { createSupabaseServiceRoleClient } from "@/lib/supabaseServiceRole";
+import { createSupabaseServiceRoleClient } from "@/lib/supabase/supabaseServiceRole";
 
 /**
  * GET /api/video/export/tiktok/autopilot/oauth

@@ -1,6 +1,6 @@
-import { createSupabaseServer } from '@/lib/supabaseServer';
+import { createSupabaseServer } from '@/lib/supabase/supabaseServer';
 import {VideoGenerationTask, VideoGenerationTaskStatus} from '@/lib/api/types/supabase/VideoGenerationTasks';
-import {createSupabaseServiceRoleClient} from "@/lib/supabaseServiceRole";
+import {createSupabaseServiceRoleClient} from "@/lib/supabase/supabaseServiceRole";
 
 export const videoGenerationTasksServerAPI = {
     // POST - 새로운 영상 생성 작업 생성

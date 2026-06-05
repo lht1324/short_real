@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { getNextBaseResponse } from "@/lib/utils/getNextBaseResponse";
-import { createSupabaseServiceRoleClient } from "@/lib/supabaseServiceRole";
+import { createSupabaseServiceRoleClient } from "@/lib/supabase/supabaseServiceRole";
 import { getIsValidRequestS2S } from "@/lib/utils/getIsValidRequest";
 
 /**

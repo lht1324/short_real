@@ -1,5 +1,5 @@
 import {logger, schedules} from "@trigger.dev/sdk/v3";
-import {createSupabaseServiceRoleClient} from "@/lib/supabaseServiceRole";
+import {createSupabaseServiceRoleClient} from "@/lib/supabase/supabaseServiceRole";
 import {videoServerAPI} from "@/lib/api/server/videoServerAPI";
 import {AutopilotData} from "@/lib/api/types/supabase/AutopilotData";
 import {internalFireAndForgetFetch} from "@/lib/utils/internalFetch";

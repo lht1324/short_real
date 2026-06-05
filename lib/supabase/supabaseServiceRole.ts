@@ -1,4 +1,4 @@
-// lib/supabaseServiceRole.ts
+// lib/supabase/supabaseServiceRole.ts
 import { createClient } from '@supabase/supabase-js'
 
 // 이 클라이언트는 오직 서버의 백그라운드 작업 및 웹훅 용도로만 사용됩니다.

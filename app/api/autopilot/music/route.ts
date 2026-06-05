@@ -4,7 +4,7 @@ import {getNextBaseResponse} from "@/lib/utils/getNextBaseResponse";
 import {videoGenerationTasksServerAPI} from "@/lib/api/server/videoGenerationTasksServerAPI";
 import {llmServerAPI} from "@/lib/api/server/llmServerAPI";
 import {internalFireAndForgetFetch} from "@/lib/utils/internalFetch";
-import {createSupabaseServiceRoleClient} from "@/lib/supabaseServiceRole";
+import {createSupabaseServiceRoleClient} from "@/lib/supabase/supabaseServiceRole";
 import {AutopilotData} from "@/lib/api/types/supabase/AutopilotData";
 import {VideoGenerationTask, VideoGenerationTaskStatus} from "@/lib/api/types/supabase/VideoGenerationTasks";
 import {musicServerAPI} from "@/lib/api/server/musicServerAPI";

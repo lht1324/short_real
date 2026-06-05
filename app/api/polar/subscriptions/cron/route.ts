@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createSupabaseServiceRoleClient } from "@/lib/supabaseServiceRole";
+import { createSupabaseServiceRoleClient } from "@/lib/supabase/supabaseServiceRole";
 import { User } from "@/lib/api/types/supabase/Users";
 import { PostgrestError } from "@supabase/supabase-js";
 import { PolarClient } from "@/lib/PolarClient";

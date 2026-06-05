@@ -8,7 +8,7 @@ import {
 } from "@/lib/ReplicateData";
 import Replicate from "replicate";
 import {videoGenerationTasksServerAPI} from "@/lib/api/server/videoGenerationTasksServerAPI";
-import {createSupabaseServiceRoleClient} from "@/lib/supabaseServiceRole";
+import {createSupabaseServiceRoleClient} from "@/lib/supabase/supabaseServiceRole";
 import {ALL_FORMATS, Input, UrlSource} from "mediabunny";
 import {fal} from "@fal-ai/client";
 

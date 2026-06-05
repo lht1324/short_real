@@ -1,7 +1,7 @@
 // app/api/video/export/tiktok/upload/route.ts
 
 import { NextRequest } from 'next/server';
-import { createSupabaseServiceRoleClient } from '@/lib/supabaseServiceRole';
+import { createSupabaseServiceRoleClient } from '@/lib/supabase/supabaseServiceRole';
 import { getNextBaseResponse } from '@/lib/utils/getNextBaseResponse';
 import { PostgrestSingleResponse } from '@supabase/supabase-js';
 import { DownloadResult } from '@supabase/storage-js';
