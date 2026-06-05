@@ -23,7 +23,7 @@ import {cronToWeekly} from "@/lib/utils/cronUtils";
 import FONT_FAMILY_LIST, {FontFamily} from "@/lib/FontFamilyList";
 import { fontMap, type FontName } from "@/lib/fonts";
 import {CaptionConfigState} from "@/components/page/workspace/editor/WorkspaceEditorPageClient";
-import {aiModelDataClient} from "@/lib/api/client/aiModelDataClient";
+import {aiModelDataClientAPI} from "@/lib/api/client/aiModelDataClientAPI";
 import {AIModelData} from "@/lib/api/types/supabase/AIModelData";
 
 const INITIAL_CAPTION_CONFIG_STATE: CaptionConfigState = {
@@ -221,7 +221,7 @@ function WorkspaceAutopilotPageClient() {
                 
                 const [voices, aiModels] = await Promise.all([
                     voiceClientAPI.getVoices(),
-                    aiModelDataClient.getAIModelData()
+                    aiModelDataClientAPI.getAIModelData()
                 ]);
                 setVoiceList(voices);
                 setAiModelList(aiModels);

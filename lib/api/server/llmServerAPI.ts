@@ -795,7 +795,7 @@ Instruction: Analyze <video_metadata>, <target_aspect_ratio>, <style_guidelines>
         sceneEntityManifestList: InitialEntityManifestItem[],
         sceneVisualDescription: string,
         styleId: string,
-        aspectRatio: VideoAspectRatio = VIDEO_ASPECT_RATIOS.PORTRAIT_9_16
+        aspectRatio: VideoAspectRatio = VIDEO_ASPECT_RATIOS.PORTRAIT_9_16,
     ): Promise<{
         success: boolean;
         imageGenPrompt?: FluxPrompt;

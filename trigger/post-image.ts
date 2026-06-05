@@ -5,7 +5,8 @@ import { videoGenerationTasksServerAPI } from "@/lib/api/server/videoGenerationT
 import { logger } from "@trigger.dev/sdk";
 import { MasterStyleInfo } from "@/lib/api/types/supabase/MasterStyleInfo";
 import { InitialEntityManifestItem } from "@/lib/api/types/open-ai/Entity";
-import { SceneData } from "@/lib/api/types/supabase/VideoGenerationTasks";
+import {AIModelConfig, SceneData} from "@/lib/api/types/supabase/VideoGenerationTasks";
+import {AIModelData} from "@/lib/api/types/supabase/AIModelData";
 
 export const postImage = task({
     id: "post-image",
@@ -34,6 +35,9 @@ export const postImage = task({
         entityManifestList: InitialEntityManifestItem[];
         sceneData: SceneData;
         styleId: string;
+        falAiApiKey: string;
+        t2iAIModelData: AIModelData;
+        i2iAIModelData: AIModelData;
     }) => {
         const {
             taskId,
@@ -43,6 +47,9 @@ export const postImage = task({
             entityManifestList,
             sceneData,
             styleId,
+            falAiApiKey,
+            t2iAIModelData,
+            i2iAIModelData,
         } = payload;
 
         try {
@@ -106,6 +113,9 @@ export const postImage = task({
                 }),
                 taskId,
                 sceneData.sceneNumber,
+                falAiApiKey,
+                t2iAIModelData,
+                i2iAIModelData,
             );
 
             if (!postImageResult.success) {

@@ -1,7 +1,7 @@
 import {AIModelData} from "@/lib/api/types/supabase/AIModelData";
 import {getFetch} from "@/lib/api/client/baseFetch";
 
-export const aiModelDataClient = {
+export const aiModelDataClientAPI = {
     async getAIModelData(): Promise<AIModelData[]> {
         try {
             const response = await getFetch(`/api/ai-model-data`);

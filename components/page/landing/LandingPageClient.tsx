@@ -18,7 +18,7 @@ import Footer from "@/components/public/footer/Footer";
 import FloatingRoadmap from "@/components/page/landing/FloatingRoadmap";
 import {RoadmapItem} from "@/lib/api/types/supabase/RoadmapItem";
 import {roadmapClientAPI} from "@/lib/api/client/roadmapClientAPI";
-import { aiModelDataClient } from "@/lib/api/client/aiModelDataClient";
+import { aiModelDataClientAPI } from "@/lib/api/client/aiModelDataClientAPI";
 import { AIModelData } from "@/lib/api/types/supabase/AIModelData";
 
 function LandingPageClient() {
@@ -73,7 +73,7 @@ function LandingPageClient() {
             setRoadmapItemList(roadmapItemList);
         }
         const loadAiModelDataList = async () => {
-            const dataList = await aiModelDataClient.getAIModelData();
+            const dataList = await aiModelDataClientAPI.getAIModelData();
             setAiModelDataList(dataList || []);
         }
         loadProductDataList().then();

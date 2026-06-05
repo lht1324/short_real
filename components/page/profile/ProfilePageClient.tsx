@@ -13,7 +13,7 @@ import {useRouter} from "next/navigation";
 import {ProductData} from "@/lib/api/types/api/polar/products/ProductData";
 import Image from "next/image";
 import DefaultModal from "@/components/public/DefaultModal";
-import {aiModelDataClient} from "@/lib/api/client/aiModelDataClient";
+import {aiModelDataClientAPI} from "@/lib/api/client/aiModelDataClientAPI";
 import {AIModelData} from "@/lib/api/types/supabase/AIModelData";
 import {usersClientAPI} from "@/lib/api/client/usersClientAPI";
 
@@ -188,7 +188,7 @@ function ProfilePageClient() {
 
     const fetchAIModels = useCallback(async () => {
         try {
-            const models = await aiModelDataClient.getAIModelData();
+            const models = await aiModelDataClientAPI.getAIModelData();
             setAiModelList(models);
 
             if (user?.preferred_ai_model_config) {

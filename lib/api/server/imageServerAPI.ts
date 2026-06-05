@@ -3,6 +3,7 @@ import {fal} from "@fal-ai/client";
 import {FluxPrompt} from "@/lib/api/types/open-ai/FluxPrompt";
 import {ImageFile} from "@fal-ai/client/endpoints";
 import {Entity} from "@/lib/api/types/open-ai/Entity";
+import {AIModelData} from "@/lib/api/types/supabase/AIModelData";
 
 export const imageServerAPI = {
     async postImage(
@@ -11,6 +12,9 @@ export const imageServerAPI = {
         subjectEntityManifestList: Entity[], // Sorted
         taskId: string,
         sceneNumber: number,
+        falAiApiKey: string,
+        t2iAIModelData: AIModelData,
+        i2iAIModelData: AIModelData,
     ): Promise<{ success: boolean; error?: { message: string; code: string } }> {
         const supabase = createSupabaseServiceRoleClient();
 
@@ -18,6 +22,7 @@ export const imageServerAPI = {
             const falAIClient = fal;
             falAIClient.config({
                 credentials: process.env.FAL_AI_API_KEY!
+                // 이 부분은 암호화/복호화 방식 규정한 뒤 falAiApiKey 복호화하는 것 넣어주는 걸로 수정해야 함
             });
 
             let resultImageUrlList: Array<ImageFile>;
@@ -33,8 +38,12 @@ export const imageServerAPI = {
             const isSubjectExists = imageSignedUrlList.length !== 0;
 
             try {
-                const modelName = isSubjectExists ? "fal-ai/nano-banana-2/edit" : "fal-ai/nano-banana-2"
+                const modelName = isSubjectExists
+                    ? i2iAIModelData.endpoint_id
+                    : t2iAIModelData.endpoint_id;
                 const output = await fal.subscribe(modelName, {
+                    // 솔직히 가물가물함. 이걸 뭐 매칭 같은 걸 시켜야 할 지, 그냥 개노가다로 하나하나 매핑해주는 함수를 작성해야 할 지 감이 안 잡힘
+                    // 그나마 양은 적으니 다행인가
                     input: {
                         prompt: imageGenPromptSentence,
                         num_images: 1,

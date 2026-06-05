@@ -24,7 +24,7 @@ import CreateFormPanel from "@/components/page/workspace/create/create-form-pane
 import WorkspaceSidebar from "@/components/public/WorkspaceSidebar";
 import {WorkspaceSidebarItem} from "@/components/public/WorkspaceSidebarItem";
 
-import {aiModelDataClient} from "@/lib/api/client/aiModelDataClient";
+import {aiModelDataClientAPI} from "@/lib/api/client/aiModelDataClientAPI";
 import {AIModelData} from "@/lib/api/types/supabase/AIModelData";
 
 function WorkspaceCreatePageClient() {
@@ -345,7 +345,7 @@ function WorkspaceCreatePageClient() {
     useEffect(() => {
         const fetchAIModels = async () => {
             try {
-                const models = await aiModelDataClient.getAIModelData();
+                const models = await aiModelDataClientAPI.getAIModelData();
                 setAiModelList(models);
 
                 // Set default models using user preferences or specific hardcoded fallback IDs
