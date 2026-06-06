@@ -36,6 +36,7 @@ export const postImage = task({
         sceneData: SceneData;
         styleId: string;
         falAiApiKey: string;
+        userId: string;
         t2iAIModelData: AIModelData;
         i2iAIModelData: AIModelData;
     }) => {
@@ -48,6 +49,7 @@ export const postImage = task({
             sceneData,
             styleId,
             falAiApiKey,
+            userId,
             t2iAIModelData,
             i2iAIModelData,
         } = payload;
@@ -114,6 +116,7 @@ export const postImage = task({
                 taskId,
                 sceneData.sceneNumber,
                 falAiApiKey,
+                userId,
                 t2iAIModelData,
                 i2iAIModelData,
             );

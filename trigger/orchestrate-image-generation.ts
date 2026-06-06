@@ -86,6 +86,7 @@ export const orchestrateImageGeneration = task({
                         sceneData,
                         styleId,
                         falAiApiKey,
+                        userId: videoGenerationTask.user_id,
                         t2iAIModelData,
                         i2iAIModelData,
                     }

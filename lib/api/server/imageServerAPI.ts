@@ -4,6 +4,7 @@ import {FluxPrompt} from "@/lib/api/types/open-ai/FluxPrompt";
 import {ImageFile} from "@fal-ai/client/endpoints";
 import {Entity} from "@/lib/api/types/open-ai/Entity";
 import {AIModelData} from "@/lib/api/types/supabase/AIModelData";
+import {cryptoUtils} from "@/lib/utils/cryptoUtils";
 
 export const imageServerAPI = {
     async postImage(
@@ -13,16 +14,18 @@ export const imageServerAPI = {
         taskId: string,
         sceneNumber: number,
         falAiApiKey: string,
+        userId: string,
         t2iAIModelData: AIModelData,
         i2iAIModelData: AIModelData,
     ): Promise<{ success: boolean; error?: { message: string; code: string } }> {
         const supabase = createSupabaseServiceRoleClient();
 
         try {
+            const decryptedApiKey = cryptoUtils.decrypt(falAiApiKey, userId);
+            
             const falAIClient = fal;
             falAIClient.config({
-                credentials: process.env.FAL_AI_API_KEY!
-                // 이 부분은 암호화/복호화 방식 규정한 뒤 falAiApiKey 복호화하는 것 넣어주는 걸로 수정해야 함
+                credentials: decryptedApiKey
             });
 
             let resultImageUrlList: Array<ImageFile>;
@@ -142,6 +145,8 @@ export const imageServerAPI = {
         referenceImagePrompt: string,
         taskId: string,
         entityId: string,
+        falAiApiKey: string,
+        userId: string,
     ): Promise<{
         success: boolean;
         error?: {
@@ -152,8 +157,10 @@ export const imageServerAPI = {
         const supabase = createSupabaseServiceRoleClient();
 
         try {
+            const decryptedApiKey = cryptoUtils.decrypt(falAiApiKey, userId);
+            
             fal.config({
-                credentials: process.env.FAL_AI_API_KEY!
+                credentials: decryptedApiKey
             });
 
             let imageUrl: string;

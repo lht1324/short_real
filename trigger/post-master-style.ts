@@ -6,6 +6,7 @@ import { llmServerAPI } from "@/lib/api/server/llmServerAPI";
 import { STYLE_DATA_LIST } from "@/lib/styles";
 import { internalFireAndForgetFetch } from "@/lib/utils/internalFetch";
 import {imageServerAPI} from "@/lib/api/server/imageServerAPI";
+import {usersServerAPI} from "@/lib/api/server/usersServerAPI";
 
 export const postMasterStyle = task({
     id: "post-master-style",
@@ -29,6 +30,12 @@ export const postMasterStyle = task({
             if (!videoGenerationTask) {
                 throw new Error('Video Generation Task not found.');
             }
+
+            const user = await usersServerAPI.getUserByUserId(videoGenerationTask.user_id);
+            if (!user || !user.fal_ai_api_key) {
+                throw new Error('User or fal_ai_api_key not found.');
+            }
+            const falAiApiKey = user.fal_ai_api_key;
 
             // 취소 체크
             const checkResultInitialResult = await taskCheckAndCleanupIfCancelled(videoGenerationTask);
@@ -107,6 +114,12 @@ export const postMasterStyle = task({
             })
 
             if (isSubjectExisting) {
+                const aiModelConfig = videoGenerationTask.ai_model_config;
+
+                if (!aiModelConfig) {
+                    throw new Error(`Task's AI Model config is invalid.`);
+                }
+
                 // --- DeepSeek 호출 3: EntityCharacterSheetPromptList ---
                 const postEntityCharacterSheetPromptListResult = await llmServerAPI.postEntityReferenceImagePromptList(
                     postEntityManifestListResult.entityManifestList.filter((entity) => {
@@ -127,7 +140,13 @@ export const postMasterStyle = task({
                         prompt: referenceImagePrompt,
                     } = referenceImageData;
 
-                    return await imageServerAPI.postReferenceImage(referenceImagePrompt, taskId, entityId);
+                    return await imageServerAPI.postReferenceImage(
+                        referenceImagePrompt,
+                        taskId,
+                        entityId,
+                        falAiApiKey,
+                        user.id
+                    );
                 });
 
                 const referenceImageResults = await Promise.all(postReferenceImagePromiseList);
