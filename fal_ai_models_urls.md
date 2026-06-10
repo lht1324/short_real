@@ -4,8 +4,6 @@ https://fal.ai/models/fal-ai/nano-banana/edit
 https://fal.ai/models/fal-ai/nano-banana-2
 https://fal.ai/models/fal-ai/nano-banana-2/edit
 
----
-
 https://fal.ai/models/fal-ai/nano-banana-pro
 https://fal.ai/models/fal-ai/nano-banana-pro/edit
 
@@ -20,24 +18,29 @@ https://fal.ai/models/fal-ai/qwen-image-2/edit
 
 https://fal.ai/models/fal-ai/qwen-image-2/pro/text-to-image
 https://fal.ai/models/fal-ai/qwen-image-2/pro/edit
-
 https://fal.ai/models/fal-ai/qwen-image-max/text-to-image
 https://fal.ai/models/fal-ai/qwen-image-max/edit
 
+---
+보류 (이미지 입력이 애매함)
+
 https://fal.ai/models/fal-ai/kling-image/v3/text-to-image
 https://fal.ai/models/fal-ai/kling-image/v3/image-to-image
+---
 
 https://fal.ai/models/fal-ai/kling-image/o3/text-to-image
 https://fal.ai/models/fal-ai/kling-image/o3/image-to-image
 
 https://fal.ai/models/fal-ai/wan/v2.7/text-to-image
 https://fal.ai/models/fal-ai/wan/v2.7/edit
-
 https://fal.ai/models/fal-ai/wan/v2.7/pro/text-to-image
 https://fal.ai/models/fal-ai/wan/v2.7/pro/edit
 
+---
+컷 (이미지 하나)
 https://fal.ai/models/fal-ai/flux-pro/kontext/text-to-image
 https://fal.ai/models/fal-ai/flux-pro/kontext
+---
 
 https://fal.ai/models/fal-ai/vidu/q3/image-to-video
 https://fal.ai/models/fal-ai/vidu/q3/image-to-video/turbo
