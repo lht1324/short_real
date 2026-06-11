@@ -1,4 +1,4 @@
-export enum falAIEndpointID {
+export enum FalAIEndpointID {
     // ==== Image Models (T2I & I2I Pairs) ====
     NANO_BANANA_T2I = "fal-ai/nano-banana",
     NANO_BANANA_I2I = "fal-ai/nano-banana/edit",
@@ -37,8 +37,8 @@ export enum falAIEndpointID {
     WAN_2_7_PRO_I2I = "fal-ai/wan/v2.7/pro/edit",
 
     // Models without explicit I2I counterparts
-    FLUX_PRO_KONTEXT_I2I = "fal-ai/flux-pro/kontext",
-    FLUX_PRO_KONTEXT_T2I = "fal-ai/flux-pro/kontext/text-to-image",
+    // FLUX_PRO_KONTEXT_I2I = "fal-ai/flux-pro/kontext",
+    // FLUX_PRO_KONTEXT_T2I = "fal-ai/flux-pro/kontext/text-to-image",
 
     // ==== Image-to-Video Models ====
     VIDU_Q3_I2V = "fal-ai/vidu/q3/image-to-video",
@@ -59,7 +59,7 @@ export enum falAIEndpointID {
     
     HAPPY_HORSE_I2V = "alibaba/happy-horse/image-to-video",
     
-    LTX_VIDEO_13B_DEV_I2V = "fal-ai/ltx-video-13b-dev/image-to-video",
+    // LTX_VIDEO_13B_DEV_I2V = "fal-ai/ltx-video-13b-dev/image-to-video",
     LTX_VIDEO_13B_DISTILLED_I2V = "fal-ai/ltx-video-13b-distilled/image-to-video",
     LTXV_13B_098_DISTILLED_I2V = "fal-ai/ltxv-13b-098-distilled/image-to-video",
     
@@ -71,13 +71,21 @@ export enum falAIEndpointID {
 
 export interface CommonInputParams {
     prompt: string;
-    imageUrls?: string[];
     aspectRatio: '16:9' | '9:16';
     resolution: '720p' | '1080p'
 }
 
+export interface ImageInputParams extends CommonInputParams {
+    imageUrls?: string[];
+}
+
+export interface VideoInputParams extends CommonInputParams {
+    imageUrl: string;
+    duration: number;
+}
+
 export const falAIInputMapper = {
-    buildImageInput(endpointId: string, params: CommonInputParams): Record<string, any> {
+    buildImageInput(endpointId: FalAIEndpointID, params: ImageInputParams): Record<string, any> {
         const {
             prompt,
             imageUrls,
@@ -95,8 +103,8 @@ export const falAIInputMapper = {
             : isVertical ? 1920 : 1080;
 
         switch (endpointId) {
-            case falAIEndpointID.NANO_BANANA_T2I:
-            case falAIEndpointID.NANO_BANANA_I2I: return {
+            case FalAIEndpointID.NANO_BANANA_T2I:
+            case FalAIEndpointID.NANO_BANANA_I2I: return {
                 prompt: prompt,
                 num_images: 1,
                 ...(hasImage && { image_urls: imageUrls }),
@@ -105,8 +113,8 @@ export const falAIInputMapper = {
                 safety_tolerance: 6,
             };
 
-            case falAIEndpointID.NANO_BANANA_2_T2I:
-            case falAIEndpointID.NANO_BANANA_2_I2I: return {
+            case FalAIEndpointID.NANO_BANANA_2_T2I:
+            case FalAIEndpointID.NANO_BANANA_2_I2I: return {
                 prompt: prompt,
                 num_images: 1,
                 output_format: 'jpeg',
@@ -116,8 +124,8 @@ export const falAIInputMapper = {
                 limit_generations: false,
             };
 
-            case falAIEndpointID.NANO_BANANA_PRO_T2I:
-            case falAIEndpointID.NANO_BANANA_PRO_I2I: return {
+            case FalAIEndpointID.NANO_BANANA_PRO_T2I:
+            case FalAIEndpointID.NANO_BANANA_PRO_I2I: return {
                 prompt: prompt,
                 num_images: 1,
                 aspect_ratio: aspectRatio,
@@ -128,8 +136,8 @@ export const falAIInputMapper = {
                 limit_generations: false,
             };
 
-            case falAIEndpointID.GPT_IMAGE_2_T2I:
-            case falAIEndpointID.GPT_IMAGE_2_I2I: return {
+            case FalAIEndpointID.GPT_IMAGE_2_T2I:
+            case FalAIEndpointID.GPT_IMAGE_2_I2I: return {
                 prompt: prompt,
                 quality: 'high', // 검토
                 image_size: {
@@ -141,8 +149,8 @@ export const falAIInputMapper = {
                 output_format: 'jpeg',
             };
 
-            case falAIEndpointID.GROK_IMAGINE_IMAGE_T2I:
-            case falAIEndpointID.GROK_IMAGINE_IMAGE_I2I: return {
+            case FalAIEndpointID.GROK_IMAGINE_IMAGE_T2I:
+            case FalAIEndpointID.GROK_IMAGINE_IMAGE_I2I: return {
                 prompt: prompt,
                 num_images: 1,
                 aspect_ratio: aspectRatio,
@@ -151,12 +159,12 @@ export const falAIInputMapper = {
                 output_format: 'jpeg',
             };
 
-            case falAIEndpointID.QWEN_IMAGE_2_T2I:
-            case falAIEndpointID.QWEN_IMAGE_2_I2I:
-            case falAIEndpointID.QWEN_IMAGE_2_PRO_T2I:
-            case falAIEndpointID.QWEN_IMAGE_2_PRO_I2I:
-            case falAIEndpointID.QWEN_IMAGE_MAX_T2I:
-            case falAIEndpointID.QWEN_IMAGE_MAX_I2I: return {
+            case FalAIEndpointID.QWEN_IMAGE_2_T2I:
+            case FalAIEndpointID.QWEN_IMAGE_2_I2I:
+            case FalAIEndpointID.QWEN_IMAGE_2_PRO_T2I:
+            case FalAIEndpointID.QWEN_IMAGE_2_PRO_I2I:
+            case FalAIEndpointID.QWEN_IMAGE_MAX_T2I:
+            case FalAIEndpointID.QWEN_IMAGE_MAX_I2I: return {
                 prompt: prompt,
                 negative_prompt: "low resolution, error, worst quality, low quality, deformed",
                 enable_prompt_expansion: false,
@@ -171,13 +179,13 @@ export const falAIInputMapper = {
             };
 
             // 이미지 입력이 불확실해 보류
-            case falAIEndpointID.KLING_IMAGE_V3_T2I:
-            case falAIEndpointID.KLING_IMAGE_V3_I2I: return {
+            case FalAIEndpointID.KLING_IMAGE_V3_T2I:
+            case FalAIEndpointID.KLING_IMAGE_V3_I2I: return {
 
             };
 
-            case falAIEndpointID.KLING_IMAGE_O3_T2I:
-            case falAIEndpointID.KLING_IMAGE_O3_I2I: return {
+            case FalAIEndpointID.KLING_IMAGE_O3_T2I:
+            case FalAIEndpointID.KLING_IMAGE_O3_I2I: return {
                 prompt: prompt,
                 ...(hasImage && { image_urls: imageUrls }),
                 resolution: '2K',
@@ -187,10 +195,10 @@ export const falAIInputMapper = {
                 output_format: 'jpeg',
             };
 
-            case falAIEndpointID.WAN_2_7_T2I:
-            case falAIEndpointID.WAN_2_7_I2I:
-            case falAIEndpointID.WAN_2_7_PRO_T2I:
-            case falAIEndpointID.WAN_2_7_PRO_I2I: return {
+            case FalAIEndpointID.WAN_2_7_T2I:
+            case FalAIEndpointID.WAN_2_7_I2I:
+            case FalAIEndpointID.WAN_2_7_PRO_T2I:
+            case FalAIEndpointID.WAN_2_7_PRO_I2I: return {
                 prompt: prompt,
                 ...(hasImage && { image_urls: imageUrls }),
                 image_size: {
@@ -215,56 +223,144 @@ export const falAIInputMapper = {
         }
     },
 
-    buildVideoInput(endpointId: string, params: CommonInputParams): Record<string, any> {
-        const hasImage = params.imageUrls && params.imageUrls.length > 0;
+    buildVideoInput(endpointId: string, params: VideoInputParams): Record<string, any> {
+        const {
+            prompt,
+            imageUrl,
+            duration,
+            aspectRatio,
+            resolution,
+        } = params;
 
         switch (endpointId) {
-            case falAIEndpointID.VIDU_Q3_I2V:
-            case falAIEndpointID.VIDU_Q3_TURBO_I2V:
-            case falAIEndpointID.VIDU_Q2_TURBO_I2V:
-            case falAIEndpointID.VIDU_Q2_PRO_I2V: return {
-
+            case FalAIEndpointID.VIDU_Q3_I2V:
+            case FalAIEndpointID.VIDU_Q3_TURBO_I2V: return {
+                prompt: prompt,
+                image_url: imageUrl,
+                duration: duration, // 1 ~ 16
+                resolution: resolution,
+                audio: false,
             };
 
-            case falAIEndpointID.KLING_VIDEO_O3_PRO_I2V:
-            case falAIEndpointID.KLING_VIDEO_O3_STANDARD_I2V:
-            case falAIEndpointID.KLING_VIDEO_O3_4K_I2V: return {
+            case FalAIEndpointID.VIDU_Q2_TURBO_I2V:
+            case FalAIEndpointID.VIDU_Q2_PRO_I2V: return {
+                prompt: prompt,
+                image_url: imageUrl,
+                duration: duration, // 2 ~ 8
+                resolution: resolution,
+                movement_amplitude: 'auto',
+                bgm: false,
+            }
 
+            case FalAIEndpointID.KLING_VIDEO_O3_PRO_I2V:
+            case FalAIEndpointID.KLING_VIDEO_O3_STANDARD_I2V:
+            case FalAIEndpointID.KLING_VIDEO_O3_4K_I2V: return {
+                prompt: prompt,
+                image_url: imageUrl,
+                duration: duration, // 3 ~ 15
+                multi_prompt: null,
+                shot_type: 'customize',
             };
 
-            case falAIEndpointID.GROK_IMAGINE_VIDEO_I2V: return {
-
+            case FalAIEndpointID.GROK_IMAGINE_VIDEO_I2V: return {
+                prompt: prompt,
+                duration: duration, // 1 ~ 15
+                resolution: '720p',
+                image_url: imageUrl,
+                aspect_ratio: aspectRatio,
             };
 
-            case falAIEndpointID.SEEDANCE_1_5_PRO_I2V:
-            case falAIEndpointID.SEEDANCE_1_PRO_FAST_I2V:
-            case falAIEndpointID.SEEDANCE_2_0_I2V:
-            case falAIEndpointID.SEEDANCE_2_0_FAST_I2V: return {
-
+            case FalAIEndpointID.SEEDANCE_1_5_PRO_I2V: return {
+                prompt: prompt,
+                aspect_ratio: aspectRatio,
+                resolution: resolution,
+                duration: duration, // 4 ~ 12
+                enable_safety_checker: false,
+                generate_audio: false,
+                image_url: imageUrl,
             };
 
-            case falAIEndpointID.HAPPY_HORSE_I2V: return {
-
+            case FalAIEndpointID.SEEDANCE_1_PRO_FAST_I2V: return {
+                prompt: prompt,
+                aspect_ratio: aspectRatio,
+                resolution: resolution,
+                duration: duration, // 2 ~ 12
+                enable_safety_checker: false,
+                image_url: imageUrl,
             };
 
-            case falAIEndpointID.LTX_VIDEO_13B_DEV_I2V:
-            case falAIEndpointID.LTX_VIDEO_13B_DISTILLED_I2V:
-            case falAIEndpointID.LTXV_13B_098_DISTILLED_I2V: return {
-
+            case FalAIEndpointID.SEEDANCE_2_0_I2V:
+            case FalAIEndpointID.SEEDANCE_2_0_FAST_I2V: return {
+                prompt: prompt,
+                duration: duration, // 4 ~ 15
+                image_url: imageUrl,
+                resolution: resolution,
+                aspect_ratio: aspectRatio,
+                generate_audio: false,
             };
 
-            case falAIEndpointID.WAN_2_7_I2V: return {
-
+            case FalAIEndpointID.HAPPY_HORSE_I2V: return {
+                image_url: imageUrl,
+                prompt: prompt,
+                resolution: resolution,
+                duration: duration, // 3 ~ 15
+                enable_safety_checker: false,
             };
 
-            case falAIEndpointID.PIXVERSE_V6_I2V:
-            case falAIEndpointID.PIXVERSE_C1_I2V: return {
+            // Deprecated
+            // case falAIEndpointID.LTX_VIDEO_13B_DEV_I2V:
 
+            case FalAIEndpointID.LTX_VIDEO_13B_DISTILLED_I2V:
+            case FalAIEndpointID.LTXV_13B_098_DISTILLED_I2V: return {
+                prompt: prompt,
+                negative_prompt: "worst quality, inconsistent motion, blurry, jittery, distorted",
+                loras: [],
+                resolution: resolution,
+                aspect_ratio: aspectRatio,
+                num_frames: (duration * 24) + 1, // 2 ~ 10
+                frame_rate: 24,
+                first_pass_num_inference_steps: 12,
+                second_pass_num_inference_steps: 12,
+                second_pass_skip_initial_steps: 5,
+                expand_prompt: false,
+                reverse_video: false,
+                enable_safety_checker: false,
+                enable_detail_pass: false,
+                temporal_adain_factor: 0.5,
+                tone_map_compression_ratio: 0,
+                constant_rate_factor: 29,
+                image_url: imageUrl,
+            };
+
+            case FalAIEndpointID.WAN_2_7_I2V: return {
+                prompt: prompt,
+                image_url: imageUrl,
+                resolution: resolution,
+                duration: duration, // 2 ~ 15
+                negative_prompt: "low resolution, errors, worst quality, low quality, incomplete, extra fingers, bad proportions, blurry, distorted",
+                enable_prompt_expansion: false,
+                enable_safety_checker: false,
+            };
+
+            case FalAIEndpointID.PIXVERSE_V6_I2V: return {
+                prompt: prompt,
+                resolution: resolution,
+                duration: duration, // 1 ~ 15
+                negative_prompt: "blurry, low quality, low resolution, pixelated, noisy, grainy, out of focus, poorly lit, poorly exposed, poorly composed, poorly framed, poorly cropped, poorly color corrected, poorly color graded",
+                image_url: imageUrl,
+                thinking_type: "auto",
+            };
+
+            case FalAIEndpointID.PIXVERSE_C1_I2V: return {
+                prompt: prompt,
+                resolution: resolution,
+                duration: duration, // 1 ~ 15
+                image_url: imageUrl,
             };
 
             default:
                 console.warn(`[falAIInputMapper - Video] Unknown endpointId: ${endpointId}.`);
                 return { };
         }
-    }
+    },
 };

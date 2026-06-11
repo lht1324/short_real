@@ -44,6 +44,7 @@ https://fal.ai/models/fal-ai/flux-pro/kontext
 
 https://fal.ai/models/fal-ai/vidu/q3/image-to-video
 https://fal.ai/models/fal-ai/vidu/q3/image-to-video/turbo
+
 https://fal.ai/models/fal-ai/vidu/q2/image-to-video/turbo
 https://fal.ai/models/fal-ai/vidu/q2/image-to-video/pro
 
@@ -54,15 +55,24 @@ https://fal.ai/models/fal-ai/kling-video/o3/4k/image-to-video
 https://fal.ai/models/xai/grok-imagine-video/image-to-video
 
 https://fal.ai/models/fal-ai/bytedance/seedance/v1.5/pro/image-to-video
+
 https://fal.ai/models/fal-ai/bytedance/seedance/v1/pro/fast/image-to-video
+
 https://fal.ai/models/bytedance/seedance-2.0/image-to-video
 https://fal.ai/models/bytedance/seedance-2.0/fast/image-to-video
 
 https://fal.ai/models/alibaba/happy-horse/image-to-video
 
+---
+컷 (Deprecated)
+
 https://fal.ai/models/fal-ai/ltx-video-13b-dev/image-to-video
+---
+
 https://fal.ai/models/fal-ai/ltx-video-13b-distilled/image-to-video
 https://fal.ai/models/fal-ai/ltxv-13b-098-distilled/image-to-video
+
+---
 
 https://fal.ai/models/fal-ai/wan/v2.7/image-to-video
 

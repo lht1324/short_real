@@ -5,6 +5,7 @@ import {ImageFile} from "@fal-ai/client/endpoints";
 import {Entity} from "@/lib/api/types/open-ai/Entity";
 import {AIModelData} from "@/lib/api/types/supabase/AIModelData";
 import {cryptoUtils} from "@/lib/utils/cryptoUtils";
+import {FalAIEndpointID, falAIInputMapper} from "@/lib/falAIInputMapper";
 
 export const imageServerAPI = {
     async postImage(
@@ -41,10 +42,16 @@ export const imageServerAPI = {
             const isSubjectExists = imageSignedUrlList.length !== 0;
 
             try {
-                const modelName = isSubjectExists
+                const modelEndpointId = isSubjectExists
                     ? i2iAIModelData.endpoint_id
                     : t2iAIModelData.endpoint_id;
-                const output = await fal.subscribe(modelName, {
+                falAIInputMapper.buildImageInput(modelEndpointId as FalAIEndpointID, {
+                    prompt: '',
+                    aspectRatio: '',
+                    resolution: '720p',
+                    ...(isSubjectExists && { imageUrls: imageSignedUrlList }),
+                })
+                const output = await fal.subscribe(modelEndpointId, {
                     // 솔직히 가물가물함. 이걸 뭐 매칭 같은 걸 시켜야 할 지, 그냥 개노가다로 하나하나 매핑해주는 함수를 작성해야 할 지 감이 안 잡힘
                     // 그나마 양은 적으니 다행인가
                     input: {
