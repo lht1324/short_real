@@ -37,9 +37,9 @@ function AutopilotConfigPanel({
     const i2vModels = useMemo(() => aiModelList.filter(m => m.category === 'image-to-video'), [aiModelList]);
 
     // Current Selection
-    const selectedT2iId = currentSeries.ai_model_config?.t2iModelId;
-    const selectedI2iId = currentSeries.ai_model_config?.i2iModelId;
-    const selectedI2vId = currentSeries.ai_model_config?.i2vModelId;
+    const selectedT2iId = currentSeries.ai_model_config?.sceneImageT2IModelId;
+    const selectedI2iId = currentSeries.ai_model_config?.sceneImageI2IModelId;
+    const selectedI2vId = currentSeries.ai_model_config?.videoModelId;
 
     // Price Calculation
     const getPrice = useCallback((models: AIModelData[], id?: string) => {
@@ -266,7 +266,7 @@ function AutopilotConfigPanel({
                                 <label className="text-[11px] font-medium text-zinc-500 uppercase tracking-wider ml-0.5">Character (T2I)</label>
                                 <select 
                                     value={selectedT2iId || ''} 
-                                    onChange={(e) => updateSeries({ ai_model_config: { ...currentSeries.ai_model_config!, t2iModelId: e.target.value } })}
+                                    onChange={(e) => updateSeries({ ai_model_config: { ...currentSeries.ai_model_config!, sceneImageT2IModelId: e.target.value } })}
                                     className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2.5 text-[13px] text-zinc-200 focus:outline-none focus:border-zinc-500 appearance-none"
                                 >
                                     {t2iModels.map(m => (
@@ -278,7 +278,7 @@ function AutopilotConfigPanel({
                                 <label className="text-[11px] font-medium text-zinc-500 uppercase tracking-wider ml-0.5">Scene (I2I)</label>
                                 <select 
                                     value={selectedI2iId || ''} 
-                                    onChange={(e) => updateSeries({ ai_model_config: { ...currentSeries.ai_model_config!, i2iModelId: e.target.value } })}
+                                    onChange={(e) => updateSeries({ ai_model_config: { ...currentSeries.ai_model_config!, sceneImageI2IModelId: e.target.value } })}
                                     className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2.5 text-[13px] text-zinc-200 focus:outline-none focus:border-zinc-500 appearance-none"
                                 >
                                     {i2iModels.map(m => (
@@ -290,7 +290,7 @@ function AutopilotConfigPanel({
                                 <label className="text-[11px] font-medium text-zinc-500 uppercase tracking-wider ml-0.5">Video (I2V)</label>
                                 <select 
                                     value={selectedI2vId || ''} 
-                                    onChange={(e) => updateSeries({ ai_model_config: { ...currentSeries.ai_model_config!, i2vModelId: e.target.value } })}
+                                    onChange={(e) => updateSeries({ ai_model_config: { ...currentSeries.ai_model_config!, videoModelId: e.target.value } })}
                                     className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2.5 text-[13px] text-zinc-200 focus:outline-none focus:border-zinc-500 appearance-none"
                                 >
                                     {i2vModels.map(m => (

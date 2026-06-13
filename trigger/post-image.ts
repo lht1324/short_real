@@ -37,8 +37,10 @@ export const postImage = task({
         styleId: string;
         falAiApiKey: string;
         userId: string;
-        t2iAIModelData: AIModelData;
-        i2iAIModelData: AIModelData;
+        sceneImageT2IAIModelData: AIModelData;
+        sceneImageI2IAIModelData: AIModelData;
+        resolution: '720p' | '1080p';
+        aspectRatio: '16:9' | '9:16';
     }) => {
         const {
             taskId,
@@ -50,8 +52,10 @@ export const postImage = task({
             styleId,
             falAiApiKey,
             userId,
-            t2iAIModelData,
-            i2iAIModelData,
+            sceneImageT2IAIModelData,
+            sceneImageI2IAIModelData,
+            resolution,
+            aspectRatio,
         } = payload;
 
         try {
@@ -117,8 +121,10 @@ export const postImage = task({
                 sceneData.sceneNumber,
                 falAiApiKey,
                 userId,
-                t2iAIModelData,
-                i2iAIModelData,
+                sceneImageT2IAIModelData,
+                sceneImageI2IAIModelData,
+                resolution,
+                aspectRatio,
             );
 
             if (!postImageResult.success) {

@@ -4,20 +4,20 @@ import {AIModelData} from "@/lib/api/types/supabase/AIModelData";
 
 interface BYOKModelSelectorProps {
     aiModelList: AIModelData[];
-    selectedT2iId: string | null;
+    selectedReferenceId: string | null;
     selectedI2iId: string | null;
     selectedI2vId: string | null;
-    onChangeT2iId: (id: string) => void;
+    onChangeReferenceId: (id: string) => void;
     onChangeI2iId: (id: string) => void;
     onChangeI2vId: (id: string) => void;
 }
 
 function BYOKModelSelector({
     aiModelList,
-    selectedT2iId,
+    selectedReferenceId,
     selectedI2iId,
     selectedI2vId,
-    onChangeT2iId,
+    onChangeReferenceId,
     onChangeI2iId,
     onChangeI2vId,
 }: BYOKModelSelectorProps) {
@@ -36,8 +36,8 @@ function BYOKModelSelector({
                 <div className="space-y-1.5">
                     <label className="text-[11px] font-medium text-zinc-500 uppercase tracking-wider ml-0.5">Character (T2I)</label>
                     <select 
-                        value={selectedT2iId || ''} 
-                        onChange={(e) => onChangeT2iId(e.target.value)}
+                        value={selectedReferenceId || ''} 
+                        onChange={(e) => onChangeReferenceId(e.target.value)}
                         className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2.5 text-[13px] text-zinc-200 focus:outline-none focus:border-zinc-500 appearance-none"
                     >
                         {t2iModels.map(m => (

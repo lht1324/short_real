@@ -18,6 +18,8 @@ export const imageServerAPI = {
         userId: string,
         t2iAIModelData: AIModelData,
         i2iAIModelData: AIModelData,
+        resolution: '720p' | '1080p',
+        aspectRatio: '16:9' | '9:16',
     ): Promise<{ success: boolean; error?: { message: string; code: string } }> {
         const supabase = createSupabaseServiceRoleClient();
 
@@ -45,30 +47,27 @@ export const imageServerAPI = {
                 const modelEndpointId = isSubjectExists
                     ? i2iAIModelData.endpoint_id
                     : t2iAIModelData.endpoint_id;
-                falAIInputMapper.buildImageInput(modelEndpointId as FalAIEndpointID, {
-                    prompt: '',
-                    aspectRatio: '',
-                    resolution: '720p',
+                const imageModelInput = falAIInputMapper.buildImageInput(modelEndpointId as FalAIEndpointID, {
+                    prompt: imageGenPromptSentence,
+                    resolution: resolution,
+                    aspectRatio: aspectRatio,
                     ...(isSubjectExists && { imageUrls: imageSignedUrlList }),
                 })
                 const output = await fal.subscribe(modelEndpointId, {
-                    // 솔직히 가물가물함. 이걸 뭐 매칭 같은 걸 시켜야 할 지, 그냥 개노가다로 하나하나 매핑해주는 함수를 작성해야 할 지 감이 안 잡힘
-                    // 그나마 양은 적으니 다행인가
-                    input: {
-                        prompt: imageGenPromptSentence,
-                        num_images: 1,
-                        aspect_ratio: "9:16",
-                        output_format: "jpeg",
-                        safety_tolerance: "6",
-                        resolution: "1K",
-                        limit_generations: true,
-                        ...(isSubjectExists && { image_urls: imageSignedUrlList }),
-                    }
+                    input: imageModelInput,
                 });
 
                 resultImageUrlList = output.data.images;
             } catch (error) {
                 console.error(`Scene #${sceneNumber} Nano Banana Image generation Error: `, error);
+
+                const isVertical = aspectRatio === '9:16';
+                const width = resolution === '720p'
+                    ? isVertical ? 720 : 1280
+                    : isVertical ? 1080 : 1920;
+                const height = resolution === '720p'
+                    ? isVertical ? 1280 : 720
+                    : isVertical ? 1920 : 1080;
 
                 const modelName = isSubjectExists ? "fal-ai/flux-2/edit" : "fal-ai/flux-2"
                 const output = await falAIClient.subscribe(modelName, {
@@ -88,7 +87,10 @@ export const imageServerAPI = {
                             .replace("fNumber", "f-number"),
                         guidance_scale: 20,
                         num_inference_steps: 50,
-                        image_size: "portrait_16_9",
+                        image_size: {
+                            width: width,
+                            height: height,
+                        },
                         num_images: 1,
                         acceleration: "none",
                         enable_prompt_expansion: false,

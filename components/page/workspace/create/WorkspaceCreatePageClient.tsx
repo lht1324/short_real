@@ -46,7 +46,7 @@ function WorkspaceCreatePageClient() {
 
     // AI Model states
     const [aiModelList, setAiModelList] = useState<AIModelData[]>([]);
-    const [selectedT2iId, setSelectedT2iId] = useState<string | null>(null);
+    const [selectedReferenceId, setSelectedReferenceId] = useState<string | null>(null);
     const [selectedI2iId, setSelectedI2iId] = useState<string | null>(null);
     const [selectedI2vId, setSelectedI2vId] = useState<string | null>(null);
 
@@ -246,12 +246,19 @@ function WorkspaceCreatePageClient() {
             }
 
             // Patch ai_model_config before generation
-            if (selectedT2iId && selectedI2iId && selectedI2vId) {
+            if (selectedReferenceId && selectedI2iId && selectedI2vId) {
+                const selectedI2iModel = aiModelList.find(m => m.id === selectedI2iId);
+                const companionT2iModel = aiModelList.find(
+                    m => m.category === 'text-to-image' && m.display_name === selectedI2iModel?.display_name
+                );
+                const inferredSceneT2iId = companionT2iModel?.id ?? '1bd90bd4-e476-40e9-8a1e-1649288786e7';
+
                 await videoClientAPI.patchVideoTaskByTaskId(taskId, {
                     ai_model_config: {
-                        t2iModelId: selectedT2iId,
-                        i2iModelId: selectedI2iId,
-                        i2vModelId: selectedI2vId
+                        referenceImageModelId: selectedReferenceId,
+                        sceneImageT2IModelId: inferredSceneT2iId,
+                        sceneImageI2IModelId: selectedI2iId,
+                        videoModelId: selectedI2vId
                     }
                 });
             }
@@ -278,7 +285,7 @@ function WorkspaceCreatePageClient() {
         } finally {
             setIsSubmitting(false);
         }
-    }, [script, taskId, user?.id, selectedStyleId]);
+    }, [script, taskId, user?.id, selectedStyleId, selectedReferenceId, selectedI2iId, selectedI2vId, aiModelList]);
 
     const onClickGenerateVideo = useCallback(async () => {
         if (isCreditInsufficient) {
@@ -292,6 +299,15 @@ function WorkspaceCreatePageClient() {
         setIsSaving(true);
 
         try {
+            let inferredSceneT2iId = '1bd90bd4-e476-40e9-8a1e-1649288786e7';
+            if (selectedI2iId) {
+                const selectedI2iModel = aiModelList.find(m => m.id === selectedI2iId);
+                const companionT2iModel = aiModelList.find(
+                    m => m.category === 'text-to-image' && m.display_name === selectedI2iModel?.display_name
+                );
+                if (companionT2iModel?.id) inferredSceneT2iId = companionT2iModel?.id;
+            }
+
             const request: Partial<VideoGenerationTask> = {
                 narration_script: script.length !== 0 ? script : undefined,
                 scene_breakdown_list: sceneDataList.length !== 0 ? sceneDataList : undefined,
@@ -299,10 +315,11 @@ function WorkspaceCreatePageClient() {
                 video_description: videoDescription ?? undefined,
                 selected_style_id: selectedStyleId.length !== 0 ? selectedStyleId : undefined,
                 selected_voice_id: selectedVoiceId.length !== 0 ? selectedVoiceId : undefined,
-                ai_model_config: (selectedT2iId && selectedI2iId && selectedI2vId) ? {
-                    t2iModelId: selectedT2iId,
-                    i2iModelId: selectedI2iId,
-                    i2vModelId: selectedI2vId
+                ai_model_config: (selectedReferenceId && inferredSceneT2iId && selectedI2iId && selectedI2vId) ? {
+                    referenceImageModelId: selectedReferenceId,
+                    sceneImageT2IModelId: inferredSceneT2iId,
+                    sceneImageI2IModelId: selectedI2iId,
+                    videoModelId: selectedI2vId
                 } : undefined,
             }
             const result: VideoGenerationTask | null = taskId
@@ -320,7 +337,7 @@ function WorkspaceCreatePageClient() {
         } finally {
             setIsSaving(false);
         }
-    }, [script, sceneDataList, videoTitle, videoDescription, selectedStyleId, selectedVoiceId, taskId]);
+    }, [script, sceneDataList, videoTitle, videoDescription, selectedStyleId, selectedVoiceId, taskId, selectedReferenceId, selectedI2iId, selectedI2vId, aiModelList]);
 
     const onCloseSaveSuccessModal = useCallback(() => {
         setShowSaveSuccessModal(false);
@@ -349,11 +366,11 @@ function WorkspaceCreatePageClient() {
                 setAiModelList(models);
 
                 // Set default models using user preferences or specific hardcoded fallback IDs
-                const defaultT2i = user?.preferred_ai_model_config?.t2iModelId || 'ca637a97-f060-4b81-a7d4-118a6f4aac0c';
-                const defaultI2i = user?.preferred_ai_model_config?.i2iModelId || '79a506ac-eced-4643-b017-c8a2bb0f028b';
-                const defaultI2v = user?.preferred_ai_model_config?.i2vModelId || '326a9a71-26a9-4142-8371-5467f316bcd6';
+                const defaultReference = user?.preferred_ai_model_config?.sceneImageT2IModelId || 'ca637a97-f060-4b81-a7d4-118a6f4aac0c';
+                const defaultI2i = user?.preferred_ai_model_config?.sceneImageI2IModelId || '79a506ac-eced-4643-b017-c8a2bb0f028b';
+                const defaultI2v = user?.preferred_ai_model_config?.videoModelId || '326a9a71-26a9-4142-8371-5467f316bcd6';
 
-                setSelectedT2iId(prev => prev ?? defaultT2i);
+                setSelectedReferenceId(prev => prev ?? defaultReference);
                 setSelectedI2iId(prev => prev ?? defaultI2i);
                 setSelectedI2vId(prev => prev ?? defaultI2v);
             } catch (error) {
@@ -389,9 +406,9 @@ function WorkspaceCreatePageClient() {
                     setSelectedStyleId(styleId ?? '');
                     
                     if (aiModelConfig) {
-                        setSelectedT2iId(aiModelConfig.t2iModelId);
-                        setSelectedI2iId(aiModelConfig.i2iModelId);
-                        setSelectedI2vId(aiModelConfig.i2vModelId);
+                        setSelectedReferenceId(aiModelConfig.sceneImageT2IModelId);
+                        setSelectedI2iId(aiModelConfig.sceneImageI2IModelId);
+                        setSelectedI2vId(aiModelConfig.videoModelId);
                     }
 
                     setIsGenerationTaskLoading(false);
@@ -504,13 +521,13 @@ function WorkspaceCreatePageClient() {
                     userCredit={userCreditCount}
                     isGeneratingStoryboardData={isGeneratingStoryboardData}
                     aiModelList={aiModelList}
-                    selectedT2iId={selectedT2iId}
+                    selectedReferenceId={selectedReferenceId}
                     selectedI2iId={selectedI2iId}
                     selectedI2vId={selectedI2vId}
                     onChangeScript={onChangeScript}
                     onClickGenerateWithAI={onClickGenerateWithAI}
                     onClickGenerateStoryboard={onClickGenerateStoryboardInCreateFormPanel}
-                    onChangeT2iId={setSelectedT2iId}
+                    onChangeReferenceId={setSelectedReferenceId}
                     onChangeI2iId={setSelectedI2iId}
                     onChangeI2vId={setSelectedI2vId}
                 />
@@ -540,7 +557,7 @@ function WorkspaceCreatePageClient() {
                     isCreditInsufficient={isCreditInsufficient}
                     isVideoGenerationEnabled={isVideoGenerationEnabled}
                     aiModelList={aiModelList}
-                    selectedT2iId={selectedT2iId}
+                    selectedReferenceId={selectedReferenceId}
                     selectedI2iId={selectedI2iId}
                     selectedI2vId={selectedI2vId}
                     onClickSaveDraft={onClickSaveDraft}

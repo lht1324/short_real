@@ -138,7 +138,8 @@ export enum ExportPlatform {
 }
 
 export interface AIModelConfig {
-    t2iModelId: string;
-    i2iModelId: string;
-    i2vModelId: string;
+    referenceImageModelId: string;
+    sceneImageT2IModelId: string;
+    sceneImageI2IModelId: string;
+    videoModelId: string;
 }

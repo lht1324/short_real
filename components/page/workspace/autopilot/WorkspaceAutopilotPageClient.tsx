@@ -187,13 +187,17 @@ function WorkspaceAutopilotPageClient() {
         const data = await autopilotDataClientAPI.getAutopilotDataByUserId(user.id);
         
         const patchedData = data.map(series => {
-            if (!series.ai_model_config || !series.ai_model_config.t2iModelId || !series.ai_model_config.i2iModelId || !series.ai_model_config.i2vModelId) {
+            // Check if it's missing the reference ID (legacy data)
+            if (!series.ai_model_config || !series.ai_model_config.referenceImageModelId) {
+                const legacyT2i = series.ai_model_config?.sceneImageT2IModelId;
+                
                 return {
                     ...series,
                     ai_model_config: {
-                        t2iModelId: series.ai_model_config?.t2iModelId || user?.preferred_ai_model_config?.t2iModelId || 'ca637a97-f060-4b81-a7d4-118a6f4aac0c',
-                        i2iModelId: series.ai_model_config?.i2iModelId || user?.preferred_ai_model_config?.i2iModelId || '79a506ac-eced-4643-b017-c8a2bb0f028b',
-                        i2vModelId: series.ai_model_config?.i2vModelId || user?.preferred_ai_model_config?.i2vModelId || '326a9a71-26a9-4142-8371-5467f316bcd6',
+                        referenceImageModelId: legacyT2i || user?.preferred_ai_model_config?.referenceImageModelId || 'ca637a97-f060-4b81-a7d4-118a6f4aac0c',
+                        sceneImageT2IModelId: user?.preferred_ai_model_config?.sceneImageT2IModelId || '1bd90bd4-e476-40e9-8a1e-1649288786e7',
+                        sceneImageI2IModelId: series.ai_model_config?.sceneImageI2IModelId || user?.preferred_ai_model_config?.sceneImageI2IModelId || '79a506ac-eced-4643-b017-c8a2bb0f028b',
+                        videoModelId: series.ai_model_config?.videoModelId || user?.preferred_ai_model_config?.videoModelId || '326a9a71-26a9-4142-8371-5467f316bcd6',
                     }
                 };
             }
@@ -240,9 +244,24 @@ function WorkspaceAutopilotPageClient() {
         setIsSaving(true);
         setSaveStatus('saving');
 
+        const currentConfig = currentSeries.ai_model_config;
+        let inferredSceneT2iId = currentConfig?.sceneImageT2IModelId;
+
+        if (currentConfig?.sceneImageI2IModelId) {
+            const selectedI2iModel = aiModelList.find(m => m.id === currentConfig.sceneImageI2IModelId);
+            const companionT2iModel = aiModelList.find(
+                m => m.category === 'text-to-image' && m.display_name === selectedI2iModel?.display_name
+            );
+            inferredSceneT2iId = companionT2iModel ? companionT2iModel.id : '1bd90bd4-e476-40e9-8a1e-1649288786e7';
+        }
+
         const currentSeriesWithCaptionConfigState: AutopilotData = {
             ...currentSeries,
             caption_config: captionConfigStateRef.current,
+            ai_model_config: currentConfig ? {
+                ...currentConfig,
+                sceneImageT2IModelId: inferredSceneT2iId || '1bd90bd4-e476-40e9-8a1e-1649288786e7'
+            } : undefined
         }
         const result = await autopilotDataClientAPI.patchAutopilotDataBySeriesId(
             currentSeries.id, 
@@ -266,7 +285,7 @@ function WorkspaceAutopilotPageClient() {
             setSaveStatus('error');
         }
         setIsSaving(false);
-    }, [currentSeries, isDirty, isSaving, validation.isValid]);
+    }, [currentSeries, isDirty, isSaving, validation.isValid, aiModelList]);
 
     useEffect(() => {
         const interval = setInterval(() => {
@@ -281,9 +300,10 @@ function WorkspaceAutopilotPageClient() {
         if (seriesList.length >= 4 || !user?.id || isActionPending) return;
         setIsActionPending(true);
         try {
-            const defaultT2i = user?.preferred_ai_model_config?.t2iModelId || 'ca637a97-f060-4b81-a7d4-118a6f4aac0c';
-            const defaultI2i = user?.preferred_ai_model_config?.i2iModelId || '79a506ac-eced-4643-b017-c8a2bb0f028b';
-            const defaultI2v = user?.preferred_ai_model_config?.i2vModelId || '326a9a71-26a9-4142-8371-5467f316bcd6';
+            const defaultReference = user?.preferred_ai_model_config?.referenceImageModelId || 'ca637a97-f060-4b81-a7d4-118a6f4aac0c';
+            const defaultSceneT2i = user?.preferred_ai_model_config?.sceneImageT2IModelId || '1bd90bd4-e476-40e9-8a1e-1649288786e7';
+            const defaultI2i = user?.preferred_ai_model_config?.sceneImageI2IModelId || '79a506ac-eced-4643-b017-c8a2bb0f028b';
+            const defaultI2v = user?.preferred_ai_model_config?.videoModelId || '326a9a71-26a9-4142-8371-5467f316bcd6';
 
             const newSeriesTemplate: Partial<AutopilotData> = {
                 user_id: user.id,
@@ -302,9 +322,10 @@ function WorkspaceAutopilotPageClient() {
                 topic_history: [],
                 caption_config: INITIAL_CAPTION_CONFIG_STATE,
                 ai_model_config: {
-                    t2iModelId: defaultT2i,
-                    i2iModelId: defaultI2i,
-                    i2vModelId: defaultI2v,
+                    referenceImageModelId: defaultReference,
+                    sceneImageT2IModelId: defaultSceneT2i,
+                    sceneImageI2IModelId: defaultI2i,
+                    videoModelId: defaultI2v,
                 }
             };
             const created = await autopilotDataClientAPI.postAutopilotData(newSeriesTemplate);

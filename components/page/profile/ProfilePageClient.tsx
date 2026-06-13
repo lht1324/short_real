@@ -54,7 +54,7 @@ function ProfilePageClient() {
 
     // AI Model states
     const [aiModelList, setAiModelList] = useState<AIModelData[]>([]);
-    const [selectedT2iId, setSelectedT2iId] = useState<string | null>(null);
+    const [selectedReferenceId, setSelectedReferenceId] = useState<string | null>(null);
     const [selectedI2iId, setSelectedI2iId] = useState<string | null>(null);
     const [selectedI2vId, setSelectedI2vId] = useState<string | null>(null);
 
@@ -191,10 +191,14 @@ function ProfilePageClient() {
             const models = await aiModelDataClientAPI.getAIModelData();
             setAiModelList(models);
 
-            if (user?.preferred_ai_model_config) {
-                setSelectedT2iId(user.preferred_ai_model_config.t2iModelId);
-                setSelectedI2iId(user.preferred_ai_model_config.i2iModelId);
-                setSelectedI2vId(user.preferred_ai_model_config.i2vModelId);
+            if (user?.preferred_ai_model_config && user.preferred_ai_model_config.referenceImageModelId) {
+                setSelectedReferenceId(user.preferred_ai_model_config.referenceImageModelId);
+                setSelectedI2iId(user.preferred_ai_model_config.sceneImageI2IModelId);
+                setSelectedI2vId(user.preferred_ai_model_config.videoModelId);
+            } else {
+                setSelectedReferenceId('ca637a97-f060-4b81-a7d4-118a6f4aac0c');
+                setSelectedI2iId('79a506ac-eced-4643-b017-c8a2bb0f028b');
+                setSelectedI2vId('326a9a71-26a9-4142-8371-5467f316bcd6');
             }
         } catch (error) {
             console.error("Failed to load AI models:", error);
@@ -314,15 +318,22 @@ function ProfilePageClient() {
     }, [subscriptionData?.id, subscriptionData?.cancelAtPeriodEnd, user?.email, loadSubscription]);
 
     const onClickSavePreferences = useCallback(async () => {
-        if (!user?.id || !selectedT2iId || !selectedI2iId || !selectedI2vId) return;
+        if (!user?.id || !selectedReferenceId || !selectedI2iId || !selectedI2vId) return;
 
         setIsSavingPrefs(true);
         try {
+            const selectedI2iModel = aiModelList.find(m => m.id === selectedI2iId);
+            const companionT2iModel = aiModelList.find(
+                m => m.category === 'text-to-image' && m.display_name === selectedI2iModel?.display_name
+            );
+            const inferredSceneT2iId = companionT2iModel?.id ?? '1bd90bd4-e476-40e9-8a1e-1649288786e7';
+
             const result = await usersClientAPI.patchUserByUserId(user.id, {
                 preferred_ai_model_config: {
-                    t2iModelId: selectedT2iId,
-                    i2iModelId: selectedI2iId,
-                    i2vModelId: selectedI2vId
+                    referenceImageModelId: selectedReferenceId,
+                    sceneImageT2IModelId: inferredSceneT2iId,
+                    sceneImageI2IModelId: selectedI2iId,
+                    videoModelId: selectedI2vId
                 }
             });
 
@@ -338,7 +349,7 @@ function ProfilePageClient() {
         } finally {
             setIsSavingPrefs(false);
         }
-    }, [user?.id, selectedT2iId, selectedI2iId, selectedI2vId, refreshUser]);
+    }, [user?.id, selectedReferenceId, selectedI2iId, selectedI2vId, refreshUser, aiModelList]);
 
     const onClickSaveFalKey = useCallback(async () => {
         if (!user?.id || !falKeyInput.trim()) return;
@@ -488,8 +499,8 @@ function ProfilePageClient() {
                         <div className="space-y-2">
                             <label className="text-[11px] font-semibold text-zinc-500 uppercase tracking-wider ml-1">Default Character Model (T2I)</label>
                             <select
-                                value={selectedT2iId || ''}
-                                onChange={(e) => setSelectedT2iId(e.target.value)}
+                                value={selectedReferenceId || ''}
+                                onChange={(e) => setSelectedReferenceId(e.target.value)}
                                 className="w-full bg-zinc-950 border border-white/10 rounded-xl px-4 py-3 text-sm text-zinc-200 focus:outline-none focus:border-zinc-500 appearance-none"
                             >
                                 {t2iModels.map(m => (

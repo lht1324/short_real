@@ -200,9 +200,9 @@ function AutopilotControlPanel({
         const i2iModels = aiModelList.filter(m => m.category === 'image-to-image');
         const i2vModels = aiModelList.filter(m => m.category === 'image-to-video');
 
-        const t2iPrice = getPrice(t2iModels, currentSeries.ai_model_config?.t2iModelId);
-        const i2iPrice = getPrice(i2iModels, currentSeries.ai_model_config?.i2iModelId);
-        const i2vPrice = getPrice(i2vModels, currentSeries.ai_model_config?.i2vModelId);
+        const t2iPrice = getPrice(t2iModels, currentSeries.ai_model_config?.sceneImageT2IModelId);
+        const i2iPrice = getPrice(i2iModels, currentSeries.ai_model_config?.sceneImageI2IModelId);
+        const i2vPrice = getPrice(i2vModels, currentSeries.ai_model_config?.videoModelId);
         
         return (t2iPrice * 1) + (i2iPrice * 6) + (i2vPrice * 30);
     }, [aiModelList, currentSeries.ai_model_config]);

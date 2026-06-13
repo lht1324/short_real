@@ -4,7 +4,7 @@ import {AIModelData} from "@/lib/api/types/supabase/AIModelData";
 
 interface EstimatedCostCardProps {
     aiModelList: AIModelData[];
-    selectedT2iId: string | null;
+    selectedReferenceId: string | null;
     selectedI2iId: string | null;
     selectedI2vId: string | null;
     expectedVideoSceneCount: number;
@@ -13,7 +13,7 @@ interface EstimatedCostCardProps {
 
 function EstimatedCostCard({
     aiModelList,
-    selectedT2iId,
+    selectedReferenceId,
     selectedI2iId,
     selectedI2vId,
     expectedVideoSceneCount,
@@ -32,7 +32,7 @@ function EstimatedCostCard({
     }, []);
 
     const estimatedCost = useMemo(() => {
-        const t2iPrice = getPrice(t2iModels, selectedT2iId);
+        const t2iPrice = getPrice(t2iModels, selectedReferenceId);
         const i2iPrice = getPrice(i2iModels, selectedI2iId);
         const i2vPrice = getPrice(i2vModels, selectedI2vId);
         
@@ -45,7 +45,7 @@ function EstimatedCostCard({
         const i2vCost = i2vPrice * duration; // Assuming i2v is priced per sec
         
         return t2iCost + i2iCost + i2vCost;
-    }, [getPrice, t2iModels, selectedT2iId, i2iModels, selectedI2iId, i2vModels, selectedI2vId, expectedVideoSceneCount, expectedVideoTotalDuration]);
+    }, [getPrice, t2iModels, selectedReferenceId, i2iModels, selectedI2iId, i2vModels, selectedI2vId, expectedVideoSceneCount, expectedVideoTotalDuration]);
 
     return (
         <div className="mb-6 rounded-xl border border-white/5 bg-zinc-900/40 p-5 transition-colors hover:bg-zinc-900/60 relative overflow-hidden group">

@@ -16,13 +16,13 @@ interface CreateFormPanelProps {
     userCredit: number;
     isGeneratingStoryboardData: boolean;
     aiModelList: AIModelData[];
-    selectedT2iId: string | null;
+    selectedReferenceId: string | null;
     selectedI2iId: string | null;
     selectedI2vId: string | null;
     onChangeScript: (e: ChangeEvent<HTMLTextAreaElement>) => void;
     onClickGenerateWithAI: () => void;
     onClickGenerateStoryboard: () => void;
-    onChangeT2iId: (id: string) => void;
+    onChangeReferenceId: (id: string) => void;
     onChangeI2iId: (id: string) => void;
     onChangeI2vId: (id: string) => void;
 }
@@ -38,13 +38,13 @@ function CreateFormPanel({
     userCredit,
     isGeneratingStoryboardData,
     aiModelList,
-    selectedT2iId,
+    selectedReferenceId,
     selectedI2iId,
     selectedI2vId,
     onChangeScript,
     onClickGenerateWithAI,
     onClickGenerateStoryboard,
-    onChangeT2iId,
+    onChangeReferenceId,
     onChangeI2iId,
     onChangeI2vId,
 }: CreateFormPanelProps) {
@@ -94,10 +94,10 @@ function CreateFormPanel({
                     {/* AI Model Selection Section */}
                     <BYOKModelSelector
                         aiModelList={aiModelList}
-                        selectedT2iId={selectedT2iId}
+                        selectedReferenceId={selectedReferenceId}
                         selectedI2iId={selectedI2iId}
                         selectedI2vId={selectedI2vId}
-                        onChangeT2iId={onChangeT2iId}
+                        onChangeReferenceId={onChangeReferenceId}
                         onChangeI2iId={onChangeI2iId}
                         onChangeI2vId={onChangeI2vId}
                     />

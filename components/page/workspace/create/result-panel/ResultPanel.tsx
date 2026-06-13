@@ -20,7 +20,7 @@ interface ResultPanelProps {
     isCreditInsufficient: boolean;
     isVideoGenerationEnabled: boolean;
     aiModelList: AIModelData[];
-    selectedT2iId: string | null;
+    selectedReferenceId: string | null;
     selectedI2iId: string | null;
     selectedI2vId: string | null;
     onClickSaveDraft: () => void;
@@ -44,7 +44,7 @@ function ResultPanel({
     isCreditInsufficient,
     isVideoGenerationEnabled,
     aiModelList,
-    selectedT2iId,
+    selectedReferenceId,
     selectedI2iId,
     selectedI2vId,
     onClickSaveDraft,
@@ -94,7 +94,7 @@ function ResultPanel({
                     {/* Estimated Cost Card */}
                     <EstimatedCostCard
                         aiModelList={aiModelList}
-                        selectedT2iId={selectedT2iId}
+                        selectedReferenceId={selectedReferenceId}
                         selectedI2iId={selectedI2iId}
                         selectedI2vId={selectedI2vId}
                         expectedVideoSceneCount={expectedVideoSceneCount}

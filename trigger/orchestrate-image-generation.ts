@@ -36,7 +36,7 @@ export const orchestrateImageGeneration = task({
 
             const videoGenerationTask = await videoGenerationTasksServerAPI.getVideoGenerationTaskById(taskId);
 
-            if (!videoGenerationTask || !videoGenerationTask.user_id || !videoGenerationTask.ai_model_config) {
+            if (!videoGenerationTask || !videoGenerationTask.user_id || !videoGenerationTask.ai_model_config || !videoGenerationTask.resolution || !videoGenerationTask.aspect_ratio) {
                 logger.error(`[Orchestrator] Task '${taskId}' not found`);
 
                 await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
@@ -54,17 +54,21 @@ export const orchestrateImageGeneration = task({
             }
 
             const falAiApiKey = user.fal_ai_api_key;
-            const aiModelConfig = videoGenerationTask.ai_model_config;
+            const {
+                ai_model_config: aiModelConfig,
+                resolution,
+                aspect_ratio: aspectRatio,
+            } = videoGenerationTask;
 
             const aiModelDataList = await aiModelDataServerAPI.getAIModelDataList();
-            const i2iAIModelData = aiModelDataList.find((aiModelData) => {
-                return aiModelData.id === aiModelConfig.i2iModelId;
+            const sceneImageT2IAIModelData = aiModelDataList.find((aiModelData) => {
+                return aiModelData.id === aiModelConfig.sceneImageT2IModelId;
             });
-            const t2iAIModelData = aiModelDataList.find((aiModelData) => {
-                return aiModelData.id !== aiModelConfig.i2iModelId && aiModelData.display_name === i2iAIModelData?.display_name;
+            const sceneImageI2IAIModelData = aiModelDataList.find((aiModelData) => {
+                return aiModelData.id === aiModelConfig.sceneImageI2IModelId;
             });
 
-            if (aiModelDataList.length === 0 || !t2iAIModelData || !i2iAIModelData) {
+            if (aiModelDataList.length === 0 || !sceneImageT2IAIModelData || !sceneImageI2IAIModelData) {
                 logger.error(`[Orchestrator] Model data were wrong.`);
 
                 await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
@@ -76,7 +80,8 @@ export const orchestrateImageGeneration = task({
             // 여기서는 모든 자식이 '최종 성공'하거나 '최종 실패'할 때까지 기다림.
             const batchResults = await tasks.batchTriggerAndWait<typeof postImage>(
                 "post-image", // 1. 태스크 ID (문자열)
-                sceneDataList.map(sceneData => ({ // 2. 아이템 배열
+                sceneDataList.map(sceneData => ({
+                    // 2. 아이템 배열
                     payload: {
                         taskId,
                         videoTitle,
@@ -87,8 +92,10 @@ export const orchestrateImageGeneration = task({
                         styleId,
                         falAiApiKey,
                         userId: videoGenerationTask.user_id,
-                        t2iAIModelData,
-                        i2iAIModelData,
+                        sceneImageT2IAIModelData,
+                        sceneImageI2IAIModelData,
+                        resolution,
+                        aspectRatio,
                     }
                 }))
             );

@@ -85,7 +85,7 @@ export interface VideoInputParams extends CommonInputParams {
 }
 
 export const falAIInputMapper = {
-    buildImageInput(endpointId: FalAIEndpointID, params: ImageInputParams): Record<string, any> {
+    buildImageInput(endpointId: FalAIEndpointID, params: ImageInputParams) {
         const {
             prompt,
             imageUrls,
@@ -223,7 +223,7 @@ export const falAIInputMapper = {
         }
     },
 
-    buildVideoInput(endpointId: string, params: VideoInputParams): Record<string, any> {
+    buildVideoInput(endpointId: string, params: VideoInputParams) {
         const {
             prompt,
             imageUrl,
