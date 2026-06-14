@@ -155,6 +155,7 @@ export const imageServerAPI = {
         taskId: string,
         entityId: string,
         falAiApiKey: string,
+        referenceImageAIModelEndpointId: string,
         userId: string,
     ): Promise<{
         success: boolean;
@@ -174,27 +175,13 @@ export const imageServerAPI = {
 
             let imageUrl: string;
 
-            const output = await fal.subscribe("fal-ai/nano-banana", {
-                input: {
-                    prompt: referenceImagePrompt,
-                    num_images: 1,
-                    aspect_ratio: "9:16",
-                    output_format: "jpeg",
-                    // @ts-expect-error - safety_tolerance field is not updated yet in fal SDK.
-                    safety_tolerance: "6",
-                    sync_mode: false,
-                    limit_generations: false,
-                    // elements: [
-                    //     {
-                    //         reference_image_urls: []
-                    //     }
-                    // ],
-                    // resolution: "1K",
-                    // result_type: "single",
-                    // num_images: 1,
-                    // aspect_ratio: "9:16",
-                    // output_format: "jpeg"
-                }
+            const imageModelInput = falAIInputMapper.buildImageInput(referenceImageAIModelEndpointId as FalAIEndpointID, {
+                prompt: referenceImagePrompt,
+                resolution: '720p',
+                aspectRatio: '9:16',
+            })
+            const output = await fal.subscribe(referenceImageAIModelEndpointId, {
+                input: imageModelInput,
             });
 
             const resultImageUrlList = output.data.images;

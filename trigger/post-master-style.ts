@@ -61,7 +61,9 @@ export const postMasterStyle = task({
                 ? lastSceneSubtitleSegmentList[lastSceneSubtitleSegmentList.length - 1].endSec
                 : undefined;
 
-            if (!selectedStyle || !videoTitle || !videoDescription || !videoDuration) {
+            const aiModelConfig = videoGenerationTask.ai_model_config;
+
+            if (!selectedStyle || !videoTitle || !videoDescription || !videoDuration || !aiModelConfig) {
                 throw new Error('Task data is invalid (missing required fields).');
             }
 
@@ -134,6 +136,7 @@ export const postMasterStyle = task({
 
                 entityReferenceImagePromptList.push(...postEntityCharacterSheetPromptListResult.entityReferenceImagePromptList);
 
+                const referenceImageAIModelEndpointId = aiModelConfig.referenceImageModelId;
                 const postReferenceImagePromiseList = entityReferenceImagePromptList.map(async (referenceImageData) => {
                     const {
                         id: entityId,
@@ -145,6 +148,7 @@ export const postMasterStyle = task({
                         taskId,
                         entityId,
                         falAiApiKey,
+                        referenceImageAIModelEndpointId,
                         user.id
                     );
                 });
