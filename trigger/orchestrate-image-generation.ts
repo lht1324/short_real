@@ -60,21 +60,6 @@ export const orchestrateImageGeneration = task({
                 aspect_ratio: aspectRatio,
             } = videoGenerationTask;
 
-            const aiModelDataList = await aiModelDataServerAPI.getAIModelDataList();
-            const sceneImageT2IAIModelData = aiModelDataList.find((aiModelData) => {
-                return aiModelData.id === aiModelConfig.sceneImageT2IModelId;
-            });
-            const sceneImageI2IAIModelData = aiModelDataList.find((aiModelData) => {
-                return aiModelData.id === aiModelConfig.sceneImageI2IModelId;
-            });
-
-            if (aiModelDataList.length === 0 || !sceneImageT2IAIModelData || !sceneImageI2IAIModelData) {
-                logger.error(`[Orchestrator] Model data were wrong.`);
-
-                await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
-                throw new Error(`Model data were wrong.`);
-            }
-
             // 1. N개의 자식 태스크 병렬 실행 및 대기 (Fan-out & Wait)
             // Trigger 시스템이 각 자식 태스크의 재시도(Retry)를 알아서 관리함.
             // 여기서는 모든 자식이 '최종 성공'하거나 '최종 실패'할 때까지 기다림.
@@ -92,8 +77,8 @@ export const orchestrateImageGeneration = task({
                         styleId,
                         falAiApiKey,
                         userId: videoGenerationTask.user_id,
-                        sceneImageT2IAIModelData,
-                        sceneImageI2IAIModelData,
+                        sceneImageT2IAIModelEndpointId: aiModelConfig.sceneImageT2IModelId,
+                        sceneImageI2IAIModelEndpointId: aiModelConfig.sceneImageI2IModelId,
                         resolution,
                         aspectRatio,
                     }

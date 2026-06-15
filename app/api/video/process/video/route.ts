@@ -8,6 +8,8 @@ import {videoServerAPI} from "@/lib/api/server/videoServerAPI";
 import {getNextBaseResponse} from "@/lib/utils/getNextBaseResponse";
 import {delay} from "@/lib/utils/asyncUtils";
 import {getIsValidRequestS2S} from "@/lib/utils/getIsValidRequest";
+import {usersServerAPI} from "@/lib/api/server/usersServerAPI";
+import {aiModelDataServerAPI} from "@/lib/api/server/aiModelDataServerAPI";
 
 export async function POST(request: NextRequest) {
     if (!getIsValidRequestS2S(request)) {
@@ -35,7 +37,7 @@ export async function POST(request: NextRequest) {
     try {
         const videoGenerationTask = await videoGenerationTasksServerAPI.getVideoGenerationTaskById(taskId);
 
-        if (!videoGenerationTask) {
+        if (!videoGenerationTask || !videoGenerationTask.ai_model_config || !videoGenerationTask.resolution || !videoGenerationTask.aspect_ratio) {
             await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
 
             return getNextBaseResponse({
@@ -44,6 +46,49 @@ export async function POST(request: NextRequest) {
                 error: 'Video Generation Task not found.'
             });
         }
+
+        const {
+            ai_model_config: aiModelConfig,
+            resolution,
+            user_id: userId,
+            aspect_ratio: aspectRatio,
+        } = videoGenerationTask;
+
+        if (!videoGenerationTask || !videoGenerationTask.ai_model_config || !videoGenerationTask.resolution || !videoGenerationTask.aspect_ratio) {
+            await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
+
+            return getNextBaseResponse({
+                success: false,
+                status: 404,
+                error: 'Video Generation Task not found.'
+            });
+        }
+
+        const videoAIModelData = await aiModelDataServerAPI.getAIModelDataById(aiModelConfig.videoModelId);
+
+        if (!videoAIModelData) {
+            await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
+
+            return getNextBaseResponse({
+                success: false,
+                status: 404,
+                error: 'There is no AI model selected by user.'
+            });
+        }
+
+        const user = await usersServerAPI.getUserByUserId(userId);
+
+        if (!user || !user.fal_ai_api_key) {
+            await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
+
+            return getNextBaseResponse({
+                success: false,
+                status: 404,
+                error: 'Video Generation Task not found.'
+            });
+        }
+
+        const falAiApiKey = user.fal_ai_api_key;
 
         const checkResultInitialResult = await taskCheckAndCleanupIfCancelled(videoGenerationTask);
 
@@ -115,6 +160,11 @@ export async function POST(request: NextRequest) {
             const requestId = await videoServerAPI.postVideo(
                 sceneData,
                 taskId,
+                userId,
+                videoAIModelData,
+                falAiApiKey,
+                aspectRatio,
+                resolution,
             );
 
             const { error } = await supabase.rpc('update_scene_request_id', {

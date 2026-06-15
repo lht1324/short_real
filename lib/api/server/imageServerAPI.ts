@@ -16,8 +16,8 @@ export const imageServerAPI = {
         sceneNumber: number,
         falAiApiKey: string,
         userId: string,
-        t2iAIModelData: AIModelData,
-        i2iAIModelData: AIModelData,
+        t2iAIModelEndpointId: string,
+        i2iAIModelEndpointId: string,
         resolution: '720p' | '1080p',
         aspectRatio: '16:9' | '9:16',
     ): Promise<{ success: boolean; error?: { message: string; code: string } }> {
@@ -45,8 +45,8 @@ export const imageServerAPI = {
 
             try {
                 const modelEndpointId = isSubjectExists
-                    ? i2iAIModelData.endpoint_id
-                    : t2iAIModelData.endpoint_id;
+                    ? i2iAIModelEndpointId
+                    : t2iAIModelEndpointId;
                 const imageModelInput = falAIInputMapper.buildImageInput(modelEndpointId as FalAIEndpointID, {
                     prompt: imageGenPromptSentence,
                     resolution: resolution,
