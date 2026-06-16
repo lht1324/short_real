@@ -39,15 +39,19 @@
 1. **[진행 예정] 실제 비디오 생성 로직에 유저 API Key 탑재**:
    - 현재 시스템 환경변수에서 가져오는 API Key를, 생성 요청을 보낸 유저의 DB 프로필(`fal_ai_api_key` 등)에서 꺼내 쓰도록 백엔드 생성 엔진 로직 수정 필요.
 
-2. **[진행 예정] Editor 페이지 디자인 리팩토링**:
+2. **[계획 수립 완료 / 진행 전] Autopilot 비디오 스펙(해상도, 비율) 설정 UI 통합**:
+   - `autopilot_new_field_ui_update.md` 파일에 상세 구현 계획 작성 완료. 
+   - `AutopilotConfigPanel` 내에 모델 선택(BYOK)과 분리된 독립적인 "Video Specs" 섹션 추가 및 미지원 해상도 비활성화 처리, 동적 해상도 Fallback 로직 구현 예정. (아직 코드 작업 시작 전이므로 이 파일부터 확인할 것)
+
+3. **[진행 예정] Editor 페이지 디자인 리팩토링**:
    - `@components/page/workspace/editor/WorkspaceEditorPageClient.tsx`를 'Dark Tech' 프로 툴 감성으로 리팩토링.
 
-3. **[검토 필요] Replicate 모델 실연동**:
+4. **[검토 필요] Replicate 모델 실연동**:
    - fal.ai 외에 Replicate 엔진을 실제 비디오 생성 옵션으로 활성화하고 키 연동 기능 정식 오픈.
 
-4. **[버그 수정] HeroSection 뮤트 버튼 작동 불량**:
+5. **[버그 수정] HeroSection 뮤트 버튼 작동 불량**:
    - 현재 Hero 영역의 비디오 카드에서 뮤트 토글 버튼이 정상적으로 동작하지 않는 이슈 해결 필요.
 
-5. **랜딩 페이지 하단 섹션 (HowItWorks, Pricing, FAQ) 디자인 개편**:
+6. **랜딩 페이지 하단 섹션 (HowItWorks, Pricing, FAQ) 디자인 개편**:
    - AI 슬롭을 제거하고 현재의 Zinc 테마와 비대칭 레이아웃으로 일치시킴.
 
