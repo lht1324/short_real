@@ -22,6 +22,10 @@ export interface AutopilotData {
     youtube_privacy?: ExportPrivacySetting | null;
     tiktok_privacy?: ExportPrivacySetting | null;
 
+    // Output Format Specs
+    resolution?: '720p' | '1080p' | '2160p' | null;
+    aspect_ratio?: '16:9' | '9:16' | null;
+
     // Model Setting
     ai_model_config?: AIModelConfig | null;
 

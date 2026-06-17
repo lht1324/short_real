@@ -72,7 +72,7 @@ export enum FalAIEndpointID {
 export interface CommonInputParams {
     prompt: string;
     aspectRatio: '16:9' | '9:16';
-    resolution: '720p' | '1080p'
+    resolution: '720p' | '1080p' | '2160p'
 }
 
 export interface ImageInputParams extends CommonInputParams {

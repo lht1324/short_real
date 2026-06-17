@@ -39,7 +39,7 @@ export const postImage = task({
         userId: string;
         sceneImageT2IAIModelEndpointId: string;
         sceneImageI2IAIModelEndpointId: string;
-        resolution: '720p' | '1080p';
+        resolution: '720p' | '1080p' | '2160p';
         aspectRatio: '16:9' | '9:16';
     }) => {
         const {

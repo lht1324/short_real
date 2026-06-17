@@ -1,7 +1,7 @@
 'use client'
 
 import {memo, useCallback, useEffect, useMemo, useState} from "react";
-import {Sparkles, FileText, Mic2, Zap, Info, Square, Play, CheckCircle2, Bot, ChevronDown, ChevronUp} from 'lucide-react';
+import {Sparkles, FileText, Mic2, Zap, Info, Square, Play, CheckCircle2, Bot, ChevronDown, ChevronUp, MonitorPlay} from 'lucide-react';
 import {Voice} from "@/lib/api/types/eleven-labs/Voice";
 import {NICHE_DATA_LIST} from "@/lib/niches";
 import {AutopilotData} from "@/lib/api/types/supabase/AutopilotData";
@@ -40,6 +40,19 @@ function AutopilotConfigPanel({
     const selectedT2iId = currentSeries.ai_model_config?.sceneImageT2IModelId;
     const selectedI2iId = currentSeries.ai_model_config?.sceneImageI2IModelId;
     const selectedI2vId = currentSeries.ai_model_config?.videoModelId;
+
+    // Supported Resolutions for selected video model
+    const supportedResolutions = useMemo(() => {
+        const model = aiModelList.find(m => m.id === selectedI2vId);
+        if (!model || !model.ai_model_price_list) return ['1080p']; // fallback default
+        
+        return model.ai_model_price_list.map(p => {
+            if (p.unit.includes('720p')) return '720p';
+            if (p.unit.includes('1080p')) return '1080p';
+            if (p.unit.includes('2160p')) return '2160p';
+            return null;
+        }).filter(Boolean) as string[];
+    }, [aiModelList, selectedI2vId]);
 
     // Price Calculation
     const getPrice = useCallback((models: AIModelData[], id?: string) => {
@@ -300,6 +313,44 @@ function AutopilotConfigPanel({
                             </div>
                         </div>
                     )}
+                </section>
+
+                <section className="bg-zinc-900/40 border border-white/5 rounded-xl p-5 space-y-4">
+                    <div className="flex items-center gap-2 text-base font-medium text-zinc-200">
+                        <MonitorPlay size={18} className="text-zinc-400" />
+                        <span>Video Specs</span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-1.5">
+                            <label className="text-[11px] font-medium text-zinc-500 uppercase tracking-wider ml-0.5">Aspect Ratio</label>
+                            <select 
+                                value={currentSeries.aspect_ratio || '9:16'} 
+                                onChange={(e) => updateSeries({ aspect_ratio: e.target.value as any })}
+                                className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2.5 text-[13px] text-zinc-200 focus:outline-none focus:border-zinc-500 appearance-none"
+                            >
+                                <option value="9:16" className="bg-zinc-900">Vertical (9:16)</option>
+                                <option value="16:9" className="bg-zinc-900">Horizontal (16:9)</option>
+                            </select>
+                        </div>
+                        <div className="space-y-1.5">
+                            <label className="text-[11px] font-medium text-zinc-500 uppercase tracking-wider ml-0.5">Resolution</label>
+                            <select 
+                                value={currentSeries.resolution || '1080p'} 
+                                onChange={(e) => updateSeries({ resolution: e.target.value as any })}
+                                className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2.5 text-[13px] text-zinc-200 focus:outline-none focus:border-zinc-500 appearance-none"
+                            >
+                                <option value="720p" disabled={!supportedResolutions.includes('720p')} className={!supportedResolutions.includes('720p') ? "bg-zinc-900 text-zinc-600" : "bg-zinc-900"}>
+                                    720p {!supportedResolutions.includes('720p') && "(Not supported)"}
+                                </option>
+                                <option value="1080p" disabled={!supportedResolutions.includes('1080p')} className={!supportedResolutions.includes('1080p') ? "bg-zinc-900 text-zinc-600" : "bg-zinc-900"}>
+                                    1080p {!supportedResolutions.includes('1080p') && "(Not supported)"}
+                                </option>
+                                <option value="2160p" disabled={!supportedResolutions.includes('2160p')} className={!supportedResolutions.includes('2160p') ? "bg-zinc-900 text-zinc-600" : "bg-zinc-900"}>
+                                    4K (2160p) {!supportedResolutions.includes('2160p') && "(Not supported)"}
+                                </option>
+                            </select>
+                        </div>
+                    </div>
                 </section>
 
                 <section className="bg-zinc-900/40 border border-white/5 rounded-xl p-5 space-y-4">

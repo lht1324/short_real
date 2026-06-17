@@ -18,7 +18,7 @@ export const imageServerAPI = {
         userId: string,
         t2iAIModelEndpointId: string,
         i2iAIModelEndpointId: string,
-        resolution: '720p' | '1080p',
+        resolution: '720p' | '1080p' | '2160p',
         aspectRatio: '16:9' | '9:16',
     ): Promise<{ success: boolean; error?: { message: string; code: string } }> {
         const supabase = createSupabaseServiceRoleClient();

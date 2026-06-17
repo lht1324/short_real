@@ -61,6 +61,10 @@ function WorkspaceCreatePageClient() {
     const [videoDescription, setVideoDescription] = useState<string | null>(null);
     const [voiceUrl, setVoiceUrl] = useState<string | null>(null);
 
+    // Video Spec states
+    const [aspectRatio, setAspectRatio] = useState<'16:9' | '9:16'>('9:16');
+    const [resolution, setResolution] = useState<'720p' | '1080p' | '2160p'>('1080p');
+
     const isVideoGenerationEnabled = useMemo(() => {
         const isScriptNotEmpty = script.length !== 0;
         const isSceneDataListNotEmpty = sceneDataList.length !== 0;
@@ -245,7 +249,7 @@ function WorkspaceCreatePageClient() {
                 throw new Error("User Id or Task Id or selected style was not found.");
             }
 
-            // Patch ai_model_config before generation
+            // Patch ai_model_config and specs before generation
             if (selectedReferenceId && selectedI2iId && selectedI2vId) {
                 const selectedI2iModel = aiModelList.find(m => m.id === selectedI2iId);
                 const companionT2iModel = aiModelList.find(
@@ -254,6 +258,8 @@ function WorkspaceCreatePageClient() {
                 const inferredSceneT2iId = companionT2iModel?.id ?? '1bd90bd4-e476-40e9-8a1e-1649288786e7';
 
                 await videoClientAPI.patchVideoTaskByTaskId(taskId, {
+                    aspect_ratio: aspectRatio,
+                    resolution: resolution,
                     ai_model_config: {
                         referenceImageModelId: selectedReferenceId,
                         sceneImageT2IModelId: inferredSceneT2iId,
@@ -285,7 +291,7 @@ function WorkspaceCreatePageClient() {
         } finally {
             setIsSubmitting(false);
         }
-    }, [script, taskId, user?.id, selectedStyleId, selectedReferenceId, selectedI2iId, selectedI2vId, aiModelList]);
+    }, [script, taskId, user?.id, selectedStyleId, selectedReferenceId, selectedI2iId, selectedI2vId, aiModelList, aspectRatio, resolution]);
 
     const onClickGenerateVideo = useCallback(async () => {
         if (isCreditInsufficient) {
@@ -315,6 +321,8 @@ function WorkspaceCreatePageClient() {
                 video_description: videoDescription ?? undefined,
                 selected_style_id: selectedStyleId.length !== 0 ? selectedStyleId : undefined,
                 selected_voice_id: selectedVoiceId.length !== 0 ? selectedVoiceId : undefined,
+                aspect_ratio: aspectRatio,
+                resolution: resolution,
                 ai_model_config: (selectedReferenceId && inferredSceneT2iId && selectedI2iId && selectedI2vId) ? {
                     referenceImageModelId: selectedReferenceId,
                     sceneImageT2IModelId: inferredSceneT2iId,
@@ -337,7 +345,7 @@ function WorkspaceCreatePageClient() {
         } finally {
             setIsSaving(false);
         }
-    }, [script, sceneDataList, videoTitle, videoDescription, selectedStyleId, selectedVoiceId, taskId, selectedReferenceId, selectedI2iId, selectedI2vId, aiModelList]);
+    }, [script, sceneDataList, videoTitle, videoDescription, selectedStyleId, selectedVoiceId, taskId, selectedReferenceId, selectedI2iId, selectedI2vId, aiModelList, aspectRatio, resolution]);
 
     const onCloseSaveSuccessModal = useCallback(() => {
         setShowSaveSuccessModal(false);
@@ -366,7 +374,7 @@ function WorkspaceCreatePageClient() {
                 setAiModelList(models);
 
                 // Set default models using user preferences or specific hardcoded fallback IDs
-                const defaultReference = user?.preferred_ai_model_config?.sceneImageT2IModelId || 'ca637a97-f060-4b81-a7d4-118a6f4aac0c';
+                const defaultReference = user?.preferred_ai_model_config?.referenceImageModelId || 'ca637a97-f060-4b81-a7d4-118a6f4aac0c';
                 const defaultI2i = user?.preferred_ai_model_config?.sceneImageI2IModelId || '79a506ac-eced-4643-b017-c8a2bb0f028b';
                 const defaultI2v = user?.preferred_ai_model_config?.videoModelId || '326a9a71-26a9-4142-8371-5467f316bcd6';
 
@@ -405,6 +413,9 @@ function WorkspaceCreatePageClient() {
                     setSelectedVoiceId(voiceId ?? '');
                     setSelectedStyleId(styleId ?? '');
                     
+                    if (videoGenerationTask.aspect_ratio) setAspectRatio(videoGenerationTask.aspect_ratio);
+                    if (videoGenerationTask.resolution) setResolution(videoGenerationTask.resolution);
+                    
                     if (aiModelConfig) {
                         setSelectedReferenceId(aiModelConfig.sceneImageT2IModelId);
                         setSelectedI2iId(aiModelConfig.sceneImageI2IModelId);
@@ -441,6 +452,25 @@ function WorkspaceCreatePageClient() {
             setVoiceUrl(null);
         }
     }, [taskId, sceneDataList]);
+
+    useEffect(() => {
+        if (!selectedI2vId || aiModelList.length === 0) return;
+
+        const newModel = aiModelList.find(m => m.id === selectedI2vId);
+        if (newModel && newModel.ai_model_price_list) {
+            const supportedResolutions = newModel.ai_model_price_list.map(p => {
+                if (p.unit.includes('720p')) return '720p';
+                if (p.unit.includes('1080p')) return '1080p';
+                if (p.unit.includes('2160p')) return '2160p';
+                return null;
+            }).filter(Boolean);
+
+            if (supportedResolutions.length > 0 && !supportedResolutions.includes(resolution)) {
+                const fallbackResolution = supportedResolutions.includes('1080p') ? '1080p' : (supportedResolutions.includes('720p') ? '720p' : supportedResolutions[0]);
+                setResolution(fallbackResolution as '720p' | '1080p' | '2160p');
+            }
+        }
+    }, [selectedI2vId, aiModelList, resolution]);
 
     useEffect(() => {
         let timeout: NodeJS.Timeout;
@@ -524,12 +554,16 @@ function WorkspaceCreatePageClient() {
                     selectedReferenceId={selectedReferenceId}
                     selectedI2iId={selectedI2iId}
                     selectedI2vId={selectedI2vId}
+                    aspectRatio={aspectRatio}
+                    resolution={resolution}
                     onChangeScript={onChangeScript}
                     onClickGenerateWithAI={onClickGenerateWithAI}
                     onClickGenerateStoryboard={onClickGenerateStoryboardInCreateFormPanel}
                     onChangeReferenceId={setSelectedReferenceId}
                     onChangeI2iId={setSelectedI2iId}
                     onChangeI2vId={setSelectedI2vId}
+                    onChangeAspectRatio={setAspectRatio}
+                    onChangeResolution={setResolution}
                 />
 
                 {/* Voice Selection Panel */}

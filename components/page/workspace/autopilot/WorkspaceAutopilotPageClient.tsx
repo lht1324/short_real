@@ -98,10 +98,46 @@ function WorkspaceAutopilotPageClient() {
         return nextFont ? nextFont.style.fontFamily : `'${selectedFontFamily?.name}', '${selectedFontFamily?.generic}'`;
     }, [selectedFontFamily]);
 
+    const [voiceList, setVoiceList] = useState<Voice[]>([]);
+    const [isVoiceLoading, setIsVoiceLoading] = useState(true);
+    const [aiModelList, setAiModelList] = useState<AIModelData[]>([]);
+    const [isAiModelLoading, setIsAiModelLoading] = useState(true);
+    const [isSaving, setIsSaving] = useState(false);
+    const [showSaveSuccessModal, setShowSaveSuccessModal] = useState(false);
+
+    const userCreditCount = useMemo(() => user?.credit_count ?? 0, [user]);
+
     const updateCurrentSeries = useCallback((updateData: Partial<AutopilotData>) => {
         if (!currentSeriesId) return;
-        setSeriesList(prev => prev.map(s => s.id === currentSeriesId ? { ...s, ...updateData } : s));
-    }, [currentSeriesId]);
+
+        setSeriesList(prev => prev.map(s => {
+            if (s.id !== currentSeriesId) return s;
+
+            // Handle resolution fallback if video model changes
+            if (updateData.ai_model_config?.videoModelId && updateData.ai_model_config.videoModelId !== s.ai_model_config?.videoModelId) {
+                const newModelId = updateData.ai_model_config.videoModelId;
+                const newModel = aiModelList.find(m => m.id === newModelId);
+                const currentResolution = updateData.resolution || s.resolution || '1080p';
+
+                if (newModel && newModel.ai_model_price_list) {
+                    const supportedResolutions = newModel.ai_model_price_list.map(p => {
+                        if (p.unit.includes('720p')) return '720p';
+                        if (p.unit.includes('1080p')) return '1080p';
+                        if (p.unit.includes('2160p')) return '2160p';
+                        return null;
+                    }).filter(Boolean);
+
+                    if (supportedResolutions.length > 0 && !supportedResolutions.includes(currentResolution)) {
+                        // Fallback to the highest supported resolution if current is not supported
+                        const fallbackResolution = supportedResolutions.includes('1080p') ? '1080p' : (supportedResolutions.includes('720p') ? '720p' : supportedResolutions[0]);
+                        return { ...s, ...updateData, resolution: fallbackResolution as '720p' | '1080p' | '2160p' };
+                    }
+                }
+            }
+
+            return { ...s, ...updateData };
+        }));
+    }, [currentSeriesId, aiModelList]);
 
     const onChangeCaptionConfigState = useCallback((newCaptionConfigState: CaptionConfigState) => {
         setCaptionConfigState(newCaptionConfigState);
@@ -171,15 +207,6 @@ function WorkspaceAutopilotPageClient() {
         }
         return { isValid: reasons.length === 0, reasons };
     }, [currentSeries]);
-
-    const [voiceList, setVoiceList] = useState<Voice[]>([]);
-    const [isVoiceLoading, setIsVoiceLoading] = useState(true);
-    const [aiModelList, setAiModelList] = useState<AIModelData[]>([]);
-    const [isAiModelLoading, setIsAiModelLoading] = useState(true);
-    const [isSaving, setIsSaving] = useState(false);
-    const [showSaveSuccessModal, setShowSaveSuccessModal] = useState(false);
-
-    const userCreditCount = useMemo(() => user?.credit_count ?? 0, [user]);
 
     const fetchAutopilotList = useCallback(async () => {
         if (!user?.id) return;
@@ -321,6 +348,8 @@ function WorkspaceAutopilotPageClient() {
                 user_timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
                 topic_history: [],
                 caption_config: INITIAL_CAPTION_CONFIG_STATE,
+                resolution: '1080p',
+                aspect_ratio: '9:16',
                 ai_model_config: {
                     referenceImageModelId: defaultReference,
                     sceneImageT2IModelId: defaultSceneT2i,
