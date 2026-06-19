@@ -23,6 +23,7 @@ interface ResultPanelProps {
     selectedReferenceId: string | null;
     selectedI2iId: string | null;
     selectedI2vId: string | null;
+    isFalAiKeyMissing: boolean;
     onClickSaveDraft: () => void;
     onClickGenerateVideo: () => void;
 }
@@ -47,6 +48,7 @@ function ResultPanel({
     selectedReferenceId,
     selectedI2iId,
     selectedI2vId,
+    isFalAiKeyMissing,
     onClickSaveDraft,
     onClickGenerateVideo,
 }: ResultPanelProps) {
@@ -136,7 +138,7 @@ function ResultPanel({
                     <div className="relative group flex-1">
                         <button
                             onClick={onClickGenerateVideo}
-                            disabled={!isVideoGenerationEnabled || isSubmitting}
+                            disabled={!isVideoGenerationEnabled || isSubmitting || isFalAiKeyMissing}
                             className={`w-full py-2.5 rounded-lg text-sm font-medium transition-all flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed ${
                                 isCreditInsufficient
                                     ? 'bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500/20'
@@ -165,7 +167,7 @@ function ResultPanel({
                         </button>
 
                         {/* 툴팁 오버레이 */}
-                        {!isVideoGenerationEnabled && (
+                        {(!isVideoGenerationEnabled || isFalAiKeyMissing) && (
                             <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-3 w-56 bg-zinc-900 border border-white/10 rounded-lg p-3.5 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 shadow-xl">
                                 <div className="text-[10px] font-medium text-zinc-500 uppercase tracking-wider mb-2">Requirements</div>
                                 <div className="space-y-2">
@@ -191,6 +193,12 @@ function ResultPanel({
                                         {selectedStyleId ? <CheckCircle2 size={14} className="text-emerald-500" /> : <Circle size={14} className="text-zinc-700" />}
                                         <span className={selectedStyleId ? 'text-zinc-200' : 'text-zinc-500'}>
                                             Style selected
+                                        </span>
+                                    </div>
+                                    <div className="flex items-center space-x-2 text-[13px]">
+                                        {!isFalAiKeyMissing ? <CheckCircle2 size={14} className="text-emerald-500" /> : <Circle size={14} className="text-zinc-700" />}
+                                        <span className={!isFalAiKeyMissing ? 'text-zinc-200' : 'text-zinc-500'}>
+                                            fal.ai Key connected
                                         </span>
                                     </div>
                                 </div>

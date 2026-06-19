@@ -44,6 +44,7 @@ interface AutopilotControlPanelProps {
     onClickSaveConfig: (runImmediately?: boolean) => void;
     onClickDeleteConfig: () => void;
     aiModelList: AIModelData[];
+    isFalAiKeyMissing: boolean;
 }
 
 function AutopilotControlPanel({
@@ -55,6 +56,7 @@ function AutopilotControlPanel({
     onClickSaveConfig,
     onClickDeleteConfig,
     aiModelList,
+    isFalAiKeyMissing,
 }: AutopilotControlPanelProps) {
     // --- Internal UI State (Not persisted in DB) ---
     const [runImmediately, setRunImmediately] = useState(false);

@@ -539,7 +539,7 @@ function ProfilePageClient() {
                 </div>
 
                 {/* Provider Authentication Section (BYOK) */}
-                <div className="mb-8 p-8 rounded-2xl border border-white/5 bg-zinc-900/40">
+                <div id="provider-authentication" className="mb-8 p-8 rounded-2xl border border-white/5 bg-zinc-900/40">
                     <div className="flex items-center gap-2.5 mb-8">
                         <Shield size={20} className="text-zinc-500" />
                         <h3 className="text-sm font-semibold text-zinc-100 uppercase tracking-wider">Provider Authentication</h3>

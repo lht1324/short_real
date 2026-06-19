@@ -186,6 +186,10 @@ function WorkspaceAutopilotPageClient() {
         });
     }, []);
 
+    const isFalAiKeyMissing = useMemo(() => {
+        return !user?.fal_ai_api_key;
+    }, [user?.fal_ai_api_key]);
+
     const isDirty = useMemo(() => {
         if (!currentSeries) return false;
         const lastSaved = lastSavedSeriesList.find(s => s.id === currentSeries.id);
@@ -205,8 +209,11 @@ function WorkspaceAutopilotPageClient() {
         if (!currentSeries.niche_preset_id && !currentSeries.niche_value?.trim()) {
             reasons.push("Niche description is empty");
         }
+        if (isFalAiKeyMissing) {
+            reasons.push("fal.ai API key is required");
+        }
         return { isValid: reasons.length === 0, reasons };
-    }, [currentSeries]);
+    }, [currentSeries, isFalAiKeyMissing]);
 
     const fetchAutopilotList = useCallback(async () => {
         if (!user?.id) return;
@@ -560,6 +567,7 @@ function WorkspaceAutopilotPageClient() {
                                         isVoiceLoading={isVoiceLoading}
                                         aiModelList={aiModelList}
                                         isAiModelLoading={isAiModelLoading}
+                                        isFalAiKeyMissing={isFalAiKeyMissing}
                                     />
                                 </div>
 
@@ -611,6 +619,7 @@ function WorkspaceAutopilotPageClient() {
                                 onClickSaveConfig={onClickSaveConfig}
                                 onClickDeleteConfig={onClickDeleteConfig}
                                 aiModelList={aiModelList}
+                                isFalAiKeyMissing={isFalAiKeyMissing}
                             />
                         </>
                     ) : (

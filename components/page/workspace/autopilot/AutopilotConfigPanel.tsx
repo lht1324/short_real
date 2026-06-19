@@ -1,7 +1,8 @@
 'use client'
 
 import {memo, useCallback, useEffect, useMemo, useState} from "react";
-import {Sparkles, FileText, Mic2, Zap, Info, Square, Play, CheckCircle2, Bot, ChevronDown, ChevronUp, MonitorPlay} from 'lucide-react';
+import {Sparkles, FileText, Mic2, Zap, Info, Square, Play, CheckCircle2, Bot, ChevronDown, ChevronUp, MonitorPlay, Lock} from 'lucide-react';
+import {useRouter} from "next/navigation";
 import {Voice} from "@/lib/api/types/eleven-labs/Voice";
 import {NICHE_DATA_LIST} from "@/lib/niches";
 import {AutopilotData} from "@/lib/api/types/supabase/AutopilotData";
@@ -15,6 +16,7 @@ interface AutopilotConfigPanelProps {
     isVoiceLoading: boolean;
     aiModelList: AIModelData[];
     isAiModelLoading: boolean;
+    isFalAiKeyMissing: boolean;
 }
 
 function AutopilotConfigPanel({
@@ -24,7 +26,9 @@ function AutopilotConfigPanel({
     isVoiceLoading,
     aiModelList,
     isAiModelLoading,
+    isFalAiKeyMissing,
 }: AutopilotConfigPanelProps) {
+    const router = useRouter();
     const topicMode = currentSeries.niche_preset_id ? 'preset' : 'custom';
     // Internal UI State: Audio
     const [currentAudio, setCurrentAudio] = useState<HTMLAudioElement | null>(null);
@@ -267,9 +271,23 @@ function AutopilotConfigPanel({
                 </section>
                 
                 <section className="bg-zinc-900/40 border border-white/5 rounded-xl p-5 space-y-4">
-                    <div className="flex items-center gap-2 text-base font-medium text-zinc-200">
-                        <Bot size={18} className="text-zinc-400" />
-                        <span>Visual AI Models (BYOK)</span>
+                    <div className="flex items-center justify-between flex-wrap gap-2">
+                        <div className="flex items-center gap-2 text-base font-medium text-zinc-200">
+                            <Bot size={18} className="text-zinc-400" />
+                            <span>Visual AI Models (BYOK)</span>
+                        </div>
+                        {isFalAiKeyMissing && (
+                            <div className="flex items-center space-x-2 text-[13px] text-amber-500/90 font-medium bg-amber-500/5 px-2.5 py-1 rounded-lg border border-amber-500/10">
+                                <Lock className="w-3.5 h-3.5" />
+                                <span>API key required to generate</span>
+                                <button
+                                    onClick={() => router.push('/profile#provider-authentication')}
+                                    className="text-zinc-300 hover:text-white underline underline-offset-4 ml-1 transition-colors"
+                                >
+                                    Connect Key
+                                </button>
+                            </div>
+                        )}
                     </div>
                     {isAiModelLoading ? (
                         <div className="py-4 text-center text-sm text-zinc-500">Loading models...</div>

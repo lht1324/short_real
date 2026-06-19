@@ -21,6 +21,7 @@ interface CreateFormPanelProps {
     selectedI2vId: string | null;
     aspectRatio: '16:9' | '9:16';
     resolution: '720p' | '1080p' | '2160p';
+    isFalAiKeyMissing: boolean;
     onChangeScript: (e: ChangeEvent<HTMLTextAreaElement>) => void;
     onClickGenerateWithAI: () => void;
     onClickGenerateStoryboard: () => void;
@@ -47,6 +48,7 @@ function CreateFormPanel({
     selectedI2vId,
     aspectRatio,
     resolution,
+    isFalAiKeyMissing,
     onChangeScript,
     onClickGenerateWithAI,
     onClickGenerateStoryboard,
@@ -118,6 +120,7 @@ function CreateFormPanel({
                         selectedReferenceId={selectedReferenceId}
                         selectedI2iId={selectedI2iId}
                         selectedI2vId={selectedI2vId}
+                        isFalAiKeyMissing={isFalAiKeyMissing}
                         onChangeReferenceId={onChangeReferenceId}
                         onChangeI2iId={onChangeI2iId}
                         onChangeI2vId={onChangeI2vId}

@@ -1,5 +1,6 @@
 import {memo, useMemo} from "react";
-import {Bot} from "lucide-react";
+import {Bot, Lock} from "lucide-react";
+import {useRouter} from "next/navigation";
 import {AIModelData} from "@/lib/api/types/supabase/AIModelData";
 
 interface BYOKModelSelectorProps {
@@ -7,6 +8,7 @@ interface BYOKModelSelectorProps {
     selectedReferenceId: string | null;
     selectedI2iId: string | null;
     selectedI2vId: string | null;
+    isFalAiKeyMissing: boolean;
     onChangeReferenceId: (id: string) => void;
     onChangeI2iId: (id: string) => void;
     onChangeI2vId: (id: string) => void;
@@ -17,19 +19,35 @@ function BYOKModelSelector({
     selectedReferenceId,
     selectedI2iId,
     selectedI2vId,
+    isFalAiKeyMissing,
     onChangeReferenceId,
     onChangeI2iId,
     onChangeI2vId,
 }: BYOKModelSelectorProps) {
+    const router = useRouter();
     const t2iModels = useMemo(() => aiModelList.filter(m => m.category === 'text-to-image'), [aiModelList]);
     const i2iModels = useMemo(() => aiModelList.filter(m => m.category === 'image-to-image'), [aiModelList]);
     const i2vModels = useMemo(() => aiModelList.filter(m => m.category === 'image-to-video'), [aiModelList]);
 
     return (
         <div className="bg-zinc-900/40 border border-white/5 rounded-xl p-5 space-y-4">
-            <div className="flex items-center gap-2 text-base font-medium text-zinc-200">
-                <Bot size={18} className="text-zinc-400" />
-                <span>Visual AI Models (BYOK)</span>
+            <div className="flex items-center justify-between flex-wrap gap-2">
+                <div className="flex items-center gap-2 text-base font-medium text-zinc-200">
+                    <Bot size={18} className="text-zinc-400" />
+                    <span>Visual AI Models (BYOK)</span>
+                </div>
+                {isFalAiKeyMissing && (
+                    <div className="flex items-center space-x-2 text-[13px] text-amber-500/90 font-medium bg-amber-500/5 px-2.5 py-1 rounded-lg border border-amber-500/10">
+                        <Lock className="w-3.5 h-3.5" />
+                        <span>API key required to generate</span>
+                        <button
+                            onClick={() => router.push('/profile#provider-authentication')}
+                            className="text-zinc-300 hover:text-white underline underline-offset-4 ml-1 transition-colors"
+                        >
+                            Connect Key
+                        </button>
+                    </div>
+                )}
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">

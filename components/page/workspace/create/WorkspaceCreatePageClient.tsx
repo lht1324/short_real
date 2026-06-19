@@ -33,6 +33,10 @@ function WorkspaceCreatePageClient() {
 
     const { user } = useAuth();
 
+    const isFalAiKeyMissing = useMemo(() => {
+        return !user?.fal_ai_api_key;
+    }, [user?.fal_ai_api_key]);
+
     const [isVoiceLoading, setIsVoiceLoading] = useState(true);
     const [isAiModelLoading, setIsAiModelLoading] = useState(true);
     const [isGenerationTaskLoading, setIsGenerationTaskLoading] = useState(true);
@@ -556,6 +560,7 @@ function WorkspaceCreatePageClient() {
                     selectedI2vId={selectedI2vId}
                     aspectRatio={aspectRatio}
                     resolution={resolution}
+                    isFalAiKeyMissing={isFalAiKeyMissing}
                     onChangeScript={onChangeScript}
                     onClickGenerateWithAI={onClickGenerateWithAI}
                     onClickGenerateStoryboard={onClickGenerateStoryboardInCreateFormPanel}
@@ -594,6 +599,7 @@ function WorkspaceCreatePageClient() {
                     selectedReferenceId={selectedReferenceId}
                     selectedI2iId={selectedI2iId}
                     selectedI2vId={selectedI2vId}
+                    isFalAiKeyMissing={isFalAiKeyMissing}
                     onClickSaveDraft={onClickSaveDraft}
                     onClickGenerateVideo={onClickGenerateVideo}
                 />
