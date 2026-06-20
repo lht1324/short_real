@@ -21,11 +21,10 @@ export async function GET(
         }
 
         // --- Security Masking ---
-        // Mask API keys before sending to the client (e.g., 'sk-a...********')
+        // Mask API keys before sending to the client (e.g., '************' if key exists)
         const maskKey = (key: string | null | undefined) => {
             if (!key) return null;
-            if (key.length <= 8) return "********"; // Too short to show prefix
-            return `${key.slice(0, 4)}...${"*".repeat(8)}`;
+            return "************";
         };
 
         const maskedUser: User = {

@@ -58,6 +58,10 @@ function ProfilePageClient() {
     const [selectedI2iId, setSelectedI2iId] = useState<string | null>(null);
     const [selectedI2vId, setSelectedI2vId] = useState<string | null>(null);
 
+    const isUserRegisteredFalAi = useMemo(() => {
+        return !!(user?.fal_ai_api_key)
+    }, [user?.fal_ai_api_key])
+
     const planDisplayName = useMemo(() => {
         return subscriptionData?.productName ?? "No Subscription";
     }, [subscriptionData]);
@@ -354,27 +358,32 @@ function ProfilePageClient() {
     const onClickSaveFalKey = useCallback(async () => {
         if (!user?.id || !falKeyInput.trim()) return;
 
+        // 이미 키가 등록되어 있고, 입력값이 마스킹 텍스트 그대로인 경우 저장 API 생략
+        if (isUserRegisteredFalAi && falKeyInput.trim() === "************") {
+            setIsEditingFalKey(false);
+            setFalKeyInput("");
+            return;
+        }
+
         setIsSavingKeys(true);
         try {
-            const result = await usersClientAPI.patchUserByUserId(user.id, {
-                fal_ai_api_key: falKeyInput.trim()
-            });
+            const result = await usersClientAPI.patchUserApiKey(user.id, falKeyInput.trim());
 
-            if (result) {
+            if (result.success) {
                 await refreshUser();
                 setIsEditingFalKey(false);
                 setFalKeyInput("");
                 alert("API Key saved successfully.");
             } else {
-                throw new Error("Failed to save key");
+                throw new Error(result.error || "Failed to save key");
             }
         } catch (error) {
             console.error("Error saving API Key:", error);
-            alert("Failed to save API Key. Please try again.");
+            alert(error instanceof Error ? error.message : "Failed to save API Key. Please try again.");
         } finally {
             setIsSavingKeys(false);
         }
-    }, [user?.id, falKeyInput, refreshUser]);
+    }, [user?.id, isUserRegisteredFalAi, falKeyInput, refreshUser]);
 
     const t2iModels = useMemo(() => aiModelList.filter(m => m.category === 'text-to-image'), [aiModelList]);
     const i2iModels = useMemo(() => aiModelList.filter(m => m.category === 'image-to-image'), [aiModelList]);
@@ -550,12 +559,12 @@ function ProfilePageClient() {
                         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-6 rounded-2xl bg-zinc-950/50 border border-white/5 hover:border-white/10 transition-colors">
                             <div className="flex items-center gap-4 min-w-0">
                                 <div className="w-12 h-12 rounded-xl bg-zinc-900 border border-white/5 flex items-center justify-center flex-shrink-0 shadow-inner">
-                                    <FalIcon size={24} className={user?.fal_ai_api_key ? "" : "grayscale opacity-40"} />
+                                    <FalIcon size={24} className={isUserRegisteredFalAi ? "" : "grayscale opacity-40"} />
                                 </div>
                                 <div className="min-w-0">
                                     <div className="flex items-center gap-2 mb-1">
                                         <span className="text-sm font-bold text-zinc-100">fal.ai</span>
-                                        {user?.fal_ai_api_key && <CheckCircle2 size={14} className="text-emerald-500" />}
+                                        {isUserRegisteredFalAi && <CheckCircle2 size={14} className="text-emerald-500" />}
                                     </div>
                                     <p className="text-[11px] text-zinc-500 font-medium tracking-tight">Advanced Text-to-Image & Image-to-Video Engine</p>
                                 </div>
@@ -569,7 +578,7 @@ function ProfilePageClient() {
                                             value={falKeyInput}
                                             onChange={(e) => setFalKeyInput(e.target.value)}
                                             placeholder="Enter your fal.ai API Key..."
-                                            className="w-full bg-zinc-900 border border-white/10 rounded-lg px-4 py-2.5 text-sm text-zinc-200 focus:outline-none focus:border-zinc-500 transition-colors"
+                                            className="w-full bg-zinc-900 border border-white/10 rounded-lg px-4 py-2.5 text-base tracking-[0.2em] placeholder:tracking-normal placeholder:text-sm text-zinc-200 focus:outline-none focus:border-zinc-500 transition-colors"
                                             autoFocus
                                         />
                                         <div className="flex items-center gap-1.5">
@@ -590,14 +599,16 @@ function ProfilePageClient() {
                                     </div>
                                 ) : (
                                     <div className="flex items-center justify-between gap-4 px-4 py-2.5 bg-zinc-900/60 rounded-xl border border-white/5 group/key">
-                                        <span className="text-xs font-mono text-zinc-500 truncate">
-                                            {user?.fal_ai_api_key || "No Key Registered"}
+                                        <span className={`truncate font-mono ${isUserRegisteredFalAi ? "text-base tracking-[0.15em] text-zinc-400 select-none" : "text-sm text-zinc-500"}`}>
+                                            {isUserRegisteredFalAi ? "●●●●●●●●●●●●" : "No Key Registered"}
                                         </span>
                                         <button
-                                            onClick={() => setIsEditingFalKey(true)}
+                                            onClick={() => {
+                                                setIsEditingFalKey(true);
+                                            }}
                                             className="text-[11px] font-bold text-zinc-300 hover:text-white transition-colors px-2 py-1"
                                         >
-                                            {user?.fal_ai_api_key ? "Update" : "Register Key"}
+                                            {isUserRegisteredFalAi ? "Update" : "Register Key"}
                                         </button>
                                     </div>
                                 )}

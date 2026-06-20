@@ -1,4 +1,4 @@
-2026-06-04 18:20
+2026-06-21 02:50
 
 # 프로젝트 컨텍스트: 오토파일럿 고도화 및 전방위적 Anti-Slop 디자인 개편 (BYOK 전환 가속화)
 
@@ -18,7 +18,7 @@
 ### 2.10 Workspace (Create & Autopilot) BYOK 모델 선택 시스템 통합 - [완료]
 - **콤팩트 모델 선택기 (`BYOKModelSelector`) 구현**: Script와 Storyboard 사이의 세로 공간 압박을 최소화하기 위해 가로 3열 레이아웃의 모델 선택 UI를 신설. 뷰포트 Fold 라인 이슈를 UX적으로 해결.
 - **실시간 가격 예측 (`EstimatedCostCard`)**: 기존의 크레딧 카드를 제거하고, 선택된 모델 단가와 영상 길이/씬 개수를 조합하여 **"Estimated BYOK Cost"**를 실시간 산출하도록 우측 ResultPanel 개편.
-- **선호 모델 기본값 연동**: `Users` 테이블의 `preferred_ai_model_config`를 1순위로 참조하도록 하여, 유저가 매번 모델을 고르지 않아도 되는 자동화 흐름 구축. (DB jsonb Default Value 설정 완료)
+- **선호 모델 기본값 연동**: `Users` 테이블 of `preferred_ai_model_config`를 1순위로 참조하도록 하여, 유저가 매번 모델을 고르지 않아도 되는 자동화 흐름 구축. (DB jsonb Default Value 설정 완료)
 - **데이터 보존 로직**: 영상 생성(`Generate Video`) 및 임시 저장(`Save Draft`) 시 선택된 `ai_model_config`가 DB에 누락 없이 반영되도록 연동 로직 보완.
 
 ### 2.11 Profile 페이지 전면 개편 및 인프라 관리 기능 구축 - [완료]
@@ -27,12 +27,24 @@
 - **BYOK 키 관리 시스템**: 
     - **보안 마스킹**: API 서버 단에서 키의 앞부분만 남기고 `********` 처리하여 프론트에 전달하는 보안 로직 구현.
     - **인증 패널**: fal.ai (활성), Replicate (Coming Soon) 로고와 함께 키 등록/수정 UI 구현. 키 등록 시 초록색 체크마크로 연동 상태 시각화.
-- **하위 컴포넌트 동기화**: `OrderItem`, `ChangePlanModal`, `DefaultModal` 등 모든 하위 UI의 그라데이션을 제거하고 Zinc 테마로 통일.
+    - **하위 컴포넌트 동기화**: `OrderItem`, `ChangePlanModal`, `DefaultModal` 등 모든 하위 UI의 그라데이션을 제거하고 Zinc 테마로 통일.
 
 ### 2.12 SignIn 페이지 브랜드 강화 및 Anti-Slop 개편 - [완료]
 - **브랜드 정체성 확립**: 로그인 폼 최상단에 **ShortReal 로고**를 배치하여 서비스 첫인상의 신뢰도 제고.
 - **디자인 슬림화**: Vaporwave 배경 효과를 제거하고 중앙의 은은한 인디고 광원만 남겨 집중도 향상. 타이틀 그라데이션 제거 및 법적 고지 문구의 시각적 소음 억제.
 - **서버 사이드 리다이렉트**: 서버 컴포넌트(`SignInPageServer`)에서 유저 세션을 선제적으로 체크하여 로그인 유저의 대시보드 이동 시 깜빡임 현상을 완벽히 제거.
+
+### 2.13 API Key 유효성 검증 강화 및 초고보안 마스킹 적용 - [완료]
+- **실시간 API Key 검증**: `app/api/user/[userId]/api-key/route.ts`에 fal.ai 공식 API(`v1/models?limit=1`) 연동. 유효하지 않은 키 입력 시 401 Unauthorized 에러 응답 및 데이터베이스 저장 거부.
+- **클라이언트 전용 API 추가**: `lib/api/client/usersClientAPI.ts`에 `patchUserApiKey` 메소드를 신설하여 전용 엔드포인트 호출을 깔끔하게 구조화.
+- **사용자 피드백 및 고정 마스킹 최적화**: 
+    - `isUserRegisteredFalAi` 변수 정의를 `!!(user?.fal_ai_api_key)` 느낌표 2개 형태로 교정하여 키의 존재 여부를 boolean 값으로 명확하게 바인딩.
+    - UI 렌더링 시 원본 API Key 값을 절대 노출하지 않고, `isUserRegisteredFalAi`에 따라 하드코딩된 `"************"` 텍스트가 표시되도록 화면 구성.
+    - U+2022 기호(`•`)가 리눅스 및 일부 브라우저 환경에서 소수점 수준의 미세한 크기로 찍히는 렌더링 한계를 극복하기 위해, 모든 환경에서 선명하게 렌더링되는 별표(asterisk) 마스킹 기호로 교체하여 `"************"`로 최종 통일.
+    - 등록 상태일 때는 `text-xs font-mono tracking-[0.15em] text-zinc-400 select-none` 스타일로 별표 자간이 단정하고 가독성 있게 렌더링되고, 미등록일 때는 일반 텍스트로 깔끔하게 렌더링되도록 클래스 조건부 최적화 적용.
+    - 수정(Update) 시 인풋 박스도 마스킹 가독성을 위해 `text-base tracking-[0.2em]`으로 키우고 `placeholder` 텍스트만 정상 크기 및 자간으로 렌더링되게 설계.
+    - 값의 변동이 없으면 저장 API 호출을 건너뛰어 성능 및 트래픽 절약.
+- **서버 마스킹 고도화 (복호화 생략)**: `app/api/user/[userId]/route.ts` GET 엔드포인트에서 원본 API key 복호화 처리를 일절 배제함. 데이터베이스에 값이 등록되어 있으면 고정 마스킹 `"************"`을, 없으면 `null`을 프론트엔드로 전달하여 복호화 키 유출 위협을 원천 차단하고 연산 비용 최적화.
 
 ## 3. 향후 작업 (Next Steps) - [Priority: HIGH]
 
