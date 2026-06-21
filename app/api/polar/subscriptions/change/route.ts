@@ -111,14 +111,6 @@ export async function POST(request: NextRequest) {
                 },
             });
 
-            const patchUserResult = await usersServerAPI.patchUserByUserId(sessionUserId, {
-                credit_count: (user.credit_count ?? 0) + (newProductData.planData.creditCount - prevProductData.planData.creditCount)
-            });
-
-            if (!patchUserResult) {
-                throw new Error("Patching user failed.");
-            }
-
             return getNextBaseResponse({
                 success: true,
                 status: 200,

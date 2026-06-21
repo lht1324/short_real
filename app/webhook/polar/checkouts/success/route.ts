@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
             (p) => p.id === productId
         );
 
-        if (!product || !product.metadata.planData) {
+        if (!product) {
             throw new Error(`Product not found for productId: ${productId}`);
         }
 
@@ -44,9 +44,8 @@ export async function POST(request: NextRequest) {
 
         // Product metadata에서 플랜 정보 추출
         const {
-            creditCount,
             planId
-        }: { creditCount: number, planId: SubscriptionPlan } = JSON.parse(product.metadata.planData as string);
+        } = product.metadata;
 
         // payload에서 userId 추출
         const userId = payload.data?.metadata?.userId;
@@ -57,8 +56,7 @@ export async function POST(request: NextRequest) {
 
         // 유저 플랜 업데이트
         const updatedUser = await usersServerAPI.patchUserByUserId(userId, {
-            plan: planId,
-            credit_count: creditCount,
+            plan: planId as SubscriptionPlan,
             subscription_id: payload.data.id,
         });
 

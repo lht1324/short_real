@@ -1,4 +1,4 @@
-2026-06-21 02:50
+2026-06-22 02:47
 
 # 프로젝트 컨텍스트: 오토파일럿 고도화 및 전방위적 Anti-Slop 디자인 개편 (BYOK 전환 가속화)
 
@@ -48,10 +48,19 @@
 
 ## 3. 향후 작업 (Next Steps) - [Priority: HIGH]
 
-1. **[진행 예정] 실제 비디오 생성 로직에 유저 API Key 탑재**:
+1. **[진행 예정] BYOK 전환 완료를 위한 Credit 시스템 전면 제거 및 안내/에러 핸들링 강화**:
+   - **자체 크레딧 관련 연산 및 UI 제거**:
+     - `WorkspaceCreatePageClient.tsx` 및 `WorkspaceAutopilotPageClient.tsx` 등에서 `userCreditCount`, `expectedCreditUsage`, `isCreditInsufficient` 계산식과 헤더의 `Credits` 스탯 영역을 완전히 제거.
+     - `Insufficient Credit Modal` 및 크레딧 부족 시 생성을 차단하는 클라이언트 사이드 validation 로직 걷어내기.
+   - **사전 경고 가이드 UI 배치**:
+     - 생성 버튼 또는 결과 패널 인근에 *"Ensure your fal.ai account has sufficient credits (or Auto-Top-Up enabled) to avoid generation failures."* 등의 툴팁 혹은 미니 안내 텍스트 노출.
+   - **사후 에러 핸들링 고도화**:
+     - 비디오 생성 프로세스 중 fal.ai 등 외부 API 호출 시 크레딧 부족(예: `402 Payment Required` 또는 잔액 부족 관련 에러 메시지)이 발생할 경우, 이를 정확히 인터셉트하여 유저에게 *"fal.ai 계정 잔액이 부족합니다. 콘솔에서 충전해 주세요"*라고 친절한 팝업을 제공하는 에러 포매팅 로직 설계.
+
+2. **[진행 예정] 실제 비디오 생성 로직에 유저 API Key 탑재**:
    - 현재 시스템 환경변수에서 가져오는 API Key를, 생성 요청을 보낸 유저의 DB 프로필(`fal_ai_api_key` 등)에서 꺼내 쓰도록 백엔드 생성 엔진 로직 수정 필요.
 
-2. **[계획 수립 완료 / 진행 전] Autopilot 비디오 스펙(해상도, 비율) 설정 UI 통합**:
+3. **[계획 수립 완료 / 진행 전] Autopilot 비디오 스펙(해상도, 비율) 설정 UI 통합**:
    - `autopilot_new_field_ui_update.md` 파일에 상세 구현 계획 작성 완료. 
    - `AutopilotConfigPanel` 내에 모델 선택(BYOK)과 분리된 독립적인 "Video Specs" 섹션 추가 및 미지원 해상도 비활성화 처리, 동적 해상도 Fallback 로직 구현 예정. (아직 코드 작업 시작 전이므로 이 파일부터 확인할 것)
 
