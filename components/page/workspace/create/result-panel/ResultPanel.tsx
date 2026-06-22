@@ -1,28 +1,25 @@
-import {memo} from "react";
+import {memo, useMemo} from "react";
 import {AlertTriangle, Coins, Film, Save, Sparkles, Loader2, CheckCircle2, Circle, FileText} from "lucide-react";
 import EstimatedCostCard from "@/components/page/workspace/create/result-panel/EstimatedCostCard";
-import {AIModelData} from "@/lib/api/types/supabase/AIModelData";
+import {AIModelData, AIModelPriceUnit} from "@/lib/api/types/supabase/AIModelData";
 
 interface ResultPanelProps {
     isStoryboardGenerated: boolean,
     videoTitle: string | null;
     videoDescription: string | null;
     expectedVideoTotalDuration: number;
-    expectedDurationUsage: number;
     expectedVideoSceneCount: number;
-    expectedSceneCountUsage: number;
-    expectedCreditUsage: number;
     script: string;
     selectedVoiceId: string;
     selectedStyleId: string;
     isSaving: boolean;
     isSubmitting: boolean;
-    isCreditInsufficient: boolean;
     isVideoGenerationEnabled: boolean;
     aiModelList: AIModelData[];
     selectedReferenceId: string | null;
     selectedI2iId: string | null;
     selectedI2vId: string | null;
+    resolution: '720p' | '1080p' | '2160p';
     isFalAiKeyMissing: boolean;
     onClickSaveDraft: () => void;
     onClickGenerateVideo: () => void;
@@ -33,25 +30,86 @@ function ResultPanel({
     videoTitle,
     videoDescription,
     expectedVideoTotalDuration,
-    expectedDurationUsage,
     expectedVideoSceneCount,
-    expectedSceneCountUsage,
-    expectedCreditUsage,
     script,
     selectedVoiceId,
     selectedStyleId,
     isSaving,
     isSubmitting,
-    isCreditInsufficient,
     isVideoGenerationEnabled,
     aiModelList,
     selectedReferenceId,
     selectedI2iId,
     selectedI2vId,
+    resolution,
     isFalAiKeyMissing,
     onClickSaveDraft,
     onClickGenerateVideo,
 }: ResultPanelProps) {
+    const referenceImageAIModelData = useMemo(() => {
+        return aiModelList.find((aiModelData) => {
+            return aiModelData.id === selectedReferenceId;
+        });
+    }, [aiModelList, selectedReferenceId]);
+
+    const sceneImageAIModelData = useMemo(() => {
+        return aiModelList.find((aiModelData) => {
+            return aiModelData.id === selectedI2iId;
+        });
+    }, [aiModelList, selectedI2iId]);
+
+    const videoAIModelData = useMemo(() => {
+        return aiModelList.find((aiModelData) => {
+            return aiModelData.id === selectedI2vId;
+        });
+    }, [aiModelList, selectedI2vId]);
+
+    const referenceImageAIModelPrice = useMemo(() => {
+        const aiModelPriceUnit = resolution === '720p'
+            ? AIModelPriceUnit.IMAGE_720P
+            : resolution === '1080p'
+                ? AIModelPriceUnit.IMAGE_1080P
+                : AIModelPriceUnit.IMAGE_2160P;
+
+        return referenceImageAIModelData?.ai_model_price_list.find((aiModelPrice) => {
+            return aiModelPrice.unit === aiModelPriceUnit;
+        })?.price_per_unit;
+    }, [resolution, referenceImageAIModelData]);
+
+    const sceneImageAIModelPrice = useMemo(() => {
+        const aiModelPriceUnit = resolution === '720p'
+            ? AIModelPriceUnit.IMAGE_720P
+            : resolution === '1080p'
+                ? AIModelPriceUnit.IMAGE_1080P
+                : AIModelPriceUnit.IMAGE_2160P;
+
+        return sceneImageAIModelData?.ai_model_price_list.find((aiModelPrice) => {
+            return aiModelPrice.unit === aiModelPriceUnit;
+        })?.price_per_unit;
+    }, [resolution, sceneImageAIModelData]);
+
+    const videoAIModelPrice = useMemo(() => {
+        const aiModelPriceUnit = resolution === '720p'
+            ? AIModelPriceUnit.VIDEO_720P
+            : resolution === '1080p'
+                ? AIModelPriceUnit.VIDEO_1080P
+                : AIModelPriceUnit.VIDEO_2160P;
+
+        return videoAIModelData?.ai_model_price_list.find((aiModelPrice) => {
+            return aiModelPrice.unit === aiModelPriceUnit;
+        })?.price_per_unit;
+    }, [resolution, videoAIModelData]);
+
+    const expectedAIModelUsage = useMemo(() => {
+        const tempCharacterCount = 3; // 임시
+
+        if (!referenceImageAIModelPrice || !sceneImageAIModelPrice || !videoAIModelPrice) return null;
+
+        return referenceImageAIModelPrice * tempCharacterCount + sceneImageAIModelPrice * expectedVideoSceneCount + videoAIModelPrice * expectedVideoTotalDuration;
+    }, [referenceImageAIModelPrice, sceneImageAIModelPrice, videoAIModelPrice, expectedVideoSceneCount, expectedVideoTotalDuration]);
+
+    if (!expectedAIModelUsage) return null;
+
     return (
         <div className="flex-[3] bg-transparent flex flex-col relative border-l border-white/5">
             <div className="flex-1 flex p-8 items-center justify-center relative z-10 overflow-y-auto custom-scrollbar">
@@ -139,27 +197,18 @@ function ResultPanel({
                         <button
                             onClick={onClickGenerateVideo}
                             disabled={!isVideoGenerationEnabled || isSubmitting || isFalAiKeyMissing}
-                            className={`w-full py-2.5 rounded-lg text-sm font-medium transition-all flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed ${
-                                isCreditInsufficient
-                                    ? 'bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500/20'
-                                    : 'bg-white text-black hover:bg-zinc-200 shadow-sm'
-                            }`}
+                            className={`w-full py-2.5 rounded-lg text-sm font-medium transition-all flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed bg-white text-black hover:bg-zinc-200 shadow-sm`}
                         >
                             {isSubmitting ? (
                                 <>
                                     <Loader2 className="w-4 h-4 animate-spin" />
                                     <span>Requesting...</span>
                                 </>
-                            ) : isCreditInsufficient ? (
-                                <>
-                                    <AlertTriangle className="w-4 h-4" />
-                                    <span>Not Enough Credits</span>
-                                </>
                             ) : (
                                 <>
                                     <div className="flex items-center space-x-1 px-2 py-0.5 bg-black/10 rounded-md">
                                         <Coins className="w-3.5 h-3.5 text-zinc-700" />
-                                        <span className="text-[11px] font-bold">-{expectedCreditUsage}</span>
+                                        <span className="text-[11px] font-bold">-${expectedAIModelUsage.toFixed(2)}</span>
                                     </div>
                                     <span>Generate Video</span>
                                 </>

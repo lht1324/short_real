@@ -2,29 +2,29 @@
 
 import {memo, useCallback, useEffect, useMemo, useRef, useState} from "react";
 import Image from "next/image";
-import { Coins, ChevronDown, Plus, Check, Loader2, CheckCircle, AlertCircle, Sparkles } from 'lucide-react';
-import {useRouter} from "next/navigation";
-import {useAuth} from "@/context/AuthContext";
-import {voiceClientAPI} from "@/lib/api/client/voiceClientAPI";
-import {Voice} from "@/lib/api/types/eleven-labs/Voice";
-import {ExportPlatform} from "@/lib/api/types/supabase/VideoGenerationTasks";
+import { ChevronDown, Plus, Check, Loader2, CheckCircle, AlertCircle, Sparkles } from 'lucide-react';
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
+import { voiceClientAPI } from "@/lib/api/client/voiceClientAPI";
+import { Voice } from "@/lib/api/types/eleven-labs/Voice";
+import { ExportPlatform } from "@/lib/api/types/supabase/VideoGenerationTasks";
 import DefaultModal from "@/components/public/DefaultModal";
 import WorkspaceSidebar from "@/components/public/WorkspaceSidebar";
-import {WorkspaceSidebarItem} from "@/components/public/WorkspaceSidebarItem";
+import { WorkspaceSidebarItem } from "@/components/public/WorkspaceSidebarItem";
 import AutopilotConfigPanel from "./AutopilotConfigPanel";
 import AutopilotControlPanel from "./AutopilotControlPanel";
 import AutopilotCaptionPreview from "./AutopilotCaptionPreview";
 import CaptionConfigPanel, {ColorPickerType} from "@/components/page/workspace/editor/CaptionConfigPanel";
 import ColorPickerPopover from "@/components/page/workspace/editor/ColorPickerPopover";
 import { NICHE_DATA_LIST } from "@/lib/niches";
-import {AutopilotData} from "@/lib/api/types/supabase/AutopilotData";
-import {autopilotDataClientAPI} from "@/lib/api/client/autopilotDataClientAPI";
-import {cronToWeekly} from "@/lib/utils/cronUtils";
+import { AutopilotData } from "@/lib/api/types/supabase/AutopilotData";
+import { autopilotDataClientAPI } from "@/lib/api/client/autopilotDataClientAPI";
+import { cronToWeekly } from "@/lib/utils/cronUtils";
 import FONT_FAMILY_LIST, {FontFamily} from "@/lib/FontFamilyList";
 import { fontMap, type FontName } from "@/lib/fonts";
-import {CaptionConfigState} from "@/components/page/workspace/editor/WorkspaceEditorPageClient";
-import {aiModelDataClientAPI} from "@/lib/api/client/aiModelDataClientAPI";
-import {AIModelData} from "@/lib/api/types/supabase/AIModelData";
+import { CaptionConfigState } from "@/components/page/workspace/editor/WorkspaceEditorPageClient";
+import { aiModelDataClientAPI } from "@/lib/api/client/aiModelDataClientAPI";
+import { AIModelData } from "@/lib/api/types/supabase/AIModelData";
 
 const INITIAL_CAPTION_CONFIG_STATE: CaptionConfigState = {
     fontFamilyName: "Poppins",
@@ -104,8 +104,6 @@ function WorkspaceAutopilotPageClient() {
     const [isAiModelLoading, setIsAiModelLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
     const [showSaveSuccessModal, setShowSaveSuccessModal] = useState(false);
-
-    const userCreditCount = useMemo(() => user?.credit_count ?? 0, [user]);
 
     const updateCurrentSeries = useCallback((updateData: Partial<AutopilotData>) => {
         if (!currentSeriesId) return;
@@ -526,16 +524,6 @@ function WorkspaceAutopilotPageClient() {
                                 <Plus className="w-4 h-4" />
                             </button>
                         )}
-                    </div>
-
-                    <div className="h-6 w-px bg-white/10 mx-1"></div>
-
-                    <div className="flex items-center space-x-2 px-3 py-1.5 bg-zinc-900/50 border border-white/10 rounded-lg">
-                        <Coins className="w-4 h-4 text-zinc-400" />
-                        <div className="flex items-baseline gap-1.5">
-                            <span className="text-[11px] text-zinc-500 font-medium">Credits</span>
-                            <span className="text-[13px] font-medium text-zinc-200">{userCreditCount.toLocaleString()}</span>
-                        </div>
                     </div>
                 </div>
             </div>

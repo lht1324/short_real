@@ -1,31 +1,27 @@
 'use client'
 
-import {ChangeEvent, memo, useCallback, useEffect, useMemo, useState} from "react";
+import { ChangeEvent, memo, useCallback, useEffect, useMemo, useState } from "react";
 import Image from "next/image";
-import {
-    Coins,
-    Loader2,
-} from 'lucide-react';
-import {openAIClientAPI} from '@/lib/api/client/openAIClientAPI';
-import {Style} from "@/lib/api/types/supabase/Styles";
-import {SceneData, VideoGenerationTask, VideoGenerationTaskStatus} from "@/lib/api/types/supabase/VideoGenerationTasks";
-import {videoClientAPI} from "@/lib/api/client/videoClientAPI";
-import {StoryboardData} from "@/lib/api/types/api/open-ai/scene/PostOpenAISceneResponse";
+import { Loader2 } from 'lucide-react';
+import { openAIClientAPI } from '@/lib/api/client/openAIClientAPI';
+import { Style } from "@/lib/api/types/supabase/Styles";
+import { SceneData, VideoGenerationTask, VideoGenerationTaskStatus } from "@/lib/api/types/supabase/VideoGenerationTasks";
+import { videoClientAPI } from "@/lib/api/client/videoClientAPI";
+import { StoryboardData } from "@/lib/api/types/api/open-ai/scene/PostOpenAISceneResponse";
 import VoiceSelectionPanel from "@/components/page/workspace/create/voice-selection-panel/VoiceSelectionPanel";
-import {useRouter, useSearchParams} from "next/navigation";
-import {PostOpenAISceneRequest} from "@/lib/api/types/api/open-ai/scene/PostOpenAISceneRequest";
+import { useRouter, useSearchParams } from "next/navigation";
+import { PostOpenAISceneRequest } from "@/lib/api/types/api/open-ai/scene/PostOpenAISceneRequest";
 import DefaultModal from "@/components/public/DefaultModal";
-import {useAuth} from "@/context/AuthContext";
-import {STYLE_DATA_LIST} from "@/lib/styles";
-import {voiceClientAPI} from "@/lib/api/client/voiceClientAPI";
+import { useAuth } from "@/context/AuthContext";
+import { STYLE_DATA_LIST } from "@/lib/styles";
+import { voiceClientAPI } from "@/lib/api/client/voiceClientAPI";
 import ResultPanel from "@/components/page/workspace/create/result-panel/ResultPanel";
 import ScriptGenerationModal from "@/components/page/workspace/create/ScriptGenerationModal";
 import CreateFormPanel from "@/components/page/workspace/create/create-form-panel/CreateFormPanel";
 import WorkspaceSidebar from "@/components/public/WorkspaceSidebar";
-import {WorkspaceSidebarItem} from "@/components/public/WorkspaceSidebarItem";
-
-import {aiModelDataClientAPI} from "@/lib/api/client/aiModelDataClientAPI";
-import {AIModelData} from "@/lib/api/types/supabase/AIModelData";
+import { WorkspaceSidebarItem } from "@/components/public/WorkspaceSidebarItem";
+import { aiModelDataClientAPI } from "@/lib/api/client/aiModelDataClientAPI";
+import { AIModelData } from "@/lib/api/types/supabase/AIModelData";
 
 function WorkspaceCreatePageClient() {
     const router = useRouter();
@@ -90,15 +86,10 @@ function WorkspaceCreatePageClient() {
     const [isSaving, setIsSaving] = useState(false);
     const [showSaveSuccessModal, setShowSaveSuccessModal] = useState(false);
     const [showVoiceChangeWarningModal, setShowVoiceChangeWarningModal] = useState(false);
-    const [showInsufficientCreditModal, setShowInsufficientCreditModal] = useState(false);
     const [pendingVoiceId, setPendingVoiceId] = useState<string | null>(null);
     
     // Collapse states for sections
     const [isStyleExpanded, setIsStyleExpanded] = useState(true);
-
-    const userCreditCount = useMemo(() => {
-        return user?.credit_count ?? 0;
-    }, [user?.credit_count]);
 
     const expectedVideoTotalDuration = useMemo(() => {
         if (sceneDataList.length === 0) return 0;
@@ -114,29 +105,6 @@ function WorkspaceCreatePageClient() {
     const expectedVideoSceneCount = useMemo(() => {
         return sceneDataList.length;
     }, [sceneDataList]);
-
-    const expectedDurationUsage = useMemo(() => {
-        const exceededVideoTotalDuration = expectedVideoTotalDuration - 30;
-        return exceededVideoTotalDuration > 0
-            ? Math.ceil(exceededVideoTotalDuration / 2) * 5
-            : 0;
-    }, [expectedVideoTotalDuration]);
-
-    const expectedSceneCountUsage = useMemo(() => {
-        const exceededVideoSceneCount = expectedVideoSceneCount - 6;
-
-        return exceededVideoSceneCount > 0
-            ? exceededVideoSceneCount * 5
-            : 0;
-    }, [expectedVideoSceneCount]);
-
-    const expectedCreditUsage = useMemo(() => {
-        return 100 + (expectedDurationUsage + expectedSceneCountUsage);
-    }, [expectedDurationUsage, expectedSceneCountUsage]);
-
-    const isCreditInsufficient = useMemo(() => {
-        return userCreditCount < expectedCreditUsage;
-    }, [userCreditCount, expectedCreditUsage]);
 
     // Style examples for preview
     const styleList = useMemo((): Style[] => STYLE_DATA_LIST, []);
@@ -298,12 +266,8 @@ function WorkspaceCreatePageClient() {
     }, [script, taskId, user?.id, selectedStyleId, selectedReferenceId, selectedI2iId, selectedI2vId, aiModelList, aspectRatio, resolution]);
 
     const onClickGenerateVideo = useCallback(async () => {
-        if (isCreditInsufficient) {
-            setShowInsufficientCreditModal(true);
-        } else {
-            await generateVideo();
-        }
-    }, [generateVideo, isCreditInsufficient]);
+        await generateVideo();
+    }, [generateVideo]);
 
     const onClickSaveDraft = useCallback(async () => {
         setIsSaving(true);
@@ -503,7 +467,7 @@ function WorkspaceCreatePageClient() {
             )}
 
             {/* Top Header - Matched to Autopilot & Dashboard */}
-            <div className="flex items-center justify-between py-3 border-b border-white/5 bg-zinc-950/80 backdrop-blur-md relative z-20">
+            <div className="flex items-center py-3 border-b border-white/5 bg-zinc-950/80 backdrop-blur-md relative z-20">
                 <div className="flex items-center" style={{paddingLeft: '16px'}}>
                     <Image
                         src="/logo/logo-64.png"
@@ -522,14 +486,6 @@ function WorkspaceCreatePageClient() {
                         <p className="text-zinc-500 text-[13px] mt-0.5 cursor-default">
                             Tell AI what you want to create.
                         </p>
-                    </div>
-                </div>
-
-                <div className="flex items-center space-x-2 mr-6 px-3 py-1.5 bg-zinc-900/50 border border-white/10 rounded-lg">
-                    <Coins className="w-4 h-4 text-zinc-400" />
-                    <div className="flex items-baseline gap-1.5">
-                        <span className="text-[11px] text-zinc-500 font-medium">Credits</span>
-                        <span className="text-[13px] font-medium text-zinc-200">{userCreditCount.toLocaleString()}</span>
                     </div>
                 </div>
             </div>
@@ -552,7 +508,6 @@ function WorkspaceCreatePageClient() {
                     voiceUrl={voiceUrl}
                     selectedVoiceId={selectedVoiceId}
                     expectedVideoTotalDuration={expectedVideoTotalDuration}
-                    userCredit={userCreditCount}
                     isGeneratingStoryboardData={isGeneratingStoryboardData}
                     aiModelList={aiModelList}
                     selectedReferenceId={selectedReferenceId}
@@ -584,35 +539,22 @@ function WorkspaceCreatePageClient() {
                     videoTitle={videoTitle}
                     videoDescription={videoDescription}
                     expectedVideoTotalDuration={expectedVideoTotalDuration}
-                    expectedDurationUsage={expectedDurationUsage}
                     expectedVideoSceneCount={expectedVideoSceneCount}
-                    expectedSceneCountUsage={expectedSceneCountUsage}
-                    expectedCreditUsage={expectedCreditUsage}
                     script={script}
                     selectedVoiceId={selectedVoiceId}
                     selectedStyleId={selectedStyleId}
                     isSaving={isSaving}
                     isSubmitting={isSubmitting}
-                    isCreditInsufficient={isCreditInsufficient}
                     isVideoGenerationEnabled={isVideoGenerationEnabled}
                     aiModelList={aiModelList}
                     selectedReferenceId={selectedReferenceId}
                     selectedI2iId={selectedI2iId}
                     selectedI2vId={selectedI2vId}
+                    resolution={resolution}
                     isFalAiKeyMissing={isFalAiKeyMissing}
                     onClickSaveDraft={onClickSaveDraft}
                     onClickGenerateVideo={onClickGenerateVideo}
                 />
-
-                {/* Insufficient Credit Modal */}
-                {showInsufficientCreditModal && (
-                    <DefaultModal
-                        title="Insufficient Credits"
-                        message={`You need ${expectedCreditUsage} credits to generate this video,\nbut you only have ${userCreditCount} credits.\n\nPlease top up your credits to continue.`}
-                        cancelText="Close"
-                        onClickCancel={() => setShowInsufficientCreditModal(false)}
-                    />
-                )}
 
                 {/* Save Success Modal */}
                 {showSaveSuccessModal && (

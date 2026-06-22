@@ -11,7 +11,6 @@ interface StoryboardSectionProps {
     voiceUrl: string | null;
     expectedVideoTotalDuration: number;
     selectedVoiceId: string;
-    userCredit: number;
     isGeneratingStoryboardData: boolean;
     onClickGenerateStoryboard: () => void;
 }
@@ -24,7 +23,6 @@ function StoryboardSection({
     voiceUrl,
     expectedVideoTotalDuration,
     selectedVoiceId,
-    userCredit,
     isGeneratingStoryboardData,
     onClickGenerateStoryboard,
 }: StoryboardSectionProps) {
@@ -112,9 +110,9 @@ function StoryboardSection({
                         <button
                             type="button"
                             onClick={onClickGenerateStoryboard}
-                            disabled={isGeneratingStoryboardData || !script.trim() || !selectedVoiceId || (userCredit < 2 && (sceneDataList.length > 0 || !!videoTitle))}
+                            disabled={isGeneratingStoryboardData || !script.trim() || !selectedVoiceId || (sceneDataList.length > 0 || !!videoTitle)}
                             className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-1.5 ${
-                                (userCredit < 2 && (sceneDataList.length > 0 || !!videoTitle))
+                                (sceneDataList.length > 0 || !!videoTitle)
                                     ? 'bg-red-500/10 border border-red-500 text-red-500 hover:bg-red-500/20'
                                     : 'bg-white text-black hover:bg-zinc-200'
                             }`}
@@ -124,7 +122,7 @@ function StoryboardSection({
                                     <Loader2 className="w-4 h-4 animate-spin" />
                                     <span>Generating...</span>
                                 </>
-                            ) : (userCredit < 2 && (sceneDataList.length > 0 || !!videoTitle)) ? (
+                            ) : (sceneDataList.length > 0 || !!videoTitle) ? (
                                 <>
                                     <AlertTriangle className="w-4 h-4" />
                                     <span>Not Enough Credits</span>

@@ -13,7 +13,6 @@ interface CreateFormPanelProps {
     voiceUrl: string | null;
     selectedVoiceId: string;
     expectedVideoTotalDuration: number;
-    userCredit: number;
     isGeneratingStoryboardData: boolean;
     aiModelList: AIModelData[];
     selectedReferenceId: string | null;
@@ -40,7 +39,6 @@ function CreateFormPanel({
     voiceUrl,
     selectedVoiceId,
     expectedVideoTotalDuration,
-    userCredit,
     isGeneratingStoryboardData,
     aiModelList,
     selectedReferenceId,
@@ -173,12 +171,10 @@ function CreateFormPanel({
                         videoDescription={videoDescription}
                         voiceUrl={voiceUrl}
                         expectedVideoTotalDuration={expectedVideoTotalDuration}
-                        userCredit={userCredit}
                         selectedVoiceId={selectedVoiceId}
                         isGeneratingStoryboardData={isGeneratingStoryboardData}
                         onClickGenerateStoryboard={onClickGenerateStoryboard}
                     />
-
                 </div>
             </div>
         </div>

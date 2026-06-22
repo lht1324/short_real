@@ -570,23 +570,14 @@ function WorkspaceDashboardPageClient() {
                     </div>
                 </div>
 
-                <div className="flex flex-row w-fit items-center gap-2">
-                    <div className="flex items-center space-x-2 mr-6 px-3 py-1.5 bg-zinc-900/50 border border-white/10 rounded-lg">
-                        <Coins className="w-4 h-4 text-zinc-400" />
-                        <div className="flex items-baseline gap-1.5">
-                            <span className="text-[11px] text-zinc-500 font-medium">Credits</span>
-                            <span className="text-[13px] font-medium text-zinc-200">{userCreditCount.toLocaleString()}</span>
-                        </div>
-                    </div>
-                    <div className="pr-6">
-                        <Link
-                            href="/workspace/create"
-                            className="bg-white text-black px-4 py-2 rounded-lg text-sm font-medium hover:bg-zinc-200 transition-colors flex items-center space-x-1.5 shadow-sm"
-                        >
-                            <Plus size={16} />
-                            <span>Start New Task</span>
-                        </Link>
-                    </div>
+                <div className="pr-6">
+                    <Link
+                        href="/workspace/create"
+                        className="bg-white text-black px-4 py-2 rounded-lg text-sm font-medium hover:bg-zinc-200 transition-colors flex items-center space-x-1.5 shadow-sm"
+                    >
+                        <Plus size={16} />
+                        <span>Start New Task</span>
+                    </Link>
                 </div>
             </div>
 
