@@ -219,6 +219,7 @@ Instruction: Process the input data and return the JSON output according to the 
                     sceneDataList,
                     videoTitle,
                     videoDescription,
+                    estimatedCharacterCount,
                 } = cleanAndParseJSON(generatedContent);
 
                 return {
@@ -226,6 +227,7 @@ Instruction: Process the input data and return the JSON output according to the 
                     sceneDataList: sceneDataList,
                     videoTitle: videoTitle,
                     videoDescription: videoDescription,
+                    estimatedCharacterCount: typeof estimatedCharacterCount === 'number' ? estimatedCharacterCount : 0,
                 };
             } catch (parseError) {
                 console.error('Failed to parse scene segmentation JSON response:', parseError);

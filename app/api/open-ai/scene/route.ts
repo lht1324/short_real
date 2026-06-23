@@ -208,6 +208,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<PostOpenA
                 sceneDataList: sceneDataListWithSceneDuration,
                 videoTitle: postSceneSegmentationResult.videoTitle,
                 videoDescription: postSceneSegmentationResult.videoDescription,
+                estimatedCharacterCount: postSceneSegmentationResult.estimatedCharacterCount,
             }
         });
 

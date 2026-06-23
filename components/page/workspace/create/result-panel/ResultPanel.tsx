@@ -21,6 +21,7 @@ interface ResultPanelProps {
     selectedI2vId: string | null;
     resolution: '720p' | '1080p' | '2160p';
     isFalAiKeyMissing: boolean;
+    estimatedCharacterCount: number;
     onClickSaveDraft: () => void;
     onClickGenerateVideo: () => void;
 }
@@ -43,6 +44,7 @@ function ResultPanel({
     selectedI2vId,
     resolution,
     isFalAiKeyMissing,
+    estimatedCharacterCount,
     onClickSaveDraft,
     onClickGenerateVideo,
 }: ResultPanelProps) {
@@ -101,14 +103,12 @@ function ResultPanel({
     }, [resolution, videoAIModelData]);
 
     const expectedAIModelUsage = useMemo(() => {
-        const tempCharacterCount = 3; // 임시
-
         if (!referenceImageAIModelPrice || !sceneImageAIModelPrice || !videoAIModelPrice) return null;
 
-        return referenceImageAIModelPrice * tempCharacterCount + sceneImageAIModelPrice * expectedVideoSceneCount + videoAIModelPrice * expectedVideoTotalDuration;
-    }, [referenceImageAIModelPrice, sceneImageAIModelPrice, videoAIModelPrice, expectedVideoSceneCount, expectedVideoTotalDuration]);
+        return referenceImageAIModelPrice * estimatedCharacterCount + sceneImageAIModelPrice * expectedVideoSceneCount + videoAIModelPrice * expectedVideoTotalDuration;
+    }, [referenceImageAIModelPrice, sceneImageAIModelPrice, videoAIModelPrice, expectedVideoSceneCount, expectedVideoTotalDuration, estimatedCharacterCount]);
 
-    if (!expectedAIModelUsage) return null;
+    // if (!expectedAIModelUsage) return null;
 
     return (
         <div className="flex-[3] bg-transparent flex flex-col relative border-l border-white/5">
@@ -159,6 +159,7 @@ function ResultPanel({
                         selectedI2vId={selectedI2vId}
                         expectedVideoSceneCount={expectedVideoSceneCount}
                         expectedVideoTotalDuration={expectedVideoTotalDuration}
+                        estimatedCharacterCount={estimatedCharacterCount}
                     />
                 </div>) : (
                     <div className="text-center">
@@ -197,20 +198,33 @@ function ResultPanel({
                         <button
                             onClick={onClickGenerateVideo}
                             disabled={!isVideoGenerationEnabled || isSubmitting || isFalAiKeyMissing}
-                            className={`w-full py-2.5 rounded-lg text-sm font-medium transition-all flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed bg-white text-black hover:bg-zinc-200 shadow-sm`}
+                            className={`relative w-full py-2.5 px-12 rounded-lg text-sm font-semibold transition-all flex items-center justify-center border ${
+                                (!isVideoGenerationEnabled || isFalAiKeyMissing || isSubmitting)
+                                    ? "bg-zinc-900 text-zinc-500 border-white/5 cursor-not-allowed"
+                                    : "bg-white text-black hover:bg-zinc-200 border-transparent shadow-sm"
+                            }`}
                         >
                             {isSubmitting ? (
-                                <>
-                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                <div className="flex items-center justify-center space-x-2">
+                                    <Loader2 className="w-4 h-4 animate-spin text-zinc-500" />
                                     <span>Requesting...</span>
-                                </>
+                                </div>
                             ) : (
                                 <>
-                                    <div className="flex items-center space-x-1 px-2 py-0.5 bg-black/10 rounded-md">
-                                        <Coins className="w-3.5 h-3.5 text-zinc-700" />
-                                        <span className="text-[11px] font-bold">-${expectedAIModelUsage.toFixed(2)}</span>
+                                    <span className="w-full text-center">Generate Video</span>
+                                    
+                                    <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                                        {(!isVideoGenerationEnabled || isFalAiKeyMissing) ? (
+                                            <span className="flex items-center space-x-1 text-[10px] font-bold text-amber-500 bg-amber-500/10 px-2 py-1 rounded border border-amber-500/20">
+                                                <AlertTriangle className="w-3.5 h-3.5 text-amber-500" />
+                                                <span>Incomplete</span>
+                                            </span>
+                                        ) : (
+                                            <span className="text-[11px] font-mono font-bold text-zinc-900 bg-zinc-100 px-2 py-0.5 rounded border border-zinc-200">
+                                                -${(expectedAIModelUsage ?? 0).toFixed(2)}
+                                            </span>
+                                        )}
                                     </div>
-                                    <span>Generate Video</span>
                                 </>
                             )}
                         </button>
@@ -221,15 +235,15 @@ function ResultPanel({
                                 <div className="text-[10px] font-medium text-zinc-500 uppercase tracking-wider mb-2">Requirements</div>
                                 <div className="space-y-2">
                                     <div className="flex items-center space-x-2 text-[13px]">
-                                        {script.trim() ? <CheckCircle2 size={14} className="text-emerald-500" /> : <Circle size={14} className="text-zinc-700" />}
-                                        <span className={script.trim() ? 'text-zinc-200' : 'text-zinc-500'}>
-                                            Script written
+                                        {!isFalAiKeyMissing ? <CheckCircle2 size={14} className="text-emerald-500" /> : <Circle size={14} className="text-zinc-700" />}
+                                        <span className={!isFalAiKeyMissing ? 'text-zinc-200' : 'text-zinc-500'}>
+                                            fal.ai Key connected
                                         </span>
                                     </div>
                                     <div className="flex items-center space-x-2 text-[13px]">
-                                        {isStoryboardGenerated && videoTitle ? <CheckCircle2 size={14} className="text-emerald-500" /> : <Circle size={14} className="text-zinc-700" />}
-                                        <span className={isStoryboardGenerated && videoTitle ? 'text-zinc-200' : 'text-zinc-500'}>
-                                            Storyboard generated
+                                        {script.trim() ? <CheckCircle2 size={14} className="text-emerald-500" /> : <Circle size={14} className="text-zinc-700" />}
+                                        <span className={script.trim() ? 'text-zinc-200' : 'text-zinc-500'}>
+                                            Script written
                                         </span>
                                     </div>
                                     <div className="flex items-center space-x-2 text-[13px]">
@@ -239,17 +253,18 @@ function ResultPanel({
                                         </span>
                                     </div>
                                     <div className="flex items-center space-x-2 text-[13px]">
-                                        {selectedStyleId ? <CheckCircle2 size={14} className="text-emerald-500" /> : <Circle size={14} className="text-zinc-700" />}
-                                        <span className={selectedStyleId ? 'text-zinc-200' : 'text-zinc-500'}>
-                                            Style selected
+                                        {isStoryboardGenerated && videoTitle ? <CheckCircle2 size={14} className="text-emerald-500" /> : <Circle size={14} className="text-zinc-700" />}
+                                        <span className={isStoryboardGenerated && videoTitle ? 'text-zinc-200' : 'text-zinc-500'}>
+                                            Storyboard generated
                                         </span>
                                     </div>
-                                    <div className="flex items-center space-x-2 text-[13px]">
-                                        {!isFalAiKeyMissing ? <CheckCircle2 size={14} className="text-emerald-500" /> : <Circle size={14} className="text-zinc-700" />}
-                                        <span className={!isFalAiKeyMissing ? 'text-zinc-200' : 'text-zinc-500'}>
-                                            fal.ai Key connected
-                                        </span>
-                                    </div>
+                                    {/* 아직 스타일 도입 안 해서 주석 처리 */}
+                                    {/*<div className="flex items-center space-x-2 text-[13px]">*/}
+                                    {/*    {selectedStyleId ? <CheckCircle2 size={14} className="text-emerald-500" /> : <Circle size={14} className="text-zinc-700" />}*/}
+                                    {/*    <span className={selectedStyleId ? 'text-zinc-200' : 'text-zinc-500'}>*/}
+                                    {/*        Style selected*/}
+                                    {/*    </span>*/}
+                                    {/*</div>*/}
                                 </div>
                             </div>
                         )}

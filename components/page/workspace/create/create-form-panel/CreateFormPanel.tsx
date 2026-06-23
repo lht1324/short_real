@@ -1,5 +1,5 @@
 import {ChangeEvent, memo, useMemo} from "react";
-import {Sparkles, MonitorPlay} from "lucide-react";
+import {Sparkles, MonitorPlay, AlertTriangle} from "lucide-react";
 import {SceneData} from "@/lib/api/types/supabase/VideoGenerationTasks";
 import StoryboardSection from "@/components/page/workspace/create/create-form-panel/StoryboardSection";
 import BYOKModelSelector from "@/components/page/workspace/create/create-form-panel/BYOKModelSelector";
@@ -56,18 +56,44 @@ function CreateFormPanel({
     onChangeAspectRatio,
     onChangeResolution
 }: CreateFormPanelProps) {
-    // Supported Resolutions for selected video model
-    const supportedResolutions = useMemo(() => {
-        const model = aiModelList.find(m => m.id === selectedI2vId);
-        if (!model || !model.ai_model_price_list) return ['1080p']; // fallback default
-        
+    // Helper function to extract supported resolutions from a model
+    const getModelSupportedResolutions = (modelId: string | null) => {
+        if (!modelId) return [];
+        const model = aiModelList.find(m => m.id === modelId);
+        if (!model || !model.ai_model_price_list) return [];
         return model.ai_model_price_list.map(p => {
             if (p.unit.includes('720p')) return '720p';
             if (p.unit.includes('1080p')) return '1080p';
             if (p.unit.includes('2160p')) return '2160p';
             return null;
-        }).filter(Boolean) as string[];
-    }, [aiModelList, selectedI2vId]);
+        }).filter(Boolean) as ('720p' | '1080p' | '2160p')[];
+    };
+
+    const { supportedResolutions, isResolutionMismatched } = useMemo(() => {
+        const refResolutions = getModelSupportedResolutions(selectedReferenceId);
+        const i2iResolutions = getModelSupportedResolutions(selectedI2iId);
+        const i2vResolutions = getModelSupportedResolutions(selectedI2vId);
+
+        let intersection: ('720p' | '1080p' | '2160p')[] = [];
+        
+        if (refResolutions.length > 0 && i2iResolutions.length > 0 && i2vResolutions.length > 0) {
+            intersection = refResolutions.filter(res => 
+                i2iResolutions.includes(res) && i2vResolutions.includes(res)
+            );
+        }
+
+        if (intersection.length > 0) {
+            return {
+                supportedResolutions: intersection,
+                isResolutionMismatched: false
+            };
+        } else {
+            return {
+                supportedResolutions: i2vResolutions.length > 0 ? i2vResolutions : ['1080p'],
+                isResolutionMismatched: (refResolutions.length > 0 || i2iResolutions.length > 0) && i2vResolutions.length > 0
+            };
+        }
+    }, [aiModelList, selectedReferenceId, selectedI2iId, selectedI2vId]);
 
     // 예상 영상 시간 계산 (2.5단어/초 기준)
     const estimatedDuration = useMemo(() => {
@@ -143,7 +169,23 @@ function CreateFormPanel({
                                 </select>
                             </div>
                             <div className="space-y-1.5">
-                                <label className="text-[11px] font-medium text-zinc-500 uppercase tracking-wider ml-0.5">Resolution</label>
+                                <div className="flex items-center justify-between">
+                                    <label className="text-[11px] font-medium text-zinc-500 uppercase tracking-wider ml-0.5">Resolution</label>
+                                    {isResolutionMismatched && (
+                                        <div className="relative group">
+                                            <span className="text-[9px] text-amber-500 font-bold bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/20 flex items-center gap-0.5 cursor-help">
+                                                ⚠️ Mismatch
+                                            </span>
+                                            {/* Custom Tooltip Card */}
+                                            <div className="absolute bottom-full right-0 mb-2 w-60 p-3.5 bg-zinc-950 border border-white/10 rounded-lg shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 text-left z-50 pointer-events-none">
+                                                <div className="text-[9px] font-bold text-zinc-500 uppercase tracking-wider mb-1.5">Resolution Mismatch</div>
+                                                <p className="text-[11px] text-zinc-400 leading-relaxed font-normal">
+                                                    Selected models do not share a common resolution. Video model's specification is used as fallback, which may cause scaling artifacts and quality loss.
+                                                </p>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
                                 <select 
                                     value={resolution} 
                                     onChange={(e) => onChangeResolution(e.target.value as '720p' | '1080p' | '2160p')}

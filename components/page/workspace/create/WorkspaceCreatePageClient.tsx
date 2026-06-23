@@ -60,6 +60,7 @@ function WorkspaceCreatePageClient() {
     const [videoTitle, setVideoTitle] = useState<string | null>(null);
     const [videoDescription, setVideoDescription] = useState<string | null>(null);
     const [voiceUrl, setVoiceUrl] = useState<string | null>(null);
+    const [estimatedCharacterCount, setEstimatedCharacterCount] = useState<number>(0);
 
     // Video Spec states
     const [aspectRatio, setAspectRatio] = useState<'16:9' | '9:16'>('9:16');
@@ -148,12 +149,14 @@ function WorkspaceCreatePageClient() {
                 sceneDataList: newSceneDataList,
                 videoTitle: newVideoTitle,
                 videoDescription: newVideoDescription,
+                estimatedCharacterCount: newEstimatedCharacterCount,
             }: StoryboardData = storyboardData;
 
             window.history.pushState(null, "", `/workspace/create?taskId=${newTaskId}`);
             setSceneDataList(newSceneDataList);
             setVideoTitle(newVideoTitle);
             setVideoDescription(newVideoDescription);
+            setEstimatedCharacterCount(newEstimatedCharacterCount ?? 0);
 
             setPendingVoiceId(null);
             setIsGeneratingStoryboardData(false);
@@ -291,6 +294,7 @@ function WorkspaceCreatePageClient() {
                 selected_voice_id: selectedVoiceId.length !== 0 ? selectedVoiceId : undefined,
                 aspect_ratio: aspectRatio,
                 resolution: resolution,
+                estimated_character_count: estimatedCharacterCount,
                 ai_model_config: (selectedReferenceId && inferredSceneT2iId && selectedI2iId && selectedI2vId) ? {
                     referenceImageModelId: selectedReferenceId,
                     sceneImageT2IModelId: inferredSceneT2iId,
@@ -373,6 +377,7 @@ function WorkspaceCreatePageClient() {
                     const voiceId = videoGenerationTask.selected_voice_id;
                     const styleId = videoGenerationTask.selected_style_id;
                     const aiModelConfig = videoGenerationTask.ai_model_config;
+                    const dbEstimatedCharacterCount = videoGenerationTask.estimated_character_count;
 
                     setScript(script);
                     setSceneDataList(sceneDataList);
@@ -380,6 +385,7 @@ function WorkspaceCreatePageClient() {
                     setVideoDescription(videoDescription ?? '');
                     setSelectedVoiceId(voiceId ?? '');
                     setSelectedStyleId(styleId ?? '');
+                    setEstimatedCharacterCount(dbEstimatedCharacterCount ?? 0);
                     
                     if (videoGenerationTask.aspect_ratio) setAspectRatio(videoGenerationTask.aspect_ratio);
                     if (videoGenerationTask.resolution) setResolution(videoGenerationTask.resolution);
@@ -422,23 +428,43 @@ function WorkspaceCreatePageClient() {
     }, [taskId, sceneDataList]);
 
     useEffect(() => {
-        if (!selectedI2vId || aiModelList.length === 0) return;
+        if (aiModelList.length === 0) return;
 
-        const newModel = aiModelList.find(m => m.id === selectedI2vId);
-        if (newModel && newModel.ai_model_price_list) {
-            const supportedResolutions = newModel.ai_model_price_list.map(p => {
+        const getModelSupportedResolutions = (modelId: string | null) => {
+            if (!modelId) return [];
+            const model = aiModelList.find(m => m.id === modelId);
+            if (!model || !model.ai_model_price_list) return [];
+            return model.ai_model_price_list.map(p => {
                 if (p.unit.includes('720p')) return '720p';
                 if (p.unit.includes('1080p')) return '1080p';
                 if (p.unit.includes('2160p')) return '2160p';
                 return null;
-            }).filter(Boolean);
+            }).filter(Boolean) as ('720p' | '1080p' | '2160p')[];
+        };
 
-            if (supportedResolutions.length > 0 && !supportedResolutions.includes(resolution)) {
-                const fallbackResolution = supportedResolutions.includes('1080p') ? '1080p' : (supportedResolutions.includes('720p') ? '720p' : supportedResolutions[0]);
-                setResolution(fallbackResolution as '720p' | '1080p' | '2160p');
-            }
+        const refResolutions = getModelSupportedResolutions(selectedReferenceId);
+        const i2iResolutions = getModelSupportedResolutions(selectedI2iId);
+        const i2vResolutions = getModelSupportedResolutions(selectedI2vId);
+
+        let intersection: ('720p' | '1080p' | '2160p')[] = [];
+        
+        if (refResolutions.length > 0 && i2iResolutions.length > 0 && i2vResolutions.length > 0) {
+            intersection = refResolutions.filter(res => 
+                i2iResolutions.includes(res) && i2vResolutions.includes(res)
+            );
         }
-    }, [selectedI2vId, aiModelList, resolution]);
+
+        const finalSupported = intersection.length > 0 
+            ? intersection 
+            : (i2vResolutions.length > 0 ? i2vResolutions : ['1080p']);
+
+        if (finalSupported.length > 0 && !finalSupported.includes(resolution)) {
+            const fallbackResolution = finalSupported.includes('1080p') 
+                ? '1080p' 
+                : (finalSupported.includes('720p') ? '720p' : finalSupported[0]);
+            setResolution(fallbackResolution as '720p' | '1080p' | '2160p');
+        }
+    }, [selectedReferenceId, selectedI2iId, selectedI2vId, aiModelList, resolution]);
 
     useEffect(() => {
         let timeout: NodeJS.Timeout;
@@ -552,6 +578,7 @@ function WorkspaceCreatePageClient() {
                     selectedI2vId={selectedI2vId}
                     resolution={resolution}
                     isFalAiKeyMissing={isFalAiKeyMissing}
+                    estimatedCharacterCount={estimatedCharacterCount}
                     onClickSaveDraft={onClickSaveDraft}
                     onClickGenerateVideo={onClickGenerateVideo}
                 />

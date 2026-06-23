@@ -9,6 +9,7 @@ interface EstimatedCostCardProps {
     selectedI2vId: string | null;
     expectedVideoSceneCount: number;
     expectedVideoTotalDuration: number;
+    estimatedCharacterCount: number;
 }
 
 function EstimatedCostCard({
@@ -18,6 +19,7 @@ function EstimatedCostCard({
     selectedI2vId,
     expectedVideoSceneCount,
     expectedVideoTotalDuration,
+    estimatedCharacterCount,
 }: EstimatedCostCardProps) {
     const t2iModels = useMemo(() => aiModelList.filter(m => m.category === 'text-to-image'), [aiModelList]);
     const i2iModels = useMemo(() => aiModelList.filter(m => m.category === 'image-to-image'), [aiModelList]);
@@ -40,12 +42,12 @@ function EstimatedCostCard({
         const scenes = Math.max(1, expectedVideoSceneCount);
         const duration = Math.max(5, expectedVideoTotalDuration);
 
-        const t2iCost = t2iPrice * 1; // 1 character generation
+        const t2iCost = t2iPrice * estimatedCharacterCount;
         const i2iCost = i2iPrice * scenes;
         const i2vCost = i2vPrice * duration; // Assuming i2v is priced per sec
         
         return t2iCost + i2iCost + i2vCost;
-    }, [getPrice, t2iModels, selectedReferenceId, i2iModels, selectedI2iId, i2vModels, selectedI2vId, expectedVideoSceneCount, expectedVideoTotalDuration]);
+    }, [getPrice, t2iModels, selectedReferenceId, i2iModels, selectedI2iId, i2vModels, selectedI2vId, expectedVideoSceneCount, expectedVideoTotalDuration, estimatedCharacterCount]);
 
     return (
         <div className="mb-6 rounded-xl border border-white/5 bg-zinc-900/40 p-5 transition-colors hover:bg-zinc-900/60 relative overflow-hidden group">

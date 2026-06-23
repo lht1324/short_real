@@ -29,6 +29,7 @@ export interface VideoGenerationTask {
     ai_model_config?: AIModelConfig | null;
     resolution?: '720p' | '1080p' | '2160p' | null;
     aspect_ratio?: '16:9' | '9:16' | null;
+    estimated_character_count?: number;
     series_id?: string;
     created_at?: string; // timestamp with time zone, default CURRENT_TIMESTAMP
     updated_at?: string;

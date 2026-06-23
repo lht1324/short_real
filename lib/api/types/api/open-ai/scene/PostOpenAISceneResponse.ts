@@ -10,4 +10,5 @@ export interface StoryboardData {
     sceneDataList: SceneData[];
     videoTitle: string;
     videoDescription: string;
+    estimatedCharacterCount?: number;
 }
