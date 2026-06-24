@@ -1,6 +1,7 @@
 import {memo, useMemo} from "react";
 import {AlertTriangle, Coins, Film, Save, Sparkles, Loader2, CheckCircle2, Circle, FileText} from "lucide-react";
 import EstimatedCostCard from "@/components/page/workspace/create/result-panel/EstimatedCostCard";
+import {getMatchedModelPrice} from "@/components/page/workspace/create/result-panel/costCalculator";
 import {AIModelData, AIModelPriceUnit} from "@/lib/api/types/supabase/AIModelData";
 
 interface ResultPanelProps {
@@ -67,51 +68,28 @@ function ResultPanel({
     }, [aiModelList, selectedI2vId]);
 
     const referenceImageAIModelPrice = useMemo(() => {
-        const aiModelPriceUnit = resolution === '720p'
-            ? AIModelPriceUnit.IMAGE_720P
-            : resolution === '1080p'
-                ? AIModelPriceUnit.IMAGE_1080P
-                : AIModelPriceUnit.IMAGE_2160P;
-
-        return referenceImageAIModelData?.ai_model_price_list.find((aiModelPrice) => {
-            return aiModelPrice.unit === aiModelPriceUnit;
-        })?.price_per_unit;
+        return getMatchedModelPrice(referenceImageAIModelData, resolution, 'text-to-image').price;
     }, [resolution, referenceImageAIModelData]);
 
     const sceneImageAIModelPrice = useMemo(() => {
-        const aiModelPriceUnit = resolution === '720p'
-            ? AIModelPriceUnit.IMAGE_720P
-            : resolution === '1080p'
-                ? AIModelPriceUnit.IMAGE_1080P
-                : AIModelPriceUnit.IMAGE_2160P;
-
-        return sceneImageAIModelData?.ai_model_price_list.find((aiModelPrice) => {
-            return aiModelPrice.unit === aiModelPriceUnit;
-        })?.price_per_unit;
+        return getMatchedModelPrice(sceneImageAIModelData, resolution, 'image-to-image').price;
     }, [resolution, sceneImageAIModelData]);
 
     const videoAIModelPrice = useMemo(() => {
-        const aiModelPriceUnit = resolution === '720p'
-            ? AIModelPriceUnit.VIDEO_720P
-            : resolution === '1080p'
-                ? AIModelPriceUnit.VIDEO_1080P
-                : AIModelPriceUnit.VIDEO_2160P;
-
-        return videoAIModelData?.ai_model_price_list.find((aiModelPrice) => {
-            return aiModelPrice.unit === aiModelPriceUnit;
-        })?.price_per_unit;
+        return getMatchedModelPrice(videoAIModelData, resolution, 'image-to-video').price;
     }, [resolution, videoAIModelData]);
 
     const expectedAIModelUsage = useMemo(() => {
-        if (!referenceImageAIModelPrice || !sceneImageAIModelPrice || !videoAIModelPrice) return null;
+        const scenes = Math.max(1, expectedVideoSceneCount);
+        const duration = Math.max(5, expectedVideoTotalDuration);
 
-        return referenceImageAIModelPrice * estimatedCharacterCount + sceneImageAIModelPrice * expectedVideoSceneCount + videoAIModelPrice * expectedVideoTotalDuration;
+        return referenceImageAIModelPrice * estimatedCharacterCount + sceneImageAIModelPrice * scenes + videoAIModelPrice * duration;
     }, [referenceImageAIModelPrice, sceneImageAIModelPrice, videoAIModelPrice, expectedVideoSceneCount, expectedVideoTotalDuration, estimatedCharacterCount]);
 
     // if (!expectedAIModelUsage) return null;
 
     return (
-        <div className="flex-[3] bg-transparent flex flex-col relative border-l border-white/5">
+        <div className="flex-[3] max-w-[450px] min-w-[380px] w-full bg-transparent flex flex-col relative border-l border-white/5">
             <div className="flex-1 flex p-8 items-center justify-center relative z-10 overflow-y-auto custom-scrollbar">
                 {(isStoryboardGenerated && videoTitle && videoDescription) ? (<div className="w-full max-w-2xl">
                     {/* Video Metadata Section */}
@@ -160,6 +138,7 @@ function ResultPanel({
                         expectedVideoSceneCount={expectedVideoSceneCount}
                         expectedVideoTotalDuration={expectedVideoTotalDuration}
                         estimatedCharacterCount={estimatedCharacterCount}
+                        resolution={resolution}
                     />
                 </div>) : (
                     <div className="text-center">
@@ -221,7 +200,7 @@ function ResultPanel({
                                             </span>
                                         ) : (
                                             <span className="text-[11px] font-mono font-bold text-zinc-900 bg-zinc-100 px-2 py-0.5 rounded border border-zinc-200">
-                                                -${(expectedAIModelUsage ?? 0).toFixed(2)}
+                                                -${(expectedAIModelUsage ?? 0).toFixed(3)}
                                             </span>
                                         )}
                                     </div>

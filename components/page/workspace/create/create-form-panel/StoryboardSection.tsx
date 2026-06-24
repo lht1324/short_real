@@ -101,21 +101,11 @@ function StoryboardSection({
                 </div>
                 <div className="relative group">
                     <div className="flex flex-row space-x-2 items-center">
-                        {sceneDataList.length > 0 && videoTitle && videoDescription && (
-                            <div className="flex items-center space-x-1 px-2 py-1 bg-black/20 rounded-md">
-                                <Coins className="w-3.5 h-3.5 text-yellow-400" />
-                                <span className="text-xs font-medium text-zinc-400">-2</span>
-                            </div>
-                        )}
                         <button
                             type="button"
                             onClick={onClickGenerateStoryboard}
-                            disabled={isGeneratingStoryboardData || !script.trim() || !selectedVoiceId || (sceneDataList.length > 0 || !!videoTitle)}
-                            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-1.5 ${
-                                (sceneDataList.length > 0 || !!videoTitle)
-                                    ? 'bg-red-500/10 border border-red-500 text-red-500 hover:bg-red-500/20'
-                                    : 'bg-white text-black hover:bg-zinc-200'
-                            }`}
+                            disabled={isGeneratingStoryboardData || !script.trim() || !selectedVoiceId}
+                            className="px-4 py-2 bg-white text-black hover:bg-zinc-200 rounded-lg text-sm font-medium transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-1.5"
                         >
                             {isGeneratingStoryboardData ? (
                                 <>
@@ -123,14 +113,9 @@ function StoryboardSection({
                                     <span>Generating...</span>
                                 </>
                             ) : (sceneDataList.length > 0 || !!videoTitle) ? (
-                                <>
-                                    <AlertTriangle className="w-4 h-4" />
-                                    <span>Not Enough Credits</span>
-                                </>
-                            ) : sceneDataList.length === 0 && !videoTitle ? (
-                                <span>Generate Storyboard</span>
-                            ) : (
                                 <span>Regenerate Storyboard</span>
+                            ) : (
+                                <span>Generate Storyboard</span>
                             )}
                         </button>
                     </div>

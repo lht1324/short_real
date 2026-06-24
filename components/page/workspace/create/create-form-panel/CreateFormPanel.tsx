@@ -1,5 +1,6 @@
 import {ChangeEvent, memo, useMemo} from "react";
-import {Sparkles, MonitorPlay, AlertTriangle} from "lucide-react";
+import {useRouter} from "next/navigation";
+import {Sparkles, MonitorPlay, AlertTriangle, AlertCircle, ChevronDown} from "lucide-react";
 import {SceneData} from "@/lib/api/types/supabase/VideoGenerationTasks";
 import StoryboardSection from "@/components/page/workspace/create/create-form-panel/StoryboardSection";
 import BYOKModelSelector from "@/components/page/workspace/create/create-form-panel/BYOKModelSelector";
@@ -56,6 +57,8 @@ function CreateFormPanel({
     onChangeAspectRatio,
     onChangeResolution
 }: CreateFormPanelProps) {
+    const router = useRouter();
+
     // Helper function to extract supported resolutions from a model
     const getModelSupportedResolutions = (modelId: string | null) => {
         if (!modelId) return [];
@@ -69,31 +72,15 @@ function CreateFormPanel({
         }).filter(Boolean) as ('720p' | '1080p' | '2160p')[];
     };
 
-    const { supportedResolutions, isResolutionMismatched } = useMemo(() => {
+    const isResolutionMismatched = useMemo(() => {
         const refResolutions = getModelSupportedResolutions(selectedReferenceId);
         const i2iResolutions = getModelSupportedResolutions(selectedI2iId);
-        const i2vResolutions = getModelSupportedResolutions(selectedI2vId);
 
-        let intersection: ('720p' | '1080p' | '2160p')[] = [];
-        
-        if (refResolutions.length > 0 && i2iResolutions.length > 0 && i2vResolutions.length > 0) {
-            intersection = refResolutions.filter(res => 
-                i2iResolutions.includes(res) && i2vResolutions.includes(res)
-            );
-        }
+        const hasRefMismatch = refResolutions.length > 0 && !refResolutions.includes(resolution);
+        const hasI2iMismatch = i2iResolutions.length > 0 && !i2iResolutions.includes(resolution);
 
-        if (intersection.length > 0) {
-            return {
-                supportedResolutions: intersection,
-                isResolutionMismatched: false
-            };
-        } else {
-            return {
-                supportedResolutions: i2vResolutions.length > 0 ? i2vResolutions : ['1080p'],
-                isResolutionMismatched: (refResolutions.length > 0 || i2iResolutions.length > 0) && i2vResolutions.length > 0
-            };
-        }
-    }, [aiModelList, selectedReferenceId, selectedI2iId, selectedI2vId]);
+        return hasRefMismatch || hasI2iMismatch;
+    }, [selectedReferenceId, selectedI2iId, resolution, aiModelList]);
 
     // 예상 영상 시간 계산 (2.5단어/초 기준)
     const estimatedDuration = useMemo(() => {
@@ -138,39 +125,31 @@ function CreateFormPanel({
                         />
                     </div>
 
-                    {/* AI Model Selection Section */}
-                    <BYOKModelSelector
-                        aiModelList={aiModelList}
-                        selectedReferenceId={selectedReferenceId}
-                        selectedI2iId={selectedI2iId}
-                        selectedI2vId={selectedI2vId}
-                        isFalAiKeyMissing={isFalAiKeyMissing}
-                        onChangeReferenceId={onChangeReferenceId}
-                        onChangeI2iId={onChangeI2iId}
-                        onChangeI2vId={onChangeI2vId}
-                    />
-
-                    {/* Video Specs Section */}
+                    {/* Render Setup Section */}
                     <section className="bg-zinc-900/40 border border-white/5 rounded-xl p-5 space-y-4">
                         <div className="flex items-center gap-2 text-base font-medium text-zinc-200">
                             <MonitorPlay size={18} className="text-zinc-400" />
-                            <span>Video Specs</span>
+                            <span>Render Setup</span>
                         </div>
+
                         <div className="grid grid-cols-2 gap-3">
                             <div className="space-y-1.5">
-                                <label className="text-[11px] font-medium text-zinc-500 uppercase tracking-wider ml-0.5">Aspect Ratio</label>
-                                <select 
-                                    value={aspectRatio} 
-                                    onChange={(e) => onChangeAspectRatio(e.target.value as '16:9' | '9:16')}
-                                    className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2.5 text-[13px] text-zinc-200 focus:outline-none focus:border-zinc-500 appearance-none"
-                                >
-                                    <option value="9:16" className="bg-zinc-900">Vertical (9:16)</option>
-                                    <option value="16:9" className="bg-zinc-900">Horizontal (16:9)</option>
-                                </select>
+                                <label className="text-sm font-bold text-zinc-500 uppercase tracking-wider ml-0.5">Aspect Ratio</label>
+                                <div className="relative">
+                                    <select 
+                                        value={aspectRatio} 
+                                        onChange={(e) => onChangeAspectRatio(e.target.value as '16:9' | '9:16')}
+                                        className="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-3 text-base font-semibold text-zinc-200 focus:outline-none focus:border-zinc-500 appearance-none cursor-pointer pr-10 hover:bg-black/60 transition-colors"
+                                    >
+                                        <option value="9:16" className="bg-zinc-900">Vertical (9:16)</option>
+                                        <option value="16:9" className="bg-zinc-900">Horizontal (16:9)</option>
+                                    </select>
+                                    <ChevronDown size={16} className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none" />
+                                </div>
                             </div>
                             <div className="space-y-1.5">
                                 <div className="flex items-center justify-between">
-                                    <label className="text-[11px] font-medium text-zinc-500 uppercase tracking-wider ml-0.5">Resolution</label>
+                                    <label className="text-sm font-bold text-zinc-500 uppercase tracking-wider ml-0.5">Resolution</label>
                                     {isResolutionMismatched && (
                                         <div className="relative group">
                                             <span className="text-[9px] text-amber-500 font-bold bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/20 flex items-center gap-0.5 cursor-help">
@@ -186,22 +165,71 @@ function CreateFormPanel({
                                         </div>
                                     )}
                                 </div>
-                                <select 
-                                    value={resolution} 
-                                    onChange={(e) => onChangeResolution(e.target.value as '720p' | '1080p' | '2160p')}
-                                    className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2.5 text-[13px] text-zinc-200 focus:outline-none focus:border-zinc-500 appearance-none"
-                                >
-                                    <option value="720p" disabled={!supportedResolutions.includes('720p')} className={!supportedResolutions.includes('720p') ? "bg-zinc-900 text-zinc-600" : "bg-zinc-900"}>
-                                        720p {!supportedResolutions.includes('720p') && "(Not supported)"}
-                                    </option>
-                                    <option value="1080p" disabled={!supportedResolutions.includes('1080p')} className={!supportedResolutions.includes('1080p') ? "bg-zinc-900 text-zinc-600" : "bg-zinc-900"}>
-                                        1080p {!supportedResolutions.includes('1080p') && "(Not supported)"}
-                                    </option>
-                                    <option value="2160p" disabled={!supportedResolutions.includes('2160p')} className={!supportedResolutions.includes('2160p') ? "bg-zinc-900 text-zinc-600" : "bg-zinc-900"}>
-                                        4K (2160p) {!supportedResolutions.includes('2160p') && "(Not supported)"}
-                                    </option>
-                                </select>
+                                <div className="relative">
+                                    <select 
+                                        value={resolution} 
+                                        onChange={(e) => onChangeResolution(e.target.value as '720p' | '1080p' | '2160p')}
+                                        className="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-3 text-base font-semibold text-zinc-200 focus:outline-none focus:border-zinc-500 appearance-none cursor-pointer pr-10 hover:bg-black/60 transition-colors"
+                                    >
+                                        <option value="720p" className="bg-zinc-900">
+                                            720p
+                                        </option>
+                                        <option value="1080p" className="bg-zinc-900">
+                                            1080p
+                                        </option>
+                                        <option value="2160p" className="bg-zinc-900">
+                                            4K (2160p)
+                                        </option>
+                                    </select>
+                                    <ChevronDown size={16} className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none" />
+                                </div>
                             </div>
+                        </div>
+
+                        {/* Notice & Error Banner Area */}
+                        <div className="space-y-2">
+                            {/* Model Compatibility Info Banner */}
+                            <div className="flex items-start gap-2 bg-zinc-900/60 border border-white/5 rounded-lg p-3 text-[12px] text-zinc-400 leading-relaxed">
+                                <AlertCircle size={15} className="text-zinc-500 flex-shrink-0 mt-0.5" />
+                                <div>
+                                    <span className="font-semibold text-zinc-300">Model Compatibility: </span>
+                                    The global resolution choice filters and prioritizes compatible models below. Incompatible models will be disabled or fall back to high resolution.
+                                </div>
+                            </div>
+
+                            {/* API Key Missing Banner */}
+                            {isFalAiKeyMissing && (
+                                <div className="flex items-start justify-between gap-3 bg-red-500/10 border border-red-500/20 rounded-lg p-3 text-[12px] text-red-400">
+                                    <div className="flex items-start gap-2 leading-relaxed">
+                                        <AlertTriangle size={15} className="text-red-400 flex-shrink-0 mt-0.5" />
+                                        <div>
+                                            <span className="font-semibold">FAL.AI Key Required: </span>
+                                            Please configure your API key in the Profile page to generate videos.
+                                        </div>
+                                    </div>
+                                    <button 
+                                        type="button"
+                                        onClick={() => router.push('/profile')} 
+                                        className="text-[11px] font-bold text-red-300 hover:text-red-200 underline whitespace-nowrap"
+                                    >
+                                        Go to Profile
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* BYOK Model Selector Dropdowns */}
+                        <div className="pt-4 border-t border-white/5">
+                            <BYOKModelSelector
+                                aiModelList={aiModelList}
+                                selectedReferenceId={selectedReferenceId}
+                                selectedI2iId={selectedI2iId}
+                                selectedI2vId={selectedI2vId}
+                                globalResolution={resolution}
+                                onChangeReferenceId={onChangeReferenceId}
+                                onChangeI2iId={onChangeI2iId}
+                                onChangeI2vId={onChangeI2vId}
+                            />
                         </div>
                     </section>
 

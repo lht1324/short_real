@@ -1,9 +1,9 @@
-2026-06-22 02:47
+2026-06-25 03:20
 
 # 프로젝트 컨텍스트: 오토파일럿 고도화 및 전방위적 Anti-Slop 디자인 개편 (BYOK 전환 가속화)
 
 ## 1. 개요
-기존의 크레딧 기반 과금 체계를 완전히 탈피하고, 유저가 자신의 API 키를 직접 사용하는 **BYOK(Bring Your Own Key)** 모델로의 전환을 본격화함. 이에 따라 워크스페이스(Create, Autopilot), 프로필, 로그인 페이지에 이르기까지 전방위적인 UI/UX 개편을 단행하여 'AI Slop'을 제거하고 전문적인 **'조종석(Cockpit)'** 컨셉의 다크 테크 디자인을 완성함.
+기존의 크레딧 기반 과금 체계를 완전히 탈피하고, 유저가 자신의 API 키를 직접 사용하는 **BYOK (Bring Your Own Key)** 모델로의 전환을 본격화함. 이에 따라 워크스페이스(Create, Autopilot), 프로필, 로그인 페이지에 이르기까지 전방위적인 UI/UX 개편을 단행하여 'AI Slop'을 제거하고 전문적인 **'조종석 (Cockpit)'** 컨셉의 다크 테크 디자인을 완성함.
 
 ## 2. 완료된 작업
 
@@ -37,14 +37,22 @@
 ### 2.13 API Key 유효성 검증 강화 및 초고보안 마스킹 적용 - [완료]
 - **실시간 API Key 검증**: `app/api/user/[userId]/api-key/route.ts`에 fal.ai 공식 API(`v1/models?limit=1`) 연동. 유효하지 않은 키 입력 시 401 Unauthorized 에러 응답 및 데이터베이스 저장 거부.
 - **클라이언트 전용 API 추가**: `lib/api/client/usersClientAPI.ts`에 `patchUserApiKey` 메소드를 신설하여 전용 엔드포인트 호출을 깔끔하게 구조화.
-- **사용자 피드백 및 고정 마스킹 최적화**: 
-    - `isUserRegisteredFalAi` 변수 정의를 `!!(user?.fal_ai_api_key)` 느낌표 2개 형태로 교정하여 키의 존재 여부를 boolean 값으로 명확하게 바인딩.
-    - UI 렌더링 시 원본 API Key 값을 절대 노출하지 않고, `isUserRegisteredFalAi`에 따라 하드코딩된 `"************"` 텍스트가 표시되도록 화면 구성.
-    - U+2022 기호(`•`)가 리눅스 및 일부 브라우저 환경에서 소수점 수준의 미세한 크기로 찍히는 렌더링 한계를 극복하기 위해, 모든 환경에서 선명하게 렌더링되는 별표(asterisk) 마스킹 기호로 교체하여 `"************"`로 최종 통일.
-    - 등록 상태일 때는 `text-xs font-mono tracking-[0.15em] text-zinc-400 select-none` 스타일로 별표 자간이 단정하고 가독성 있게 렌더링되고, 미등록일 때는 일반 텍스트로 깔끔하게 렌더링되도록 클래스 조건부 최적화 적용.
-    - 수정(Update) 시 인풋 박스도 마스킹 가독성을 위해 `text-base tracking-[0.2em]`으로 키우고 `placeholder` 텍스트만 정상 크기 및 자간으로 렌더링되게 설계.
-    - 값의 변동이 없으면 저장 API 호출을 건너뛰어 성능 및 트래픽 절약.
-- **서버 마스킹 고도화 (복호화 생략)**: `app/api/user/[userId]/route.ts` GET 엔드포인트에서 원본 API key 복호화 처리를 일절 배제함. 데이터베이스에 값이 등록되어 있으면 고정 마스킹 `"************"`을, 없으면 `null`을 프론트엔드로 전달하여 복호화 키 유출 위협을 원천 차단하고 연산 비용 최적화.
+- **사용자 피드백 및 고정 마스킹 최적화 완료**
+
+### 2.14 Workspace 상세 요금 명세서(Invoice) 개편 및 해상도 미스매치 보정 - [완료]
+- **비용 산출 단일화 (`costCalculator.ts`)**: 글로벌 해상도를 기반으로 3대 파트(레퍼런스 T2I, 장면 I2I, 비디오 I2V)의 단가를 산정하고, 개별 모델의 지원 범위가 글로벌 해상도와 불일치(미스매치)하는 경우 자동으로 지원 최고 해상도의 요율로 대체하는 폴백 로직 구현.
+- **명세서 레이아웃 고도화 및 Bottom-Up 순서 재배치 (`EstimatedCostCard.tsx`)**: 총액만 표시되던 기존 구조에서 탈피하여 3개 파트별로 사용 모델명, 해상도 단가, 곱해진 수량, 최종 계산 금액을 리스트 형식의 영수증 레이아웃으로 개편. 해상도 강제 대체 발생 시 노란색 경고 문구를 노출하여 유저가 가격 급등 사유를 직관적으로 이해하도록 유도. 폰트 스케일을 키우고 패딩 여백 및 명암비를 상향 보정해 가독성을 끌어올렸으며, 유저의 가격 저항감(Sticker Shock)을 낮추기 위해 **[세부 내역 ➔ 최종 총합계 (Total)]** 순서로 영수증(Bottom-Up) 흐름을 재배치함. 최종 합계 금액 표시 영역의 `$ (달러)` 기호를 숫자에 맞춰 볼드 및 폰트 크기 조절을 통해 스케일업하고, 수직 정렬을 세로 중앙정렬(`items-center`)로 교정하여 가독성 왜곡을 해결함. 또한 모호한 물결표(`~`)를 제거하고 통화 단위인 `USD` 명세를 우측에 컴팩트하게 추가했으며, 가격 자릿수를 **소수점 3자리**로 맞춤. 우상단 설명 툴팁이 부모 카드의 `overflow-hidden` 속성 때문에 잘려 보이지 않던 버그를 고쳤으며, 툴팁 반응 범위를 카드 전체 마우스 오버가 아닌 우상단 아이콘 호버 시에만 뜨도록 좁혀(`group/info`) UX 완성도를 높임.
+- **비율 배지 및 레이아웃 가로 락 연동 (`ResultPanel.tsx`)**: 예상 합계 금액 산출 방식을 costCalculator 로직과 동기화하여 버튼 우측 배지 가격과 비용 카드 총액의 일관성 보장. 또한 27인치 대화면에서 우측 영역이 가로로 과도하게 늘어나 텍스트 가독성이 흐트러지는 것을 방지하기 위해 패널 가로 크기를 최대 450px(`max-w-[450px] min-w-[380px]`)로 락하여 정보 집중도와 프로 툴 감성을 유지하도록 개선함. 버튼 가격 배지도 카드에 맞춰 **소수점 3자리**로 일치시켜 수학적 오해를 불식함.
+
+### 2.15 Storyboard 생성/재생성 버튼 버그 및 잔재 크레딧 로직 완전 배제 - [완료]
+- **StoryboardSection.tsx 버그 픽스**: 크레딧 제거 리팩토링 과정에서 잔존했던 잘못된 예외 조건(`(sceneDataList.length > 0 || !!videoTitle)`)으로 인해 스토리보드가 생성되면 무조건 "Not Enough Credits" 경고가 뜨며 재생성이 막히던 심각한 오작동 버그를 수정함.
+- **클린업**: 불필요한 코인 감액 표시 배지(`-2`) 및 버튼의 빨간색 테두리/에러 스타일을 완전히 제거하고, 정상적으로 스크립트 작성 및 성우 선택 상태에 반응하여 `Generate Storyboard`와 `Regenerate Storyboard`가 작동되도록 교정함.
+
+### 2.16 Render Setup 카드 통합 및 해상도 탑다운 필터링 적용 - [완료]
+- **단일 카드 통합 (`CreateFormPanel.tsx`)**: 기존의 분리되어 있던 `BYOKModelSelector` 카드와 `Video Specs` 카드를 하나로 묶어 `Render Setup` 컴포넌트로 개편함. 1층에 Aspect Ratio & Resolution 선택 상자를 배치하고, 2층에 모델 호환 가이드 및 API 키 누락 경고 배너, 3층에 BYOK 모델 셀렉터를 수직 구조로 재배치하여 정보 집중도를 높임.
+- **해상도 필터링 오작동 해결 및 탑다운 전환 (`CreateFormPanel.tsx`, `WorkspaceCreatePageClient.tsx`)**: 모델 사양에 역방향으로 종속되어 해상도 옵션이 잠기던 기존 로직(`supportedResolutions` 연산)과 강제 롤백 효과(`useEffect`)를 완전히 걷어냄. 이제 글로벌 해상도는 언제나 자유롭게 선택할 수 있으며, 4K 선택 시 미지원 비디오 모델이 선택되어 있으면 4K 지원 비디오 모델로 자동 스위칭(대체)해 줌. 또한 선택한 해상도를 지원하지 않는 캐릭터/장면 모델들은 1080p 폴백 요율과 함께 ⚠️ `Mismatch` 경고만 띄우고 생성 기능은 정상 동작하도록 교정함.
+- **드롭다운 UI 디테일 및 텍스트 룰 교정 (`BYOKModelSelector.tsx`)**: 커스텀 드롭다운 내 폰트 크기가 작아 시인성이 떨어지던 현상을 해결하기 위해 텍스트 스케일을 대대적으로 확장(`text-sm` ➔ `text-base`, 단가 `text-xs` ➔ `text-sm`, 뱃지 `text-[9px]` ➔ `text-xs`)하고, 여백(`py-2` ➔ `py-3`, `p-2.5` ➔ `p-3`)을 충분히 확보하여 cockpit UI 환경에 걸맞게 시원한 가독성을 제공함. 더불어 UI 텍스트에 한글(`대체`)이 섞여 노출되던 룰 위반 사항을 발견해 `fallback`으로 전면 영어 변환하였으며 가격 및 서브 정보들의 명도 대비를 한 단계 톤업하여 다크 테마 시인성을 강화함.
+- **종횡비/해상도 드롭다운 디자인 동기화 (`CreateFormPanel.tsx`)**: 이질감이 들던 Aspect Ratio 및 Resolution 네이티브 셀렉트 박스를 `relative` 래퍼로 감싸고, 폰트 크기(`text-base font-semibold`), 패딩(`px-4 py-3`), 배경/보더 및 호버 트랜지션을 모델 드롭다운 토글 버튼과 완벽히 동기화함. 또한 우측에 `ChevronDown` 아이콘을 정렬하여 대칭적인 룩앤필(Symmetry Look & Feel)과 다크 테크 조종석(Cockpit) 감성을 극대화함.
 
 ## 3. 향후 작업 (Next Steps) - [Priority: HIGH]
 
@@ -52,27 +60,20 @@
    - **자체 크레딧 관련 연산 및 UI 제거**:
      - `WorkspaceCreatePageClient.tsx` 및 `WorkspaceAutopilotPageClient.tsx` 등에서 `userCreditCount`, `expectedCreditUsage`, `isCreditInsufficient` 계산식과 헤더의 `Credits` 스탯 영역을 완전히 제거.
      - `Insufficient Credit Modal` 및 크레딧 부족 시 생성을 차단하는 클라이언트 사이드 validation 로직 걷어내기.
-   - **사전 경고 가이드 UI 배치**:
-     - 생성 버튼 또는 결과 패널 인근에 *"Ensure your fal.ai account has sufficient credits (or Auto-Top-Up enabled) to avoid generation failures."* 등의 툴팁 혹은 미니 안내 텍스트 노출.
-   - **사후 에러 핸들링 고도화**:
-     - 비디오 생성 프로세스 중 fal.ai 등 외부 API 호출 시 크레딧 부족(예: `402 Payment Required` 또는 잔액 부족 관련 에러 메시지)이 발생할 경우, 이를 정확히 인터셉트하여 유저에게 *"fal.ai 계정 잔액이 부족합니다. 콘솔에서 충전해 주세요"*라고 친절한 팝업을 제공하는 에러 포매팅 로직 설계.
+   - **사전 경고 가이드 UI 배치**
+   - **사후 에러 핸들링 고도화**
 
 2. **[진행 예정] 실제 비디오 생성 로직에 유저 API Key 탑재**:
-   - 현재 시스템 환경변수에서 가져오는 API Key를, 생성 요청을 보낸 유저의 DB 프로필(`fal_ai_api_key` 등)에서 꺼내 쓰도록 백엔드 생성 엔진 로직 수정 필요.
+   - 현재 시스템 환경변수에서 가져오는 API Key를, 생성 요청을 보낸 유저의 DB 프로필에서 꺼내 쓰도록 백엔드 생성 엔진 로직 수정 필요.
 
 3. **[계획 수립 완료 / 진행 전] Autopilot 비디오 스펙(해상도, 비율) 설정 UI 통합**:
    - `autopilot_new_field_ui_update.md` 파일에 상세 구현 계획 작성 완료. 
-   - `AutopilotConfigPanel` 내에 모델 선택(BYOK)과 분리된 독립적인 "Video Specs" 섹션 추가 및 미지원 해상도 비활성화 처리, 동적 해상도 Fallback 로직 구현 예정. (아직 코드 작업 시작 전이므로 이 파일부터 확인할 것)
+   - `AutopilotConfigPanel` 내에 모델 선택(BYOK)과 분리된 독립적인 "Video Specs" 섹션 추가 및 미지원 해상도 비활성화 처리, 동적 해상도 Fallback 로직 구현 예정.
 
-3. **[진행 예정] Editor 페이지 디자인 리팩토링**:
-   - `@components/page/workspace/editor/WorkspaceEditorPageClient.tsx`를 'Dark Tech' 프로 툴 감성으로 리팩토링.
+4. **[진행 예정] Editor 페이지 디자인 리팩토링**
 
-4. **[검토 필요] Replicate 모델 실연동**:
-   - fal.ai 외에 Replicate 엔진을 실제 비디오 생성 옵션으로 활성화하고 키 연동 기능 정식 오픈.
+5. **[검토 필요] Replicate 모델 실연동**
 
-5. **[버그 수정] HeroSection 뮤트 버튼 작동 불량**:
-   - 현재 Hero 영역의 비디오 카드에서 뮤트 토글 버튼이 정상적으로 동작하지 않는 이슈 해결 필요.
+6. **[버그 수정] HeroSection 뮤트 버튼 작동 불량**
 
-6. **랜딩 페이지 하단 섹션 (HowItWorks, Pricing, FAQ) 디자인 개편**:
-   - AI 슬롭을 제거하고 현재의 Zinc 테마와 비대칭 레이아웃으로 일치시킴.
-
+7. **랜딩 페이지 하단 섹션 (HowItWorks, Pricing, FAQ) 디자인 개편**

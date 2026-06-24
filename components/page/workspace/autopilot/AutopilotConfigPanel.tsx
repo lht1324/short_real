@@ -41,7 +41,7 @@ function AutopilotConfigPanel({
     const i2vModels = useMemo(() => aiModelList.filter(m => m.category === 'image-to-video'), [aiModelList]);
 
     // Current Selection
-    const selectedT2iId = currentSeries.ai_model_config?.sceneImageT2IModelId;
+    const selectedT2iId = currentSeries.ai_model_config?.referenceImageModelId;
     const selectedI2iId = currentSeries.ai_model_config?.sceneImageI2IModelId;
     const selectedI2vId = currentSeries.ai_model_config?.videoModelId;
 

@@ -317,7 +317,7 @@ function WorkspaceCreatePageClient() {
         } finally {
             setIsSaving(false);
         }
-    }, [script, sceneDataList, videoTitle, videoDescription, selectedStyleId, selectedVoiceId, taskId, selectedReferenceId, selectedI2iId, selectedI2vId, aiModelList, aspectRatio, resolution]);
+    }, [selectedI2iId, script, sceneDataList, videoTitle, videoDescription, selectedStyleId, selectedVoiceId, aspectRatio, resolution, estimatedCharacterCount, selectedReferenceId, selectedI2vId, taskId, aiModelList]);
 
     const onCloseSaveSuccessModal = useCallback(() => {
         setShowSaveSuccessModal(false);
@@ -391,7 +391,7 @@ function WorkspaceCreatePageClient() {
                     if (videoGenerationTask.resolution) setResolution(videoGenerationTask.resolution);
                     
                     if (aiModelConfig) {
-                        setSelectedReferenceId(aiModelConfig.sceneImageT2IModelId);
+                        setSelectedReferenceId(aiModelConfig.referenceImageModelId);
                         setSelectedI2iId(aiModelConfig.sceneImageI2IModelId);
                         setSelectedI2vId(aiModelConfig.videoModelId);
                     }
@@ -427,44 +427,29 @@ function WorkspaceCreatePageClient() {
         }
     }, [taskId, sceneDataList]);
 
+    // 해상도가 변경될 때 미지원 비디오 모델을 호환되는 모델로 자동 스위칭해 주는 효과
     useEffect(() => {
-        if (aiModelList.length === 0) return;
+        if (aiModelList.length === 0 || !selectedI2vId) return;
 
-        const getModelSupportedResolutions = (modelId: string | null) => {
-            if (!modelId) return [];
-            const model = aiModelList.find(m => m.id === modelId);
-            if (!model || !model.ai_model_price_list) return [];
-            return model.ai_model_price_list.map(p => {
-                if (p.unit.includes('720p')) return '720p';
-                if (p.unit.includes('1080p')) return '1080p';
-                if (p.unit.includes('2160p')) return '2160p';
-                return null;
-            }).filter(Boolean) as ('720p' | '1080p' | '2160p')[];
-        };
+        // 현재 선택된 비디오 모델 조회
+        const currentI2vModel = aiModelList.find(m => m.id === selectedI2vId);
+        if (!currentI2vModel || !currentI2vModel.ai_model_price_list) return;
 
-        const refResolutions = getModelSupportedResolutions(selectedReferenceId);
-        const i2iResolutions = getModelSupportedResolutions(selectedI2iId);
-        const i2vResolutions = getModelSupportedResolutions(selectedI2vId);
+        const targetUnit = resolution === '720p' ? 'video_720p' : resolution === '1080p' ? 'video_1080p' : 'video_2160p';
+        const supportsCurrentRes = currentI2vModel.ai_model_price_list.some(p => p.unit === targetUnit);
 
-        let intersection: ('720p' | '1080p' | '2160p')[] = [];
-        
-        if (refResolutions.length > 0 && i2iResolutions.length > 0 && i2vResolutions.length > 0) {
-            intersection = refResolutions.filter(res => 
-                i2iResolutions.includes(res) && i2vResolutions.includes(res)
-            );
+        // 현재 비디오 모델이 해상도를 지원하지 않는다면 다른 호환되는 비디오 모델로 변경
+        if (!supportsCurrentRes) {
+            const compatibleI2vModel = aiModelList.find(m => {
+                if (m.category !== 'image-to-video' || !m.ai_model_price_list) return false;
+                return m.ai_model_price_list.some(p => p.unit === targetUnit);
+            });
+
+            if (compatibleI2vModel && compatibleI2vModel.id) {
+                setSelectedI2vId(compatibleI2vModel.id);
+            }
         }
-
-        const finalSupported = intersection.length > 0 
-            ? intersection 
-            : (i2vResolutions.length > 0 ? i2vResolutions : ['1080p']);
-
-        if (finalSupported.length > 0 && !finalSupported.includes(resolution)) {
-            const fallbackResolution = finalSupported.includes('1080p') 
-                ? '1080p' 
-                : (finalSupported.includes('720p') ? '720p' : finalSupported[0]);
-            setResolution(fallbackResolution as '720p' | '1080p' | '2160p');
-        }
-    }, [selectedReferenceId, selectedI2iId, selectedI2vId, aiModelList, resolution]);
+    }, [resolution, aiModelList, selectedI2vId]);
 
     useEffect(() => {
         let timeout: NodeJS.Timeout;
