@@ -17,6 +17,8 @@ interface CaptionConfigPanelProps {
     onToggleIsCaptionEnabled: () => void;
     onChangeCaptionConfigState: (captionConfigState: CaptionConfigState) => void;
     onOpenColorPicker: (type: ColorPickerType, anchor: HTMLElement) => void;
+    showPositionSelector?: boolean;
+    aspectRatio?: '9:16' | '16:9';
 }
 
 function CaptionConfigPanel({
@@ -28,6 +30,8 @@ function CaptionConfigPanel({
     onToggleIsCaptionEnabled,
     onChangeCaptionConfigState,
     onOpenColorPicker,
+    showPositionSelector = false,
+    aspectRatio = '9:16',
 }: CaptionConfigPanelProps) {
     const fontSizeInputRef = useRef<HTMLInputElement>(null);
 
@@ -358,6 +362,45 @@ function CaptionConfigPanel({
                         />
                     </div>
                 </div>
+
+                {/* Caption Position Selector (Autopilot only) */}
+                {showPositionSelector && (
+                    <div className="space-y-2 pt-4 border-t border-white/5">
+                        <label className="text-white text-base font-medium">Caption Position</label>
+                        {aspectRatio === '9:16' ? (
+                            <div className="flex bg-black/40 border border-white/10 rounded-lg p-0.5 w-full">
+                                {[
+                                    { label: 'Top', pos: 15 },
+                                    { label: 'Middle', pos: 50 },
+                                    { label: 'Bottom', pos: 80 }
+                                ].map((item) => {
+                                    const isSelected = captionConfigState.captionPosition === item.pos;
+                                    return (
+                                        <button
+                                            key={item.label}
+                                            type="button"
+                                            onClick={() => onChangeCaptionConfigState({
+                                                ...captionConfigState,
+                                                captionPosition: item.pos
+                                            })}
+                                            className={`flex-1 py-1.5 text-sm font-medium rounded-md transition-all focus:outline-none ${
+                                                isSelected
+                                                    ? 'bg-zinc-800 text-white shadow-sm'
+                                                    : 'text-zinc-400 hover:text-zinc-200'
+                                            }`}
+                                        >
+                                            {item.label}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        ) : (
+                            <div className="text-zinc-500 text-sm italic py-2 bg-black/20 rounded-lg px-3 border border-white/5">
+                                Fixed to Bottom for Landscape (16:9) video.
+                            </div>
+                        )}
+                    </div>
+                )}
             </AccordionSection>}
 
             {/* Text Section (renamed from Colors) */}

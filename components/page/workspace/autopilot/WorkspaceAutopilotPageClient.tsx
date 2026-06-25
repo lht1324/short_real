@@ -104,6 +104,7 @@ function WorkspaceAutopilotPageClient() {
     const [isAiModelLoading, setIsAiModelLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
     const [showSaveSuccessModal, setShowSaveSuccessModal] = useState(false);
+    const [previewMode, setPreviewMode] = useState<'normal' | 'wide'>('normal');
 
     const updateCurrentSeries = useCallback((updateData: Partial<AutopilotData>) => {
         if (!currentSeriesId) return;
@@ -365,6 +366,19 @@ function WorkspaceAutopilotPageClient() {
         }
     }, [currentSeries?.resolution, aiModelList, currentSeries?.ai_model_config?.videoModelId, updateCurrentSeries, currentSeries]);
 
+    // 종횡비가 16:9로 변경될 때 자막 위치를 Bottom(80)으로 자동 스위칭(보정)해 주는 효과
+    useEffect(() => {
+        if (!currentSeries) return;
+
+        const ratio = currentSeries.aspect_ratio || '9:16';
+        if (ratio === '16:9' && captionConfigState.captionPosition !== 80) {
+            setCaptionConfigState(prev => ({
+                ...prev,
+                captionPosition: 80
+            }));
+        }
+    }, [currentSeries?.aspect_ratio, captionConfigState.captionPosition, currentSeries]);
+
     const onClickAddSeries = useCallback(async () => {
         if (seriesList.length >= 4 || !user?.id || isActionPending) return;
         setIsActionPending(true);
@@ -613,39 +627,55 @@ function WorkspaceAutopilotPageClient() {
                                             onToggleIsCaptionEnabled={onToggleIsCaptionEnabled}
                                             onChangeCaptionConfigState={onChangeCaptionConfigState}
                                             onOpenColorPicker={onOpenColorPicker}
+                                            showPositionSelector={true}
+                                            aspectRatio={currentSeries.aspect_ratio || '9:16'}
                                         />
                                     </div>
                                 </div>
 
                                 {/* Col 4: Preview */}
-                                <div className="flex-[0.4] min-w-0 border-r border-white/5 bg-black/20 flex flex-col overflow-hidden">
-                                    <div className="px-5 pt-4 pb-2 flex-shrink-0">
+                                <div className={`transition-all duration-300 ease-in-out ${previewMode === 'wide' ? 'flex-[1.2]' : 'flex-[0.6]'} min-w-0 border-r border-white/5 bg-black/20 flex flex-col overflow-hidden`}>
+                                    <div className="px-5 pt-4 pb-2 flex-shrink-0 flex items-center justify-between">
                                         <p className="text-[11px] font-semibold text-zinc-500 uppercase tracking-wider">
                                             Preview
                                         </p>
+                                        {previewMode === 'wide' && (
+                                            <span className="text-[10px] font-medium text-emerald-400 bg-emerald-950/40 border border-emerald-500/20 px-2 py-0.5 rounded-full animate-pulse">
+                                                Live Wide Editor Active
+                                            </span>
+                                        )}
                                     </div>
                                     <div className="flex-1 min-h-0">
                                         <AutopilotCaptionPreview
                                             captionConfigState={captionConfigState}
                                             selectedFontFamilyFullShape={selectedFontFamilyFullShape}
                                             onChangeCaptionConfigState={onChangeCaptionConfigState}
+                                            aspectRatio={currentSeries.aspect_ratio || '9:16'}
+                                            previewMode={previewMode}
+                                            onChangePreviewMode={setPreviewMode}
                                         />
                                     </div>
                                 </div>
                             </div>
 
                             {/* Col 5: Right Control Panel */}
-                            <AutopilotControlPanel
-                                currentSeries={currentSeries}
-                                updateSeries={updateCurrentSeries}
-                                isSaving={isSaving}
-                                isDirty={isDirty}
-                                validation={validation}
-                                onClickSaveConfig={onClickSaveConfig}
-                                onClickDeleteConfig={onClickDeleteConfig}
-                                aiModelList={aiModelList}
-                                isFalAiKeyMissing={isFalAiKeyMissing}
-                            />
+                            <div className={`transition-all duration-300 ease-in-out flex-shrink-0 ${
+                                previewMode === 'wide'
+                                    ? 'w-0 opacity-0 pointer-events-none overflow-hidden'
+                                    : 'w-80 opacity-100'
+                            }`}>
+                                <AutopilotControlPanel
+                                    currentSeries={currentSeries}
+                                    updateSeries={updateCurrentSeries}
+                                    isSaving={isSaving}
+                                    isDirty={isDirty}
+                                    validation={validation}
+                                    onClickSaveConfig={onClickSaveConfig}
+                                    onClickDeleteConfig={onClickDeleteConfig}
+                                    aiModelList={aiModelList}
+                                    isFalAiKeyMissing={isFalAiKeyMissing}
+                                />
+                            </div>
                         </>
                     ) : (
                         <div className="flex-1 flex flex-col items-center justify-center space-y-6">
