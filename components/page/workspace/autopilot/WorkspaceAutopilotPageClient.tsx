@@ -328,6 +328,43 @@ function WorkspaceAutopilotPageClient() {
         return () => clearInterval(interval);
     }, [isDirty, isSaving, onClickSaveConfig, validation.isValid]);
 
+    // 해상도가 변경될 때 미지원 비디오 모델을 호환되는 모델로 자동 스위칭해 주는 효과
+    useEffect(() => {
+        if (!currentSeries || aiModelList.length === 0) return;
+
+        const resolution = currentSeries.resolution || '1080p';
+        const selectedI2vId = currentSeries.ai_model_config?.videoModelId;
+        if (!selectedI2vId) return;
+
+        // 현재 선택된 비디오 모델 조회
+        const currentI2vModel = aiModelList.find(m => m.id === selectedI2vId);
+        if (!currentI2vModel || !currentI2vModel.ai_model_price_list) return;
+
+        const targetUnit = resolution === '720p' ? 'video_720p' : resolution === '1080p' ? 'video_1080p' : 'video_2160p';
+        const supportsCurrentRes = currentI2vModel.ai_model_price_list.some(p => p.unit === targetUnit);
+
+        // 현재 비디오 모델이 해상도를 지원하지 않는다면 다른 호환되는 비디오 모델로 변경
+        if (!supportsCurrentRes) {
+            const compatibleI2vModel = aiModelList.find(m => {
+                if (m.category !== 'image-to-video' || !m.ai_model_price_list) return false;
+                return m.ai_model_price_list.some(p => p.unit === targetUnit);
+            });
+
+            if (compatibleI2vModel && compatibleI2vModel.id) {
+                updateCurrentSeries({
+                    ai_model_config: {
+                        ...(currentSeries.ai_model_config || {
+                            referenceImageModelId: 'ca637a97-f060-4b81-a7d4-118a6f4aac0c',
+                            sceneImageT2IModelId: '1bd90bd4-e476-40e9-8a1e-1649288786e7',
+                            sceneImageI2IModelId: '79a506ac-eced-4643-b017-c8a2bb0f028b',
+                        }),
+                        videoModelId: compatibleI2vModel.id,
+                    }
+                });
+            }
+        }
+    }, [currentSeries?.resolution, aiModelList, currentSeries?.ai_model_config?.videoModelId, updateCurrentSeries, currentSeries]);
+
     const onClickAddSeries = useCallback(async () => {
         if (seriesList.length >= 4 || !user?.id || isActionPending) return;
         setIsActionPending(true);

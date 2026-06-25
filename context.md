@@ -1,4 +1,4 @@
-2026-06-25 03:20
+2026-06-26 00:15
 
 # 프로젝트 컨텍스트: 오토파일럿 고도화 및 전방위적 Anti-Slop 디자인 개편 (BYOK 전환 가속화)
 
@@ -54,6 +54,16 @@
 - **드롭다운 UI 디테일 및 텍스트 룰 교정 (`BYOKModelSelector.tsx`)**: 커스텀 드롭다운 내 폰트 크기가 작아 시인성이 떨어지던 현상을 해결하기 위해 텍스트 스케일을 대대적으로 확장(`text-sm` ➔ `text-base`, 단가 `text-xs` ➔ `text-sm`, 뱃지 `text-[9px]` ➔ `text-xs`)하고, 여백(`py-2` ➔ `py-3`, `p-2.5` ➔ `p-3`)을 충분히 확보하여 cockpit UI 환경에 걸맞게 시원한 가독성을 제공함. 더불어 UI 텍스트에 한글(`대체`)이 섞여 노출되던 룰 위반 사항을 발견해 `fallback`으로 전면 영어 변환하였으며 가격 및 서브 정보들의 명도 대비를 한 단계 톤업하여 다크 테마 시인성을 강화함.
 - **종횡비/해상도 드롭다운 디자인 동기화 (`CreateFormPanel.tsx`)**: 이질감이 들던 Aspect Ratio 및 Resolution 네이티브 셀렉트 박스를 `relative` 래퍼로 감싸고, 폰트 크기(`text-base font-semibold`), 패딩(`px-4 py-3`), 배경/보더 및 호버 트랜지션을 모델 드롭다운 토글 버튼과 완벽히 동기화함. 또한 우측에 `ChevronDown` 아이콘을 정렬하여 대칭적인 룩앤필(Symmetry Look & Feel)과 다크 테크 조종석(Cockpit) 감성을 극대화함.
 
+### 2.17 Workspace 공통 BYOK 모델 선택기 및 드롭다운 UI/UX 통일 - [완료]
+- **컴포넌트 공용화 및 경로 이전 (`BYOKModelSelector.tsx`, `costCalculator.ts`, `VideoSpecsSelector.tsx`)**: 
+  - Create 페이지 내부의 `create-form-panel` 디렉토리에 묶여 있던 모델 선택기 컴포넌트(`BYOKModelSelector.tsx`)를 공용 폴더인 `components/public/` 경로로 추출 이전 완료. 가격 계산 로직(`costCalculator.ts`) 역시 `lib/utils/` 공용 유틸 경로로 이전 완료.
+  - 추가적으로, Create와 Autopilot 화면에서 각각 이질적으로 렌더링되던 비디오 Specs(Aspect Ratio / Resolution) 선택 마크업을 공용 컴포넌트인 **`VideoSpecsSelector.tsx`**로 분리하여 `components/public/`에 신설 완료.
+- **참조처 일괄 업데이트 및 기존 파일 정리**: `CreateFormPanel.tsx`, `ResultPanel.tsx`, `EstimatedCostCard.tsx`, `AutopilotConfigPanel.tsx` 등의 임포트 경로를 이전된 공용 컴포넌트 경로로 일괄 교정 및 기존 중복 로컬 파일들 완전 제거 완료.
+- **Autopilot 모델 선택 및 비디오 스펙 디자인 동기화 (`AutopilotConfigPanel.tsx`)**: Autopilot 설정 패널 내에 분리되어 널려 있던 두 개의 카드("Visual AI Models", "Video Specs")를 Create 화면의 디자인 흐름과 100% 매칭시켜 **하나의 단일 `Render Setup` 카드** 형태로 통합하고, 그 안에 비디오 스펙 공용 컴포넌트(`VideoSpecsSelector`)와 BYOK 모델 공용 선택기(`BYOKModelSelector`)를 탑다운 레이아웃으로 완벽 이식 완료.
+- **해상도 변경 시 모델 실시간 동기화 효과 적용 (`WorkspaceAutopilotPageClient.tsx`)**: Create 화면에만 탑재되어 있던 "글로벌 해상도가 변경될 때 미지원 비디오 모델을 호환되는 모델로 실시간 자동 스위칭(대체)해 주는 `useEffect` 효과"를 Autopilot 페이지에도 완벽히 이식하여 두 화면 간의 동적 비즈니스 로직 수준까지 완벽하게 정교화 완료.
+- **Generation Specs ElevenLabs 로고 이식 (`AutopilotConfigPanel.tsx`)**: `ShortReal Subscription` 하단 스펙 요약 리스트의 `Premium Voiceover (ElevenLabs)` 텍스트를, 기존 SVG 에셋(`elevenlabs-logo.svg`) 이미지로 세련되게 교체하여 디자인 디테일 및 텍스트 슬롭 억제 완료.
+- **BYOK 모델 선택기 가격 표시 단위 교정 (`BYOKModelSelector.tsx`)**: 기존 모호하게 표기되던 가격 요율 라벨 `/ea` (캐릭터 수)를 **`/character`**로, `/s` (영상 초)를 **`/sec`**로 명확한 단위로 표기 변경하여 사용자 가격 인지 가독성을 대폭 개선 완료.
+
 ## 3. 향후 작업 (Next Steps) - [Priority: HIGH]
 
 1. **[진행 예정] BYOK 전환 완료를 위한 Credit 시스템 전면 제거 및 안내/에러 핸들링 강화**:
@@ -66,14 +76,10 @@
 2. **[진행 예정] 실제 비디오 생성 로직에 유저 API Key 탑재**:
    - 현재 시스템 환경변수에서 가져오는 API Key를, 생성 요청을 보낸 유저의 DB 프로필에서 꺼내 쓰도록 백엔드 생성 엔진 로직 수정 필요.
 
-3. **[계획 수립 완료 / 진행 전] Autopilot 비디오 스펙(해상도, 비율) 설정 UI 통합**:
-   - `autopilot_new_field_ui_update.md` 파일에 상세 구현 계획 작성 완료. 
-   - `AutopilotConfigPanel` 내에 모델 선택(BYOK)과 분리된 독립적인 "Video Specs" 섹션 추가 및 미지원 해상도 비활성화 처리, 동적 해상도 Fallback 로직 구현 예정.
+3. **[진행 예정] Editor 페이지 디자인 리팩토링**
 
-4. **[진행 예정] Editor 페이지 디자인 리팩토링**
+4. **[검토 필요] Replicate 모델 실연동**
 
-5. **[검토 필요] Replicate 모델 실연동**
+5. **[버그 수정] HeroSection 뮤트 버튼 작동 불량**
 
-6. **[버그 수정] HeroSection 뮤트 버튼 작동 불량**
-
-7. **랜딩 페이지 하단 섹션 (HowItWorks, Pricing, FAQ) 디자인 개편**
+6. **랜딩 페이지 하단 섹션 (HowItWorks, Pricing, FAQ) 디자인 개편**

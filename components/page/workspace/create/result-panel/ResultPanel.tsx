@@ -1,7 +1,7 @@
 import {memo, useMemo} from "react";
 import {AlertTriangle, Coins, Film, Save, Sparkles, Loader2, CheckCircle2, Circle, FileText} from "lucide-react";
 import EstimatedCostCard from "@/components/page/workspace/create/result-panel/EstimatedCostCard";
-import {getMatchedModelPrice} from "@/components/page/workspace/create/result-panel/costCalculator";
+import {getMatchedModelPrice} from "@/lib/utils/costCalculator";
 import {AIModelData, AIModelPriceUnit} from "@/lib/api/types/supabase/AIModelData";
 
 interface ResultPanelProps {

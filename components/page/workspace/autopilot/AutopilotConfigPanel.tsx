@@ -1,12 +1,15 @@
 'use client'
 
 import {memo, useCallback, useEffect, useMemo, useState} from "react";
-import {Sparkles, FileText, Mic2, Zap, Info, Square, Play, CheckCircle2, Bot, ChevronDown, ChevronUp, MonitorPlay, Lock} from 'lucide-react';
+import {Sparkles, FileText, Mic2, Zap, Info, Square, Play, CheckCircle2, Bot, ChevronDown, ChevronUp, MonitorPlay, Lock, AlertCircle, AlertTriangle} from 'lucide-react';
 import {useRouter} from "next/navigation";
+import Image from "next/image";
 import {Voice} from "@/lib/api/types/eleven-labs/Voice";
 import {NICHE_DATA_LIST} from "@/lib/niches";
 import {AutopilotData} from "@/lib/api/types/supabase/AutopilotData";
 import {AIModelData} from "@/lib/api/types/supabase/AIModelData";
+import BYOKModelSelector from "@/components/public/BYOKModelSelector";
+import VideoSpecsSelector from "@/components/public/VideoSpecsSelector";
 
 
 interface AutopilotConfigPanelProps {
@@ -45,18 +48,7 @@ function AutopilotConfigPanel({
     const selectedI2iId = currentSeries.ai_model_config?.sceneImageI2IModelId;
     const selectedI2vId = currentSeries.ai_model_config?.videoModelId;
 
-    // Supported Resolutions for selected video model
-    const supportedResolutions = useMemo(() => {
-        const model = aiModelList.find(m => m.id === selectedI2vId);
-        if (!model || !model.ai_model_price_list) return ['1080p']; // fallback default
-        
-        return model.ai_model_price_list.map(p => {
-            if (p.unit.includes('720p')) return '720p';
-            if (p.unit.includes('1080p')) return '1080p';
-            if (p.unit.includes('2160p')) return '2160p';
-            return null;
-        }).filter(Boolean) as string[];
-    }, [aiModelList, selectedI2vId]);
+
 
     // Price Calculation
     const getPrice = useCallback((models: AIModelData[], id?: string) => {
@@ -270,104 +262,99 @@ function AutopilotConfigPanel({
                     )}
                 </section>
                 
+                {/* Render Setup Section */}
                 <section className="bg-zinc-900/40 border border-white/5 rounded-xl p-5 space-y-4">
-                    <div className="flex items-center justify-between flex-wrap gap-2">
-                        <div className="flex items-center gap-2 text-base font-medium text-zinc-200">
-                            <Bot size={18} className="text-zinc-400" />
-                            <span>Visual AI Models (BYOK)</span>
+                    <div className="flex items-center gap-2 text-base font-medium text-zinc-200">
+                        <MonitorPlay size={18} className="text-zinc-400" />
+                        <span>Render Setup</span>
+                    </div>
+
+                    {/* 1층: Video Specs (Aspect Ratio & Resolution) */}
+                    <VideoSpecsSelector
+                        aspectRatio={currentSeries.aspect_ratio || '9:16'}
+                        resolution={currentSeries.resolution || '1080p'}
+                        onChangeAspectRatio={(ratio) => updateSeries({ aspect_ratio: ratio })}
+                        onChangeResolution={(res) => updateSeries({ resolution: res })}
+                    />
+
+                    {/* 2층: Notice & Error Banners */}
+                    <div className="space-y-2">
+                        {/* Model Compatibility Info Banner */}
+                        <div className="flex items-start gap-2 bg-zinc-900/60 border border-white/5 rounded-lg p-3 text-[12px] text-zinc-400 leading-relaxed">
+                            <AlertCircle size={15} className="text-zinc-500 flex-shrink-0 mt-0.5" />
+                            <div>
+                                <span className="font-semibold text-zinc-300">Model Compatibility: </span>
+                                The global resolution choice filters and prioritizes compatible models below. Incompatible models will be disabled or fall back to high resolution.
+                            </div>
                         </div>
+
+                        {/* API Key Missing Banner */}
                         {isFalAiKeyMissing && (
-                            <div className="flex items-center space-x-2 text-[13px] text-amber-500/90 font-medium bg-amber-500/5 px-2.5 py-1 rounded-lg border border-amber-500/10">
-                                <Lock className="w-3.5 h-3.5" />
-                                <span>API key required to generate</span>
-                                <button
-                                    onClick={() => router.push('/profile#provider-authentication')}
-                                    className="text-zinc-300 hover:text-white underline underline-offset-4 ml-1 transition-colors"
+                            <div className="flex items-start justify-between gap-3 bg-red-500/10 border border-red-500/20 rounded-lg p-3 text-[12px] text-red-400">
+                                <div className="flex items-start gap-2 leading-relaxed">
+                                    <AlertTriangle size={15} className="text-red-400 flex-shrink-0 mt-0.5" />
+                                    <div>
+                                        <span className="font-semibold">FAL.AI Key Required: </span>
+                                        Please configure your API key in the Profile page to generate videos.
+                                    </div>
+                                </div>
+                                <button 
+                                    type="button"
+                                    onClick={() => router.push('/profile#provider-authentication')} 
+                                    className="text-[11px] font-bold text-red-300 hover:text-red-200 underline whitespace-nowrap"
                                 >
-                                    Connect Key
+                                    Go to Profile
                                 </button>
                             </div>
                         )}
                     </div>
-                    {isAiModelLoading ? (
-                        <div className="py-4 text-center text-sm text-zinc-500">Loading models...</div>
-                    ) : (
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                            <div className="space-y-1.5">
-                                <label className="text-[11px] font-medium text-zinc-500 uppercase tracking-wider ml-0.5">Character (T2I)</label>
-                                <select 
-                                    value={selectedT2iId || ''} 
-                                    onChange={(e) => updateSeries({ ai_model_config: { ...currentSeries.ai_model_config!, sceneImageT2IModelId: e.target.value } })}
-                                    className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2.5 text-[13px] text-zinc-200 focus:outline-none focus:border-zinc-500 appearance-none"
-                                >
-                                    {t2iModels.map(m => (
-                                        <option key={m.id} value={m.id} className="bg-zinc-900">{m.display_name}</option>
-                                    ))}
-                                </select>
-                            </div>
-                            <div className="space-y-1.5">
-                                <label className="text-[11px] font-medium text-zinc-500 uppercase tracking-wider ml-0.5">Scene (I2I)</label>
-                                <select 
-                                    value={selectedI2iId || ''} 
-                                    onChange={(e) => updateSeries({ ai_model_config: { ...currentSeries.ai_model_config!, sceneImageI2IModelId: e.target.value } })}
-                                    className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2.5 text-[13px] text-zinc-200 focus:outline-none focus:border-zinc-500 appearance-none"
-                                >
-                                    {i2iModels.map(m => (
-                                        <option key={m.id} value={m.id} className="bg-zinc-900">{m.display_name}</option>
-                                    ))}
-                                </select>
-                            </div>
-                            <div className="space-y-1.5">
-                                <label className="text-[11px] font-medium text-zinc-500 uppercase tracking-wider ml-0.5">Video (I2V)</label>
-                                <select 
-                                    value={selectedI2vId || ''} 
-                                    onChange={(e) => updateSeries({ ai_model_config: { ...currentSeries.ai_model_config!, videoModelId: e.target.value } })}
-                                    className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2.5 text-[13px] text-zinc-200 focus:outline-none focus:border-zinc-500 appearance-none"
-                                >
-                                    {i2vModels.map(m => (
-                                        <option key={m.id} value={m.id} className="bg-zinc-900">{m.display_name}</option>
-                                    ))}
-                                </select>
-                            </div>
-                        </div>
-                    )}
-                </section>
 
-                <section className="bg-zinc-900/40 border border-white/5 rounded-xl p-5 space-y-4">
-                    <div className="flex items-center gap-2 text-base font-medium text-zinc-200">
-                        <MonitorPlay size={18} className="text-zinc-400" />
-                        <span>Video Specs</span>
-                    </div>
-                    <div className="grid grid-cols-2 gap-3">
-                        <div className="space-y-1.5">
-                            <label className="text-[11px] font-medium text-zinc-500 uppercase tracking-wider ml-0.5">Aspect Ratio</label>
-                            <select 
-                                value={currentSeries.aspect_ratio || '9:16'} 
-                                onChange={(e) => updateSeries({ aspect_ratio: e.target.value as any })}
-                                className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2.5 text-[13px] text-zinc-200 focus:outline-none focus:border-zinc-500 appearance-none"
-                            >
-                                <option value="9:16" className="bg-zinc-900">Vertical (9:16)</option>
-                                <option value="16:9" className="bg-zinc-900">Horizontal (16:9)</option>
-                            </select>
-                        </div>
-                        <div className="space-y-1.5">
-                            <label className="text-[11px] font-medium text-zinc-500 uppercase tracking-wider ml-0.5">Resolution</label>
-                            <select 
-                                value={currentSeries.resolution || '1080p'} 
-                                onChange={(e) => updateSeries({ resolution: e.target.value as any })}
-                                className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2.5 text-[13px] text-zinc-200 focus:outline-none focus:border-zinc-500 appearance-none"
-                            >
-                                <option value="720p" disabled={!supportedResolutions.includes('720p')} className={!supportedResolutions.includes('720p') ? "bg-zinc-900 text-zinc-600" : "bg-zinc-900"}>
-                                    720p {!supportedResolutions.includes('720p') && "(Not supported)"}
-                                </option>
-                                <option value="1080p" disabled={!supportedResolutions.includes('1080p')} className={!supportedResolutions.includes('1080p') ? "bg-zinc-900 text-zinc-600" : "bg-zinc-900"}>
-                                    1080p {!supportedResolutions.includes('1080p') && "(Not supported)"}
-                                </option>
-                                <option value="2160p" disabled={!supportedResolutions.includes('2160p')} className={!supportedResolutions.includes('2160p') ? "bg-zinc-900 text-zinc-600" : "bg-zinc-900"}>
-                                    4K (2160p) {!supportedResolutions.includes('2160p') && "(Not supported)"}
-                                </option>
-                            </select>
-                        </div>
+                    {/* 3층: BYOK Model Selector (Character, Scene, Video) */}
+                    <div className="pt-4 border-t border-white/5">
+                        {isAiModelLoading ? (
+                            <div className="py-4 text-center text-sm text-zinc-500">Loading models...</div>
+                        ) : (
+                            <BYOKModelSelector
+                                aiModelList={aiModelList}
+                                selectedReferenceId={selectedT2iId || null}
+                                selectedI2iId={selectedI2iId || null}
+                                selectedI2vId={selectedI2vId || null}
+                                globalResolution={currentSeries.resolution || '1080p'}
+                                onChangeReferenceId={(id) => updateSeries({
+                                    ai_model_config: {
+                                        ...(currentSeries.ai_model_config || {
+                                            referenceImageModelId: 'ca637a97-f060-4b81-a7d4-118a6f4aac0c',
+                                            sceneImageT2IModelId: '1bd90bd4-e476-40e9-8a1e-1649288786e7',
+                                            sceneImageI2IModelId: '79a506ac-eced-4643-b017-c8a2bb0f028b',
+                                            videoModelId: '326a9a71-26a9-4142-8371-5467f316bcd6',
+                                        }),
+                                        referenceImageModelId: id,
+                                    }
+                                })}
+                                onChangeI2iId={(id) => updateSeries({
+                                    ai_model_config: {
+                                        ...(currentSeries.ai_model_config || {
+                                            referenceImageModelId: 'ca637a97-f060-4b81-a7d4-118a6f4aac0c',
+                                            sceneImageT2IModelId: '1bd90bd4-e476-40e9-8a1e-1649288786e7',
+                                            sceneImageI2IModelId: '79a506ac-eced-4643-b017-c8a2bb0f028b',
+                                            videoModelId: '326a9a71-26a9-4142-8371-5467f316bcd6',
+                                        }),
+                                        sceneImageI2IModelId: id,
+                                    }
+                                })}
+                                onChangeI2vId={(id) => updateSeries({
+                                    ai_model_config: {
+                                        ...(currentSeries.ai_model_config || {
+                                            referenceImageModelId: 'ca637a97-f060-4b81-a7d4-118a6f4aac0c',
+                                            sceneImageT2IModelId: '1bd90bd4-e476-40e9-8a1e-1649288786e7',
+                                            sceneImageI2IModelId: '79a506ac-eced-4643-b017-c8a2bb0f028b',
+                                            videoModelId: '326a9a71-26a9-4142-8371-5467f316bcd6',
+                                        }),
+                                        videoModelId: id,
+                                    }
+                                })}
+                            />
+                        )}
                     </div>
                 </section>
 
@@ -382,19 +369,40 @@ function AutopilotConfigPanel({
                             <span className="text-[11px] font-medium text-zinc-500 uppercase tracking-wider">ShortReal Subscription</span>
                         </div>
                         <ul className="space-y-2">
-                            {[
-                                'Script & Prompt Generation (LLM)',
-                                'Premium Voiceover (ElevenLabs)',
-                                'Background Music Generation',
-                                'Auto Captioning & Export'
-                            ].map((item, i) => (
-                                <li key={i} className="flex justify-between items-center text-[13px]">
-                                    <span className="text-zinc-400">{item}</span>
-                                    <span className="flex items-center gap-1.5 text-[11px] font-medium text-emerald-400 bg-emerald-400/10 px-1.5 py-0.5 rounded border border-emerald-400/20">
-                                        <CheckCircle2 size={10} /> Included
-                                    </span>
-                                </li>
-                            ))}
+                            <li className="flex justify-between items-center text-[13px]">
+                                <span className="text-zinc-400">Script & Prompt Generation (LLM)</span>
+                                <span className="flex items-center gap-1.5 text-[11px] font-medium text-emerald-400 bg-emerald-400/10 px-1.5 py-0.5 rounded border border-emerald-400/20">
+                                    <CheckCircle2 size={10} /> Included
+                                </span>
+                            </li>
+                            <li className="flex justify-between items-center text-[13px]">
+                                <div className="flex items-center">
+                                    <span className="text-zinc-400">Premium Voiceover (Powered by </span>
+                                    <Image 
+                                        src="/icons/elevenlabs-logo.svg"
+                                        alt="ElevenLabs"
+                                        width={77}
+                                        height={10}
+                                        className="w-auto h-2.5 ml-[5px] mr-0.5 mb-[3px] opacity-50 hover:opacity-85 transition-opacity"
+                                    />
+                                    <span className="text-zinc-400">)</span>
+                                </div>
+                                <span className="flex items-center gap-1.5 text-[11px] font-medium text-emerald-400 bg-emerald-400/10 px-1.5 py-0.5 rounded border border-emerald-400/20">
+                                    <CheckCircle2 size={10} /> Included
+                                </span>
+                            </li>
+                            <li className="flex justify-between items-center text-[13px]">
+                                <span className="text-zinc-400">Background Music Generation</span>
+                                <span className="flex items-center gap-1.5 text-[11px] font-medium text-emerald-400 bg-emerald-400/10 px-1.5 py-0.5 rounded border border-emerald-400/20">
+                                    <CheckCircle2 size={10} /> Included
+                                </span>
+                            </li>
+                            <li className="flex justify-between items-center text-[13px]">
+                                <span className="text-zinc-400">Auto Captioning & Export</span>
+                                <span className="flex items-center gap-1.5 text-[11px] font-medium text-emerald-400 bg-emerald-400/10 px-1.5 py-0.5 rounded border border-emerald-400/20">
+                                    <CheckCircle2 size={10} /> Included
+                                </span>
+                            </li>
                         </ul>
                     </div>
 

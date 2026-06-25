@@ -1,7 +1,7 @@
 import {memo, useEffect, useRef, useState, useMemo} from "react";
 import {ChevronDown, Check, AlertCircle} from "lucide-react";
 import {AIModelData} from "@/lib/api/types/supabase/AIModelData";
-import {getMatchedModelPrice} from "@/components/page/workspace/create/result-panel/costCalculator";
+import {getMatchedModelPrice} from "@/lib/utils/costCalculator";
 
 interface CustomModelSelectProps {
     label: string;
@@ -60,7 +60,7 @@ function CustomModelSelect({
     const selectedPriceLabel = useMemo(() => {
         if (!selectedModel) return '';
         const matched = getMatchedModelPrice(selectedModel, globalResolution, category);
-        const suffix = category === 'text-to-image' ? '/ea' : (category === 'image-to-image' ? '/scene' : '/s');
+        const suffix = category === 'text-to-image' ? '/character' : (category === 'image-to-image' ? '/scene' : '/sec');
         if (matched.isFallback) {
             return `$${matched.price.toFixed(3)}${suffix} (${matched.matchedResolution})`;
         }
@@ -98,7 +98,7 @@ function CustomModelSelect({
 
                         // 옵션별 가격 요율 라벨
                         const matched = getMatchedModelPrice(option, globalResolution, category);
-                        const suffix = category === 'text-to-image' ? '/ea' : (category === 'image-to-image' ? '/scene' : '/s');
+                        const suffix = category === 'text-to-image' ? '/character' : (category === 'image-to-image' ? '/scene' : '/sec');
                         const priceText = matched.isFallback
                             ? `$${matched.price.toFixed(3)}${suffix} (${matched.matchedResolution} fallback)`
                             : `$${matched.price.toFixed(3)}${suffix}`;
