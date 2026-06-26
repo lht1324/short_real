@@ -60,11 +60,6 @@ function HowItWorksSection() {
         }, 0.0);
     }, [scenes]);
 
-    const estimatedCost = useMemo(() => {
-        const sceneCountOverage = scenes.length > 6 ? (scenes.length - 6) * 20 : 0;
-        const durationOverage = totalDuration > 30 ? (totalDuration - 30) * 20 : 0;
-        return 100 + sceneCountOverage + durationOverage;
-    }, [scenes, totalDuration]);
 
     // --- State: Voice & Generate ---
     const [selectedVoiceId, setSelectedVoiceId] = useState<string>('');
@@ -234,7 +229,7 @@ function HowItWorksSection() {
                                 <button
                                     onClick={handleGenerateStoryboard}
                                     disabled={isSplitting || !script.trim()}
-                                    className="flex items-center gap-2 px-4 py-2 bg-white text-black hover:bg-zinc-200 disabled:bg-zinc-800 disabled:text-zinc-500 text-xs font-bold rounded-lg transition-colors shadow-lg shadow-white/5"
+                                    className="flex items-center gap-2 px-4 py-2 bg-white text-black hover:bg-zinc-200 disabled:bg-zinc-800 disabled:text-zinc-500 text-sm font-bold rounded-lg transition-colors shadow-lg shadow-white/5"
                                 >
                                     {isSplitting ? (
                                         <>
@@ -263,7 +258,7 @@ function HowItWorksSection() {
                                     Storyboard
                                 </span>
                                 {hasGenerated && (
-                                    <span className="text-[10px] text-gray-600 font-mono">
+                                    <span className="text-xs text-gray-500 font-mono">
                                         {scenes.length} SCENES / {totalDuration.toFixed(1)}s
                                     </span>
                                 )}
@@ -326,7 +321,6 @@ function HowItWorksSection() {
 
                     {/* Generate Action */}
                     <GenerateActionPanel
-                        estimatedCost={estimatedCost}
                         isSystemReady={isSystemReady}
                         isGenerating={isGenerating}
                         validationErrors={validationErrors}

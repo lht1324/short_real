@@ -6,7 +6,6 @@ import {AnimPresence} from "@/components/public/framerMotion/AnimPresence";
 import {MotionDiv, MotionSpan} from "@/components/public/framerMotion/Motion";
 
 interface GenerateActionPanelProps {
-    estimatedCost: number;
     isSystemReady: boolean;
     isGenerating: boolean;
     validationErrors: string[];
@@ -14,7 +13,6 @@ interface GenerateActionPanelProps {
 }
 
 function GenerateActionPanel({
-    estimatedCost,
     isSystemReady,
     isGenerating,
     validationErrors,
@@ -77,10 +75,11 @@ function GenerateActionPanel({
                 </div>
 
                 <div className="mt-6">
-                    <p className="text-gray-500 text-[10px] uppercase tracking-wider mb-1 font-semibold">Estimated Cost</p>
-                    <div className="text-3xl font-bold text-white flex items-baseline gap-2">
-                        {Math.floor(estimatedCost)} <span className="text-sm text-yellow-500 font-normal">Credits</span>
-                    </div>
+                    <p className="text-gray-500 text-[10px] uppercase tracking-wider mb-1 font-semibold">Billing</p>
+                    <p className="text-sm text-zinc-300 leading-snug">
+                        Billed directly to your API provider.
+                    </p>
+                    <p className="text-[11px] text-zinc-500 mt-1">No platform markup. BYOK.</p>
                 </div>
             </div>
 

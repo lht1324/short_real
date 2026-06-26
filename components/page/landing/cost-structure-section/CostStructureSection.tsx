@@ -1,15 +1,17 @@
 'use client'
 
-import { memo, useMemo, useState, useEffect, useCallback, ChangeEvent } from "react";
+import { memo, useMemo, useState, useCallback, ChangeEvent } from "react";
 import { AIModelData } from "@/lib/api/types/supabase/AIModelData";
 import { Calculator, Users, Image as ImageIcon, Video, Key, CheckCircle2 } from "lucide-react";
 import Image from "next/image";
+import { getMatchedModelPrice } from "@/lib/utils/costCalculator";
 
 interface CostStructureSectionProps {
     aiModelDataList: AIModelData[];
 }
 
-const SUPPORTED_PROVIDERS = ['fal.ai', 'Replicate', 'OpenRouter', 'ElevenLabs'];
+
+
 
 function CostStructureSection({ aiModelDataList }: CostStructureSectionProps) {
     const t2iModels = useMemo(() => aiModelDataList.filter(m => m.category === 'text-to-image'), [aiModelDataList]);
@@ -20,34 +22,46 @@ function CostStructureSection({ aiModelDataList }: CostStructureSectionProps) {
     const [selectedI2iId, setSelectedI2iId] = useState<string>('79a506ac-eced-4643-b017-c8a2bb0f028b');
     const [selectedI2vId, setSelectedI2vId] = useState<string>('326a9a71-26a9-4142-8371-5467f316bcd6');
 
-    // Default selections
-    useEffect(() => {
-        if (!selectedT2iId && t2iModels.length > 0) setSelectedT2iId(t2iModels[0].id || t2iModels[0].endpoint_id);
-        if (!selectedI2iId && i2iModels.length > 0) setSelectedI2iId(i2iModels[0].id || i2iModels[0].endpoint_id);
-        if (!selectedI2vId && i2vModels.length > 0) setSelectedI2vId(i2vModels[0].id || i2vModels[0].endpoint_id);
-    }, [t2iModels, i2iModels, i2vModels, selectedT2iId, selectedI2iId, selectedI2vId]);
+    const [resolution, setResolution] = useState<'720p' | '1080p'>('1080p');
 
     const [characterCount, setCharacterCount] = useState<number>(3);
     const [sceneCount, setSceneCount] = useState<number>(6);
     const [videoDuration, setVideoDuration] = useState<number>(30);
 
-    const getPrice = useCallback((models: AIModelData[], id: string) => {
-        const model = models.find(m => (m.id || m.endpoint_id) === id);
-        if (!model || !model.ai_model_price_list || model.ai_model_price_list.length === 0) return 0;
-        const price1080 = model.ai_model_price_list.find(p => p.unit.includes('1080p'));
-        return price1080?.price_per_unit || model.ai_model_price_list[0].price_per_unit || 0;
+    const t2iModel = useMemo(
+        () => t2iModels.find(m => (m.id || m.endpoint_id) === selectedT2iId),
+        [t2iModels, selectedT2iId]
+    );
+    const i2iModel = useMemo(
+        () => i2iModels.find(m => (m.id || m.endpoint_id) === selectedI2iId),
+        [i2iModels, selectedI2iId]
+    );
+    const i2vModel = useMemo(
+        () => i2vModels.find(m => (m.id || m.endpoint_id) === selectedI2vId),
+        [i2vModels, selectedI2vId]
+    );
+
+    const t2iPriceResult = useMemo(
+        () => getMatchedModelPrice(t2iModel, resolution, 'text-to-image'),
+        [t2iModel, resolution]
+    );
+    const i2iPriceResult = useMemo(
+        () => getMatchedModelPrice(i2iModel, resolution, 'image-to-image'),
+        [i2iModel, resolution]
+    );
+    const i2vPriceResult = useMemo(
+        () => getMatchedModelPrice(i2vModel, resolution, 'image-to-video'),
+        [i2vModel, resolution]
+    );
+
+    const t2iCost = useMemo(() => t2iPriceResult.price * characterCount, [t2iPriceResult.price, characterCount]);
+    const i2iCost = useMemo(() => i2iPriceResult.price * sceneCount, [i2iPriceResult.price, sceneCount]);
+    const i2vCost = useMemo(() => i2vPriceResult.price * videoDuration, [i2vPriceResult.price, videoDuration]);
+    const totalCost = useMemo(() => t2iCost + i2iCost + i2vCost, [t2iCost, i2iCost, i2vCost]);
+
+    const onClickResolution = useCallback((res: '720p' | '1080p') => {
+        setResolution(res);
     }, []);
-
-    const t2iPrice = useMemo(() => getPrice(t2iModels, selectedT2iId), [getPrice, t2iModels, selectedT2iId]);
-    const i2iPrice = useMemo(() => getPrice(i2iModels, selectedI2iId), [getPrice, i2iModels, selectedI2iId]);
-    const i2vPrice = useMemo(() => getPrice(i2vModels, selectedI2vId), [getPrice, i2vModels, selectedI2vId]);
-
-    const totalCost = useMemo(() => {
-        const t2iCost = t2iPrice * characterCount;
-        const i2iCost = i2iPrice * sceneCount;
-        const i2vCost = i2vPrice * videoDuration;
-        return t2iCost + i2iCost + i2vCost;
-    }, [t2iPrice, characterCount, i2iPrice, sceneCount, i2vPrice, videoDuration]);
 
     const onChangeSelectedT2iId = useCallback((e: ChangeEvent<HTMLSelectElement>) => {
         setSelectedT2iId(e.target.value);
@@ -88,9 +102,9 @@ function CostStructureSection({ aiModelDataList }: CostStructureSectionProps) {
 
                 {/* Grid Layout: Calculator (Left) / BYOK (Right) */}
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
-                    
+
                     {/* Left: Calculator */}
-                    <div className="lg:col-span-7 space-y-6">
+                    <div className="lg:col-span-7">
                         <div className="bg-white/5 border border-white/10 rounded-2xl p-6 md:p-8 backdrop-blur-md">
                             <div className="flex items-center gap-3 mb-8">
                                 <div className="p-2 bg-pink-500/20 rounded-lg">
@@ -101,22 +115,24 @@ function CostStructureSection({ aiModelDataList }: CostStructureSectionProps) {
 
                             <div className="space-y-8">
                                 {/* Model Selection */}
-                                <div className="space-y-5">
+                                <div className="space-y-4">
                                     <h4 className="text-sm font-medium text-gray-400 uppercase tracking-widest">Model Selection</h4>
-                                    
+
                                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                         <div className="space-y-2">
                                             <label className="text-sm text-gray-300 flex items-center gap-2">
                                                 <Users className="w-4 h-4 text-gray-500" />
-                                                Character Generator Model
+                                                Character
                                             </label>
-                                            <select 
-                                                value={selectedT2iId} 
+                                            <select
+                                                value={selectedT2iId}
                                                 onChange={onChangeSelectedT2iId}
-                                                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-pink-500/50 appearance-none"
+                                                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-pink-500/50 appearance-none cursor-pointer"
                                             >
                                                 {t2iModels.map(m => (
-                                                    <option key={m.id || m.endpoint_id} value={m.id || m.endpoint_id} className="bg-zinc-900">{m.display_name}</option>
+                                                    <option key={m.id || m.endpoint_id} value={m.id || m.endpoint_id} className="bg-zinc-900">
+                                                        {m.display_name}
+                                                    </option>
                                                 ))}
                                             </select>
                                         </div>
@@ -124,15 +140,17 @@ function CostStructureSection({ aiModelDataList }: CostStructureSectionProps) {
                                         <div className="space-y-2">
                                             <label className="text-sm text-gray-300 flex items-center gap-2">
                                                 <ImageIcon className="w-4 h-4 text-gray-500" />
-                                                Scene Generator Model
+                                                Scene
                                             </label>
-                                            <select 
-                                                value={selectedI2iId} 
+                                            <select
+                                                value={selectedI2iId}
                                                 onChange={onChangeSelectedI2iId}
-                                                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-pink-500/50 appearance-none"
+                                                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-pink-500/50 appearance-none cursor-pointer"
                                             >
                                                 {i2iModels.map(m => (
-                                                    <option key={m.id || m.endpoint_id} value={m.id || m.endpoint_id} className="bg-zinc-900">{m.display_name}</option>
+                                                    <option key={m.id || m.endpoint_id} value={m.id || m.endpoint_id} className="bg-zinc-900">
+                                                        {m.display_name}
+                                                    </option>
                                                 ))}
                                             </select>
                                         </div>
@@ -140,71 +158,123 @@ function CostStructureSection({ aiModelDataList }: CostStructureSectionProps) {
                                         <div className="space-y-2">
                                             <label className="text-sm text-gray-300 flex items-center gap-2">
                                                 <Video className="w-4 h-4 text-gray-500" />
-                                                Video Generator Model
+                                                Video
                                             </label>
-                                            <select 
-                                                value={selectedI2vId} 
+                                            <select
+                                                value={selectedI2vId}
                                                 onChange={onChangeSelectedI2vId}
-                                                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-pink-500/50 appearance-none"
+                                                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-pink-500/50 appearance-none cursor-pointer"
                                             >
                                                 {i2vModels.map(m => (
-                                                    <option key={m.id || m.endpoint_id} value={m.id || m.endpoint_id} className="bg-zinc-900">{m.display_name}</option>
+                                                    <option key={m.id || m.endpoint_id} value={m.id || m.endpoint_id} className="bg-zinc-900">
+                                                        {m.display_name}
+                                                    </option>
                                                 ))}
                                             </select>
                                         </div>
                                     </div>
                                 </div>
 
-                                <div className="h-px w-full bg-white/5" />
-
-                                {/* Parameters */}
-                                <div className="space-y-6">
-                                    <h4 className="text-sm font-medium text-gray-400 uppercase tracking-widest">Production Scope</h4>
-                                    
-                                    <div className="space-y-5">
-                                        <div className="flex flex-col gap-3">
-                                            <div className="flex justify-between items-center">
-                                                <label className="text-sm text-gray-300">Character Count</label>
-                                                <span className="text-sm font-mono text-white bg-white/10 px-2 py-0.5 rounded">{characterCount}</span>
-                                            </div>
-                                            <input 
-                                                type="range" min="1" max="10" step="1" 
-                                                value={characterCount} onChange={onChangeCharacterCount}
-                                                className="w-full accent-pink-500"
-                                            />
-                                        </div>
-
-                                        <div className="flex flex-col gap-3">
-                                            <div className="flex justify-between items-center">
-                                                <label className="text-sm text-gray-300">Scene Count</label>
-                                                <span className="text-sm font-mono text-white bg-white/10 px-2 py-0.5 rounded">{sceneCount}</span>
-                                            </div>
-                                            <input 
-                                                type="range" min="1" max="30" step="1" 
-                                                value={sceneCount} onChange={onChangeSceneCount}
-                                                className="w-full accent-pink-500"
-                                            />
-                                        </div>
-
-                                        <div className="flex flex-col gap-3">
-                                            <div className="flex justify-between items-center">
-                                                <label className="text-sm text-gray-300">Total Video Duration (sec)</label>
-                                                <span className="text-sm font-mono text-white bg-white/10 px-2 py-0.5 rounded">{videoDuration}s</span>
-                                            </div>
-                                            <input 
-                                                type="range" min="5" max="60" step="1" 
-                                                value={videoDuration} onChange={onChangeVideoDuration}
-                                                className="w-full accent-pink-500"
-                                            />
-                                        </div>
+                                {/* Resolution Toggle */}
+                                <div className="space-y-3">
+                                    <h4 className="text-sm font-medium text-gray-400 uppercase tracking-widest">Resolution</h4>
+                                    <div className="flex gap-2">
+                                        {(['720p', '1080p'] as const).map((res) => (
+                                            <button
+                                                key={res}
+                                                type="button"
+                                                onClick={() => onClickResolution(res)}
+                                                className={`px-5 py-2 rounded-lg text-sm font-mono font-semibold border transition-all ${
+                                                    resolution === res
+                                                        ? 'bg-white/10 border-white/20 text-white'
+                                                        : 'bg-transparent border-white/10 text-zinc-500 hover:text-zinc-300 hover:border-white/20'
+                                                }`}
+                                            >
+                                                {res}
+                                            </button>
+                                        ))}
                                     </div>
                                 </div>
 
-                                {/* Total Cost Display */}
-                                <div className="pt-6 mt-6 border-t border-white/5 flex flex-col md:flex-row md:items-end justify-between gap-4">
+                                <div className="h-px w-full bg-white/5" />
+
+                                {/* Parameters */}
+                                <div className="space-y-5">
+                                    <h4 className="text-sm font-medium text-gray-400 uppercase tracking-widest">Production Scope</h4>
+
+                                    <div className="flex flex-col gap-3">
+                                        <div className="flex justify-between items-center">
+                                            <label className="text-sm text-gray-300">Character Count</label>
+                                            <span className="text-sm font-mono text-white bg-white/10 px-2 py-0.5 rounded">{characterCount}</span>
+                                        </div>
+                                        <input
+                                            type="range" min="1" max="10" step="1"
+                                            value={characterCount} onChange={onChangeCharacterCount}
+                                            className="w-full accent-pink-500"
+                                        />
+                                    </div>
+
+                                    <div className="flex flex-col gap-3">
+                                        <div className="flex justify-between items-center">
+                                            <label className="text-sm text-gray-300">Scene Count</label>
+                                            <span className="text-sm font-mono text-white bg-white/10 px-2 py-0.5 rounded">{sceneCount}</span>
+                                        </div>
+                                        <input
+                                            type="range" min="1" max="30" step="1"
+                                            value={sceneCount} onChange={onChangeSceneCount}
+                                            className="w-full accent-pink-500"
+                                        />
+                                    </div>
+
+                                    <div className="flex flex-col gap-3">
+                                        <div className="flex justify-between items-center">
+                                            <label className="text-sm text-gray-300">Total Video Duration</label>
+                                            <span className="text-sm font-mono text-white bg-white/10 px-2 py-0.5 rounded">{videoDuration}s</span>
+                                        </div>
+                                        <input
+                                            type="range" min="5" max="60" step="1"
+                                            value={videoDuration} onChange={onChangeVideoDuration}
+                                            className="w-full accent-pink-500"
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* Cost Breakdown */}
+                                <div className="border-t border-white/5 pt-6 space-y-3">
+                                    <div className="flex justify-between items-start">
+                                        <div>
+                                            <p className="text-sm text-zinc-300 font-medium">Character</p>
+                                            <p className="text-xs font-mono text-zinc-400 mt-0.5">
+                                                ${t2iPriceResult.price.toFixed(3)}/person × {characterCount}
+                                            </p>
+                                        </div>
+                                        <span className="text-sm font-mono text-zinc-200">${t2iCost.toFixed(3)}</span>
+                                    </div>
+                                    <div className="flex justify-between items-start">
+                                        <div>
+                                            <p className="text-sm text-zinc-300 font-medium">Scene</p>
+                                            <p className="text-xs font-mono text-zinc-400 mt-0.5">
+                                                ${i2iPriceResult.price.toFixed(3)}/scene × {sceneCount}
+                                            </p>
+                                        </div>
+                                        <span className="text-sm font-mono text-zinc-200">${i2iCost.toFixed(3)}</span>
+                                    </div>
+                                    <div className="flex justify-between items-start">
+                                        <div>
+                                            <p className="text-sm text-zinc-300 font-medium">Video</p>
+                                            <p className="text-xs font-mono text-zinc-400 mt-0.5">
+                                                ${i2vPriceResult.price.toFixed(5)}/sec × {videoDuration}s
+                                            </p>
+                                        </div>
+                                        <span className="text-sm font-mono text-zinc-200">${i2vCost.toFixed(3)}</span>
+                                    </div>
+                                </div>
+
+                                {/* Total Cost */}
+                                <div className="border-t border-white/10 pt-6 flex flex-col md:flex-row md:items-end justify-between gap-4">
                                     <div className="space-y-1">
                                         <p className="text-sm text-gray-400">Estimated Total Cost</p>
-                                        <p className="text-xs text-gray-500">Based on direct API costs (USD).</p>
+                                        <p className="text-sm text-gray-400">Direct API costs, billed to your provider (USD).</p>
                                     </div>
                                     <div className="flex items-baseline gap-1">
                                         <span className="text-2xl text-gray-400 font-light">$</span>
@@ -216,42 +286,76 @@ function CostStructureSection({ aiModelDataList }: CostStructureSectionProps) {
                     </div>
 
                     {/* Right: BYOK Info */}
-                    <div className="lg:col-span-5 space-y-6">
+                    <div className="lg:col-span-5">
                         <div className="bg-gradient-to-b from-purple-900/20 to-transparent border border-purple-500/20 rounded-2xl p-6 md:p-8">
                             <div className="flex items-center gap-3 mb-6">
                                 <div className="p-2 bg-purple-500/20 rounded-lg">
                                     <Key className="w-5 h-5 text-purple-400" />
                                 </div>
-                                <h3 className="text-xl font-semibold text-white">Bring Your Own Key (BYOK)</h3>
+                                <h3 className="text-xl font-semibold text-white">Bring Your Own Key</h3>
                             </div>
-                            
+
                             <p className="text-gray-300 leading-relaxed mb-8">
-                                Connect your own provider API keys and generate content at zero platform markup. You pay only the direct cost charged by the AI providers. Enjoy complete transparency and control over your budget.
+                                Connect your own provider API keys and generate content at zero platform markup. You pay only the direct cost charged by the AI providers. Complete transparency, full control.
                             </p>
 
-                            <div className="space-y-4">
+                            <div className="space-y-3">
                                 <h4 className="text-sm font-medium text-gray-400 uppercase tracking-widest mb-4">Supported Providers</h4>
-                                
-                                {SUPPORTED_PROVIDERS.map((provider) => {
-                                    const iconMap: Record<string, string> = {
-                                        'fal.ai': 'icon-fal.svg',
-                                        'Replicate': 'icon-replicate.svg',
-                                        'OpenRouter': 'icon-openrouter.svg',
-                                        'ElevenLabs': 'icon-elevenlabs.png'
-                                    };
-                                    const iconSrc = `/icons/${iconMap[provider] || 'google-g-light.svg'}`;
-                                    
-                                    return (
-                                        <div key={provider} className="flex items-center gap-4 bg-white/5 border border-white/5 rounded-xl p-3">
-                                            <div className="w-10 h-10 rounded-lg bg-white flex items-center justify-center flex-shrink-0">
-                                                <Image src={iconSrc} alt={`${provider} logo`} width={40} height={40} className="opacity-90 rounded-md" />
-                                            </div>
-                                            <span className="text-white font-medium">{provider}</span>
-                                            <CheckCircle2 className="w-4 h-4 text-emerald-400 ml-auto opacity-70" />
-                                        </div>
-                                    );
-                                })}
+
+                                {/* fal.ai - 현재 유일하게 지원하는 BYOK 제공사 */}
+                                <div className="flex items-center gap-4 bg-white/5 border border-white/5 rounded-xl p-3">
+                                    <div className="w-10 h-10 rounded-lg bg-white flex items-center justify-center flex-shrink-0">
+                                        <Image src="/icons/icon-fal.svg" alt="fal.ai logo" width={40} height={40} className="opacity-90 rounded-md" />
+                                    </div>
+                                    <span className="text-white font-medium">fal.ai</span>
+                                    <CheckCircle2 className="w-4 h-4 text-emerald-400 ml-auto opacity-70" />
+                                </div>
+
+                                <div className="flex items-center gap-4 border border-dashed border-white/10 rounded-xl p-3">
+                                    <div className="w-10 h-10 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center flex-shrink-0">
+                                        <span className="text-zinc-500 text-lg">+</span>
+                                    </div>
+                                    <span className="text-zinc-300 text-sm">More providers coming soon</span>
+                                </div>
                             </div>
+
+                            {/* How to Connect */}
+                            <div className="mt-8 pt-8 border-t border-white/5 space-y-4">
+                                <h4 className="text-sm font-medium text-gray-400 uppercase tracking-widest">How to Connect</h4>
+
+                                <div className="space-y-3">
+                                    <div className="flex items-start gap-4">
+                                        <div className="w-8 h-8 rounded-full bg-white/10 border border-white/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                                            <span className="text-sm font-bold text-zinc-300">1</span>
+                                        </div>
+                                        <div>
+                                            <p className="text-base font-medium text-zinc-200">Get your API key</p>
+                                            <p className="text-sm text-zinc-400 mt-0.5">Sign up at fal.ai and copy your API key from the dashboard.</p>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex items-start gap-4">
+                                        <div className="w-8 h-8 rounded-full bg-white/10 border border-white/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                                            <span className="text-sm font-bold text-zinc-300">2</span>
+                                        </div>
+                                        <div>
+                                            <p className="text-base font-medium text-zinc-200">Paste it in Settings</p>
+                                            <p className="text-sm text-zinc-400 mt-0.5">Add your key in the API Keys section of your Short Real account.</p>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex items-start gap-4">
+                                        <div className="w-8 h-8 rounded-full bg-white/10 border border-white/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                                            <span className="text-sm font-bold text-zinc-300">3</span>
+                                        </div>
+                                        <div>
+                                            <p className="text-base font-medium text-zinc-200">Start generating</p>
+                                            <p className="text-sm text-zinc-400 mt-0.5">Costs go directly to fal.ai. We never touch your billing.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
                         </div>
                     </div>
                 </div>

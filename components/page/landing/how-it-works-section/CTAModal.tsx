@@ -71,7 +71,7 @@ function CTAModal({
                                 </MotionDiv>
                                 <h3 className="text-3xl font-bold text-white mb-3">Ready to Create Real Magic?</h3>
                                 <p className="text-gray-300 text-base mb-1 leading-relaxed">This was a simulation of our engine.</p>
-                                <p className="text-gray-400 text-sm mb-8">To generate <b>actual 4K videos</b> without limits, start your journey now.</p>
+                                <p className="text-gray-400 text-sm mb-8">To generate <b>actual Full HD videos</b>, connect your API keys and start creating.</p>
                                 <div className="flex items-center gap-4 w-full justify-center">
                                     <button onClick={onClickClose} className="px-6 py-3 rounded-xl text-sm font-bold text-gray-400 hover:text-white transition-colors hover:bg-white/5">Stay Here</button>
                                     <button onClick={onClickGoToPricing} className="px-8 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white text-sm font-bold rounded-xl shadow-lg shadow-purple-900/40 transition-all transform hover:scale-105 flex items-center gap-2">Start Creating <ArrowRight size={16} /></button>
