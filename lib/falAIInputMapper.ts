@@ -154,7 +154,7 @@ export const falAIInputMapper = {
                 prompt: prompt,
                 num_images: 1,
                 aspect_ratio: aspectRatio,
-                resolution: '1K',
+                resolution: '1k',
                 ...(hasImage && { image_urls: imageUrls }),
                 output_format: 'jpeg',
             };
@@ -178,10 +178,19 @@ export const falAIInputMapper = {
                 },
             };
 
-            // 이미지 입력이 불확실해 보류
+            // I2I는 image_url 단일 입력이 강제되어 실질적으로 T2I에 reference_image_urls만 사용하는 걸로 고정됨
             case FalAIEndpointID.KLING_IMAGE_V3_T2I:
             case FalAIEndpointID.KLING_IMAGE_V3_I2I: return {
-
+                prompt: prompt,
+                elements: [
+                    {
+                        reference_image_urls: hasImage ? imageUrls : [],
+                    }
+                ],
+                resolution: "2K",
+                num_images: 1,
+                aspect_ratio: aspectRatio,
+                output_format: "jpeg"
             };
 
             case FalAIEndpointID.KLING_IMAGE_O3_T2I:

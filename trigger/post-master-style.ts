@@ -7,6 +7,7 @@ import { STYLE_DATA_LIST } from "@/lib/styles";
 import { internalFireAndForgetFetch } from "@/lib/utils/internalFetch";
 import {imageServerAPI} from "@/lib/api/server/imageServerAPI";
 import {usersServerAPI} from "@/lib/api/server/usersServerAPI";
+import {aiModelDataServerAPI} from "@/lib/api/server/aiModelDataServerAPI";
 
 export const postMasterStyle = task({
     id: "post-master-style",
@@ -136,7 +137,13 @@ export const postMasterStyle = task({
 
                 entityReferenceImagePromptList.push(...postEntityCharacterSheetPromptListResult.entityReferenceImagePromptList);
 
-                const referenceImageAIModelEndpointId = aiModelConfig.referenceImageModelId;
+                const referenceImageAIModelDataId = aiModelConfig.referenceImageModelId;
+                const referenceImageAIModelData = await aiModelDataServerAPI.getAIModelDataById(referenceImageAIModelDataId);
+
+                if (!referenceImageAIModelData) {
+                    throw new Error('Failed to fetch ai model data from database.');
+                }
+
                 const postReferenceImagePromiseList = entityReferenceImagePromptList.map(async (referenceImageData) => {
                     const {
                         id: entityId,
@@ -148,7 +155,7 @@ export const postMasterStyle = task({
                         taskId,
                         entityId,
                         falAiApiKey,
-                        referenceImageAIModelEndpointId,
+                        referenceImageAIModelData.endpoint_id,
                         user.id
                     );
                 });

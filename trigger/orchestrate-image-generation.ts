@@ -8,6 +8,7 @@ import { InitialEntityManifestItem } from "@/lib/api/types/open-ai/Entity";
 import { internalFireAndForgetFetch } from "@/lib/utils/internalFetch";
 import {usersServerAPI} from "@/lib/api/server/usersServerAPI";
 import {aiModelDataServerAPI} from "@/lib/api/server/aiModelDataServerAPI";
+import {FalAIEndpointID} from "@/lib/falAIInputMapper";
 
 export const orchestrateImageGeneration = task({
     id: "orchestrate-image-generation",
@@ -60,6 +61,18 @@ export const orchestrateImageGeneration = task({
                 aspect_ratio: aspectRatio,
             } = videoGenerationTask;
 
+            const sceneImageT2IAIModelData = await aiModelDataServerAPI.getAIModelDataById(aiModelConfig?.sceneImageT2IModelId);
+            const sceneImageI2IAIModelData = sceneImageT2IAIModelData?.endpoint_id === FalAIEndpointID.KLING_IMAGE_V3_T2I
+                ? sceneImageT2IAIModelData
+                : await aiModelDataServerAPI.getAIModelDataById(aiModelConfig?.sceneImageI2IModelId);
+
+            if (!sceneImageT2IAIModelData || !sceneImageI2IAIModelData) {
+                logger.error(`[Orchestrator] AI model data not found`);
+
+                await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
+                throw new Error(`AI model data are not found.`);
+            }
+
             // 1. N개의 자식 태스크 병렬 실행 및 대기 (Fan-out & Wait)
             // Trigger 시스템이 각 자식 태스크의 재시도(Retry)를 알아서 관리함.
             // 여기서는 모든 자식이 '최종 성공'하거나 '최종 실패'할 때까지 기다림.
@@ -77,8 +90,8 @@ export const orchestrateImageGeneration = task({
                         styleId,
                         falAiApiKey,
                         userId: videoGenerationTask.user_id,
-                        sceneImageT2IAIModelEndpointId: aiModelConfig.sceneImageT2IModelId,
-                        sceneImageI2IAIModelEndpointId: aiModelConfig.sceneImageI2IModelId,
+                        sceneImageT2IAIModelEndpointId: sceneImageT2IAIModelData.endpoint_id,
+                        sceneImageI2IAIModelEndpointId: sceneImageI2IAIModelData.endpoint_id,
                         resolution,
                         aspectRatio,
                     }

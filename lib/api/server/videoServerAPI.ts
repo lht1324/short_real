@@ -20,7 +20,7 @@ export const videoServerAPI = {
         videoAIModelData: AIModelData,
         falAiApiKey: string,
         aspectRatio: "16:9" | "9:16",
-        resolution: '720p' | '1080p', // nP란 가로세로 중 짧은 쪽의 비율을 따라감
+        resolution: '720p' | '1080p' | '2160p', // nP란 가로세로 중 짧은 쪽의 비율을 따라감
         isViolence: boolean = false,
     ) {
         const supabase = createSupabaseServiceRoleClient();
