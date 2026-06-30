@@ -142,18 +142,6 @@ function MusicItem({
                     <div className="text-zinc-100 text-[15px] font-medium">{musicData.title}</div>
                 </div>
 
-                {/* Row 2: 태그 리스트 */}
-                <div className="flex flex-row flex-wrap gap-2">
-                    {musicData.tagList.map((tag, index) => (
-                        <span
-                            key={index}
-                            className="px-2 py-1 text-[11px] font-medium rounded-md bg-white/5 text-zinc-400 border border-white/5"
-                        >
-                            {tag}
-                        </span>
-                    ))}
-                </div>
-
                 {/* Row 3: 타임라인 + 재생/편집 버튼 */}
                 <div className="flex items-center gap-3">
                     <div className="flex-1 space-y-1">

@@ -62,6 +62,7 @@ const VideoPlayerPanel = forwardRef<VideoPlayerHandle, VideoPlayerPanelProps>(({
     const captionRef = useRef<HTMLParagraphElement>(null);
     const timelineRef = useRef<HTMLDivElement>(null);
     const audioRef = useRef<HTMLAudioElement>(null);
+    const videoNaturalAspectRatioRef = useRef<number | null>(null);
 
     const [isPlayingVideo, setIsPlayingVideo] = useState<boolean>(false);
     const [isVideoEnded, setIsVideoEnded] = useState(false);
@@ -264,27 +265,53 @@ const VideoPlayerPanel = forwardRef<VideoPlayerHandle, VideoPlayerPanelProps>(({
         setIsPlayingVideo(prev => !prev);
     }, [isPlayingVideo]);
 
+    // 컨테이너 실제 크기 기반으로 비디오 표시 크기 계산
+    // ref를 사용해 stale closure 없이 ResizeObserver에서도 최신 비율 참조 가능
+    const recalculateVideoSize = useCallback((containerWidth: number, containerHeight: number) => {
+        const ratio = videoNaturalAspectRatioRef.current;
+        if (!ratio) return;
+
+        const isHorizontal = ratio > 1;
+
+        if (isHorizontal) {
+            // 16:9 - 너비 기준으로 패널을 최대한 활용
+            // overhead: p-8 양쪽(64px) + 슬라이더 w-14(56px) + 스페이서 w-8(32px) + 버퍼(8px)
+            const overhead = 160;
+            const newWidth = Math.max(Math.min(containerWidth - overhead, 850), 320);
+            const newHeight = Math.round(newWidth / ratio);
+            setVideoContainerWidth(newWidth);
+            setVideoContainerHeight(newHeight);
+        } else {
+            // 9:16 - 높이 기준으로 패널을 최대한 활용
+            // overhead: p-8 위아래(64px) + 버퍼(16px)
+            const overhead = 80;
+            const newHeight = Math.max(Math.min(containerHeight - overhead, 720), 300);
+            const newWidth = Math.round(newHeight * ratio);
+            setVideoContainerWidth(newWidth);
+            setVideoContainerHeight(newHeight);
+        }
+    }, []);
+
     const onLoadedMetadata = useCallback(() => {
         if (videoRef.current) {
             setVideoDuration(videoRef.current.duration);
 
-            // 비디오의 실제 크기를 가져와서 324px 너비 기준으로 높이 계산
             const videoNaturalWidth = videoRef.current.videoWidth;
             const videoNaturalHeight = videoRef.current.videoHeight;
 
             if (videoNaturalWidth > 0 && videoNaturalHeight > 0) {
-                const standardWidth = videoNaturalWidth > videoNaturalHeight
-                    ? 576 // horizontal
-                    : 324 // vertical or square
+                videoNaturalAspectRatioRef.current = videoNaturalWidth / videoNaturalHeight;
 
-                // const containerWidth = 324;
-                const calculatedHeight = Math.round((videoNaturalHeight / videoNaturalWidth) * standardWidth);
-                setVideoContainerWidth(standardWidth);
-                setVideoContainerHeight(calculatedHeight);
+                if (containerRef.current) {
+                    recalculateVideoSize(
+                        containerRef.current.offsetWidth,
+                        containerRef.current.offsetHeight
+                    );
+                }
             }
         }
         onFinishLoading();
-    }, [onFinishLoading]);
+    }, [onFinishLoading, recalculateVideoSize]);
 
     const updateTimelinePosition = useCallback((clientX: number, element: HTMLDivElement) => {
         if (!videoRef.current) return;
@@ -462,6 +489,22 @@ const VideoPlayerPanel = forwardRef<VideoPlayerHandle, VideoPlayerPanelProps>(({
         }
     }, [onChangeVideoPanelContainerHeight]);
 
+    // 윈도우 리사이즈 시 비디오 크기 재계산
+    useEffect(() => {
+        const container = containerRef.current;
+        if (!container) return;
+
+        const observer = new ResizeObserver((entries) => {
+            const entry = entries[0];
+            if (entry) {
+                recalculateVideoSize(entry.contentRect.width, entry.contentRect.height);
+            }
+        });
+
+        observer.observe(container);
+        return () => observer.disconnect();
+    }, [recalculateVideoSize]);
+
     // 메인 useEffect - startSec, duration만 관리
     useEffect(() => {
         const audio = audioRef.current;
@@ -539,7 +582,7 @@ const VideoPlayerPanel = forwardRef<VideoPlayerHandle, VideoPlayerPanelProps>(({
             style={{ pointerEvents: isDraggingTimeline ? 'none' : 'auto' }}
             ref={containerRef}
         >
-            <div className="flex flex-row p-8 justify-center z-10">
+            <div className="flex flex-row p-8 justify-center items-center flex-1 z-10">
                 {/* Caption Position Slider */}
                 {/* w-6 + w-2 + w-6 */}
                 {isCaptionEnabled && <div

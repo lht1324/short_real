@@ -157,6 +157,7 @@ function WorkspaceEditorPageClient() {
     const [isFinishLoading, setIsFinishLoading] = useState(false);
 
     const [videoData, setVideoData] = useState<VideoData | null>(null);
+    const [aspectRatio, setAspectRatio] = useState<'16:9' | '9:16'>('9:16');
 
     const [isCaptionEnabled, setIsCaptionEnabled] = useState(true);
 
@@ -433,6 +434,9 @@ function WorkspaceEditorPageClient() {
                     throw new Error("Invalid task status for editor")
                 }
 
+                // 종횡비 설정 (기본값 9:16)
+                setAspectRatio(videoGenerationTask.aspect_ratio ?? '9:16');
+
                 // 각 씬의 시작/종료 시간 및 자막 세그먼트 계산
                 let accumulatedTime = 0;
                 const captionDataList = videoGenerationTask.scene_breakdown_list.map((sceneData) => {
@@ -562,6 +566,7 @@ function WorkspaceEditorPageClient() {
                         taskId={taskId}
                         captionDataList={captionDataList}
                         currentSceneIndex={currentSceneIndex}
+                        aspectRatio={aspectRatio}
                         onClickSceneSequence={onClickSceneSequence}
                         onFinishLoading={onFinishSceneSequencePanelLoading}
                     />
