@@ -6,6 +6,9 @@ import Image from "next/image";
 import { Properties } from "csstype";
 import { Maximize2 } from "lucide-react";
 
+const EDITOR_VERTICAL_MOCKUP_HEIGHT = 590;
+const EDITOR_HORIZONTAL_MOCKUP_HEIGHT = 443;
+
 interface AutopilotCaptionPreviewProps {
     captionConfigState: CaptionConfigState;
     selectedFontFamilyFullShape: string;
@@ -26,24 +29,29 @@ function AutopilotCaptionPreview({
     onChangePreviewMode,
 }: AutopilotCaptionPreviewProps) {
     const mockupRef = useRef<HTMLDivElement>(null);
-    const [mockupWidth, setMockupWidth] = useState(120);
+    const [mockupHeight, setMockupHeight] = useState<number>(590);
 
     useEffect(() => {
         const el = mockupRef.current;
         if (!el) return;
         const observer = new ResizeObserver((entries) => {
-            const width = entries[0]?.contentRect.width;
-            if (width > 0) setMockupWidth(width);
+            const height = entries[0]?.contentRect.height;
+            if (height > 0) {
+                setMockupHeight(height);
+            }
         });
         observer.observe(el);
         return () => observer.disconnect();
     }, []);
 
-    const videoWidth = useMemo(() => {
-        return aspectRatio === '16:9' ? 1920 : 1080;
-    }, [aspectRatio]);
-
-    const scale = useMemo(() => mockupWidth / videoWidth, [mockupWidth, videoWidth]);
+    const scale = useMemo(() => {
+        const baseScale = 0.7;
+        if (aspectRatio === '16:9') {
+            return (mockupHeight / EDITOR_HORIZONTAL_MOCKUP_HEIGHT) * baseScale;
+        } else {
+            return (mockupHeight / EDITOR_VERTICAL_MOCKUP_HEIGHT) * baseScale;
+        }
+    }, [aspectRatio, mockupHeight]);
 
     const makeWordStyle = useCallback((isActive: boolean): Properties => {
         const {
@@ -62,10 +70,10 @@ function AutopilotCaptionPreview({
             color: isActive ? activeColor : inactiveColor,
             WebkitTextStroke: isActive
                 ? isActiveOutlineEnabled
-                    ? `${(activeOutlineThickness / 100) * 12 * 0.7 * scale}px ${activeOutlineColor}`
+                    ? `${(activeOutlineThickness / 100) * 12 * scale}px ${activeOutlineColor}`
                     : '0px transparent'
                 : isInactiveOutlineEnabled
-                    ? `${(inactiveOutlineThickness / 100) * 12 * 0.7 * scale}px ${inactiveOutlineColor}`
+                    ? `${(inactiveOutlineThickness / 100) * 12 * scale}px ${inactiveOutlineColor}`
                     : '0px transparent',
         };
     }, [captionConfigState, selectedFontFamilyFullShape, scale]);
@@ -127,8 +135,8 @@ function AutopilotCaptionPreview({
                     style={{ top: `${topPercent}%`, bottom: 0 }}
                 >
                     <p className="text-center leading-tight px-2 break-words">
-                        <span style={activeWordStyle}>Lorem ipsum<br/></span>
-                        <span style={inactiveWordStyle}>dolor sit amet</span>
+                        <span style={activeWordStyle}>Make it short,<br/></span>
+                        <span style={inactiveWordStyle}>make it real</span>
                     </p>
                 </div>
 
