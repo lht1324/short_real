@@ -51,26 +51,31 @@ function AutopilotConfigPanel({
 
 
     // Price Calculation
-    const getPrice = useCallback((models: AIModelData[], id?: string) => {
+    const getPrice = useCallback((models: AIModelData[], id?: string, targetRes?: string) => {
         if (!id) return 0;
         const model = models.find(m => m.id === id);
         if (!model || !model.ai_model_price_list || model.ai_model_price_list.length === 0) return 0;
-        const price1080 = model.ai_model_price_list.find(p => p.unit.includes('1080p'));
-        return price1080?.price_per_unit || model.ai_model_price_list[0].price_per_unit || 0;
+        
+        const res = targetRes || '1080p';
+        const matched = model.ai_model_price_list.find(p => p.unit.endsWith(res));
+        return matched?.price_per_unit || model.ai_model_price_list[0].price_per_unit || 0;
     }, []);
 
     const estimatedCost = useMemo(() => {
-        const t2iPrice = getPrice(t2iModels, selectedT2iId);
-        const i2iPrice = getPrice(i2iModels, selectedI2iId);
-        const i2vPrice = getPrice(i2vModels, selectedI2vId);
-        
+        const resolution = currentSeries.resolution || '1080p';
+        const referenceImageModelId = currentSeries.ai_model_config?.referenceImageModelId;
+
         // Autopilot Format: 1 character, 6 scenes, 30 sec total (approx 5 sec per scene video gen, assuming i2v is priced per sec)
-        const t2iCost = t2iPrice * 1;
-        const i2iCost = i2iPrice * 6;
-        const i2vCost = i2vPrice * 30;
+        const characterPrice = getPrice(t2iModels, referenceImageModelId, '720p');
+        const scenePrice = getPrice(i2iModels, selectedI2iId, resolution);
+        const videoPrice = getPrice(i2vModels, selectedI2vId, resolution);
         
-        return t2iCost + i2iCost + i2vCost;
-    }, [getPrice, t2iModels, selectedT2iId, i2iModels, selectedI2iId, i2vModels, selectedI2vId]);
+        const characterCost = characterPrice * 1;
+        const sceneCost = scenePrice * 6;
+        const videoCost = videoPrice * 30;
+        
+        return characterCost + sceneCost + videoCost;
+    }, [getPrice, t2iModels, i2iModels, i2vModels, currentSeries.ai_model_config, currentSeries.resolution, selectedI2iId, selectedI2vId]);
 
     // Internal Audio Logic
     const onClickPlayVoice = useCallback((voice: Voice) => {

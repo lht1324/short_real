@@ -190,24 +190,29 @@ function AutopilotControlPanel({
     
     // Internal UI Logic: Forecast
     const estimatedCost = useMemo(() => {
-        const getPrice = (models: AIModelData[], id?: string) => {
+        const getPrice = (models: AIModelData[], id?: string, targetRes?: string) => {
             if (!id) return 0;
             const model = models.find(m => m.id === id);
             if (!model || !model.ai_model_price_list || model.ai_model_price_list.length === 0) return 0;
-            const price1080 = model.ai_model_price_list.find(p => p.unit.includes('1080p'));
-            return price1080?.price_per_unit || model.ai_model_price_list[0].price_per_unit || 0;
+            
+            const res = targetRes || '1080p';
+            const matched = model.ai_model_price_list.find(p => p.unit.endsWith(res));
+            return matched?.price_per_unit || model.ai_model_price_list[0].price_per_unit || 0;
         };
 
-        const t2iModels = aiModelList.filter(m => m.category === 'text-to-image');
+        const referenceModels = aiModelList.filter(m => m.category === 'text-to-image');
         const i2iModels = aiModelList.filter(m => m.category === 'image-to-image');
         const i2vModels = aiModelList.filter(m => m.category === 'image-to-video');
 
-        const t2iPrice = getPrice(t2iModels, currentSeries.ai_model_config?.sceneImageT2IModelId);
-        const i2iPrice = getPrice(i2iModels, currentSeries.ai_model_config?.sceneImageI2IModelId);
-        const i2vPrice = getPrice(i2vModels, currentSeries.ai_model_config?.videoModelId);
+        const resolution = currentSeries.resolution || '1080p';
+        const referenceImageModelId = currentSeries.ai_model_config?.referenceImageModelId;
+
+        const characterPrice = getPrice(referenceModels, referenceImageModelId, '720p');
+        const scenePrice = getPrice(i2iModels, currentSeries.ai_model_config?.sceneImageI2IModelId, resolution);
+        const videoPrice = getPrice(i2vModels, currentSeries.ai_model_config?.videoModelId, resolution);
         
-        return (t2iPrice * 1) + (i2iPrice * 6) + (i2vPrice * 30);
-    }, [aiModelList, currentSeries.ai_model_config]);
+        return (characterPrice * 1) + (scenePrice * 6) + (videoPrice * 30);
+    }, [aiModelList, currentSeries.ai_model_config, currentSeries.resolution]);
 
     const usageInfo = useMemo(() => {
         const weeklyCount = selectedDays.length;

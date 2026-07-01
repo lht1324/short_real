@@ -1,5 +1,5 @@
 import {memo, useEffect, useRef, useState, useMemo} from "react";
-import {ChevronDown, Check, AlertCircle} from "lucide-react";
+import {ChevronDown, Check, AlertCircle, Info} from "lucide-react";
 import {AIModelData} from "@/lib/api/types/supabase/AIModelData";
 import {getMatchedModelPrice} from "@/lib/utils/costCalculator";
 
@@ -21,9 +21,12 @@ function CustomModelSelect({
     onChange,
 }: CustomModelSelectProps) {
     const [isOpen, setIsOpen] = useState(false);
+    const [sortBy, setSortBy] = useState<'price' | 'name'>('price');
     const containerRef = useRef<HTMLDivElement>(null);
 
     const selectedModel = useMemo(() => options.find(m => m.id === value), [options, value]);
+
+    const localResolution = category === 'text-to-image' ? '720p' : globalResolution;
 
     // 해상도 지원 여부 판단
     const hasResolution = (model: AIModelData, res: '720p' | '1080p' | '2160p') => {
@@ -35,16 +38,23 @@ function CustomModelSelect({
         return model.ai_model_price_list.some(p => p.unit === targetUnit);
     };
 
-    // 정렬 로직 (현재 해상도 지원 모델을 최상단으로 정렬)
+    // 정렬 로직 (현재 해상도 지원 모델 최선행 + sortBy 기준 정렬)
     const sortedOptions = useMemo(() => {
         return [...options].sort((a, b) => {
-            const aSupport = hasResolution(a, globalResolution);
-            const bSupport = hasResolution(b, globalResolution);
+            const aSupport = hasResolution(a, localResolution);
+            const bSupport = hasResolution(b, localResolution);
             if (aSupport && !bSupport) return -1;
             if (!aSupport && bSupport) return 1;
-            return 0;
+
+            if (sortBy === 'price') {
+                const aPrice = getMatchedModelPrice(a, localResolution, category).price;
+                const bPrice = getMatchedModelPrice(b, localResolution, category).price;
+                return aPrice - bPrice;
+            } else {
+                return a.display_name.localeCompare(b.display_name);
+            }
         });
-    }, [options, globalResolution]);
+    }, [options, localResolution, sortBy, category]);
 
     // 바깥 클릭 시 드롭다운 닫기
     useEffect(() => {
@@ -59,17 +69,29 @@ function CustomModelSelect({
 
     const selectedPriceLabel = useMemo(() => {
         if (!selectedModel) return '';
-        const matched = getMatchedModelPrice(selectedModel, globalResolution, category);
+        const matched = getMatchedModelPrice(selectedModel, localResolution, category);
         const suffix = category === 'text-to-image' ? '/character' : (category === 'image-to-image' ? '/scene' : '/sec');
         if (matched.isFallback) {
             return `$${matched.price.toFixed(3)}${suffix} (${matched.matchedResolution})`;
         }
         return `$${matched.price.toFixed(3)}${suffix}`;
-    }, [selectedModel, globalResolution, category]);
+    }, [selectedModel, localResolution, category]);
 
     return (
         <div ref={containerRef} className="space-y-1.5 relative flex-1">
-            <label className="text-sm font-bold text-zinc-500 uppercase tracking-wider ml-0.5">{label}</label>
+            <div className="flex items-center gap-1.5 ml-0.5">
+                <label className="text-sm font-bold text-zinc-500 uppercase tracking-wider">{label}</label>
+                {category === 'text-to-image' && (
+                    <div className="relative group flex items-center">
+                        <Info size={14} className="text-zinc-500 hover:text-zinc-300 transition-colors cursor-help" />
+                        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-56 p-2.5 bg-zinc-900 border border-white/10 rounded-lg shadow-xl opacity-0 group-hover:opacity-100 transition-opacity text-left pointer-events-none z-50">
+                            <p className="text-xs text-zinc-300 leading-relaxed font-normal normal-case tracking-normal">
+                                Character sheets are generated at 720p as it provides sufficient visual reference for video generation, preventing unnecessary extra costs.
+                            </p>
+                        </div>
+                    </div>
+                )}
+            </div>
             
             {/* Dropdown Toggle Button */}
             <button
@@ -88,16 +110,58 @@ function CustomModelSelect({
 
             {/* Dropdown Options Popup */}
             {isOpen && (
-                <div className="absolute top-full left-0 w-full mt-1.5 bg-zinc-900 border border-white/10 rounded-xl shadow-2xl z-50 max-h-64 overflow-y-auto custom-scrollbar p-2 space-y-1.5">
-                    {sortedOptions.map(option => {
-                        const isSelected = option.id === value;
-                        const supportsRes = hasResolution(option, globalResolution);
+                <div className="absolute top-full left-0 w-full mt-1.5 bg-zinc-900 border border-white/10 rounded-xl shadow-2xl z-50 max-h-64 overflow-y-auto custom-scrollbar p-2 flex flex-col gap-1.5">
+                    {/* Sort Controller Header */}
+                    <div className="flex items-center justify-between px-3.5 py-2 border-b border-white/5 text-[13px] text-zinc-500 font-medium flex-shrink-0 select-none">
+                        <span>Sort models</span>
+                        <div className="flex gap-4">
+                            <button 
+                                type="button" 
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    setSortBy('price');
+                                }} 
+                                className={`transition-colors py-0.5 relative text-[13px] ${
+                                    sortBy === 'price' 
+                                        ? 'text-zinc-200 font-bold' 
+                                        : 'text-zinc-400 hover:text-zinc-200'
+                                }`}
+                            >
+                                Price
+                                {sortBy === 'price' && (
+                                    <span className="absolute bottom-0 left-0 w-full h-[1.5px] bg-zinc-200" />
+                                )}
+                            </button>
+                            <button 
+                                type="button" 
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    setSortBy('name');
+                                }} 
+                                className={`transition-colors py-0.5 relative text-[13px] ${
+                                    sortBy === 'name' 
+                                        ? 'text-zinc-200 font-bold' 
+                                        : 'text-zinc-400 hover:text-zinc-200'
+                                }`}
+                            >
+                                Name
+                                {sortBy === 'name' && (
+                                    <span className="absolute bottom-0 left-0 w-full h-[1.5px] bg-zinc-200" />
+                                )}
+                            </button>
+                        </div>
+                    </div>
+
+                    <div className="flex-1 overflow-y-auto space-y-1.5 custom-scrollbar">
+                        {sortedOptions.map(option => {
+                            const isSelected = option.id === value;
+                        const supportsRes = hasResolution(option, localResolution);
                         
                         // 비디오 모델의 경우 글로벌 해상도 미지원 시 비활성화(disabled)
                         const isOptionDisabled = category === 'image-to-video' && !supportsRes;
 
                         // 옵션별 가격 요율 라벨
-                        const matched = getMatchedModelPrice(option, globalResolution, category);
+                        const matched = getMatchedModelPrice(option, localResolution, category);
                         const suffix = category === 'text-to-image' ? '/character' : (category === 'image-to-image' ? '/scene' : '/sec');
                         const priceText = matched.isFallback
                             ? `$${matched.price.toFixed(3)}${suffix} (${matched.matchedResolution} fallback)`
@@ -105,7 +169,9 @@ function CustomModelSelect({
 
                         // 지원 해상도 목록
                         const resList: string[] = [];
-                        if (option.ai_model_price_list) {
+                        if (category === 'text-to-image') {
+                            resList.push('720p');
+                        } else if (option.ai_model_price_list) {
                             option.ai_model_price_list.forEach(p => {
                                 let name = '';
                                 if (p.unit.includes('720p')) name = '720p';
@@ -158,7 +224,7 @@ function CustomModelSelect({
                                                 <span 
                                                     key={res} 
                                                     className={`text-xs font-bold font-mono px-2 py-0.5 rounded border ${
-                                                        res === (globalResolution === '2160p' ? '4K' : globalResolution)
+                                                        res === (localResolution === '2160p' ? '4K' : localResolution)
                                                             ? "bg-white/10 border-white/20 text-white"
                                                             : "border-white/10 text-zinc-400"
                                                     }`}
@@ -180,6 +246,7 @@ function CustomModelSelect({
                             </button>
                         );
                     })}
+                    </div>
                 </div>
             )}
         </div>
@@ -207,14 +274,21 @@ function BYOKModelSelector({
     onChangeI2iId,
     onChangeI2vId,
 }: BYOKModelSelectorProps) {
-    const t2iModels = useMemo(() => aiModelList.filter(m => m.category === 'text-to-image'), [aiModelList]);
+    const t2iModels = useMemo(() => {
+        return aiModelList
+            .filter(m => m.category === 'text-to-image')
+            .filter(m => {
+                if (!m.ai_model_price_list) return false;
+                return m.ai_model_price_list.some(p => p.unit === 'image_720p');
+            });
+    }, [aiModelList]);
     const i2iModels = useMemo(() => aiModelList.filter(m => m.category === 'image-to-image'), [aiModelList]);
     const i2vModels = useMemo(() => aiModelList.filter(m => m.category === 'image-to-video'), [aiModelList]);
 
     return (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             <CustomModelSelect
-                label="Character (T2I)"
+                label="Character"
                 value={selectedReferenceId}
                 options={t2iModels}
                 category="text-to-image"
@@ -222,7 +296,7 @@ function BYOKModelSelector({
                 onChange={onChangeReferenceId}
             />
             <CustomModelSelect
-                label="Scene (I2I)"
+                label="Scene"
                 value={selectedI2iId}
                 options={i2iModels}
                 category="image-to-image"
@@ -230,7 +304,7 @@ function BYOKModelSelector({
                 onChange={onChangeI2iId}
             />
             <CustomModelSelect
-                label="Video (I2V)"
+                label="Video"
                 value={selectedI2vId}
                 options={i2vModels}
                 category="image-to-video"
