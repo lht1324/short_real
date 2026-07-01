@@ -6,7 +6,7 @@ import {ExportPlatform, VideoGenerationTaskStatus} from "@/lib/api/types/supabas
 import {
     AlertCircle,
     Calendar,
-    Clock, Coins,
+    Clock,
     Download,
     Edit,
     FileVideo,
@@ -28,11 +28,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
-import {
-    RETRY_CREDIT_MUSIC_GENERATION,
-    RETRY_CREDIT_PER_SCENE,
-    RETRY_CREDIT_PER_VIDEO_DURATION
-} from "@/lib/ADDITIONAL_CREDIT_AMOUNT";
+import {AIModelData} from "@/lib/api/types/supabase/AIModelData";
 
 enum StatusGroup {
     CREATING = 'creating',
@@ -46,6 +42,7 @@ enum StatusGroup {
 interface DashboardItemProps {
     taskData: TaskData;
     index: number;
+    aiModelDataList: AIModelData[];
     onClickEdit: (taskId: string) => void;
     onClickExport: (taskId: string, platform: ExportPlatform) => Promise<void>;
     onClickDownload: (taskId: string) => void;
@@ -56,6 +53,7 @@ interface DashboardItemProps {
 function DashboardItem({
     taskData,
     index,
+    aiModelDataList,
     onClickEdit,
     onClickExport,
     onClickDownload,
@@ -176,123 +174,141 @@ function DashboardItem({
     }, [taskData]);
 
     const retryPrice = useMemo(() => {
-        const {
-            status,
-            sceneCount,
-            videoDuration,
-        } = taskData;
+        if (!taskData.isGenerationFailed || !taskData.aiModelConfig) return null;
 
-        if (taskData.isGenerationFailed) {
-            switch (status) {
-                case VideoGenerationTaskStatus.GENERATING_IMAGE_PROMPT: return RETRY_CREDIT_PER_SCENE * sceneCount;
-                case VideoGenerationTaskStatus.GENERATING_VIDEO_PROMPT:
-                case VideoGenerationTaskStatus.GENERATING_VIDEO: return RETRY_CREDIT_PER_VIDEO_DURATION * Math.ceil(videoDuration);
-                case VideoGenerationTaskStatus.COMPOSING_MUSIC: return RETRY_CREDIT_MUSIC_GENERATION;
-                default: return null;
+        const { status, sceneCount, videoDuration, resolution, estimatedCharacterCount, aiModelConfig } = taskData;
+        const effectiveResolution = resolution ?? '720p';
+
+        const findPricePerUnit = (modelId: string, res: string): number | null => {
+            const model = aiModelDataList.find(m => m.id === modelId);
+            if (!model) return null;
+            return model.ai_model_price_list.find(p => p.unit.endsWith(res))?.price_per_unit ?? null;
+        };
+
+        switch (status) {
+            case VideoGenerationTaskStatus.GENERATING_MASTER_STYLE_PROMPT: {
+                if (!estimatedCharacterCount) return null;
+                const price = findPricePerUnit(aiModelConfig.referenceImageModelId, '720p');
+                if (price === null) return null;
+                return price * estimatedCharacterCount;
             }
-        } else {
-            return null;
+            case VideoGenerationTaskStatus.GENERATING_IMAGE_PROMPT: {
+                const price = findPricePerUnit(aiModelConfig.sceneImageI2IModelId, effectiveResolution);
+                if (price === null) return null;
+                return price * sceneCount;
+            }
+            case VideoGenerationTaskStatus.GENERATING_VIDEO_PROMPT:
+            case VideoGenerationTaskStatus.GENERATING_VIDEO: {
+                const price = findPricePerUnit(aiModelConfig.videoModelId, effectiveResolution);
+                if (price === null) return null;
+                return price * Math.round(videoDuration);
+            }
+            default:
+                return null;
         }
-    }, [taskData]);
+    }, [taskData, aiModelDataList]);
 
     const retryTooltipContent = useMemo(() => {
-        const {
-            status,
-            sceneCount,
-            videoDuration,
-        } = taskData;
+        if (!taskData.isGenerationFailed || !taskData.aiModelConfig || retryPrice === null) return null;
 
-        if (!taskData.isGenerationFailed) return null;
+        const { status, sceneCount, videoDuration, resolution, estimatedCharacterCount, aiModelConfig } = taskData;
+        const effectiveResolution = resolution ?? '720p';
 
-        const containerClasses = "bg-zinc-900 border border-white/10 rounded-lg shadow-xl p-3 min-w-[180px] z-50";
-        const headerClasses = "flex items-center gap-1.5 mb-2 pb-2 border-b border-white/5 text-[13px] font-medium";
-        const rowClasses = "flex justify-between items-center text-xs text-zinc-400 mb-1.5";
-        const totalRowClasses = "flex justify-between items-center pt-2 mt-2 border-t border-white/5 text-xs font-medium text-zinc-200";
+        const findModel = (modelId: string) => aiModelDataList.find(m => m.id === modelId) ?? null;
+        const findPricePerUnit = (modelId: string, res: string): number | null => {
+            const model = findModel(modelId);
+            if (!model) return null;
+            return model.ai_model_price_list.find(p => p.unit.endsWith(res))?.price_per_unit ?? null;
+        };
+        const formatUSD = (val: number) => `$${val.toFixed(4)}`;
 
-        const renderReceipt = (title: string, colorClass: string, icon: ReactNode, details: { label: ReactNode; value: ReactNode }[], total: number | null) => (
+        const containerClasses = "bg-zinc-900 border border-white/10 rounded-lg shadow-xl p-3 min-w-[220px] z-50";
+        const headerClasses = "flex items-center gap-1.5 mb-1.5 pb-2 border-b border-white/5 text-[14px] font-medium";
+        const modelNameClasses = "text-xs text-zinc-500 mb-2 truncate";
+        const rowClasses = "flex justify-between items-center text-[13px] text-zinc-400 mb-1.5";
+        const totalRowClasses = "flex justify-between items-center pt-2 mt-1 border-t border-white/5 text-[13px] font-medium text-zinc-200";
+
+        const renderReceipt = (
+            title: string,
+            colorClass: string,
+            icon: ReactNode,
+            modelName: string,
+            details: { label: string; value: string }[]
+        ) => (
             <div className={containerClasses}>
                 <div className={`${headerClasses} ${colorClass}`}>
                     {icon}
                     <span>{title}</span>
                 </div>
-                {details.map((detail, index) => (
-                    <div key={index} className={rowClasses}>
+                <div className={modelNameClasses}>{modelName}</div>
+                {details.map((detail, i) => (
+                    <div key={i} className={rowClasses}>
                         <span>{detail.label}</span>
-                        <span className="text-zinc-300 flex items-center gap-1">{detail.value}</span>
+                        <span className="text-zinc-300">{detail.value}</span>
                     </div>
                 ))}
                 <div className={totalRowClasses}>
-                    <span>Est. Retry Cost</span>
-                    <div className="flex items-center text-zinc-300">
-                        <Coins size={12} className="mr-1 text-zinc-500" />
-                        {total}
-                    </div>
+                    <span>Est. BYOK Cost</span>
+                    <span>{formatUSD(retryPrice)}</span>
                 </div>
             </div>
         );
 
-        const CostLabel = ({ suffix }: { suffix: string }) => (
-            <div className="flex items-center gap-1 text-zinc-400">
-                <Coins size={10} className="text-zinc-500" />
-                <span>/ {suffix}</span>
-            </div>
-        );
-
-        const CreditValue = ({ value }: { value: number | string }) => (
-            <div className="flex items-center gap-1">
-                <span>{value}</span>
-            </div>
-        );
-
         switch (status) {
-            case VideoGenerationTaskStatus.GENERATING_IMAGE_PROMPT:
+            case VideoGenerationTaskStatus.GENERATING_MASTER_STYLE_PROMPT: {
+                const model = findModel(aiModelConfig.referenceImageModelId);
+                if (!model || !estimatedCharacterCount) return null;
+                const price = findPricePerUnit(aiModelConfig.referenceImageModelId, '720p');
+                if (price === null) return null;
                 return renderReceipt(
-                    "Image Generation",
-                    "text-amber-400",
+                    "Character Sheet",
+                    "text-purple-400",
                     <ImageIcon size={14} />,
+                    model.display_name,
                     [
-                        { label: "Scenes", value: sceneCount },
-                        { label: <CostLabel suffix="scene" />, value: <CreditValue value={RETRY_CREDIT_PER_SCENE} /> },
-                    ],
-                    retryPrice
+                        { label: "Characters", value: `${estimatedCharacterCount}` },
+                        { label: "Price / character", value: formatUSD(price) },
+                    ]
                 );
+            }
+            case VideoGenerationTaskStatus.GENERATING_IMAGE_PROMPT: {
+                const model = findModel(aiModelConfig.sceneImageI2IModelId);
+                if (!model) return null;
+                const price = findPricePerUnit(aiModelConfig.sceneImageI2IModelId, effectiveResolution);
+                if (price === null) return null;
+                return renderReceipt(
+                    "Scene Images",
+                    "text-pink-400",
+                    <ImageIcon size={14} />,
+                    model.display_name,
+                    [
+                        { label: "Scenes", value: `${sceneCount}` },
+                        { label: "Price / scene", value: formatUSD(price) },
+                    ]
+                );
+            }
             case VideoGenerationTaskStatus.GENERATING_VIDEO_PROMPT:
-            case VideoGenerationTaskStatus.GENERATING_VIDEO:
-                const duration = Math.ceil(videoDuration || 0);
+            case VideoGenerationTaskStatus.GENERATING_VIDEO: {
+                const model = findModel(aiModelConfig.videoModelId);
+                if (!model) return null;
+                const price = findPricePerUnit(aiModelConfig.videoModelId, effectiveResolution);
+                if (price === null) return null;
+                const duration = Math.round(videoDuration);
                 return renderReceipt(
                     "Video Generation",
                     "text-blue-400",
                     <FileVideo size={14} />,
+                    model.display_name,
                     [
                         { label: "Duration", value: `${duration}s` },
-                        { label: <CostLabel suffix="sec" />, value: <CreditValue value={RETRY_CREDIT_PER_VIDEO_DURATION} /> },
-                    ],
-                    retryPrice
+                        { label: "Price / sec", value: formatUSD(price) },
+                    ]
                 );
-            case VideoGenerationTaskStatus.COMPOSING_MUSIC:
-                return renderReceipt(
-                    "Music Composition",
-                    "text-rose-400",
-                    <Clock size={14} />,
-                    [
-                        { label: "Type", value: "Fixed Cost" },
-                        { label: "Cost", value: <CreditValue value={RETRY_CREDIT_MUSIC_GENERATION} /> },
-                    ],
-                    RETRY_CREDIT_MUSIC_GENERATION
-                );
+            }
             default:
-                return renderReceipt(
-                    "Regeneration",
-                    "text-zinc-400",
-                    <Loader2 size={14} />,
-                    [
-                        { label: "Type", value: "Estimated" },
-                        { label: "Cost", value: <CreditValue value={retryPrice ?? '-'} /> },
-                    ],
-                    retryPrice
-                );
+                return null;
         }
-    }, [taskData, retryPrice]);
+    }, [taskData, aiModelDataList, retryPrice]);
 
     // ==================== 설명 텍스트 포맷팅 ====================
     const formattedDescription = useMemo(() => {

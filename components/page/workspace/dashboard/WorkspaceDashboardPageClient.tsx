@@ -4,6 +4,7 @@ import {memo, useCallback, useEffect, useMemo, useState} from "react";
 import Link from "next/link";
 import {Coins, ListTodo, Loader2, Plus, Zap} from 'lucide-react';
 import {
+    AIModelConfig,
     ExportPlatform,
     ExportStatus,
     VideoGenerationTask,
@@ -19,6 +20,8 @@ import {createBrowserClient} from "@supabase/ssr";
 import TaskDeleteLoadingModal from "@/components/page/workspace/dashboard/TaskDeleteLoadingModal";
 import {Polar} from "@polar-sh/sdk";
 import {polarClientAPI} from "@/lib/api/client/polarClientAPI";
+import {AIModelData} from "@/lib/api/types/supabase/AIModelData";
+import {aiModelDataClientAPI} from "@/lib/api/client/aiModelDataClientAPI";
 import CheckoutResultDialog, {
     CheckoutResultDialogData
 } from "@/components/page/workspace/dashboard/CheckoutResultDialog";
@@ -46,6 +49,9 @@ export interface TaskData {
     selectedVoiceId?: string;
     selectedStyleId?: string;
     isGenerationFailed: boolean;
+    estimatedCharacterCount?: number;
+    resolution?: '720p' | '1080p' | '2160p';
+    aiModelConfig?: AIModelConfig;
 }
 
 function WorkspaceDashboardPageClient() {
@@ -57,6 +63,7 @@ function WorkspaceDashboardPageClient() {
     const [taskDataList, setTaskDataList] = useState<TaskData[]>([]);
     const [exportResults, setExportResults] = useState<ExportResult[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [aiModelDataList, setAiModelDataList] = useState<AIModelData[]>([]);
 
     const customerSessionToken = useMemo(() => {
         return searchParams.get('customer_session_token');
@@ -329,6 +336,9 @@ function WorkspaceDashboardPageClient() {
             selectedVoiceId: task.selected_voice_id,
             selectedStyleId: task.selected_style_id,
             isGenerationFailed: task.is_generation_failed,
+            estimatedCharacterCount: task.estimated_character_count,
+            resolution: task.resolution ?? undefined,
+            aiModelConfig: task.ai_model_config ?? undefined,
         };
     }, [calculateProgress]);
 
@@ -346,7 +356,12 @@ function WorkspaceDashboardPageClient() {
             // 초기 데이터 로드
             const loadData = async () => {
                 try {
-                    const videoGenerationTaskList = await videoClientAPI.getVideoTasksByUserId(user?.id);
+                    const [videoGenerationTaskList, fetchedAIModelDataList] = await Promise.all([
+                        videoClientAPI.getVideoTasksByUserId(user?.id),
+                        aiModelDataClientAPI.getAIModelData(),
+                    ]);
+
+                    setAiModelDataList(fetchedAIModelDataList);
 
                     if (!videoGenerationTaskList) {
                         throw new Error("Cannot read videoGenerationTaskList. Try again.");
@@ -621,6 +636,7 @@ function WorkspaceDashboardPageClient() {
                                         key={taskData.id}
                                         taskData={taskData}
                                         index={index}
+                                        aiModelDataList={aiModelDataList}
                                         onClickEdit={onClickEdit}
                                         onClickDownload={onClickDownload}
                                         onClickExport={async (taskId, platform) => {
