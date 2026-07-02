@@ -331,7 +331,15 @@ function AutopilotControlPanel({
                 <div className="space-y-4">
                     {/* Timezone Selection */}
                     <div className="space-y-1.5">
-                        <label className="text-[10px] text-zinc-500 mb-1 block ml-0.5 uppercase font-medium tracking-wider">Timezone</label>
+                        <div className="flex items-center justify-between">
+                            <label className="text-[10px] text-zinc-500 mb-1 block ml-0.5 uppercase font-medium tracking-wider">Timezone</label>
+                            <div className="group relative">
+                                <Info size={12} className="text-zinc-500 cursor-help hover:text-zinc-300 transition-colors" />
+                                <div className="absolute right-0 bottom-full mb-2 w-48 p-2 bg-zinc-950 border border-white/10 rounded-lg shadow-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 text-[10px] text-zinc-400 leading-normal">
+                                    Videos are generated and uploaded based on this timezone. We recommend setting this to your target audience&#39;s timezone.
+                                </div>
+                            </div>
+                        </div>
                         <div className="relative group">
                             <Globe size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none" />
                             <select 

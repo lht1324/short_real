@@ -63,6 +63,9 @@ export async function POST(
             style_id: styleId,
             caption_config: captionConfig,
             topic_history: topicHistory = [],
+            resolution,
+            aspect_ratio: aspectRatio,
+            ai_model_config: aiModelConfig,
         }: AutopilotData = autopilotData;
 
         // 1. 주제 발굴 (Topic Discovery)
@@ -183,8 +186,9 @@ export async function POST(
             selected_voice_id: voiceId,
             selected_style_id: styleId,
             series_id: seriesId,
-            // Autopilot에서는 기본적으로 9:16 등의 설정을 어디서 가져올지 고민 필요하나, 
-            // 현재는 씬 분할 단계로 넘어가기 위한 최소 정보만 저장
+            resolution: resolution || '720p',
+            aspect_ratio: aspectRatio || '9:16',
+            ai_model_config: aiModelConfig || undefined,
         });
 
         const taskId = videoGenerationTask.id;
@@ -312,6 +316,10 @@ export async function POST(
             taskId,
         );
 
+        const isVertical = aspectRatio === '9:16';
+        const videoWidth = isVertical ? 1080 : 1920;
+        const videoHeight = isVertical ? 1920 : 1080;
+
         // 9. 최종 데이터로 태스크 업데이트
         const patchVideoGenerationTaskRequest: Partial<VideoGenerationTask> = {
             scene_breakdown_list: finalSceneDataList,
@@ -331,10 +339,10 @@ export async function POST(
                         subtitleSegmentationList: sceneData.sceneSubtitleSegments ?? [],
                     }
                 }),
-                // 숏폼 기본 해상도 및 자막 위치 설정 (1080x1920 기준)
-                videoWidth: 1080,
-                videoHeight: 1920,
-                captionAreaTop: Math.round((captionConfig.captionPosition / 100) * (1920 - ((captionConfig.fontSize * 2) + 84))),
+                // 영상 기본 해상도 및 자막 위치 설정
+                videoWidth: videoWidth,
+                videoHeight: videoHeight,
+                captionAreaTop: Math.round((captionConfig.captionPosition / 100) * (videoHeight - ((captionConfig.fontSize * 2) + 84))),
                 captionAreaVerticalPadding: 40,
                 captionOneLineHeight: captionConfig.fontSize,
 

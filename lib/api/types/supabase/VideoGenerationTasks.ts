@@ -1,7 +1,7 @@
 // video_generation_tasks 테이블 타입 정의
 import {MasterStyleInfo} from "@/lib/api/types/supabase/MasterStyleInfo";
 import {CaptionConfigState, CaptionData} from "@/components/page/workspace/editor/WorkspaceEditorPageClient";
-import {Entity, InitialEntityManifestItem} from "@/lib/api/types/open-ai/Entity";
+import {InitialEntityManifestItem} from "@/lib/api/types/open-ai/Entity";
 import {FluxPrompt} from "@/lib/api/types/open-ai/FluxPrompt";
 
 export interface VideoGenerationTask {
