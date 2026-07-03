@@ -97,36 +97,73 @@ export async function GET(request: NextRequest) {
         // 4. Supabase에 토큰 저장
         const supabase = createSupabaseServiceRoleClient();
 
-        // [추가] TikTok 사용자 정보 조회 (Display Name)
+        // [수정] TikTok 사용자 정보 조회 (Display Name + avatar_url)
         let displayName = null;
+        let avatarUrl = null;
         try {
-            const userRes = await fetch('https://open.tiktokapis.com/v2/user/info/?fields=display_name', {
+            const userRes = await fetch('https://open.tiktokapis.com/v2/user/info/?fields=display_name,avatar_url', {
                 headers: { Authorization: `Bearer ${tokens.access_token}` }
             });
-            if (userRes.ok) {
-                const userData = await userRes.json();
-                if (userData.data?.user) {
-                    displayName = userData.data.user.display_name || null;
-                    console.log(`[TikTok Callback] Fetched profile: ${displayName}`);
-                }
+            const userData = await userRes.json();
+
+            if (userData.error) {
+                console.error(`[TikTok Callback] API Inner Error:`, JSON.stringify(userData.error));
+            }
+
+            if (userData.data?.user) {
+                displayName = userData.data.user.display_name || null;
+                avatarUrl = userData.data.user.avatar_url || null;
+                console.log(`[TikTok Callback] Fetched profile: ${displayName} (Avatar: ${avatarUrl})`);
             }
         } catch (e) {
             console.error('[TikTok Callback] Failed to fetch user info:', e);
         }
 
-        const { error: dbError } = await supabase
+        // --- 3단계 수정 내용 시작 ---
+        // (1) 기존 레코드의 ID를 조회 (오토파일럿/수동 업로드 모드 분기 처리)
+        let findQuery = supabase
             .from('user_tiktok_tokens')
-            .upsert({
-                user_id: userId,
-                access_token: tokens.access_token,
-                refresh_token: tokens.refresh_token,
-                expires_at: new Date(Date.now() + tokens.expires_in * 1000).toISOString(),
-                refresh_expires_at: new Date(Date.now() + tokens.refresh_expires_in * 1000).toISOString(),
-                tiktok_user_id: tokens.open_id,
-                display_name: displayName,
-                updated_at: new Date().toISOString(),
-                last_used_at: new Date().toISOString(),
-            });
+            .select('id')
+            .eq('user_id', userId);
+
+        if (isAutopilot) {
+            findQuery = findQuery.eq('series_id', seriesId);
+        } else {
+            findQuery = findQuery.is('series_id', null);
+        }
+
+        const { data: existingRecord } = await findQuery.maybeSingle();
+
+        const tokenPayload = {
+            user_id: userId,
+            series_id: isAutopilot ? seriesId : null,
+            access_token: tokens.access_token,
+            refresh_token: tokens.refresh_token,
+            expires_at: new Date(Date.now() + tokens.expires_in * 1000).toISOString(),
+            refresh_expires_at: new Date(Date.now() + tokens.refresh_expires_in * 1000).toISOString(),
+            tiktok_user_id: tokens.open_id,
+            display_name: displayName,
+            avatar_url: avatarUrl,
+            updated_at: new Date().toISOString(),
+            last_used_at: new Date().toISOString(),
+        };
+
+        let dbResult;
+        if (existingRecord?.id) {
+            // (2) 이미 존재하는 경우: id 기준으로 UPDATE
+            dbResult = await supabase
+                .from('user_tiktok_tokens')
+                .update(tokenPayload)
+                .eq('id', existingRecord.id);
+        } else {
+            // (3) 존재하지 않는 경우: INSERT
+            dbResult = await supabase
+                .from('user_tiktok_tokens')
+                .insert(tokenPayload);
+        }
+
+        const dbError = dbResult.error;
+        // --- 3단계 수정 내용 끝 ---
 
         if (dbError) {
             console.error('Database error:', dbError);

@@ -6,6 +6,7 @@ export interface UserTikTokToken {
     tiktok_user_id?: string;
     handle_name?: string;
     display_name?: string;
+    avatar_url?: string;
     created_at: string;
     updated_at: string;
     last_used_at?: string;

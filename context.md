@@ -1,26 +1,36 @@
-# 작업 진행 상황 (Last Updated: 2026-06-26 03:22)
+# 작업 진행 상황 (Last Updated: 2026-07-04 03:30)
 
 ## 1. 최근 세션 작업 내용 (Current Session Changes)
-### 1.1 Autopilot 캡션 프리뷰 및 와이드 에디터 렌더링 리팩토링 - [완료]
-* **자막 프리뷰 패널 클린업 (`AutopilotCaptionPreview.tsx`)**:
-    - `isLargeOpen` 상태 및 `Max Zoom` 모달 overlay 관련 미정의 참조로 인한 컴파일 에러 유발 코드를 완전히 제거했습니다 (YAGNI 원칙 적용).
-    - 프리뷰 내부 Floating 버튼을 `[ Wide Edit ]` (와이드 모드 시 `[ Close Wide ]`) 단일 토글 버튼으로 깔끔하게 통합하여 뷰를 최소화했습니다.
-    - 가로형(`16:9`)일 때는 가로 너비 기준, 세로형(`9:16`)일 때는 세로 높이 기준(최대 480px~600px 제한)의 물리 1:1 종횡비 스케일링 계산을 반영하여 찌그러짐을 방지했습니다.
-* **깜빡임 없는 슬라이딩 트랜지션 연동 (`WorkspaceAutopilotPageClient.tsx`)**:
-    - `previewMode`에 따라 5열(`AutopilotControlPanel`)의 가로폭과 불투명도를 제어하는 CSS 트랜지션을 구축하여, 돔 마운트/언마운트에 의한 렌더링 깜빡임 현상을 원천 차단하고 부드러운 슬라이딩 전이를 구현했습니다.
-    - 종횡비가 가로형(`16:9`)으로 바뀔 때 기존 자막 위치가 `Top`이나 `Middle`에 정렬되어 있으면 `Bottom`(80)으로 실시간 롤백하여 DB와 최종 동기화하는 보정 효과를 구현했습니다.
-* **자막 위치 제어기 이관 (`CaptionConfigPanel.tsx`)**:
-    - 자막 위치 설정 탭(Top/Middle/Bottom)을 4열 프리뷰 영역에서 제거하고 3열 설정 패널의 자막 설정 아코디언 내부로 완벽히 이식했습니다.
-    - 16:9 모드일 때는 자막 위치 변경을 비활성화하고 "Fixed to Bottom for Landscape (16:9) video." 가이드를 영어로 제공합니다.
+### 1.1 Autopilot 다중 소셜 계정 연동 및 자동 업로드 분기 리팩토링 - [완료]
+* **DB 스키마 마이그레이션**:
+    - `user_youtube_tokens` 및 `user_tiktok_tokens` 테이블의 단일 PK(`user_id`)를 제거하고 전역 고유 `id` UUID PK를 설정.
+    - `series_id` 컬럼에 Unique 제약 인덱스를 설정하여 1시리즈당 플랫폼별 최대 1개 계정 연동을 가능하게 함.
+    - 수동 업로드 모드 호환을 위해 `series_id IS NULL` 부분 고유 인덱스를 구성하여 수동 토큰이 공존할 수 있게 스펙 개편.
+* **OAuth 시작 API 수정**:
+    - 유튜브 및 틱톡 Autopilot OAuth 시작 쿼리 조건에 `series_id`를 추가하여, 이미 다른 시리즈가 연동되어 있어도 가로채기 당하지 않고 새 시리즈 로그인 창이 뜨도록 수정.
+* **OAuth 콜백 API 고도화**:
+    - 토큰 저장(`upsert`) 시 `series_id`가 누락되던 문제를 해결하고, 부분 인덱스 충돌 예외를 피하기 위해 `SELECT ➔ UPDATE or INSERT` 구조로 쿼리 분기 처리.
+    - 구글 로그인 범위에 민감하지 않은 범위 스코프(`userinfo.profile`, `userinfo.email`)를 추가 요청하도록 수정하여 구글 계정 이름, 이메일, 프로필 이미지 URL 수집 성공.
+    - 틱톡 로그인 시에도 `avatar_url`을 함께 긁어오도록 수집 명세를 고도화하고 내부 에러 로그 감지 보강.
+* **자동 업로드 엔진 분기 연동**:
+    - 비디오 생성 태스크 완료 후 호출되는 유튜브/틱톡 업로드 API가 해당 태스크의 `series_id`에 할당된 1:1 토큰만을 쿼리하여 업로드하도록 수정.
 
 ## 2. 향후 작업 (Next Steps) - [Priority: HIGH]
-1. **[진행 예정] BYOK 전환 완료를 위한 Credit 시스템 전면 제거 및 안내/에러 핸들링 강화**:
+1. **[진행 예정] 대시보드 수동 내보내기 시 업로드할 소셜 계정 선택 기능 구현**:
+    - **백엔드 설계 방향 (보안 강화)**: 브라우저가 민감한 소셜 토큰 테이블에 직접 접근(SELECT)하지 않도록 차단하고, 유저 ID에 묶인 연동 소셜 채널 정보(`display_name`, `handle_name`, `avatar_url`, `series_id`)를 마스킹하여 반환하는 **전용 API 엔드포인트**를 신설하여 보안 규칙 준수.
+    - **UI 연동**: 대시보드 내보내기 모달에서 위 API 데이터를 호출해 업로드할 채널을 드롭다운으로 선택할 수 있도록 구현하고, 선택한 `series_id`를 쿼리 파라미터(`&targetSeriesId=...`)로 OAuth 시작 API에 전달.
+    - **수동 OAuth 시작 API 보완**: 파라미터로 넘어온 `targetSeriesId` 값에 따라 `eq('series_id', targetSeriesId)` 또는 `is('series_id', null)` 조건으로 분기 조회하여 즉시 다이렉트 업로드 처리.
+2. **[진행 예정] BYOK 전환 완료를 위한 Credit 시스템 전면 제거 및 안내/에러 핸들링 강화**:
     - `WorkspaceCreatePageClient.tsx` 및 `WorkspaceAutopilotPageClient.tsx` 등에서 `userCreditCount`, `expectedCreditUsage`, `isCreditInsufficient` 계산식과 헤더의 `Credits` 스탯 영역을 완전히 제거.
     - `Insufficient Credit Modal` 및 크레딧 부족 시 생성을 차단하는 클라이언트 사이드 validation 로직 걷어내기.
     - 사전 경고 가이드 UI 배치 및 사후 에러 핸들링 고도화.
-2. **[진행 예정] 실제 비디오 생성 로직에 유저 API Key 탑재**:
+3. **[진행 예정] 실제 비디오 생성 로직에 유저 API Key 탑재**:
     - 현재 시스템 환경변수에서 가져오는 API Key를, 생성 요청을 보낸 유저의 DB 프로필에서 꺼내 쓰도록 백엔드 생성 엔진 로직 수정 필요.
-3. **[진행 예정] Editor 페이지 디자인 리팩토링**
-4. **[검토 필요] Replicate 모델 실연동**
-5. **[버그 수정] HeroSection 뮤트 버튼 작동 불량**
-6. **랜딩 페이지 하단 섹션 (HowItWorks, Pricing, FAQ) 디자인 개편**
+4. **[진행 예정] Editor 페이지 디자인 리팩토링**
+5. **[검토 필요] Replicate 모델 실연동**
+6. **[버그 수정] HeroSection 뮤트 버튼 작동 불량**
+7. **랜딩 페이지 하단 섹션 (HowItWorks, Pricing, FAQ) 디자인 개편**
+8. **[기획/장기] ProfilePage 내 소셜 계정 보관함 (Account Pool) 기능 추가**:
+    - **컨셉트**: 오토파일럿 시리즈에 즉시 매핑하지 않더라도, 사용자가 소유한 여러 소셜 플랫폼 계정을 마이페이지(ProfilePage)에서 미리 인증하여 하나의 계정 풀(Pool) 형태로 보관하고 관리하는 저장소 역할.
+    - **DB 대응**: `series_id`가 아직 `NULL`인 상태에서도 `user_id`를 소유주로 지정하여 소셜 토큰을 안전하게 유지 및 관리할 수 있도록 설계.
+

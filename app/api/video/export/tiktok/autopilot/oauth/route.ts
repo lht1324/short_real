@@ -38,6 +38,7 @@ export async function GET(request: NextRequest) {
             .from('user_tiktok_tokens')
             .select('refresh_token')
             .eq('user_id', user.id)
+            .eq('series_id', seriesId)
             .maybeSingle();
 
         if (existingToken?.refresh_token) {

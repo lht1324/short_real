@@ -56,12 +56,20 @@ export async function POST(request: NextRequest) {
 
         console.log(`[TikTok Upload] Starting for userId=${userId}`);
 
-        // 1. DB에서 토큰 조회
-        const { data: tokenData, error: tokenError }: PostgrestSingleResponse<UserTikTokToken> = await supabase
-            .from('user_tiktok_tokens')
-            .select('*')
-            .eq('user_id', userId)
-            .single();
+        // 1. DB에서 토큰 조회 (자동 스케줄러 여부에 따른 series_id 분기 필터링)
+        let tokenQuery = supabase
+             .from('user_tiktok_tokens')
+             .select('*')
+             .eq('user_id', userId);
+
+        if (videoGenerationTask.series_id) {
+            tokenQuery = tokenQuery.eq('series_id', videoGenerationTask.series_id);
+        } else {
+            tokenQuery = tokenQuery.is('series_id', null);
+        }
+
+        const { data: tokenData, error: tokenError }: PostgrestSingleResponse<UserTikTokToken> = await tokenQuery
+            .maybeSingle();
 
         if (tokenError || !tokenData) {
             console.error('[TikTok Upload] Token not found:', tokenError);

@@ -67,7 +67,7 @@ export async function GET(request: NextRequest) {
             client_id: process.env.GOOGLE_YOUTUBE_CLIENT_ID!,
             redirect_uri: `${process.env.BASE_URL}/callback/youtube`,
             response_type: 'code',
-            scope: 'https://www.googleapis.com/auth/youtube.upload',
+            scope: 'https://www.googleapis.com/auth/youtube.upload https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email',
             access_type: 'offline',
             prompt: 'consent',
             state: encodeURIComponent(JSON.stringify({

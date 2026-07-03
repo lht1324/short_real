@@ -102,36 +102,68 @@ export async function GET(request: NextRequest) {
             Date.now() + tokens.expires_in * 1000
         ).toISOString();
 
-        // [추가] YouTube 채널 정보 조회 (Handle, Display Name)
+        // [수정] Google 프로필 정보 조회 (유튜브 채널 대신 구글 계정 정보 활용)
         let handleName = null;
         let displayName = null;
+        let avatarUrl = null;
         try {
-            const channelRes = await fetch('https://www.googleapis.com/youtube/v3/channels?part=snippet&mine=true', {
+            const profileRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
                 headers: { Authorization: `Bearer ${tokens.access_token}` }
             });
-            if (channelRes.ok) {
-                const channelData = await channelRes.json();
-                if (channelData.items?.[0]?.snippet) {
-                    handleName = channelData.items[0].snippet.customUrl || null;
-                    displayName = channelData.items[0].snippet.title || null;
-                    console.log(`[YouTube Callback] Fetched profile: ${handleName} (${displayName})`);
-                }
+            if (profileRes.ok) {
+                const profileData = await profileRes.json();
+                displayName = profileData.name || null;      // 구글 프로필 이름 (예: "이재호")
+                handleName = profileData.email || null;       // 구글 이메일 (예: "jaeho@email.com")
+                avatarUrl = profileData.picture || null;      // 프로필 이미지 URL
+                console.log(`[YouTube Callback] Fetched profile: ${displayName} (${handleName})`);
             }
         } catch (e) {
-            console.error('[YouTube Callback] Failed to fetch channel info:', e);
+            console.error('[YouTube Callback] Failed to fetch Google userinfo:', e);
         }
 
-        const { error: dbError } = await supabase
+        // --- 3단계 수정 내용 시작 ---
+        // (1) 기존 레코드의 ID를 조회 (오토파일럿/수동 업로드 모드 분기 처리)
+        let findQuery = supabase
             .from('user_youtube_tokens')
-            .upsert({
-                user_id: userId,
-                access_token: tokens.access_token,
-                refresh_token: tokens.refresh_token,
-                expires_at: expiresAt,
-                handle_name: handleName,
-                display_name: displayName,
-                updated_at: new Date().toISOString()
-            });
+            .select('id')
+            .eq('user_id', userId);
+
+        if (isAutopilot) {
+            findQuery = findQuery.eq('series_id', seriesId);
+        } else {
+            findQuery = findQuery.is('series_id', null);
+        }
+
+        const { data: existingRecord } = await findQuery.maybeSingle();
+
+        const tokenPayload = {
+            user_id: userId,
+            series_id: isAutopilot ? seriesId : null,
+            access_token: tokens.access_token,
+            refresh_token: tokens.refresh_token,
+            expires_at: expiresAt,
+            handle_name: handleName,
+            display_name: displayName,
+            avatar_url: avatarUrl,
+            updated_at: new Date().toISOString()
+        };
+
+        let dbResult;
+        if (existingRecord?.id) {
+            // (2) 이미 존재하는 경우: id 기준으로 UPDATE
+            dbResult = await supabase
+                .from('user_youtube_tokens')
+                .update(tokenPayload)
+                .eq('id', existingRecord.id);
+        } else {
+            // (3) 존재하지 않는 경우: INSERT
+            dbResult = await supabase
+                .from('user_youtube_tokens')
+                .insert(tokenPayload);
+        }
+
+        const dbError = dbResult.error;
+        // --- 3단계 수정 내용 끝 ---
 
         if (dbError) {
             console.error('Database error:', dbError);
