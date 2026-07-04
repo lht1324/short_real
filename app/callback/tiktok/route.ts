@@ -51,7 +51,7 @@ export async function GET(request: NextRequest) {
 
         // 2. State에서 데이터 추출
         const stateData = JSON.parse(state);
-        const { taskId, userId, seriesId, mode } = stateData;
+        const { taskId, userId, seriesId, mode, targetSeriesId } = stateData;
         const isAutopilot = mode === 'autopilot';
 
         // 필수 파라미터 체크: 오토파일럿은 userId만 있으면 됨, 매뉴얼은 taskId 필수
@@ -128,6 +128,8 @@ export async function GET(request: NextRequest) {
 
         if (isAutopilot) {
             findQuery = findQuery.eq('series_id', seriesId);
+        } else if (targetSeriesId) {
+            findQuery = findQuery.eq('series_id', targetSeriesId);
         } else {
             findQuery = findQuery.is('series_id', null);
         }
@@ -136,7 +138,7 @@ export async function GET(request: NextRequest) {
 
         const tokenPayload = {
             user_id: userId,
-            series_id: isAutopilot ? seriesId : null,
+            series_id: isAutopilot ? seriesId : (targetSeriesId || null),
             access_token: tokens.access_token,
             refresh_token: tokens.refresh_token,
             expires_at: new Date(Date.now() + tokens.expires_in * 1000).toISOString(),
@@ -181,6 +183,13 @@ export async function GET(request: NextRequest) {
         // 5. 모드에 따른 후속 작업 및 리다이렉트
         if (isAutopilot) {
             return NextResponse.redirect(`${originUrl}/workspace/autopilot?seriesId=${seriesId}`);
+        }
+
+        // 수동 업로드 모드이고 선택한 targetSeriesId가 있는 경우 해당 태스크의 series_id에 반영
+        if (targetSeriesId) {
+            await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, {
+                series_id: targetSeriesId,
+            });
         }
 
         // 수동 업로드 모드인 경우

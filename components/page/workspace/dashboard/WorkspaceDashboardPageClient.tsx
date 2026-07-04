@@ -32,6 +32,7 @@ import ExportSettingsModal from "@/components/page/workspace/dashboard/export-se
 import {ExportPrivacySetting} from "@/components/page/workspace/dashboard/export-settings-modal/ExportPrivacySetting";
 import WorkspaceSidebar from "@/components/public/WorkspaceSidebar";
 import {WorkspaceSidebarItem} from "@/components/public/WorkspaceSidebarItem";
+import { AnimatePresence } from "framer-motion";
 
 export interface TaskData {
     id: string;
@@ -81,6 +82,7 @@ function WorkspaceDashboardPageClient() {
     const [pendingExportPlatform, setPendingExportPlatform] = useState<ExportPlatform | null>(null);
 
     const [youtubePrivacySetting, setYoutubePrivacySetting] = useState<ExportPrivacySetting>(ExportPrivacySetting.PUBLIC);
+    const [targetSeriesId, setTargetSeriesId] = useState<string | null>(null);
 
     const [showEditMetadataModal, setShowEditMetadataModal] = useState(false);
     const [showCancelConfirmModal, setShowCancelConfirmModal] = useState(false);
@@ -89,6 +91,7 @@ function WorkspaceDashboardPageClient() {
     const [showRetryLoadingModal, setShowRetryLoadingModal] = useState(false);
 
     const [showYoutubeExportSettingModal, setShowYoutubeExportSettingModal] = useState(false);
+    const [showTikTokExportSettingModal, setShowTikTokExportSettingModal] = useState(false);
     const [showTikTokExportConsentModal, setShowTikTokExportConsentModal] = useState(false);
 
     const [isExportingVideo, setIsExportingVideo] = useState(false);
@@ -126,13 +129,15 @@ function WorkspaceDashboardPageClient() {
                 throw Error("Export data is not invalid.");
             }
 
+            const targetSeriesQuery = targetSeriesId ? `&targetSeriesId=${targetSeriesId}` : '';
+
             switch (pendingExportPlatform) {
                 case ExportPlatform.YOUTUBE: {
-                    window.location.href = `/api/video/export/youtube/manual/oauth?taskId=${pendingExportTaskId}&privacySetting=${youtubePrivacySetting}`;
+                    window.location.href = `/api/video/export/youtube/manual/oauth?taskId=${pendingExportTaskId}&privacySetting=${youtubePrivacySetting}${targetSeriesQuery}`;
                     return;
                 }
                 case ExportPlatform.TIKTOK: {
-                    window.location.href = `/api/video/export/tiktok/manual/oauth?taskId=${pendingExportTaskId}`;
+                    window.location.href = `/api/video/export/tiktok/manual/oauth?taskId=${pendingExportTaskId}${targetSeriesQuery}`;
                     return;
                 }
                 case ExportPlatform.INSTAGRAM: {
@@ -143,7 +148,7 @@ function WorkspaceDashboardPageClient() {
         } catch (error) {
             console.error(error);
         }
-    }, [user?.id, pendingExportTaskId, pendingExportPlatform, youtubePrivacySetting]);
+    }, [user?.id, pendingExportTaskId, pendingExportPlatform, youtubePrivacySetting, targetSeriesId]);
 
     const onClickDownload = useCallback(async (taskId: string) => {
         try {
@@ -649,7 +654,7 @@ function WorkspaceDashboardPageClient() {
                                                     break;
                                                 }
                                                 case ExportPlatform.TIKTOK: {
-                                                    setShowTikTokExportConsentModal(true);
+                                                    setShowTikTokExportSettingModal(true);
                                                     break;
                                                 }
                                                 case ExportPlatform.INSTAGRAM: {
@@ -735,35 +740,35 @@ function WorkspaceDashboardPageClient() {
                 </div>
             )}
 
-            {showYoutubeExportSettingModal && <ExportSettingsModal
-                privacySetting={youtubePrivacySetting}
-                onChangePrivacySetting={onChangeYoutubePrivacySetting}
-                onClickConfirm={onClickExport}
-                onClickCancel={() => {
-                    setShowYoutubeExportSettingModal(false);
-                }}
-            />}
+            <AnimatePresence>
+                {showYoutubeExportSettingModal && user?.id && <ExportSettingsModal
+                    userId={user.id}
+                    platform={ExportPlatform.YOUTUBE}
+                    privacySetting={youtubePrivacySetting}
+                    onChangePrivacySetting={onChangeYoutubePrivacySetting}
+                    selectedSeriesId={targetSeriesId}
+                    onChangeSelectedSeriesId={setTargetSeriesId}
+                    onClickConfirm={onClickExport}
+                    onClickCancel={() => {
+                        setShowYoutubeExportSettingModal(false);
+                        setTargetSeriesId(null);
+                    }}
+                />}
 
-            {showTikTokExportConsentModal && <DefaultModal
-                title="Export to TikTok"
-                message={
-                    "By continuing, you authorize ShortReal AI to upload this video to your TikTok account on your behalf.\n\n" +
-                    "• Only this video will be uploaded — no other actions will be taken.\n" +
-                    "• Processing may take a few minutes after upload.\n" +
-                    "• You can remove access at any time from your TikTok settings."
-                }
-                confirmText="Authorize & Continue"
-                cancelText="Cancel"
-                onClickConfirm={async () => {
-                    setShowTikTokExportConsentModal(false);
-                    await onClickExport();
-                }}
-                onClickCancel={() => {
-                    setShowTikTokExportConsentModal(false);
-                    setPendingExportTaskId(null);
-                    setPendingExportPlatform(null);
-                }}
-            />}
+                {showTikTokExportSettingModal && user?.id && <ExportSettingsModal
+                    userId={user.id}
+                    platform={ExportPlatform.TIKTOK}
+                    privacySetting={youtubePrivacySetting}
+                    onChangePrivacySetting={onChangeYoutubePrivacySetting}
+                    selectedSeriesId={targetSeriesId}
+                    onChangeSelectedSeriesId={setTargetSeriesId}
+                    onClickConfirm={onClickExport}
+                    onClickCancel={() => {
+                        setShowTikTokExportSettingModal(false);
+                        setTargetSeriesId(null);
+                    }}
+                />}
+            </AnimatePresence>
         </div>
     )
 }

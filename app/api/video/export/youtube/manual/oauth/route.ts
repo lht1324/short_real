@@ -33,6 +33,7 @@ export async function GET(request: NextRequest) {
 
     try {
         const privacySetting = request.nextUrl.searchParams.get('privacySetting');
+        const targetSeriesId = request.nextUrl.searchParams.get('targetSeriesId');
 
         if (!privacySetting) {
             return getNextBaseResponse({
@@ -42,11 +43,26 @@ export async function GET(request: NextRequest) {
             });
         }
 
-        const { data: existingToken } = await supabase
+        // 1. 수동 내보내기 시 선택한 채널(시리즈 ID)이 있다면 해당 태스크의 series_id에 맵핑
+        if (targetSeriesId) {
+            await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, {
+                series_id: targetSeriesId,
+            });
+        }
+
+        // 2. 해당 채널(시리즈 ID)에 매칭되는 기존 토큰이 있는지 조회
+        let tokenQuery = supabase
             .from('user_youtube_tokens')
             .select('refresh_token, expires_at')
-            .eq('user_id', user.id)
-            .single();
+            .eq('user_id', user.id);
+
+        if (targetSeriesId) {
+            tokenQuery = tokenQuery.eq('series_id', targetSeriesId);
+        } else {
+            tokenQuery = tokenQuery.is('series_id', null);
+        }
+
+        const { data: existingToken } = await tokenQuery.maybeSingle();
 
         if (existingToken?.refresh_token) {
             // 토큰 있음 → OAuth 건너뛰고 바로 업로드 트리거
@@ -74,6 +90,7 @@ export async function GET(request: NextRequest) {
                 userId: user.id,
                 taskId: taskId,
                 privacySetting: privacySetting,
+                targetSeriesId: targetSeriesId || null,
             }))
         });
 
