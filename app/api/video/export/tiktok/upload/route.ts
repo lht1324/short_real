@@ -10,6 +10,7 @@ import { UserTikTokToken } from '@/lib/api/types/supabase/UserTikTokToken';
 import {getIsValidRequestS2S} from "@/lib/utils/getIsValidRequest";
 import {ExportPlatform, ExportStatus} from "@/lib/api/types/supabase/VideoGenerationTasks";
 import JSONbig from 'json-bigint';
+import { cryptoUtils } from "@/lib/utils/cryptoUtils";
 
 const MIN_CHUNK = 5 * 1024 * 1024;  // 5MB
 const MAX_CHUNK = 64 * 1024 * 1024; // 64MB
@@ -27,6 +28,8 @@ export async function POST(request: NextRequest) {
 
     const { searchParams } = new URL(request.url);
     const taskId = searchParams.get('taskId');
+    const tokenIdRaw = searchParams.get('tokenId');
+    const tokenId = (tokenIdRaw === 'null' || tokenIdRaw === 'undefined') ? null : tokenIdRaw;
 
     if (!taskId) {
         return getNextBaseResponse({
@@ -56,19 +59,39 @@ export async function POST(request: NextRequest) {
 
         console.log(`[TikTok Upload] Starting for userId=${userId}`);
 
-        // 1. DB에서 토큰 조회 (자동 스케줄러 여부에 따른 series_id 분기 필터링)
+        let decryptedTokenId: string | null = null;
+        if (tokenId) {
+            try {
+                decryptedTokenId = cryptoUtils.decrypt(tokenId, userId);
+            } catch (e) {
+                console.error('[TikTok Upload] Failed to decrypt tokenId:', e);
+                await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, {
+                    export_status: ExportStatus.FAILED,
+                    export_platform: ExportPlatform.TIKTOK,
+                });
+                return getNextBaseResponse({
+                    success: false,
+                    status: 400,
+                    error: 'Invalid token signature or unauthorized token access.'
+                });
+            }
+        }
+
+        // 1. DB에서 토큰 조회 (tokenId 최우선 조회, 없을 시 series_id 분기 필터링)
         let tokenQuery = supabase
              .from('user_tiktok_tokens')
              .select('*')
              .eq('user_id', userId);
 
-        if (videoGenerationTask.series_id) {
+        if (decryptedTokenId) {
+            tokenQuery = tokenQuery.eq('id', decryptedTokenId);
+        } else if (videoGenerationTask.series_id) {
             tokenQuery = tokenQuery.eq('series_id', videoGenerationTask.series_id);
         } else {
             tokenQuery = tokenQuery.is('series_id', null);
         }
 
-        const { data: tokenData, error: tokenError }: PostgrestSingleResponse<UserTikTokToken> = await tokenQuery
+        const { data: tokenData, error: tokenError } = await tokenQuery
             .maybeSingle();
 
         if (tokenError || !tokenData) {
@@ -142,7 +165,7 @@ export async function POST(request: NextRequest) {
                     updated_at: new Date().toISOString(),
                     last_used_at: new Date().toISOString(),
                 })
-                .eq('user_id', userId);
+                .eq('id', tokenData.id);
 
             console.log('[TikTok Upload] Token refreshed successfully');
         }
@@ -274,7 +297,7 @@ export async function POST(request: NextRequest) {
         await supabase
             .from('user_tiktok_tokens')
             .update({ last_used_at: new Date().toISOString() })
-            .eq('user_id', userId);
+            .eq('id', tokenData.id);
 
         console.log('[TikTok Upload] Success! URL:', videoUrl);
         await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, {

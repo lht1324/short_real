@@ -82,7 +82,7 @@ function WorkspaceDashboardPageClient() {
     const [pendingExportPlatform, setPendingExportPlatform] = useState<ExportPlatform | null>(null);
 
     const [youtubePrivacySetting, setYoutubePrivacySetting] = useState<ExportPrivacySetting>(ExportPrivacySetting.PUBLIC);
-    const [targetSeriesId, setTargetSeriesId] = useState<string | null>(null);
+    const [targetTokenId, setTargetTokenId] = useState<string | null>(null);
 
     const [showEditMetadataModal, setShowEditMetadataModal] = useState(false);
     const [showCancelConfirmModal, setShowCancelConfirmModal] = useState(false);
@@ -129,15 +129,15 @@ function WorkspaceDashboardPageClient() {
                 throw Error("Export data is not invalid.");
             }
 
-            const targetSeriesQuery = targetSeriesId ? `&targetSeriesId=${targetSeriesId}` : '';
+            const targetTokenQuery = targetTokenId ? `&targetTokenId=${targetTokenId}` : '';
 
             switch (pendingExportPlatform) {
                 case ExportPlatform.YOUTUBE: {
-                    window.location.href = `/api/video/export/youtube/manual/oauth?taskId=${pendingExportTaskId}&privacySetting=${youtubePrivacySetting}${targetSeriesQuery}`;
+                    window.location.href = `/api/video/export/youtube/manual/oauth?taskId=${pendingExportTaskId}&privacySetting=${youtubePrivacySetting}${targetTokenQuery}`;
                     return;
                 }
                 case ExportPlatform.TIKTOK: {
-                    window.location.href = `/api/video/export/tiktok/manual/oauth?taskId=${pendingExportTaskId}${targetSeriesQuery}`;
+                    window.location.href = `/api/video/export/tiktok/manual/oauth?taskId=${pendingExportTaskId}${targetTokenQuery}`;
                     return;
                 }
                 case ExportPlatform.INSTAGRAM: {
@@ -148,7 +148,7 @@ function WorkspaceDashboardPageClient() {
         } catch (error) {
             console.error(error);
         }
-    }, [user?.id, pendingExportTaskId, pendingExportPlatform, youtubePrivacySetting, targetSeriesId]);
+    }, [user?.id, pendingExportTaskId, pendingExportPlatform, youtubePrivacySetting, targetTokenId]);
 
     const onClickDownload = useCallback(async (taskId: string) => {
         try {
@@ -746,12 +746,12 @@ function WorkspaceDashboardPageClient() {
                     platform={ExportPlatform.YOUTUBE}
                     privacySetting={youtubePrivacySetting}
                     onChangePrivacySetting={onChangeYoutubePrivacySetting}
-                    selectedSeriesId={targetSeriesId}
-                    onChangeSelectedSeriesId={setTargetSeriesId}
+                    selectedTokenId={targetTokenId}
+                    onChangeSelectedTokenId={setTargetTokenId}
                     onClickConfirm={onClickExport}
                     onClickCancel={() => {
                         setShowYoutubeExportSettingModal(false);
-                        setTargetSeriesId(null);
+                        setTargetTokenId(null);
                     }}
                 />}
 
@@ -760,12 +760,12 @@ function WorkspaceDashboardPageClient() {
                     platform={ExportPlatform.TIKTOK}
                     privacySetting={youtubePrivacySetting}
                     onChangePrivacySetting={onChangeYoutubePrivacySetting}
-                    selectedSeriesId={targetSeriesId}
-                    onChangeSelectedSeriesId={setTargetSeriesId}
+                    selectedTokenId={targetTokenId}
+                    onChangeSelectedTokenId={setTargetTokenId}
                     onClickConfirm={onClickExport}
                     onClickCancel={() => {
                         setShowTikTokExportSettingModal(false);
-                        setTargetSeriesId(null);
+                        setTargetTokenId(null);
                     }}
                 />}
             </AnimatePresence>

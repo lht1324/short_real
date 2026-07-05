@@ -1,6 +1,7 @@
 import { memo, useMemo, ReactNode, useState, useEffect } from "react";
 import { ExportPrivacySetting } from "@/components/page/workspace/dashboard/export-settings-modal/ExportPrivacySetting";
 import { Globe, Lock, Link as LinkIcon, User, ChevronDown, Loader2 } from "lucide-react";
+import { getFetch } from "@/lib/api/client/baseFetch";
 import { ExportPlatform } from "@/lib/api/types/supabase/VideoGenerationTasks";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -44,8 +45,8 @@ interface ExportSettingsModalProps {
     platform?: ExportPlatform;
     privacySetting: ExportPrivacySetting;
     onChangePrivacySetting: (privacySetting: ExportPrivacySetting) => void;
-    selectedSeriesId: string | null;
-    onChangeSelectedSeriesId: (seriesId: string | null) => void;
+    selectedTokenId: string | null;
+    onChangeSelectedTokenId: (tokenId: string | null) => void;
     onClickConfirm: () => Promise<void>;
     onClickCancel: () => void;
 }
@@ -55,8 +56,8 @@ function ExportSettingsModal({
     platform = ExportPlatform.YOUTUBE,
     privacySetting,
     onChangePrivacySetting,
-    selectedSeriesId,
-    onChangeSelectedSeriesId,
+    selectedTokenId,
+    onChangeSelectedTokenId,
     onClickConfirm,
     onClickCancel,
 }: ExportSettingsModalProps) {
@@ -72,7 +73,7 @@ function ExportSettingsModal({
             setIsLoadingChannels(true);
             try {
                 const platformQuery = platform === ExportPlatform.YOUTUBE ? "youtube" : "tiktok";
-                const response = await fetch(`/api/user/${userId}/social-channels?platform=${platformQuery}`);
+                const response = await getFetch(`/api/user/${userId}/social-channels?platform=${platformQuery}`);
                 const resData = await response.json();
                 
                 if (resData.success && resData.data?.channels) {
@@ -81,9 +82,9 @@ function ExportSettingsModal({
                     
                     // 기존에 연동된 채널이 있다면 첫 번째 채널을 기본값으로 자동 설정
                     if (fetchedChannels.length > 0) {
-                        onChangeSelectedSeriesId(fetchedChannels[0].seriesId);
+                        onChangeSelectedTokenId(fetchedChannels[0].id);
                     } else {
-                        onChangeSelectedSeriesId(null);
+                        onChangeSelectedTokenId(null);
                     }
                 }
             } catch (error) {
@@ -94,7 +95,7 @@ function ExportSettingsModal({
         };
 
         fetchChannels();
-    }, [userId, platform, onChangeSelectedSeriesId]);
+    }, [userId, platform, onChangeSelectedTokenId]);
 
     const filteredOptions = useMemo(() => {
         if (platform === ExportPlatform.TIKTOK) {
@@ -121,11 +122,11 @@ function ExportSettingsModal({
 
     // 현재 선택된 채널 객체 찾기
     const selectedChannel = useMemo(() => {
-        return channels.find(c => c.seriesId === selectedSeriesId);
-    }, [channels, selectedSeriesId]);
+        return channels.find(c => c.id === selectedTokenId);
+    }, [channels, selectedTokenId]);
 
-    const handleSelectChannel = (seriesId: string | null) => {
-        onChangeSelectedSeriesId(seriesId);
+    const handleSelectChannel = (tokenId: string | null) => {
+        onChangeSelectedTokenId(tokenId);
         setIsDropdownOpen(false);
     };
 
@@ -223,7 +224,7 @@ function ExportSettingsModal({
                                             <button
                                                 key={channel.id}
                                                 type="button"
-                                                onClick={() => handleSelectChannel(channel.seriesId)}
+                                                onClick={() => handleSelectChannel(channel.id)}
                                                 className="w-full flex items-center gap-3 px-4 py-3 hover:bg-white/5 hover:text-white transition-all text-left group"
                                             >
                                                 {channel.avatarUrl ? (

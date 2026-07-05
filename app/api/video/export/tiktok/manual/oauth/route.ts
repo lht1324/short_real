@@ -5,6 +5,7 @@ import { createSupabaseServiceRoleClient } from "@/lib/supabase/supabaseServiceR
 import { internalFireAndForgetFetch } from "@/lib/utils/internalFetch";
 import { videoGenerationTasksServerAPI } from "@/lib/api/server/videoGenerationTasksServerAPI";
 import { ExportPlatform, ExportStatus } from "@/lib/api/types/supabase/VideoGenerationTasks";
+import { cryptoUtils } from "@/lib/utils/cryptoUtils";
 
 export async function GET(request: NextRequest) {
     const { isValidRequest, user } = await getIsValidRequestC2S();
@@ -20,7 +21,8 @@ export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams;
 
     const taskId = searchParams.get('taskId');
-    const targetSeriesId = searchParams.get('targetSeriesId');
+    const targetTokenIdRaw = searchParams.get('targetTokenId');
+    let targetTokenId = (targetTokenIdRaw === 'null' || targetTokenIdRaw === 'undefined') ? null : targetTokenIdRaw;
 
     if (!taskId) {
         return getNextBaseResponse({
@@ -33,21 +35,25 @@ export async function GET(request: NextRequest) {
     const supabase = createSupabaseServiceRoleClient();
 
     try {
-        // 1. 수동 내보내기 시 선택한 채널(시리즈 ID)이 있다면 해당 태스크의 series_id에 맵핑
-        if (targetSeriesId) {
-            await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, {
-                series_id: targetSeriesId,
-            });
+        // 복호화 시도 (DB 조회용)
+        let decryptedTokenId: string | null = null;
+        if (targetTokenId) {
+            try {
+                decryptedTokenId = cryptoUtils.decrypt(targetTokenId, user.id);
+            } catch (e) {
+                console.error('[TikTok OAuth] Failed to decrypt targetTokenId:', e);
+                targetTokenId = null;
+            }
         }
 
-        // 2. 해당 채널(시리즈 ID)에 매칭되는 기존 토큰이 있는지 조회
+        // 2. 해당 고유 토큰 ID에 매칭되는 기존 토큰이 있는지 조회
         let tokenQuery = supabase
              .from('user_tiktok_tokens')
-             .select('refresh_token, refresh_expires_at')
+             .select('id, refresh_token, refresh_expires_at')
              .eq('user_id', user.id);
 
-        if (targetSeriesId) {
-            tokenQuery = tokenQuery.eq('series_id', targetSeriesId);
+        if (decryptedTokenId) {
+            tokenQuery = tokenQuery.eq('id', decryptedTokenId);
         } else {
             tokenQuery = tokenQuery.is('series_id', null);
         }
@@ -56,8 +62,10 @@ export async function GET(request: NextRequest) {
 
         // 3. 토큰이 유효하게 남아있다면 OAuth 없이 즉시 업로드 트리거
         if (existingToken?.refresh_token && Date.now() < new Date(existingToken.refresh_expires_at).getTime()) {
+            const tokenToPass = targetTokenId || cryptoUtils.encrypt(existingToken.id, user.id);
+
             internalFireAndForgetFetch(
-                `${process.env.BASE_URL}/api/video/export/tiktok/upload?taskId=${taskId}`,
+                `${process.env.BASE_URL}/api/video/export/tiktok/upload?taskId=${taskId}&tokenId=${tokenToPass}`,
                 { method: 'POST' },
                 { userId: user.id }
             );
@@ -78,7 +86,7 @@ export async function GET(request: NextRequest) {
             state: JSON.stringify({
                 taskId,
                 userId: user.id,
-                targetSeriesId: targetSeriesId || null,
+                targetTokenId: targetTokenId || null, // 암호화 상태 그대로 유지하여 전달
             }),
         });
 

@@ -2,14 +2,8 @@ import {NextRequest} from "next/server";
 import {videoGenerationTasksServerAPI} from "@/lib/api/server/videoGenerationTasksServerAPI";
 import {VideoGenerationTaskStatus} from "@/lib/api/types/supabase/VideoGenerationTasks";
 import {getNextBaseResponse} from "@/lib/utils/getNextBaseResponse";
-import {getIsValidRequestC2S, getIsValidRequestS2S} from "@/lib/utils/getIsValidRequest";
+import {getIsValidRequestS2S} from "@/lib/utils/getIsValidRequest";
 import {internalFireAndForgetFetch} from "@/lib/utils/internalFetch";
-import {usersServerAPI} from "@/lib/api/server/usersServerAPI";
-import {
-    RETRY_CREDIT_MUSIC_GENERATION,
-    RETRY_CREDIT_PER_SCENE,
-    RETRY_CREDIT_PER_VIDEO_DURATION
-} from "@/lib/ADDITIONAL_CREDIT_AMOUNT";
 
 interface RetryPathData {
     path: string;

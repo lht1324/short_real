@@ -25,7 +25,8 @@ export async function GET(request: NextRequest) {
     }
 
     const searchParams = request.nextUrl.searchParams;
-    const seriesId = searchParams.get('seriesId') || searchParams.get('taskId'); // Flexible parameter name
+    const seriesIdRaw = searchParams.get('seriesId') || searchParams.get('taskId'); // Flexible parameter name
+    const seriesId = (seriesIdRaw === 'null' || seriesIdRaw === 'undefined') ? null : seriesIdRaw;
 
     if (!seriesId) {
         return getNextBaseResponse({

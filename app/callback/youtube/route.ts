@@ -4,6 +4,7 @@ import {createSupabaseServiceRoleClient} from "@/lib/supabase/supabaseServiceRol
 import {internalFireAndForgetFetch} from "@/lib/utils/internalFetch";
 import {videoGenerationTasksServerAPI} from "@/lib/api/server/videoGenerationTasksServerAPI";
 import {ExportPlatform, ExportStatus} from "@/lib/api/types/supabase/VideoGenerationTasks";
+import { cryptoUtils } from "@/lib/utils/cryptoUtils";
 
 
 export async function GET(request: NextRequest) {
@@ -54,7 +55,7 @@ export async function GET(request: NextRequest) {
 
         // 2. State에서 데이터 추출
         const stateData = JSON.parse(decodeURIComponent(state));
-        const { userId, taskId, seriesId, mode, privacySetting, targetSeriesId } = stateData;
+        const { userId, taskId, seriesId, mode, privacySetting, targetTokenId } = stateData;
         const isAutopilot = mode === 'autopilot';
 
         // 필수 파라미터 체크: 오토파일럿은 userId만 있으면 됨, 매뉴얼은 taskId/privacySetting 필수
@@ -128,10 +129,19 @@ export async function GET(request: NextRequest) {
             .select('id')
             .eq('user_id', userId);
 
+        let decryptedTokenId: string | null = null;
+        if (!isAutopilot && targetTokenId && targetTokenId !== 'null' && targetTokenId !== 'undefined') {
+            try {
+                decryptedTokenId = cryptoUtils.decrypt(targetTokenId, userId);
+            } catch (e) {
+                console.error('[YouTube Callback] Failed to decrypt targetTokenId:', e);
+            }
+        }
+
         if (isAutopilot) {
             findQuery = findQuery.eq('series_id', seriesId);
-        } else if (targetSeriesId) {
-            findQuery = findQuery.eq('series_id', targetSeriesId);
+        } else if (decryptedTokenId) {
+            findQuery = findQuery.eq('id', decryptedTokenId);
         } else {
             findQuery = findQuery.is('series_id', null);
         }
@@ -140,7 +150,7 @@ export async function GET(request: NextRequest) {
 
         const tokenPayload = {
             user_id: userId,
-            series_id: isAutopilot ? seriesId : (targetSeriesId || null),
+            series_id: isAutopilot ? seriesId : null,
             access_token: tokens.access_token,
             refresh_token: tokens.refresh_token,
             expires_at: expiresAt,
@@ -156,12 +166,16 @@ export async function GET(request: NextRequest) {
             dbResult = await supabase
                 .from('user_youtube_tokens')
                 .update(tokenPayload)
-                .eq('id', existingRecord.id);
+                .eq('id', existingRecord.id)
+                .select('id')
+                .single();
         } else {
             // (3) 존재하지 않는 경우: INSERT
             dbResult = await supabase
                 .from('user_youtube_tokens')
-                .insert(tokenPayload);
+                .insert(tokenPayload)
+                .select('id')
+                .single();
         }
 
         const dbError = dbResult.error;
@@ -186,15 +200,10 @@ export async function GET(request: NextRequest) {
             return NextResponse.redirect(`${originUrl}/workspace/autopilot?seriesId=${seriesId}`);
         }
 
-        // 수동 업로드 모드이고 선택한 targetSeriesId가 있는 경우 해당 태스크의 series_id에 반영
-        if (targetSeriesId) {
-            await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, {
-                series_id: targetSeriesId,
-            });
-        }
-
         // 수동 업로드 모드인 경우: 기존 업로드 트리거 로직 실행
-        internalFireAndForgetFetch(`${process.env.BASE_URL}/api/video/export/youtube/upload?taskId=${taskId}&privacySetting=${privacySetting}`, {
+        const finalTokenId = existingRecord?.id || dbResult.data?.id;
+        const encryptedTokenId = finalTokenId ? cryptoUtils.encrypt(finalTokenId, userId) : '';
+        internalFireAndForgetFetch(`${process.env.BASE_URL}/api/video/export/youtube/upload?taskId=${taskId}&privacySetting=${privacySetting}&tokenId=${encryptedTokenId}`, {
             method: 'POST',
         });
 

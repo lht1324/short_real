@@ -1,11 +1,22 @@
 import { NextRequest } from "next/server";
 import { createSupabaseServiceRoleClient } from "@/lib/supabase/supabaseServiceRole";
 import { getNextBaseResponse } from "@/lib/utils/getNextBaseResponse";
+import { cryptoUtils } from "@/lib/utils/cryptoUtils";
+import { getIsValidRequestS2S } from "@/lib/utils/getIsValidRequest";
 
 export async function GET(
     request: NextRequest,
     { params }: { params: Promise<{ userId: string }> }
 ) {
+    // 🚨 S2S 게이트웨이 보안 가드
+    if (!getIsValidRequestS2S(request)) {
+        return getNextBaseResponse({
+            success: false,
+            status: 401,
+            error: "Unauthorized internal request."
+        });
+    }
+
     try {
         const { userId } = await params;
         const { searchParams } = new URL(request.url);
@@ -40,7 +51,7 @@ export async function GET(
             }
 
             const channels = (youtubeTokens || []).map((token) => ({
-                id: token.id,
+                id: cryptoUtils.encrypt(token.id, userId),
                 seriesId: token.series_id || null,
                 displayName: token.display_name || "YouTube Shorts Channel",
                 handleName: token.handle_name || "",
@@ -67,7 +78,7 @@ export async function GET(
             }
 
             const channels = (tiktokTokens || []).map((token) => ({
-                id: token.id,
+                id: cryptoUtils.encrypt(token.id, userId),
                 seriesId: token.series_id || null,
                 displayName: token.display_name || "TikTok Account",
                 handleName: token.handle_name || "",

@@ -5,7 +5,7 @@ import { getCachedPolarProducts } from "@/lib/api/cached/polarCached";
 import {
     PostPolarSubscriptionsChangeRequest
 } from "@/lib/api/types/api/polar/subscriptions/change/PostPolarSubscriptionsChangeRequest";
-import {getIsValidRequestC2S, getIsValidRequestS2S} from "@/lib/utils/getIsValidRequest";
+import { getIsValidRequestS2S } from "@/lib/utils/getIsValidRequest";
 import { PolarClient } from "@/lib/PolarClient";
 
 /**

@@ -11,6 +11,7 @@ import {DownloadResult} from "@supabase/storage-js";
 import {videoGenerationTasksServerAPI} from "@/lib/api/server/videoGenerationTasksServerAPI";
 import {ExportPlatform, ExportStatus} from "@/lib/api/types/supabase/VideoGenerationTasks";
 import {getIsValidRequestS2S} from "@/lib/utils/getIsValidRequest";
+import { cryptoUtils } from "@/lib/utils/cryptoUtils";
 
 export async function POST(request: NextRequest) {
     if (!getIsValidRequestS2S(request)) {
@@ -26,6 +27,8 @@ export async function POST(request: NextRequest) {
     // URL에서 파라미터 추출
     const { searchParams } = new URL(request.url);
     const taskId = searchParams.get('taskId');
+    const tokenIdRaw = searchParams.get('tokenId');
+    const tokenId = (tokenIdRaw === 'null' || tokenIdRaw === 'undefined') ? null : tokenIdRaw;
 
     if (!taskId) {
         // 찝찝하지만 비정상 요청으로 간주하고 넘기자
@@ -73,19 +76,39 @@ export async function POST(request: NextRequest) {
 
         console.log(`[YouTube Upload] Starting for userId=${userId}`);
 
-        // 1. DB에서 토큰 조회 (자동 스케줄러 여부에 따른 series_id 분기 필터링)
+        let decryptedTokenId: string | null = null;
+        if (tokenId) {
+            try {
+                decryptedTokenId = cryptoUtils.decrypt(tokenId, userId);
+            } catch (e) {
+                console.error('[YouTube Upload] Failed to decrypt tokenId:', e);
+                await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, {
+                    export_status: ExportStatus.FAILED,
+                    export_platform: ExportPlatform.YOUTUBE,
+                });
+                return getNextBaseResponse({
+                    success: false,
+                    status: 400,
+                    error: 'Invalid token signature or unauthorized token access.'
+                });
+            }
+        }
+
+        // 1. DB에서 토큰 조회 (tokenId 최우선 조회, 없을 시 series_id 분기 필터링)
         let tokenQuery = supabase
             .from('user_youtube_tokens')
             .select('*')
             .eq('user_id', userId);
 
-        if (videoGenerationTask.series_id) {
+        if (decryptedTokenId) {
+            tokenQuery = tokenQuery.eq('id', decryptedTokenId);
+        } else if (videoGenerationTask.series_id) {
             tokenQuery = tokenQuery.eq('series_id', videoGenerationTask.series_id);
         } else {
             tokenQuery = tokenQuery.is('series_id', null);
         }
 
-        const { data: tokenData, error: tokenError }: PostgrestSingleResponse<UserYoutubeToken> = await tokenQuery
+        const { data: tokenData, error: tokenError } = await tokenQuery
             .maybeSingle();
 
         if (tokenError || !tokenData) {
@@ -150,7 +173,7 @@ export async function POST(request: NextRequest) {
                     expires_at: newExpiresAt,
                     updated_at: new Date().toISOString()
                 })
-                .eq('user_id', userId);
+                .eq('id', tokenData.id);
 
             console.log('[YouTube Upload] Token refreshed successfully');
         }

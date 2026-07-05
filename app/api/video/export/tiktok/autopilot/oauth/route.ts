@@ -20,7 +20,8 @@ export async function GET(request: NextRequest) {
     }
 
     const searchParams = request.nextUrl.searchParams;
-    const seriesId = searchParams.get('seriesId') || searchParams.get('taskId');
+    const seriesIdRaw = searchParams.get('seriesId') || searchParams.get('taskId');
+    const seriesId = (seriesIdRaw === 'null' || seriesIdRaw === 'undefined') ? null : seriesIdRaw;
 
     if (!seriesId) {
         return getNextBaseResponse({

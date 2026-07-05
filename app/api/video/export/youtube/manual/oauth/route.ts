@@ -5,6 +5,7 @@ import { createSupabaseServiceRoleClient } from "@/lib/supabase/supabaseServiceR
 import { internalFireAndForgetFetch } from "@/lib/utils/internalFetch";
 import { videoGenerationTasksServerAPI } from "@/lib/api/server/videoGenerationTasksServerAPI";
 import { ExportPlatform, ExportStatus } from "@/lib/api/types/supabase/VideoGenerationTasks";
+import { cryptoUtils } from "@/lib/utils/cryptoUtils";
 
 export async function GET(request: NextRequest) {
     const { isValidRequest, user } = await getIsValidRequestC2S();
@@ -33,7 +34,8 @@ export async function GET(request: NextRequest) {
 
     try {
         const privacySetting = request.nextUrl.searchParams.get('privacySetting');
-        const targetSeriesId = request.nextUrl.searchParams.get('targetSeriesId');
+        const targetTokenIdRaw = request.nextUrl.searchParams.get('targetTokenId');
+        let targetTokenId = (targetTokenIdRaw === 'null' || targetTokenIdRaw === 'undefined') ? null : targetTokenIdRaw;
 
         if (!privacySetting) {
             return getNextBaseResponse({
@@ -43,21 +45,25 @@ export async function GET(request: NextRequest) {
             });
         }
 
-        // 1. 수동 내보내기 시 선택한 채널(시리즈 ID)이 있다면 해당 태스크의 series_id에 맵핑
-        if (targetSeriesId) {
-            await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, {
-                series_id: targetSeriesId,
-            });
+        // 복호화 시도 (DB 조회용)
+        let decryptedTokenId: string | null = null;
+        if (targetTokenId) {
+            try {
+                decryptedTokenId = cryptoUtils.decrypt(targetTokenId, user.id);
+            } catch (e) {
+                console.error('[YouTube OAuth] Failed to decrypt targetTokenId:', e);
+                targetTokenId = null;
+            }
         }
 
-        // 2. 해당 채널(시리즈 ID)에 매칭되는 기존 토큰이 있는지 조회
+        // 2. 해당 고유 토큰 ID에 매칭되는 기존 토큰이 있는지 조회
         let tokenQuery = supabase
             .from('user_youtube_tokens')
-            .select('refresh_token, expires_at')
+            .select('id, refresh_token, expires_at')
             .eq('user_id', user.id);
 
-        if (targetSeriesId) {
-            tokenQuery = tokenQuery.eq('series_id', targetSeriesId);
+        if (decryptedTokenId) {
+            tokenQuery = tokenQuery.eq('id', decryptedTokenId);
         } else {
             tokenQuery = tokenQuery.is('series_id', null);
         }
@@ -65,9 +71,12 @@ export async function GET(request: NextRequest) {
         const { data: existingToken } = await tokenQuery.maybeSingle();
 
         if (existingToken?.refresh_token) {
-            // 토큰 있음 → OAuth 건너뛰고 바로 업로드 트리거
+            // 토큰 있음 → OAuth 건너뛰고 바로 업로드 트리거 (암호화된 targetTokenId 전달)
+            // 만약 targetTokenId가 없었다면 (예: legacy 수동 연동 복구), 새로 암호화하여 생성
+            const tokenToPass = targetTokenId || cryptoUtils.encrypt(existingToken.id, user.id);
+            
             internalFireAndForgetFetch(
-                `${process.env.BASE_URL}/api/video/export/youtube/upload?taskId=${taskId}&privacySetting=${privacySetting}`,
+                `${process.env.BASE_URL}/api/video/export/youtube/upload?taskId=${taskId}&privacySetting=${privacySetting}&tokenId=${tokenToPass}`,
                 { method: 'POST' }
             );
 
@@ -90,7 +99,7 @@ export async function GET(request: NextRequest) {
                 userId: user.id,
                 taskId: taskId,
                 privacySetting: privacySetting,
-                targetSeriesId: targetSeriesId || null,
+                targetTokenId: targetTokenId || null, // 암호화된 상태 그대로 유지하여 전달
             }))
         });
 
