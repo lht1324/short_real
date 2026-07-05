@@ -58,12 +58,16 @@ export async function GET(request: NextRequest) {
         const privacySetting = searchParams.get('privacySetting') || series.youtube_privacy || ExportPrivacySetting.UNLISTED;
 
         // 2. Check for existing token for this specific series
-        const { data: existingToken } = await supabase
-            .from('user_youtube_tokens')
-            .select('refresh_token')
-            .eq('user_id', user.id)
-            .eq('series_id', seriesId)
-            .maybeSingle();
+        let existingToken = null;
+        if (series.youtube_token_id) {
+            const { data: token } = await supabase
+                .from('user_youtube_tokens')
+                .select('refresh_token')
+                .eq('user_id', user.id)
+                .eq('id', series.youtube_token_id)
+                .maybeSingle();
+            existingToken = token;
+        }
 
         if (existingToken?.refresh_token) {
             // ALREADY CONNECTED: Trigger upload if a task is pending
@@ -82,7 +86,7 @@ export async function GET(request: NextRequest) {
             }
 
             // Redirect back to autopilot settings with the series selected
-            return NextResponse.redirect(`${process.env.BASE_URL}/workspace/autopilot?seriesId=${seriesId}`);
+            return NextResponse.redirect(`${process.env.BASE_URL}/workspace/autopilot`);
         }
 
         // 3. START OAUTH: Pack 'autopilot' mode and seriesId into state

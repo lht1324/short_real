@@ -34,17 +34,27 @@ export async function GET(request: NextRequest) {
     const supabase = createSupabaseServiceRoleClient();
 
     try {
-        // 1. 이미 연동된 토큰이 있는지 확인 (유튜브와 로직 동기화)
-        const { data: existingToken } = await supabase
-            .from('user_tiktok_tokens')
-            .select('refresh_token')
-            .eq('user_id', user.id)
-            .eq('series_id', seriesId)
-            .maybeSingle();
+        // 1. autopilot_data에서 해당 시리즈의 토큰 ID 조회
+        const { data: autopilot } = await supabase
+            .from('autopilot_data')
+            .select('tiktok_token_id')
+            .eq('id', seriesId)
+            .single();
+
+        let existingToken = null;
+        if (autopilot?.tiktok_token_id) {
+            const { data: token } = await supabase
+                .from('user_tiktok_tokens')
+                .select('refresh_token')
+                .eq('user_id', user.id)
+                .eq('id', autopilot.tiktok_token_id)
+                .maybeSingle();
+            existingToken = token;
+        }
 
         if (existingToken?.refresh_token) {
             // 이미 연동되어 있다면 즉시 오토파일럿 설정 페이지로 리다이렉트
-            return NextResponse.redirect(`${process.env.BASE_URL}/workspace/autopilot?seriesId=${seriesId}`);
+            return NextResponse.redirect(`${process.env.BASE_URL}/workspace/autopilot`);
         }
 
         // 2. 연동되지 않은 경우 틱톡 OAuth 프로세스 시작

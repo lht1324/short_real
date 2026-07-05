@@ -121,7 +121,7 @@ export async function GET(request: NextRequest) {
         }
 
         // --- 3단계 수정 내용 시작 ---
-        // (1) 기존 레코드의 ID를 조회 (오토파일럿/수동 업로드 모드 분기 처리)
+        // (1) 기존 레코드의 ID를 조회 (중복 연동 판단)
         let findQuery = supabase
             .from('user_tiktok_tokens')
             .select('id')
@@ -136,19 +136,18 @@ export async function GET(request: NextRequest) {
             }
         }
 
-        if (isAutopilot) {
-            findQuery = findQuery.eq('series_id', seriesId);
-        } else if (decryptedTokenId) {
+        if (decryptedTokenId) {
             findQuery = findQuery.eq('id', decryptedTokenId);
+        } else if (tokens.open_id) {
+            findQuery = findQuery.eq('tiktok_user_id', tokens.open_id);
         } else {
-            findQuery = findQuery.is('series_id', null);
+            findQuery = findQuery.eq('id', '00000000-0000-0000-0000-000000000000');
         }
 
         const { data: existingRecord } = await findQuery.maybeSingle();
 
         const tokenPayload = {
             user_id: userId,
-            series_id: isAutopilot ? seriesId : null,
             access_token: tokens.access_token,
             refresh_token: tokens.refresh_token,
             expires_at: new Date(Date.now() + tokens.expires_in * 1000).toISOString(),
@@ -194,13 +193,23 @@ export async function GET(request: NextRequest) {
             return NextResponse.redirect(isAutopilot ? `${originUrl}/workspace/autopilot?seriesId=${seriesId}` : `${originUrl}/workspace/dashboard`);
         }
 
+        const finalTokenId = existingRecord?.id || dbResult.data?.id;
+
         // 5. 모드에 따른 후속 작업 및 리다이렉트
         if (isAutopilot) {
+            if (finalTokenId) {
+                await supabase
+                    .from('autopilot_data')
+                    .update({
+                        tiktok_token_id: finalTokenId,
+                        updated_at: new Date().toISOString()
+                    })
+                    .eq('id', seriesId);
+            }
             return NextResponse.redirect(`${originUrl}/workspace/autopilot?seriesId=${seriesId}`);
         }
 
         // 수동 업로드 모드인 경우
-        const finalTokenId = existingRecord?.id || dbResult.data?.id;
         const encryptedTokenId = finalTokenId ? cryptoUtils.encrypt(finalTokenId, userId) : '';
         internalFireAndForgetFetch(
             `${process.env.BASE_URL}/api/video/export/tiktok/upload?taskId=${taskId}&tokenId=${encryptedTokenId}`,

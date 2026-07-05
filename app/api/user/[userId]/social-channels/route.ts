@@ -1,8 +1,9 @@
-import { NextRequest } from "next/server";
-import { createSupabaseServiceRoleClient } from "@/lib/supabase/supabaseServiceRole";
-import { getNextBaseResponse } from "@/lib/utils/getNextBaseResponse";
-import { cryptoUtils } from "@/lib/utils/cryptoUtils";
-import { getIsValidRequestS2S } from "@/lib/utils/getIsValidRequest";
+import {NextRequest} from "next/server";
+import {createSupabaseServiceRoleClient} from "@/lib/supabase/supabaseServiceRole";
+import {getNextBaseResponse} from "@/lib/utils/getNextBaseResponse";
+import {cryptoUtils} from "@/lib/utils/cryptoUtils";
+import {getIsValidRequestS2S} from "@/lib/utils/getIsValidRequest";
+import {ExportPlatform} from "@/lib/api/types/supabase/VideoGenerationTasks";
 
 export async function GET(
     request: NextRequest,
@@ -20,7 +21,7 @@ export async function GET(
     try {
         const { userId } = await params;
         const { searchParams } = new URL(request.url);
-        const platform = searchParams.get("platform");
+        const platform = searchParams.get("platform") as ExportPlatform;
 
         if (!userId) {
             return getNextBaseResponse({
@@ -30,20 +31,20 @@ export async function GET(
             });
         }
 
-        if (!platform || (platform !== "youtube" && platform !== "tiktok")) {
+        if (!platform || (platform !== ExportPlatform.YOUTUBE && platform !== ExportPlatform.TIKTOK)) {
             return getNextBaseResponse({
                 success: false,
                 status: 400,
-                error: "Invalid or missing platform parameter (must be 'youtube' or 'tiktok')"
+                error: "Invalid or missing platform parameter"
             });
         }
 
         const supabase = createSupabaseServiceRoleClient();
 
-        if (platform === "youtube") {
+        if (platform === ExportPlatform.YOUTUBE) {
             const { data: youtubeTokens, error: youtubeError } = await supabase
                 .from("user_youtube_tokens")
-                .select("id, series_id, display_name, handle_name, avatar_url")
+                .select("id, display_name, handle_name, avatar_url")
                 .eq("user_id", userId);
 
             if (youtubeError) {
@@ -52,7 +53,7 @@ export async function GET(
 
             const channels = (youtubeTokens || []).map((token) => ({
                 id: cryptoUtils.encrypt(token.id, userId),
-                seriesId: token.series_id || null,
+                seriesId: null,
                 displayName: token.display_name || "YouTube Shorts Channel",
                 handleName: token.handle_name || "",
                 avatarUrl: token.avatar_url || null,
@@ -70,7 +71,7 @@ export async function GET(
         } else {
             const { data: tiktokTokens, error: tiktokError } = await supabase
                 .from("user_tiktok_tokens")
-                .select("id, series_id, display_name, handle_name, avatar_url")
+                .select("id, display_name, handle_name, avatar_url")
                 .eq("user_id", userId);
 
             if (tiktokError) {
@@ -79,7 +80,7 @@ export async function GET(
 
             const channels = (tiktokTokens || []).map((token) => ({
                 id: cryptoUtils.encrypt(token.id, userId),
-                seriesId: token.series_id || null,
+                seriesId: null,
                 displayName: token.display_name || "TikTok Account",
                 handleName: token.handle_name || "",
                 avatarUrl: token.avatar_url || null,

@@ -94,18 +94,27 @@ export async function POST(request: NextRequest) {
             }
         }
 
-        // 1. DB에서 토큰 조회 (tokenId 최우선 조회, 없을 시 series_id 분기 필터링)
+        // 1. DB에서 토큰 조회 (1:N 징검다리 쿼리 적용)
+        let targetTokenIdToQuery: string | null = decryptedTokenId;
+
+        if (!targetTokenIdToQuery && videoGenerationTask.series_id) {
+            const { data: autopilot } = await supabase
+                .from('autopilot_data')
+                .select('youtube_token_id')
+                .eq('id', videoGenerationTask.series_id)
+                .single();
+            if (autopilot?.youtube_token_id) {
+                targetTokenIdToQuery = autopilot.youtube_token_id;
+            }
+        }
+
         let tokenQuery = supabase
             .from('user_youtube_tokens')
             .select('*')
             .eq('user_id', userId);
 
-        if (decryptedTokenId) {
-            tokenQuery = tokenQuery.eq('id', decryptedTokenId);
-        } else if (videoGenerationTask.series_id) {
-            tokenQuery = tokenQuery.eq('series_id', videoGenerationTask.series_id);
-        } else {
-            tokenQuery = tokenQuery.is('series_id', null);
+        if (targetTokenIdToQuery) {
+            tokenQuery = tokenQuery.eq('id', targetTokenIdToQuery);
         }
 
         const { data: tokenData, error: tokenError } = await tokenQuery

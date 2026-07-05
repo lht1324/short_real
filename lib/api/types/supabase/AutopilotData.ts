@@ -21,6 +21,8 @@ export interface AutopilotData {
     // Platform Setting
     youtube_privacy?: ExportPrivacySetting | null;
     tiktok_privacy?: ExportPrivacySetting | null;
+    youtube_token_id?: string | null;
+    tiktok_token_id?: string | null;
 
     // Output Format Specs
     resolution?: '720p' | '1080p' | '2160p' | null;

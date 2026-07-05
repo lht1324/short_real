@@ -31,24 +31,36 @@ export async function GET(request: NextRequest) {
     const supabase = createSupabaseServiceRoleClient();
 
     try {
-        // 해당 시리즈와 매칭된 토큰 정보를 각각 조회
-        const [youtubeResult, tiktokResult] = await Promise.all([
-            supabase
-                .from('user_youtube_tokens')
-                .select('user_id, handle_name, display_name')
-                .eq('user_id', sessionUserId)
-                .eq('series_id', seriesId)
-                .maybeSingle(),
-            supabase
-                .from('user_tiktok_tokens')
-                .select('user_id, handle_name, display_name')
-                .eq('user_id', sessionUserId)
-                .eq('series_id', seriesId)
-                .maybeSingle()
-        ]);
+        // 1. autopilot_data에서 해당 시리즈의 토큰 ID들 조회
+        const { data: autopilot } = await supabase
+            .from('autopilot_data')
+            .select('youtube_token_id, tiktok_token_id')
+            .eq('id', seriesId)
+            .single();
 
-        const youtubeToken = youtubeResult.data;
-        const tiktokToken = tiktokResult.data;
+        let youtubeToken = null;
+        let tiktokToken = null;
+
+        if (autopilot) {
+            const [youtubeResult, tiktokResult] = await Promise.all([
+                autopilot.youtube_token_id 
+                    ? supabase
+                        .from('user_youtube_tokens')
+                        .select('user_id, handle_name, display_name')
+                        .eq('id', autopilot.youtube_token_id)
+                        .maybeSingle()
+                    : Promise.resolve({ data: null }),
+                autopilot.tiktok_token_id 
+                    ? supabase
+                        .from('user_tiktok_tokens')
+                        .select('user_id, handle_name, display_name')
+                        .eq('id', autopilot.tiktok_token_id)
+                        .maybeSingle()
+                    : Promise.resolve({ data: null })
+            ]);
+            youtubeToken = youtubeResult.data;
+            tiktokToken = tiktokResult.data;
+        }
 
         return getNextBaseResponse({
             success: true,
@@ -113,12 +125,7 @@ export async function DELETE(request: NextRequest) {
     const supabase = createSupabaseServiceRoleClient();
 
     try {
-        let tableName = "";
-        if (platform === 'youtube') {
-            tableName = "user_youtube_tokens";
-        } else if (platform === 'tiktok') {
-            tableName = "user_tiktok_tokens";
-        } else {
+        if (platform !== 'youtube' && platform !== 'tiktok') {
             return getNextBaseResponse({
                 success: false,
                 status: 400,
@@ -126,12 +133,17 @@ export async function DELETE(request: NextRequest) {
             });
         }
 
-        // 특정 유저의 '특정 시리즈'에 연동된 토큰만 삭제
+        const updateField = platform === 'youtube' ? 'youtube_token_id' : 'tiktok_token_id';
+
+        // 특정 시리즈의 토큰 맵핑 필드를 null로 업데이트하여 연동 해제
         const { error } = await supabase
-            .from(tableName)
-            .delete()
-            .eq('user_id', sessionUserId)
-            .eq('series_id', seriesId);
+            .from('autopilot_data')
+            .update({
+                [updateField]: null,
+                updated_at: new Date().toISOString()
+            })
+            .eq('id', seriesId)
+            .eq('user_id', sessionUserId);
 
         if (error) throw error;
 

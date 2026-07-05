@@ -8,7 +8,6 @@ export interface UserTikTokToken {
     handle_name?: string | null;
     display_name?: string | null;
     avatar_url?: string | null;
-    series_id?: string | null;
     created_at: string;
     updated_at: string;
     last_used_at?: string | null;

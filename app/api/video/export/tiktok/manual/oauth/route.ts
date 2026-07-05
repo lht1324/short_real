@@ -54,8 +54,6 @@ export async function GET(request: NextRequest) {
 
         if (decryptedTokenId) {
             tokenQuery = tokenQuery.eq('id', decryptedTokenId);
-        } else {
-            tokenQuery = tokenQuery.is('series_id', null);
         }
 
         const { data: existingToken } = await tokenQuery.maybeSingle();
