@@ -53,6 +53,7 @@ export interface TaskData {
     estimatedCharacterCount?: number;
     resolution?: '720p' | '1080p' | '2160p';
     aiModelConfig?: AIModelConfig;
+    aspectRatio?: '16:9' | '9:16';
 }
 
 function WorkspaceDashboardPageClient() {
@@ -343,6 +344,7 @@ function WorkspaceDashboardPageClient() {
             isGenerationFailed: task.is_generation_failed,
             estimatedCharacterCount: task.estimated_character_count,
             resolution: task.resolution ?? undefined,
+            aspectRatio: task.aspect_ratio ?? undefined,
             aiModelConfig: task.ai_model_config ?? undefined,
         };
     }, [calculateProgress]);
@@ -744,6 +746,7 @@ function WorkspaceDashboardPageClient() {
                 {showYoutubeExportSettingModal && user?.id && <ExportSettingsModal
                     userId={user.id}
                     platform={ExportPlatform.YOUTUBE}
+                    aspectRatio={taskDataList.find(t => t.id === pendingExportTaskId)?.aspectRatio}
                     privacySetting={youtubePrivacySetting}
                     onChangePrivacySetting={onChangeYoutubePrivacySetting}
                     selectedTokenId={targetTokenId}

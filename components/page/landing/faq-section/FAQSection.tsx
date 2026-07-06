@@ -10,11 +10,8 @@ export interface FAQItemData {
 
 const FAQ_LIST: FAQItemData[] = [
     {
-        question: "How does the credit system work?",
-        answer: `100 credits = 1 basic video (≤ 30 seconds, ≤ 6 scenes)
-+5 credits per additional 2 seconds over 30s
-+5 credits per additional scene over 6 scenes
-Credits are cumulative and added to your balance each month.`
+        question: "How does the BYOK (Bring Your Own Key) model work?",
+        answer: "ShortReal operates on a Bring Your Own Key (BYOK) model for image and video generation. You connect your own fal.ai API key to our platform, which is used to run the generation models. You pay fal.ai directly at cost with no markup from us, making high-volume video production extremely cost-effective."
     },
     {
         question: "What counts as a 'scene'?",
@@ -26,23 +23,19 @@ Credits are cumulative and added to your balance each month.`
     },
     {
         question: "Can I edit the video after it's generated?",
-        answer: "Yes. After generation, you can open the editor to select AI music, trim the clip, and configure captions. However, since video scenes are timed to the voiceover, full regeneration is required to change the scene content itself."
+        answer: "Yes. After generation, you can open the editor to select AI music, trim the clip, and configure captions. However, since video scenes are timed to the voiceover, full regeneration is required to change the scene content itself, which will incur additional generation costs from your connected fal.ai API key."
     },
     {
-        question: "What formats and resolutions do you support?",
-        answer: "Videos are generated in MP4 format in 9:16 (vertical) at 720p. We plan to support 1080p and additional formats in the future."
-    },
-    {
-        question: "Do unused credits roll over?",
-        answer: "Yes. Unused credits roll over and accumulate in your account indefinitely. You keep what you pay for."
+        question: "What formats, aspect ratios, and resolutions do you support?",
+        answer: "Videos are generated in MP4 format. We support both 9:16 (vertical) and 16:9 (horizontal) aspect ratios at either 720p or 1080p resolutions, giving you full flexibility for both shorts and long-form content."
     },
     {
         question: "Can I cancel my subscription anytime?",
-        answer: "Absolutely. You can cancel instantly from your dashboard. Your credits will remain active, and you won't be charged for the next cycle."
+        answer: "Absolutely. You can cancel instantly from your dashboard. You will continue to have access to ShortReal's platform features until the end of your current billing cycle, and you won't be charged for the next cycle."
     },
     {
         question: "What is your refund policy?",
-        answer: "If you haven't used any credits yet, contact support for a refund. Once credits are used, we cannot offer refunds due to the high GPU costs incurred during generation."
+        answer: "Since you pay fal.ai directly for image and video generation via your own API key, ShortReal's refund policy applies only to our platform subscription fee. Platform subscription fees are refundable within 14 days of purchase if you haven't generated any videos during that period."
     },
 ];
 

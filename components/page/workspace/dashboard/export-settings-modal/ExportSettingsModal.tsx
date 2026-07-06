@@ -49,6 +49,7 @@ interface ExportSettingsModalProps {
     onChangeSelectedTokenId: (tokenId: string | null) => void;
     onClickConfirm: () => Promise<void>;
     onClickCancel: () => void;
+    aspectRatio?: '16:9' | '9:16';
 }
 
 function ExportSettingsModal({
@@ -60,6 +61,7 @@ function ExportSettingsModal({
     onChangeSelectedTokenId,
     onClickConfirm,
     onClickCancel,
+    aspectRatio,
 }: ExportSettingsModalProps) {
     const [channels, setChannels] = useState<SocialChannel[]>([]);
     const [isLoadingChannels, setIsLoadingChannels] = useState(false);
@@ -116,9 +118,12 @@ function ExportSettingsModal({
     }, [privacySetting]);
 
     const modalTitle = useMemo(() => {
-        const platformLabel = platform === ExportPlatform.YOUTUBE ? "YouTube Shorts" : "TikTok";
+        const isShorts = aspectRatio !== '16:9';
+        const platformLabel = platform === ExportPlatform.YOUTUBE 
+            ? (isShorts ? "YouTube Shorts" : "YouTube Video") 
+            : "TikTok";
         return `${platformLabel} Settings`;
-    }, [platform]);
+    }, [platform, aspectRatio]);
 
     // 현재 선택된 채널 객체 찾기
     const selectedChannel = useMemo(() => {
@@ -306,7 +311,9 @@ function ExportSettingsModal({
                 {/* --- 3. 플랫폼별 업로드 안내문 렌더링 --- */}
                 <div className="mb-6 p-4 rounded-xl border border-white/5 bg-white/[0.01] text-xs text-zinc-400 space-y-1.5 leading-relaxed">
                     <p className="font-semibold text-zinc-300">
-                        {platform === ExportPlatform.YOUTUBE ? "YouTube Shorts Notice" : "TikTok Consent Notice"}
+                        {platform === ExportPlatform.YOUTUBE 
+                            ? (aspectRatio !== '16:9' ? "YouTube Shorts Notice" : "YouTube Video Notice") 
+                            : "TikTok Consent Notice"}
                     </p>
                     <p className="text-[11px] text-zinc-500 mb-1 leading-relaxed">
                         By continuing, you authorize ShortReal AI to upload this video to the selected account on your behalf.

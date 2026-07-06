@@ -2,15 +2,10 @@
 import { NextRequest } from 'next/server';
 import { createSupabaseServiceRoleClient } from '@/lib/supabase/supabaseServiceRole';
 import { getNextBaseResponse } from '@/lib/utils/getNextBaseResponse';
-import {
-    PostVideoExportYoutubeUploadRequest
-} from "@/lib/api/types/api/video/export/youtube/upload/PostVideoExportYoutubeUploadRequest";
-import {UserYoutubeToken} from "@/lib/api/types/supabase/UserYoutubeToken";
-import {PostgrestSingleResponse} from "@supabase/supabase-js";
-import {DownloadResult} from "@supabase/storage-js";
-import {videoGenerationTasksServerAPI} from "@/lib/api/server/videoGenerationTasksServerAPI";
-import {ExportPlatform, ExportStatus} from "@/lib/api/types/supabase/VideoGenerationTasks";
-import {getIsValidRequestS2S} from "@/lib/utils/getIsValidRequest";
+import { DownloadResult } from "@supabase/storage-js";
+import { videoGenerationTasksServerAPI } from "@/lib/api/server/videoGenerationTasksServerAPI";
+import { ExportPlatform, ExportStatus } from "@/lib/api/types/supabase/VideoGenerationTasks";
+import { getIsValidRequestS2S } from "@/lib/utils/getIsValidRequest";
 import { cryptoUtils } from "@/lib/utils/cryptoUtils";
 
 export async function POST(request: NextRequest) {
@@ -59,7 +54,7 @@ export async function POST(request: NextRequest) {
 
         const videoGenerationTask = await videoGenerationTasksServerAPI.getVideoGenerationTaskById(taskId);
 
-        if (!videoGenerationTask) {
+        if (!videoGenerationTask || !videoGenerationTask.aspect_ratio) {
             await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, {
                 export_status: ExportStatus.FAILED,
                 export_platform: ExportPlatform.YOUTUBE,
@@ -220,6 +215,7 @@ export async function POST(request: NextRequest) {
             videoGenerationTask.video_description ?? "ShortReal AI",
             boundary,
             privacySetting,
+            videoGenerationTask.aspect_ratio,
         )
         const uploadResponse = await fetch(
             'https://www.googleapis.com/upload/youtube/v3/videos?uploadType=multipart&part=snippet,status',
@@ -291,6 +287,7 @@ function createMultipartBody(
     videoDescription: string,
     boundary: string,
     privacySetting: string,
+    aspectRatio: '16:9' | '9:16',
 ): Uint8Array {
     const encoder = new TextEncoder();
     const metadataJson = JSON.stringify({
@@ -298,7 +295,7 @@ function createMultipartBody(
             title: videoTitle,
             description: videoDescription,
             categoryId: '24',
-            tags: ['shorts', 'ai', 'generated'],
+            tags: aspectRatio === '16:9' ? ['ai', 'generated'] : ['shorts', 'ai', 'generated'],
         },
         status: {
             privacyStatus: privacySetting,
