@@ -59,10 +59,17 @@ function AutopilotControlPanel({
     isFalAiKeyMissing,
 }: AutopilotControlPanelProps) {
     // --- Internal UI State (Not persisted in DB) ---
-    const [runImmediately, setRunImmediately] = useState(false);
     const [platformConnections, setPlatformConnections] = useState<AutopilotPlatformConnection | null>(null);
     const [isLoadingConnections, setIsLoadingConnections] = useState(true);
     const [settingsModalOpen, setSettingsModalOpen] = useState<ExportPlatform | null>(null);
+    const [tempYoutubePrivacy, setTempYoutubePrivacy] = useState<ExportPrivacySetting | null>(null);
+    const [tempYoutubeTokenId, setTempYoutubeTokenId] = useState<string | null>(null);
+    const [tempTiktokPrivacy, setTempTiktokPrivacy] = useState<ExportPrivacySetting | null>(null);
+    const [tempTiktokTokenId, setTempTiktokTokenId] = useState<string | null>(null);
+    
+    // Window Closed Confirmation Modal State
+    const [showWindowClosedModal, setShowWindowClosedModal] = useState(false);
+    const [runImmediatelyTemp, setRunImmediatelyTemp] = useState(false);
     const scheduleMode = 'weekly'; 
 
     // Fetch actual platform connection status using Client API
@@ -91,30 +98,46 @@ function AutopilotControlPanel({
 
     // --- 2-Hour Window Logic ---
     const schedulingForecast = useMemo(() => {
-        // Get current time in the series' timezone
         const now = new Date();
         try {
+            const tz = currentSeries.user_timezone || Intl.DateTimeFormat().resolvedOptions().timeZone;
+            
+            // 1. Get current hour and minute in target timezone
             const formatter = new Intl.DateTimeFormat('en-US', {
-                timeZone: currentSeries.user_timezone || Intl.DateTimeFormat().resolvedOptions().timeZone,
+                timeZone: tz,
                 hour: 'numeric',
                 minute: 'numeric',
                 hour12: false
             });
-            
             const parts = formatter.formatToParts(now);
             const currentHour = parseInt(parts.find(p => p.type === 'hour')?.value || '0', 10);
             const currentMinute = parseInt(parts.find(p => p.type === 'minute')?.value || '0', 10);
+            
+            // 2. Get current weekday in target timezone
+            const formatterDay = new Intl.DateTimeFormat('en-US', {
+                timeZone: tz,
+                weekday: 'short' // 'Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'
+            });
+            const dayOfWeekStr = formatterDay.format(now);
+            const dayMap: Record<string, number> = {
+                'Sun': 0, 'Mon': 1, 'Tue': 2, 'Wed': 3, 'Thu': 4, 'Fri': 5, 'Sat': 6
+            };
+            const targetTimezoneDay = dayMap[dayOfWeekStr] ?? now.getDay();
+            
+            const isTodayScheduled = selectedDays.includes(targetTimezoneDay);
             
             // Target generation time is 2 hours before scheduled upload
             let genHour = scheduledHour - 2;
             if (genHour < 0) genHour += 24;
 
-            // Is today's generation window closed? 
             const currentTimeInMinutes = (currentHour * 60) + currentMinute;
             const genStartTimeInMinutes = (genHour * 60) + scheduledMinute;
+            const uploadTimeInMinutes = (scheduledHour * 60) + scheduledMinute;
             
-            // If the current time is past the generation start time, the window is closed for today.
-            const isWindowClosed = currentTimeInMinutes >= genStartTimeInMinutes;
+            // Closed only if today is scheduled, and current time is between generation start and upload time
+            const isWindowClosed = isTodayScheduled && 
+                                   (currentTimeInMinutes >= genStartTimeInMinutes) && 
+                                   (currentTimeInMinutes < uploadTimeInMinutes);
             
             return {
                 isWindowClosed,
@@ -125,26 +148,43 @@ function AutopilotControlPanel({
             console.error("Timezone error:", e);
             return { isWindowClosed: false, genTime: '--:--', uploadTime: '--:--' };
         }
-    }, [scheduledHour, scheduledMinute, currentSeries.user_timezone]);
+    }, [scheduledHour, scheduledMinute, selectedDays, currentSeries.user_timezone]);
 
-    // Reset runImmediately if window opens or series changes
-    useEffect(() => {
-        setRunImmediately(false);
-    }, [schedulingForecast.isWindowClosed, currentSeries.id]);
+
 
     // --- Internal Handlers ---
-    const onToggleDay = (dayId: number) => {
+    const onToggleDay = useCallback((dayId: number) => {
         const newDays = selectedDays.includes(dayId) 
             ? selectedDays.filter(id => id !== dayId) 
             : [...selectedDays, dayId];
         
         const newCron = weeklyToCron(newDays, scheduledHour, scheduledMinute);
         updateSeries({ schedule_cron: newCron });
-    };
+    }, [selectedDays, scheduledHour, scheduledMinute, updateSeries]);
 
     const onClickPlatformSettings = useCallback((platform: ExportPlatform) => {
+        if (platform === ExportPlatform.YOUTUBE) {
+            setTempYoutubePrivacy(currentSeries.youtube_privacy ?? ExportPrivacySetting.UNLISTED);
+            setTempYoutubeTokenId(currentSeries.youtube_token_id ?? null);
+        } else {
+            setTempTiktokPrivacy(currentSeries.tiktok_privacy ?? ExportPrivacySetting.PRIVATE);
+            setTempTiktokTokenId(currentSeries.tiktok_token_id ?? null);
+        }
         setSettingsModalOpen(platform);
-    }, []);
+    }, [currentSeries.youtube_privacy, currentSeries.youtube_token_id, currentSeries.tiktok_privacy, currentSeries.tiktok_token_id]);
+
+    const onClickPlatformToggle = useCallback((platformId: ExportPlatform) => {
+        updateSeries({
+            platforms: {
+                ...currentSeries.platforms,
+                [platformId]: !currentSeries.platforms[platformId]
+            }
+        });
+    }, [currentSeries.platforms, updateSeries]);
+
+    const onClickPlatformConnect = useCallback((platformId: ExportPlatform) => {
+        window.location.href = `/api/video/export/${platformId}/autopilot/oauth?seriesId=${currentSeries.id}&userId=${currentSeries.user_id}`;
+    }, [currentSeries.id, currentSeries.user_id]);
 
     const onClickPlatformDisconnect = useCallback(async (platform: ExportPlatform) => {
         if (!confirm(`Are you sure you want to disconnect your ${platform} account from this series?`)) return;
@@ -174,19 +214,66 @@ function AutopilotControlPanel({
         }
     }, [currentSeries.id, currentSeries.platforms, updateSeries]);
 
-    const onChangeHour = (hour: number) => {
+    const onChangeHour = useCallback((hour: number) => {
         const newCron = weeklyToCron(selectedDays, hour, scheduledMinute);
         updateSeries({ schedule_cron: newCron });
-    };
+    }, [selectedDays, scheduledMinute, updateSeries]);
 
-    const onChangeMinute = (minute: number) => {
+    const onChangeMinute = useCallback((minute: number) => {
         const newCron = weeklyToCron(selectedDays, scheduledHour, minute);
         updateSeries({ schedule_cron: newCron });
-    };
+    }, [selectedDays, scheduledHour, updateSeries]);
 
-    const onChangeTimezone = (timezone: string) => {
+    const onChangeTimezone = useCallback((timezone: string) => {
         updateSeries({ user_timezone: timezone });
-    };
+    }, [updateSeries]);
+
+    const onChangePrivacySetting = useCallback((setting: ExportPrivacySetting) => {
+        if (!settingsModalOpen) return;
+        if (settingsModalOpen === ExportPlatform.YOUTUBE) {
+            setTempYoutubePrivacy(setting);
+        } else {
+            setTempTiktokPrivacy(setting);
+        }
+    }, [settingsModalOpen]);
+
+    const onChangeSelectedTokenId = useCallback((tokenId: string | null) => {
+        if (!settingsModalOpen) return;
+        if (settingsModalOpen === ExportPlatform.YOUTUBE) {
+            setTempYoutubeTokenId(tokenId);
+        } else {
+            setTempTiktokTokenId(tokenId);
+        }
+    }, [settingsModalOpen]);
+
+    const onClickConfirmSettings = useCallback(async () => {
+        if (!settingsModalOpen) return;
+        if (settingsModalOpen === ExportPlatform.YOUTUBE) {
+            updateSeries({
+                youtube_privacy: tempYoutubePrivacy,
+                youtube_token_id: tempYoutubeTokenId
+            });
+        } else {
+            updateSeries({
+                tiktok_privacy: tempTiktokPrivacy,
+                tiktok_token_id: tempTiktokTokenId
+            });
+        }
+        setSettingsModalOpen(null);
+    }, [settingsModalOpen, tempYoutubePrivacy, tempYoutubeTokenId, tempTiktokPrivacy, tempTiktokTokenId, updateSeries]);
+
+    const onClickCancelSettings = useCallback(() => {
+        setSettingsModalOpen(null);
+    }, []);
+
+    const onClickSaveConfigManual = useCallback(() => {
+        if (schedulingForecast.isWindowClosed && currentSeries.is_active) {
+            setRunImmediatelyTemp(false);
+            setShowWindowClosedModal(true);
+        } else {
+            onClickSaveConfig(false);
+        }
+    }, [schedulingForecast.isWindowClosed, currentSeries.is_active, onClickSaveConfig]);
     
     // Internal UI Logic: Forecast
     const estimatedCost = useMemo(() => {
@@ -236,7 +323,7 @@ function AutopilotControlPanel({
     }, [selectedDays, estimatedCost]);
 
     return (
-        <div className="w-80 bg-zinc-900/60 border-l border-white/5 p-6 flex flex-col space-y-7 overflow-y-auto custom-scrollbar">
+        <div className="w-80 h-full bg-zinc-900/60 border-l border-white/5 p-6 flex flex-col space-y-7 overflow-y-auto custom-scrollbar">
             {/* Activation Toggle */}
             <div className="space-y-3">
                 <div className="flex items-center justify-between">
@@ -282,7 +369,7 @@ function AutopilotControlPanel({
                         </div>
                     ) : (
                         [
-                            { id: ExportPlatform.YOUTUBE, label: 'YouTube Shorts', src: '/icons/youtube-logo.png', activeColor: 'bg-red-500/10 border-red-500/20', iconColor: 'text-red-500' },
+                            { id: ExportPlatform.YOUTUBE, label: 'YouTube', src: '/icons/youtube-logo.png', activeColor: 'bg-red-500/10 border-red-500/20', iconColor: 'text-red-500' },
                             { id: ExportPlatform.TIKTOK, label: 'TikTok', src: '/icons/tiktok-logo-white.svg', activeColor: 'bg-cyan-500/10 border-cyan-500/20', iconColor: 'text-cyan-400' },
                             { id: ExportPlatform.INSTAGRAM, label: 'Instagram Reels', src: '/icons/instagram-logo.png', activeColor: 'bg-pink-500/10 border-pink-500/20', iconColor: 'text-pink-500' }
                         ].map((platform) => {
@@ -303,15 +390,8 @@ function AutopilotControlPanel({
                                     handleName={connection?.handleName}
                                     displayName={connection?.displayName}
                                     isDisabled={isInstagram}
-                                    onClickToggle={() => updateSeries({
-                                        platforms: { 
-                                            ...currentSeries.platforms, 
-                                            [platform.id]: !currentSeries.platforms[platform.id] 
-                                        }
-                                    })}
-                                    onClickConnect={() => {
-                                        window.location.href = `/api/video/export/${platform.id}/autopilot/oauth?seriesId=${currentSeries.id}&userId=${currentSeries.user_id}`;
-                                    }}
+                                    onClickToggle={() => onClickPlatformToggle(platform.id)}
+                                    onClickConnect={() => onClickPlatformConnect(platform.id)}
                                     onClickSettings={() => onClickPlatformSettings(platform.id)}
                                     onClickDisconnect={() => onClickPlatformDisconnect(platform.id)}
                                 />
@@ -456,52 +536,13 @@ function AutopilotControlPanel({
                     </div>
                 </div>
                 
-                {usageInfo.isBonusApplied && (
-                    <div className="flex items-start gap-2 p-3 rounded-lg bg-indigo-500/5 border border-indigo-500/10 animate-in fade-in zoom-in-95 duration-300">
-                        <Sparkles size={14} className="text-indigo-400 shrink-0 mt-0.5" />
-                        <div className="space-y-0.5">
-                            <p className="text-[11px] font-semibold text-indigo-300 uppercase tracking-wider">Full Coverage</p>
-                            <p className="text-[11px] text-zinc-400 leading-snug">
-                                Extra days in 31-day months are on us.
-                            </p>
-                        </div>
-                    </div>
-                )}
+
             </div>
 
             {/* Actions */}
             <div className="mt-auto pt-4 space-y-3">
-                {schedulingForecast.isWindowClosed && (
-                    <div className="bg-zinc-900 border border-white/5 rounded-lg p-3 space-y-2 animate-in fade-in zoom-in-95 duration-300">
-                        <div className="flex items-center gap-1.5 text-amber-500/80">
-                            <AlertCircle size={14} />
-                            <span className="text-[10px] font-bold uppercase tracking-wider">Today&#39;s window closed</span>
-                        </div>
-                        
-                        <label className="flex items-start gap-2.5 cursor-pointer group">
-                            <div className="relative flex items-center mt-0.5">
-                                <input
-                                    type="checkbox"
-                                    checked={runImmediately}
-                                    onChange={(e) => setRunImmediately(e.target.checked)}
-                                    className="peer h-4 w-4 cursor-pointer appearance-none rounded border border-white/10 bg-black/20 transition-all checked:bg-zinc-200 checked:border-zinc-200 focus:outline-none"
-                                />
-                                <CheckCircle2 className="absolute h-3 w-3 text-black opacity-0 peer-checked:opacity-100 left-0.5 top-0.5 pointer-events-none transition-opacity" />
-                            </div>
-                            <div className="space-y-0.5">
-                                <p className="text-[13px] font-medium text-zinc-300 group-hover:text-zinc-100 transition-colors">Start immediately</p>
-                                <p className="text-[10px] leading-relaxed text-zinc-500">
-                                    {runImmediately 
-                                        ? "Starting now. May bypass schedule." 
-                                        : "Next video will process tomorrow."}
-                                </p>
-                            </div>
-                        </label>
-                    </div>
-                )}
-
                 <button
-                    onClick={() => onClickSaveConfig(runImmediately)}
+                    onClick={onClickSaveConfigManual}
                     disabled={isSaving || !isDirty || !validation.isValid}
                     className={`w-full py-3 rounded-lg font-medium text-sm transition-all disabled:opacity-40 disabled:cursor-not-allowed ${
                         isDirty && validation.isValid
@@ -528,22 +569,79 @@ function AutopilotControlPanel({
             {/* Settings Modal Integration */}
             {settingsModalOpen && (
                 <ExportSettingsModal
+                    userId={currentSeries.user_id}
                     platform={settingsModalOpen}
                     privacySetting={
                         settingsModalOpen === ExportPlatform.YOUTUBE
-                            ? (currentSeries.youtube_privacy ?? ExportPrivacySetting.UNLISTED)
-                            : (currentSeries.tiktok_privacy ?? ExportPrivacySetting.PRIVATE)
+                            ? (tempYoutubePrivacy ?? ExportPrivacySetting.UNLISTED)
+                            : (tempTiktokPrivacy ?? ExportPrivacySetting.PRIVATE)
                     }
-                    onChangePrivacySetting={(setting) => {
-                        if (settingsModalOpen === ExportPlatform.YOUTUBE) {
-                            updateSeries({ youtube_privacy: setting });
-                        } else {
-                            updateSeries({ tiktok_privacy: setting });
-                        }
-                    }}
-                    onClickConfirm={async () => setSettingsModalOpen(null)}
-                    onClickCancel={() => setSettingsModalOpen(null)}
+                    onChangePrivacySetting={onChangePrivacySetting}
+                    selectedTokenId={
+                        settingsModalOpen === ExportPlatform.YOUTUBE
+                            ? tempYoutubeTokenId
+                            : tempTiktokTokenId
+                    }
+                    onChangeSelectedTokenId={onChangeSelectedTokenId}
+                    aspectRatio={currentSeries.aspect_ratio ?? undefined}
+                    confirmButtonText="Confirm"
+                    onClickConfirm={onClickConfirmSettings}
+                    onClickCancel={onClickCancelSettings}
                 />
+            )}
+
+            {/* Today's Window Closed Confirmation Modal */}
+            {showWindowClosedModal && (
+                <div className="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="bg-zinc-950 border border-white/10 rounded-2xl p-6 w-full max-w-sm mx-auto shadow-2xl flex flex-col relative text-left">
+                        <div className="flex items-center gap-2 text-amber-500 mb-2">
+                            <AlertCircle size={20} />
+                            <h3 className="text-base font-bold text-zinc-100 uppercase tracking-wider">Today&#39;s Window Closed</h3>
+                        </div>
+                        
+                        <p className="text-xs text-zinc-400 leading-relaxed mb-4">
+                            Today&#39;s video generation schedule has already passed. The next automated video will be generated and uploaded tomorrow.
+                        </p>
+
+                        <label className="flex items-start gap-2.5 cursor-pointer group bg-white/5 border border-white/5 hover:border-white/10 rounded-xl p-3.5 mb-6 transition-all select-none">
+                            <div className="relative flex items-center mt-0.5">
+                                <input
+                                    type="checkbox"
+                                    checked={runImmediatelyTemp}
+                                    onChange={(e) => setRunImmediatelyTemp(e.target.checked)}
+                                    className="peer h-4 w-4 cursor-pointer appearance-none rounded border border-white/10 bg-black/20 transition-all checked:bg-zinc-200 checked:border-zinc-200 focus:outline-none"
+                                />
+                                <CheckCircle2 className="absolute h-3 w-3 text-black opacity-0 peer-checked:opacity-100 left-0.5 top-0.5 pointer-events-none transition-opacity" />
+                            </div>
+                            <div className="space-y-0.5">
+                                <p className="text-xs font-semibold text-zinc-200 group-hover:text-white transition-colors">Start immediately</p>
+                                <p className="text-[10px] leading-normal text-zinc-500">
+                                    Generate and upload the first video right now, bypassing today&#39;s closed schedule.
+                                </p>
+                            </div>
+                        </label>
+
+                        <div className="flex gap-3">
+                            <button
+                                type="button"
+                                onClick={() => setShowWindowClosedModal(false)}
+                                className="flex-1 py-2.5 rounded-xl bg-white/5 border border-white/10 text-zinc-300 text-xs font-semibold hover:bg-white/10 hover:text-white transition-all active:scale-[0.98] focus:outline-none"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    onClickSaveConfig(runImmediatelyTemp);
+                                    setShowWindowClosedModal(false);
+                                }}
+                                className="flex-1 py-2.5 rounded-xl bg-white text-black text-xs font-semibold hover:bg-zinc-200 transition-all active:scale-[0.98] focus:outline-none shadow-lg"
+                            >
+                                Save Config
+                            </button>
+                        </div>
+                    </div>
+                </div>
             )}
         </div>
     );

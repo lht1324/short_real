@@ -659,7 +659,7 @@ function WorkspaceAutopilotPageClient() {
                             </div>
 
                             {/* Col 5: Right Control Panel */}
-                            <div className={`transition-all duration-300 ease-in-out flex-shrink-0 ${
+                            <div className={`transition-all duration-300 ease-in-out flex-shrink-0 h-full ${
                                 previewMode === 'wide'
                                     ? 'w-0 opacity-0 pointer-events-none overflow-hidden'
                                     : 'w-80 opacity-100'

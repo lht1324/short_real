@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { getNextBaseResponse } from "@/lib/utils/getNextBaseResponse";
 import { createSupabaseServiceRoleClient } from "@/lib/supabase/supabaseServiceRole";
+import { cryptoUtils } from "@/lib/utils/cryptoUtils";
 import { AutopilotData } from "@/lib/api/types/supabase/AutopilotData";
 import { getIsValidRequestS2S } from "@/lib/utils/getIsValidRequest";
 import { schedules, tasks } from "@trigger.dev/sdk/v3";
@@ -115,6 +116,34 @@ export async function PATCH(
 
         // 2. Update DB
         const updateData: Partial<AutopilotData> = await request.json();
+
+        // Decrypt token IDs if they are encrypted
+        if (updateData.youtube_token_id) {
+            try {
+                if (updateData.youtube_token_id.includes(':')) {
+                    updateData.youtube_token_id = cryptoUtils.decrypt(updateData.youtube_token_id, sessionUserId);
+                }
+            } catch (err) {
+                console.error("Failed to decrypt youtube_token_id:", err);
+                return getNextBaseResponse({ success: false, status: 400, error: "Invalid youtube_token_id" });
+            }
+        } else if (updateData.youtube_token_id === '') {
+            updateData.youtube_token_id = null;
+        }
+
+        if (updateData.tiktok_token_id) {
+            try {
+                if (updateData.tiktok_token_id.includes(':')) {
+                    updateData.tiktok_token_id = cryptoUtils.decrypt(updateData.tiktok_token_id, sessionUserId);
+                }
+            } catch (err) {
+                console.error("Failed to decrypt tiktok_token_id:", err);
+                return getNextBaseResponse({ success: false, status: 400, error: "Invalid tiktok_token_id" });
+            }
+        } else if (updateData.tiktok_token_id === '') {
+            updateData.tiktok_token_id = null;
+        }
+
         const { data, error } = await supabase
             .from('autopilot_data')
             .update({

@@ -1,4 +1,4 @@
-import { memo, useMemo, ReactNode, useState, useEffect } from "react";
+import { memo, useMemo, ReactNode, useState, useEffect, useRef } from "react";
 import { ExportPrivacySetting } from "@/components/page/workspace/dashboard/export-settings-modal/ExportPrivacySetting";
 import { Globe, Lock, Link as LinkIcon, User, ChevronDown, Loader2 } from "lucide-react";
 import { getFetch } from "@/lib/api/client/baseFetch";
@@ -50,6 +50,7 @@ interface ExportSettingsModalProps {
     onClickConfirm: () => Promise<void>;
     onClickCancel: () => void;
     aspectRatio?: '16:9' | '9:16';
+    confirmButtonText?: string;
 }
 
 function ExportSettingsModal({
@@ -62,10 +63,23 @@ function ExportSettingsModal({
     onClickConfirm,
     onClickCancel,
     aspectRatio,
+    confirmButtonText = "Export Video",
 }: ExportSettingsModalProps) {
     const [channels, setChannels] = useState<SocialChannel[]>([]);
     const [isLoadingChannels, setIsLoadingChannels] = useState(false);
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+
+    // ref를 활용해 의존성 제거 및 무한 루프 방지
+    const onChangeSelectedTokenIdRef = useRef(onChangeSelectedTokenId);
+    const selectedTokenIdRef = useRef(selectedTokenId);
+
+    useEffect(() => {
+        onChangeSelectedTokenIdRef.current = onChangeSelectedTokenId;
+    }, [onChangeSelectedTokenId]);
+
+    useEffect(() => {
+        selectedTokenIdRef.current = selectedTokenId;
+    }, [selectedTokenId]);
 
     // 연동 채널 정보 조회
     useEffect(() => {
@@ -82,11 +96,17 @@ function ExportSettingsModal({
                     const fetchedChannels = resData.data.channels;
                     setChannels(fetchedChannels);
                     
-                    // 기존에 연동된 채널이 있다면 첫 번째 채널을 기본값으로 자동 설정
-                    if (fetchedChannels.length > 0) {
-                        onChangeSelectedTokenId(fetchedChannels[0].id);
-                    } else {
-                        onChangeSelectedTokenId(null);
+                    // 현재 선택된 토큰이 이미 채널 목록 내에 유효하게 존재하는지 체크
+                    const currentSelected = selectedTokenIdRef.current;
+                    const isValidSelection = fetchedChannels.some(c => c.id === currentSelected);
+
+                    if (!isValidSelection) {
+                        // 유효한 선택 값이 없을 때만 기본값(첫 번째 채널 또는 null) 설정
+                        if (fetchedChannels.length > 0) {
+                            onChangeSelectedTokenIdRef.current(fetchedChannels[0].id);
+                        } else {
+                            onChangeSelectedTokenIdRef.current(null);
+                        }
                     }
                 }
             } catch (error) {
@@ -97,7 +117,7 @@ function ExportSettingsModal({
         };
 
         fetchChannels();
-    }, [userId, platform, onChangeSelectedTokenId]);
+    }, [userId, platform]);
 
     const filteredOptions = useMemo(() => {
         if (platform === ExportPlatform.TIKTOK) {
@@ -343,7 +363,7 @@ function ExportSettingsModal({
                         onClick={onClickConfirm}
                         className="flex-1 py-3 rounded-xl bg-white text-black text-sm font-semibold hover:bg-zinc-200 transition-all active:scale-[0.98] focus:outline-none shadow-lg shadow-black/30"
                     >
-                        Export Video
+                        {confirmButtonText}
                     </button>
                 </div>
             </motion.div>
