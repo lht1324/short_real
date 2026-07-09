@@ -3,8 +3,8 @@ import WorkspaceAutopilotSettingPageClient from "@/components/page/workspace/aut
 
 // [중요] 도구 페이지는 검색 엔진 수집 차단
 export const metadata: Metadata = {
-    title: 'Autopilot Setting', // "Auto Pilot Setting | ShortReal AI"
-    description: 'Configure your autopilot schedule to automatically generate and publish AI shorts to YouTube, TikTok or Instagram.',
+    title: 'Autopilot Setting', // "ShortReal AI | Autopilot Setting"가 됩니다.
+    description: 'Configure your autopilot schedule to automatically generate and publish AI videos to YouTube, TikTok or Instagram.',
     robots: {
         index: false,
         follow: false,

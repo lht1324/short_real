@@ -3,7 +3,7 @@ import { Metadata } from "next";
 import { LegalDataType } from "@/components/page/legal/LegalDataType";
 
 export const metadata: Metadata = {
-    title: 'Privacy Policy', // 템플릿에 의해 "Sign In | ShortReal AI"가 됩니다.
+    title: 'Privacy Policy', // 템플릿에 의해 "ShortReal AI | Privacy Policy"가 됩니다.
     description: 'Read ShortReal AI Privacy Policy. Learn how we handle your data.',
     openGraph: {
         title: 'Privacy Policy - ShortReal AI',

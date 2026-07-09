@@ -13,7 +13,6 @@ import {
     Loader2,
     Pause,
     Play,
-    Sparkles,
     Trash2
 } from 'lucide-react';
 import {ExportPlatform} from "@/lib/api/types/supabase/VideoGenerationTasks";

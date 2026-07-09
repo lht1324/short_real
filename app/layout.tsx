@@ -11,8 +11,8 @@ export const metadata: Metadata = {
     metadataBase: new URL('https://shortreal.ai'), // 실제 도메인으로 변경 필수
     applicationName: "ShortReal AI",
     title: {
-        template: '%s | ShortReal AI', // 서비스명으로 변경
-        default: 'ShortReal AI - AI Faceless Shorts Generator',
+        template: 'ShortReal AI | %s',
+        default: 'ShortReal AI | Harnessed AI Video Studio',
     },
     icons: {
         icon: [
@@ -20,19 +20,28 @@ export const metadata: Metadata = {
         ],
         apple: '/apple-icon.png', // 선택사항
     },
-    description: 'Turn text scripts into viral faceless YouTube Shorts, TikTok & Reels instantly. Best AI Faceless Video Generator with Storyboard, Voiceover, Songwriting & Captions.',
+    description: 'We harness the complex AI pipeline. Just bring the idea. Create videos with identical characters and high-end visuals in minutes.',
     openGraph: {
         type: 'website',
         locale: 'en_US',
         url: 'https://shortreal.ai',
-        title: 'ShortReal AI - AI Faceless Shorts Generator',
-        description: 'Create AI faceless shorts from scripts. No editing, composing skills needed.',
+        title: 'ShortReal AI | Harnessed AI Video Studio',
+        description: 'We harness the complex AI video generation pipeline. Just bring the idea to create videos with identical characters and high-end visuals in minutes.',
         siteName: 'ShortReal AI',
+        images: [
+            {
+                url: 'https://shortreal.ai/opengraph-image.png',
+                width: 1200,
+                height: 630,
+                alt: 'ShortReal AI | Harnessed AI Video Studio',
+            }
+        ],
     },
     twitter: {
         card: 'summary_large_image',
-        title: 'ShortReal AI - AI Faceless Shorts Generator',
-        description: 'Turn scripts into true motion faceless shorts instantly. No more AI slideshows.',
+        title: 'ShortReal AI | Harnessed AI Video Studio',
+        description: 'We harness the complex AI pipeline. Just bring the idea. Create videos with identical characters and high-end visuals in minutes.',
+        images: ['https://shortreal.ai/opengraph-image.png'],
     },
     robots: {
         index: true,
