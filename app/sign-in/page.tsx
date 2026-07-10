@@ -13,8 +13,8 @@ export const metadata: Metadata = {
         canonical: 'https://shortreal.ai/sign-in',
     },
     robots: {
-        index: true,
-        follow: true,
+        index: false,
+        follow: false,
     }
 };
 
