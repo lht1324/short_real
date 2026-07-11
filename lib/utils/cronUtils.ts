@@ -120,3 +120,62 @@ export function cronToWeekly(cron: string): WeeklySchedule {
         return defaultSchedule;
     }
 }
+
+/**
+ * 현재 시간 기준으로 오토파일럿 Generation 윈도우가 닫혀 있는지 검증합니다.
+ * (스케줄 업로드 시간 기준 2시간 전부터 업로드 시간 사이인지 검증)
+ */
+export function isAutopilotWindowClosed(cron: string, timezone?: string): boolean {
+    if (!cron || cron === "NONE") return false;
+
+    const schedule = cronToWeekly(cron);
+    const { days: selectedDays, hour: scheduledHour, minute: scheduledMinute } = schedule;
+
+    if (selectedDays.length === 0) return false;
+
+    const now = new Date();
+    try {
+        const tz = timezone || Intl.DateTimeFormat().resolvedOptions().timeZone;
+        
+        // 1. target timezone 기준 현재 시, 분 획득
+        const formatter = new Intl.DateTimeFormat('en-US', {
+            timeZone: tz,
+            hour: 'numeric',
+            minute: 'numeric',
+            hour12: false
+        });
+        const parts = formatter.formatToParts(now);
+        const currentHour = parseInt(parts.find(p => p.type === 'hour')?.value || '0', 10);
+        const currentMinute = parseInt(parts.find(p => p.type === 'minute')?.value || '0', 10);
+        
+        // 2. target timezone 기준 현재 요일 획득
+        const formatterDay = new Intl.DateTimeFormat('en-US', {
+            timeZone: tz,
+            weekday: 'short'
+        });
+        const dayOfWeekStr = formatterDay.format(now);
+        const dayMap: Record<string, number> = {
+            'Sun': 0, 'Mon': 1, 'Tue': 2, 'Wed': 3, 'Thu': 4, 'Fri': 5, 'Sat': 6
+        };
+        const targetTimezoneDay = dayMap[dayOfWeekStr] ?? now.getDay();
+        
+        const isTodayScheduled = selectedDays.includes(targetTimezoneDay);
+        if (!isTodayScheduled) return false;
+
+        // 업로드 시각 2시간 전을 generation 시작 시간으로 잡음
+        let genHour = scheduledHour - 2;
+        if (genHour < 0) genHour += 24;
+
+        const currentTimeInMinutes = (currentHour * 60) + currentMinute;
+        const genStartTimeInMinutes = (genHour * 60) + scheduledMinute;
+        const uploadTimeInMinutes = (scheduledHour * 60) + scheduledMinute;
+
+        // 자정을 걸치는 윈도우 구간(예: 23:00 ~ 01:00) 연산 보정
+        return genStartTimeInMinutes > uploadTimeInMinutes
+            ? (currentTimeInMinutes >= genStartTimeInMinutes || currentTimeInMinutes < uploadTimeInMinutes)
+            : (currentTimeInMinutes >= genStartTimeInMinutes && currentTimeInMinutes < uploadTimeInMinutes);
+    } catch (e) {
+        console.error("Timezone offset calc error:", e);
+        return false;
+    }
+}

@@ -17,7 +17,7 @@ import {
 } from 'lucide-react';
 import {ExportPlatform} from "@/lib/api/types/supabase/VideoGenerationTasks";
 import {AutopilotData} from "@/lib/api/types/supabase/AutopilotData";
-import {cronToWeekly, weeklyToCron} from "@/lib/utils/cronUtils";
+import {cronToWeekly, weeklyToCron, isAutopilotWindowClosed} from "@/lib/utils/cronUtils";
 import {autopilotDataClientAPI, AutopilotPlatformConnection} from "@/lib/api/client/autopilotDataClientAPI";
 import PlatformAccountCard from "@/components/page/workspace/autopilot/PlatformAccountCard";
 import ExportSettingsModal from "@/components/page/workspace/dashboard/export-settings-modal/ExportSettingsModal";
@@ -97,57 +97,25 @@ function AutopilotControlPanel({
 
     // --- 2-Hour Window Logic ---
     const schedulingForecast = useMemo(() => {
-        const now = new Date();
         try {
-            const tz = currentSeries.user_timezone || Intl.DateTimeFormat().resolvedOptions().timeZone;
-            
-            // 1. Get current hour and minute in target timezone
-            const formatter = new Intl.DateTimeFormat('en-US', {
-                timeZone: tz,
-                hour: 'numeric',
-                minute: 'numeric',
-                hour12: false
-            });
-            const parts = formatter.formatToParts(now);
-            const currentHour = parseInt(parts.find(p => p.type === 'hour')?.value || '0', 10);
-            const currentMinute = parseInt(parts.find(p => p.type === 'minute')?.value || '0', 10);
-            
-            // 2. Get current weekday in target timezone
-            const formatterDay = new Intl.DateTimeFormat('en-US', {
-                timeZone: tz,
-                weekday: 'short' // 'Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'
-            });
-            const dayOfWeekStr = formatterDay.format(now);
-            const dayMap: Record<string, number> = {
-                'Sun': 0, 'Mon': 1, 'Tue': 2, 'Wed': 3, 'Thu': 4, 'Fri': 5, 'Sat': 6
-            };
-            const targetTimezoneDay = dayMap[dayOfWeekStr] ?? now.getDay();
-            
-            const isTodayScheduled = selectedDays.includes(targetTimezoneDay);
-            
-            // Target generation time is 2 hours before scheduled upload
+            const schedule = cronToWeekly(currentSeries.schedule_cron);
+            const { hour: scheduledHour, minute: scheduledMinute } = schedule;
+
             let genHour = scheduledHour - 2;
             if (genHour < 0) genHour += 24;
 
-            const currentTimeInMinutes = (currentHour * 60) + currentMinute;
-            const genStartTimeInMinutes = (genHour * 60) + scheduledMinute;
-            const uploadTimeInMinutes = (scheduledHour * 60) + scheduledMinute;
-            
-            // Closed only if today is scheduled, and current time is between generation start and upload time
-            const isWindowClosed = isTodayScheduled && 
-                                   (currentTimeInMinutes >= genStartTimeInMinutes) && 
-                                   (currentTimeInMinutes < uploadTimeInMinutes);
-            
+            const isWindowClosed = isAutopilotWindowClosed(currentSeries.schedule_cron, currentSeries.user_timezone);
+
             return {
                 isWindowClosed,
                 genTime: `${genHour.toString().padStart(2, '0')}:${scheduledMinute.toString().padStart(2, '0')}`,
                 uploadTime: `${scheduledHour.toString().padStart(2, '0')}:${scheduledMinute.toString().padStart(2, '0')}`
             };
         } catch (e) {
-            console.error("Timezone error:", e);
+            console.error("Scheduling forecast error:", e);
             return { isWindowClosed: false, genTime: '--:--', uploadTime: '--:--' };
         }
-    }, [scheduledHour, scheduledMinute, selectedDays, currentSeries.user_timezone]);
+    }, [currentSeries.schedule_cron, currentSeries.user_timezone]);
 
 
 

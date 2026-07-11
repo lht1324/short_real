@@ -2,7 +2,7 @@
 
 import {memo, useCallback, useEffect, useMemo, useRef, useState} from "react";
 import Image from "next/image";
-import { ChevronDown, Plus, Check, Loader2, CheckCircle, AlertCircle, Sparkles } from 'lucide-react';
+import { ChevronDown, Plus, Check, Loader2, CheckCircle, AlertCircle, Sparkles, Trash2 } from 'lucide-react';
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { voiceClientAPI } from "@/lib/api/client/voiceClientAPI";
@@ -25,6 +25,9 @@ import { fontMap, type FontName } from "@/lib/fonts";
 import { CaptionConfigState } from "@/components/page/workspace/editor/WorkspaceEditorPageClient";
 import { aiModelDataClientAPI } from "@/lib/api/client/aiModelDataClientAPI";
 import { AIModelData } from "@/lib/api/types/supabase/AIModelData";
+import { getAutopilotLimitByPlan } from "@/lib/utils/subscriptionUtils";
+import { SubscriptionPlan } from "@/lib/api/types/supabase/Users";
+import { isAutopilotWindowClosed } from "@/lib/utils/cronUtils";
 
 const INITIAL_CAPTION_CONFIG_STATE: CaptionConfigState = {
     fontFamilyName: "Poppins",
@@ -62,6 +65,17 @@ function WorkspaceAutopilotPageClient() {
     const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
     const [isInitialLoading, setIsInitialLoading] = useState(true);
     const [isActionPending, setIsActionPending] = useState(false);
+
+    const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+    const [showActiveLimitModal, setShowActiveLimitModal] = useState(false);
+
+    const maxSeriesLimit = useMemo(() => {
+        return getAutopilotLimitByPlan(user?.plan);
+    }, [user?.plan]);
+
+    const maxActiveLimit = useMemo(() => {
+        return getAutopilotLimitByPlan(user?.plan);
+    }, [user?.plan]);
 
     const [captionConfigState, setCaptionConfigState] = useState<CaptionConfigState>(INITIAL_CAPTION_CONFIG_STATE);
     const [fontFamilyList, setFontFamilyList] = useState<FontFamily[]>([]);
@@ -109,6 +123,15 @@ function WorkspaceAutopilotPageClient() {
     const updateCurrentSeries = useCallback((updateData: Partial<AutopilotData>) => {
         if (!currentSeriesId) return;
 
+        // is_active를 활성화하려는 경우, 동시 활성화 개수 제한 체크
+        if (updateData.is_active === true) {
+            const activeCount = seriesList.filter(s => s.id !== currentSeriesId && s.is_active).length;
+            if (activeCount >= maxActiveLimit) {
+                setShowActiveLimitModal(true);
+                return;
+            }
+        }
+
         setSeriesList(prev => prev.map(s => {
             if (s.id !== currentSeriesId) return s;
 
@@ -136,7 +159,7 @@ function WorkspaceAutopilotPageClient() {
 
             return { ...s, ...updateData };
         }));
-    }, [currentSeriesId, aiModelList]);
+    }, [currentSeriesId, aiModelList, seriesList, maxActiveLimit]);
 
     const onChangeCaptionConfigState = useCallback((newCaptionConfigState: CaptionConfigState) => {
         setCaptionConfigState(newCaptionConfigState);
@@ -237,11 +260,31 @@ function WorkspaceAutopilotPageClient() {
             return series;
         });
 
-        setSeriesList(patchedData);
-        setLastSavedSeriesList(JSON.parse(JSON.stringify(patchedData)));
-        if (patchedData.length > 0 && !currentSeriesId) {
-            setCurrentSeriesId(patchedData[0].id);
-            setCaptionConfigState(patchedData[0].caption_config ?? INITIAL_CAPTION_CONFIG_STATE);
+        const limit = getAutopilotLimitByPlan(user?.plan);
+        const activeSeries = patchedData.filter(s => s.is_active);
+
+        let finalData = patchedData;
+        if (activeSeries.length > limit) {
+            let activeCount = 0;
+            finalData = patchedData.map(series => {
+                if (series.is_active) {
+                    if (activeCount < limit) {
+                        activeCount++;
+                        return series;
+                    } else {
+                        autopilotDataClientAPI.patchAutopilotDataBySeriesId(series.id, { is_active: false });
+                        return { ...series, is_active: false };
+                    }
+                }
+                return series;
+            });
+        }
+
+        setSeriesList(finalData);
+        setLastSavedSeriesList(JSON.parse(JSON.stringify(finalData)));
+        if (finalData.length > 0 && !currentSeriesId) {
+            setCurrentSeriesId(finalData[0].id);
+            setCaptionConfigState(finalData[0].caption_config ?? INITIAL_CAPTION_CONFIG_STATE);
         }
         setIsInitialLoading(false);
     }, [user, currentSeriesId]);
@@ -323,11 +366,19 @@ function WorkspaceAutopilotPageClient() {
     useEffect(() => {
         const interval = setInterval(() => {
             if (isDirty && !isSaving && validation.isValid) {
+                // 윈도우가 닫혀 있는 상태이면서 시리즈를 활성화하려고 한다면 자동 저장을 건너뛰어서
+                // 사용자가 수동 저장을 통해 경고 모달을 인지하고 즉시 시작 여부를 직접 결정할 수 있게 유도함
+                const isClosed = currentSeries && isAutopilotWindowClosed(currentSeries.schedule_cron, currentSeries.user_timezone);
+                if (isClosed && currentSeries?.is_active) {
+                    console.log("[AutoSave] Skipped auto-save because schedule window is closed for active series. Waiting for manual save confirmation.");
+                    return;
+                }
+
                 onClickSaveConfig();
             }
         }, 30000);
         return () => clearInterval(interval);
-    }, [isDirty, isSaving, onClickSaveConfig, validation.isValid]);
+    }, [isDirty, isSaving, onClickSaveConfig, validation.isValid, currentSeries]);
 
     // 해상도가 변경될 때 미지원 비디오 모델을 호환되는 모델로 자동 스위칭해 주는 효과
     useEffect(() => {
@@ -380,7 +431,13 @@ function WorkspaceAutopilotPageClient() {
     }, [currentSeries?.aspect_ratio, captionConfigState.captionPosition, currentSeries]);
 
     const onClickAddSeries = useCallback(async () => {
-        if (seriesList.length >= 4 || !user?.id || isActionPending) return;
+        if (!user?.id || isActionPending) return;
+
+        if (seriesList.length >= maxSeriesLimit) {
+            setShowUpgradeModal(true);
+            return;
+        }
+
         setIsActionPending(true);
         try {
             const defaultReference = user?.preferred_ai_model_config?.referenceImageModelId || 'ca637a97-f060-4b81-a7d4-118a6f4aac0c';
@@ -424,7 +481,7 @@ function WorkspaceAutopilotPageClient() {
         } finally {
             setIsActionPending(false);
         }
-    }, [seriesList.length, user, voiceList, isActionPending]);
+    }, [seriesList.length, user, voiceList, isActionPending, maxSeriesLimit]);
 
     const onClickDeleteConfig = useCallback(async () => {
         if (!currentSeries || isActionPending) return;
@@ -562,17 +619,25 @@ function WorkspaceAutopilotPageClient() {
                             )}
                         </div>
 
-                        {seriesList.length < 4 && (
+                        <button
+                            onClick={onClickAddSeries}
+                            className={`flex items-center justify-center w-10 h-10 rounded-lg border transition-all ${
+                                seriesList.length === 0
+                                    ? 'border-indigo-500/50 bg-indigo-500/10 text-indigo-300'
+                                    : 'border-white/10 bg-zinc-900/50 text-zinc-400 hover:bg-white/5 hover:text-zinc-200'
+                            }`}
+                            title="Add New Series"
+                        >
+                            <Plus className="w-4 h-4" />
+                        </button>
+
+                        {seriesList.length > 0 && currentSeries && (
                             <button
-                                onClick={onClickAddSeries}
-                                className={`flex items-center justify-center w-10 h-10 rounded-lg border transition-all ${
-                                    seriesList.length === 0
-                                        ? 'border-indigo-500/50 bg-indigo-500/10 text-indigo-300'
-                                        : 'border-white/10 bg-zinc-900/50 text-zinc-400 hover:bg-white/5 hover:text-zinc-200'
-                                }`}
-                                title="Add New Series"
+                                onClick={onClickDeleteConfig}
+                                className="flex items-center justify-center w-10 h-10 rounded-lg border border-white/10 bg-zinc-900/50 text-zinc-400 hover:bg-red-950/20 hover:border-red-500/30 hover:text-red-400 transition-all"
+                                title={`Delete "${currentSeries.name}"`}
                             >
-                                <Plus className="w-4 h-4" />
+                                <Trash2 className="w-4 h-4" />
                             </button>
                         )}
                     </div>
@@ -583,6 +648,22 @@ function WorkspaceAutopilotPageClient() {
             <div className="absolute inset-0 opacity-[0.03] pointer-events-none z-0">
                 <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-indigo-500 rounded-full blur-[120px]"></div>
             </div>
+
+            {/* Plan Exceeded Warning Banner */}
+            {seriesList.length > maxSeriesLimit && (
+                <div className="bg-amber-950/40 border-b border-amber-500/20 px-6 py-2.5 flex items-center justify-between z-20 relative animate-in slide-in-from-top duration-300">
+                    <div className="flex items-center gap-2 text-amber-400 text-[13px] font-medium">
+                        <AlertCircle className="w-4 h-4 shrink-0" />
+                        <span>You are exceeding the series limit ({maxSeriesLimit}) of your current plan. Some series cannot be activated.</span>
+                    </div>
+                    <button
+                        onClick={() => router.push('/profile')}
+                        className="text-[12px] font-semibold text-amber-400 hover:text-amber-300 underline shrink-0"
+                    >
+                        Upgrade Plan
+                    </button>
+                </div>
+            )}
 
             {isInitialLoading ? (
                 <div className="flex h-[calc(100vh-73px)] items-center justify-center relative z-10">
@@ -659,9 +740,9 @@ function WorkspaceAutopilotPageClient() {
                             </div>
 
                             {/* Col 5: Right Control Panel */}
-                            <div className={`transition-all duration-300 ease-in-out flex-shrink-0 h-full ${
+                            <div className={`transition-all duration-300 ease-in-out flex-shrink-0 h-full overflow-hidden ${
                                 previewMode === 'wide'
-                                    ? 'w-0 opacity-0 pointer-events-none overflow-hidden'
+                                    ? 'w-0 opacity-0 pointer-events-none'
                                     : 'w-80 opacity-100'
                             }`}>
                                 <AutopilotControlPanel
@@ -703,6 +784,34 @@ function WorkspaceAutopilotPageClient() {
                     message="Your Autopilot configuration has been saved successfully."
                     cancelText="Close"
                     onClickCancel={() => setShowSaveSuccessModal(false)}
+                />
+            )}
+
+            {showUpgradeModal && (
+                <DefaultModal
+                    title="Upgrade Required"
+                    message={`You have reached the maximum number of Autopilot series allowed for your current plan (${maxSeriesLimit} series).\n\nUpgrade your plan to unlock more series.`}
+                    confirmText="Upgrade Plan"
+                    cancelText="Close"
+                    onClickConfirm={() => {
+                        setShowUpgradeModal(false);
+                        router.push('/profile');
+                    }}
+                    onClickCancel={() => setShowUpgradeModal(false)}
+                />
+            )}
+
+            {showActiveLimitModal && (
+                <DefaultModal
+                    title="Active Limit Reached"
+                    message={`You can only activate up to ${maxActiveLimit} series simultaneously on your current plan.\n\nPlease deactivate one of your currently active series first, or upgrade your plan.`}
+                    confirmText="Upgrade Plan"
+                    cancelText="Close"
+                    onClickConfirm={() => {
+                        setShowActiveLimitModal(false);
+                        router.push('/profile');
+                    }}
+                    onClickCancel={() => setShowActiveLimitModal(false)}
                 />
             )}
 

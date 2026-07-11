@@ -3,6 +3,7 @@ import { getNextBaseResponse } from "@/lib/utils/getNextBaseResponse";
 import { createSupabaseServiceRoleClient } from "@/lib/supabase/supabaseServiceRole";
 import { AutopilotData } from "@/lib/api/types/supabase/AutopilotData";
 import { getIsValidRequestS2S } from "@/lib/utils/getIsValidRequest";
+import { getAutopilotLimitByPlan } from "@/lib/utils/subscriptionUtils";
 
 /**
  * POST /api/autopilot-data
@@ -32,6 +33,47 @@ export async function POST(
     const supabase = createSupabaseServiceRoleClient();
 
     try {
+        // 1. Get user plan
+        const { data: userData, error: userError } = await supabase
+            .from('users')
+            .select('plan')
+            .eq('id', sessionUserId)
+            .single();
+
+        if (userError) {
+            console.error('Fetch user plan error:', userError);
+            return getNextBaseResponse({
+                success: false,
+                status: 500,
+                error: 'Failed to verify user plan.'
+            });
+        }
+
+        // 2. Count existing autopilot series
+        const { count, error: countError } = await supabase
+            .from('autopilot_data')
+            .select('*', { count: 'exact', head: true })
+            .eq('user_id', sessionUserId);
+
+        if (countError) {
+            console.error('Count autopilot series error:', countError);
+            return getNextBaseResponse({
+                success: false,
+                status: 500,
+                error: 'Failed to verify existing series limit.'
+            });
+        }
+
+        // 3. Verify against plan limit
+        const limit = getAutopilotLimitByPlan(userData?.plan);
+        if (count !== null && count >= limit) {
+            return getNextBaseResponse({
+                success: false,
+                status: 403,
+                error: `Limit reached. Your plan allows up to ${limit} series.`
+            });
+        }
+
         const newAutopilotData: Partial<AutopilotData> = await request.json();
 
         const { data, error } = await supabase
