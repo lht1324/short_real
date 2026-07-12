@@ -2,7 +2,7 @@
 
 import {memo, useCallback, useEffect, useMemo, useState} from "react";
 import {SubscriptionPlan} from "@/lib/api/types/supabase/Users";
-import {CreditCard, Crown, Calendar, Mail, User as UserIcon, Receipt, FileText, Settings, Sparkles, Loader2, Bot, Save, ExternalLink, CheckCircle2, Shield} from "lucide-react";
+import {CreditCard, Crown, Calendar, Mail, User as UserIcon, Receipt, FileText, Settings, Sparkles, Loader2, Bot, Save, ExternalLink, CheckCircle2, Shield, Share2, Trash2, Plus} from "lucide-react";
 import {useAuth} from "@/context/AuthContext";
 import {polarClientAPI} from "@/lib/api/client/polarClientAPI";
 import {OrderData} from "@/lib/api/types/api/polar/orders/GetPolarOrdersResponse";
@@ -16,6 +16,7 @@ import DefaultModal from "@/components/public/DefaultModal";
 import {aiModelDataClientAPI} from "@/lib/api/client/aiModelDataClientAPI";
 import {AIModelData} from "@/lib/api/types/supabase/AIModelData";
 import {usersClientAPI} from "@/lib/api/client/usersClientAPI";
+import {getFetch, deleteFetch} from "@/lib/api/client/baseFetch";
 
 const FalIcon = ({ size = 20, className }: { size?: number, className?: string }) => (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
@@ -28,6 +29,20 @@ const ReplicateIcon = ({ size = 20, className }: { size?: number, className?: st
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
         <rect width="24" height="24" fill="rgb(202, 44, 18)" rx="4"/>
         <path d="M22 10.552v2.26h-7.932V22H11.54V10.552H22zM22 2v2.264H4.528V22H2V2h20zm0 4.276V8.54H9.296V22H6.768V6.276H22z" fill="#ffffff" transform="translate(3, 3) scale(0.75)"/>
+    </svg>
+);
+
+const YouTubeIcon = ({ size = 20, className }: { size?: number, className?: string }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
+        <rect width="24" height="24" fill="rgb(230, 0, 0)" rx="4"/>
+        <path d="M19 12a1 1 0 00-.06-.34l-8.5-5A1 1 0 009 7.5v9a1 1 0 001.44.89l8.5-5c.34-.2.56-.54.56-.89z" fill="#ffffff" transform="scale(0.8) translate(3, 3)"/>
+    </svg>
+);
+
+const TikTokIcon = ({ size = 20, className }: { size?: number, className?: string }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
+        <rect width="24" height="24" fill="rgb(0, 0, 0)" rx="4"/>
+        <path d="M16.6 9c1.3 0 2.4.8 2.4.8V7.3s-1.1-.3-2.1-.3v-2h-2v7.9c0 1.2-.9 2.1-2.1 2.1S10.7 14 10.7 12.8s.9-2.1 2.1-2.1v-2c-2.3 0-4.1 1.8-4.1 4.1s1.8 4.1 4.1 4.1 4.1-1.8 4.1-4.1V9h1.7z" fill="#ffffff" transform="scale(0.9) translate(1, 1)"/>
     </svg>
 );
 
@@ -57,6 +72,14 @@ function ProfilePageClient() {
     const [selectedReferenceId, setSelectedReferenceId] = useState<string | null>(null);
     const [selectedI2iId, setSelectedI2iId] = useState<string | null>(null);
     const [selectedI2vId, setSelectedI2vId] = useState<string | null>(null);
+
+    // Social Channels states
+    const [youtubeChannels, setYoutubeChannels] = useState<any[]>([]);
+    const [tiktokAccounts, setTiktokAccounts] = useState<any[]>([]);
+    const [isDeletingTokenId, setIsDeletingTokenId] = useState<string | null>(null);
+    const [isDeletingPlatform, setIsDeletingPlatform] = useState<"youtube" | "tiktok" | null>(null);
+    const [showDisconnectModal, setShowDisconnectModal] = useState(false);
+    const [isDisconnecting, setIsDisconnecting] = useState(false);
 
     const isUserRegisteredFalAi = useMemo(() => {
         return !!(user?.fal_ai_api_key)
@@ -209,6 +232,67 @@ function ProfilePageClient() {
         }
     }, [user?.preferred_ai_model_config]);
 
+    const loadSocialChannels = useCallback(async () => {
+        if (!user?.id) return;
+        try {
+            const ytRes = await getFetch(`/api/user/${user.id}/social-channels?platform=youtube`);
+            const ytData = await ytRes.json();
+            if (ytData.success) {
+                setYoutubeChannels(ytData.data?.channels || []);
+            }
+
+            const ttRes = await getFetch(`/api/user/${user.id}/social-channels?platform=tiktok`);
+            const ttData = await ttRes.json();
+            if (ttData.success) {
+                setTiktokAccounts(ttData.data?.channels || []);
+            }
+        } catch (error) {
+            console.error("Failed to load social channels:", error);
+        }
+    }, [user?.id]);
+
+    const onClickDisconnect = useCallback((tokenId: string, platform: "youtube" | "tiktok") => {
+        setIsDeletingTokenId(tokenId);
+        setIsDeletingPlatform(platform);
+        setShowDisconnectModal(true);
+    }, []);
+
+    const onConfirmDisconnect = useCallback(async () => {
+        if (!user?.id || !isDeletingTokenId || !isDeletingPlatform) return;
+        
+        setIsDisconnecting(true);
+        try {
+            const res = await deleteFetch(
+                `/api/user/${user.id}/social-channels?tokenId=${encodeURIComponent(isDeletingTokenId)}&platform=${isDeletingPlatform}`
+            );
+            const data = await res.json();
+            if (data.success) {
+                alert(`Successfully disconnected.`);
+                await loadSocialChannels();
+            } else {
+                throw new Error(data.error || "Failed to disconnect account.");
+            }
+        } catch (error) {
+            console.error("Error disconnecting account:", error);
+            alert(error instanceof Error ? error.message : "Failed to disconnect. Try again.");
+        } finally {
+            setIsDisconnecting(false);
+            setShowDisconnectModal(false);
+            setIsDeletingTokenId(null);
+            setIsDeletingPlatform(null);
+        }
+    }, [user?.id, isDeletingTokenId, isDeletingPlatform, loadSocialChannels]);
+
+    const onClickConnectYoutube = useCallback(() => {
+        if (!user?.id) return;
+        window.location.href = `/api/video/export/youtube/manual/oauth?mode=profile`;
+    }, [user?.id]);
+
+    const onClickConnectTiktok = useCallback(() => {
+        if (!user?.id) return;
+        window.location.href = `/api/video/export/tiktok/manual/oauth?mode=profile`;
+    }, [user?.id]);
+
     const loadAllData = useCallback(async () => {
         if (!user?.email) return;
         
@@ -218,7 +302,8 @@ function ProfilePageClient() {
                 loadOrders(user.email),
                 loadSubscription(user.email),
                 loadScheduledProduct(),
-                fetchAIModels()
+                fetchAIModels(),
+                loadSocialChannels()
             ]);
         } catch (error) {
             console.error("Error loading profile data:", error);
@@ -226,11 +311,41 @@ function ProfilePageClient() {
         } finally {
             setIsLoading(false);
         }
-    }, [user?.email, loadOrders, loadSubscription, loadScheduledProduct, fetchAIModels, router]);
+    }, [user?.email, loadOrders, loadSubscription, loadScheduledProduct, fetchAIModels, loadSocialChannels, router]);
 
     useEffect(() => {
         loadAllData();
     }, [loadAllData]);
+
+    const socialPlatforms = useMemo(() => {
+        return [
+            {
+                id: "youtube" as const,
+                name: "YouTube",
+                icon: <YouTubeIcon size={24} />,
+                items: youtubeChannels,
+                emptyText: "No YouTube channels connected.",
+                connectLabel: youtubeChannels.length > 0 ? "Link channel" : "Connect YouTube",
+                onConnect: onClickConnectYoutube
+            },
+            {
+                id: "tiktok" as const,
+                name: "TikTok",
+                icon: <TikTokIcon size={24} />,
+                items: tiktokAccounts,
+                emptyText: "No TikTok accounts connected.",
+                connectLabel: tiktokAccounts.length > 0 ? "Link account" : "Connect TikTok",
+                onConnect: onClickConnectTiktok
+            }
+        ];
+    }, [youtubeChannels, tiktokAccounts, onClickConnectYoutube, onClickConnectTiktok]);
+
+    const gridColsClass = useMemo(() => {
+        if (socialPlatforms.length === 2) {
+            return "grid grid-cols-1 md:grid-cols-2 gap-8";
+        }
+        return "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6";
+    }, [socialPlatforms.length]);
 
     const onClickChangePlan = useCallback(() => {
         setShowChangePlanModal(true);
@@ -636,6 +751,81 @@ function ProfilePageClient() {
                     </div>
                 </div>
 
+                {/* Connected Accounts Section */}
+                <div id="connected-accounts" className="mb-8 p-8 rounded-2xl border border-white/5 bg-zinc-900/40">
+                    <div className="flex items-center gap-2.5 mb-8">
+                        <Share2 size={20} className="text-zinc-500" />
+                        <h3 className="text-sm font-semibold text-zinc-100 uppercase tracking-wider">Connected Accounts</h3>
+                    </div>
+
+                    <div className={gridColsClass}>
+                        {socialPlatforms.map((platform) => (
+                            <div 
+                                key={platform.id} 
+                                className="p-6 rounded-2xl bg-zinc-950/30 border border-white/5 flex flex-col justify-between min-h-[220px]"
+                            >
+                                <div>
+                                    <div className="flex items-center gap-3 mb-6">
+                                        {platform.icon}
+                                        <span className="text-sm font-bold text-zinc-100">{platform.name}</span>
+                                    </div>
+
+                                    {platform.items.length > 0 ? (
+                                        <div className="space-y-3">
+                                            {platform.items.map((item) => (
+                                                <div 
+                                                    key={item.id} 
+                                                    className="group relative flex items-center justify-between p-3 bg-zinc-950/60 border border-white/5 hover:border-white/10 rounded-xl transition-all duration-300"
+                                                >
+                                                    <div className="flex items-center gap-3 min-w-0">
+                                                        {item.avatarUrl ? (
+                                                            <img 
+                                                                src={item.avatarUrl} 
+                                                                alt={item.displayName} 
+                                                                className="w-8 h-8 rounded-full object-cover border border-white/10" 
+                                                            />
+                                                        ) : (
+                                                            <div className="w-8 h-8 rounded-full bg-zinc-900 border border-white/5 flex items-center justify-center">
+                                                                <UserIcon size={14} className="text-zinc-500" />
+                                                            </div>
+                                                        )}
+                                                        <div className="min-w-0">
+                                                            <p className="text-xs font-semibold text-zinc-200 truncate">{item.displayName}</p>
+                                                            {item.handleName && (
+                                                                <p className="text-[10px] text-zinc-500 truncate mt-0.5">{item.handleName}</p>
+                                                            )}
+                                                        </div>
+                                                    </div>
+
+                                                    <button
+                                                        onClick={() => onClickDisconnect(item.id, platform.id)}
+                                                        className="opacity-0 group-hover:opacity-100 focus:opacity-100 p-1.5 text-zinc-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all duration-200 active:scale-[0.98]"
+                                                        title={`Disconnect ${platform.name}`}
+                                                    >
+                                                        <Trash2 size={14} />
+                                                    </button>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <div className="flex flex-col items-center justify-center p-6 border border-dashed border-white/5 bg-zinc-950/10 rounded-xl text-center">
+                                            <p className="text-xs text-zinc-500 mb-2">{platform.emptyText}</p>
+                                        </div>
+                                    )}
+                                </div>
+
+                                <button
+                                    onClick={platform.onConnect}
+                                    className="mt-6 w-full flex items-center justify-center gap-2 py-2 px-4 bg-zinc-900 hover:bg-zinc-855 border border-white/5 text-zinc-300 text-xs font-bold rounded-lg transition-all active:scale-[0.98]"
+                                >
+                                    <Plus size={14} />
+                                    <span>{platform.connectLabel}</span>
+                                </button>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+
                 {/* 2 Column Layout: Subscription & Payment History */}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     {/* Left Column: Subscription & Manage */}
@@ -786,6 +976,20 @@ function ProfilePageClient() {
                 cancelText="No, Keep it"
                 onClickConfirm={onConfirmCancelSubscription}
                 onClickCancel={() => setShowCancelSubscriptionModal(false)}
+            />}
+            {showDisconnectModal && <DefaultModal
+                title="Disconnect Account"
+                message={`Are you sure you want to disconnect this ${isDeletingPlatform === 'youtube' ? 'YouTube channel' : 'TikTok account'}? Any active Autopilot series using this account will stop exporting.`}
+                confirmText={isDisconnecting ? "Disconnecting..." : "Yes, Disconnect"}
+                cancelText="No, Keep it"
+                onClickConfirm={onConfirmDisconnect}
+                onClickCancel={() => {
+                    if (!isDisconnecting) {
+                        setShowDisconnectModal(false);
+                        setIsDeletingTokenId(null);
+                        setIsDeletingPlatform(null);
+                    }
+                }}
             />}
 
             {/* Loading Overlay - Minimal Version */}

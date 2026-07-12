@@ -19,12 +19,14 @@ export async function GET(request: NextRequest) {
     }
 
     const searchParams = request.nextUrl.searchParams;
+    const mode = searchParams.get('mode');
+    const isProfileMode = mode === 'profile';
 
     const taskId = searchParams.get('taskId');
     const targetTokenIdRaw = searchParams.get('targetTokenId');
     let targetTokenId = (targetTokenIdRaw === 'null' || targetTokenIdRaw === 'undefined') ? null : targetTokenIdRaw;
 
-    if (!taskId) {
+    if (!isProfileMode && !taskId) {
         return getNextBaseResponse({
             success: false,
             status: 400,
@@ -59,7 +61,7 @@ export async function GET(request: NextRequest) {
         const { data: existingToken } = await tokenQuery.maybeSingle();
 
         // 3. 토큰이 유효하게 남아있다면 OAuth 없이 즉시 업로드 트리거
-        if (existingToken?.refresh_token && Date.now() < new Date(existingToken.refresh_expires_at).getTime()) {
+        if (!isProfileMode && existingToken?.refresh_token && Date.now() < new Date(existingToken.refresh_expires_at).getTime() && taskId) {
             const tokenToPass = targetTokenId || cryptoUtils.encrypt(existingToken.id, user.id);
 
             internalFireAndForgetFetch(
@@ -82,9 +84,10 @@ export async function GET(request: NextRequest) {
             response_type: 'code',
             redirect_uri: `${process.env.BASE_URL}/callback/tiktok`,
             state: JSON.stringify({
-                taskId,
+                taskId: taskId || null,
                 userId: user.id,
                 targetTokenId: targetTokenId || null, // 암호화 상태 그대로 유지하여 전달
+                mode: mode || null
             }),
         });
 

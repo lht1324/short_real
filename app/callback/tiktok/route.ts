@@ -54,9 +54,10 @@ export async function GET(request: NextRequest) {
         const stateData = JSON.parse(state);
         const { taskId, userId, seriesId, mode, targetTokenId } = stateData;
         const isAutopilot = mode === 'autopilot';
+        const isProfileMode = mode === 'profile';
 
-        // 필수 파라미터 체크: 오토파일럿은 userId만 있으면 됨, 매뉴얼은 taskId 필수
-        if (!userId || (!isAutopilot && !taskId)) {
+        // 필수 파라미터 체크: 오토파일럿이나 프로필 연동은 userId만 있으면 됨, 매뉴얼은 taskId 필수
+        if (!userId || (!isAutopilot && !isProfileMode && !taskId)) {
             console.error('Invalid token or missing taskId/userId');
             if (taskId) {
                 await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, {
@@ -64,7 +65,7 @@ export async function GET(request: NextRequest) {
                     export_platform: ExportPlatform.TIKTOK,
                 });
             }
-            return NextResponse.redirect(isAutopilot ? `${originUrl}/workspace/autopilot?seriesId=${seriesId}` : `${originUrl}/workspace/dashboard`);
+            return NextResponse.redirect(isAutopilot ? `${originUrl}/workspace/autopilot?seriesId=${seriesId}` : (isProfileMode ? `${originUrl}/profile` : `${originUrl}/workspace/dashboard`));
         }
 
         // 3. code → access_token 교환
@@ -190,12 +191,16 @@ export async function GET(request: NextRequest) {
                 });
             }
 
-            return NextResponse.redirect(isAutopilot ? `${originUrl}/workspace/autopilot?seriesId=${seriesId}` : `${originUrl}/workspace/dashboard`);
+            return NextResponse.redirect(isAutopilot ? `${originUrl}/workspace/autopilot?seriesId=${seriesId}` : (isProfileMode ? `${originUrl}/profile` : `${originUrl}/workspace/dashboard`));
         }
 
         const finalTokenId = existingRecord?.id || dbResult.data?.id;
 
         // 5. 모드에 따른 후속 작업 및 리다이렉트
+        if (isProfileMode) {
+            return NextResponse.redirect(`${originUrl}/profile`);
+        }
+
         if (isAutopilot) {
             if (finalTokenId) {
                 await supabase
@@ -226,6 +231,7 @@ export async function GET(request: NextRequest) {
 
     } catch (error) {
         console.error('TikTok callback error:', error);
-        return NextResponse.redirect(`${originUrl}/workspace/dashboard`);
+        const isProfileMode = state ? (JSON.parse(state)?.mode === 'profile') : false;
+        return NextResponse.redirect(isProfileMode ? `${originUrl}/profile` : `${originUrl}/workspace/dashboard`);
     }
 }

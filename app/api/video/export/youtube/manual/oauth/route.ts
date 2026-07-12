@@ -19,10 +19,12 @@ export async function GET(request: NextRequest) {
     }
 
     const searchParams = request.nextUrl.searchParams;
+    const mode = searchParams.get('mode');
+    const isProfileMode = mode === 'profile';
 
-    const taskId = searchParams.get('taskId')
+    const taskId = searchParams.get('taskId');
 
-    if (!taskId) {
+    if (!isProfileMode && !taskId) {
         return getNextBaseResponse({
             success: false,
             status: 400,
@@ -37,7 +39,7 @@ export async function GET(request: NextRequest) {
         const targetTokenIdRaw = request.nextUrl.searchParams.get('targetTokenId');
         let targetTokenId = (targetTokenIdRaw === 'null' || targetTokenIdRaw === 'undefined') ? null : targetTokenIdRaw;
 
-        if (!privacySetting) {
+        if (!isProfileMode && !privacySetting) {
             return getNextBaseResponse({
                 success: false,
                 status: 400,
@@ -68,7 +70,7 @@ export async function GET(request: NextRequest) {
 
         const { data: existingToken } = await tokenQuery.maybeSingle();
 
-        if (existingToken?.refresh_token) {
+        if (!isProfileMode && existingToken?.refresh_token && taskId && privacySetting) {
             // 토큰 있음 → OAuth 건너뛰고 바로 업로드 트리거 (암호화된 targetTokenId 전달)
             // 만약 targetTokenId가 없었다면 (예: legacy 수동 연동 복구), 새로 암호화하여 생성
             const tokenToPass = targetTokenId || cryptoUtils.encrypt(existingToken.id, user.id);
@@ -95,9 +97,10 @@ export async function GET(request: NextRequest) {
             prompt: 'consent',
             state: encodeURIComponent(JSON.stringify({
                 userId: user.id,
-                taskId: taskId,
-                privacySetting: privacySetting,
+                taskId: taskId || null,
+                privacySetting: privacySetting || null,
                 targetTokenId: targetTokenId || null, // 암호화된 상태 그대로 유지하여 전달
+                mode: mode || null
             }))
         });
 

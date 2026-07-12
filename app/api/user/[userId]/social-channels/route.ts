@@ -105,3 +105,85 @@ export async function GET(
         });
     }
 }
+
+export async function DELETE(
+    request: NextRequest,
+    { params }: { params: Promise<{ userId: string }> }
+) {
+    if (!getIsValidRequestS2S(request)) {
+        return getNextBaseResponse({
+            success: false,
+            status: 401,
+            error: "Unauthorized internal request."
+        });
+    }
+
+    try {
+        const { userId } = await params;
+        const { searchParams } = new URL(request.url);
+        const encryptedTokenId = searchParams.get("tokenId");
+        const platform = searchParams.get("platform") as ExportPlatform;
+
+        if (!userId) {
+            return getNextBaseResponse({
+                success: false,
+                status: 400,
+                error: "Missing userId parameter"
+            });
+        }
+
+        if (!encryptedTokenId) {
+            return getNextBaseResponse({
+                success: false,
+                status: 400,
+                error: "Missing tokenId parameter"
+            });
+        }
+
+        if (!platform || (platform !== ExportPlatform.YOUTUBE && platform !== ExportPlatform.TIKTOK)) {
+            return getNextBaseResponse({
+                success: false,
+                status: 400,
+                error: "Invalid or missing platform parameter"
+            });
+        }
+
+        let decryptedTokenId: string;
+        try {
+            decryptedTokenId = cryptoUtils.decrypt(encryptedTokenId, userId);
+        } catch (e) {
+            console.error("Failed to decrypt tokenId:", e);
+            return getNextBaseResponse({
+                success: false,
+                status: 400,
+                error: "Invalid token ID signature or unauthorized access"
+            });
+        }
+
+        const supabase = createSupabaseServiceRoleClient();
+        const tableName = platform === ExportPlatform.YOUTUBE ? "user_youtube_tokens" : "user_tiktok_tokens";
+
+        const { error } = await supabase
+            .from(tableName)
+            .delete()
+            .eq("id", decryptedTokenId)
+            .eq("user_id", userId);
+
+        if (error) {
+            throw error;
+        }
+
+        return getNextBaseResponse({
+            success: true,
+            status: 200,
+            message: `Successfully disconnected ${platform} account.`
+        });
+    } catch (error) {
+        console.error("Error in DELETE /api/user/[userId]/social-channels:", error);
+        return getNextBaseResponse({
+            success: false,
+            status: 500,
+            error: error instanceof Error ? error.message : "Failed to disconnect social channel."
+        });
+    }
+}
