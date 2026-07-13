@@ -67,15 +67,23 @@ function CustomModelSelect({
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
+    const selectedModelMatchedPrice = useMemo(() => {
+        if (!selectedModel) return null;
+        return getMatchedModelPrice(selectedModel, localResolution, category);
+    }, [selectedModel, localResolution, category]);
+
     const selectedPriceLabel = useMemo(() => {
-        if (!selectedModel) return '';
-        const matched = getMatchedModelPrice(selectedModel, localResolution, category);
+        if (!selectedModelMatchedPrice) return '';
+        const matched = selectedModelMatchedPrice;
         const suffix = category === 'text-to-image' ? '/character' : (category === 'image-to-image' ? '/scene' : '/sec');
         if (matched.isFallback) {
-            return `$${matched.price.toFixed(3)}${suffix} (${matched.matchedResolution})`;
+            return `$${matched.price}${suffix} (${matched.matchedResolution})`;
         }
-        return `$${matched.price.toFixed(3)}${suffix}`;
-    }, [selectedModel, localResolution, category]);
+        return `$${matched.price}${suffix}`;
+    }, [selectedModelMatchedPrice, category]);
+
+    const selectedModelExtraPrice = selectedModelMatchedPrice?.extraInputPrice;
+    const selectedModelExtraAbove1Price = selectedModelMatchedPrice?.extraInputAbove1Price;
 
     return (
         <div ref={containerRef} className="space-y-1.5 relative flex-1">
@@ -91,6 +99,16 @@ function CustomModelSelect({
                         </div>
                     </div>
                 )}
+                {category === 'image-to-image' && (
+                    <div className="relative group flex items-center">
+                        <Info size={14} className="text-zinc-500 hover:text-zinc-300 transition-colors cursor-help" />
+                        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-56 p-2.5 bg-zinc-900 border border-white/10 rounded-lg shadow-xl opacity-0 group-hover:opacity-100 transition-opacity text-left pointer-events-none z-50">
+                            <p className="text-xs text-zinc-300 leading-relaxed font-normal normal-case tracking-normal">
+                                If character reference is not used, the scene generates at a lower rate (excluding any reference image surcharges).
+                            </p>
+                        </div>
+                    </div>
+                )}
             </div>
             
             {/* Dropdown Toggle Button */}
@@ -102,7 +120,23 @@ function CustomModelSelect({
                 <div className="flex flex-col min-w-0 pr-2">
                     <span className="font-semibold text-zinc-100 text-base truncate">{selectedModel?.display_name || "Select Model"}</span>
                     {selectedModel && (
-                        <span className="text-sm text-zinc-300 font-mono mt-0.5">{selectedPriceLabel}</span>
+                        <div className="flex items-center gap-1.5 mt-0.5">
+                            <span className="text-sm text-zinc-300 font-mono">{selectedPriceLabel}</span>
+                            {((selectedModelExtraPrice !== undefined && selectedModelExtraPrice > 0) || 
+                              (selectedModelExtraAbove1Price !== undefined && selectedModelExtraAbove1Price > 0)) && (
+                                <div className="relative group flex items-center">
+                                    <AlertCircle size={14} className="text-amber-500 hover:text-amber-400 transition-colors cursor-help flex-shrink-0" />
+                                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-52 p-2 bg-zinc-950 border border-white/10 rounded-lg shadow-xl opacity-0 group-hover:opacity-100 transition-opacity text-left pointer-events-none z-50">
+                                        <p className="text-[11px] text-zinc-300 leading-normal font-normal normal-case tracking-normal">
+                                            {selectedModelExtraPrice !== undefined && selectedModelExtraPrice > 0 
+                                                ? `This model charges an additional $${selectedModelExtraPrice} per reference image.`
+                                                : `This model charges an additional $${selectedModelExtraAbove1Price} per reference image (excluding the first one).`
+                                            }
+                                        </p>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
                     )}
                 </div>
                 <ChevronDown size={16} className="text-zinc-500 flex-shrink-0" />
@@ -164,8 +198,8 @@ function CustomModelSelect({
                         const matched = getMatchedModelPrice(option, localResolution, category);
                         const suffix = category === 'text-to-image' ? '/character' : (category === 'image-to-image' ? '/scene' : '/sec');
                         const priceText = matched.isFallback
-                            ? `$${matched.price.toFixed(3)}${suffix} (${matched.matchedResolution} fallback)`
-                            : `$${matched.price.toFixed(3)}${suffix}`;
+                            ? `$${matched.price}${suffix} (${matched.matchedResolution} fallback)`
+                            : `$${matched.price}${suffix}`;
 
                         // 지원 해상도 목록
                         const resList: string[] = [];
@@ -213,8 +247,22 @@ function CustomModelSelect({
                                     </div>
                                     {/* 2층: 요율 */}
                                     {!isOptionDisabled && (
-                                        <div className="mt-0.5">
+                                        <div className="mt-0.5 flex items-center gap-1.5">
                                             <span className="text-sm text-zinc-300 font-mono">{priceText}</span>
+                                            {((matched.extraInputPrice !== undefined && matched.extraInputPrice > 0) ||
+                                              (matched.extraInputAbove1Price !== undefined && matched.extraInputAbove1Price > 0)) && (
+                                                <div className="relative group/opt flex items-center">
+                                                    <AlertCircle size={13} className="text-amber-500/80 hover:text-amber-400 transition-colors cursor-help flex-shrink-0" />
+                                                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-52 p-2 bg-zinc-950 border border-white/10 rounded-lg shadow-xl opacity-0 group-hover/opt:opacity-100 transition-opacity text-left pointer-events-none z-50">
+                                                        <p className="text-[11px] text-zinc-300 leading-normal font-normal normal-case tracking-normal">
+                                                            {matched.extraInputPrice !== undefined && matched.extraInputPrice > 0
+                                                                ? `This model charges an additional $${matched.extraInputPrice} per reference image.`
+                                                                : `This model charges an additional $${matched.extraInputAbove1Price} per reference image (excluding the first one).`
+                                                            }
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            )}
                                         </div>
                                     )}
                                     {/* 3층: 해상도 뱃지 & 제공처 */}

@@ -31,4 +31,6 @@ export enum AIModelPriceUnit {
     IMAGE_720P = 'image_720p',
     IMAGE_1080P = 'image_1080p',
     IMAGE_2160P = 'image_2160p',
+    INPUT_IMAGE = 'input_image',
+    INPUT_IMAGE_ABOVE_1 = 'input_image_above_1',
 }

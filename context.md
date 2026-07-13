@@ -1,18 +1,17 @@
-# 작업 진행 상황 (Last Updated: 2026-07-13 02:51)
+# 작업 진행 상황 (Last Updated: 2026-07-14 02:40)
 
 ## 1. 최근 세션 작업 내용 (Current Session Changes)
-* **소셜 계정 보관함(Connected Accounts) UI 리팩토링 완료**:
-    * [ProfilePageClient.tsx](file:///home/jaeho/Projects/short_real/components/page/profile/ProfilePageClient.tsx)의 `Connected Accounts` 섹션을 하드코딩에서 `socialPlatforms` 데이터 배열 기반의 동적 렌더링 방식으로 변경.
-    * 플랫폼이 2개(YouTube, TikTok)일 때는 가로 2열(`md:grid-cols-2`)을 유지하고, 인스타그램 등 플랫폼 추가 시 별도 CSS/마크업 수정 없이 자동으로 가로 3열(`lg:grid-cols-3`)로 확장 정렬되도록 반응형 그리드(`gridColsClass`) 적용.
-    * 각 플랫폼 타이틀(`YouTube`, `TikTok`) 및 연동 추가 버튼의 텍스트(`Link channel`, `Link account`)를 콤팩트하게 다듬어 가로폭 압박에 대응함.
-* **신규 image-to-video(I2V) AI 모델 삽입용 SQL 쿼리 설계 완료**:
-    * [ai_model_data_rows.csv](file:///home/jaeho/Projects/short_real/ai_model_data_rows.csv) 파일의 스키마 및 JSONB/Array 포맷(Price List, Duration Range) 분석을 진행함.
-    * xAI Grok, Gemini Omni Flash, Ltx 2.3, Cosmos 3 Super, Kling V3 Turbo, Happy Horse 1.1, Seedance 2.0 Mini 등 신규 I2V 모델 8종의 요금제 정보 및 해상도 사양을 매핑한 Supabase 데이터 적재용 Upsert SQL 스크립트를 작성함.
+* **신규 AI 모델 요금 및 해상도 정책 조사/분석 완료**:
+    * `Grok Imagine 1.5`, `Luma Uni-1`, `Microsoft MAI-Image-2.5`, `Nano Banana Lite` 등의 해상도 스펙(Aspect Ratio만 넘기고 고정 화소 출력)과 메가픽셀 기반 요금 규격 분석 완료.
+* **BYOK 모델 선택기 UI 경고 뱃지 및 커스텀 툴팁 구현 완료**:
+    * [BYOKModelSelector.tsx](file:///home/jaeho/Projects/short_real/components/public/BYOKModelSelector.tsx)의 `selectedModel` 및 옵션 목록 렌더링 영역에 인풋 이미지 추가 과금 모델 감지 시 주황색 경고 뱃지(`AlertCircle`) 노출.
+    * 마우스 오버 시 소수점 4자리 정밀 요율(예: `$0.0045/ref`)을 출력하는 커스텀 툴팁 팝업 구현.
+    * `SCENE` 라벨 옆에도 대칭으로 `ⓘ` 아이콘을 배치하여, 인물이 없을 경우 배경 전용 모드로 요금이 자동 인하된다는 혜택 위주의 세련된 안내 문구 적용 완료.
+* **가변 인풋 이미지 과금용 유닛 설계 및 연동 완료**:
+    * [AIModelData.ts](file:///home/jaeho/Projects/short_real/lib/api/types/supabase/AIModelData.ts) 및 [costCalculator.ts](file:///home/jaeho/Projects/short_real/lib/utils/costCalculator.ts)에 `input_image` (첫 장부터 과금)와 `input_image_above_1` (첫 장은 무료, 2장째 추가분부터 과금) 단위를 새롭게 설계하고 가격 산출기에 연동하여 특수 과금 모델을 완벽히 수용.
 
 ## 2. 향후 작업 (Next Steps) - [Priority: HIGH]
-1. **[검증] 소셜 계정 보관함 리팩토링 결과 UI 테스트**:
-    * 로컬 개발 서버에서 리팩토링된 Connected Accounts 반응형 UI와 연동 해제 흐름의 린트 에러 여부 실기기 최종 검증.
-2. **[DB/기획] i2i / t2i AI 모델 데이터 추가 적재 진행**:
-    * 금일 진행한 I2V 모델에 이어, 나머지 Image-to-Image 및 Text-to-Image 모델군에 대해서도 단가 정보를 조사하고 테이블 데이터(SQL 및 CSV) 업데이트 작업 진행 예정.
-3. **[기획/장기] Replicate 모델 실연동 검토**:
-    * Replicate 모델의 실제 서비스 연동 및 기획 단계 진행 예정.
+1. **[DB/기획] 신규 모델 리스트 분석 및 DB 적재 데이터 생성**:
+    * [new_model_list.json](file:///home/jaeho/Projects/short_real/new_model_list.json) 파일에 수집된 신규 모델 데이터들을 확인하여, 가격 정책 문구를 읽고 정리한 뒤 Supabase DB 적재용 최종 삽입 데이터(CSV 또는 SQL) 생성.
+2. **[검증] BYOKModelSelector 린트 및 UI 실기기 최종 테스트**:
+    * 로컬 개발 환경에서 뱃지/툴팁 UI의 디자인 완성도와 린트 에러 여부를 사장에게 최종 컨펌 요청.

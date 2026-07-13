@@ -1,0 +1,391 @@
+[
+  {
+    "endpoint_id": "xai/grok-imagine-image/quality/edit",
+    "metadata": {
+      "display_name": "Grok Imagine Image Editing Quality",
+      "category": "image-to-image",
+      "description": "Grok Imagine Pro is an advanced AI model from xAI that creates high-quality visuals from text prompts and allows you to edit or analyze existing images.",
+      "status": "active",
+      "tags": [
+        "stylized",
+        "transform",
+        "typography"
+      ],
+      "updated_at": "2026-05-07T23:29:57.387Z",
+      "is_favorited": false,
+      "thumbnail_url": "https://v3b.fal.media/files/b/0a959abd/vUggNVIfKJsfVCUQhcI7s_ea5f9f2ac49147d49270324989db60e4.jpg",
+      "model_url": "https://fal.run/xai/grok-imagine-image/quality/edit",
+      "license_type": "commercial",
+      "date": "2026-04-09T20:49:13.706Z",
+      "group": {
+        "key": "grok-imagine-image",
+        "label": "Edit Image Quality"
+      },
+      "highlighted": false,
+      "kind": "inference",
+      "pinned": false
+    }
+  },
+  {
+    "endpoint_id": "xai/grok-imagine-image/quality/text-to-image",
+    "metadata": {
+      "display_name": "Grok Imagine Image",
+      "category": "text-to-image",
+      "description": "Grok Imagine Pro is an advanced AI model from xAI that creates high-quality visuals from text prompts and allows you to edit or analyze existing images.",
+      "status": "active",
+      "tags": [
+        "stylized",
+        "transform",
+        "typography"
+      ],
+      "updated_at": "2026-05-07T23:29:26.351Z",
+      "is_favorited": false,
+      "thumbnail_url": "https://v3b.fal.media/files/b/0a959ac2/BbRJ1XroSH1gwHzPYc_t8_8ba16f7ab525499aaa149fba1039b4a4.jpg",
+      "model_url": "https://fal.run/xai/grok-imagine-image/quality/text-to-image",
+      "license_type": "commercial",
+      "date": "2026-04-09T20:50:18.727Z",
+      "group": {
+        "key": "grok-imagine-image",
+        "label": "Text to Image Quality"
+      },
+      "highlighted": false,
+      "kind": "inference",
+      "pinned": false
+    }
+  },
+  {
+    "endpoint_id": "fal-ai/hidream-o1-image/edit",
+    "metadata": {
+      "display_name": "Hidream O1 Image",
+      "category": "image-to-image",
+      "description": "Unified image generation with HiDream-O1-Image. Create, edit, and personalize high-resolution images up to 2K—single native model handles text-to-image, editing, and custom subjects without external components.",
+      "status": "active",
+      "tags": [],
+      "updated_at": "2026-07-01T04:56:00.169Z",
+      "is_favorited": false,
+      "thumbnail_url": "https://v3b.fal.media/files/b/0a99921e/VChBoBpjrCe5lbXHv97mB_220119a1d12448c2bb216d8e8ec6245e.jpg",
+      "model_url": "https://fal.run/fal-ai/hidream-o1-image/edit",
+      "license_type": "commercial",
+      "date": "2026-05-09T22:29:40.275Z",
+      "highlighted": false,
+      "kind": "inference",
+      "pinned": false
+    }
+  },
+  {
+    "endpoint_id": "fal-ai/hidream-o1-image",
+    "metadata": {
+      "display_name": "Hidream O1 Image",
+      "category": "text-to-image",
+      "description": "Unified image generation with HiDream-O1-Image. Create, edit, and personalize high-resolution images up to 2K—single native model handles text-to-image, editing, and custom subjects without external components.",
+      "status": "active",
+      "tags": [],
+      "updated_at": "2026-07-01T04:56:00.169Z",
+      "is_favorited": false,
+      "thumbnail_url": "https://v3b.fal.media/files/b/0a999217/79hRTD17Is8llel4R5GvK_fb7bcffb53ea405198c7978f9886a668.jpg",
+      "model_url": "https://fal.run/fal-ai/hidream-o1-image",
+      "license_type": "commercial",
+      "date": "2026-05-09T22:28:20.145Z",
+      "highlighted": false,
+      "kind": "inference",
+      "pinned": false
+    }
+  },
+  {
+    "endpoint_id": "fal-ai/hidream-o1-image/dev/edit",
+    "metadata": {
+      "display_name": "Hidream O1 Image",
+      "category": "image-to-image",
+      "description": "Unified image generation with HiDream-O1-Image. Create, edit, and personalize high-resolution images up to 2K—single native model handles text-to-image, editing, and custom subjects without external components.",
+      "status": "active",
+      "tags": [],
+      "updated_at": "2026-07-01T04:56:00.169Z",
+      "is_favorited": false,
+      "thumbnail_url": "https://v3b.fal.media/files/b/0a999225/QmwooLH3hpHa3255JhRoC_d6e5053b73d44e4a9b4593a043360e66.jpg",
+      "model_url": "https://fal.run/fal-ai/hidream-o1-image/dev/edit",
+      "license_type": "commercial",
+      "date": "2026-05-09T22:30:26.882Z",
+      "highlighted": false,
+      "kind": "inference",
+      "pinned": false
+    }
+  },
+  {
+    "endpoint_id": "fal-ai/hidream-o1-image/dev",
+    "metadata": {
+      "display_name": "Hidream O1 Image",
+      "category": "text-to-image",
+      "description": "Unified image generation with HiDream-O1-Image. Create, edit, and personalize high-resolution images up to 2K—single native model handles text-to-image, editing, and custom subjects without external components.",
+      "status": "active",
+      "tags": [],
+      "updated_at": "2026-07-01T04:56:00.169Z",
+      "is_favorited": false,
+      "thumbnail_url": "https://v3b.fal.media/files/b/0a9991f9/vvcIi5jpPDoJJ_j-Mqjet_714dcf611a2d446381e3b2a8eb084c21.jpg",
+      "model_url": "https://fal.run/fal-ai/hidream-o1-image/dev",
+      "license_type": "commercial",
+      "date": "2026-05-09T22:26:28.943Z",
+      "highlighted": false,
+      "kind": "inference",
+      "pinned": false
+    }
+  },
+  {
+    "endpoint_id": "imagineart/imagineart-2.0-edit-preview/image-to-image",
+    "metadata": {
+      "display_name": "Imagineart 2.0 Edit Preview",
+      "category": "image-to-image",
+      "description": "ImagineArt 2.0 Edit delivers precise prompt-guided image editing at 2K resolution, preserving fine detail and realism while accurately applying targeted changes across one or more reference images.",
+      "status": "active",
+      "tags": [
+        "stylized",
+        "transform",
+        "typography"
+      ],
+      "updated_at": "2026-07-01T04:56:00.169Z",
+      "is_favorited": false,
+      "thumbnail_url": "https://v3b.fal.media/files/b/0a9ad814/PsE01Pyi5i4PgVaJ7qytu_4e417585f9e74974afdf1362d3ec7443.jpg",
+      "model_url": "https://fal.run/imagineart/imagineart-2.0-edit-preview/image-to-image",
+      "license_type": "commercial",
+      "date": "2026-05-19T14:17:03.624Z",
+      "highlighted": false,
+      "kind": "inference",
+      "pinned": false
+    }
+  },
+  {
+    "endpoint_id": "imagineart/imagineart-2.0-preview/text-to-image",
+    "metadata": {
+      "display_name": "Imagineart 2.0 Preview",
+      "category": "text-to-image",
+      "description": "ImagineArt 2.0 is ImagineArt's latest state-of-the-art visual reasoning text-to-image model, generating high-fidelity, professional-grade visuals with lifelike realism, cinematic effects, and strong aesthetic quality.",
+      "status": "active",
+      "tags": [
+        "stylized",
+        "transform",
+        "typography"
+      ],
+      "updated_at": "2026-04-21T02:05:52.494Z",
+      "is_favorited": false,
+      "thumbnail_url": "https://v3b.fal.media/files/b/0a9619d4/8isHEzPc3fcKe_uRplQCZ_0270eeb6dceb461c97fe89581ef257f7.jpg",
+      "model_url": "https://fal.run/imagineart/imagineart-2.0-preview/text-to-image",
+      "license_type": "commercial",
+      "date": "2026-04-13T14:49:56.783Z",
+      "highlighted": false,
+      "kind": "inference",
+      "pinned": false
+    }
+  },
+  {
+    "endpoint_id": "ideogram/v4/image-to-image",
+    "metadata": {
+      "display_name": "Ideogram V4.0q Image to Image",
+      "category": "image-to-image",
+      "description": "Ideogram V4.0q Image-to-Image transforms an input image with a text prompt, restyling and reworking the composition while preserving its core structure for prompt-faithful, high-fidelity edits.",
+      "status": "active",
+      "tags": [
+        "realism",
+        "typography",
+        "stylized"
+      ],
+      "updated_at": "2026-07-01T04:56:00.169Z",
+      "is_favorited": false,
+      "thumbnail_url": "https://v3b.fal.media/files/b/0a9dc0d8/Sk7dDmlNxtuNqrIC5PGqo_cb68a0ee29c44a729d67bd251546ba63.jpg",
+      "model_url": "https://fal.run/ideogram/v4/image-to-image",
+      "license_type": "commercial",
+      "date": "2026-06-10T15:58:06.697Z",
+      "group": {
+        "key": "ideogram/v4",
+        "label": "Image to Image"
+      },
+      "highlighted": false,
+      "kind": "inference",
+      "stream_url": "https://fal.run/ideogram/v4/image-to-image/stream",
+      "pinned": false
+    }
+  },
+  {
+    "endpoint_id": "ideogram/v4",
+    "metadata": {
+      "display_name": "Ideogram V4.0 Text to Image",
+      "category": "text-to-image",
+      "description": "Generate high-quality images, posters, and logos with Ideogram's latest V4.0q — producing crisp visuals with accurate text rendering, fine detail, and full creative control for polished, ready-to-use designs.",
+      "status": "active",
+      "tags": [
+        "realism",
+        "typography",
+        "stylized"
+      ],
+      "updated_at": "2026-07-06T12:50:57.937Z",
+      "is_favorited": false,
+      "thumbnail_url": "https://v3b.fal.media/files/b/0a9cb567/UOWMMlOcuBA-NRLAWnP2G_8e662a91cf494675a0f6a83852cdb6e1.jpg",
+      "model_url": "https://fal.run/ideogram/v4",
+      "license_type": "commercial",
+      "date": "2026-06-02T17:49:09.083Z",
+      "group": {
+        "key": "ideogram/v4",
+        "label": "Text to Image"
+      },
+      "highlighted": false,
+      "kind": "inference",
+      "stream_url": "https://fal.run/ideogram/v4/stream",
+      "pinned": false,
+      "training_endpoint_ids": [
+        "ideogram/v4/trainer"
+      ]
+    }
+  },
+  {
+    "endpoint_id": "fal-ai/boogu-image/edit",
+    "metadata": {
+      "display_name": "Boogu Image",
+      "category": "image-to-image",
+      "description": "Image To Image Model using Boogu-Image",
+      "status": "active",
+      "tags": [],
+      "updated_at": "2026-07-01T04:56:00.169Z",
+      "is_favorited": false,
+      "thumbnail_url": "https://v3b.fal.media/files/b/0a9eb89f/j82hUH1BOPbfNF6F0etgy_2e7f4e89b0314bc997a85a38dd833d2b.jpg",
+      "model_url": "https://fal.run/fal-ai/boogu-image/edit",
+      "license_type": "commercial",
+      "date": "2026-06-18T00:07:26.592Z",
+      "group": {
+        "key": "boogu-image",
+        "label": "Image Editing"
+      },
+      "highlighted": false,
+      "kind": "inference",
+      "pinned": false
+    }
+  },
+  {
+    "endpoint_id": "fal-ai/boogu-image",
+    "metadata": {
+      "display_name": "Boogu Image",
+      "category": "text-to-image",
+      "description": "Text To Image Model using Boogu-Image",
+      "status": "active",
+      "tags": [],
+      "updated_at": "2026-07-01T04:56:00.169Z",
+      "is_favorited": false,
+      "thumbnail_url": "https://v3b.fal.media/files/b/0a9eb742/8QNsn7JFWdvxtbkhJsDym_1e782ca20ecb4a9187294c4d2e1140d6.jpg",
+      "model_url": "https://fal.run/fal-ai/boogu-image",
+      "license_type": "commercial",
+      "date": "2026-06-18T00:02:46.287Z",
+      "group": {
+        "key": "boogu-image",
+        "label": "Text To Image"
+      },
+      "highlighted": false,
+      "kind": "inference",
+      "pinned": false
+    }
+  },
+  {
+    "endpoint_id": "bytedance/seedream/v5/pro/edit",
+    "metadata": {
+      "display_name": "Seedream 5.0 Pro Image Editing",
+      "category": "image-to-image",
+      "description": "Seedream 5.0 Pro is grounded, region-precise image editing model that changes one element while keeping the rest of the frame intact with layer separation, sketch completion, and up to 10 reference images.",
+      "status": "active",
+      "tags": [
+        "realism",
+        "typography",
+        "stylized"
+      ],
+      "updated_at": "2026-07-09T19:15:50.675Z",
+      "is_favorited": false,
+      "thumbnail_url": "https://v3b.fal.media/files/b/0aa15606/l4xYHHjF6aMrdoonScgXK.jpg",
+      "model_url": "https://fal.run/bytedance/seedream/v5/pro/edit",
+      "license_type": "commercial",
+      "date": "2026-07-07T20:08:05.177Z",
+      "group": {
+        "key": "seedream-5-pro",
+        "label": "Image Editing"
+      },
+      "highlighted": false,
+      "kind": "inference",
+      "pinned": false
+    }
+  },
+  {
+    "endpoint_id": "bytedance/seedream/v5/pro/text-to-image",
+    "metadata": {
+      "display_name": "Seedream 5.0 Pro Text to Image",
+      "category": "text-to-image",
+      "description": "ByteDance's Seedream 5.0 Pro is flagship text-to-image model, with deep-thinking prompt understanding, native text in 14 languages, and precise control over dense layouts and structured designs.",
+      "status": "active",
+      "tags": [
+        "realism",
+        "typography",
+        "stylized"
+      ],
+      "updated_at": "2026-07-09T16:45:51.224Z",
+      "is_favorited": false,
+      "thumbnail_url": "https://v3b.fal.media/files/b/0aa1561a/Rb0DDLUI2sx4gevoh1HKt.jpg",
+      "model_url": "https://fal.run/bytedance/seedream/v5/pro/text-to-image",
+      "license_type": "commercial",
+      "date": "2026-07-07T20:10:11.334Z",
+      "group": {
+        "key": "seedream-5-pro",
+        "label": "Text to Image"
+      },
+      "highlighted": false,
+      "kind": "inference",
+      "pinned": false
+    }
+  },
+  {
+    "endpoint_id": "bytedance/seedream/v5/lite/edit",
+    "metadata": {
+      "display_name": "Seedream",
+      "category": "image-to-image",
+      "description": "Image editing endpoint for the fast Lite version of Seedream 5.0, supporting high quality intelligent image editing with multiple inputs.",
+      "status": "active",
+      "tags": [
+        "bytedance",
+        "seedream-5.0-lite",
+        "edit"
+      ],
+      "updated_at": "2026-07-08T22:46:03.081Z",
+      "is_favorited": false,
+      "thumbnail_url": "https://v3b.fal.media/files/b/0a9c2fb5/PIUPm_8kBdpdBoSkOebbz_bcfdbe1021324995bf3c36b05ab59c2c.jpg",
+      "model_url": "https://fal.run/bytedance/seedream/v5/lite/edit",
+      "license_type": "commercial",
+      "date": "2026-07-08T22:33:11.888Z",
+      "group": {
+        "key": "seedream-5.0",
+        "label": "Image Editing (Lite)"
+      },
+      "highlighted": false,
+      "kind": "inference",
+      "pinned": false
+    }
+  },
+  {
+    "endpoint_id": "bytedance/seedream/v5/lite/text-to-image",
+    "metadata": {
+      "display_name": "Seedream",
+      "category": "text-to-image",
+      "description": "Text to Image endpoint for the fast Lite version of Seedream 5.0, supporting high quality intelligent text-to-image generation.",
+      "status": "active",
+      "tags": [
+        "text-to-image",
+        "bytedance",
+        "seedream-5.0-lite"
+      ],
+      "updated_at": "2026-07-08T22:44:24.470Z",
+      "is_favorited": false,
+      "thumbnail_url": "https://v3b.fal.media/files/b/0a8f9a87/jRElAKkVlihQHtusciuoI_b73a05e10c45441bb15bce9cbed1bf25.jpg",
+      "model_url": "https://fal.run/bytedance/seedream/v5/lite/text-to-image",
+      "license_type": "commercial",
+      "date": "2026-07-08T22:39:42.090Z",
+      "group": {
+        "key": "seedream-5.0",
+        "label": "Text to Image (Lite)"
+      },
+      "highlighted": false,
+      "kind": "inference",
+      "pinned": false
+    }
+  }
+]

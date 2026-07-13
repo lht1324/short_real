@@ -4,6 +4,8 @@ export interface MatchedPriceResult {
     price: number;
     matchedResolution: '720p' | '1080p' | '2160p';
     isFallback: boolean;
+    extraInputPrice?: number;
+    extraInputAbove1Price?: number;
 }
 
 function getPriceUnit(res: '720p' | '1080p' | '2160p', isVideo: boolean): AIModelPriceUnit {
@@ -38,28 +40,35 @@ export function getMatchedModelPrice(
     const priceList = model.ai_model_price_list;
     const isVideo = category === 'image-to-video';
 
-    // 1. 글로벌 해상도 매칭 시도
+    // 1. 추가 이미지 입력 단가 조회
+    const inputPriceObj = priceList.find(p => p.unit === AIModelPriceUnit.INPUT_IMAGE);
+    const extraInputPrice = inputPriceObj ? inputPriceObj.price_per_unit : undefined;
+
+    const inputAbove1PriceObj = priceList.find(p => p.unit === AIModelPriceUnit.INPUT_IMAGE_ABOVE_1);
+    const extraInputAbove1Price = inputAbove1PriceObj ? inputAbove1PriceObj.price_per_unit : undefined;
+
+    // 2. 글로벌 해상도 매칭 시도
     const targetUnit = getPriceUnit(globalResolution, isVideo);
     const targetPrice = priceList.find(p => p.unit === targetUnit);
     if (targetPrice) {
-        return { price: targetPrice.price_per_unit, matchedResolution: globalResolution, isFallback: false };
+        return { price: targetPrice.price_per_unit, matchedResolution: globalResolution, isFallback: false, extraInputPrice, extraInputAbove1Price };
     }
 
-    // 2. 미스매치 시 차선책(최고 해상도) 검색 우선순위: 2160p -> 1080p -> 720p
+    // 3. 미스매치 시 차선책(최고 해상도) 검색 우선순위: 2160p -> 1080p -> 720p
     const resolutions: ('720p' | '1080p' | '2160p')[] = ['2160p', '1080p', '720p'];
     for (const res of resolutions) {
         const unit = getPriceUnit(res, isVideo);
         const priceObj = priceList.find(p => p.unit === unit);
         if (priceObj) {
-            return { price: priceObj.price_per_unit, matchedResolution: res, isFallback: true };
+            return { price: priceObj.price_per_unit, matchedResolution: res, isFallback: true, extraInputPrice, extraInputAbove1Price };
         }
     }
 
-    // 3. 그것도 없으면 첫 번째 가격 데이터 반환
+    // 4. 그것도 없으면 첫 번째 가격 데이터 반환
     const firstPrice = priceList[0];
     let matchedRes: '720p' | '1080p' | '2160p' = '1080p';
     if (firstPrice.unit.includes('720p')) matchedRes = '720p';
     else if (firstPrice.unit.includes('2160p')) matchedRes = '2160p';
 
-    return { price: firstPrice.price_per_unit, matchedResolution: matchedRes, isFallback: true };
+    return { price: firstPrice.price_per_unit, matchedResolution: matchedRes, isFallback: true, extraInputPrice, extraInputAbove1Price };
 }
