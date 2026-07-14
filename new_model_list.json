@@ -23,7 +23,8 @@
       },
       "highlighted": false,
       "kind": "inference",
-      "pinned": false
+      "pinned": false,
+      "pricing_text": "Your request with cost $0.05 per output image for 1K and $0.07 per output image for 2K in addition to $0.01 per input image."
     }
   },
   {
@@ -50,7 +51,8 @@
       },
       "highlighted": false,
       "kind": "inference",
-      "pinned": false
+      "pinned": false,
+      "pricing_text": "Your request with cost $0.05 per image for 1K and $0.07 per image for 2K."
     }
   },
   {
@@ -69,7 +71,8 @@
       "date": "2026-05-09T22:29:40.275Z",
       "highlighted": false,
       "kind": "inference",
-      "pinned": false
+      "pinned": false,
+      "pricing_text": "Your request took 39.27 seconds and will cost $0.01 per megapixel."
     }
   },
   {
@@ -88,7 +91,8 @@
       "date": "2026-05-09T22:28:20.145Z",
       "highlighted": false,
       "kind": "inference",
-      "pinned": false
+      "pinned": false,
+      "pricing_text": "Your request took 10.06 seconds and will cost $0.01 per megapixel."
     }
   },
   {
@@ -107,7 +111,8 @@
       "date": "2026-05-09T22:30:26.882Z",
       "highlighted": false,
       "kind": "inference",
-      "pinned": false
+      "pinned": false,
+      "pricing_text": "Your request took 11.02 seconds and will cost $0.005 per megapixel."
     }
   },
   {
@@ -126,7 +131,8 @@
       "date": "2026-05-09T22:26:28.943Z",
       "highlighted": false,
       "kind": "inference",
-      "pinned": false
+      "pinned": false,
+      "pricing_text": "Your request took 2.10 seconds and will cost $0.005 per megapixel."
     }
   },
   {
@@ -149,7 +155,8 @@
       "date": "2026-05-19T14:17:03.624Z",
       "highlighted": false,
       "kind": "inference",
-      "pinned": false
+      "pinned": false,
+      "pricing_text": "Output Resolution: 2K. Pricing: $0.05 (1 image) then $0.007 for any additional input image other than 1st image."
     }
   },
   {
@@ -172,7 +179,8 @@
       "date": "2026-04-13T14:49:56.783Z",
       "highlighted": false,
       "kind": "inference",
-      "pinned": false
+      "pinned": false,
+      "pricing_text": "Your request will cost 1K at $0.03 and 2K at $0.05 per image generation."
     }
   },
   {
@@ -200,7 +208,8 @@
       "highlighted": false,
       "kind": "inference",
       "stream_url": "https://fal.run/ideogram/v4/image-to-image/stream",
-      "pinned": false
+      "pinned": false,
+      "pricing_text": "Your request will cost $0.0075 per megapixel in TURBO mode, $0.015 per megapixel in BALANCED mode, or $0.025 per megapixel in QUALITY mode. For example, a 2048 x 2048 image will cost $0.03, $0.06 or $0.10 based on the mode. (Only QUALITY)"
     }
   },
   {
@@ -231,7 +240,8 @@
       "pinned": false,
       "training_endpoint_ids": [
         "ideogram/v4/trainer"
-      ]
+      ],
+      "pricing_text": "Your request will cost $0.0075 per megapixel in TURBO mode, $0.015 per megapixel in BALANCED mode, or $0.025 per megapixel in QUALITY mode. For example, a 2048 x 2048 image will cost $0.03, $0.06 or $0.10 based on the mode. (Only QUALITY)"
     }
   },
   {
@@ -254,7 +264,8 @@
       },
       "highlighted": false,
       "kind": "inference",
-      "pinned": false
+      "pinned": false,
+      "pricing_text": "Your request will cost $0.04 per megapixel of each generated image (a 1024×1024 image is 1 megapixel). For example, a 1MP image costs $0.04 and a 2048×2048 (4MP) image costs $0.16. Generating multiple images multiplies the cost by the number of images."
     }
   },
   {
@@ -277,7 +288,8 @@
       },
       "highlighted": false,
       "kind": "inference",
-      "pinned": false
+      "pinned": false,
+      "pricing_text": "Your request will cost $0.04 per megapixel of each generated image (a 1024×1024 image is 1 megapixel). For example, a 1MP image costs $0.04 and a 2048×2048 (4MP) image costs $0.16. Generating multiple images multiplies the cost by the number of images."
     }
   },
   {
@@ -304,7 +316,8 @@
       },
       "highlighted": false,
       "kind": "inference",
-      "pinned": false
+      "pinned": false,
+      "pricing_text": "You will be charged for both input and output images. The first input image is not charged, and every additional input image will cost $0.0045. Tentative pricing is $0.0675+ $(0.0045 x number of additional input images) per output image for images of total area less than or equal to 1536x1536 pixels. For output images with area in between 1536x1536 and 2048x2048 pixels, the price is $0.135 + $(0.0045 x number of additional input images) per image."
     }
   },
   {
@@ -331,7 +344,8 @@
       },
       "highlighted": false,
       "kind": "inference",
-      "pinned": false
+      "pinned": false,
+      "pricing_text": "Tentative pricing is $0.0675 per image for images of total area less than or equal to 1536x1536 pixels. For images with area in between 1536x1536 and 2048x2048 pixels, the price is $0.135 per image."
     }
   },
   {
@@ -358,7 +372,8 @@
       },
       "highlighted": false,
       "kind": "inference",
-      "pinned": false
+      "pinned": false,
+      "pricing_text": "Your request will cost $0.035 per image."
     }
   },
   {
@@ -385,7 +400,8 @@
       },
       "highlighted": false,
       "kind": "inference",
-      "pinned": false
+      "pinned": false,
+      "pricing_text": "Your request will cost $0.035 per image."
     }
   }
 ]
