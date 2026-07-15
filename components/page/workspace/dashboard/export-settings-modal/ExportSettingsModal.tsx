@@ -93,7 +93,7 @@ function ExportSettingsModal({
                 const resData = await response.json();
                 
                 if (resData.success && resData.data?.channels) {
-                    const fetchedChannels = resData.data.channels;
+                    const fetchedChannels: SocialChannel[] = resData.data.channels;
                     setChannels(fetchedChannels);
                     
                     // 현재 선택된 토큰이 이미 채널 목록 내에 유효하게 존재하는지 체크
