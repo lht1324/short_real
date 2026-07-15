@@ -13,6 +13,7 @@ export async function GET(request: NextRequest) {
         ? request.nextUrl.origin
         : request.nextUrl.origin.replaceAll("https", "http");
 
+    let isProfileMode = false;
     try {
         const searchParams = request.nextUrl.searchParams;
         const code = searchParams.get('code');
@@ -57,7 +58,7 @@ export async function GET(request: NextRequest) {
         const stateData = JSON.parse(decodeURIComponent(state));
         const { userId, taskId, seriesId, mode, privacySetting, targetTokenId } = stateData;
         const isAutopilot = mode === 'autopilot';
-        const isProfileMode = mode === 'profile';
+        isProfileMode = mode === 'profile';
 
         // 필수 파라미터 체크: 오토파일럿이나 프로필 연동은 userId만 있으면 됨, 매뉴얼은 taskId/privacySetting 필수
         if (!userId || (!isAutopilot && !isProfileMode && (!taskId || !privacySetting))) {
@@ -230,7 +231,6 @@ export async function GET(request: NextRequest) {
 
     } catch (error) {
         console.error('YouTube callback error:', error);
-        const isProfileMode = state ? (JSON.parse(decodeURIComponent(state))?.mode === 'profile') : false;
         return NextResponse.redirect(isProfileMode ? `${originUrl}/profile` : `${originUrl}/workspace/dashboard`);
     }
 }
