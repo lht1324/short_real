@@ -126,8 +126,8 @@ function CustomModelSelect({
                               (selectedModelExtraAbove1Price !== undefined && selectedModelExtraAbove1Price > 0)) && (
                                 <div className="relative group flex items-center">
                                     <AlertCircle size={14} className="text-amber-500 hover:text-amber-400 transition-colors cursor-help flex-shrink-0" />
-                                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-52 p-2 bg-zinc-950 border border-white/10 rounded-lg shadow-xl opacity-0 group-hover:opacity-100 transition-opacity text-left pointer-events-none z-50">
-                                        <p className="text-[11px] text-zinc-300 leading-normal font-normal normal-case tracking-normal">
+                                    <div className="absolute bottom-full left-0 mb-2 w-52 p-2 bg-zinc-950 border border-white/10 rounded-lg shadow-xl opacity-0 group-hover:opacity-100 transition-opacity text-left pointer-events-none z-50">
+                                        <p className="text-[11px] text-zinc-300 leading-normal font-normal normal-case tracking-normal break-words">
                                             {selectedModelExtraPrice !== undefined && selectedModelExtraPrice > 0 
                                                 ? `This model charges an additional $${selectedModelExtraPrice} per reference image.`
                                                 : `This model charges an additional $${selectedModelExtraAbove1Price} per reference image (excluding the first one).`
@@ -253,8 +253,8 @@ function CustomModelSelect({
                                               (matched.extraInputAbove1Price !== undefined && matched.extraInputAbove1Price > 0)) && (
                                                 <div className="relative group/opt flex items-center">
                                                     <AlertCircle size={13} className="text-amber-500/80 hover:text-amber-400 transition-colors cursor-help flex-shrink-0" />
-                                                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-52 p-2 bg-zinc-950 border border-white/10 rounded-lg shadow-xl opacity-0 group-hover/opt:opacity-100 transition-opacity text-left pointer-events-none z-50">
-                                                        <p className="text-[11px] text-zinc-300 leading-normal font-normal normal-case tracking-normal">
+                                                    <div className="absolute bottom-full left-0 mb-2 w-52 p-2 bg-zinc-950 border border-white/10 rounded-lg shadow-xl opacity-0 group-hover/opt:opacity-100 transition-opacity text-left pointer-events-none z-50">
+                                                        <p className="text-[11px] text-zinc-300 leading-normal font-normal normal-case tracking-normal break-words">
                                                             {matched.extraInputPrice !== undefined && matched.extraInputPrice > 0
                                                                 ? `This model charges an additional $${matched.extraInputPrice} per reference image.`
                                                                 : `This model charges an additional $${matched.extraInputAbove1Price} per reference image (excluding the first one).`
