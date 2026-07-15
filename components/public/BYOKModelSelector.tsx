@@ -247,21 +247,17 @@ function CustomModelSelect({
                                     </div>
                                     {/* 2층: 요율 */}
                                     {!isOptionDisabled && (
-                                        <div className="mt-0.5 flex items-center gap-1.5">
+                                        <div className="mt-0.5 flex flex-col items-start">
                                             <span className="text-sm text-zinc-300 font-mono">{priceText}</span>
-                                            {((matched.extraInputPrice !== undefined && matched.extraInputPrice > 0) ||
-                                              (matched.extraInputAbove1Price !== undefined && matched.extraInputAbove1Price > 0)) && (
-                                                <div className="relative group/opt flex items-center">
-                                                    <AlertCircle size={13} className="text-amber-500/80 hover:text-amber-400 transition-colors cursor-help flex-shrink-0" />
-                                                    <div className="absolute bottom-full left-0 mb-2 w-52 p-2 bg-zinc-950 border border-white/10 rounded-lg shadow-xl opacity-0 group-hover/opt:opacity-100 transition-opacity text-left pointer-events-none z-50">
-                                                        <p className="text-[11px] text-zinc-300 leading-normal font-normal normal-case tracking-normal break-words">
-                                                            {matched.extraInputPrice !== undefined && matched.extraInputPrice > 0
-                                                                ? `This model charges an additional $${matched.extraInputPrice} per reference image.`
-                                                                : `This model charges an additional $${matched.extraInputAbove1Price} per reference image (excluding the first one).`
-                                                            }
-                                                        </p>
-                                                    </div>
-                                                </div>
+                                            {matched.extraInputPrice !== undefined && matched.extraInputPrice > 0 && (
+                                                <span className="text-[11px] text-amber-500 font-sans font-medium mt-0.5 whitespace-nowrap">
+                                                    +${matched.extraInputPrice}/ref
+                                                </span>
+                                            )}
+                                            {matched.extraInputAbove1Price !== undefined && matched.extraInputAbove1Price > 0 && (
+                                                <span className="text-[11px] text-amber-500 font-sans font-medium mt-0.5 whitespace-nowrap">
+                                                    +${matched.extraInputAbove1Price}/ref above 1
+                                                </span>
                                             )}
                                         </div>
                                     )}
