@@ -545,7 +545,7 @@ function WorkspaceDashboardPageClient() {
                 setCheckoutResultDialogData({
                     planName: productData.name,
                     price: productData.price,
-                    creditCount: productData.planData.creditCount,
+                    planId: productData.planId,
                 })
             }
 
