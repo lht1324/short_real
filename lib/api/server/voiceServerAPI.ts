@@ -1,5 +1,5 @@
 import {elevenLabsClient} from '@/lib/elevenLabsClient';
-import {Voice as VoiceOrigin, VoiceResponseModelCategory} from "@elevenlabs/elevenlabs-js/api";
+import {Voice as VoiceOrigin} from "@elevenlabs/elevenlabs-js/api";
 import {
     Voice,
     VoiceGenerationModelId,
@@ -20,7 +20,7 @@ export const voiceServerAPI = {
 
         // return response.voices.filter(isVerifiedEnglishVoice).map((voice: VoiceOrigin) => {
         return response.voices.filter((voice: VoiceOrigin) => {
-            return voice.category === VoiceResponseModelCategory.Premade &&
+            return voice.category === "premade" &&
                 voice.labels?.language === "en";
         }).map((voice: VoiceOrigin) => {
             return {
