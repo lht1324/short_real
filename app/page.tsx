@@ -20,9 +20,9 @@ export default async function Home() {
         offers: {
             '@type': 'AggregateOffer',
             priceCurrency: 'USD',
-            lowPrice: '149',
-            highPrice: '569',
-            offerCount: 4,
+            lowPrice: '19',
+            highPrice: '49',
+            offerCount: 3,
         },
         description: 'A harnessed AI-powered video generation studio. We handle the complex pipeline—you just drop your script and select your preferred models.',
         potentialAction: {

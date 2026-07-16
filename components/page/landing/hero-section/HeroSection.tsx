@@ -15,39 +15,42 @@ function HeroSection() {
     return (
         <section className="relative pt-6 pb-12 lg:pt-10 lg:pb-24 px-4 sm:px-6 lg:px-8 overflow-hidden z-10">
             <div className="max-w-[1400px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 items-center relative z-10">
-                
+
                 {/* LEFT: Typography & CTA */}
                 <div className="lg:col-span-6 flex flex-col items-center lg:items-start text-center lg:text-left space-y-6 lg:space-y-8 order-1 lg:pr-8">
                     <h1 className="relative leading-[1] md:leading-[0.95] flex flex-col items-center lg:items-start">
                         <span className="block text-[4rem] sm:text-7xl md:text-8xl lg:text-[7.5rem] font-black tracking-tighter text-white cursor-default select-none">
-                            F*ck AI
+                            F×ck
                         </span>
                         <div className="relative mt-1 md:mt-2 inline-block">
                             <div className="relative overflow-visible">
                                 {/* UPPER SLICE (The Master Blade Strategy) */}
-                                <span 
-                                    className="block text-[3.5rem] sm:text-6xl md:text-7xl lg:text-[6.5rem] font-black tracking-tighter text-zinc-500/80 uppercase [clip-path:polygon(0_0,100%_0,100%_15%,0_70%)] cursor-default select-none"
+                                <span
+                                    className="block text-[3.5rem] sm:text-6xl md:text-7xl lg:text-[6.5rem] font-black tracking-tighter text-zinc-500/80 uppercase [clip-path:polygon(0%_0%,100%_0%,100%_15%,0_70%)] cursor-default select-none whitespace-nowrap"
                                     aria-hidden="true"
                                 >
-                                    slideshows.
-                                </span>
-                                
-                                {/* LOWER SLICE (The Master Blade Strategy) */}
-                                <span className="absolute inset-0 text-[3.5rem] left-[1%] sm:text-6xl md:text-7xl lg:text-[6.5rem] font-black tracking-tighter text-zinc-500/60 uppercase [clip-path:polygon(0_80%,100%_25%,100%_100%,0_100%)] translate-x-[1px] cursor-default select-none">
-                                    slideshows
+                                    AI slideshows<span className="text-[#0a0a0c]">.</span>
                                 </span>
 
-                                {/* MASTER BLADE (Sharpened and Centered) */}
+                                {/* LOWER SLICE (The Master Blade Strategy) */}
+                                <span 
+                                    className="absolute inset-0 text-[3.5rem] left-[1%] sm:text-6xl md:text-7xl lg:text-[6.5rem] font-black tracking-tighter text-zinc-500/60 uppercase [clip-path:polygon(0%_80%,100%_25%,100%_100%,0_100%)] translate-x-[1px] cursor-default select-none whitespace-nowrap"
+                                >
+                                    AI slideshows<span className="text-[#0a0a0c]">.</span>
+                                </span>
+
+                                {/* MASTER BLADE (Sharpened and Centered - Crimson Red) */}
                                 <div
-                                    className="absolute top-[48%] left-[-5%] w-[110%] h-[1.5px] lg:h-[3.4px] bg-gradient-to-r from-red-600 via-pink-500 to-purple-600 -rotate-[6.5deg] transform -translate-y-1/2 z-10 mix-blend-screen [clip-path:polygon(0%_50%,2%_0%,98%_0%,100%_50%,98%_100%,2%_100%)]"
-                                    style={{ filter: 'drop-shadow(0 0 15px rgba(236,72,153,0.9))' }}
+                                    className="absolute top-[48%] left-[-5%] w-[110%] h-[1.5px] lg:h-[3.4px] bg-[#c21a2e] -rotate-[5.1deg] transform -translate-y-1/2 z-10 mix-blend-screen [clip-path:polygon(0%_50%,2%_0%,98%_0%,100%_50%,98%_100%,2%_100%)]"
+                                    style={{ filter: 'drop-shadow(0 0 12px rgba(194,26,46,0.8))' }}
                                 ></div>
                             </div>
                         </div>
                     </h1>
 
-                    <p className="text-base sm:text-lg lg:text-2xl font-medium text-zinc-400 tracking-wide max-w-[40ch] mx-auto lg:mx-0 cursor-default select-none">
-                        Finally, <span className="text-white font-bold border-b border-zinc-700 pb-0.5">True Motion</span> Generation.<br className="hidden lg:block"/>
+                    {/* Sub Copy - Optimized for mobile readability with contrast and tracking */}
+                    <p className="text-base sm:text-lg lg:text-2xl font-medium text-zinc-400 tracking-wider max-w-[40ch] mx-auto lg:mx-0 cursor-default select-none leading-relaxed">
+                        Finally, <span className="text-white font-black">True Motion</span> Generation.<br className="hidden lg:block"/>
                         Don&#39;t settle for zooming images.
                     </p>
 
