@@ -97,10 +97,11 @@ export async function POST(request: NextRequest) {
 
     } catch (error) {
         console.error('[Webhook Video-Music Merge] Error:', error);
+        await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
         return getNextBaseResponse({
             success: false,
             status: 500,
-            error: 'Webhook processing failed'
+            error: error instanceof Error ? error.message : 'Webhook processing failed'
         });
     }
 }

@@ -64,60 +64,56 @@ export async function POST(request: NextRequest) {
         const musicMetadataList = result.musicMetadataList;
 
         if (musicMetadataList.length > 0) {
-            try {
-                // audio_url에서 파일 다운로드
-                const musicFileList: Blob[] = [];
+            // audio_url에서 파일 다운로드
+            const musicFileList: Blob[] = [];
 
-                for (const musicMetaData of musicMetadataList) {
-                    if (musicMetaData.audio_url) {
-                        const response = await fetch(musicMetaData.audio_url);
-                        if (response.ok) {
-                            const musicBlob = await response.blob();
-                            musicFileList.push(musicBlob);
-                        } else {
-                            console.error(`Failed to download music from ${musicMetaData.audio_url}`);
-                        }
+            for (const musicMetaData of musicMetadataList) {
+                if (musicMetaData.audio_url) {
+                    const response = await fetch(musicMetaData.audio_url);
+                    if (response.ok) {
+                        const musicBlob = await response.blob();
+                        musicFileList.push(musicBlob);
+                    } else {
+                        console.error(`Failed to download music from ${musicMetaData.audio_url}`);
                     }
                 }
+            }
 
-                if (musicFileList.length > 0) {
-                    // Supabase Storage에 업로드
-                    const uploadResult = await musicServerAPI.postMusic(
-                        taskId,
-                        musicFileList,
-                        musicMetadataList.map((musicMetaData) => {
-                            return {
-                                title: musicMetaData.title,
-                                tagList: musicMetaData.tags.split(", "),
-                                audioUrl: musicMetaData.source_audio_url,
-                                imageUrl: musicMetaData.image_url,
-                                duration: musicMetaData.duration,
-                            }
-                        }),
-                    );
-
-                    if (uploadResult.success) {
-                        console.log(`Successfully uploaded ${musicFileList.length} music files for task: ${taskId}`);
-
-                        // Task 상태 'EDITOR'로 업데이트
-                        if (videoGenerationTask.final_video_merge_data) {
-                            internalFireAndForgetFetch(
-                                `${process.env.BASE_URL}/api/autopilot/music?taskId=${taskId}&seriesId=${videoGenerationTask.series_id}`,
-                                {
-                                    method: 'POST',
-                                },
-                            );
-                        } else {
-                            await videoGenerationTasksServerAPI.patchVideoGenerationTaskStatus(taskId, VideoGenerationTaskStatus.EDITOR);
+            if (musicFileList.length > 0) {
+                // Supabase Storage에 업로드
+                const uploadResult = await musicServerAPI.postMusic(
+                    taskId,
+                    musicFileList,
+                    musicMetadataList.map((musicMetaData) => {
+                        return {
+                            title: musicMetaData.title,
+                            tagList: musicMetaData.tags.split(", "),
+                            audioUrl: musicMetaData.source_audio_url,
+                            imageUrl: musicMetaData.image_url,
+                            duration: musicMetaData.duration,
                         }
+                    }),
+                );
+
+                if (uploadResult.success) {
+                    console.log(`Successfully uploaded ${musicFileList.length} music files for task: ${taskId}`);
+
+                    // Task 상태 'EDITOR'로 업데이트
+                    if (videoGenerationTask.final_video_merge_data) {
+                        internalFireAndForgetFetch(
+                            `${process.env.BASE_URL}/api/autopilot/music?taskId=${taskId}&seriesId=${videoGenerationTask.series_id}`,
+                            {
+                                method: 'POST',
+                            },
+                        );
                     } else {
-                        console.error(`Failed to upload music files for task: ${taskId}`, uploadResult.error);
+                        await videoGenerationTasksServerAPI.patchVideoGenerationTaskStatus(taskId, VideoGenerationTaskStatus.EDITOR);
                     }
                 } else {
-                    console.warn('No valid music files to upload');
+                    throw new Error(`Failed to upload music files: ${uploadResult.error}`);
                 }
-            } catch (error) {
-                console.error('Error processing music files:', error);
+            } else {
+                throw new Error('No valid music files downloaded to upload');
             }
         } else {
             console.warn('No music data received in COMPLETE callback');
@@ -129,13 +125,13 @@ export async function POST(request: NextRequest) {
             message: "Generated music with Suno-API successfully.",
         });
     } catch (error) {
-        console.error('Error in POST /webhook/suno-api:', error);
+        console.error('Error in POST /api/music/upload:', error);
 
         await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
         return getNextBaseResponse({
             success: false,
             status: 500,
-            error: 'Failed to process webhook'
+            error: error instanceof Error ? error.message : 'Failed to process webhook'
         });
     }
 }

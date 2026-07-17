@@ -3,6 +3,7 @@ import { tasks } from "@trigger.dev/sdk/v3";
 import { getNextBaseResponse } from "@/lib/utils/getNextBaseResponse";
 import { getIsValidRequestS2S } from "@/lib/utils/getIsValidRequest";
 import { postMasterStyle } from "@/trigger/post-master-style";
+import {videoGenerationTasksServerAPI} from "@/lib/api/server/videoGenerationTasksServerAPI";
 
 export async function POST(request: NextRequest) {
     // 1. 보안 검사
@@ -46,6 +47,7 @@ export async function POST(request: NextRequest) {
 
     } catch (error) {
         console.error("Failed to trigger task:", error);
+        await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
         return getNextBaseResponse({
             success: false,
             status: 500,

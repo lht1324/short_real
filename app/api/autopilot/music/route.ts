@@ -27,9 +27,11 @@ export async function POST(
         auth: process.env.REPLICATE_API_TOKEN,
     });
 
+    let taskId: string | null = null;
+
     try {
         const searchParams = request.nextUrl.searchParams;
-        const taskId = searchParams.get("taskId");
+        taskId = searchParams.get("taskId");
         const seriesId = searchParams.get("seriesId");
 
         if (!taskId) {
@@ -51,11 +53,7 @@ export async function POST(
         const videoGenerationTask = await videoGenerationTasksServerAPI.getVideoGenerationTaskById(taskId);
 
         if (!videoGenerationTask) {
-            return getNextBaseResponse({
-                success: false,
-                status: 500,
-                error: 'Fetching video generation task is failed.',
-            })
+            throw new Error('Fetching video generation task is failed.');
         }
 
         const { data: autopilotData, error } = await supabase
@@ -65,11 +63,7 @@ export async function POST(
             .single();
 
         if (error) {
-            return getNextBaseResponse({
-                success: false,
-                status: 500,
-                error: 'Fetching autopilot data is failed.',
-            });
+            throw new Error('Fetching autopilot data is failed.');
         }
 
         const {
@@ -82,11 +76,7 @@ export async function POST(
         }: VideoGenerationTask = videoGenerationTask;
 
         if (!videoMergeData) {
-            return getNextBaseResponse({
-                success: false,
-                status: 500,
-                error: 'Video merge data not exists.',
-            });
+            throw new Error('Video merge data not exists.');
         }
 
         const {
@@ -255,10 +245,13 @@ export async function POST(
         });
     } catch (error) {
         console.error("Error in POST /api/autopilot/music:", error);
+        if (taskId) {
+            await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
+        }
         return getNextBaseResponse({
             status: 500,
             success: false,
-            message: "Failed to analyze music"
+            error: error instanceof Error ? error.message : "Failed to analyze music"
         });
     }
 }

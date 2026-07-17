@@ -79,6 +79,7 @@ export async function POST(request: NextRequest) {
 
     } catch (error) {
         console.error("Failed to trigger image generation orchestration:", error);
+        await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
         return getNextBaseResponse({
             success: false,
             status: 500,

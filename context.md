@@ -1,20 +1,20 @@
-# 작업 진행 상황 (Last Updated: 2026-07-17 03:30)
+# 작업 진행 상황 (Last Updated: 2026-07-17 17:31)
 
 ## 1. 최근 세션 작업 내용 (Current Session Changes)
-* **메인 타이포그래피 슬라이스(`The Master Blade`) 기하학적 정렬 및 튜닝 완수**:
-    * **14글자 비례 각도 튜닝**: 카피가 `"AI slideshows."` (14글자)로 길어짐에 따라 완만해진 가림막 경사에 맞춰, 데스크톱 기준 칼날(`MASTER BLADE`)의 회전 각도를 `-rotate-[6.5deg]`에서 **`-rotate-[5.1deg]`**로 정확히 피팅하여 사선 정합성을 복구했습니다.
-    * **Tailwind 동적 컴파일 우회**: 자바스크립트 템플릿 리터럴을 활용한 동적 임의 클래스(`[clip-path:polygon(...)]`)가 Tailwind 빌드 타임에 클래스로 생성되지 않는 한계를, React 인라인 `style={{ clipPath: ... }}` 바인딩으로 전환하여 깔끔하게 회피하고 런타임 렌더링을 복원했습니다.
-    * **자동 줄바꿈(개행) 방지**: 단어 사이의 공백(Space)으로 인해 브라우저 가로폭 뷰포트에 따라 텍스트가 2줄로 강제 개행되던 버그를, 두 span 요소에 `whitespace-nowrap` 클래스를 추가하여 한 줄로 강제 고정하며 해결했습니다.
-* **디자인 디테일 개선 (검은 마침표 트릭 및 0.5px 흰색 테두리 선)**:
-    * **검은 마침표(Hidden Dot) 트릭**: 마침표(`.`)를 완전히 지웠을 때 우측 끝 글자 `S`가 사선 가림막에 깎여 나가는 기하학적 백분율 딜레마를 해결하기 위해, 마침표를 지우지 않고 `text-[#0a0a0c]` 클래스를 입혀 배경색과 동화시켜 숨기는 방식으로 가로 안전폭을 깔끔하게 유지했습니다.
-    * **SVG 0.5px 테두리 오버레이**: 잘려 나간 폴리곤 외곽선에 칼같은 흰색 실선 효과를 얹기 위해, 텍스트 박스 크기에 비례해 신축성이 유지되며 선 두께가 찌그러지지 않는 `vector-effect="non-scaling-stroke"` 옵션의 투명 SVG `<polygon>` 레이어 2개를 윗단/아랫단에 각각 오버레이 연동시켰습니다.
-* **오픈그래프(OG) 안전 영역(Safe Area) 준수**:
-    * SNS 및 모바일 링크 썸네일 노출 시 모서리 크롭이나 라운딩 처리에 글씨가 잘리는 대형 사고를 차단하기 위해, 1200x630 해상도의 10% 안전 가이드라인에 맞추어 좌우 여백 패딩을 `px-24`(96px)에서 **`px-32`(128px)**로 정교하게 넓혀 텍스트를 안쪽으로 포지셔닝했습니다.
-* **트위터 배너(1500x500) 자산 제작 및 다운로드**:
-    * 1500x500 3:1 고정 규격 캔버스 모드를 구현하고, 서브 카피를 걷어낸 채 메인 타이틀만 웅장한 크기(`text-[8.5rem]/[7.5rem]`)로 배너 한가운데에 센터링 정렬한 뒤, 클릭 시 `twitter-header.png`로 즉시 저장되는 단독 배너 파일 제작 환경을 지원하고 성공적으로 캡처 자산을 다운로드했습니다.
-* **서비스 레이아웃(HeroSection) 안정적 복구 및 디자인 마이그레이션**:
-    * 트위터 배너 캡처 세션이 종료된 후, 원래의 반응형 히어로 섹션 레이아웃(비디오 카드 3단 슬라이드, CTA 버튼 등)으로 코드를 안전하게 롤백했습니다.
-    * 롤백 과정에서 이번 캡처 세션 동안 최종 확정되고 조율된 모든 최신 디자인 사양(F×ck 곱하기 텍스트, 딥 크림슨 레드 칼침 및 drop-shadow, 0.5px 흰색 테두리 오버레이선, Hidden Dot 트릭, 가독성 높은 서브 텍스트 명도 조율)을 서비스용 반응형 뷰포트에 완벽하게 이식 및 합병해 두었습니다.
+* **에러 핸들링 체계 및 엔드포인트 전수 점검 완수**:
+    * **[app/api/autopilot/music/route.ts](file:///home/jaeho/Projects/short_real/app/api/autopilot/music/route.ts)**:
+        * `try` 블록 내부의 `const taskId` 선언을 외부 스코프로 이관하여 `catch` 스코프 내 `patchVideoGenerationTaskFailed(taskId)`가 ReferenceError 없이 안전하게 호출되도록 수정했습니다.
+        * `try` 내부 비즈니스 로직(500) 실패 조건을 `throw new Error` 구조로 변경하여 중앙 집중형 예외 처리 흐름을 완성했습니다.
+    * **[app/api/music/upload/route.ts](file:///home/jaeho/Projects/short_real/app/api/music/upload/route.ts)**:
+        * 실물 데이터 Body parsing은 `try` 블록 내에 유지하되, 내부의 에러 삼킴(swallowing) 현상을 걷어내고 에러 발생 시 `throw`를 던지게 해 `catch` 블록에서 `patchVideoGenerationTaskFailed(taskId)`가 올바르게 작동하도록 복구했습니다.
+    * **[app/api/video/process/image/route.ts](file:///home/jaeho/Projects/short_real/app/api/video/process/image/route.ts)**, **[app/webhook/replicate/music/modifying/route.ts](file:///home/jaeho/Projects/short_real/app/webhook/replicate/music/modifying/route.ts)**, **[app/webhook/replicate/video/merge/music/route.ts](file:///home/jaeho/Projects/short_real/app/webhook/replicate/video/merge/music/route.ts)**:
+        * `catch` 블록 혹은 실패 처리 분기 내에서 태스크 실패 처리(`patchVideoGenerationTaskFailed`)가 누락되어 시스템이 무한 로딩 대기 상태에 빠질 수 있던 리스크들을 일괄 색출하고 보완했습니다.
+* **신규 Fal-AI 모델 매핑 뼈대(Skeleton) 구축**:
+    * **[lib/falAIInputMapper.ts](file:///home/jaeho/Projects/short_real/lib/falAIInputMapper.ts)**:
+        * `ai_model_data_rows.csv`에 등록된 24개의 신규 활성 이미지/비디오 모델들을 `FalAIEndpointID` enum에 모두 정의했습니다.
+        * 사장님이 직접 세부적인 파라미터 매핑을 하실 수 있도록, `buildImageInput`과 `buildVideoInput` 스위치 문 내에 줄바꿈이 적용된 빈 객체 리턴 케이스(`: return { \n\n };`) 형태의 뼈대(와꾸)를 순서대로 완벽하게 구성해 두었습니다.
+* **Supabase Storage 용량 문제 원인 진단**:
+    * 비디오 최종 머지 시 `The object exceeded the maximum allowed size` 에러는 Supabase Storage의 `processed_video_storage` 버킷 용량 제한(Max file size) 설정이 원인임을 파악하여, Supabase Dashboard 상에서 설정 값을 늘려 해결하는 가이드를 제공했습니다.
 
 ## 2. 향후 작업 (Next Steps) - [Priority: HIGH]
 1. **[검증] 요금제 개편 후 결제 완료 및 오토파일럿 설정 플로우 최종 실기기 테스트**:
