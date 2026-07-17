@@ -315,7 +315,7 @@ export const falAIInputMapper = {
                 ...(hasImage && { image_urls: imageUrls }),
                 num_images: 1,
                 output_format: "jpeg",
-                resolution: resolution === '720p' ? '1k' : '2K',
+                resolution: resolution === '720p' ? '1k' : '2k',
                 aspect_ratio: aspectRatio,
             };
 
