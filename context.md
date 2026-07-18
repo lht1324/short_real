@@ -1,23 +1,22 @@
-# 작업 진행 상황 (Last Updated: 2026-07-17 17:31)
+# 작업 진행 상황 (Last Updated: 2026-07-18 16:35)
 
 ## 1. 최근 세션 작업 내용 (Current Session Changes)
-* **에러 핸들링 체계 및 엔드포인트 전수 점검 완수**:
-    * **[app/api/autopilot/music/route.ts](file:///home/jaeho/Projects/short_real/app/api/autopilot/music/route.ts)**:
-        * `try` 블록 내부의 `const taskId` 선언을 외부 스코프로 이관하여 `catch` 스코프 내 `patchVideoGenerationTaskFailed(taskId)`가 ReferenceError 없이 안전하게 호출되도록 수정했습니다.
-        * `try` 내부 비즈니스 로직(500) 실패 조건을 `throw new Error` 구조로 변경하여 중앙 집중형 예외 처리 흐름을 완성했습니다.
-    * **[app/api/music/upload/route.ts](file:///home/jaeho/Projects/short_real/app/api/music/upload/route.ts)**:
-        * 실물 데이터 Body parsing은 `try` 블록 내에 유지하되, 내부의 에러 삼킴(swallowing) 현상을 걷어내고 에러 발생 시 `throw`를 던지게 해 `catch` 블록에서 `patchVideoGenerationTaskFailed(taskId)`가 올바르게 작동하도록 복구했습니다.
-    * **[app/api/video/process/image/route.ts](file:///home/jaeho/Projects/short_real/app/api/video/process/image/route.ts)**, **[app/webhook/replicate/music/modifying/route.ts](file:///home/jaeho/Projects/short_real/app/webhook/replicate/music/modifying/route.ts)**, **[app/webhook/replicate/video/merge/music/route.ts](file:///home/jaeho/Projects/short_real/app/webhook/replicate/video/merge/music/route.ts)**:
-        * `catch` 블록 혹은 실패 처리 분기 내에서 태스크 실패 처리(`patchVideoGenerationTaskFailed`)가 누락되어 시스템이 무한 로딩 대기 상태에 빠질 수 있던 리스크들을 일괄 색출하고 보완했습니다.
-* **신규 Fal-AI 모델 매핑 뼈대(Skeleton) 구축**:
-    * **[lib/falAIInputMapper.ts](file:///home/jaeho/Projects/short_real/lib/falAIInputMapper.ts)**:
-        * `ai_model_data_rows.csv`에 등록된 24개의 신규 활성 이미지/비디오 모델들을 `FalAIEndpointID` enum에 모두 정의했습니다.
-        * 사장님이 직접 세부적인 파라미터 매핑을 하실 수 있도록, `buildImageInput`과 `buildVideoInput` 스위치 문 내에 줄바꿈이 적용된 빈 객체 리턴 케이스(`: return { \n\n };`) 형태의 뼈대(와꾸)를 순서대로 완벽하게 구성해 두었습니다.
-* **Supabase Storage 용량 문제 원인 진단**:
-    * 비디오 최종 머지 시 `The object exceeded the maximum allowed size` 에러는 Supabase Storage의 `processed_video_storage` 버킷 용량 제한(Max file size) 설정이 원인임을 파악하여, Supabase Dashboard 상에서 설정 값을 늘려 해결하는 가이드를 제공했습니다.
+* **Tailwind CSS v4 순정 마이그레이션 및 땜질 잔재 청소 완수**:
+    * **[package.json](file:///home/jaeho/Projects/short_real/package.json)**:
+        * 더 이상 필요 없는 `autoprefixer` 패키지를 제거하고, v4 연동을 위한 `@tailwindcss/postcss`를 새롭게 추가했습니다.
+    * **[postcss.config.js](file:///home/jaeho/Projects/short_real/postcss.config.js)**:
+        * 구버전 플러그인 설정을 지우고, Next.js 환경에 맞춘 `@tailwindcss/postcss` 단일 플러그인으로 변경하여 빌드 환경을 순정화했습니다.
+    * **[app/globals.css](file:///home/jaeho/Projects/short_real/app/globals.css)**:
+        * 이전 `@tailwind` 지시어들을 `@import "tailwindcss";`와 `@plugin "@tailwindcss/typography";`로 교체했습니다.
+        * `tailwind.config.js`에 있던 커스텀 `font-roboto` 설정과 `shimmer` 애니메이션 설정을 CSS-First 사양에 맞춰 `@theme` 블록으로 안전하게 이관했습니다.
+    * **[tailwind.config.js](file:///home/jaeho/Projects/short_real/tailwind.config.js) 삭제**:
+        * 설정을 모두 globals.css로 성공적으로 넘겼으므로, 더 이상 불필요해진 구버전 JS 설정 파일을 완전히 제거했습니다.
+* **메이저 의존성 일제 업데이트에 따른 타입 컴파일 전수 검증**:
+    * TypeScript 7.0.2, Next.js 16.2.10, React 19.2.7, Supabase 2.110.7, Polar SDK 0.48.1 등 핵심 라이브러리들이 일제히 업그레이드됨에 따라 타입 호환성을 검증했습니다.
+    * `npx tsc --noEmit`을 통한 타입 컴파일러 검사 결과, **타입 에러가 단 한 개도 없이 100% 깔끔하게 통과**되는 것을 확인했습니다.
 
 ## 2. 향후 작업 (Next Steps) - [Priority: HIGH]
-1. **[검증] 요금제 개편 후 결제 완료 및 오토파일럿 설정 플로우 최종 실기기 테스트**:
-    * 갱신된 Polar 상품 결제 완료 다이얼로그 디자인이 실기기 모바일 및 좁은 화면에서 예쁘게 연출되는지 사장님 컨펌 하에 최종 확인.
-2. **[기능] BYOK 공급처에 Replicate 추가 연동**:
+1. **[기능] BYOK 공급처에 Replicate 추가 연동**:
     * 현재 fal.ai 위주로 연동되어 있는 BYOK 시스템에 사용자 본인의 Replicate API Key를 연동하고, Replicate 호스팅 모델들을 영상 생성 파이프라인에서 직접 선택 및 원가 과금으로 구동할 수 있도록 기능 설계 및 UI 반영.
+2. **[검증] 요금제 개편 후 결제 완료 및 오토파일럿 설정 플로우 최종 실기기 테스트**:
+    * 갱신된 Polar 상품 결제 완료 다이얼로그 디자인이 실기기 모바일 및 좁은 화면에서 예쁘게 연출되는지 사장님 컨펌 하에 최종 확인.
