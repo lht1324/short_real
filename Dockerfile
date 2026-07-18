@@ -1,5 +1,5 @@
 # [Docker 프로젝트]는 Node.js가 설치된 리눅스(Alpine) 환경이다
-FROM node:22.17.1
+FROM node:24.16.0
 
 # [Docker 프로젝트] 내부의 작업 공간을 '/workdir'라고 부르겠다
 WORKDIR /workdir
