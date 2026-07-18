@@ -29,7 +29,7 @@ function VoiceSelectionItem({
             className={`
                 relative cursor-pointer p-4 rounded-xl border transition-all duration-300
                 ${isSelected
-                    ? 'bg-[#1a1a24] border-pink-500/50 shadow-[0_0_15px_-5px_rgba(236,72,153,0.15)]'
+                    ? 'bg-[#13131c] border-white/20 shadow-[0_0_15px_-5px_rgba(255,255,255,0.05)]'
                     : 'bg-transparent border-white/5 hover:bg-white/5 hover:border-white/10'}
             `}
         >
@@ -43,7 +43,7 @@ function VoiceSelectionItem({
                             {voice.uiDescriptive && (
                                 <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium border ${
                                     isSelected
-                                        ? 'bg-pink-500/10 border-pink-500/30 text-pink-300'
+                                        ? 'bg-white/10 border-white/10 text-white'
                                         : 'bg-white/5 border-white/10 text-gray-500'
                                 }`}>
                                     {voice.uiDescriptive}
@@ -57,7 +57,7 @@ function VoiceSelectionItem({
                                 isPlaying
                                     ? 'bg-white text-black shadow-[0_0_10px_rgba(255,255,255,0.5)]'
                                     : isSelected
-                                        ? 'bg-pink-500 text-white hover:bg-pink-400'
+                                        ? 'bg-white text-black hover:bg-zinc-200'
                                         : 'bg-white/10 text-gray-400 hover:bg-white/20 hover:text-white'
                             }`}
                         >
@@ -79,7 +79,7 @@ function VoiceSelectionItem({
             {isSelected && (
                 <MotionDiv
                     layoutId="active-voice"
-                    className="absolute inset-0 rounded-xl border border-pink-500/30 pointer-events-none"
+                    className="absolute inset-0 rounded-xl border border-white/20 pointer-events-none"
                     transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
                 />
             )}

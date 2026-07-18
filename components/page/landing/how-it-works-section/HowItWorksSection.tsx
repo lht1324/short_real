@@ -32,8 +32,8 @@ const CAMERA_ANGLES = [
 const getVoiceStyle = (index: number) => {
     const styles = [
         { color: 'from-orange-400 to-red-500', tags: ['Deep', 'Narration'] },
-        { color: 'from-pink-400 to-purple-500', tags: ['Soft', 'Story'] },
-        { color: 'from-cyan-400 to-blue-500', tags: ['British', 'Docu'] },
+        { color: 'from-zinc-500 to-zinc-700', tags: ['Soft', 'Story'] },
+        { color: 'from-zinc-400 to-zinc-600', tags: ['British', 'Docu'] },
         { color: 'from-green-400 to-emerald-500', tags: ['Energetic', 'Promo'] },
         { color: 'from-yellow-400 to-orange-500', tags: ['Warm', 'Character'] },
     ];
@@ -288,7 +288,7 @@ function HowItWorksSection() {
                                                         <span className="text-[10px] font-bold text-gray-500 bg-white/5 px-1.5 py-0.5 rounded">
                                                             SCENE {scene.id + 1}
                                                         </span>
-                                                        <span className="text-[10px] text-cyan-400/70 border border-cyan-500/20 px-2 py-0.5 rounded-full bg-cyan-500/5 truncate">
+                                                        <span className="text-[10px] text-zinc-400 border border-zinc-700/50 px-2 py-0.5 rounded-full bg-zinc-800/10 truncate">
                                                             {scene.cameraAngle}
                                                         </span>
                                                     </div>

@@ -17,7 +17,12 @@ function LandingPageNavigation() {
             <LandingPageNavigationItem
                 navigateId={"howitworks"}
                 itemName={"How It Works"}
-                isTallerSection={false}
+                isTallerSection={true}
+            />
+            <LandingPageNavigationItem
+                navigateId={"coststructure"}
+                itemName={"Cost Calc"}
+                isTallerSection={true}
             />
             <LandingPageNavigationItem
                 navigateId={"pricing"}

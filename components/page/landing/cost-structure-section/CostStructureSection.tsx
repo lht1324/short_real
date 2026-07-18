@@ -88,7 +88,10 @@ function CostStructureSection({ aiModelDataList }: CostStructureSectionProps) {
     }, []);
 
     return (
-        <section className="relative py-24 md:py-32 px-4 sm:px-6 lg:px-8 overflow-hidden z-10">
+        <section
+            id="coststructure"
+            className="relative py-24 md:py-32 px-4 sm:px-6 lg:px-8 overflow-hidden z-10"
+        >
             <div className="max-w-[1400px] mx-auto relative z-10">
                 {/* Header */}
                 <div className="mb-16 md:mb-24 max-w-3xl relative z-10">
@@ -107,8 +110,8 @@ function CostStructureSection({ aiModelDataList }: CostStructureSectionProps) {
                     <div className="lg:col-span-7">
                         <div className="bg-white/5 border border-white/10 rounded-2xl p-6 md:p-8 backdrop-blur-md">
                             <div className="flex items-center gap-3 mb-8">
-                                <div className="p-2 bg-pink-500/20 rounded-lg">
-                                    <Calculator className="w-5 h-5 text-pink-400" />
+                                <div className="p-2 bg-white/5 border border-white/10 rounded-lg">
+                                    <Calculator className="w-5 h-5 text-zinc-300" />
                                 </div>
                                 <h3 className="text-xl font-semibold text-white">Cost Calculator</h3>
                             </div>
@@ -127,7 +130,7 @@ function CostStructureSection({ aiModelDataList }: CostStructureSectionProps) {
                                             <select
                                                 value={selectedT2iId}
                                                 onChange={onChangeSelectedT2iId}
-                                                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-pink-500/50 appearance-none cursor-pointer"
+                                                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-white/20 appearance-none cursor-pointer"
                                             >
                                                 {t2iModels.map(m => (
                                                     <option key={m.id || m.endpoint_id} value={m.id || m.endpoint_id} className="bg-zinc-900">
@@ -145,7 +148,7 @@ function CostStructureSection({ aiModelDataList }: CostStructureSectionProps) {
                                             <select
                                                 value={selectedI2iId}
                                                 onChange={onChangeSelectedI2iId}
-                                                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-pink-500/50 appearance-none cursor-pointer"
+                                                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-white/20 appearance-none cursor-pointer"
                                             >
                                                 {i2iModels.map(m => (
                                                     <option key={m.id || m.endpoint_id} value={m.id || m.endpoint_id} className="bg-zinc-900">
@@ -163,7 +166,7 @@ function CostStructureSection({ aiModelDataList }: CostStructureSectionProps) {
                                             <select
                                                 value={selectedI2vId}
                                                 onChange={onChangeSelectedI2vId}
-                                                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-pink-500/50 appearance-none cursor-pointer"
+                                                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-white/20 appearance-none cursor-pointer"
                                             >
                                                 {i2vModels.map(m => (
                                                     <option key={m.id || m.endpoint_id} value={m.id || m.endpoint_id} className="bg-zinc-900">
@@ -210,7 +213,7 @@ function CostStructureSection({ aiModelDataList }: CostStructureSectionProps) {
                                         <input
                                             type="range" min="1" max="10" step="1"
                                             value={characterCount} onChange={onChangeCharacterCount}
-                                            className="w-full accent-pink-500"
+                                            className="w-full accent-white"
                                         />
                                     </div>
 
@@ -222,7 +225,7 @@ function CostStructureSection({ aiModelDataList }: CostStructureSectionProps) {
                                         <input
                                             type="range" min="1" max="30" step="1"
                                             value={sceneCount} onChange={onChangeSceneCount}
-                                            className="w-full accent-pink-500"
+                                            className="w-full accent-white"
                                         />
                                     </div>
 
@@ -234,7 +237,7 @@ function CostStructureSection({ aiModelDataList }: CostStructureSectionProps) {
                                         <input
                                             type="range" min="5" max="60" step="1"
                                             value={videoDuration} onChange={onChangeVideoDuration}
-                                            className="w-full accent-pink-500"
+                                            className="w-full accent-white"
                                         />
                                     </div>
                                 </div>
@@ -287,10 +290,10 @@ function CostStructureSection({ aiModelDataList }: CostStructureSectionProps) {
 
                     {/* Right: BYOK Info */}
                     <div className="lg:col-span-5">
-                        <div className="bg-gradient-to-b from-purple-900/20 to-transparent border border-purple-500/20 rounded-2xl p-6 md:p-8">
+                        <div className="bg-white/5 border border-white/10 rounded-2xl p-6 md:p-8">
                             <div className="flex items-center gap-3 mb-6">
-                                <div className="p-2 bg-purple-500/20 rounded-lg">
-                                    <Key className="w-5 h-5 text-purple-400" />
+                                <div className="p-2 bg-white/5 border border-white/10 rounded-lg">
+                                    <Key className="w-5 h-5 text-zinc-300" />
                                 </div>
                                 <h3 className="text-xl font-semibold text-white">Bring Your Own Key</h3>
                             </div>
