@@ -62,9 +62,12 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
            * The dancers are performing a tango, bodies locked in close embrace and shifting weight between them.
            * The children are playing tug-of-war, leaning back against the rope with full body tension.
            * The two chefs are arguing across the counter, hands gesturing urgently between them.
+    4. **Phase 4: Physical Reasoning**:
+       - Provide a step-by-step physical reasoning explaining why this video_gen_prompt is appropriate based on the image analysis and motion intent.
   </processing_logic>
   <output_schema>
     {
+      "reasoning": "Step-by-step physical reasoning explaining why this video_gen_prompt is appropriate based on the image analysis and action intent.",
       "video_gen_prompt": "A concise, physics-grounded motion direction. Natural language."
     }
   </output_schema>

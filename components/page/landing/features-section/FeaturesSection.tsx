@@ -45,7 +45,7 @@ const features: Feature[] = [
         description:
             "The engine adds cinematic camera moves.\nIt matches each scene's energy for you.",
         prompt:
-            "A continuous adrenaline-fueled sequence of a wingsuit jumper: diving with visible fabric flutter, snapping the suit open against wind resistance, weaving through narrow stone arches with aerodynamic precision, rushing past blurred canyon walls inches from the lens, and skimming the river surface spray before soaring into the open horizon.",
+            "A thief slips through the shadows, ignoring the museum lasers.\n\nHe stops, pressing his back flat against the cold marble wall.\n\nWith steady gloved hands, he cuts the glass of the display case.\n\nInstead of the diamond, he pulls out a small black USB drive.\n\nA sudden red siren flashes, but the thief only smiles.\n\nThe real treasure is never what they leave behind.",
         videoSrc: `${process.env.NEXT_PUBLIC_DEMO_ASSETS_URL}/demo_camera.mp4`,
         icon: Aperture,
         color: "border-zinc-500/20",

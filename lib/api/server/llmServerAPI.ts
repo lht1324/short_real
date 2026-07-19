@@ -940,6 +940,7 @@ Instruction: Generate the scene instruction JSON.
     ): Promise<{
         success: boolean;
         videoGenPrompt?: string;
+        reasoning?: string;
         error?: { message: string; code: string }
     }> {
         try {
@@ -956,7 +957,7 @@ Proceed with the prompt generation.
             const client = new OpenRouterClient();
 
             const generatedContent = await client.createCompletion({
-                model: OpenRouterModel.GEMINI_3_0_FLASH_PREVIEW,
+                model: OpenRouterModel.GROK_4_3,
                 systemMessage: systemMessage,
                 userMessage: userMessage,
                 imageBase64List: [imageBase64],
@@ -976,14 +977,17 @@ Proceed with the prompt generation.
 
             try {
                 const parsedJson: {
+                    reasoning: string;
                     video_gen_prompt: string;
                 } = cleanAndParseJSON(generatedContent);
 
-                console.log(`videoGenPrompt: ${parsedJson.video_gen_prompt}`);
+                console.log(`Scene #${sceneNumber} reasoning: ${parsedJson.reasoning}`);
+                console.log(`Scene #${sceneNumber} videoGenPrompt: ${parsedJson.video_gen_prompt}`);
 
                 return {
                     success: true,
                     videoGenPrompt: parsedJson.video_gen_prompt,
+                    reasoning: parsedJson.reasoning,
                 }
             } catch (parseError) {
                 console.error('JSON Parse Failed:', parseError);

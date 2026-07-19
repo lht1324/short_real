@@ -72,12 +72,12 @@ function FeatureCard({ feature, index, className }: { feature: Feature, index: n
                 <p className="text-zinc-400 text-sm md:text-base whitespace-pre-line max-w-sm">{feature.description}</p>
             </div>
 
-            {/* Hover Overlay (Prompt Terminal) */}
-            <div className={`absolute inset-0 bg-black/80 backdrop-blur-md p-6 md:p-8 flex flex-col justify-center transition-all duration-500 pointer-events-none z-20 ${isHovered ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`}>
-                <span className="text-xs font-mono text-zinc-500 mb-3 uppercase tracking-widest">
+            {/* Hover Overlay (Prompt Terminal - Subtitle Bar style) */}
+            <div className={`absolute bottom-0 left-0 w-full bg-black/75 backdrop-blur-md p-6 border-t border-white/10 flex flex-col transition-all duration-500 pointer-events-none z-20 ${isHovered ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0'}`}>
+                <span className="text-[10px] font-mono text-zinc-500 mb-1.5 uppercase tracking-widest">
                     {"// Prompt Input"}
                 </span>
-                <p className="font-mono text-sm md:text-base text-zinc-300 leading-relaxed max-w-xl">
+                <p className="font-mono text-xs sm:text-sm text-zinc-300 leading-relaxed max-w-xl">
                     &gt; {feature.prompt}
                     <span className="animate-pulse text-zinc-500 ml-1">_</span>
                 </p>

@@ -58,7 +58,8 @@ function Header() {
                             <Image
                                 src="/logo/logo-64.png"
                                 alt="Short Real"
-                                fill
+                                width={64}
+                                height={64}
                                 className="object-contain"
                             />
                         </div>
