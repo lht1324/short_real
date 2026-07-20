@@ -2,7 +2,7 @@
 
 import {memo, useEffect, useState} from "react";
 import Image from "next/image";
-import {CaptionData} from "@/components/page/workspace/editor/WorkspaceEditorPageClient";
+import {CaptionData, SceneRealTime} from "@/components/page/workspace/editor/WorkspaceEditorPageClient";
 import {imageClientAPI} from "@/lib/api/client/imageClientAPI";
 import SceneSequenceItem from "@/components/page/workspace/editor/SceneSequenceItem";
 
@@ -16,6 +16,7 @@ interface SceneSequencePanelProps {
     captionDataList: CaptionData[];
     currentSceneIndex: number;
     aspectRatio: '16:9' | '9:16';
+    sceneRealStartTimes: SceneRealTime[];
     onClickSceneSequence: (sceneStartSec: number) => void;
     onFinishLoading: () => void;
 }
@@ -25,6 +26,7 @@ function SceneSequencePanel({
     captionDataList,
     currentSceneIndex,
     aspectRatio,
+    sceneRealStartTimes,
     onClickSceneSequence,
     onFinishLoading,
 }: SceneSequencePanelProps) {
@@ -72,6 +74,7 @@ function SceneSequencePanel({
         <div className="p-4 space-y-4">
             <div className="text-zinc-100 text-[15px] uppercase tracking-wider font-medium mb-4">Scene</div>
             {captionDataList.map((captionData, index) => {
+                const realTime = sceneRealStartTimes.find(r => r.sceneNumber === captionData.sceneNumber);
                 return <SceneSequenceItem
                     key={index}
                     captionData={captionData}
@@ -80,6 +83,8 @@ function SceneSequencePanel({
                     isCurrentScene={currentSceneIndex === index}
                     isLastItem={index === captionDataList.length - 1}
                     aspectRatio={aspectRatio}
+                    realStartSec={realTime?.realStartSec ?? captionData.startSec}
+                    realEndSec={realTime?.realEndSec ?? captionData.endSec}
                     onClickSceneSequence={onClickSceneSequence}
                     onLoadImage={() => {
                         setImageDataList((prevImageDataList) => {

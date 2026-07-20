@@ -11,6 +11,8 @@ interface SceneSequenceItemProps {
     isCurrentScene: boolean;
     isLastItem: boolean;
     aspectRatio: '16:9' | '9:16';
+    realStartSec: number;
+    realEndSec: number;
     onClickSceneSequence: (sceneStartSec: number) => void;
     onMouseEnter: () => void;
     onMouseLeave: () => void;
@@ -24,17 +26,15 @@ function SceneSequenceItem({
     isCurrentScene,
     isLastItem,
     aspectRatio,
+    realStartSec,
+    realEndSec,
     onClickSceneSequence,
     onMouseEnter,
     onMouseLeave,
     onLoadImage,
 }: SceneSequenceItemProps) {
-    const sceneStartSec = useMemo(() => {
-        return captionData.startSec;
-    }, [captionData.startSec]);
-    const sceneEndSec = useMemo(() => {
-        return captionData.endSec;
-    }, [captionData.endSec]);
+    const sceneStartSec = realStartSec;
+    const sceneEndSec = realEndSec;
 
     const is16by9 = useMemo(() => aspectRatio === '16:9', [aspectRatio]);
 
@@ -48,7 +48,7 @@ function SceneSequenceItem({
                     ${isHovered ? 'z-50' : 'z-0'}
                 `}
                 onClick={() => {
-                    onClickSceneSequence(captionData.sceneNumber === 1 ? 0.00 : sceneStartSec + 0.1);
+                    onClickSceneSequence(captionData.sceneNumber === 1 ? 0.00 : captionData.startSec + 0.1);
                 }}
             >
                 {/* 썸네일 — 상단, 16:9 비율 */}
@@ -122,7 +122,7 @@ function SceneSequenceItem({
                         ${isHovered ? 'z-50' : 'z-0'}
                     `}
             onClick={() => {
-                onClickSceneSequence(captionData.sceneNumber === 1 ? 0.00 : sceneStartSec + 0.1);
+                onClickSceneSequence(captionData.sceneNumber === 1 ? 0.00 : captionData.startSec + 0.1);
             }}
         >
             <div className="flex items-stretch justify-between">

@@ -5,7 +5,9 @@ import {Eye, EyeOff, Play, Pause, RotateCcw, ChevronLeft, ChevronRight} from "lu
 import {
     CaptionConfigState,
     CaptionData,
-    MusicPlayConfig, VideoPlayerUIData
+    MusicPlayConfig,
+    SceneRealTime,
+    VideoPlayerUIData
 } from "@/components/page/workspace/editor/WorkspaceEditorPageClient";
 import {Properties} from "csstype";
 
@@ -41,6 +43,7 @@ interface VideoPlayerPanelProps {
     selectedFontFamilyFullShape: string;
     musicPlayConfig: MusicPlayConfig;
     sceneSpeedList: { sceneNumber: number; speedMultiplier: number; }[];
+    sceneRealStartTimes: SceneRealTime[];
     onChangeVideoPanelContainerHeight: (containerHeight: number) => void;
     onChangeCaptionConfigState: (captionConfigState: CaptionConfigState) => void;
     onChangeVideoPlayerUIData: (uiData: VideoPlayerUIData) => void;
@@ -58,6 +61,7 @@ const VideoPlayerPanel = forwardRef<VideoPlayerHandle, VideoPlayerPanelProps>(({
     selectedFontFamilyFullShape,
     musicPlayConfig,
     sceneSpeedList,
+    sceneRealStartTimes,
     onChangeVideoPanelContainerHeight,
     onChangeCaptionConfigState,
     onChangeVideoPlayerUIData,
@@ -90,6 +94,7 @@ const VideoPlayerPanel = forwardRef<VideoPlayerHandle, VideoPlayerPanelProps>(({
     
     const captionRef = useRef<HTMLParagraphElement>(null);
     const timelineRef = useRef<HTMLDivElement>(null);
+    const carouselRef = useRef<HTMLDivElement>(null);
     const videoNaturalAspectRatioRef = useRef<number | null>(null);
 
     // 재생 제어 상태
@@ -100,6 +105,9 @@ const VideoPlayerPanel = forwardRef<VideoPlayerHandle, VideoPlayerPanelProps>(({
     const [hoveredSceneIndex, setHoveredSceneIndex] = useState<number | null>(null);
     const [videoContainerWidth, setVideoContainerWidth] = useState<number>(324);
     const [videoContainerHeight, setVideoContainerHeight] = useState<number>(576);
+    // 사이드 카드 물리 크기 (캐러셀 높이의 65% 기준, 초기값은 기본 비율로 산정)
+    const [sideCardWidth, setSideCardWidth] = useState<number>(251);
+    const [sideCardHeight, setSideCardHeight] = useState<number>(446);
 
     // 씬별 캐싱 및 탐색 제어
     const currentSceneIndex = useMemo(() => {
@@ -276,6 +284,21 @@ const VideoPlayerPanel = forwardRef<VideoPlayerHandle, VideoPlayerPanelProps>(({
         return `${mins}:${secs.toString().padStart(2, '0')}`;
     }, []);
 
+    // 스토리 타임(대본 기준) → 실제 재생 시간(배속 반영) 변환 헬퍼
+    const storyTimeToRealTime = useCallback((storyTime: number): number => {
+        if (sceneRealStartTimes.length === 0) return storyTime;
+        const sceneIdx = captionDataList.findIndex(
+            (s) => storyTime >= s.startSec && storyTime < s.endSec
+        );
+        if (sceneIdx === -1) {
+            return sceneRealStartTimes[sceneRealStartTimes.length - 1]?.realEndSec ?? storyTime;
+        }
+        const realStart = sceneRealStartTimes[sceneIdx]?.realStartSec ?? 0;
+        const speed = sceneSpeedList.find(s => s.sceneNumber === captionDataList[sceneIdx].sceneNumber)?.speedMultiplier ?? 1.0;
+        const localOffset = (storyTime - captionDataList[sceneIdx].startSec) / speed;
+        return realStart + localOffset;
+    }, [captionDataList, sceneRealStartTimes, sceneSpeedList]);
+
     const onClickPlayAndPause = useCallback(async () => {
         const activeVideoElement = videoRefs.current[activeSceneIndex];
         const activeVoiceElement = voiceAudioRefs.current[activeSceneIndex];
@@ -303,7 +326,7 @@ const VideoPlayerPanel = forwardRef<VideoPlayerHandle, VideoPlayerPanelProps>(({
                     await activeVoiceElement.play();
                 }
                 if (bgm && musicPlayConfig.audioUrl) {
-                    bgm.currentTime = currentTime + musicPlayConfig.startSec;
+                    bgm.currentTime = storyTimeToRealTime(currentTime) + musicPlayConfig.startSec;
                     await bgm.play();
                 }
                 setIsPlaying(true);
@@ -311,26 +334,42 @@ const VideoPlayerPanel = forwardRef<VideoPlayerHandle, VideoPlayerPanelProps>(({
                 console.error("Play failed:", err);
             }
         }
-    }, [isPlaying, activeSceneIndex, activeScene, activeSceneUrlData, currentTime, musicPlayConfig]);
+    }, [isPlaying, activeSceneIndex, activeScene, activeSceneUrlData, currentTime, musicPlayConfig, storyTimeToRealTime]);
 
-    const recalculateVideoSize = useCallback((containerWidth: number, containerHeight: number) => {
+    const recalculateVideoSize = useCallback(() => {
         const ratio = videoNaturalAspectRatioRef.current;
-        if (!ratio) return;
+        const carousel = carouselRef.current;
+        if (!ratio || !carousel) return;
+
+        const carouselWidth = carousel.offsetWidth;
+        const carouselHeight = carousel.offsetHeight;
+
+        // 비율 상수: 액티브 카드는 캐러셀 높이의 84%, 사이드 카드는 65%
+        const ACTIVE_HEIGHT_RATIO = 0.84;
+        const SIDE_HEIGHT_RATIO = 0.65;
 
         const isHorizontal = ratio > 1;
 
         if (isHorizontal) {
-            const overhead = 160;
-            const newWidth = Math.max(Math.min(containerWidth - overhead, 850), 320);
-            const newHeight = Math.round(newWidth / ratio);
-            setVideoContainerWidth(newWidth);
-            setVideoContainerHeight(newHeight);
+            // 가로 영상: 너비 기준으로 비율 계산
+            const activeWidth = Math.round(carouselWidth * 0.60);
+            const activeHeight = Math.round(activeWidth / ratio);
+            const sideWidth = Math.round(carouselWidth * 0.44);
+            const sideHeight = Math.round(sideWidth / ratio);
+            setVideoContainerWidth(activeWidth);
+            setVideoContainerHeight(activeHeight);
+            setSideCardWidth(sideWidth);
+            setSideCardHeight(sideHeight);
         } else {
-            const overhead = 80;
-            const newHeight = Math.max(Math.min(containerHeight - overhead, 720), 300);
-            const newWidth = Math.round(newHeight * ratio);
-            setVideoContainerWidth(newWidth);
-            setVideoContainerHeight(newHeight);
+            // 세로 영상: 높이 기준으로 비율 계산
+            const activeHeight = Math.round(carouselHeight * ACTIVE_HEIGHT_RATIO);
+            const activeWidth = Math.round(activeHeight * ratio);
+            const sideHeight = Math.round(carouselHeight * SIDE_HEIGHT_RATIO);
+            const sideWidth = Math.round(sideHeight * ratio);
+            setVideoContainerWidth(activeWidth);
+            setVideoContainerHeight(activeHeight);
+            setSideCardWidth(sideWidth);
+            setSideCardHeight(sideHeight);
         }
     }, []);
 
@@ -342,13 +381,7 @@ const VideoPlayerPanel = forwardRef<VideoPlayerHandle, VideoPlayerPanelProps>(({
 
             if (videoNaturalWidth > 0 && videoNaturalHeight > 0) {
                 videoNaturalAspectRatioRef.current = videoNaturalWidth / videoNaturalHeight;
-
-                if (containerRef.current) {
-                    recalculateVideoSize(
-                        containerRef.current.offsetWidth,
-                        containerRef.current.offsetHeight
-                    );
-                }
+                recalculateVideoSize();
             }
         }
         onFinishLoading();
@@ -400,14 +433,14 @@ const VideoPlayerPanel = forwardRef<VideoPlayerHandle, VideoPlayerPanelProps>(({
         lastSwitchedIndexRef.current = actualSceneIndex;
 
         if (bgm && musicPlayConfig.audioUrl) {
-            bgm.currentTime = time + musicPlayConfig.startSec;
+            bgm.currentTime = storyTimeToRealTime(time) + musicPlayConfig.startSec;
             if (isPlaying) {
                 bgm.play().catch(() => null);
             }
         }
 
         onChangeCurrentTime(time);
-    }, [captionDataList, scenesUrlData, isPlaying, musicPlayConfig, onChangeCurrentTime]);
+    }, [captionDataList, scenesUrlData, isPlaying, musicPlayConfig, storyTimeToRealTime, onChangeCurrentTime]);
 
     const onClickPrevScene = useCallback(() => {
         if (activeSceneIndex > 0) {
@@ -420,6 +453,10 @@ const VideoPlayerPanel = forwardRef<VideoPlayerHandle, VideoPlayerPanelProps>(({
             performSeek(captionDataList[activeSceneIndex + 1].startSec);
         }
     }, [activeSceneIndex, captionDataList, performSeek]);
+
+    const onClickResetSceneSpeed = useCallback(() => {
+        onChangeSceneSpeed(activeScene?.sceneNumber ?? 1, 1.0);
+    }, [activeScene?.sceneNumber, onChangeSceneSpeed]);
 
     const updateTimelinePosition = useCallback(async (clientX: number, element: HTMLDivElement) => {
         if (!activeScene) return;
@@ -488,7 +525,7 @@ const VideoPlayerPanel = forwardRef<VideoPlayerHandle, VideoPlayerPanelProps>(({
                         nextVideo.play().catch(() => null);
                         nextVoice?.play().catch(() => null);
                         if (bgm && musicPlayConfig.audioUrl) {
-                            bgm.currentTime = nextScene.startSec + musicPlayConfig.startSec;
+                            bgm.currentTime = (sceneRealStartTimes[nextSceneIndex]?.realStartSec ?? nextScene.startSec) + musicPlayConfig.startSec;
                             bgm.play().catch(() => null);
                         }
                         currentTimeRef.current = nextScene.startSec;
@@ -521,7 +558,7 @@ const VideoPlayerPanel = forwardRef<VideoPlayerHandle, VideoPlayerPanelProps>(({
                 }
             }
         }
-    }, [activeSceneIndex, captionDataList, scenesUrlData, musicPlayConfig, onChangeCurrentTime]);
+    }, [activeSceneIndex, captionDataList, scenesUrlData, musicPlayConfig, sceneRealStartTimes, onChangeCurrentTime]);
 
     const onClickReplay = useCallback(async () => {
         const bgm = bgmAudioRef.current;
@@ -757,7 +794,7 @@ const VideoPlayerPanel = forwardRef<VideoPlayerHandle, VideoPlayerPanelProps>(({
                             nextVideoElement.play().catch(() => null);
                             nextVoiceElement?.play().catch(() => null);
                             if (bgm && musicPlayConfig.audioUrl) {
-                                bgm.currentTime = nextScene.startSec + musicPlayConfig.startSec;
+                                bgm.currentTime = (sceneRealStartTimes[nextSceneIndex]?.realStartSec ?? nextScene.startSec) + musicPlayConfig.startSec;
                                 bgm.play().catch(() => null);
                             }
                             currentTimeRef.current = nextScene.startSec;
@@ -810,7 +847,7 @@ const VideoPlayerPanel = forwardRef<VideoPlayerHandle, VideoPlayerPanelProps>(({
         return () => {
             if (animationFrameId) cancelAnimationFrame(animationFrameId);
         };
-    }, [isPlaying, activeSceneIndex, activeScene, captionDataList, scenesUrlData, videoDuration, onChangeCurrentTime]);
+    }, [isPlaying, activeSceneIndex, activeScene, captionDataList, scenesUrlData, videoDuration, sceneRealStartTimes, onChangeCurrentTime]);
 
     // BGM 볼륨 동기화
     useEffect(() => {
@@ -840,7 +877,8 @@ const VideoPlayerPanel = forwardRef<VideoPlayerHandle, VideoPlayerPanelProps>(({
             <div className="flex flex-row p-8 justify-center items-center flex-1 z-10 w-full relative">
                 {/* Video Area (우측 빈 공간 전체를 100% 활용하는 3D 카드 병풍 뷰포트) */}
                 <div
-                    className="relative w-full h-[580px] overflow-hidden flex items-center justify-center"
+                    ref={carouselRef}
+                    className="relative w-full h-full overflow-hidden flex items-center justify-center"
                     onMouseEnter={() => setIsHoveringVideo(true)}
                     onMouseLeave={() => setIsHoveringVideo(false)}
                 >
@@ -856,13 +894,17 @@ const VideoPlayerPanel = forwardRef<VideoPlayerHandle, VideoPlayerPanelProps>(({
                                 const distance = Math.abs(diff);
                                 const isVisible = distance <= 1; // 오직 바로 옆 1단계 인접 카드만 시각 노출
 
-                                // 3D 카드 오버랩 튜닝 비례 상수 (55%만 옆으로 이동시켜 45% 중첩 유도)
-                                const overlapFactor = 0.55;
+                                // 실제 카드 물리 크기: 액티브는 큰 크기, 사이드는 작은 크기로 깊이감 표현
+                                const cardWidth = isActive ? videoContainerWidth : sideCardWidth;
+                                const cardHeight = isActive ? videoContainerHeight : sideCardHeight;
+
+                                // shiftX: 액티브 카드 폭 기준으로 사이드 카드 중심 위치 결정
+                                const overlapFactor = 0.60;
                                 const shiftX = diff * (videoContainerWidth * overlapFactor);
 
-                                // 거리에 따른 3D 스케일/투명도/필터/레이어 동적 변조 (2단계 이상은 opacity: 0 완전 소거)
-                                const scaleVal = isActive ? 1 : isHovered ? 0.93 : 0.88;
-                                const opacityVal = isActive ? 1 : isHovered ? 0.65 : isVisible ? 0.3 : 0;
+                                // scale: DOM 크기 차이로 깊이감을 표현하므로, hover 시에만 살짝 확대
+                                const scaleVal = isHovered && !isActive ? 1.04 : 1;
+                                const opacityVal = isActive ? 1 : isHovered ? 0.75 : isVisible ? 0.35 : 0;
                                 const blurVal = isActive ? 'none' : isHovered ? 'blur(0.5px)' : 'blur(2px)';
                                 const borderClass = isActive ? 'border-white/10' : isHovered ? 'border-white/30 shadow-[0_0_20px_rgba(255,255,255,0.08)]' : 'border-white/10';
                                 const zIndexVal = isActive ? 30 : isHovered ? 20 : isVisible ? 10 : 0;
@@ -874,8 +916,8 @@ const VideoPlayerPanel = forwardRef<VideoPlayerHandle, VideoPlayerPanelProps>(({
                                             !isActive && isVisible ? 'cursor-pointer' : ''
                                         } ${borderClass}`}
                                         style={{
-                                            width: `${videoContainerWidth}px`,
-                                            height: `${videoContainerHeight}px`,
+                                            width: `${cardWidth}px`,
+                                            height: `${cardHeight}px`,
                                             transform: `translate(calc(-50% + ${shiftX}px), -50%) scale(${scaleVal})`,
                                             opacity: opacityVal,
                                             zIndex: zIndexVal,
@@ -987,6 +1029,13 @@ const VideoPlayerPanel = forwardRef<VideoPlayerHandle, VideoPlayerPanelProps>(({
                                             <span className="text-[10px] font-bold text-zinc-100 select-none w-7 text-right font-mono">
                                                 {activeSceneSpeed.toFixed(1)}x
                                             </span>
+                                            <button
+                                                onClick={onClickResetSceneSpeed}
+                                                title="Reset to 1.0x"
+                                                className="flex items-center justify-center w-4 h-4 text-zinc-400 hover:text-white transition-colors shrink-0"
+                                            >
+                                                <RotateCcw size={10} />
+                                            </button>
                                         </div>
                                     </div>
 

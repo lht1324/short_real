@@ -93,6 +93,12 @@ export interface MusicPlayConfig {
     volume: number
 }
 
+export interface SceneRealTime {
+    sceneNumber: number;
+    realStartSec: number; // 배속 적용 후 실제 시작 시간 (초)
+    realEndSec: number;   // 배속 적용 후 실제 종료 시간 (초)
+}
+
 interface ColorPickerState {
     isOpen: boolean;
     type: ColorPickerType | null;
@@ -173,6 +179,23 @@ function WorkspaceEditorPageClient() {
 
     const [captionConfigState, setCaptionConfigState] = useState<CaptionConfigState>(INITIAL_CAPTION_CONFIG_STATE);
     const [sceneSpeedList, setSceneSpeedList] = useState<{ sceneNumber: number; speedMultiplier: number; }[]>([]);
+
+    // 각 씨의 실제 재생 시작/종료 시간 (배속 반영 후) 사전 계산
+    // VideoPlayerPanel BGM 싱크 및 SceneSequencePanel 시간 표시에 공유
+    const sceneRealStartTimes = useMemo<SceneRealTime[]>(() => {
+        let realTime = 0;
+        return captionDataList.map((scene) => {
+            const realStart = realTime;
+            const speed = sceneSpeedList.find(s => s.sceneNumber === scene.sceneNumber)?.speedMultiplier ?? 1.0;
+            const duration = scene.endSec - scene.startSec;
+            realTime += duration / speed;
+            return {
+                sceneNumber: scene.sceneNumber,
+                realStartSec: parseFloat(realStart.toFixed(3)),
+                realEndSec: parseFloat(realTime.toFixed(3)),
+            };
+        });
+    }, [captionDataList, sceneSpeedList]);
     const [fontFamilyList, setFontFamilyList] = useState<FontFamily[]>([]);
     const selectedFontFamily = useMemo(() => {
         return fontFamilyList.find((fontFamily) => {
@@ -205,6 +228,11 @@ function WorkspaceEditorPageClient() {
             ? captionDataList[captionDataList.length - 1].endSec
             : 0
     }, [captionDataList]);
+    // 배속 반영된 실제 종 재생 시간 (MusicEditPanel 구간 계산 및 백앤드 에 사용)
+    const realVideoDuration = useMemo(() => {
+        if (sceneRealStartTimes.length === 0) return videoDuration;
+        return sceneRealStartTimes[sceneRealStartTimes.length - 1].realEndSec;
+    }, [sceneRealStartTimes, videoDuration]);
 
     const [editingMusicIndex, setEditingMusicIndex] = useState<number>(0);
     const editingMusicData = useMemo(() => {
@@ -221,10 +249,10 @@ function WorkspaceEditorPageClient() {
         return editingMusicData ? {
             audioUrl: editingMusicData.audioUrl,
             startSec: musicStartSec,
-            duration: videoDuration,
+            duration: realVideoDuration,
             volume: isMusicMuted ? 0 : musicVolume,
         } : null;
-    }, [editingMusicData, musicStartSec, videoDuration, musicVolume, isMusicMuted]);
+    }, [editingMusicData, musicStartSec, realVideoDuration, musicVolume, isMusicMuted]);
 
     const finalVideoMergeData: FinalVideoMergeData | null = useMemo(() => {
         if (captionDataList.length !== 0 && taskId && videoPlayerUIData && videoDuration > 0) {
@@ -249,13 +277,13 @@ function WorkspaceEditorPageClient() {
 
                 musicIndex: editingMusicIndex,
                 cuttingAreaStartSec: musicStartSec,
-                cuttingAreaEndSec: musicStartSec + videoDuration,
+                cuttingAreaEndSec: musicStartSec + realVideoDuration,
                 volumePercentage: Math.round(musicVolume * 100),
             };
         } else {
             return null;
         }
-    }, [isCaptionEnabled, captionDataList, taskId, videoPlayerUIData, videoDuration, captionConfigState, editingMusicIndex, musicStartSec, musicVolume, sceneSpeedList]);
+    }, [isCaptionEnabled, captionDataList, taskId, videoPlayerUIData, videoDuration, realVideoDuration, captionConfigState, editingMusicIndex, musicStartSec, musicVolume, sceneSpeedList]);
 
     const onClickFinish = useCallback(async () => {
         setIsFinishLoading(true);
@@ -603,6 +631,7 @@ function WorkspaceEditorPageClient() {
                         captionDataList={captionDataList}
                         currentSceneIndex={currentSceneIndex}
                         aspectRatio={aspectRatio}
+                        sceneRealStartTimes={sceneRealStartTimes}
                         onClickSceneSequence={onClickSceneSequence}
                         onFinishLoading={onFinishSceneSequencePanelLoading}
                     />
@@ -671,7 +700,7 @@ function WorkspaceEditorPageClient() {
 
                         {/* Video Player */}
                         {/*{videoData && <div className="flex-[0.66] h-full">*/}
-                        {videoData && musicPlayConfig && <div className="flex-[0.66]">
+                        {videoData && musicPlayConfig && <div className="flex-[0.66] h-full">
                             <VideoPlayerPanel
                                 ref={videoPlayerRef}
                                 scenesUrlData={videoData.scenesUrlData}
@@ -682,6 +711,7 @@ function WorkspaceEditorPageClient() {
                                 musicPlayConfig={musicPlayConfig}
                                 selectedFontFamilyFullShape={selectedFontFamilyFullShape}
                                 sceneSpeedList={sceneSpeedList}
+                                sceneRealStartTimes={sceneRealStartTimes}
                                 onChangeVideoPanelContainerHeight={onChangeVideoPanelContainerHeight}
                                 onChangeCaptionConfigState={onChangeCaptionConfigState}
                                 onChangeVideoPlayerUIData={onChangeVideoPlayerUIData}
@@ -699,7 +729,7 @@ function WorkspaceEditorPageClient() {
                     >
                         <MusicEditPanel
                             musicData={editingMusicData}
-                            videoDuration={videoDuration}
+                            videoDuration={realVideoDuration}
                             panelHeight={musicEditPanelHeight}
                             onChangeMusicStartSec={onChangeMusicStartSec}
                             onChangeMusicVolume={onChangeMusicVolume}
