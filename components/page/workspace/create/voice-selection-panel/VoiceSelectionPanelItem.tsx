@@ -74,19 +74,6 @@ function VoiceSelectionPanelItem({
         }
     }, [voice.accent]);
 
-    const useCaseText = useMemo(() => {
-        switch (voice.useCase) {
-            case "social_media": return VoiceUseCase.SOCIAL_MEDIA;
-            case "advertisement": return VoiceUseCase.ADVERTISEMENT;
-            case "characters": return VoiceUseCase.CHARACTERS;
-            case "conversational": return VoiceUseCase.CONVERSATIONAL;
-            case "informative_educational": return VoiceUseCase.INFORMATIVE_EDUCATIONAL;
-            case "narrative_story": return VoiceUseCase.NARRATIVE_STORY;
-            case "entertainment": return VoiceUseCase.ENTERTAINMENT;
-            default: return VoiceUseCase.OTHER;
-        }
-    }, [voice.useCase]);
-
     // Voice 아이템 태그 클래스 생성 (동적 클래스 문제 해결)
     const genderTagClass = useMemo(() => {
         const getGenderColor = (gender?: string) => {
@@ -101,11 +88,11 @@ function VoiceSelectionPanelItem({
 
         switch (color) {
             case 'blue':
-                return 'text-xs px-2 py-1 rounded-full border font-medium bg-blue-500/20 text-blue-300 border-blue-400/30';
+                return 'text-[11px] px-2 py-0.5 rounded border font-medium bg-sky-500/10 text-sky-400 border-sky-400/20';
             case 'red':
-                return 'text-xs px-2 py-1 rounded-full border font-medium bg-red-500/20 text-red-300 border-red-400/30';
+                return 'text-[11px] px-2 py-0.5 rounded border font-medium bg-rose-500/10 text-rose-400 border-rose-400/20';
             default:
-                return 'text-xs px-2 py-1 rounded-full border font-medium bg-gray-500/20 text-gray-300 border-gray-400/30';
+                return 'text-[11px] px-2 py-0.5 rounded border font-medium bg-zinc-500/10 text-zinc-400 border-zinc-400/20';
         }
     }, [voice.gender]);
 
@@ -122,52 +109,44 @@ function VoiceSelectionPanelItem({
 
         switch (color) {
             case 'green':
-                return 'text-xs px-2 py-1 rounded-full border font-medium bg-green-500/20 text-green-300 border-green-400/30';
+                return 'text-[11px] px-2 py-0.5 rounded border font-medium bg-emerald-500/10 text-emerald-400 border-emerald-400/20';
             case 'purple':
-                return 'text-xs px-2 py-1 rounded-full border font-medium bg-purple-500/20 text-purple-300 border-purple-400/30';
+                return 'text-[11px] px-2 py-0.5 rounded border font-medium bg-indigo-500/10 text-indigo-400 border-indigo-400/20';
             case 'orange':
-                return 'text-xs px-2 py-1 rounded-full border font-medium bg-orange-500/20 text-orange-300 border-orange-400/30';
+                return 'text-[11px] px-2 py-0.5 rounded border font-medium bg-orange-500/10 text-orange-400 border-orange-400/20';
             default:
-                return 'text-xs px-2 py-1 rounded-full border font-medium bg-gray-500/20 text-gray-300 border-gray-400/30';
+                return 'text-[11px] px-2 py-0.5 rounded border font-medium bg-zinc-500/10 text-zinc-400 border-zinc-400/20';
         }
     }, [voice.age]);
 
     return (
         <div
             onClick={() => onSelectVoice(voice.id)}
-            className={`pt-3 pr-3 pb-3 rounded-lg border transition-all text-left cursor-pointer ${
+            className={`p-3 rounded-xl border transition-colors cursor-pointer ${
                 voice.id === selectedVoiceId
-                    ? 'border-pink-500 bg-pink-500/10'
-                    : 'border-purple-500/30 bg-gray-800/30 hover:border-purple-400/50'
+                    ? 'border-zinc-500 bg-zinc-800 shadow-sm'
+                    : 'border-white/5 bg-black/20 hover:bg-white/5 hover:border-white/10'
             }`}
         >
             <div className="flex items-center justify-between">
                 <div className="min-w-0 flex-1">
                     <div className="flex flex-col gap-1.5">
-                        {/* Voice Name + Descriptive */}
-                        <div className="pl-3 text-white font-medium text-base flex items-center gap-2">
+                        {/* Voice Name */}
+                        <div className={`font-medium text-[13px] flex items-center gap-2 ${
+                            voice.id === selectedVoiceId ? 'text-zinc-100' : 'text-zinc-300'
+                        }`}>
                             <span>{voice.name}</span>
-                            {/*{voice.descriptive && (*/}
-                            {/*    <span className="text-purple-300 text-sm font-normal">*/}
-                            {/*        • {voice.descriptive.charAt(0).toUpperCase() + voice.descriptive.slice(1)}*/}
-                            {/*    </span>*/}
-                            {/*)}*/}
-                            {/*{voice.useCase && (*/}
-                            {/*    <span className="text-purple-300 text-sm font-normal">*/}
-                            {/*        • {useCaseText}*/}
-                            {/*    </span>*/}
-                            {/*)}*/}
                         </div>
 
                         {/* Description */}
                         {voice.description && (
-                            <div className="pl-3 text-gray-400 text-sm">
+                            <div className="text-zinc-500 text-xs line-clamp-2 pr-2">
                                 {voice.description}
                             </div>
                         )}
 
                         {/* Tags */}
-                        <div className="flex pl-2 gap-1.5 flex-wrap">
+                        <div className="flex gap-1.5 flex-wrap mt-0.5">
                             {voice.gender && (
                                 <span className={genderTagClass}>
                                     {genderText}
@@ -179,7 +158,7 @@ function VoiceSelectionPanelItem({
                                 </span>
                             )}
                             {voice.accent && (
-                                <span className="text-xs px-2 py-1 rounded-full border font-medium bg-cyan-500/20 text-cyan-300 border-cyan-400/30">
+                                <span className="text-[11px] px-2 py-0.5 rounded border font-medium bg-cyan-500/10 text-cyan-400 border-cyan-400/20">
                                     {accentText}
                                 </span>
                             )}
@@ -187,15 +166,21 @@ function VoiceSelectionPanelItem({
                     </div>
                 </div>
                 <button
-                    className="p-1.5 rounded-full bg-gray-700/50 hover:bg-gray-600/50 transition-colors flex-shrink-0 ml-2"
+                    className={`p-1.5 rounded-md transition-colors flex-shrink-0 ml-2 ${
+                        playingSoundId === voice.id 
+                            ? 'bg-zinc-200 text-black' 
+                            : voice.id === selectedVoiceId
+                                ? 'bg-zinc-700 text-zinc-300 hover:bg-zinc-600 hover:text-white'
+                                : 'bg-white/5 text-zinc-500 hover:bg-white/10 hover:text-zinc-300'
+                    }`}
                     onClick={(e) => {
                         onClickPlayAndPauseButton(e, voice.id, voice.previewUrl);
                     }}
                 >
                     {playingSoundId === voice.id ? (
-                        <Square size={14} className="text-white" />
+                        <Square size={14} fill="currentColor" />
                     ) : (
-                        <Play size={14} className="text-white" />
+                        <Play size={14} fill="currentColor" className="ml-0.5" />
                     )}
                 </button>
             </div>

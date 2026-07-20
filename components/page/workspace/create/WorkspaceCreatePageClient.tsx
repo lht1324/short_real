@@ -1,29 +1,27 @@
 'use client'
 
-import {ChangeEvent, memo, useCallback, useEffect, useMemo, useState} from "react";
-import Link from "next/link";
+import { ChangeEvent, memo, useCallback, useEffect, useMemo, useState } from "react";
 import Image from "next/image";
-import {
-    Coins,
-    ListTodo,
-    Plus,
-    Sparkles,
-} from 'lucide-react';
-import {openAIClientAPI} from '@/lib/api/client/openAIClientAPI';
-import {Style} from "@/lib/api/types/supabase/Styles";
-import {SceneData, VideoGenerationTask, VideoGenerationTaskStatus} from "@/lib/api/types/supabase/VideoGenerationTasks";
-import {videoClientAPI} from "@/lib/api/client/videoClientAPI";
-import {StoryboardData} from "@/lib/api/types/api/open-ai/scene/PostOpenAISceneResponse";
+import { Loader2 } from 'lucide-react';
+import { openAIClientAPI } from '@/lib/api/client/openAIClientAPI';
+import { Style } from "@/lib/api/types/supabase/Styles";
+import { SceneData, VideoGenerationTask, VideoGenerationTaskStatus } from "@/lib/api/types/supabase/VideoGenerationTasks";
+import { videoClientAPI } from "@/lib/api/client/videoClientAPI";
+import { StoryboardData } from "@/lib/api/types/api/open-ai/scene/PostOpenAISceneResponse";
 import VoiceSelectionPanel from "@/components/page/workspace/create/voice-selection-panel/VoiceSelectionPanel";
-import {useRouter, useSearchParams} from "next/navigation";
-import {PostOpenAISceneRequest} from "@/lib/api/types/api/open-ai/scene/PostOpenAISceneRequest";
+import { useRouter, useSearchParams } from "next/navigation";
+import { PostOpenAISceneRequest } from "@/lib/api/types/api/open-ai/scene/PostOpenAISceneRequest";
 import DefaultModal from "@/components/public/DefaultModal";
-import {useAuth} from "@/context/AuthContext";
-import {STYLE_DATA_LIST} from "@/lib/styles";
-import {voiceClientAPI} from "@/lib/api/client/voiceClientAPI";
+import { useAuth } from "@/context/AuthContext";
+import { STYLE_DATA_LIST } from "@/lib/styles";
+import { voiceClientAPI } from "@/lib/api/client/voiceClientAPI";
 import ResultPanel from "@/components/page/workspace/create/result-panel/ResultPanel";
 import ScriptGenerationModal from "@/components/page/workspace/create/ScriptGenerationModal";
 import CreateFormPanel from "@/components/page/workspace/create/create-form-panel/CreateFormPanel";
+import WorkspaceSidebar from "@/components/public/WorkspaceSidebar";
+import { WorkspaceSidebarItem } from "@/components/public/WorkspaceSidebarItem";
+import { aiModelDataClientAPI } from "@/lib/api/client/aiModelDataClientAPI";
+import { AIModelData } from "@/lib/api/types/supabase/AIModelData";
 
 function WorkspaceCreatePageClient() {
     const router = useRouter();
@@ -31,15 +29,26 @@ function WorkspaceCreatePageClient() {
 
     const { user } = useAuth();
 
+    const isFalAiKeyMissing = useMemo(() => {
+        return !user?.fal_ai_api_key;
+    }, [user?.fal_ai_api_key]);
+
     const [isVoiceLoading, setIsVoiceLoading] = useState(true);
+    const [isAiModelLoading, setIsAiModelLoading] = useState(true);
     const [isGenerationTaskLoading, setIsGenerationTaskLoading] = useState(true);
     const isLoading = useMemo(() => {
-        return isVoiceLoading || isGenerationTaskLoading;
-    }, [isVoiceLoading, isGenerationTaskLoading]);
+        return isVoiceLoading || isGenerationTaskLoading || isAiModelLoading;
+    }, [isVoiceLoading, isGenerationTaskLoading, isAiModelLoading]);
 
     const taskId = useMemo(() => {
         return searchParams.get("taskId") ?? undefined;
     }, [searchParams]);
+
+    // AI Model states
+    const [aiModelList, setAiModelList] = useState<AIModelData[]>([]);
+    const [selectedReferenceId, setSelectedReferenceId] = useState<string | null>(null);
+    const [selectedI2iId, setSelectedI2iId] = useState<string | null>(null);
+    const [selectedI2vId, setSelectedI2vId] = useState<string | null>(null);
 
     // Section states
     const [script, setScript] = useState<string>('');
@@ -51,6 +60,11 @@ function WorkspaceCreatePageClient() {
     const [videoTitle, setVideoTitle] = useState<string | null>(null);
     const [videoDescription, setVideoDescription] = useState<string | null>(null);
     const [voiceUrl, setVoiceUrl] = useState<string | null>(null);
+    const [estimatedCharacterCount, setEstimatedCharacterCount] = useState<number>(0);
+
+    // Video Spec states
+    const [aspectRatio, setAspectRatio] = useState<'16:9' | '9:16'>('9:16');
+    const [resolution, setResolution] = useState<'720p' | '1080p' | '2160p'>('1080p');
 
     const isVideoGenerationEnabled = useMemo(() => {
         const isScriptNotEmpty = script.length !== 0;
@@ -73,15 +87,10 @@ function WorkspaceCreatePageClient() {
     const [isSaving, setIsSaving] = useState(false);
     const [showSaveSuccessModal, setShowSaveSuccessModal] = useState(false);
     const [showVoiceChangeWarningModal, setShowVoiceChangeWarningModal] = useState(false);
-    const [showInsufficientCreditModal, setShowInsufficientCreditModal] = useState(false);
     const [pendingVoiceId, setPendingVoiceId] = useState<string | null>(null);
     
     // Collapse states for sections
     const [isStyleExpanded, setIsStyleExpanded] = useState(true);
-
-    const userCreditCount = useMemo(() => {
-        return user?.credit_count ?? 0;
-    }, [user?.credit_count]);
 
     const expectedVideoTotalDuration = useMemo(() => {
         if (sceneDataList.length === 0) return 0;
@@ -98,37 +107,8 @@ function WorkspaceCreatePageClient() {
         return sceneDataList.length;
     }, [sceneDataList]);
 
-    const expectedDurationUsage = useMemo(() => {
-        const exceededVideoTotalDuration = expectedVideoTotalDuration - 30;
-        return exceededVideoTotalDuration > 0
-            ? Math.ceil(exceededVideoTotalDuration / 2) * 5
-            : 0;
-    }, [expectedVideoTotalDuration]);
-
-    const expectedSceneCountUsage = useMemo(() => {
-        const exceededVideoSceneCount = expectedVideoSceneCount - 6;
-
-        return exceededVideoSceneCount > 0
-            ? exceededVideoSceneCount * 5
-            : 0;
-    }, [expectedVideoSceneCount]);
-
-    const expectedCreditUsage = useMemo(() => {
-        return 100 + (expectedDurationUsage + expectedSceneCountUsage);
-    }, [expectedDurationUsage, expectedSceneCountUsage]);
-
-    const isCreditInsufficient = useMemo(() => {
-        return userCreditCount < expectedCreditUsage;
-    }, [userCreditCount, expectedCreditUsage]);
-
     // Style examples for preview
     const styleList = useMemo((): Style[] => STYLE_DATA_LIST, []);
-
-    // Virtual tabs for navigation consistency
-    const virtualTabs = useMemo(() => [
-        { id: 'dashboard', icon: ListTodo, name: 'Dashboard', href: '/workspace/dashboard' },
-        { id: 'create', icon: Plus, name: 'Create', href: '/workspace/create', active: true }
-    ], []);
 
     const onChangeScript = useCallback((e: ChangeEvent<HTMLTextAreaElement>) => {
         setScript(e.target.value);
@@ -169,12 +149,14 @@ function WorkspaceCreatePageClient() {
                 sceneDataList: newSceneDataList,
                 videoTitle: newVideoTitle,
                 videoDescription: newVideoDescription,
+                estimatedCharacterCount: newEstimatedCharacterCount,
             }: StoryboardData = storyboardData;
 
             window.history.pushState(null, "", `/workspace/create?taskId=${newTaskId}`);
             setSceneDataList(newSceneDataList);
             setVideoTitle(newVideoTitle);
             setVideoDescription(newVideoDescription);
+            setEstimatedCharacterCount(newEstimatedCharacterCount ?? 0);
 
             setPendingVoiceId(null);
             setIsGeneratingStoryboardData(false);
@@ -242,6 +224,26 @@ function WorkspaceCreatePageClient() {
                 throw new Error("User Id or Task Id or selected style was not found.");
             }
 
+            // Patch ai_model_config and specs before generation
+            if (selectedReferenceId && selectedI2iId && selectedI2vId) {
+                const selectedI2iModel = aiModelList.find(m => m.id === selectedI2iId);
+                const companionT2iModel = aiModelList.find(
+                    m => m.category === 'text-to-image' && m.display_name === selectedI2iModel?.display_name
+                );
+                const inferredSceneT2iId = companionT2iModel?.id ?? '1bd90bd4-e476-40e9-8a1e-1649288786e7';
+
+                await videoClientAPI.patchVideoTaskByTaskId(taskId, {
+                    aspect_ratio: aspectRatio,
+                    resolution: resolution,
+                    ai_model_config: {
+                        referenceImageModelId: selectedReferenceId,
+                        sceneImageT2IModelId: inferredSceneT2iId,
+                        sceneImageI2IModelId: selectedI2iId,
+                        videoModelId: selectedI2vId
+                    }
+                });
+            }
+
             // Video API 호출
             const postVideoResult = await videoClientAPI.postVideo(taskId, user.id as string, selectedStyleId);
 
@@ -264,20 +266,25 @@ function WorkspaceCreatePageClient() {
         } finally {
             setIsSubmitting(false);
         }
-    }, [script, taskId, user?.id, selectedStyleId]);
+    }, [script, taskId, user?.id, selectedStyleId, selectedReferenceId, selectedI2iId, selectedI2vId, aiModelList, aspectRatio, resolution]);
 
     const onClickGenerateVideo = useCallback(async () => {
-        if (isCreditInsufficient) {
-            setShowInsufficientCreditModal(true);
-        } else {
-            await generateVideo();
-        }
-    }, [generateVideo, isCreditInsufficient]);
+        await generateVideo();
+    }, [generateVideo]);
 
     const onClickSaveDraft = useCallback(async () => {
         setIsSaving(true);
 
         try {
+            let inferredSceneT2iId = '1bd90bd4-e476-40e9-8a1e-1649288786e7';
+            if (selectedI2iId) {
+                const selectedI2iModel = aiModelList.find(m => m.id === selectedI2iId);
+                const companionT2iModel = aiModelList.find(
+                    m => m.category === 'text-to-image' && m.display_name === selectedI2iModel?.display_name
+                );
+                if (companionT2iModel?.id) inferredSceneT2iId = companionT2iModel?.id;
+            }
+
             const request: Partial<VideoGenerationTask> = {
                 narration_script: script.length !== 0 ? script : undefined,
                 scene_breakdown_list: sceneDataList.length !== 0 ? sceneDataList : undefined,
@@ -285,6 +292,15 @@ function WorkspaceCreatePageClient() {
                 video_description: videoDescription ?? undefined,
                 selected_style_id: selectedStyleId.length !== 0 ? selectedStyleId : undefined,
                 selected_voice_id: selectedVoiceId.length !== 0 ? selectedVoiceId : undefined,
+                aspect_ratio: aspectRatio,
+                resolution: resolution,
+                estimated_character_count: estimatedCharacterCount,
+                ai_model_config: (selectedReferenceId && inferredSceneT2iId && selectedI2iId && selectedI2vId) ? {
+                    referenceImageModelId: selectedReferenceId,
+                    sceneImageT2IModelId: inferredSceneT2iId,
+                    sceneImageI2IModelId: selectedI2iId,
+                    videoModelId: selectedI2vId
+                } : undefined,
             }
             const result: VideoGenerationTask | null = taskId
                 ? await videoClientAPI.patchVideoTaskByTaskId(taskId, request)
@@ -301,7 +317,7 @@ function WorkspaceCreatePageClient() {
         } finally {
             setIsSaving(false);
         }
-    }, [script, sceneDataList, videoTitle, videoDescription, selectedStyleId, selectedVoiceId, taskId]);
+    }, [selectedI2iId, script, sceneDataList, videoTitle, videoDescription, selectedStyleId, selectedVoiceId, aspectRatio, resolution, estimatedCharacterCount, selectedReferenceId, selectedI2vId, taskId, aiModelList]);
 
     const onCloseSaveSuccessModal = useCallback(() => {
         setShowSaveSuccessModal(false);
@@ -323,6 +339,30 @@ function WorkspaceCreatePageClient() {
         setShowVoiceChangeWarningModal(false);
     }, []);
 
+    useEffect(() => {
+        const fetchAIModels = async () => {
+            try {
+                const models = await aiModelDataClientAPI.getAIModelData();
+                setAiModelList(models);
+
+                // Set default models using user preferences or specific hardcoded fallback IDs
+                const defaultReference = user?.preferred_ai_model_config?.referenceImageModelId || 'ca637a97-f060-4b81-a7d4-118a6f4aac0c';
+                const defaultI2i = user?.preferred_ai_model_config?.sceneImageI2IModelId || '79a506ac-eced-4643-b017-c8a2bb0f028b';
+                const defaultI2v = user?.preferred_ai_model_config?.videoModelId || '326a9a71-26a9-4142-8371-5467f316bcd6';
+
+                setSelectedReferenceId(prev => prev ?? defaultReference);
+                setSelectedI2iId(prev => prev ?? defaultI2i);
+                setSelectedI2vId(prev => prev ?? defaultI2v);
+            } catch (error) {
+                console.error("Failed to load AI models:", error);
+            } finally {
+                setIsAiModelLoading(false);
+            }
+        };
+
+        fetchAIModels().then();
+    }, [user]);
+
     // 페이지 로드 시: taskId 있으면 데이터 복원
     useEffect(() => {
         if (taskId) {
@@ -336,6 +376,8 @@ function WorkspaceCreatePageClient() {
                     const videoDescription = videoGenerationTask.video_description;
                     const voiceId = videoGenerationTask.selected_voice_id;
                     const styleId = videoGenerationTask.selected_style_id;
+                    const aiModelConfig = videoGenerationTask.ai_model_config;
+                    const dbEstimatedCharacterCount = videoGenerationTask.estimated_character_count;
 
                     setScript(script);
                     setSceneDataList(sceneDataList);
@@ -343,6 +385,16 @@ function WorkspaceCreatePageClient() {
                     setVideoDescription(videoDescription ?? '');
                     setSelectedVoiceId(voiceId ?? '');
                     setSelectedStyleId(styleId ?? '');
+                    setEstimatedCharacterCount(dbEstimatedCharacterCount ?? 0);
+                    
+                    if (videoGenerationTask.aspect_ratio) setAspectRatio(videoGenerationTask.aspect_ratio);
+                    if (videoGenerationTask.resolution) setResolution(videoGenerationTask.resolution);
+                    
+                    if (aiModelConfig) {
+                        setSelectedReferenceId(aiModelConfig.referenceImageModelId);
+                        setSelectedI2iId(aiModelConfig.sceneImageI2IModelId);
+                        setSelectedI2vId(aiModelConfig.videoModelId);
+                    }
 
                     setIsGenerationTaskLoading(false);
                 } else {
@@ -375,6 +427,30 @@ function WorkspaceCreatePageClient() {
         }
     }, [taskId, sceneDataList]);
 
+    // 해상도가 변경될 때 미지원 비디오 모델을 호환되는 모델로 자동 스위칭해 주는 효과
+    useEffect(() => {
+        if (aiModelList.length === 0 || !selectedI2vId) return;
+
+        // 현재 선택된 비디오 모델 조회
+        const currentI2vModel = aiModelList.find(m => m.id === selectedI2vId);
+        if (!currentI2vModel || !currentI2vModel.ai_model_price_list) return;
+
+        const targetUnit = resolution === '720p' ? 'video_720p' : resolution === '1080p' ? 'video_1080p' : 'video_2160p';
+        const supportsCurrentRes = currentI2vModel.ai_model_price_list.some(p => p.unit === targetUnit);
+
+        // 현재 비디오 모델이 해상도를 지원하지 않는다면 다른 호환되는 비디오 모델로 변경
+        if (!supportsCurrentRes) {
+            const compatibleI2vModel = aiModelList.find(m => {
+                if (m.category !== 'image-to-video' || !m.ai_model_price_list) return false;
+                return m.ai_model_price_list.some(p => p.unit === targetUnit);
+            });
+
+            if (compatibleI2vModel && compatibleI2vModel.id) {
+                setSelectedI2vId(compatibleI2vModel.id);
+            }
+        }
+    }, [resolution, aiModelList, selectedI2vId]);
+
     useEffect(() => {
         let timeout: NodeJS.Timeout;
 
@@ -390,106 +466,49 @@ function WorkspaceCreatePageClient() {
     }, [user, router]);
 
     return (
-        <div className="min-h-screen bg-black text-white">
+        <div className="min-h-screen bg-zinc-950 text-white relative overflow-hidden">
             {/* Loading Overlay */}
             {isLoading && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md">
-                    <div className="flex flex-col items-center space-y-6">
-                        {/* 로딩 스피너 */}
-                        <div className="relative w-24 h-24">
-                            {/* 외부 링 */}
-                            <div className="absolute inset-0 border-4 border-purple-200/20 rounded-full"></div>
-                            {/* 회전하는 그라디언트 링 */}
-                            <div className="absolute inset-0 border-4 border-transparent border-t-pink-500 border-r-purple-500 rounded-full animate-spin"></div>
-                            {/* 내부 역방향 회전 링 */}
-                            <div className="absolute inset-3 border-2 border-transparent border-b-purple-400 border-l-pink-400 rounded-full animate-spin" style={{animationDirection: 'reverse', animationDuration: '1.5s'}}></div>
-                            {/* 중앙 아이콘 */}
-                            <div className="absolute inset-0 flex items-center justify-center">
-                                <Sparkles className="w-8 h-8 text-purple-400 animate-pulse" />
-                            </div>
-                        </div>
-
-                        {/* 로딩 텍스트 */}
-                        <div className="text-center space-y-2">
-                            <h3 className="text-2xl font-semibold bg-gradient-to-r from-pink-400 to-purple-500 bg-clip-text text-transparent">
-                                Loading Create Studio
-                            </h3>
-                            <p className="text-gray-400 text-sm">
-                                Preparing your creative workspace...
-                            </p>
-                        </div>
-
-                        {/* 애니메이션 도트 */}
-                        <div className="flex space-x-2">
-                            <div className="w-2 h-2 bg-pink-500 rounded-full animate-bounce" style={{animationDelay: '0ms'}}></div>
-                            <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style={{animationDelay: '150ms'}}></div>
-                            <div className="w-2 h-2 bg-indigo-500 rounded-full animate-bounce" style={{animationDelay: '300ms'}}></div>
-                        </div>
+                <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center">
+                    <div className="flex flex-col items-center gap-4 p-8 rounded-3xl bg-zinc-900/80 border border-white/10 shadow-2xl">
+                        <Loader2 className="w-10 h-10 animate-spin text-zinc-400" />
+                        <p className="text-sm font-medium text-zinc-300">Loading Workspace...</p>
                     </div>
                 </div>
             )}
 
-            {/* Top Header - Same as Editor */}
-            <div className="flex items-center justify-between py-4 border-b border-purple-500/20 bg-gray-900/50 backdrop-blur-sm">
+            {/* Top Header - Matched to Autopilot & Dashboard */}
+            <div className="flex items-center py-3 border-b border-white/5 bg-zinc-950/80 backdrop-blur-md relative z-20">
                 <div className="flex items-center" style={{paddingLeft: '16px'}}>
                     <Image
                         src="/logo/logo-64.png"
                         alt="Short Real"
-                        width={64}
-                        height={64}
-                        className="w-16 h-16 cursor-pointer"
+                        width={48}
+                        height={48}
+                        className="w-12 h-12 cursor-pointer"
                         onClick={() => {
                             router.push('/');
                         }}
                     />
-                    <div className="flex flex-col ml-4">
-                        <span className="text-4xl font-bold bg-gradient-to-r from-pink-400 to-purple-500 bg-clip-text text-transparent cursor-default">
+                    <div className="flex flex-col ml-3">
+                        <span className="text-2xl font-bold bg-gradient-to-r from-zinc-100 to-zinc-400 bg-clip-text text-transparent cursor-default leading-none">
                             Create Video
                         </span>
-                        <p className="text-gray-400 text-base pl-0.5 cursor-default">
+                        <p className="text-zinc-500 text-[13px] mt-0.5 cursor-default">
                             Tell AI what you want to create.
                         </p>
                     </div>
                 </div>
-
-                <div className="flex items-center space-x-2 mr-6 px-4 py-2 bg-gray-900/50 border border-purple-500/30 rounded-lg backdrop-blur-sm hover:border-purple-400/50 transition-all">
-                    <Coins className="w-5 h-5 text-yellow-400" />
-                    <div className="flex flex-col">
-                        <span className="text-xs text-purple-300">Credits</span>
-                        <span className="text-lg font-bold text-yellow-400">{userCreditCount.toLocaleString()}</span>
-                    </div>
-                </div>
             </div>
 
-            {/* Vaporwave Background Effects */}
-            <div className="absolute inset-0 opacity-10 pointer-events-none">
-                <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-gradient-to-r from-pink-500 to-purple-600 rounded-full blur-3xl"></div>
-                <div className="absolute bottom-1/4 right-1/4 w-52 h-52 bg-gradient-to-r from-purple-500 to-indigo-600 rounded-full blur-3xl"></div>
-                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-48 h-48 bg-gradient-to-r from-indigo-500 to-cyan-500 rounded-full blur-3xl"></div>
+            {/* Background Effects - Toned down significantly */}
+            <div className="absolute inset-0 opacity-[0.03] pointer-events-none z-0">
+                <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-indigo-500 rounded-full blur-[120px]"></div>
             </div>
 
-            <div className="flex h-[calc(100vh-97px)]">
+            <div className="flex h-[calc(100vh-73px)] relative z-10">
                 {/* Left Virtual Tab Sidebar */}
-                <div className="w-20 bg-gray-900/50 backdrop-blur-sm border-r border-purple-500/20 flex flex-col items-center py-4 space-y-4">
-                    {virtualTabs.map((tab) => {
-                        const IconComponent = tab.icon;
-                        return (
-                            <Link
-                                key={tab.id}
-                                href={tab.href}
-                                className={`w-16 h-16 rounded-lg flex flex-col items-center justify-center transition-all border ${
-                                    tab.active 
-                                        ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white border-purple-400/50 shadow-lg' 
-                                        : 'text-gray-400 hover:text-pink-400 hover:bg-gray-800/50 border-transparent hover:border-purple-500/30'
-                                }`}
-                                title={tab.name}
-                            >
-                                <IconComponent size={24} />
-                                <span className="text-sm mt-1 leading-tight">{tab.name}</span>
-                            </Link>
-                        );
-                    })}
-                </div>
+                <WorkspaceSidebar activeItem={WorkspaceSidebarItem.CREATE} />
 
                 {/* Create Form Panel */}
                 <CreateFormPanel
@@ -500,11 +519,22 @@ function WorkspaceCreatePageClient() {
                     voiceUrl={voiceUrl}
                     selectedVoiceId={selectedVoiceId}
                     expectedVideoTotalDuration={expectedVideoTotalDuration}
-                    userCredit={userCreditCount}
                     isGeneratingStoryboardData={isGeneratingStoryboardData}
+                    aiModelList={aiModelList}
+                    selectedReferenceId={selectedReferenceId}
+                    selectedI2iId={selectedI2iId}
+                    selectedI2vId={selectedI2vId}
+                    aspectRatio={aspectRatio}
+                    resolution={resolution}
+                    isFalAiKeyMissing={isFalAiKeyMissing}
                     onChangeScript={onChangeScript}
                     onClickGenerateWithAI={onClickGenerateWithAI}
                     onClickGenerateStoryboard={onClickGenerateStoryboardInCreateFormPanel}
+                    onChangeReferenceId={setSelectedReferenceId}
+                    onChangeI2iId={setSelectedI2iId}
+                    onChangeI2vId={setSelectedI2vId}
+                    onChangeAspectRatio={setAspectRatio}
+                    onChangeResolution={setResolution}
                 />
 
                 {/* Voice Selection Panel */}
@@ -520,30 +550,23 @@ function WorkspaceCreatePageClient() {
                     videoTitle={videoTitle}
                     videoDescription={videoDescription}
                     expectedVideoTotalDuration={expectedVideoTotalDuration}
-                    expectedDurationUsage={expectedDurationUsage}
                     expectedVideoSceneCount={expectedVideoSceneCount}
-                    expectedSceneCountUsage={expectedSceneCountUsage}
-                    expectedCreditUsage={expectedCreditUsage}
                     script={script}
                     selectedVoiceId={selectedVoiceId}
                     selectedStyleId={selectedStyleId}
                     isSaving={isSaving}
                     isSubmitting={isSubmitting}
-                    isCreditInsufficient={isCreditInsufficient}
                     isVideoGenerationEnabled={isVideoGenerationEnabled}
+                    aiModelList={aiModelList}
+                    selectedReferenceId={selectedReferenceId}
+                    selectedI2iId={selectedI2iId}
+                    selectedI2vId={selectedI2vId}
+                    resolution={resolution}
+                    isFalAiKeyMissing={isFalAiKeyMissing}
+                    estimatedCharacterCount={estimatedCharacterCount}
                     onClickSaveDraft={onClickSaveDraft}
                     onClickGenerateVideo={onClickGenerateVideo}
                 />
-
-                {/* Insufficient Credit Modal */}
-                {showInsufficientCreditModal && (
-                    <DefaultModal
-                        title="Insufficient Credits"
-                        message={`You need ${expectedCreditUsage} credits to generate this video,\nbut you only have ${userCreditCount} credits.\n\nPlease top up your credits to continue.`}
-                        cancelText="Close"
-                        onClickCancel={() => setShowInsufficientCreditModal(false)}
-                    />
-                )}
 
                 {/* Save Success Modal */}
                 {showSaveSuccessModal && (

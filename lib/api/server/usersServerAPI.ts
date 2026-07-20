@@ -1,6 +1,6 @@
 import {User} from "@/lib/api/types/supabase/Users";
 import {PostgrestError, PostgrestSingleResponse} from "@supabase/supabase-js";
-import {createSupabaseServiceRoleClient} from "@/lib/supabaseServiceRole";
+import {createSupabaseServiceRoleClient} from "@/lib/supabase/supabaseServiceRole";
 
 export const usersServerAPI = {
     async getUserByUserId(userId: string): Promise<User | null> {

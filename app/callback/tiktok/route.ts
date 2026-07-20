@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { internalFireAndForgetFetch } from '@/utils/internalFetch';
-import { createSupabaseServiceRoleClient } from "@/lib/supabaseServiceRole";
+import { internalFireAndForgetFetch } from '@/lib/utils/internalFetch';
+import { createSupabaseServiceRoleClient } from "@/lib/supabase/supabaseServiceRole";
 import {videoGenerationTasksServerAPI} from "@/lib/api/server/videoGenerationTasksServerAPI";
 import {ExportPlatform, ExportStatus} from "@/lib/api/types/supabase/VideoGenerationTasks";
+import { cryptoUtils } from "@/lib/utils/cryptoUtils";
 
 
 export async function GET(request: NextRequest) {
@@ -10,6 +11,7 @@ export async function GET(request: NextRequest) {
             ? request.nextUrl.origin
             : request.nextUrl.origin.replaceAll("https", "http");
     
+    let isProfileMode = false;
     try {
         const searchParams = request.nextUrl.searchParams;
         const code = searchParams.get('code');
@@ -49,10 +51,14 @@ export async function GET(request: NextRequest) {
             return NextResponse.redirect(`${originUrl}/workspace/dashboard`);
         }
 
-        // 2. 쿠키에서 state, taskId, userId 추출 및 검증
-        const { taskId, userId } = JSON.parse(state);
+        // 2. State에서 데이터 추출
+        const stateData = JSON.parse(state);
+        const { taskId, userId, seriesId, mode, targetTokenId } = stateData;
+        const isAutopilot = mode === 'autopilot';
+        isProfileMode = mode === 'profile';
 
-        if (!taskId || !userId) {
+        // 필수 파라미터 체크: 오토파일럿이나 프로필 연동은 userId만 있으면 됨, 매뉴얼은 taskId 필수
+        if (!userId || (!isAutopilot && !isProfileMode && !taskId)) {
             console.error('Invalid token or missing taskId/userId');
             if (taskId) {
                 await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, {
@@ -60,7 +66,7 @@ export async function GET(request: NextRequest) {
                     export_platform: ExportPlatform.TIKTOK,
                 });
             }
-            return NextResponse.redirect(`${originUrl}/workspace/dashboard`);
+            return NextResponse.redirect(isAutopilot ? `${originUrl}/workspace/autopilot?seriesId=${seriesId}` : (isProfileMode ? `${originUrl}/profile` : `${originUrl}/workspace/dashboard`));
         }
 
         // 3. code → access_token 교환
@@ -81,43 +87,138 @@ export async function GET(request: NextRequest) {
         if (!tokens.access_token) {
             console.error('TikTok token exchange error:', tokens);
 
-            await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, {
-                export_status: ExportStatus.FAILED,
-                export_platform: ExportPlatform.TIKTOK,
-            });
+            if (taskId) {
+                await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, {
+                    export_status: ExportStatus.FAILED,
+                    export_platform: ExportPlatform.TIKTOK,
+                });
+            }
 
-            return NextResponse.redirect(`${originUrl}/workspace/dashboard`);
+            return NextResponse.redirect(isAutopilot ? `${originUrl}/workspace/autopilot?seriesId=${seriesId}` : `${originUrl}/workspace/dashboard`);
         }
 
         // 4. Supabase에 토큰 저장
         const supabase = createSupabaseServiceRoleClient();
-        const { error: dbError } = await supabase
-            .from('user_tiktok_tokens')
-            .upsert({
-                user_id: userId,
-                access_token: tokens.access_token,
-                refresh_token: tokens.refresh_token,
-                expires_at: new Date(Date.now() + tokens.expires_in * 1000).toISOString(),
-                refresh_expires_at: new Date(Date.now() + tokens.refresh_expires_in * 1000).toISOString(),
-                tiktok_user_id: tokens.open_id,
-                updated_at: new Date().toISOString(),
-                last_used_at: new Date().toISOString(),
+
+        // [수정] TikTok 사용자 정보 조회 (Display Name + avatar_url)
+        let displayName = null;
+        let avatarUrl = null;
+        try {
+            const userRes = await fetch('https://open.tiktokapis.com/v2/user/info/?fields=display_name,avatar_url', {
+                headers: { Authorization: `Bearer ${tokens.access_token}` }
             });
+            const userData = await userRes.json();
+
+            if (userData.error) {
+                console.error(`[TikTok Callback] API Inner Error:`, JSON.stringify(userData.error));
+            }
+
+            if (userData.data?.user) {
+                displayName = userData.data.user.display_name || null;
+                avatarUrl = userData.data.user.avatar_url || null;
+                console.log(`[TikTok Callback] Fetched profile: ${displayName} (Avatar: ${avatarUrl})`);
+            }
+        } catch (e) {
+            console.error('[TikTok Callback] Failed to fetch user info:', e);
+        }
+
+        // --- 3단계 수정 내용 시작 ---
+        // (1) 기존 레코드의 ID를 조회 (중복 연동 판단)
+        let findQuery = supabase
+            .from('user_tiktok_tokens')
+            .select('id')
+            .eq('user_id', userId);
+
+        let decryptedTokenId: string | null = null;
+        if (!isAutopilot && targetTokenId && targetTokenId !== 'null' && targetTokenId !== 'undefined') {
+            try {
+                decryptedTokenId = cryptoUtils.decrypt(targetTokenId, userId);
+            } catch (e) {
+                console.error('[TikTok Callback] Failed to decrypt targetTokenId:', e);
+            }
+        }
+
+        if (decryptedTokenId) {
+            findQuery = findQuery.eq('id', decryptedTokenId);
+        } else if (tokens.open_id) {
+            findQuery = findQuery.eq('tiktok_user_id', tokens.open_id);
+        } else {
+            findQuery = findQuery.eq('id', '00000000-0000-0000-0000-000000000000');
+        }
+
+        const { data: existingRecord } = await findQuery.maybeSingle();
+
+        const tokenPayload = {
+            user_id: userId,
+            access_token: tokens.access_token,
+            refresh_token: tokens.refresh_token,
+            expires_at: new Date(Date.now() + tokens.expires_in * 1000).toISOString(),
+            refresh_expires_at: new Date(Date.now() + tokens.refresh_expires_in * 1000).toISOString(),
+            tiktok_user_id: tokens.open_id,
+            display_name: displayName,
+            avatar_url: avatarUrl,
+            updated_at: new Date().toISOString(),
+            last_used_at: new Date().toISOString(),
+        };
+
+        let dbResult;
+        if (existingRecord?.id) {
+            // (2) 이미 존재하는 경우: id 기준으로 UPDATE
+            dbResult = await supabase
+                .from('user_tiktok_tokens')
+                .update(tokenPayload)
+                .eq('id', existingRecord.id)
+                .select('id')
+                .single();
+        } else {
+            // (3) 존재하지 않는 경우: INSERT
+            dbResult = await supabase
+                .from('user_tiktok_tokens')
+                .insert(tokenPayload)
+                .select('id')
+                .single();
+        }
+
+        const dbError = dbResult.error;
+        // --- 3단계 수정 내용 끝 ---
 
         if (dbError) {
             console.error('Database error:', dbError);
 
-            await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, {
-                export_status: ExportStatus.FAILED,
-                export_platform: ExportPlatform.TIKTOK,
-            });
+            if (taskId) {
+                await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, {
+                    export_status: ExportStatus.FAILED,
+                    export_platform: ExportPlatform.TIKTOK,
+                });
+            }
 
-            return NextResponse.redirect(`${originUrl}/workspace/dashboard`);
+            return NextResponse.redirect(isAutopilot ? `${originUrl}/workspace/autopilot?seriesId=${seriesId}` : (isProfileMode ? `${originUrl}/profile` : `${originUrl}/workspace/dashboard`));
         }
 
-        // 5. 업로드 트리거
+        const finalTokenId = existingRecord?.id || dbResult.data?.id;
+
+        // 5. 모드에 따른 후속 작업 및 리다이렉트
+        if (isProfileMode) {
+            return NextResponse.redirect(`${originUrl}/profile`);
+        }
+
+        if (isAutopilot) {
+            if (finalTokenId) {
+                await supabase
+                    .from('autopilot_data')
+                    .update({
+                        tiktok_token_id: finalTokenId,
+                        updated_at: new Date().toISOString()
+                    })
+                    .eq('id', seriesId);
+            }
+            return NextResponse.redirect(`${originUrl}/workspace/autopilot?seriesId=${seriesId}`);
+        }
+
+        // 수동 업로드 모드인 경우
+        const encryptedTokenId = finalTokenId ? cryptoUtils.encrypt(finalTokenId, userId) : '';
         internalFireAndForgetFetch(
-            `${process.env.BASE_URL}/api/video/export/tiktok/upload?taskId=${taskId}`,
+            `${process.env.BASE_URL}/api/video/export/tiktok/upload?taskId=${taskId}&tokenId=${encryptedTokenId}`,
             { method: 'POST' },
             { userId }
         );
@@ -128,10 +229,8 @@ export async function GET(request: NextRequest) {
         });
 
         return NextResponse.redirect(`${originUrl}/workspace/dashboard`);
-
     } catch (error) {
         console.error('TikTok callback error:', error);
-
-        return NextResponse.redirect(`${originUrl}/workspace/dashboard`);
+        return NextResponse.redirect(isProfileMode ? `${originUrl}/profile` : `${originUrl}/workspace/dashboard`);
     }
 }

@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { createSupabaseProxyClient } from '@/lib/supabase/supabaseProxy';
 
-export function proxy(request: NextRequest) {
+export async function proxy(request: NextRequest) {
     const path = request.nextUrl.pathname;
 
     // 1. /admin 하위 경로 보호
@@ -16,12 +17,23 @@ export function proxy(request: NextRequest) {
         }
     }
 
-    return NextResponse.next();
+    // 2. 세션 검사 및 라우팅 보호
+    const { supabase, supabaseResponse } = await createSupabaseProxyClient(request);
+
+    if (path.startsWith('/sign-in')) {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+            return NextResponse.redirect(new URL('/workspace/dashboard', request.url));
+        }
+    }
+
+    return supabaseResponse;
 }
 
 export const config = {
     // 미들웨어가 실행될 경로 지정
     matcher: [
         '/admin/:path*', // /admin 및 그 하위 모든 경로
+        '/sign-in',      // 로그인 페이지
     ],
 };

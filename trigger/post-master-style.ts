@@ -1,17 +1,13 @@
 import {logger, task } from "@trigger.dev/sdk/v3";
 import { videoGenerationTasksServerAPI } from "@/lib/api/server/videoGenerationTasksServerAPI";
-import { taskCheckAndCleanupIfCancelled } from "@/utils/taskCheckAndCleanupIfCancelled";
+import { taskCheckAndCleanupIfCancelled } from "@/lib/utils/taskCheckAndCleanupIfCancelled";
 import { VideoGenerationTaskStatus } from "@/lib/api/types/supabase/VideoGenerationTasks";
 import { llmServerAPI } from "@/lib/api/server/llmServerAPI";
 import { STYLE_DATA_LIST } from "@/lib/styles";
-import { usersServerAPI } from "@/lib/api/server/usersServerAPI";
-import { internalFireAndForgetFetch } from "@/utils/internalFetch";
-import {
-    BASE_CREDIT_PER_SCENE, BASE_CREDIT_PER_VIDEO_DURATION,
-    BASE_SCENE_COUNT_STANDARD,
-    BASE_VIDEO_DURATION_STANDARD
-} from "@/lib/ADDITIONAL_CREDIT_AMOUNT";
+import { internalFireAndForgetFetch } from "@/lib/utils/internalFetch";
 import {imageServerAPI} from "@/lib/api/server/imageServerAPI";
+import {usersServerAPI} from "@/lib/api/server/usersServerAPI";
+import {aiModelDataServerAPI} from "@/lib/api/server/aiModelDataServerAPI";
 
 export const postMasterStyle = task({
     id: "post-master-style",
@@ -35,6 +31,12 @@ export const postMasterStyle = task({
             if (!videoGenerationTask) {
                 throw new Error('Video Generation Task not found.');
             }
+
+            const user = await usersServerAPI.getUserByUserId(videoGenerationTask.user_id);
+            if (!user || !user.fal_ai_api_key) {
+                throw new Error('User or fal_ai_api_key not found.');
+            }
+            const falAiApiKey = user.fal_ai_api_key;
 
             // 취소 체크
             const checkResultInitialResult = await taskCheckAndCleanupIfCancelled(videoGenerationTask);
@@ -60,7 +62,9 @@ export const postMasterStyle = task({
                 ? lastSceneSubtitleSegmentList[lastSceneSubtitleSegmentList.length - 1].endSec
                 : undefined;
 
-            if (!selectedStyle || !videoTitle || !videoDescription || !videoDuration) {
+            const aiModelConfig = videoGenerationTask.ai_model_config;
+
+            if (!selectedStyle || !videoTitle || !videoDescription || !videoDuration || !aiModelConfig) {
                 throw new Error('Task data is invalid (missing required fields).');
             }
 
@@ -113,6 +117,12 @@ export const postMasterStyle = task({
             })
 
             if (isSubjectExisting) {
+                const aiModelConfig = videoGenerationTask.ai_model_config;
+
+                if (!aiModelConfig) {
+                    throw new Error(`Task's AI Model config is invalid.`);
+                }
+
                 // --- DeepSeek 호출 3: EntityCharacterSheetPromptList ---
                 const postEntityCharacterSheetPromptListResult = await llmServerAPI.postEntityReferenceImagePromptList(
                     postEntityManifestListResult.entityManifestList.filter((entity) => {
@@ -127,13 +137,27 @@ export const postMasterStyle = task({
 
                 entityReferenceImagePromptList.push(...postEntityCharacterSheetPromptListResult.entityReferenceImagePromptList);
 
+                const referenceImageAIModelDataId = aiModelConfig.referenceImageModelId;
+                const referenceImageAIModelData = await aiModelDataServerAPI.getAIModelDataById(referenceImageAIModelDataId);
+
+                if (!referenceImageAIModelData) {
+                    throw new Error('Failed to fetch ai model data from database.');
+                }
+
                 const postReferenceImagePromiseList = entityReferenceImagePromptList.map(async (referenceImageData) => {
                     const {
                         id: entityId,
                         prompt: referenceImagePrompt,
                     } = referenceImageData;
 
-                    return await imageServerAPI.postReferenceImage(referenceImagePrompt, taskId, entityId);
+                    return await imageServerAPI.postReferenceImage(
+                        referenceImagePrompt,
+                        taskId,
+                        entityId,
+                        falAiApiKey,
+                        referenceImageAIModelData.endpoint_id,
+                        user.id
+                    );
                 });
 
                 const referenceImageResults = await Promise.all(postReferenceImagePromiseList);
@@ -204,26 +228,6 @@ export const postMasterStyle = task({
                     };
                 })
             });
-
-            // 크레딧 차감 로직
-            const sceneCount = sceneDataList.length;
-            const totalDuration = sceneDataList.reduce((acc, sceneData) => {
-                return acc + sceneData.sceneDuration;
-            }, 0);
-            const additionalTotalDurationUsage = totalDuration > BASE_VIDEO_DURATION_STANDARD
-                ? Math.ceil(totalDuration - BASE_VIDEO_DURATION_STANDARD) * BASE_CREDIT_PER_VIDEO_DURATION
-                : 0;
-            const additionalSceneCountUsage = sceneCount > BASE_SCENE_COUNT_STANDARD
-                ? (sceneCount - BASE_SCENE_COUNT_STANDARD) * BASE_CREDIT_PER_SCENE
-                : 0;
-            const creditUsage = 100 + additionalTotalDurationUsage + additionalSceneCountUsage;
-
-            const patchUserCreditCountResult = await usersServerAPI.patchUserCreditCountByUserId(videoGenerationTask.user_id, -creditUsage);
-
-            if (!patchUserCreditCountResult) {
-                // 크레딧 차감 실패 시에도 일단 진행? 혹은 에러? (기존 로직 따름)
-                throw new Error('Failed to patch user credit count.');
-            }
 
             const checkFinalResult = await taskCheckAndCleanupIfCancelled(patchVideoGenerationTaskStatusFinalResult);
             if (checkFinalResult) return { status: 'cancelled' };

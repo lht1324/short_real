@@ -2,7 +2,7 @@
 import { MetadataRoute } from 'next'
 
 const BASE_URL = 'https://shortreal.ai'
-const LAST_MODIFIED = new Date('2026-02-23T18:09:00+09:00')
+const LAST_MODIFIED = new Date('2026-07-10T17:20:00+09:00')
 
 export default function sitemap(): MetadataRoute.Sitemap {
     return [

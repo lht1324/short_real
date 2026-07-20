@@ -10,26 +10,28 @@ import {
     VideoGenerationTask,
     VideoGenerationTaskStatus
 } from "@/lib/api/types/supabase/VideoGenerationTasks";
-import {getNextBaseResponse} from "@/utils/getNextBaseResponse";
-import {usersServerAPI} from "@/lib/api/server/usersServerAPI";
-import {createSupabaseServer} from "@/lib/supabaseServer";
-import {SCENE_SEGMENTATION_STANDARD} from "@/lib/ADDITIONAL_CREDIT_AMOUNT";
+import {getNextBaseResponse} from "@/lib/utils/getNextBaseResponse";
+import {getIsValidRequestS2S} from "@/lib/utils/getIsValidRequest";
 
 export async function POST(request: NextRequest): Promise<NextResponse<PostOpenAISceneResponse>> {
     try {
-        const supabase = await createSupabaseServer();
-        const {data: {user: authUser}, error: authError} = await supabase.auth.getUser();
-
-        if (authError || !authUser) {
-            console.error("/api/open-ai/scene authError: ", authError);
+        if (!getIsValidRequestS2S(request)) {
             return getNextBaseResponse({
                 success: false,
                 status: 401,
-                error: 'Unauthorized request.',
+                error: 'Unauthorized internal request.',
             });
         }
 
-        const userId = authUser.id;
+        const userId = request.nextUrl.searchParams.get('userId');
+
+        if (!userId) {
+            return getNextBaseResponse({
+                success: false,
+                status: 401,
+                error: 'Missing userId in request.',
+            });
+        }
 
         const {
             taskId,
@@ -87,36 +89,6 @@ export async function POST(request: NextRequest): Promise<NextResponse<PostOpenA
                 status: 500,
                 error: 'Failed to generate scene segmentation'
             });
-        }
-
-        if (videoGenerationTask.scene_breakdown_list) {
-            const user = await usersServerAPI.getUserByUserId(userId);
-
-            if (!user) {
-                return getNextBaseResponse({
-                    success: false,
-                    status: 404,
-                    error: 'User not found.'
-                });
-            }
-
-            if (!user.credit_count || user.credit_count < SCENE_SEGMENTATION_STANDARD) {
-                return getNextBaseResponse({
-                    success: false,
-                    status: 402,
-                    error: "Insufficient credits."
-                });
-            }
-
-            const patchUserCreditCountResult = await usersServerAPI.patchUserCreditCountByUserId(userId, -SCENE_SEGMENTATION_STANDARD);
-
-            if (!patchUserCreditCountResult) {
-                return getNextBaseResponse({
-                    success: false,
-                    status: 500,
-                    error: 'Failed to patch user\'s credit count.'
-                });
-            }
         }
 
         // 3. 각 Scene의 자막 데이터 분리
@@ -236,6 +208,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<PostOpenA
                 sceneDataList: sceneDataListWithSceneDuration,
                 videoTitle: postSceneSegmentationResult.videoTitle,
                 videoDescription: postSceneSegmentationResult.videoDescription,
+                estimatedCharacterCount: postSceneSegmentationResult.estimatedCharacterCount,
             }
         });
 

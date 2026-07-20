@@ -1,9 +1,13 @@
 import OpenAI from "openai";
 
 export enum OpenRouterModel {
-    GPT_4O_MINI = "openai/gpt-4o-mini",
     DEEPSEEK_V_3_2 = "deepseek/deepseek-v3.2",
-    GEMINI_3_0_FLASH_PREVIEW = "google/gemini-3-flash-preview" // 3.0 Flash 출시 안 됨
+    DEEPSEEK_V_4_FLASH = "deepseek/deepseek-v4-flash",
+    GEMINI_3_0_FLASH_PREVIEW = "google/gemini-3-flash-preview", // 3.0 Flash 출시 안 됨
+    GEMINI_3_1_FLASH_LITE_PREVIEW = "google/gemini-3.1-flash-lite-preview",
+    GROK_4_1_FAST = "x-ai/grok-4.1-fast", // agentic/tool calling 강함, reasoning 지원
+    GROK_4_3 = "x-ai/grok-4.3", // agentic/tool calling 강함, reasoning 지원
+    GEMINI_1_5_FLASH_EXP = "google/gemini-1.5-flash-exp", // 빠른 멀티모달, 오디오 강함 (후보)
 }
 
 export interface CompletionBaseInput {
@@ -16,6 +20,7 @@ export interface CompletionBaseInput {
     // Optional
     imageBase64List?: string[];
     imageDetail?: "auto" | "low" | "high";
+    audioBase64List?: string[];
     reasoning?: boolean;
     temperature?: number;
     presencePenalty?: number;
@@ -42,6 +47,7 @@ export class OpenRouterClient {
             maxCompletionTokens,
             imageBase64List,
             imageDetail,
+            audioBase64List,
             reasoning,
             temperature,
             presencePenalty,
@@ -73,6 +79,23 @@ export class OpenRouterClient {
                     });
                 } else {
                     console.warn(`Skipping failed image: ${imageBase64List[index]}`);
+                }
+            });
+        }
+
+        if (audioBase64List && audioBase64List.length > 0) {
+            audioBase64List.forEach((base64Str, index) => {
+                if (base64Str) {
+                    userContent.push({ type: "text", text: `Track ${index}:` });
+                    userContent.push({
+                        type: "input_audio",
+                        input_audio: {
+                            data: base64Str, // Audio data must be raw base64 without prefix
+                            format: "mp3"
+                        }
+                    });
+                } else {
+                    console.warn(`Skipping failed audio at index: ${index}`);
                 }
             });
         }

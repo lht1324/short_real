@@ -20,7 +20,8 @@ You agree to use our services only for lawful purposes. You represent and warran
 ## 5. Payment, Fees & No Refunds (EU Waiver)
 **Immediate Performance:** By clicking "Subscribe" or "Generate", you expressly request that the Service begins immediately.
 **Waiver of Withdrawal Right:** IF YOU ARE A CONSUMER IN THE EU/UK, YOU ACKNOWLEDGE THAT YOU LOSE YOUR RIGHT OF WITHDRAWAL (14-DAY COOLING-OFF PERIOD) ONCE THE SERVICE HAS STARTED (I.E., THE GENERATION PROCESS BEGINS).
-**No Refunds:** Due to the resource-intensive nature of AI video generation (GPU costs incurred immediately via providers like Replicate/Fal.ai), **we strictly do not offer refunds** once credits have been used or a subscription period has started.
+**No Refunds:** Due to the resource-intensive nature of AI video generation (GPU costs incurred immediately via API key usage initiated via your own credentials for Fal.ai), **we strictly do not offer refunds** once credits have been used or a subscription period has started.
+**BYOK (Bring Your Own Key) Responsibility:** If you configure and use your own Fal.ai API key (BYOK), all charges, usage limits, and billing disputes related to that API key are solely your responsibility. ShortReal AI disclaims any liability for financial damages, unexpected costs, or service disruptions arising from the use of your own API key.
 
 ## 6. Disclaimer of Warranties
 The service is provided "AS IS" without warranties of any kind. We do not guarantee that AI-generated content will be accurate, unique, or suitable for your specific needs.
@@ -53,6 +54,7 @@ ShortReal AI ("we", "us", or "our") respects your privacy. This Privacy Policy e
 ## 2. Information We Collect
 - **Account Data:** Email address, name, and profile picture (via OAuth providers).
 - **Usage Data:** User-provided prompts (text entered directly by you into script or generation fields, not derived from your OAuth account data), generated video metadata, and interaction logs. Technical data such as IP address and browser type is automatically collected by our infrastructure providers for security and analytics purposes.
+- **User-Provided API Keys (BYOK):** If you opt to use your own Fal.ai API key, we securely store your encrypted API key for the sole purpose of proxying and authenticating your generation requests to Fal.ai.
 - **Payment Data:** We do not store credit card details. All financial transactions are processed by our secure payment provider, Polar (or Stripe).
 
 ## 3. How We Use Your Information
@@ -63,12 +65,12 @@ ShortReal AI ("we", "us", or "our") respects your privacy. This Privacy Policy e
 
 ## 4. Data Sharing & Third-Party Sub-processors
 We utilize industry-leading AI infrastructure providers to generate content. Your input data is processed by the following entities:
-- **AI Infrastructure**
+- **AI Infrastructure (Platform-provided)**
   - **Text** (for script generation & LLM routing)
     - [OpenRouter LLC](https://openrouter.ai/) (USA) — Only user-provided script content entered directly into generation fields is transmitted. Account data obtained via OAuth (such as email address, name, or profile picture) is never sent to OpenRouter or any other AI infrastructure provider.
+- **AI Infrastructure (User-directed / BYOK)**
   - **Video/Image** (for media generation)
-    - [Replicate Inc.](https://replicate.com/) (USA)
-    - [fal.ai](https://fal.ai) (USA)
+    - [fal.ai](https://fal.ai) (USA) — Processed using user-provided API keys (BYOK). When utilizing Fal.ai models, you are executing generations using your own API credentials, and ShortReal AI acts as a proxy for these requests.
 - **Infrastructure** (for hosting and database)
   - [Vercel](https://vercel.com/home)
   - [Cloudflare](https://www.cloudflare.com/)

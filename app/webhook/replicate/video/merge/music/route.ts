@@ -1,9 +1,9 @@
 import { NextRequest } from 'next/server';
-import { createSupabaseServiceRoleClient } from '@/lib/supabaseServiceRole';
+import { createSupabaseServiceRoleClient } from '@/lib/supabase/supabaseServiceRole';
 import { videoGenerationTasksServerAPI } from '@/lib/api/server/videoGenerationTasksServerAPI';
 import { VideoGenerationTaskStatus } from '@/lib/api/types/supabase/VideoGenerationTasks';
-import {taskCheckAndCleanupIfCancelled} from "@/utils/taskCheckAndCleanupIfCancelled";
-import {getNextBaseResponse} from "@/utils/getNextBaseResponse";
+import {taskCheckAndCleanupIfCancelled} from "@/lib/utils/taskCheckAndCleanupIfCancelled";
+import {getNextBaseResponse} from "@/lib/utils/getNextBaseResponse";
 
 export async function POST(request: NextRequest) {
     const supabase = createSupabaseServiceRoleClient();
@@ -97,10 +97,11 @@ export async function POST(request: NextRequest) {
 
     } catch (error) {
         console.error('[Webhook Video-Music Merge] Error:', error);
+        await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
         return getNextBaseResponse({
             success: false,
             status: 500,
-            error: 'Webhook processing failed'
+            error: error instanceof Error ? error.message : 'Webhook processing failed'
         });
     }
 }

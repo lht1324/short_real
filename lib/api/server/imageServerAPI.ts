@@ -1,8 +1,11 @@
-import {createSupabaseServiceRoleClient} from "@/lib/supabaseServiceRole";
+import {createSupabaseServiceRoleClient} from "@/lib/supabase/supabaseServiceRole";
 import {fal} from "@fal-ai/client";
 import {FluxPrompt} from "@/lib/api/types/open-ai/FluxPrompt";
 import {ImageFile} from "@fal-ai/client/endpoints";
 import {Entity} from "@/lib/api/types/open-ai/Entity";
+import {AIModelData} from "@/lib/api/types/supabase/AIModelData";
+import {cryptoUtils} from "@/lib/utils/cryptoUtils";
+import {FalAIEndpointID, falAIInputMapper} from "@/lib/falAIInputMapper";
 
 export const imageServerAPI = {
     async postImage(
@@ -11,13 +14,21 @@ export const imageServerAPI = {
         subjectEntityManifestList: Entity[], // Sorted
         taskId: string,
         sceneNumber: number,
+        falAiApiKey: string,
+        userId: string,
+        t2iAIModelEndpointId: string,
+        i2iAIModelEndpointId: string,
+        resolution: '720p' | '1080p' | '2160p',
+        aspectRatio: '16:9' | '9:16',
     ): Promise<{ success: boolean; error?: { message: string; code: string } }> {
         const supabase = createSupabaseServiceRoleClient();
 
         try {
+            const decryptedApiKey = cryptoUtils.decrypt(falAiApiKey, userId);
+            
             const falAIClient = fal;
             falAIClient.config({
-                credentials: process.env.FAL_AI_API_KEY!
+                credentials: decryptedApiKey
             });
 
             let resultImageUrlList: Array<ImageFile>;
@@ -33,23 +44,30 @@ export const imageServerAPI = {
             const isSubjectExists = imageSignedUrlList.length !== 0;
 
             try {
-                const modelName = isSubjectExists ? "fal-ai/nano-banana-2/edit" : "fal-ai/nano-banana-2"
-                const output = await fal.subscribe(modelName, {
-                    input: {
-                        prompt: imageGenPromptSentence,
-                        num_images: 1,
-                        aspect_ratio: "9:16",
-                        output_format: "jpeg",
-                        safety_tolerance: "6",
-                        resolution: "1K",
-                        limit_generations: true,
-                        ...(isSubjectExists && { image_urls: imageSignedUrlList }),
-                    }
+                const modelEndpointId = isSubjectExists
+                    ? i2iAIModelEndpointId
+                    : t2iAIModelEndpointId;
+                const imageModelInput = falAIInputMapper.buildImageInput(modelEndpointId as FalAIEndpointID, {
+                    prompt: imageGenPromptSentence,
+                    resolution: resolution,
+                    aspectRatio: aspectRatio,
+                    ...(isSubjectExists && { imageUrls: imageSignedUrlList }),
+                })
+                const output = await fal.subscribe(modelEndpointId, {
+                    input: imageModelInput,
                 });
 
                 resultImageUrlList = output.data.images;
             } catch (error) {
                 console.error(`Scene #${sceneNumber} Nano Banana Image generation Error: `, error);
+
+                const isVertical = aspectRatio === '9:16';
+                const width = resolution === '720p'
+                    ? isVertical ? 720 : 1280
+                    : isVertical ? 1080 : 1920;
+                const height = resolution === '720p'
+                    ? isVertical ? 1280 : 720
+                    : isVertical ? 1920 : 1080;
 
                 const modelName = isSubjectExists ? "fal-ai/flux-2/edit" : "fal-ai/flux-2"
                 const output = await falAIClient.subscribe(modelName, {
@@ -69,7 +87,10 @@ export const imageServerAPI = {
                             .replace("fNumber", "f-number"),
                         guidance_scale: 20,
                         num_inference_steps: 50,
-                        image_size: "portrait_16_9",
+                        image_size: {
+                            width: width,
+                            height: height,
+                        },
                         num_images: 1,
                         acceleration: "none",
                         enable_prompt_expansion: false,
@@ -133,6 +154,9 @@ export const imageServerAPI = {
         referenceImagePrompt: string,
         taskId: string,
         entityId: string,
+        falAiApiKey: string,
+        referenceImageAIModelEndpointId: string,
+        userId: string,
     ): Promise<{
         success: boolean;
         error?: {
@@ -143,33 +167,21 @@ export const imageServerAPI = {
         const supabase = createSupabaseServiceRoleClient();
 
         try {
+            const decryptedApiKey = cryptoUtils.decrypt(falAiApiKey, userId);
+            
             fal.config({
-                credentials: process.env.FAL_AI_API_KEY!
+                credentials: decryptedApiKey
             });
 
             let imageUrl: string;
 
-            const output = await fal.subscribe("fal-ai/nano-banana", {
-                input: {
-                    prompt: referenceImagePrompt,
-                    num_images: 1,
-                    aspect_ratio: "9:16",
-                    output_format: "jpeg",
-                    // @ts-expect-error - safety_tolerance field is not updated yet in fal SDK.
-                    safety_tolerance: "6",
-                    sync_mode: false,
-                    limit_generations: false,
-                    // elements: [
-                    //     {
-                    //         reference_image_urls: []
-                    //     }
-                    // ],
-                    // resolution: "1K",
-                    // result_type: "single",
-                    // num_images: 1,
-                    // aspect_ratio: "9:16",
-                    // output_format: "jpeg"
-                }
+            const imageModelInput = falAIInputMapper.buildImageInput(referenceImageAIModelEndpointId as FalAIEndpointID, {
+                prompt: referenceImagePrompt,
+                resolution: '720p',
+                aspectRatio: '9:16',
+            })
+            const output = await fal.subscribe(referenceImageAIModelEndpointId, {
+                input: imageModelInput,
             });
 
             const resultImageUrlList = output.data.images;

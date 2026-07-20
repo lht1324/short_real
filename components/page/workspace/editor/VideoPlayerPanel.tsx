@@ -62,6 +62,7 @@ const VideoPlayerPanel = forwardRef<VideoPlayerHandle, VideoPlayerPanelProps>(({
     const captionRef = useRef<HTMLParagraphElement>(null);
     const timelineRef = useRef<HTMLDivElement>(null);
     const audioRef = useRef<HTMLAudioElement>(null);
+    const videoNaturalAspectRatioRef = useRef<number | null>(null);
 
     const [isPlayingVideo, setIsPlayingVideo] = useState<boolean>(false);
     const [isVideoEnded, setIsVideoEnded] = useState(false);
@@ -264,27 +265,53 @@ const VideoPlayerPanel = forwardRef<VideoPlayerHandle, VideoPlayerPanelProps>(({
         setIsPlayingVideo(prev => !prev);
     }, [isPlayingVideo]);
 
+    // 컨테이너 실제 크기 기반으로 비디오 표시 크기 계산
+    // ref를 사용해 stale closure 없이 ResizeObserver에서도 최신 비율 참조 가능
+    const recalculateVideoSize = useCallback((containerWidth: number, containerHeight: number) => {
+        const ratio = videoNaturalAspectRatioRef.current;
+        if (!ratio) return;
+
+        const isHorizontal = ratio > 1;
+
+        if (isHorizontal) {
+            // 16:9 - 너비 기준으로 패널을 최대한 활용
+            // overhead: p-8 양쪽(64px) + 슬라이더 w-14(56px) + 스페이서 w-8(32px) + 버퍼(8px)
+            const overhead = 160;
+            const newWidth = Math.max(Math.min(containerWidth - overhead, 850), 320);
+            const newHeight = Math.round(newWidth / ratio);
+            setVideoContainerWidth(newWidth);
+            setVideoContainerHeight(newHeight);
+        } else {
+            // 9:16 - 높이 기준으로 패널을 최대한 활용
+            // overhead: p-8 위아래(64px) + 버퍼(16px)
+            const overhead = 80;
+            const newHeight = Math.max(Math.min(containerHeight - overhead, 720), 300);
+            const newWidth = Math.round(newHeight * ratio);
+            setVideoContainerWidth(newWidth);
+            setVideoContainerHeight(newHeight);
+        }
+    }, []);
+
     const onLoadedMetadata = useCallback(() => {
         if (videoRef.current) {
             setVideoDuration(videoRef.current.duration);
 
-            // 비디오의 실제 크기를 가져와서 324px 너비 기준으로 높이 계산
             const videoNaturalWidth = videoRef.current.videoWidth;
             const videoNaturalHeight = videoRef.current.videoHeight;
 
             if (videoNaturalWidth > 0 && videoNaturalHeight > 0) {
-                const standardWidth = videoNaturalWidth > videoNaturalHeight
-                    ? 576 // horizontal
-                    : 324 // vertical or square
+                videoNaturalAspectRatioRef.current = videoNaturalWidth / videoNaturalHeight;
 
-                // const containerWidth = 324;
-                const calculatedHeight = Math.round((videoNaturalHeight / videoNaturalWidth) * standardWidth);
-                setVideoContainerWidth(standardWidth);
-                setVideoContainerHeight(calculatedHeight);
+                if (containerRef.current) {
+                    recalculateVideoSize(
+                        containerRef.current.offsetWidth,
+                        containerRef.current.offsetHeight
+                    );
+                }
             }
         }
         onFinishLoading();
-    }, [onFinishLoading]);
+    }, [onFinishLoading, recalculateVideoSize]);
 
     const updateTimelinePosition = useCallback((clientX: number, element: HTMLDivElement) => {
         if (!videoRef.current) return;
@@ -462,6 +489,22 @@ const VideoPlayerPanel = forwardRef<VideoPlayerHandle, VideoPlayerPanelProps>(({
         }
     }, [onChangeVideoPanelContainerHeight]);
 
+    // 윈도우 리사이즈 시 비디오 크기 재계산
+    useEffect(() => {
+        const container = containerRef.current;
+        if (!container) return;
+
+        const observer = new ResizeObserver((entries) => {
+            const entry = entries[0];
+            if (entry) {
+                recalculateVideoSize(entry.contentRect.width, entry.contentRect.height);
+            }
+        });
+
+        observer.observe(container);
+        return () => observer.disconnect();
+    }, [recalculateVideoSize]);
+
     // 메인 useEffect - startSec, duration만 관리
     useEffect(() => {
         const audio = audioRef.current;
@@ -535,18 +578,11 @@ const VideoPlayerPanel = forwardRef<VideoPlayerHandle, VideoPlayerPanelProps>(({
 
     return (
         <div
-            className="h-full bg-black flex flex-col relative"
+            className="h-full bg-zinc-950 flex flex-col relative"
             style={{ pointerEvents: isDraggingTimeline ? 'none' : 'auto' }}
             ref={containerRef}
         >
-            {/* Vaporwave Background Effects */}
-            <div className="absolute inset-0 opacity-10" style={{ pointerEvents: 'none' }}>
-                <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-gradient-to-r from-pink-500 to-purple-600 rounded-full blur-3xl"></div>
-                <div className="absolute bottom-1/4 right-1/4 w-52 h-52 bg-gradient-to-r from-purple-500 to-indigo-600 rounded-full blur-3xl"></div>
-                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-48 h-48 bg-gradient-to-r from-indigo-500 to-cyan-500 rounded-full blur-3xl"></div>
-            </div>
-
-            <div className="flex flex-row p-8 justify-center z-10">
+            <div className="flex flex-row p-8 justify-center items-center flex-1 z-10">
                 {/* Caption Position Slider */}
                 {/* w-6 + w-2 + w-6 */}
                 {isCaptionEnabled && <div
@@ -556,7 +592,7 @@ const VideoPlayerPanel = forwardRef<VideoPlayerHandle, VideoPlayerPanelProps>(({
                     {/* Caption Position Toggle Button */}
                     <button
                         onClick={onToggleShowCaptionLine}
-                        className="absolute flex w-6 h-6 rounded-full bg-gray-800/50 hover:bg-gray-700/70 border border-gray-600/50 items-center justify-center transition-none"
+                        className="absolute flex w-6 h-6 rounded-full bg-zinc-800/80 hover:bg-zinc-700 border border-white/10 items-center justify-center transition-none"
                         title={showCaptionLine ? "Hide caption guideline" : "Show caption guideline"}
                         style={{
                             top: `${captionAreaTop - (CAPTION_POSITION_SLIDER_PADDING_PX + CAPTION_POSITION_SLIDER_TRACK_SIZE_PX / 2)}px`,
@@ -564,9 +600,9 @@ const VideoPlayerPanel = forwardRef<VideoPlayerHandle, VideoPlayerPanelProps>(({
                         }}
                     >
                         {showCaptionLine ? (
-                            <Eye size={14} className="text-gray-300"/>
+                            <Eye size={14} className="text-zinc-300"/>
                         ) : (
-                            <EyeOff size={14} className="text-gray-500"/>
+                            <EyeOff size={14} className="text-zinc-600"/>
                         )}
                     </button>
                     <input
@@ -578,11 +614,11 @@ const VideoPlayerPanel = forwardRef<VideoPlayerHandle, VideoPlayerPanelProps>(({
                         className="absolute w-6 h-full cursor-grab active:cursor-grabbing
                                 [&::-webkit-slider-runnable-track]:px-0.5
                                 [&::-webkit-slider-runnable-track]:py-0.5
-                                [&::-webkit-slider-runnable-track]:bg-white
+                                [&::-webkit-slider-runnable-track]:bg-white/20
                                 [&::-webkit-slider-runnable-track]:rounded-md
                                 [&::-moz-range-track]:px-0.5
                                 [&::-moz-range-track]:py-0.5
-                                [&::-moz-range-track]:bg-white
+                                [&::-moz-range-track]:bg-white/20
                                 [&::-moz-range-track]:rounded-md
                             "
                         style={{
@@ -590,7 +626,7 @@ const VideoPlayerPanel = forwardRef<VideoPlayerHandle, VideoPlayerPanelProps>(({
                             left: CAPTION_AREA_LINE_TOGGLE_BUTTON_SIZE + 8,
                             writingMode: 'vertical-lr',
                             direction: 'rtl',
-                            accentColor: "#A855F7",
+                            accentColor: "#a1a1aa",
                         }}
                     />
                 </div>}
@@ -603,7 +639,7 @@ const VideoPlayerPanel = forwardRef<VideoPlayerHandle, VideoPlayerPanelProps>(({
                 >
                     {/* Video Area */}
                     <div
-                        className="relative bg-gradient-to-br from-gray-900 to-black rounded-2xl border border-purple-500/30 overflow-hidden shadow-2xl"
+                        className="relative bg-zinc-900 rounded-2xl border border-white/10 overflow-hidden shadow-2xl"
                         style={{
                             width: `${videoContainerWidth}px`,
                             height: `${videoContainerHeight}px`
@@ -631,37 +667,37 @@ const VideoPlayerPanel = forwardRef<VideoPlayerHandle, VideoPlayerPanelProps>(({
                                     />
                                 )}
 
-                                <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent pointer-events-none"></div>
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent pointer-events-none"></div>
                                 <div className={`absolute inset-0 flex items-center justify-center z-30 pointer-events-none transition-opacity duration-200 ${
                                     (videoRef.current?.currentTime === 0 || isHoveringVideo || isVideoEnded) ? 'opacity-100' : 'opacity-0'
                                 }`}>
                                     <button
                                         onClick={isVideoEnded ? onClickReplay : onClickPlayAndPause}
-                                        className="w-16 h-16 bg-black/40 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-black/60 transition-all border border-purple-400/50 pointer-events-auto"
+                                        className="w-16 h-16 bg-black/40 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-black/60 transition-all border border-white/10 pointer-events-auto shadow-xl"
                                     >
                                         {isVideoEnded ? (
-                                            <RotateCcw size={24} className="text-white" />
+                                            <RotateCcw size={24} className="text-zinc-100" />
                                         ) : isPlayingVideo ? (
-                                            <Pause size={24} className="text-white" />
+                                            <Pause size={24} className="text-zinc-100" />
                                         ) : (
-                                            <Play size={24} className="text-white ml-1" />
+                                            <Play size={24} className="text-zinc-100 ml-1" />
                                         )}
                                     </button>
                                 </div>
                                 <div className="absolute bottom-4 left-4 right-4 z-30">
-                                    <div className="flex items-center justify-between text-white text-sm mb-2">
+                                    <div className="flex items-center justify-between text-zinc-300 text-xs font-medium tracking-wide mb-2 px-1">
                                         <span>{timelineCurrentSec}</span>
                                         <span>{timelineEndSec}</span>
                                     </div>
                                     <div
                                         ref={timelineRef}
-                                        className="w-full h-2 bg-white/20 rounded-full cursor-pointer relative"
+                                        className="w-full h-1.5 bg-white/20 rounded-full cursor-pointer relative hover:h-2 transition-all duration-200 group/timeline"
                                         onClick={onClickTimeline}
                                         onMouseDown={onMouseDownTimeline}
                                         style={{ pointerEvents: 'auto' }}
                                     >
                                         <div
-                                            className="h-full bg-gradient-to-r from-pink-400 to-purple-500 rounded-full relative"
+                                            className="h-full bg-indigo-500 rounded-full relative"
                                             style={{
                                                 width: `${progressPercentage}%`,
                                                 transition: 'none',
@@ -669,10 +705,9 @@ const VideoPlayerPanel = forwardRef<VideoPlayerHandle, VideoPlayerPanelProps>(({
                                         >
                                             {/* 인디케이터 */}
                                             <div
-                                                className="absolute top-1/2 left-full w-4 h-4 bg-white rounded-full shadow-lg"
+                                                className="absolute top-1/2 left-full w-0 h-0 group-hover/timeline:w-3 group-hover/timeline:h-3 bg-white rounded-full shadow-lg pointer-events-none transition-all duration-200"
                                                 style={{
                                                     transform: 'translate(-50%, -50%)',
-                                                    boxShadow: '0 0 8px rgba(168, 85, 247, 0.6)'
                                                 }}
                                             ></div>
                                         </div>
@@ -680,8 +715,8 @@ const VideoPlayerPanel = forwardRef<VideoPlayerHandle, VideoPlayerPanelProps>(({
                                 </div>
                             </div>
                         ) : (
-                            <div className="w-full h-full flex items-center justify-center text-gray-500 bg-gradient-to-br from-gray-800 to-gray-900">
-                                <p className="text-sm">No video generated yet</p>
+                            <div className="w-full h-full flex items-center justify-center text-zinc-500 bg-zinc-900">
+                                <p className="text-[13px] font-medium">No video generated yet</p>
                             </div>
                         )}
                     </div>
@@ -721,7 +756,10 @@ const VideoPlayerPanel = forwardRef<VideoPlayerHandle, VideoPlayerPanelProps>(({
                                                 ...getPairedCaptionStyle(pairedSegmentData.isActive),
                                             }}
                                         >
-                                            {pairedSegmentData.word}{(index + 1) % 2 === 1 ? ' ' : ''}
+                                            {pairedSegmentData.word
+                                                .replaceAll('—', '...')
+                                                .replace(/["\u201C\u201D]/g, '')
+                                            }{(index + 1) % 2 === 1 ? ' ' : ''}
                                         </span>
                                     })}
                                 </p>

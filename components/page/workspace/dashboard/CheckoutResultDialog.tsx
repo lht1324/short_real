@@ -6,7 +6,7 @@ import {CheckCircle, Sparkles, X} from "lucide-react";
 export interface CheckoutResultDialogData {
     planName: string;
     price: number;
-    creditCount: number;
+    planId: string;
 }
 
 interface CheckoutResultDialogProps {
@@ -91,11 +91,13 @@ function CheckoutResultDialog({
                             {/* Divider */}
                             <div className="border-t border-purple-500/20"></div>
 
-                            {/* Credits */}
+                            {/* Autopilot Limit */}
                             <div className="flex justify-between items-center text-gray-300">
-                                <span className="text-sm">Credits Added</span>
+                                <span className="text-sm">Autopilot Limit</span>
                                 <span className="text-lg font-bold text-purple-400">
-                                    +{checkoutResultDialogData.creditCount} credits
+                                    {checkoutResultDialogData.planId === 'plan-4'
+                                        ? 'Unlimited Series'
+                                        : `${checkoutResultDialogData.planId === 'plan-2' ? '2' : '1'} Active Series`}
                                 </span>
                             </div>
                         </div>

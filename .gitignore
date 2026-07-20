@@ -17,6 +17,7 @@ package-lock.json
 
 # next.js
 /.next/
+/.next-docker/
 /out/
 
 # production
@@ -42,3 +43,22 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 .trigger
+/env.local
+
+# Replicate Cog
+.dockerignore
+.cog/*
+/workflows/*
+__pycache__/*
+
+# Agent
+.antigravitycli
+.agents
+skills-lock.json
+
+# next-video
+videos/*
+!videos/*.json
+!videos/*.js
+!videos/*.ts
+public/_next-video

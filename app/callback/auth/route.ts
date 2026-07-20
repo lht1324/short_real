@@ -1,6 +1,6 @@
 import {NextRequest, NextResponse} from 'next/server'
 import {usersServerAPI} from '@/lib/api/server/usersServerAPI'
-import {createSupabaseServer} from "@/lib/supabaseServer";
+import {createSupabaseServer} from "@/lib/supabase/supabaseServer";
 import {SubscriptionPlan, User} from "@/lib/api/types/supabase/Users";
 
 export async function GET(request: NextRequest) {

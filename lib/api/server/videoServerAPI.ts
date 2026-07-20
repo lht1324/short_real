@@ -2,30 +2,34 @@ import {
     SceneData,
     VideoGenerationTask,
 } from '@/lib/api/types/supabase/VideoGenerationTasks';
-import {
-    VIDEO_RESOLUTIONS,
-    VideoResolution
-} from "@/lib/ReplicateData";
 import Replicate from "replicate";
 import {videoGenerationTasksServerAPI} from "@/lib/api/server/videoGenerationTasksServerAPI";
-import {createSupabaseServiceRoleClient} from "@/lib/supabaseServiceRole";
+import {createSupabaseServiceRoleClient} from "@/lib/supabase/supabaseServiceRole";
 import {ALL_FORMATS, Input, UrlSource} from "mediabunny";
 import {fal} from "@fal-ai/client";
+import {cryptoUtils} from "@/lib/utils/cryptoUtils";
+import {AIModelData} from "@/lib/api/types/supabase/AIModelData";
+import {falAIInputMapper} from "@/lib/falAIInputMapper";
 
 export const videoServerAPI = {
     // POST /videos - Scene별 image-to-video 생성 요청 제출
     async postVideo(
         sceneData: SceneData,
         taskId: string,
+        userId: string,
+        videoAIModelData: AIModelData,
+        falAiApiKey: string,
+        aspectRatio: "16:9" | "9:16",
+        resolution: '720p' | '1080p' | '2160p', // nP란 가로세로 중 짧은 쪽의 비율을 따라감
         isViolence: boolean = false,
-        aspectRatio: "16:9" | "9:16" | "1:1" | "21:9" | "4:3" | "3:4" | "auto" = "9:16",
-        videoResolution: VideoResolution = VIDEO_RESOLUTIONS.RES_1080P, // nP란 가로세로 중 짧은 쪽의 비율을 따라감
     ) {
         const supabase = createSupabaseServiceRoleClient();
+        const decryptedApiKey = cryptoUtils.decrypt(falAiApiKey, userId);
+
         const falAIClient = fal;
         falAIClient.config({
-            credentials: process.env.FAL_AI_API_KEY!
-        })
+            credentials: decryptedApiKey
+        });
 
         // ---- [추가] 웹훅 URL 환경 변수 확인 ----
         const baseUrl = process.env.BASE_URL;
@@ -49,27 +53,34 @@ export const videoServerAPI = {
         }
         const imageUrl = data.signedUrl;
 
-        const baseInputData = {
-            image_url: imageUrl,
-            aspect_ratio: aspectRatio,
-            camera_fixed: false,
-            enable_safety_checker: false,
+        const videoAIModelEndpointId = videoAIModelData.endpoint_id;
+        const videoAIModelSupportedDurations = videoAIModelData.supported_duration_range ?? [];
+
+        const targetDuration = sceneData.sceneDuration + 0.2;
+        let safeDuration = Math.round(targetDuration);
+
+        if (videoAIModelSupportedDurations.length > 0) {
+            const sortedDurations = [...videoAIModelSupportedDurations].sort((a, b) => a - b);
+            const coveringDuration = sortedDurations.find(d => d >= targetDuration);
+            
+            if (coveringDuration !== undefined) {
+                safeDuration = coveringDuration;
+            } else {
+                safeDuration = sortedDurations[sortedDurations.length - 1];
+            }
+        } else {
+            throw Error("AI Model Data is wrong.");
         }
 
-        const safeDuration = sceneData.sceneDuration + 0.2 < 4.2
-            ? 4
-            : sceneData.sceneDuration + 0.2 > 12.2
-                ? 12
-                : Math.round(sceneData.sceneDuration + 0.2);
-        const inputData = {
-            ...baseInputData,
+        const inputData = falAIInputMapper.buildVideoInput(videoAIModelEndpointId, {
             prompt: sceneData.videoGenPrompt ?? "A cinematic video",
-            duration: safeDuration.toString() as "4" | "5" | "6" | "7" | "8" | "9" | "10" | "11" | "12", // 4-12
-            resolution: videoResolution as "480p" | "720p" | "1080p",
-            generate_audio: false,
-        }
+            imageUrl: imageUrl,
+            duration: safeDuration,
+            aspectRatio: aspectRatio,
+            resolution: resolution,
+        });
 
-        const { request_id: requestId } = await falAIClient.queue.submit('fal-ai/bytedance/seedance/v1.5/pro/image-to-video', {
+        const { request_id: requestId } = await falAIClient.queue.submit(videoAIModelEndpointId, {
             input: inputData,
             webhookUrl: webhookUrl,
         });

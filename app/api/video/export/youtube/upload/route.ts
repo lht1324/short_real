@@ -1,23 +1,29 @@
 // app/api/youtube/upload/route.ts
 import { NextRequest } from 'next/server';
-import { createSupabaseServiceRoleClient } from '@/lib/supabaseServiceRole';
-import { getNextBaseResponse } from '@/utils/getNextBaseResponse';
-import {
-    PostVideoExportYoutubeUploadRequest
-} from "@/lib/api/types/api/video/export/youtube/upload/PostVideoExportYoutubeUploadRequest";
-import {UserYoutubeToken} from "@/lib/api/types/supabase/UserYoutubeToken";
-import {PostgrestSingleResponse} from "@supabase/supabase-js";
-import {DownloadResult} from "@supabase/storage-js";
-import {videoGenerationTasksServerAPI} from "@/lib/api/server/videoGenerationTasksServerAPI";
-import {ExportPlatform, ExportStatus} from "@/lib/api/types/supabase/VideoGenerationTasks";
-
+import { createSupabaseServiceRoleClient } from '@/lib/supabase/supabaseServiceRole';
+import { getNextBaseResponse } from '@/lib/utils/getNextBaseResponse';
+import { DownloadResult } from "@supabase/storage-js";
+import { videoGenerationTasksServerAPI } from "@/lib/api/server/videoGenerationTasksServerAPI";
+import { ExportPlatform, ExportStatus } from "@/lib/api/types/supabase/VideoGenerationTasks";
+import { getIsValidRequestS2S } from "@/lib/utils/getIsValidRequest";
+import { cryptoUtils } from "@/lib/utils/cryptoUtils";
 
 export async function POST(request: NextRequest) {
+    if (!getIsValidRequestS2S(request)) {
+        return getNextBaseResponse({
+            success: false,
+            status: 401,
+            error: 'Unauthorized internal request',
+        });
+    }
+
     const supabase = createSupabaseServiceRoleClient();
 
     // URL에서 파라미터 추출
     const { searchParams } = new URL(request.url);
     const taskId = searchParams.get('taskId');
+    const tokenIdRaw = searchParams.get('tokenId');
+    const tokenId = (tokenIdRaw === 'null' || tokenIdRaw === 'undefined') ? null : tokenIdRaw;
 
     if (!taskId) {
         // 찝찝하지만 비정상 요청으로 간주하고 넘기자
@@ -28,22 +34,9 @@ export async function POST(request: NextRequest) {
         });
     }
 
+    // 1262af2d-502d-4f7d-9752-3993008dd3fe
+
     try {
-        const { userId }: PostVideoExportYoutubeUploadRequest = await request.json();
-
-        if (!userId) {
-            await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, {
-                export_status: ExportStatus.FAILED,
-                export_platform: ExportPlatform.YOUTUBE,
-            });
-
-            return getNextBaseResponse({
-                success: false,
-                status: 400,
-                error: 'userId is required'
-            });
-        }
-
         const privacySetting = searchParams.get('privacySetting');
 
         if (!privacySetting) {
@@ -61,7 +54,7 @@ export async function POST(request: NextRequest) {
 
         const videoGenerationTask = await videoGenerationTasksServerAPI.getVideoGenerationTaskById(taskId);
 
-        if (!videoGenerationTask) {
+        if (!videoGenerationTask || !videoGenerationTask.aspect_ratio) {
             await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, {
                 export_status: ExportStatus.FAILED,
                 export_platform: ExportPlatform.YOUTUBE,
@@ -74,14 +67,53 @@ export async function POST(request: NextRequest) {
             })
         }
 
+        const userId = videoGenerationTask.user_id;
+
         console.log(`[YouTube Upload] Starting for userId=${userId}`);
 
-        // 1. DB에서 토큰 조회
-        const { data: tokenData, error: tokenError }: PostgrestSingleResponse<UserYoutubeToken> = await supabase
+        let decryptedTokenId: string | null = null;
+        if (tokenId) {
+            try {
+                decryptedTokenId = cryptoUtils.decrypt(tokenId, userId);
+            } catch (e) {
+                console.error('[YouTube Upload] Failed to decrypt tokenId:', e);
+                await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, {
+                    export_status: ExportStatus.FAILED,
+                    export_platform: ExportPlatform.YOUTUBE,
+                });
+                return getNextBaseResponse({
+                    success: false,
+                    status: 400,
+                    error: 'Invalid token signature or unauthorized token access.'
+                });
+            }
+        }
+
+        // 1. DB에서 토큰 조회 (1:N 징검다리 쿼리 적용)
+        let targetTokenIdToQuery: string | null = decryptedTokenId;
+
+        if (!targetTokenIdToQuery && videoGenerationTask.series_id) {
+            const { data: autopilot } = await supabase
+                .from('autopilot_data')
+                .select('youtube_token_id')
+                .eq('id', videoGenerationTask.series_id)
+                .single();
+            if (autopilot?.youtube_token_id) {
+                targetTokenIdToQuery = autopilot.youtube_token_id;
+            }
+        }
+
+        let tokenQuery = supabase
             .from('user_youtube_tokens')
             .select('*')
-            .eq('user_id', userId)
-            .single();
+            .eq('user_id', userId);
+
+        if (targetTokenIdToQuery) {
+            tokenQuery = tokenQuery.eq('id', targetTokenIdToQuery);
+        }
+
+        const { data: tokenData, error: tokenError } = await tokenQuery
+            .maybeSingle();
 
         if (tokenError || !tokenData) {
             console.error('[YouTube Upload] Token not found:', tokenError);
@@ -145,7 +177,7 @@ export async function POST(request: NextRequest) {
                     expires_at: newExpiresAt,
                     updated_at: new Date().toISOString()
                 })
-                .eq('user_id', userId);
+                .eq('id', tokenData.id);
 
             console.log('[YouTube Upload] Token refreshed successfully');
         }
@@ -183,6 +215,7 @@ export async function POST(request: NextRequest) {
             videoGenerationTask.video_description ?? "ShortReal AI",
             boundary,
             privacySetting,
+            videoGenerationTask.aspect_ratio,
         )
         const uploadResponse = await fetch(
             'https://www.googleapis.com/upload/youtube/v3/videos?uploadType=multipart&part=snippet,status',
@@ -254,6 +287,7 @@ function createMultipartBody(
     videoDescription: string,
     boundary: string,
     privacySetting: string,
+    aspectRatio: '16:9' | '9:16',
 ): Uint8Array {
     const encoder = new TextEncoder();
     const metadataJson = JSON.stringify({
@@ -261,7 +295,7 @@ function createMultipartBody(
             title: videoTitle,
             description: videoDescription,
             categoryId: '24',
-            tags: ['shorts', 'ai', 'generated'],
+            tags: aspectRatio === '16:9' ? ['ai', 'generated'] : ['shorts', 'ai', 'generated'],
         },
         status: {
             privacyStatus: privacySetting,

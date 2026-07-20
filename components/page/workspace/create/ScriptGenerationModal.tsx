@@ -1,5 +1,5 @@
 import {memo, useCallback, useState, ChangeEvent} from "react";
-import {AlertTriangle, Sparkles, X} from "lucide-react";
+import {AlertTriangle, Sparkles, X, Loader2} from "lucide-react";
 import {ScriptGenerationRequest} from "@/lib/api/types/open-ai/ScriptGeneration";
 import {openAIClientAPI} from "@/lib/api/client/openAIClientAPI";
 
@@ -59,26 +59,25 @@ function ScriptGenerationModal({
         >
             <div
                 onClick={(e) => e.stopPropagation()}
-                className="bg-gray-900/95 backdrop-blur-sm border border-purple-500/30 rounded-xl max-w-lg w-full mx-4 overflow-hidden shadow-2xl"
+                className="bg-zinc-900 border border-white/10 rounded-xl max-w-lg w-full mx-4 overflow-hidden shadow-2xl"
             >
                 <div className="p-6">
                     <div className="flex items-center justify-between mb-4">
-                        <h3 className="text-xl font-semibold text-purple-300">
+                        <h3 className="text-lg font-medium text-zinc-100">
                             Generate Script with AI
                         </h3>
                         {!isGeneratingScript && <button
                             onClick={onClickClose}
-                            className="text-gray-400 hover:text-pink-400 transition-colors p-1 rounded-lg hover:bg-gray-800/50"
+                            className="text-zinc-500 hover:text-zinc-300 transition-colors p-1.5 rounded hover:bg-white/5"
                         >
-                            <X size={18} />
+                            <X size={16} />
                         </button>}
                     </div>
 
                     <div className="space-y-4">
                         <div>
-                            <label className="block text-sm font-medium text-white mb-2">What do you want to create?</label>
+                            <label className="block text-[13px] font-medium text-zinc-400 mb-2">What do you want to create?</label>
                             <textarea
-                                // placeholder="Tell me about Elon Musk's early SpaceX struggles"
                                 placeholder={`- Tell me about Elon Musk's early SpaceX struggles
 - Air Jordan, 30 secs, 5 scenes, for Youtube Shorts
 - George Washington's story, 8 scenes
@@ -87,17 +86,17 @@ function ScriptGenerationModal({
                                 value={aiPrompt}
                                 onChange={onChangeAiPrompt}
                                 rows={4}
-                                className="w-full min-w-[120px] bg-gray-800/50 border border-purple-500/30 rounded-lg px-3 py-2 text-white text-sm focus:border-purple-400 focus:outline-none resize-none placeholder-gray-400 transition-all"
+                                className="w-full min-w-[120px] bg-black/20 border border-white/10 rounded-lg px-3 py-2 text-zinc-100 text-[13px] focus:border-zinc-500 focus:outline-none resize-none placeholder-zinc-600 transition-all leading-relaxed"
                             />
                         </div>
 
                         {/* Warning Message - Simplified */}
-                        <div className="bg-amber-500/10 border border-amber-400/30 rounded-lg p-3">
+                        <div className="bg-amber-500/5 border border-amber-500/10 rounded-lg p-3">
                             <div className="flex items-start space-x-2">
-                                <AlertTriangle className="w-4 h-4 text-amber-400 mt-0.5 flex-shrink-0" />
-                                <div className="text-sm text-amber-100">
+                                <AlertTriangle className="w-4 h-4 text-amber-500/80 mt-0.5 flex-shrink-0" />
+                                <div className="text-[13px] text-amber-500/90">
                                     <p className="font-medium">Be specific to avoid wasting credits</p>
-                                    <p className="text-xs text-amber-200 mt-1">Vague requests may produce unwanted results.</p>
+                                    <p className="text-[11px] opacity-80 mt-0.5">Vague requests may produce unwanted results.</p>
                                 </div>
                             </div>
                         </div>
@@ -105,16 +104,16 @@ function ScriptGenerationModal({
                         <button
                             onClick={onClickGenerateScript}
                             disabled={isGeneratingScript || !aiPrompt.trim()}
-                            className="w-full bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white px-4 py-3 rounded-lg font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2 shadow-lg shadow-purple-500/25"
+                            className="w-full bg-white hover:bg-zinc-200 text-black px-4 py-2.5 rounded-lg font-medium text-[13px] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2 shadow-sm"
                         >
                             {isGeneratingScript ? (
                                 <>
-                                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                                    <Loader2 className="w-4 h-4 animate-spin text-zinc-600" />
                                     <span>Generating...</span>
                                 </>
                             ) : (
                                 <>
-                                    <Sparkles size={16} />
+                                    <Sparkles size={14} className="text-indigo-600" />
                                     <span>Generate Script</span>
                                 </>
                             )}

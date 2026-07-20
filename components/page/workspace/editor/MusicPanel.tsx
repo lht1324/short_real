@@ -17,6 +17,8 @@ function MusicPanel({
 }: MusicPanelProps) {
     // Audio 인스턴스는 ref로 관리
     const audioRef = useRef<HTMLAudioElement | null>(null);
+    // 진행 중인 play() Promise 추적 - cleanupAudio에서 race condition 방지용
+    const pendingPlayRef = useRef<Promise<void> | null>(null);
 
     // UI에 영향을 주는 값들만 state로 관리
     const [selectedItemIndex, setSelectedItemIndex] = useState(0);
@@ -53,14 +55,28 @@ function MusicPanel({
     }, []);
 
     // 오디오 이벤트 리스너 정리 함수
+    // play()가 pending 상태일 때 pause()를 직접 호출하면 AbortError가 발생하므로
+    // pendingPlayRef를 통해 play()가 완료된 후 pause()를 호출한다
     const cleanupAudio = useCallback(() => {
         if (audioRef.current) {
-            audioRef.current.pause();
-            audioRef.current.currentTime = 0;
-            audioRef.current.removeEventListener('ended', handleAudioEnded);
-            audioRef.current.removeEventListener('error', handleAudioError);
-            audioRef.current.removeEventListener('timeupdate', handleTimeUpdate);
+            const audio = audioRef.current;
             audioRef.current = null;
+            audio.removeEventListener('ended', handleAudioEnded);
+            audio.removeEventListener('error', handleAudioError);
+            audio.removeEventListener('timeupdate', handleTimeUpdate);
+
+            const doPause = () => {
+                audio.pause();
+                audio.currentTime = 0;
+            };
+
+            if (pendingPlayRef.current) {
+                // play()가 resolve/reject된 후 pause 실행 (AbortError 방지)
+                pendingPlayRef.current.then(doPause, doPause);
+                pendingPlayRef.current = null;
+            } else {
+                doPause();
+            }
         }
         setIsMusicPlaying(false);
         setMusicCurrentTime(0);
@@ -79,12 +95,19 @@ function MusicPanel({
         audioRef.current = audio;
         setSelectedItemIndex(prevIndex => prevIndex != musicIndex ? musicIndex : prevIndex);
         setPlayingMusicIndex(musicIndex);
+        setIsMusicPlaying(true); // 낙관적 업데이트 - 실패 시 cleanupAudio가 false로 되돌림
 
-        audio.play()
+        const playPromise = audio.play();
+        pendingPlayRef.current = playPromise;
+
+        playPromise
             .then(() => {
-                setIsMusicPlaying(true);
+                pendingPlayRef.current = null;
             })
-            .catch((error) => {
+            .catch((error: Error) => {
+                pendingPlayRef.current = null;
+                // AbortError는 pause() 또는 언마운트로 인한 정상적인 중단 - 무시
+                if (error.name === 'AbortError') return;
                 console.error('Failed to play audio:', error);
                 cleanupAudio();
                 setPlayingMusicIndex(null);
@@ -94,7 +117,7 @@ function MusicPanel({
     const onClickMusicItem = useCallback((index: number) => {
         setSelectedItemIndex(index);
         onSelectMusic(index);
-        
+
         if (isMusicPlaying) {
             cleanupAudio();
         }
@@ -118,11 +141,17 @@ function MusicPanel({
                     audioRef.current.pause();
                     setIsMusicPlaying(false);
                 } else {
-                    audioRef.current.play()
+                    const playPromise = audioRef.current.play();
+                    pendingPlayRef.current = playPromise;
+
+                    playPromise
                         .then(() => {
+                            pendingPlayRef.current = null;
                             setIsMusicPlaying(true);
                         })
-                        .catch((error) => {
+                        .catch((error: Error) => {
+                            pendingPlayRef.current = null;
+                            if (error.name === 'AbortError') return;
                             console.error('Failed to resume audio:', error);
                             cleanupAudio();
                             setPlayingMusicIndex(null);
@@ -146,11 +175,17 @@ function MusicPanel({
 
             // 일시정지 상태면 재생
             if (!isMusicPlaying) {
-                audioRef.current.play()
+                const playPromise = audioRef.current.play();
+                pendingPlayRef.current = playPromise;
+
+                playPromise
                     .then(() => {
+                        pendingPlayRef.current = null;
                         setIsMusicPlaying(true);
                     })
-                    .catch((error) => {
+                    .catch((error: Error) => {
+                        pendingPlayRef.current = null;
+                        if (error.name === 'AbortError') return;
                         console.error('Failed to resume audio:', error);
                         cleanupAudio();
                         setPlayingMusicIndex(null);
@@ -171,13 +206,18 @@ function MusicPanel({
         setSelectedItemIndex(prevIndex => prevIndex !== musicIndex ? musicIndex : prevIndex);
         setPlayingMusicIndex(musicIndex);
 
-        // seek 후 재생
         audio.currentTime = timeInSeconds;
-        audio.play()
+        const playPromise = audio.play();
+        pendingPlayRef.current = playPromise;
+
+        playPromise
             .then(() => {
+                pendingPlayRef.current = null;
                 setIsMusicPlaying(true);
             })
-            .catch((error) => {
+            .catch((error: Error) => {
+                pendingPlayRef.current = null;
+                if (error.name === 'AbortError') return;
                 console.error('Failed to play audio:', error);
                 cleanupAudio();
                 setPlayingMusicIndex(null);
@@ -204,22 +244,47 @@ function MusicPanel({
                     Musics were not generated.
                 </div>
             ) : (
-                musicDataList.map((musicData, index) => {
-                    const isSelected = index === selectedItemIndex;
+                <>
+                    {/* 공통 태그 섹션 — 이 음악들의 공통 분위기/특징 */}
+                    {musicDataList[0]?.tagList && musicDataList[0].tagList.length > 0 && (
+                        <div className="px-1 pb-1">
+                            <p className="text-zinc-600 text-[10px] font-semibold uppercase tracking-[0.15em] mb-2.5">
+                                Track Characteristics
+                            </p>
+                            <div className="flex flex-row flex-wrap gap-1.5">
+                                {musicDataList[0].tagList.map((tag, index) => (
+                                    <span
+                                        key={index}
+                                        className="px-2.5 py-1 text-[11px] font-medium rounded-full bg-zinc-800/80 text-zinc-300 border border-zinc-700/60"
+                                    >
+                                        {tag}
+                                    </span>
+                                ))}
+                            </div>
+                            <div className="mt-4 h-px bg-white/5"/>
+                        </div>
+                    )}
 
-                    return <MusicItem
-                        key={index}
-                        musicData={musicData}
-                        videoDuration={videoDuration}
-                        isSelected={isSelected}
-                        isPlaying={isSelected && isMusicPlaying}
-                        progress={isSelected ? musicProgress : 0}
-                        onClickItem={() => onClickMusicItem(index)}
-                        onClickPlayButton={() => onToggleMusicPlay(index)}
-                        onClickOpenEditModal={onClickOpenEditModalForIndex(index)}
-                        onSeek={(timeInSeconds) => onSeekMusic(index, timeInSeconds)}
-                    />
-                })
+                    {/* 음악 아이템 리스트 */}
+                    <div className="space-y-3">
+                        {musicDataList.map((musicData, index) => {
+                            const isSelected = index === selectedItemIndex;
+
+                            return <MusicItem
+                                key={index}
+                                musicData={musicData}
+                                videoDuration={videoDuration}
+                                isSelected={isSelected}
+                                isPlaying={isSelected && isMusicPlaying}
+                                progress={isSelected ? musicProgress : 0}
+                                onClickItem={() => onClickMusicItem(index)}
+                                onClickPlayButton={() => onToggleMusicPlay(index)}
+                                onClickOpenEditModal={onClickOpenEditModalForIndex(index)}
+                                onSeek={(timeInSeconds) => onSeekMusic(index, timeInSeconds)}
+                            />
+                        })}
+                    </div>
+                </>
             )}
         </div>
     );

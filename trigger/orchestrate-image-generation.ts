@@ -2,10 +2,13 @@ import { task, tasks } from "@trigger.dev/sdk/v3";
 import { logger } from "@trigger.dev/sdk";
 import { videoGenerationTasksServerAPI } from "@/lib/api/server/videoGenerationTasksServerAPI";
 import { postImage } from "@/trigger/post-image";
-import { SceneData, VideoGenerationTaskStatus } from "@/lib/api/types/supabase/VideoGenerationTasks";
+import {AIModelConfig, SceneData, VideoGenerationTaskStatus} from "@/lib/api/types/supabase/VideoGenerationTasks";
 import { MasterStyleInfo } from "@/lib/api/types/supabase/MasterStyleInfo";
 import { InitialEntityManifestItem } from "@/lib/api/types/open-ai/Entity";
-import { internalFireAndForgetFetch } from "@/utils/internalFetch";
+import { internalFireAndForgetFetch } from "@/lib/utils/internalFetch";
+import {usersServerAPI} from "@/lib/api/server/usersServerAPI";
+import {aiModelDataServerAPI} from "@/lib/api/server/aiModelDataServerAPI";
+import {FalAIEndpointID} from "@/lib/falAIInputMapper";
 
 export const orchestrateImageGeneration = task({
     id: "orchestrate-image-generation",
@@ -32,12 +35,51 @@ export const orchestrateImageGeneration = task({
         try {
             logger.info(`[Orchestrator] Starting orchestration for Task: ${taskId} (${sceneDataList.length} scenes)`);
 
+            const videoGenerationTask = await videoGenerationTasksServerAPI.getVideoGenerationTaskById(taskId);
+
+            if (!videoGenerationTask || !videoGenerationTask.user_id || !videoGenerationTask.ai_model_config || !videoGenerationTask.resolution || !videoGenerationTask.aspect_ratio) {
+                logger.error(`[Orchestrator] Task '${taskId}' not found`);
+
+                await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
+                throw new Error(`Task '${taskId}' not found`);
+            }
+
+            const user = await usersServerAPI.getUserByUserId(videoGenerationTask.user_id);
+
+            // 암호화된 값. 사용하는 시점에만 복호화해서 넣어주고 들고 다닐 땐 암호화 상태인 걸로.
+            if (!user || !user.fal_ai_api_key) {
+                logger.error(`[Orchestrator] User not found`);
+
+                await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
+                throw new Error(`User not found`);
+            }
+
+            const falAiApiKey = user.fal_ai_api_key;
+            const {
+                ai_model_config: aiModelConfig,
+                resolution,
+                aspect_ratio: aspectRatio,
+            } = videoGenerationTask;
+
+            const sceneImageT2IAIModelData = await aiModelDataServerAPI.getAIModelDataById(aiModelConfig?.sceneImageT2IModelId);
+            const sceneImageI2IAIModelData = sceneImageT2IAIModelData?.endpoint_id === FalAIEndpointID.KLING_IMAGE_V3_T2I
+                ? sceneImageT2IAIModelData
+                : await aiModelDataServerAPI.getAIModelDataById(aiModelConfig?.sceneImageI2IModelId);
+
+            if (!sceneImageT2IAIModelData || !sceneImageI2IAIModelData) {
+                logger.error(`[Orchestrator] AI model data not found`);
+
+                await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
+                throw new Error(`AI model data are not found.`);
+            }
+
             // 1. N개의 자식 태스크 병렬 실행 및 대기 (Fan-out & Wait)
             // Trigger 시스템이 각 자식 태스크의 재시도(Retry)를 알아서 관리함.
             // 여기서는 모든 자식이 '최종 성공'하거나 '최종 실패'할 때까지 기다림.
             const batchResults = await tasks.batchTriggerAndWait<typeof postImage>(
                 "post-image", // 1. 태스크 ID (문자열)
-                sceneDataList.map(sceneData => ({ // 2. 아이템 배열
+                sceneDataList.map(sceneData => ({
+                    // 2. 아이템 배열
                     payload: {
                         taskId,
                         videoTitle,
@@ -46,6 +88,12 @@ export const orchestrateImageGeneration = task({
                         entityManifestList,
                         sceneData,
                         styleId,
+                        falAiApiKey,
+                        userId: videoGenerationTask.user_id,
+                        sceneImageT2IAIModelEndpointId: sceneImageT2IAIModelData.endpoint_id,
+                        sceneImageI2IAIModelEndpointId: sceneImageI2IAIModelData.endpoint_id,
+                        resolution,
+                        aspectRatio,
                     }
                 }))
             );

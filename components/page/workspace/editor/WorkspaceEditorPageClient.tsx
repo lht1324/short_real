@@ -157,6 +157,7 @@ function WorkspaceEditorPageClient() {
     const [isFinishLoading, setIsFinishLoading] = useState(false);
 
     const [videoData, setVideoData] = useState<VideoData | null>(null);
+    const [aspectRatio, setAspectRatio] = useState<'16:9' | '9:16'>('9:16');
 
     const [isCaptionEnabled, setIsCaptionEnabled] = useState(true);
 
@@ -433,6 +434,9 @@ function WorkspaceEditorPageClient() {
                     throw new Error("Invalid task status for editor")
                 }
 
+                // 종횡비 설정 (기본값 9:16)
+                setAspectRatio(videoGenerationTask.aspect_ratio ?? '9:16');
+
                 // 각 씬의 시작/종료 시간 및 자막 세그먼트 계산
                 let accumulatedTime = 0;
                 const captionDataList = videoGenerationTask.scene_breakdown_list.map((sceneData) => {
@@ -511,16 +515,16 @@ function WorkspaceEditorPageClient() {
     }, [user, router]);
 
     return (
-        <div className="min-h-screen bg-black text-white">
+        <div className="min-h-screen bg-zinc-950 text-white">
             {/* Top Header */}
             <div
                 ref={headerRef}
-                className="flex items-center justify-between pl-3 pr-6 py-4 border-b border-purple-500/20 bg-gray-900/50 backdrop-blur-sm"
+                className="flex items-center justify-between pl-3 pr-6 py-4 border-b border-white/5 bg-zinc-950/80 backdrop-blur-sm"
             >
                 <div className="flex items-center">
                     <Link 
                         href="/workspace/dashboard"
-                        className="text-gray-400 hover:text-pink-400 transition-colors"
+                        className="text-zinc-500 hover:text-zinc-300 transition-colors"
                         title="Back to Dashboard"
                     >
                         <ChevronLeft size={40} />
@@ -536,17 +540,17 @@ function WorkspaceEditorPageClient() {
                         }}
                     />
                     <div className="flex flex-col ml-4">
-                        <span className="text-4xl font-bold bg-gradient-to-r from-pink-400 to-purple-500 bg-clip-text text-transparent">
+                        <span className="text-2xl font-bold text-zinc-100 cursor-default leading-none">
                             Video Editor
                         </span>
-                        <p className="text-gray-400 text-base pl-0.5">
+                        <p className="text-zinc-500 text-[13px] mt-0.5 cursor-default pl-0.5">
                             We&#39;re almost there.
                         </p>
                     </div>
                 </div>
                 <button
                     onClick={onClickFinish}
-                    className="bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all"
+                    className="bg-white hover:bg-zinc-200 text-black px-5 py-2 rounded-lg text-sm font-medium transition-all shadow-sm"
                 >
                     Finish
                 </button>
@@ -557,11 +561,12 @@ function WorkspaceEditorPageClient() {
                 style={{ height: headerHeight > 0 ? `calc(100vh - ${headerHeight}px)` : '100vh' }}
             >
                 {/* Sequences Panel */}
-                {taskId && <div className="flex-[0.24] h-full px-3 bg-gray-900/30 backdrop-blur-sm border-r border-purple-500/20 overflow-y-auto">
+                {taskId && <div className="flex-[0.24] h-full px-3 bg-zinc-900/30 backdrop-blur-sm border-r border-white/5 overflow-y-auto">
                     <SceneSequencePanel
                         taskId={taskId}
                         captionDataList={captionDataList}
                         currentSceneIndex={currentSceneIndex}
+                        aspectRatio={aspectRatio}
                         onClickSceneSequence={onClickSceneSequence}
                         onFinishLoading={onFinishSceneSequencePanelLoading}
                     />
@@ -574,25 +579,25 @@ function WorkspaceEditorPageClient() {
                     <div className="flex flex-[0.83] flex-row min-h-0">
                         {/* Config Panel */}
                         {/*<div className="flex-[0.34] h-full bg-gray-900/30 backdrop-blur-sm border-r border-purple-500/20 flex flex-col">*/}
-                        <div className="flex-[0.34] bg-gray-900/30 backdrop-blur-sm border-r border-purple-500/20 flex flex-col">
+                        <div className="flex-[0.34] bg-zinc-900/30 backdrop-blur-sm border-r border-white/5 flex flex-col">
                             {/* Tab Navigation */}
                             <div className="flex items-end px-4 pt-4">
                                 <button
                                     onClick={() => setActiveConfigPanel(ConfigPanelType.Caption)}
-                                    className={`px-6 py-2 text-xl font-medium rounded-t-lg border-t border-l border-r transition-all relative ${
+                                    className={`px-6 py-2 text-[15px] font-medium transition-all relative ${
                                         activeConfigPanel === ConfigPanelType.Caption
-                                            ? 'text-purple-300 border-purple-400/50 bg-gray-900/30 -mb-px z-10'
-                                            : 'text-gray-400 border-transparent bg-gray-800/30 hover:text-purple-200 hover:border-purple-500/30'
+                                            ? 'text-zinc-100 border-b-2 border-white'
+                                            : 'text-zinc-500 border-b-2 border-transparent hover:text-zinc-300'
                                     }`}
                                 >
                                     Caption
                                 </button>
                                 <button
                                     onClick={() => setActiveConfigPanel(ConfigPanelType.Music)}
-                                    className={`px-6 py-2 text-xl font-medium rounded-t-lg border-t border-l border-r transition-all relative ${
+                                    className={`px-6 py-2 text-[15px] font-medium transition-all relative ${
                                         activeConfigPanel === ConfigPanelType.Music
-                                            ? 'text-purple-300 border-purple-400/50 bg-gray-900/30 -mb-px z-10'
-                                            : 'text-gray-400 border-transparent bg-gray-800/30 hover:text-purple-200 hover:border-purple-500/30'
+                                            ? 'text-zinc-100 border-b-2 border-white'
+                                            : 'text-zinc-500 border-b-2 border-transparent hover:text-zinc-300'
                                     }`}
                                 >
                                     Music
@@ -600,7 +605,7 @@ function WorkspaceEditorPageClient() {
                             </div>
 
                             {/* Tab Border Line */}
-                            <div className="border-t border-purple-400/50 mx-4"></div>
+                            <div className="border-t border-white/5 mx-4 -mt-[2px]"></div>
 
                             {/* Panel Content */}
                             <div className="flex-1 px-3 overflow-y-auto">

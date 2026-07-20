@@ -1,14 +1,16 @@
 import {NextRequest} from "next/server";
 import {videoGenerationTasksServerAPI} from "@/lib/api/server/videoGenerationTasksServerAPI";
 import {videoServerAPI} from "@/lib/api/server/videoServerAPI";
-import {taskCheckAndCleanupIfCancelled} from "@/utils/taskCheckAndCleanupIfCancelled";
-import {getNextBaseResponse} from "@/utils/getNextBaseResponse";
-import {getIsValidRequestS2S} from "@/utils/getIsValidRequest";
-import {createSupabaseServiceRoleClient} from "@/lib/supabaseServiceRole";
-import {getErrorMessage} from "@/utils/ErrorUtils";
+import {taskCheckAndCleanupIfCancelled} from "@/lib/utils/taskCheckAndCleanupIfCancelled";
+import {getNextBaseResponse} from "@/lib/utils/getNextBaseResponse";
+import {getIsValidRequestS2S} from "@/lib/utils/getIsValidRequest";
+import {createSupabaseServiceRoleClient} from "@/lib/supabase/supabaseServiceRole";
+import {getErrorMessage} from "@/lib/utils/ErrorUtils";
 import {FalAiErrorDetail} from "@/lib/api/types/fal-ai/FalAIResponse";
 import {VideoGenerationTaskStatus} from "@/lib/api/types/supabase/VideoGenerationTasks";
-import {internalFireAndForgetFetch} from "@/utils/internalFetch";
+import {internalFireAndForgetFetch} from "@/lib/utils/internalFetch";
+import {usersServerAPI} from "@/lib/api/server/usersServerAPI";
+import {aiModelDataServerAPI} from "@/lib/api/server/aiModelDataServerAPI";
 
 export async function POST(request: NextRequest) {
     if (!getIsValidRequestS2S(request)) {
@@ -212,9 +214,23 @@ export async function POST(request: NextRequest) {
                         });
 
                         if (currentSceneData) {
+                            const userId = videoGenerationTask.user_id;
+                            const user = await usersServerAPI.getUserByUserId(userId);
+                            const videoModelDataId = videoGenerationTask.ai_model_config?.videoModelId;
+                            if (!user || !user.fal_ai_api_key || !videoModelDataId || !videoGenerationTask.aspect_ratio || !videoGenerationTask.resolution) {
+                                throw new Error("Missing required task data for video generation retry.");
+                            }
+                            const videoAIModelData = await aiModelDataServerAPI.getAIModelDataById(videoModelDataId);
+                            if (!videoAIModelData) throw new Error("AI Model Data not found.");
+
                             const newRequestId = await videoServerAPI.postVideo(
                                 currentSceneData,
                                 taskId,
+                                userId,
+                                videoAIModelData,
+                                user.fal_ai_api_key,
+                                videoGenerationTask.aspect_ratio,
+                                videoGenerationTask.resolution,
                                 true,
                             );
 

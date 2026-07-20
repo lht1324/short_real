@@ -1,5 +1,5 @@
 import { voiceServerAPI } from '@/lib/api/server/voiceServerAPI';
-import {getNextBaseResponse} from "@/utils/getNextBaseResponse";
+import {getNextBaseResponse} from "@/lib/utils/getNextBaseResponse";
 import {NextRequest} from "next/server";
 
 export async function GET(request: NextRequest) {

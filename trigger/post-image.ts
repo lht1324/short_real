@@ -5,7 +5,8 @@ import { videoGenerationTasksServerAPI } from "@/lib/api/server/videoGenerationT
 import { logger } from "@trigger.dev/sdk";
 import { MasterStyleInfo } from "@/lib/api/types/supabase/MasterStyleInfo";
 import { InitialEntityManifestItem } from "@/lib/api/types/open-ai/Entity";
-import { SceneData } from "@/lib/api/types/supabase/VideoGenerationTasks";
+import {AIModelConfig, SceneData} from "@/lib/api/types/supabase/VideoGenerationTasks";
+import {AIModelData} from "@/lib/api/types/supabase/AIModelData";
 
 export const postImage = task({
     id: "post-image",
@@ -34,6 +35,12 @@ export const postImage = task({
         entityManifestList: InitialEntityManifestItem[];
         sceneData: SceneData;
         styleId: string;
+        falAiApiKey: string;
+        userId: string;
+        sceneImageT2IAIModelEndpointId: string;
+        sceneImageI2IAIModelEndpointId: string;
+        resolution: '720p' | '1080p' | '2160p';
+        aspectRatio: '16:9' | '9:16';
     }) => {
         const {
             taskId,
@@ -43,6 +50,12 @@ export const postImage = task({
             entityManifestList,
             sceneData,
             styleId,
+            falAiApiKey,
+            userId,
+            sceneImageT2IAIModelEndpointId,
+            sceneImageI2IAIModelEndpointId,
+            resolution,
+            aspectRatio,
         } = payload;
 
         try {
@@ -106,6 +119,12 @@ export const postImage = task({
                 }),
                 taskId,
                 sceneData.sceneNumber,
+                falAiApiKey,
+                userId,
+                sceneImageT2IAIModelEndpointId,
+                sceneImageI2IAIModelEndpointId,
+                resolution,
+                aspectRatio,
             );
 
             if (!postImageResult.success) {

@@ -58,11 +58,12 @@ function Header() {
                             <Image
                                 src="/logo/logo-64.png"
                                 alt="Short Real"
-                                fill
+                                width={64}
+                                height={64}
                                 className="object-contain"
                             />
                         </div>
-                        <span className="font-black text-3xl bg-gradient-to-r from-pink-400 to-purple-500 bg-clip-text text-transparent tracking-tight">
+                        <span className="font-black text-2xl md:text-3xl text-white tracking-tight">
                             ShortReal AI
                         </span>
                     </div>
@@ -82,8 +83,8 @@ function Header() {
                                     className={`
                                         flex items-center space-x-3 px-2 py-1.5 rounded-full border transition-all duration-200
                                         ${isDropdownOpen 
-                                            ? 'bg-white/10 border-purple-500/50' 
-                                            : 'bg-white/5 border-transparent hover:bg-white/10 hover:border-white/10'}
+                                            ? 'bg-white/10 border-white/30' 
+                                            : 'bg-white/5 border-transparent hover:bg-white/10 hover:border-white/20'}
                                     `}
                                 >
                                     <Image
@@ -91,7 +92,7 @@ function Header() {
                                         alt={user?.name || 'User'}
                                         width={32}
                                         height={32}
-                                        className="w-8 h-8 rounded-full ring-2 ring-transparent group-hover:ring-purple-500/50"
+                                        className="w-8 h-8 rounded-full ring-2 ring-transparent group-hover:ring-white/30"
                                     />
                                     <span className="text-gray-300 text-sm font-medium hidden md:block pr-2">
                                         {user?.name}
@@ -114,7 +115,7 @@ function Header() {
                                                         router.push("/workspace/dashboard");
                                                         setIsDropdownOpen(false);
                                                     }}
-                                                    className="w-full flex items-center space-x-3 px-4 py-2.5 text-gray-400 hover:bg-white/5 hover:text-purple-400 rounded-lg transition-colors"
+                                                    className="w-full flex items-center space-x-3 px-4 py-2.5 text-gray-400 hover:bg-white/5 hover:text-white rounded-lg transition-colors"
                                                 >
                                                     <LayoutDashboard size={16} />
                                                     <span className="text-sm font-medium">Dashboard</span>
@@ -142,12 +143,11 @@ function Header() {
                         ) : (
                             /* Get Started Button */
                             <button
-                                className="group relative px-5 py-2.5 rounded-xl font-bold text-white text-sm transition-all hover:scale-105 hover:shadow-[0_0_20px_-5px_rgba(236,72,153,0.4)]"
+                                className="group relative px-5 py-2.5 rounded-xl font-bold text-white text-sm transition-all border border-white/20 hover:bg-white hover:text-black hover:border-transparent"
                                 onClick={() => {
                                     router.push('/sign-in?redirectTo=profile');
                                 }}
                             >
-                                <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 group-hover:from-purple-500 group-hover:to-pink-500 transition-colors" />
                                 <span className="relative">Get Started</span>
                             </button>
                         )}

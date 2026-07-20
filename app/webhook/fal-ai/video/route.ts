@@ -1,8 +1,8 @@
 import {NextRequest} from "next/server";
 import {videoGenerationTasksServerAPI} from "@/lib/api/server/videoGenerationTasksServerAPI";
-import {getErrorMessage} from "@/utils/ErrorUtils";
-import {getNextBaseResponse} from "@/utils/getNextBaseResponse";
-import {internalFireAndForgetFetch} from "@/utils/internalFetch";
+import {getErrorMessage} from "@/lib/utils/ErrorUtils";
+import {getNextBaseResponse} from "@/lib/utils/getNextBaseResponse";
+import {internalFireAndForgetFetch} from "@/lib/utils/internalFetch";
 
 /**
  * fal-ai Webhook 엔드포인트

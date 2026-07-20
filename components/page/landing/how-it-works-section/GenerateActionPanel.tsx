@@ -6,7 +6,6 @@ import {AnimPresence} from "@/components/public/framerMotion/AnimPresence";
 import {MotionDiv, MotionSpan} from "@/components/public/framerMotion/Motion";
 
 interface GenerateActionPanelProps {
-    estimatedCost: number;
     isSystemReady: boolean;
     isGenerating: boolean;
     validationErrors: string[];
@@ -14,7 +13,6 @@ interface GenerateActionPanelProps {
 }
 
 function GenerateActionPanel({
-    estimatedCost,
     isSystemReady,
     isGenerating,
     validationErrors,
@@ -25,15 +23,13 @@ function GenerateActionPanel({
 
     return (
         <div className="h-[240px] bg-gradient-to-br from-[#12121a] to-[#0f0f16] border border-white/10 rounded-3xl p-6 relative overflow-visible flex flex-col justify-between group">
-            <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10 pointer-events-none overflow-hidden rounded-3xl" />
-
             <div className="relative z-10">
                 <div className="flex justify-between items-start mb-2">
-                    <div className="flex items-center gap-2 text-cyan-400">
-                        <div className="p-1.5 bg-cyan-500/10 rounded-md">
+                    <div className="flex items-center gap-2 text-zinc-300">
+                        <div className="p-1.5 bg-white/5 rounded-md">
                             <Clapperboard size={16} />
                         </div>
-                        <span className="text-sm font-bold tracking-wide">STEP 3: ACTION</span>
+                        <span className="text-sm font-bold tracking-wide">Action</span>
                     </div>
 
                     <div
@@ -42,10 +38,10 @@ function GenerateActionPanel({
                         onMouseLeave={() => setShowErrorTooltip(false)}
                     >
                         <div className={`
-                                        px-2 py-0.5 text-[10px] font-bold rounded uppercase tracking-wider border shadow-lg transition-all
+                                        px-2 py-0.5 text-[10px] font-bold rounded uppercase tracking-wider border transition-all
                                         ${isSystemReady
-                            ? 'bg-green-500/10 border-green-500/20 text-green-400 shadow-[0_0_10px_-3px_rgba(74,222,128,0.3)] cursor-default'
-                            : 'bg-red-500/10 border-red-500/20 text-red-400 shadow-[0_0_10px_-3px_rgba(239,68,68,0.3)] cursor-help'}
+                            ? 'bg-white/10 border-white/20 text-white cursor-default'
+                            : 'bg-zinc-800 border-zinc-700 text-zinc-400 cursor-help'}
                                     `}>
                             {isSystemReady ? "System Ready" : "Setup Required"}
                         </div>
@@ -79,10 +75,11 @@ function GenerateActionPanel({
                 </div>
 
                 <div className="mt-6">
-                    <p className="text-gray-500 text-[10px] uppercase tracking-wider mb-1 font-semibold">Estimated Cost</p>
-                    <div className="text-3xl font-bold text-white flex items-baseline gap-2">
-                        {Math.floor(estimatedCost)} <span className="text-sm text-yellow-500 font-normal">Credits</span>
-                    </div>
+                    <p className="text-gray-500 text-[10px] uppercase tracking-wider mb-1 font-semibold">Billing</p>
+                    <p className="text-sm text-zinc-300 leading-snug">
+                        Billed directly to your API provider.
+                    </p>
+                    <p className="text-[11px] text-zinc-500 mt-1">No platform markup. BYOK.</p>
                 </div>
             </div>
 
@@ -92,7 +89,7 @@ function GenerateActionPanel({
                 className={`
                     relative w-full py-4 rounded-xl font-bold text-lg transition-all duration-300 border flex items-center justify-center gap-2 overflow-hidden
                     ${isSystemReady 
-                        ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg shadow-purple-900/20 hover:shadow-purple-900/40 hover:scale-[1.02] hover:brightness-110 active:scale-95 border-white/10 cursor-pointer'
+                        ? 'bg-white text-black hover:bg-zinc-200 shadow-[0_0_40px_-15px_rgba(255,255,255,0.3)] hover:scale-[1.02] active:scale-95 border-transparent cursor-pointer'
                         : 'bg-white/5 text-gray-500 border-white/5 cursor-not-allowed grayscale opacity-50'}
                 `}
             >
@@ -113,7 +110,7 @@ function GenerateActionPanel({
                         </>
                     ) : (
                         <>
-                            <Sparkles size={18} className={isSystemReady ? "text-white/70" : ""} />
+                            <Sparkles size={18} />
                             <span>Generate Video</span>
                         </>
                     )}

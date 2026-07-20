@@ -15,6 +15,7 @@ interface SceneSequencePanelProps {
     taskId: string;
     captionDataList: CaptionData[];
     currentSceneIndex: number;
+    aspectRatio: '16:9' | '9:16';
     onClickSceneSequence: (sceneStartSec: number) => void;
     onFinishLoading: () => void;
 }
@@ -23,6 +24,7 @@ function SceneSequencePanel({
     taskId,
     captionDataList,
     currentSceneIndex,
+    aspectRatio,
     onClickSceneSequence,
     onFinishLoading,
 }: SceneSequencePanelProps) {
@@ -68,7 +70,7 @@ function SceneSequencePanel({
 
     return (
         <div className="p-4 space-y-4">
-            <div className="text-purple-300 text-2xl font-medium mb-4">Scene</div>
+            <div className="text-zinc-100 text-[15px] uppercase tracking-wider font-medium mb-4">Scene</div>
             {captionDataList.map((captionData, index) => {
                 return <SceneSequenceItem
                     key={index}
@@ -77,6 +79,7 @@ function SceneSequencePanel({
                     isHovered={hoveredImageIndex === index}
                     isCurrentScene={currentSceneIndex === index}
                     isLastItem={index === captionDataList.length - 1}
+                    aspectRatio={aspectRatio}
                     onClickSceneSequence={onClickSceneSequence}
                     onLoadImage={() => {
                         setImageDataList((prevImageDataList) => {

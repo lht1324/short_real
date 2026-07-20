@@ -1,9 +1,9 @@
 import { NextRequest } from 'next/server';
-import { createSupabaseServiceRoleClient } from '@/lib/supabaseServiceRole';
+import { createSupabaseServiceRoleClient } from '@/lib/supabase/supabaseServiceRole';
 import {videoGenerationTasksServerAPI} from "@/lib/api/server/videoGenerationTasksServerAPI";
-import {taskCheckAndCleanupIfCancelled} from "@/utils/taskCheckAndCleanupIfCancelled";
-import {getNextBaseResponse} from "@/utils/getNextBaseResponse";
-import {internalFireAndForgetFetch} from "@/utils/internalFetch";
+import {taskCheckAndCleanupIfCancelled} from "@/lib/utils/taskCheckAndCleanupIfCancelled";
+import {getNextBaseResponse} from "@/lib/utils/getNextBaseResponse";
+import {internalFireAndForgetFetch} from "@/lib/utils/internalFetch";
 
 export async function POST(request: NextRequest) {
     const supabase = createSupabaseServiceRoleClient();
@@ -122,9 +122,10 @@ export async function POST(request: NextRequest) {
                 .from('video_generation_tasks')
                 .update({
                     music_completed: false,
-                    // 필요시 에러 메시지 저장 필드 추가 가능
                 })
                 .eq('id', taskId);
+
+            await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
         }
 
         return getNextBaseResponse({
@@ -135,10 +136,11 @@ export async function POST(request: NextRequest) {
 
     } catch (error) {
         console.error('[Webhook Audio] Error:', error);
+        await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
         return getNextBaseResponse({
             success: false,
             status: 500,
-            error: 'Webhook processing failed'
+            error: error instanceof Error ? error.message : 'Webhook processing failed'
         });
     }
 }

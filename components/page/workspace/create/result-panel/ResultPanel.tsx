@@ -1,23 +1,28 @@
-import {memo} from "react";
-import {AlertTriangle, Coins, Film, Save, Sparkles} from "lucide-react";
-import CreditUsageCard from "@/components/page/workspace/create/result-panel/CreditUsageCard";
+import {memo, useMemo} from "react";
+import {AlertTriangle, Coins, Film, Save, Sparkles, Loader2, CheckCircle2, Circle, FileText} from "lucide-react";
+import EstimatedCostCard from "@/components/page/workspace/create/result-panel/EstimatedCostCard";
+import {getMatchedModelPrice} from "@/lib/utils/costCalculator";
+import {AIModelData, AIModelPriceUnit} from "@/lib/api/types/supabase/AIModelData";
 
 interface ResultPanelProps {
     isStoryboardGenerated: boolean,
     videoTitle: string | null;
     videoDescription: string | null;
     expectedVideoTotalDuration: number;
-    expectedDurationUsage: number;
     expectedVideoSceneCount: number;
-    expectedSceneCountUsage: number;
-    expectedCreditUsage: number;
     script: string;
     selectedVoiceId: string;
     selectedStyleId: string;
     isSaving: boolean;
     isSubmitting: boolean;
-    isCreditInsufficient: boolean;
     isVideoGenerationEnabled: boolean;
+    aiModelList: AIModelData[];
+    selectedReferenceId: string | null;
+    selectedI2iId: string | null;
+    selectedI2vId: string | null;
+    resolution: '720p' | '1080p' | '2160p';
+    isFalAiKeyMissing: boolean;
+    estimatedCharacterCount: number;
     onClickSaveDraft: () => void;
     onClickGenerateVideo: () => void;
 }
@@ -27,44 +32,79 @@ function ResultPanel({
     videoTitle,
     videoDescription,
     expectedVideoTotalDuration,
-    expectedDurationUsage,
     expectedVideoSceneCount,
-    expectedSceneCountUsage,
-    expectedCreditUsage,
     script,
     selectedVoiceId,
     selectedStyleId,
     isSaving,
     isSubmitting,
-    isCreditInsufficient,
     isVideoGenerationEnabled,
+    aiModelList,
+    selectedReferenceId,
+    selectedI2iId,
+    selectedI2vId,
+    resolution,
+    isFalAiKeyMissing,
+    estimatedCharacterCount,
     onClickSaveDraft,
     onClickGenerateVideo,
 }: ResultPanelProps) {
-    return (
-        <div className="flex-[3] bg-black flex flex-col relative">
-            {/* Vaporwave Background Effects */}
-            <div className="absolute inset-0 opacity-10">
-                <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-gradient-to-r from-pink-500 to-purple-600 rounded-full blur-3xl"></div>
-                <div className="absolute bottom-1/4 right-1/4 w-52 h-52 bg-gradient-to-r from-purple-500 to-indigo-600 rounded-full blur-3xl"></div>
-                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-48 h-48 bg-gradient-to-r from-indigo-500 to-cyan-500 rounded-full blur-3xl"></div>
-            </div>
+    const referenceImageAIModelData = useMemo(() => {
+        return aiModelList.find((aiModelData) => {
+            return aiModelData.id === selectedReferenceId;
+        });
+    }, [aiModelList, selectedReferenceId]);
 
-            <div className="flex-1 flex p-8 items-center justify-center relative z-10">
-                {(isStoryboardGenerated && videoTitle && videoDescription) ? (<div>
+    const sceneImageAIModelData = useMemo(() => {
+        return aiModelList.find((aiModelData) => {
+            return aiModelData.id === selectedI2iId;
+        });
+    }, [aiModelList, selectedI2iId]);
+
+    const videoAIModelData = useMemo(() => {
+        return aiModelList.find((aiModelData) => {
+            return aiModelData.id === selectedI2vId;
+        });
+    }, [aiModelList, selectedI2vId]);
+
+    const referenceImageAIModelPrice = useMemo(() => {
+        return getMatchedModelPrice(referenceImageAIModelData, resolution, 'text-to-image').price;
+    }, [resolution, referenceImageAIModelData]);
+
+    const sceneImageAIModelPrice = useMemo(() => {
+        return getMatchedModelPrice(sceneImageAIModelData, resolution, 'image-to-image').price;
+    }, [resolution, sceneImageAIModelData]);
+
+    const videoAIModelPrice = useMemo(() => {
+        return getMatchedModelPrice(videoAIModelData, resolution, 'image-to-video').price;
+    }, [resolution, videoAIModelData]);
+
+    const expectedAIModelUsage = useMemo(() => {
+        const scenes = Math.max(1, expectedVideoSceneCount);
+        const duration = Math.max(5, expectedVideoTotalDuration);
+
+        return referenceImageAIModelPrice * estimatedCharacterCount + sceneImageAIModelPrice * scenes + videoAIModelPrice * duration;
+    }, [referenceImageAIModelPrice, sceneImageAIModelPrice, videoAIModelPrice, expectedVideoSceneCount, expectedVideoTotalDuration, estimatedCharacterCount]);
+
+    // if (!expectedAIModelUsage) return null;
+
+    return (
+        <div className="flex-[3] max-w-[450px] min-w-[380px] w-full bg-transparent flex flex-col relative border-l border-white/5">
+            <div className="flex-1 flex p-8 items-center justify-center relative z-10 overflow-y-auto custom-scrollbar">
+                {(isStoryboardGenerated && videoTitle && videoDescription) ? (<div className="w-full max-w-2xl">
                     {/* Video Metadata Section */}
                     <div className="mb-4 space-y-3">
                         {/* Title Card */}
-                        <div className="group relative rounded-xl border border-purple-500/30 bg-gradient-to-r from-purple-500/5 via-pink-500/5 to-purple-500/5 p-4 backdrop-blur-sm transition-all hover:border-purple-400/50 hover:shadow-lg hover:shadow-purple-500/10">
+                        <div className="rounded-xl border border-white/5 bg-zinc-900/40 p-5 transition-colors hover:bg-zinc-900/60">
                             <div className="flex items-start space-x-3">
                                 <div className="flex-shrink-0 mt-0.5">
-                                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center shadow-lg">
-                                        <Film className="w-4 h-4 text-white" />
+                                    <div className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center">
+                                        <Film className="w-4 h-4 text-zinc-400" />
                                     </div>
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                    <div className="text-sm font-medium text-purple-300 mb-1.5">Video Title</div>
-                                    <h3 className="text-lg font-bold leading-snug text-white">
+                                    <div className="text-[11px] font-medium text-zinc-500 mb-1 uppercase tracking-wider">Video Title</div>
+                                    <h3 className="text-[15px] font-medium leading-snug text-zinc-100">
                                         {videoTitle}
                                     </h3>
                                 </div>
@@ -72,16 +112,16 @@ function ResultPanel({
                         </div>
 
                         {/* Description Card */}
-                        <div className="group relative rounded-xl border border-purple-500/30 bg-gradient-to-r from-pink-500/5 via-purple-500/5 to-pink-500/5 p-4 backdrop-blur-sm transition-all hover:border-purple-400/50 hover:shadow-lg hover:shadow-pink-500/10">
+                        <div className="rounded-xl border border-white/5 bg-zinc-900/40 p-5 transition-colors hover:bg-zinc-900/60">
                             <div className="flex items-start space-x-3">
                                 <div className="flex-shrink-0 mt-0.5">
-                                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-600 to-pink-500 flex items-center justify-center shadow-lg">
-                                        <Sparkles className="w-4 h-4 text-white" />
+                                    <div className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center">
+                                        <FileText className="w-4 h-4 text-zinc-400" />
                                     </div>
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                    <div className="text-sm font-medium text-purple-300 mb-1.5">Description</div>
-                                    <p className="whitespace-pre-wrap text-base leading-relaxed text-gray-300">
+                                    <div className="text-[11px] font-medium text-zinc-500 mb-1 uppercase tracking-wider">Description</div>
+                                    <p className="whitespace-pre-wrap text-[13px] leading-relaxed text-zinc-400">
                                         {videoDescription}
                                     </p>
                                 </div>
@@ -89,110 +129,121 @@ function ResultPanel({
                         </div>
                     </div>
 
-                    {/* Credit Usage Card */}
-                    <CreditUsageCard
-                        expectedVideoTotalDuration={expectedVideoTotalDuration}
-                        expectedDurationUsage={expectedDurationUsage}
+                    {/* Estimated Cost Card */}
+                    <EstimatedCostCard
+                        aiModelList={aiModelList}
+                        selectedReferenceId={selectedReferenceId}
+                        selectedI2iId={selectedI2iId}
+                        selectedI2vId={selectedI2vId}
                         expectedVideoSceneCount={expectedVideoSceneCount}
-                        expectedSceneCountUsage={expectedSceneCountUsage}
-                        expectedCreditUsage={expectedCreditUsage}
+                        expectedVideoTotalDuration={expectedVideoTotalDuration}
+                        estimatedCharacterCount={estimatedCharacterCount}
+                        resolution={resolution}
                     />
                 </div>) : (
                     <div className="text-center">
-                        <div className="text-gray-400 mb-4">
-                            <Sparkles className="w-16 h-16 mx-auto mb-3 opacity-50" />
+                        <div className="w-16 h-16 bg-white/5 border border-white/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <Sparkles className="w-6 h-6 text-zinc-600" />
                         </div>
-                        <p className="text-base text-gray-400 font-medium">No results yet</p>
-                        <p className="text-sm text-gray-500 mt-1">Generate a storyboard to see your video details</p>
+                        <p className="text-sm font-medium text-zinc-300">No storyboard yet</p>
+                        <p className="text-[13px] text-zinc-500 mt-1.5">Generate a storyboard to preview your video details.</p>
                     </div>
                 )}
             </div>
 
-            <div className="p-6 border-t border-purple-500/20 bg-gray-900/50 backdrop-blur-sm relative z-10">
-                <div className="flex w-fit items-center space-x-4 max-w-2xl mx-auto">
+            <div className="p-6 border-t border-white/5 bg-zinc-950/80 backdrop-blur-md relative z-10">
+                <div className="flex w-full items-center space-x-4 max-w-2xl mx-auto">
                     {/* Save Draft 버튼 */}
                     <button
                         onClick={onClickSaveDraft}
                         disabled={isSaving}
-                        className="flex items-center space-x-2 px-4 py-3 bg-gray-800/50 hover:bg-gray-800 border border-gray-600/50 hover:border-gray-500/50 text-gray-300 hover:text-white rounded-lg font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="flex items-center justify-center space-x-2 w-32 py-2.5 bg-zinc-900 hover:bg-zinc-800 border border-white/10 text-zinc-300 hover:text-white rounded-lg font-medium text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         {isSaving ? (
                             <>
-                                <div className="w-4 h-4 border-2 border-gray-400/30 border-t-gray-400 rounded-full animate-spin"></div>
-                                <span className="text-sm">Saving...</span>
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                                <span>Saving...</span>
                             </>
                         ) : (
                             <>
                                 <Save size={16} />
-                                <span className="text-sm">Save Draft</span>
+                                <span>Save Draft</span>
                             </>
                         )}
                     </button>
 
                     {/* Generate Video 버튼 */}
-                    <div className="relative group">
+                    <div className="relative group flex-1">
                         <button
                             onClick={onClickGenerateVideo}
-                            disabled={!isVideoGenerationEnabled || isSubmitting}
-                            className={`flex-1 min-w-[280px] group px-6 py-3 rounded-xl text-lg font-semibold transition-all duration-300 transform hover:scale-105 flex items-center justify-center space-x-2 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none ${
-                                isCreditInsufficient
-                                    ? 'bg-red-500/10 border-2 border-red-500 text-red-500 hover:bg-red-500/20 shadow-red-500/25'
-                                    : 'bg-gradient-to-r from-pink-500 to-purple-600 text-white hover:from-pink-600 hover:to-purple-700 shadow-purple-500/25'
+                            disabled={!isVideoGenerationEnabled || isSubmitting || isFalAiKeyMissing}
+                            className={`relative w-full py-2.5 px-12 rounded-lg text-sm font-semibold transition-all flex items-center justify-center border ${
+                                (!isVideoGenerationEnabled || isFalAiKeyMissing || isSubmitting)
+                                    ? "bg-zinc-900 text-zinc-500 border-white/5 cursor-not-allowed"
+                                    : "bg-white text-black hover:bg-zinc-200 border-transparent shadow-sm"
                             }`}
                         >
                             {isSubmitting ? (
-                                <>
-                                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                                <div className="flex items-center justify-center space-x-2">
+                                    <Loader2 className="w-4 h-4 animate-spin text-zinc-500" />
                                     <span>Requesting...</span>
-                                </>
-                            ) : isCreditInsufficient ? (
-                                <>
-                                    <AlertTriangle className="w-5 h-5" />
-                                    <span>Not Enough Credits</span>
-                                </>
+                                </div>
                             ) : (
                                 <>
-                                    <div className="flex items-center space-x-1 px-2 py-1 bg-black/40 rounded-lg">
-                                        <Coins className="w-3.5 h-3.5 text-yellow-400" />
-                                        <span className="text-xs font-medium">-{expectedCreditUsage}</span>
+                                    <span className="w-full text-center">Generate Video</span>
+                                    
+                                    <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                                        {(!isVideoGenerationEnabled || isFalAiKeyMissing) ? (
+                                            <span className="flex items-center space-x-1 text-[10px] font-bold text-amber-500 bg-amber-500/10 px-2 py-1 rounded border border-amber-500/20">
+                                                <AlertTriangle className="w-3.5 h-3.5 text-amber-500" />
+                                                <span>Incomplete</span>
+                                            </span>
+                                        ) : (
+                                            <span className="text-[11px] font-mono font-bold text-zinc-900 bg-zinc-100 px-2 py-0.5 rounded border border-zinc-200">
+                                                -${(expectedAIModelUsage ?? 0).toFixed(3)}
+                                            </span>
+                                        )}
                                     </div>
-                                    <span>Generate Video</span>
-                                    <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                                    </svg>
                                 </>
                             )}
                         </button>
 
                         {/* 툴팁 오버레이 */}
-                        {!isVideoGenerationEnabled && (
-                            <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-64 bg-gray-900/95 backdrop-blur-sm border border-purple-500/30 rounded-lg p-3 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-10 shadow-xl">
-                                <div className="text-xs font-medium text-purple-300 mb-2">Requirements</div>
-                                <div className="space-y-1.5">
-                                    <div className="flex items-center space-x-2 text-xs">
-                                        <span>{script.trim() ? '🟢' : '🔴'}</span>
-                                        <span className={script.trim() ? 'text-green-300' : 'text-gray-400'}>
-                                                    Script written
-                                                </span>
-                                    </div>
-                                    <div className="flex items-center space-x-2 text-xs">
-                                        <span>{isStoryboardGenerated && videoTitle ? '🟢' : '🔴'}</span>
-                                        <span className={isStoryboardGenerated && videoTitle ? 'text-green-300' : 'text-gray-400'}>
-                                            Storyboard generated
+                        {(!isVideoGenerationEnabled || isFalAiKeyMissing) && (
+                            <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-3 w-56 bg-zinc-900 border border-white/10 rounded-lg p-3.5 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 shadow-xl">
+                                <div className="text-[10px] font-medium text-zinc-500 uppercase tracking-wider mb-2">Requirements</div>
+                                <div className="space-y-2">
+                                    <div className="flex items-center space-x-2 text-[13px]">
+                                        {!isFalAiKeyMissing ? <CheckCircle2 size={14} className="text-emerald-500" /> : <Circle size={14} className="text-zinc-700" />}
+                                        <span className={!isFalAiKeyMissing ? 'text-zinc-200' : 'text-zinc-500'}>
+                                            fal.ai Key connected
                                         </span>
                                     </div>
-                                    <div className="flex items-center space-x-2 text-xs">
-                                        <span>{selectedVoiceId ? '🟢' : '🔴'}</span>
-                                        <span className={selectedVoiceId ? 'text-green-300' : 'text-gray-400'}>
+                                    <div className="flex items-center space-x-2 text-[13px]">
+                                        {script.trim() ? <CheckCircle2 size={14} className="text-emerald-500" /> : <Circle size={14} className="text-zinc-700" />}
+                                        <span className={script.trim() ? 'text-zinc-200' : 'text-zinc-500'}>
+                                            Script written
+                                        </span>
+                                    </div>
+                                    <div className="flex items-center space-x-2 text-[13px]">
+                                        {selectedVoiceId ? <CheckCircle2 size={14} className="text-emerald-500" /> : <Circle size={14} className="text-zinc-700" />}
+                                        <span className={selectedVoiceId ? 'text-zinc-200' : 'text-zinc-500'}>
                                             Voice selected
                                         </span>
                                     </div>
-                                    <div className="flex items-center space-x-2 text-xs">
-                                        <span>{selectedStyleId ? '🟢' : '🔴'}</span>
-                                        <span className={selectedStyleId ? 'text-green-300' : 'text-gray-400'}>
-                                            Style selected
+                                    <div className="flex items-center space-x-2 text-[13px]">
+                                        {isStoryboardGenerated && videoTitle ? <CheckCircle2 size={14} className="text-emerald-500" /> : <Circle size={14} className="text-zinc-700" />}
+                                        <span className={isStoryboardGenerated && videoTitle ? 'text-zinc-200' : 'text-zinc-500'}>
+                                            Storyboard generated
                                         </span>
                                     </div>
+                                    {/* 아직 스타일 도입 안 해서 주석 처리 */}
+                                    {/*<div className="flex items-center space-x-2 text-[13px]">*/}
+                                    {/*    {selectedStyleId ? <CheckCircle2 size={14} className="text-emerald-500" /> : <Circle size={14} className="text-zinc-700" />}*/}
+                                    {/*    <span className={selectedStyleId ? 'text-zinc-200' : 'text-zinc-500'}>*/}
+                                    {/*        Style selected*/}
+                                    {/*    </span>*/}
+                                    {/*</div>*/}
                                 </div>
                             </div>
                         )}
