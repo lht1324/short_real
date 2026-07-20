@@ -314,7 +314,17 @@ export async function POST(
         await voiceServerAPI.postNarrationBufferStream(
             voiceGenerationResult.audioBuffer,
             taskId,
+            userId,
         );
+
+        // 8-1. 음성 파일을 각 Scene별 자막 시간에 맞추어 컷팅하여 저장
+        console.log(`[Autopilot Video-Metadata] Scene 오디오 슬라이싱 시작... task: ${taskId}`);
+        await voiceServerAPI.sliceVoiceToScenes(
+            taskId,
+            userId,
+            finalSceneDataList
+        );
+        console.log(`[Autopilot Video-Metadata] Scene 오디오 슬라이싱 완료.`);
 
         const isVertical = aspectRatio === '9:16';
         const videoWidth = isVertical ? 1080 : 1920;
@@ -322,7 +332,12 @@ export async function POST(
 
         // 9. 최종 데이터로 태스크 업데이트
         const patchVideoGenerationTaskRequest: Partial<VideoGenerationTask> = {
-            scene_breakdown_list: finalSceneDataList,
+            scene_breakdown_list: finalSceneDataList.map((sceneData) => {
+                return {
+                    ...sceneData,
+                    speedMultiplier: 1.0,
+                }
+            }),
             video_title: postSceneSegmentationResult.videoTitle,
             video_description: postSceneSegmentationResult.videoDescription,
             final_video_merge_data: {

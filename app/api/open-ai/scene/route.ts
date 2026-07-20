@@ -174,7 +174,12 @@ export async function POST(request: NextRequest): Promise<NextResponse<PostOpenA
         });
 
         const patchVideoGenerationTaskRequest: Partial<VideoGenerationTask> = {
-            scene_breakdown_list: sceneDataListWithSceneDuration,
+            scene_breakdown_list: sceneDataListWithSceneDuration.map((sceneData) => {
+                return {
+                    ...sceneData,
+                    speedMultiplier: 1.0,
+                }
+            }),
             video_title: postSceneSegmentationResult.videoTitle,
             video_description: postSceneSegmentationResult.videoDescription,
         }
@@ -192,11 +197,21 @@ export async function POST(request: NextRequest): Promise<NextResponse<PostOpenA
         const fileUploadResult = await voiceServerAPI.postNarrationBufferStream(
             voiceGenerationResult.audioBuffer,
             patchVideoGenerationTaskResult.id,
+            userId,
         );
 
         if (!fileUploadResult.success) {
             throw Error(`Failed to upload audio file to Supabase Storage: ${fileUploadResult.message}`);
         }
+
+        // 10. 음성 파일을 각 Scene별 자막 시간에 맞추어 컷팅하여 저장
+        console.log(`[Scene Segmentation] Scene 오디오 슬라이싱 시작... task: ${patchVideoGenerationTaskResult.id}`);
+        await voiceServerAPI.sliceVoiceToScenes(
+            patchVideoGenerationTaskResult.id,
+            userId,
+            sceneDataListWithSceneDuration
+        );
+        console.log(`[Scene Segmentation] Scene 오디오 슬라이싱 완료.`);
 
         console.log("newSceneDataList: ", JSON.stringify(postSceneSegmentationResult.sceneDataList))
 

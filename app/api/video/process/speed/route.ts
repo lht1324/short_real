@@ -53,44 +53,14 @@ export async function POST(request: NextRequest) {
         // safety 걸렸을 때 1.0 Pro Fast 재요청 추가
 
         if (status === 'OK' || status === 'COMPLETED' || status === 'completed' || status === 'Completed') {
-            // 중복 처리 여부 검증
-            const fileName = `${taskId}/${requestId}.mp4`;
-            const { data: existingFiles, error: listError } = await supabase.storage
-                .from('processed_video_storage')
-                .list(taskId, {
-                    search: requestId // requestId가 포함된 파일이 있는지 검색
-                });
-
-            if (existingFiles && existingFiles.length > 0) {
-                console.log(`[Safety Guard] 파일이 이미 존재함. 중복 요청 스킵: ${fileName}`);
-                return getNextBaseResponse({
-                    success: true,
-                    status: 200,
-                    message: "Already processed (File exists)"
-                });
-            }
-
             // 3. fal-ai의 requestId와 일치하는 Scene 찾기
             const originalSceneDataList = videoGenerationTask.scene_breakdown_list.sort((a, b) => {
                 return a.sceneNumber - b.sceneNumber;
             });
 
-            // 5. fal-ai 영상 URL 확인
-            // 모델마다 다르지만 보통 payload.video.url 또는 payload.output.video.url에 위치함
-            const videoUrl = payload?.video?.url || payload?.output?.video?.url || payload?.url;
-
-            if (!videoUrl || typeof videoUrl !== 'string') {
-                console.error("fal-ai Payload Structure:", JSON.stringify(payload));
-                throw new Error(`Invalid video output URL from fal-ai for request ${requestId}`);
-            }
-
-            // ==================================================================
-            //  ▼▼▼ 영상 속도 조절 및 업로드 처리 부분 (기존 로직 유지) ▼▼▼
-            // ==================================================================
-
             const currentIndex = originalSceneDataList.findIndex((sceneData) => {
                 return sceneData.requestId === requestId;
-            })
+            });
 
             if (currentIndex === -1) {
                 await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
@@ -102,6 +72,36 @@ export async function POST(request: NextRequest) {
             }
 
             const sceneToProcess = originalSceneDataList[currentIndex];
+            const userId = videoGenerationTask.user_id;
+
+            // 중복 처리 여부 검증 (신규 파일명 규칙 기준)
+            const processedFileName = `${userId}/${taskId}/video_processed_${sceneToProcess.sceneNumber}.mp4`;
+            const { data: existingFiles } = await supabase.storage
+                .from('processed_video_storage')
+                .list(`${userId}/${taskId}`, {
+                    search: `video_processed_${sceneToProcess.sceneNumber}.mp4`
+                });
+
+            if (existingFiles && existingFiles.length > 0) {
+                console.log(`[Safety Guard] 파일이 이미 존재함. 중복 요청 스킵: ${processedFileName}`);
+                return getNextBaseResponse({
+                    success: true,
+                    status: 200,
+                    message: "Already processed (File exists)"
+                });
+            }
+
+            // 5. fal-ai 영상 URL 확인
+            const videoUrl = payload?.video?.url || payload?.output?.video?.url || payload?.url;
+
+            if (!videoUrl || typeof videoUrl !== 'string') {
+                console.error("fal-ai Payload Structure:", JSON.stringify(payload));
+                throw new Error(`Invalid video output URL from fal-ai for request ${requestId}`);
+            }
+
+            // ==================================================================
+            //  ▼▼▼ 영상 속도 조절 및 업로드 처리 부분 ▼▼▼
+            // ==================================================================
 
             const subtitles = sceneToProcess.sceneSubtitleSegments;
 
@@ -130,24 +130,43 @@ export async function POST(request: NextRequest) {
             const processedVideoUrl = postProcessedVideoResult.processedVideoUrl;
 
             // 6. 결과 영상 다운로드
-            // Replicate output은 URL 문자열입니다.
             const videoResponse = await fetch(processedVideoUrl);
             if (!videoResponse.ok) throw new Error(`Download failed: ${videoResponse.statusText}`);
             const videoBuffer = await videoResponse.arrayBuffer();
 
             // 7. Supabase Storage 업로드
-            // 파일명 규칙: [taskId]/[requestId].mp4
-            const newFileName = `${taskId}/${requestId}.mp4`;
+
+            // 7-1. 원본 비디오(Raw) 다운로드 및 업로드
+            console.log(`[Speed Process] 원본 비디오 다운로드 및 업로드 시작: scene ${sceneToProcess.sceneNumber}`);
+            const rawVideoResponse = await fetch(videoUrl);
+            if (!rawVideoResponse.ok) throw new Error(`Raw video download failed: ${rawVideoResponse.statusText}`);
+            const rawVideoBuffer = await rawVideoResponse.arrayBuffer();
+
+            const rawFileName = `${userId}/${taskId}/video_raw_${sceneToProcess.sceneNumber}.mp4`;
+            const { error: rawUploadError } = await supabase.storage
+                .from('processed_video_storage')
+                .upload(rawFileName, Buffer.from(rawVideoBuffer), {
+                    contentType: 'video/mp4',
+                    upsert: true
+                });
+
+            if (rawUploadError) {
+                throw new Error(`Raw video storage upload failed: ${rawUploadError.message}`);
+            }
+            console.log(`[Speed Process] 원본 비디오 업로드 완료: ${rawFileName}`);
+
+            // 7-2. 가공 비디오(Processed) 업로드
             const { error: uploadError } = await supabase.storage
                 .from('processed_video_storage')
-                .upload(newFileName, videoBuffer, {
+                .upload(processedFileName, Buffer.from(videoBuffer), {
                     contentType: 'video/mp4',
                     upsert: true
                 });
 
             if (uploadError) {
-                throw new Error(`Storage upload failed: ${uploadError.message}`);
+                throw new Error(`Processed video storage upload failed: ${uploadError.message}`);
             }
+            console.log(`[Speed Process] 가공 비디오 업로드 완료: ${processedFileName}`);
 
             // =========================================================
             // [병합 트리거] "내가 마지막인가?" 확인 로직
@@ -174,20 +193,18 @@ export async function POST(request: NextRequest) {
 
             console.log(`Speed Webhook: Scene ${requestId} finished. Progress: ${processedCount}/${totalCount}`);
 
-            // 10. 모든 씬 완료 시 병합(Merge) 엔드포인트 호출
+            // 10. 모든 씬 완료 시 음악 생성(Music) 엔드포인트 호출
             if (processedCount === totalCount) {
-                console.log(`모든 Scene 처리 완료. 최종 병합을 시작합니다: ${taskId}`);
+                console.log(`모든 Scene 처리 완료. 음악 생성을 시작합니다: ${taskId}`);
 
-                // 상태 변경: STITCHING_VIDEOS
+                // 상태 변경: COMPOSING_MUSIC
                 await videoGenerationTasksServerAPI.patchVideoGenerationTaskStatus(
                     taskId,
-                    VideoGenerationTaskStatus.STITCHING_VIDEOS
+                    VideoGenerationTaskStatus.COMPOSING_MUSIC
                 );
 
-                // 병합 엔드포인트 호출 (Fire and Forget)
-                // 주의: 서버 사이드 fetch이므로 process.env.BASE_URL(절대 경로) 필수
-
-                internalFireAndForgetFetch(`${process.env.BASE_URL}/api/video/merge?taskId=${taskId}`, {
+                // 음악 생성 엔드포인트 호출 (Fire and Forget)
+                internalFireAndForgetFetch(`${process.env.BASE_URL}/api/music?taskId=${taskId}`, {
                     method: 'POST',
                 });
             }

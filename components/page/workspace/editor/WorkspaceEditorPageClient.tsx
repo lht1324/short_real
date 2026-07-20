@@ -33,7 +33,12 @@ const MusicEditPanel = dynamic(
 
 interface VideoData {
     title: string;
-    videoUrl: string;
+    scenesUrlData: {
+        sceneNumber: number;
+        videoRawUrl: string | null;
+        videoProcessedUrl: string | null;
+        voiceUrl: string | null;
+    }[];
     captionDataList: CaptionData[];
 }
 
@@ -43,6 +48,7 @@ export interface CaptionData {
     startSec: number;
     endSec: number;
     subtitleSegmentationList: SubtitleSegment[];
+    speedMultiplier?: number; // 2차 배속 설정
 }
 
 export interface CaptionConfigState {
@@ -166,7 +172,7 @@ function WorkspaceEditorPageClient() {
     }, [videoData]);
 
     const [captionConfigState, setCaptionConfigState] = useState<CaptionConfigState>(INITIAL_CAPTION_CONFIG_STATE);
-
+    const [sceneSpeedList, setSceneSpeedList] = useState<{ sceneNumber: number; speedMultiplier: number; }[]>([]);
     const [fontFamilyList, setFontFamilyList] = useState<FontFamily[]>([]);
     const selectedFontFamily = useMemo(() => {
         return fontFamilyList.find((fontFamily) => {
@@ -222,9 +228,18 @@ function WorkspaceEditorPageClient() {
 
     const finalVideoMergeData: FinalVideoMergeData | null = useMemo(() => {
         if (captionDataList.length !== 0 && taskId && videoPlayerUIData && videoDuration > 0) {
+            // 자막 데이터 리스트에 개별 씬의 최신 배속 설정 값을 결합(Join)하여 빌드
+            const mergedCaptionDataList = captionDataList.map((caption) => {
+                const speedObj = sceneSpeedList.find((s) => s.sceneNumber === caption.sceneNumber);
+                return {
+                    ...caption,
+                    speedMultiplier: speedObj ? speedObj.speedMultiplier : 1.0,
+                };
+            });
+
             return {
                 isCaptionEnabled: isCaptionEnabled,
-                captionDataList: captionDataList,
+                captionDataList: mergedCaptionDataList,
                 captionConfigState: captionConfigState,
                 videoWidth: videoPlayerUIData.videoWidth,
                 videoHeight: videoPlayerUIData.videoHeight,
@@ -240,7 +255,7 @@ function WorkspaceEditorPageClient() {
         } else {
             return null;
         }
-    }, [isCaptionEnabled, captionDataList, taskId, videoPlayerUIData, videoDuration, captionConfigState, editingMusicIndex, musicStartSec, musicVolume]);
+    }, [isCaptionEnabled, captionDataList, taskId, videoPlayerUIData, videoDuration, captionConfigState, editingMusicIndex, musicStartSec, musicVolume, sceneSpeedList]);
 
     const onClickFinish = useCallback(async () => {
         setIsFinishLoading(true);
@@ -311,6 +326,16 @@ function WorkspaceEditorPageClient() {
             return prevCurrentTime !== newCurrentTime
                 ? newCurrentTime
                 : prevCurrentTime;
+        });
+    }, []);
+
+    const onChangeSceneSpeed = useCallback((sceneNumber: number, speedMultiplier: number) => {
+        setSceneSpeedList((prev) => {
+            return prev.map((s) => {
+                return s.sceneNumber === sceneNumber
+                    ? { ...s, speedMultiplier: speedMultiplier }
+                    : s;
+            });
         });
     }, []);
 
@@ -421,12 +446,13 @@ function WorkspaceEditorPageClient() {
                 setFontFamilyList(newFamilyList);
 
                 // Task Data Initialization
-                const [taskVideoUrl, videoGenerationTask] = await Promise.all([
-                    videoClientAPI.getVideoVoiceUrl(taskId),
+                const userId = user?.id || searchParams.get('userId') || "";
+                const [urlsResult, videoGenerationTask] = await Promise.all([
+                    videoClientAPI.getVideoTaskUrls(taskId, userId),
                     videoClientAPI.getVideoTaskByTaskId(taskId)
                 ]);
 
-                if (!taskVideoUrl || !videoGenerationTask) {
+                if (!urlsResult || !videoGenerationTask) {
                     throw new Error("There is no video generation task");
                 }
 
@@ -439,6 +465,7 @@ function WorkspaceEditorPageClient() {
 
                 // 각 씬의 시작/종료 시간 및 자막 세그먼트 계산
                 let accumulatedTime = 0;
+                const initialSpeedList: { sceneNumber: number; speedMultiplier: number; }[] = [];
                 const captionDataList = videoGenerationTask.scene_breakdown_list.map((sceneData) => {
                     const subtitleSegmentationList = sceneData.sceneSubtitleSegments ?? [];
                     const startSec = subtitleSegmentationList[0].startSec ?? accumulatedTime;
@@ -446,18 +473,27 @@ function WorkspaceEditorPageClient() {
 
                     accumulatedTime = endSec;
 
+                    const speed = sceneData.speedMultiplier ?? 1.0;
+                    initialSpeedList.push({
+                        sceneNumber: sceneData.sceneNumber,
+                        speedMultiplier: speed,
+                    });
+
                     return {
                         sceneNumber: sceneData.sceneNumber,
                         script: sceneData.narration,
                         startSec: startSec,
                         endSec: endSec,
-                        subtitleSegmentationList: subtitleSegmentationList
+                        subtitleSegmentationList: subtitleSegmentationList,
+                        speedMultiplier: speed,
                     }
                 });
 
+                setSceneSpeedList(initialSpeedList);
+
                 setVideoData({
                     title: videoGenerationTask.video_title ?? "",
-                    videoUrl: taskVideoUrl,
+                    scenesUrlData: urlsResult.scenes,
                     captionDataList: captionDataList,
                 });
 
@@ -619,6 +655,8 @@ function WorkspaceEditorPageClient() {
                                         onToggleIsCaptionEnabled={onToggleIsCaptionEnabled}
                                         onChangeCaptionConfigState={onChangeCaptionConfigState}
                                         onOpenColorPicker={onOpenColorPicker}
+                                        showPositionSelector={true}
+                                        aspectRatio={aspectRatio}
                                     />
                                 )}
                                 {activeConfigPanel === ConfigPanelType.Music && (
@@ -636,17 +674,19 @@ function WorkspaceEditorPageClient() {
                         {videoData && musicPlayConfig && <div className="flex-[0.66]">
                             <VideoPlayerPanel
                                 ref={videoPlayerRef}
-                                videoUrl={videoData.videoUrl}
+                                scenesUrlData={videoData.scenesUrlData}
                                 currentTime={videoCurrentTime}
                                 isCaptionEnabled={isCaptionEnabled}
                                 captionDataList={captionDataList}
                                 captionConfigState={captionConfigState}
                                 musicPlayConfig={musicPlayConfig}
                                 selectedFontFamilyFullShape={selectedFontFamilyFullShape}
+                                sceneSpeedList={sceneSpeedList}
                                 onChangeVideoPanelContainerHeight={onChangeVideoPanelContainerHeight}
                                 onChangeCaptionConfigState={onChangeCaptionConfigState}
                                 onChangeVideoPlayerUIData={onChangeVideoPlayerUIData}
                                 onChangeCurrentTime={onChangeVideoCurrentTime}
+                                onChangeSceneSpeed={onChangeSceneSpeed}
                                 onFinishLoading={onFinishVideoPlayerPanelLoading}
                             />
                         </div>}

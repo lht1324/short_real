@@ -3,19 +3,28 @@ import {getNextBaseResponse} from "@/lib/utils/getNextBaseResponse";
 import {NextRequest} from "next/server";
 
 export async function GET(request: NextRequest) {
-    const searchParams = request.nextUrl.searchParams;
+    const { searchParams } = new URL(request.url);
     const taskId = searchParams.get('taskId');
+    const sessionUserId = searchParams.get('userId');
 
     if (!taskId) {
         return getNextBaseResponse({
-            success: true, // Replicate가 재시도하지 않도록 200 OK 처리하되 에러 로그 남김
+            success: true,
             status: 400,
             error: "Missing param 'taskId'"
         });
     }
 
+    if (!sessionUserId) {
+        return getNextBaseResponse({
+            success: true,
+            status: 400,
+            error: "Missing param 'userId'"
+        });
+    }
+
     try {
-        const voiceUrl = await voiceServerAPI.getVoiceSignedUrl(taskId);
+        const voiceUrl = await voiceServerAPI.getVoiceSignedUrl(taskId, sessionUserId);
 
         return getNextBaseResponse({
             success: true,

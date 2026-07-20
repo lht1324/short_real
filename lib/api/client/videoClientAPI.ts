@@ -172,6 +172,34 @@ export const videoClientAPI = {
         }
     },
 
+    async getVideoTaskUrls(taskId: string, userId: string): Promise<{
+        scenes: {
+            sceneNumber: number;
+            videoRawUrl: string | null;
+            videoProcessedUrl: string | null;
+            voiceUrl: string | null;
+        }[]
+    } | null> {
+        try {
+            const response = await getFetch(`/api/video/task/${taskId}/urls?userId=${userId}`);
+
+            if (!response.ok) {
+                throw Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const result = await response.json();
+
+            if (!result.success || !result.data) {
+                throw Error(result.error ?? "Failed to fetch video task URLs.")
+            }
+
+            return result.data;
+        } catch (error) {
+            console.error('Failed to get video task URLs:', error);
+            return null;
+        }
+    },
+
     async getVideoFinalUrl(taskId: string, fileName: string): Promise<string | null> {
         try {
             const response = await getFetch(`/api/video/url/final?taskId=${taskId}&fileName=${fileName}`);

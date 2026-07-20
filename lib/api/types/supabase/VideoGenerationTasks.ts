@@ -81,6 +81,7 @@ export interface SceneData {
     sceneCastingEntityIdList?: string[];
     sceneVisualDescription?: string;
     status: SceneGenerationStatus;
+    speedMultiplier: number; // default 1.0
 }
 
 export interface SubtitleSegment {
