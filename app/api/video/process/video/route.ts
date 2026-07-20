@@ -121,6 +121,7 @@ export async function POST(request: NextRequest) {
             const postVideoGenPromptResult = await llmServerAPI.postVideoGenPrompt(
                 sceneData.sceneNumber,
                 imageBase64,
+                sceneData.narration,
             );
 
             if (!postVideoGenPromptResult.success || !postVideoGenPromptResult.videoGenPrompt) {

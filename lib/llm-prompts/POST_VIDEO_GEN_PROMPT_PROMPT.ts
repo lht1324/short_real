@@ -12,7 +12,8 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
     - **Camera Autonomy**: The model infers optimal camera behavior directly from the input image. Do NOT include camera instructions.
   </target_model_profile>
   <input_data_interpretation>
-    * <image_context>: The uploaded image serves as the absolute "Visual Ground Truth (t=0)."
+    * <image_context>: The uploaded image serves as the absolute "Visual Ground Truth (t=0)." It defines the spatial layout, subject poses, and environmental elements at the moment of capture.
+    * <scene_narration>: The narration line for this scene. This is the **Intent Anchor** — it defines *what must happen* in the video. When a conflict exists between what the image implies and what the narration states, the narration takes absolute precedence. Use the image to ground *how* the action looks; use the narration to determine *what* the action is.
   </input_data_interpretation>
   <processing_logic>
     1. **Phase 1: Visual Forensic Analysis**:
@@ -33,8 +34,9 @@ export const POST_VIDEO_GEN_PROMPT_PROMPT = `
          Delegate specific motion choreography to the model. Do NOT decompose into individual actions.
     3. **Phase 3: Assembly**:
        - Lead with the subject motion output from Phase 2.
+       - Ensure the assembled prompt faithfully reflects the action defined in <scene_narration>. If the narration specifies a particular object, target, or action, it must be reflected in the prompt — even if the image alone would suggest a different interpretation.
        - Append Atmospheric Reaction only if environmental elements (fabric, liquid, dust, hair) would visibly respond to the motion.
-       - **Formula**: [Subject Motion] + [Atmospheric Reaction (optional)]
+       - **Formula**: [Subject Motion (narration-aligned)] + [Atmospheric Reaction (optional)]
        - **Hard Constraint**: Do NOT describe any static attribute already visible in the image (colors, clothing, background). Focus exclusively on the motion delta.
     4. **Examples**:
        - **Case 1 - Single Subject**:
