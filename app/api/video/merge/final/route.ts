@@ -102,13 +102,6 @@ export async function POST(
             });
         }
 
-        const audioFilePath = isMusicPreProcessed
-            ? `${taskId}/autopilot_cut_music.mp3`
-            : `${taskId}/${taskId}_${musicIndex}.mp3`;
-
-        const videoUrl = await videoServerAPI.getVideoSignedUrl(`${taskId}/${taskId}.mp4`, 60 * 60);
-        const audioUrl = await musicServerAPI.getMusicSignedUrl(audioFilePath, 60 * 60);
-
         const patchVideoGenerationTaskStatusResult = await videoGenerationTasksServerAPI.patchVideoGenerationTaskStatus(taskId, VideoGenerationTaskStatus.FINALIZING);
 
         const checkingInitialResult = await taskCheckAndCleanupIfCancelled(patchVideoGenerationTaskStatusResult);
@@ -117,10 +110,99 @@ export async function POST(
             return checkingInitialResult;
         }
 
-        // ASS 콘텐츠 생성
+        // --- 1. 씬별 속도 조절 및 비디오 결합 렌더링 선행 ---
+        const isFinalVideoCreated = await videoServerAPI.postFinalVideo(taskId, videoGenerationTask);
+        if (!isFinalVideoCreated) {
+            return getNextBaseResponse({
+                success: false,
+                status: 500,
+                error: 'Failed to create final stitched video.'
+            });
+        }
+
+        // --- 1.5 최종 배속 조절 반영하여 자막 및 씬 타임라인 재계산 및 DB 업데이트 ---
+        let realTimeOffset = 0;
+        let originalTimeOffset = 0;
+
+        const sceneTimeOffsets = videoGenerationTask.scene_breakdown_list
+            .sort((a, b) => a.sceneNumber - b.sceneNumber)
+            .map((scene) => {
+                const captionData = captionDataList.find(c => c.sceneNumber === scene.sceneNumber);
+                const speed = captionData?.speedMultiplier ?? 1.0;
+                const duration = scene.sceneDuration;
+
+                const offsetInfo = {
+                    sceneNumber: scene.sceneNumber,
+                    originalStart: originalTimeOffset,
+                    realStart: realTimeOffset,
+                    speed: speed,
+                };
+
+                originalTimeOffset += duration;
+                realTimeOffset += (duration / speed);
+
+                return offsetInfo;
+            });
+
+        const adjustedCaptionDataList = captionDataList.map((caption) => {
+            const offsetInfo = sceneTimeOffsets.find(o => o.sceneNumber === caption.sceneNumber);
+            const speed = offsetInfo?.speed ?? 1.0;
+
+            if (!offsetInfo) return caption;
+
+            const adjustedSegments = caption.subtitleSegmentationList.map((seg) => {
+                const relativeStart = seg.startSec - offsetInfo.originalStart;
+                const relativeEnd = seg.endSec - offsetInfo.originalStart;
+
+                const scaledStart = relativeStart / speed;
+                const scaledEnd = relativeEnd / speed;
+
+                return {
+                    ...seg,
+                    startSec: parseFloat((offsetInfo.realStart + scaledStart).toFixed(3)),
+                    endSec: parseFloat((offsetInfo.realStart + scaledEnd).toFixed(3)),
+                };
+            });
+
+            return {
+                ...caption,
+                startSec: parseFloat(offsetInfo.realStart.toFixed(3)),
+                endSec: parseFloat((offsetInfo.realStart + (caption.endSec - caption.startSec) / speed).toFixed(3)),
+                subtitleSegmentationList: adjustedSegments,
+            };
+        });
+
+        const adjustedSceneBreakdownList = videoGenerationTask.scene_breakdown_list.map((scene) => {
+            const captionData = captionDataList.find(c => c.sceneNumber === scene.sceneNumber);
+            const speed = captionData?.speedMultiplier ?? 1.0;
+            return {
+                ...scene,
+                sceneDuration: parseFloat((scene.sceneDuration / speed).toFixed(3)),
+                speedMultiplier: speed,
+            };
+        });
+
+        // Supabase DB에 최종 배속이 완료된 자막과 씬 리스트 저장 (데이터 정합성 보존)
+        await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, {
+            final_video_merge_data: {
+                ...videoGenerationTask.final_video_merge_data,
+                captionDataList: adjustedCaptionDataList,
+            },
+            scene_breakdown_list: adjustedSceneBreakdownList,
+        });
+
+        // --- 2. 렌더링 완료된 비디오 및 오디오 URL 획득 ---
+        const audioFilePath = isMusicPreProcessed
+            ? `${taskId}/autopilot_cut_music.mp3`
+            : `${taskId}/${taskId}_${musicIndex}.mp3`;
+
+        const videoUrl = await videoServerAPI.getVideoSignedUrl(`${taskId}/${taskId}.mp4`, 60 * 60);
+        const audioUrl = await musicServerAPI.getMusicSignedUrl(audioFilePath, 60 * 60);
+
+        // --- 3. ASS 자막 생성 ---
         const assContent = generateASSContent(
             isCaptionEnabled,
-            captionDataList,
+            adjustedCaptionDataList,
             captionConfigState,
             videoWidth,
             videoHeight,
@@ -129,7 +211,8 @@ export async function POST(
             captionOneLineHeight,
         );
 
-        const videoDuration = videoGenerationTask.scene_breakdown_list.reduce((acc, sceneData) => {
+        // --- 4. 총 영상 길이 (배속 적용) 계산 ---
+        const videoDuration = adjustedSceneBreakdownList.reduce((acc, sceneData) => {
             return sceneData.sceneDuration + acc;
         }, 0);
 
@@ -158,7 +241,6 @@ export async function POST(
             status: 200,
             message: `Requested merging caption and modifying music successfully. caption: ${captionPredictionId}, music: ${musicPredictionId}}`,
         });
-
     } catch (error) {
         console.error('[API Final] Error:', error);
 

@@ -164,7 +164,10 @@ export const postMasterStyle = task({
 
                 const failedResults = referenceImageResults.filter((r) => !r.success);
                 if (failedResults.length > 0) {
-                    throw new Error(`Character sheet image generation failed for some entities.`);
+                    const firstError = failedResults[0].error;
+                    const customError = new Error(`Character sheet image generation failed: ${firstError?.message ?? 'Unknown error'}`);
+                    (customError as any).status = firstError?.status;
+                    throw customError;
                 }
             }
 
@@ -248,21 +251,22 @@ export const postMasterStyle = task({
                 error: error
             });
 
-            // [핵심 로직] 마지막 시도인지 확인
-            // ctx.attempt.number: 현재 시도 횟수 (1, 2, 3...)
-            // ctx.task.retry.maxAttempts: 설정된 최대 횟수 (여기서는 3)
-            // 주의: ctx 구조는 버전에 따라 다를 수 있으므로 안전하게 접근하거나 하드코딩된 값(3)과 비교해도 됩니다.
-
             const currentAttempt = ctx.attempt.number;
             const maxAttempts = 3; // 위 retry 설정과 동일하게 맞춤
 
-            if (currentAttempt >= maxAttempts) {
-                // [마지막 시도] 이제 진짜 망했음 -> DB에 실패 상태 기록
+            // fal.ai 잔액 부족 / 정지 등의 계정 관련 치명적 에러 감지 (403 이면서 balance, top up 포함)
+            const errStr = (error instanceof Error ? error.message : String(error)).toLowerCase();
+            const isStatus403 = (error && typeof error === 'object' && 'status' in error && (error as any).status === 403);
+            const hasBalanceOrTopUp = errStr.includes("balance") || errStr.includes("top up");
+
+            const isFalAiFatalError = isStatus403 && hasBalanceOrTopUp;
+
+            if (currentAttempt >= maxAttempts || isFalAiFatalError) {
+                // [마지막 시도 또는 치명적 계정 에러] DB에 실패 상태 기록
                 await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
-                logger.error(`Task permanently failed after ${maxAttempts} attempts.`);
+                logger.error(`Task permanently failed. Fatal error or attempt limit reached.`);
             } else {
                 // [재시도 예정] DB 업데이트 안 함 (사용자는 여전히 '생성 중'으로 봄)
-                // Trigger 대시보드에는 에러가 찍히지만, 재시도 스케줄링됨
                 logger.warn(`Attempt ${currentAttempt} failed. Retrying...`);
             }
 

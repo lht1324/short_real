@@ -216,9 +216,12 @@ function WorkspaceEditorPageClient() {
     const [videoCurrentTime, setVideoCurrentTime] = useState<number>(0.0);
     const currentSceneIndex = useMemo(() => {
         return captionDataList.findIndex((captionData, index) => {
-            return index === 0
-                ? 0.00 <= videoCurrentTime && captionData.endSec >= videoCurrentTime
-                : captionData.startSec <= videoCurrentTime && captionData.endSec >= videoCurrentTime;
+            const nextScene = captionDataList[index + 1];
+            if (nextScene) {
+                return videoCurrentTime >= captionData.startSec && videoCurrentTime < nextScene.startSec;
+            } else {
+                return videoCurrentTime >= captionData.startSec && videoCurrentTime <= captionData.endSec;
+            }
         });
     }, [captionDataList, videoCurrentTime]);
 
@@ -497,11 +500,14 @@ function WorkspaceEditorPageClient() {
                 const captionDataList = videoGenerationTask.scene_breakdown_list.map((sceneData) => {
                     const subtitleSegmentationList = sceneData.sceneSubtitleSegments ?? [];
                     const startSec = subtitleSegmentationList[0].startSec ?? accumulatedTime;
-                    const endSec = subtitleSegmentationList[subtitleSegmentationList.length - 1].endSec;
+
+                    const speed = sceneData.speedMultiplier ?? 1.0;
+                    // DB에 이미 배속 가공이 되어 늘어난 sceneDuration을 1.0배속 오리지널 길이로 역산 환원
+                    const originalSceneDuration = sceneData.sceneDuration * speed;
+                    const endSec = startSec + originalSceneDuration;
 
                     accumulatedTime = endSec;
 
-                    const speed = sceneData.speedMultiplier ?? 1.0;
                     initialSpeedList.push({
                         sceneNumber: sceneData.sceneNumber,
                         speedMultiplier: speed,

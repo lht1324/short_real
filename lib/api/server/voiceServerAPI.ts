@@ -7,7 +7,7 @@ import {
     VoiceGenerationResult,
     VoiceSettings
 } from "@/lib/api/types/eleven-labs/Voice";
-import {SubtitleSegment} from "@/lib/api/types/supabase/VideoGenerationTasks";
+import {SceneData, SubtitleSegment} from "@/lib/api/types/supabase/VideoGenerationTasks";
 import {createSupabaseServiceRoleClient} from "@/lib/supabase/supabaseServiceRole";
 import Replicate from "replicate";
 
@@ -283,7 +283,7 @@ export const voiceServerAPI = {
     async sliceVoiceToScenes(
         taskId: string,
         userId: string,
-        sceneDataList: any[]
+        sceneDataList: SceneData[]
     ): Promise<boolean> {
         const replicate = new Replicate({
             auth: process.env.REPLICATE_API_TOKEN,
@@ -294,16 +294,23 @@ export const voiceServerAPI = {
             // 1. 이미 업로드되어 있는 통짜 오디오의 Signed URL을 확보합니다.
             const fullVoiceSignedUrl = await this.getVoiceSignedUrl(taskId, userId);
 
-            // 2. 각 씬의 타임스탬프 기준으로 병렬 슬라이싱을 실행합니다.
-            const slicePromises = sceneDataList.map(async (scene) => {
-                const { sceneNumber, sceneSubtitleSegments } = scene;
-                if (!sceneSubtitleSegments || sceneSubtitleSegments.length === 0) {
-                    return;
-                }
+            // 2. 각 씬의 타임스탬프(영상 길이) 기준으로 병렬 슬라이싱을 실행합니다.
+            let fallbackAccumulatedTime = 0;
+            
+            // 씬 번호 순으로 정렬 보장
+            const sortedSceneList = [...sceneDataList].sort((a, b) => a.sceneNumber - b.sceneNumber);
 
-                const startSec = sceneSubtitleSegments[0].startSec;
-                const endSec = sceneSubtitleSegments[sceneSubtitleSegments.length - 1].endSec;
-                const duration = Math.max(0.1, endSec - startSec); // 최소 0.1초 보장
+            const slicePromises = sortedSceneList.map(async (scene) => {
+                const { sceneNumber, sceneDuration, sceneSubtitleSegments } = scene;
+                
+                // 첫 단어의 절대 시작 시간이 이 씬의 오디오 시작점이 됩니다.
+                // (자막 세그먼트가 없는 예외적인 경우에만 누적 시간 fallback 사용)
+                const startSec = (sceneSubtitleSegments && sceneSubtitleSegments.length > 0)
+                    ? sceneSubtitleSegments[0].startSec
+                    : fallbackAccumulatedTime;
+                
+                const duration = sceneDuration;
+                fallbackAccumulatedTime = startSec + duration; // Fallback용 누적값 업데이트
 
                 // Replicate ffmpeg-sandbox-2 용 컷팅 인수 지정
                 const ffmpegArgs = `-ss ${startSec.toFixed(4)} -t ${duration.toFixed(4)} -c:a libmp3lame -q:a 2`;

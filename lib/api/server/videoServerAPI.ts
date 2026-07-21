@@ -10,6 +10,7 @@ import {fal} from "@fal-ai/client";
 import {cryptoUtils} from "@/lib/utils/cryptoUtils";
 import {AIModelData} from "@/lib/api/types/supabase/AIModelData";
 import {falAIInputMapper} from "@/lib/falAIInputMapper";
+import {voiceServerAPI} from "@/lib/api/server/voiceServerAPI";
 
 export const videoServerAPI = {
     // POST /videos - Scene별 image-to-video 생성 요청 제출
@@ -305,50 +306,100 @@ export const videoServerAPI = {
         });
 
         try {
-            // 1. 필요한 데이터 조회 (영상 리스트, 음성 URL)
-            console.log(`[Merge Service] 음성 파일 URL 조회`);
-            const { data: audioData, error: audioError } = await supabase.storage
-                .from('narration_voice_storage')
-                .createSignedUrl(`${generationTaskId}.mp3`, 3600);
+            console.log(`[Merge Service] 최종 영상 병합 시작 (분할 병렬 렌더링)`);
 
-            if (!audioData || !audioData?.signedUrl || audioError) {
-                throw new Error(audioError?.message || "Voice audio file not found.");
-            }
-
-            const audioUrl = audioData.signedUrl;
-
-            // 2. 처리된 영상 클립들의 URL 수집 (순서대로 정렬)
+            const userId = videoGenerationTask.user_id;
+            const captionDataList = videoGenerationTask.final_video_merge_data?.captionDataList ?? [];
             const sortedSceneDataList = videoGenerationTask.scene_breakdown_list
                 .sort((a, b) => a.sceneNumber - b.sceneNumber);
 
-            // Supabase Storage에서 처리된 영상 클립들의 URL 생성 (Signed URL 사용)
-            const getSignedUrlPromises = sortedSceneDataList.map(async (sceneData) => {
-                // Supabase Storage에 저장된 처리된 영상의 경로 구성
-                const filePath = `${generationTaskId}/${sceneData.requestId}.mp4`;
+            // [추가] 병합 시작 전, 통짜 오디오를 '영상 씬 길이'와 1:1로 완벽히 일치하도록 다시 썰어서 스토리지에 갱신합니다.
+            console.log(`[Merge Service] 음성 조각 완벽 싱크 맞춤 작업 (재슬라이싱) 시작`);
+            await voiceServerAPI.sliceVoiceToScenes(generationTaskId, userId, sortedSceneDataList);
+            console.log(`[Merge Service] 음성 조각 재슬라이싱 완료`);
 
-                // Signed URL 생성 (1시간 유효)
-                const { data, error } = await supabase.storage
-                    .from('processed_video_storage')
-                    .createSignedUrl(filePath, 3600);
-
-                if (error || !data?.signedUrl) {
-                    throw new Error(`Scene #${sceneData.sceneNumber} signed URL 생성 실패: ${JSON.stringify(error)}`)
+            // atempo 체인링 헬퍼
+            const getAtempoFilterString = (speed: number) => {
+                let filters = [];
+                let currentSpeed = speed;
+                while (currentSpeed > 2.0) {
+                    filters.push("atempo=2.0");
+                    currentSpeed /= 2.0;
                 }
-                return data.signedUrl;
-            });
-            const processedVideoSignedUrlList = await Promise.all(getSignedUrlPromises);
+                while (currentSpeed < 0.5) {
+                    filters.push("atempo=0.5");
+                    currentSpeed /= 0.5;
+                }
+                if (currentSpeed !== 1.0) {
+                    filters.push(`atempo=${currentSpeed.toFixed(4)}`);
+                }
+                return filters.join(",");
+            };
 
-            const videoMergeInput = {
-                audio_url: audioUrl,
-                video_urls: JSON.stringify(processedVideoSignedUrlList),
-                ffmpeg_args: "-c:v libx264 -preset fast -crf 12 -c:a aac",
-            }
+            // Step 1. 씬별 영상+음성 병합 (병렬)
+            const step1Promises = sortedSceneDataList.map(async (sceneData) => {
+                const sceneNumber = sceneData.sceneNumber;
+                const captionData = captionDataList.find(c => c.sceneNumber === sceneNumber);
+                const speedMultiplier = captionData?.speedMultiplier ?? 1.0;
+
+                // 1. 음성 URL 가져오기
+                const audioUrl = await voiceServerAPI.getSceneVoiceSignedUrl(generationTaskId, userId, sceneNumber);
+
+                let videoUrl = "";
+                let ffmpegArgs = "";
+
+                if (speedMultiplier === 1.0) {
+                    // 배속이 1.0이면 가공본(processed) 사용 및 무손실 스트림 카피
+                    videoUrl = await this.getVideoSignedUrl(`${userId}/${generationTaskId}/video_processed_${sceneNumber}.mp4`, 3600);
+                    ffmpegArgs = "-c:v copy -c:a aac -shortest";
+                } else {
+                    // 배속이 변경되었으면 원본(raw) 사용 및 곱연산 인코딩 1회
+                    videoUrl = await this.getVideoSignedUrl(`${userId}/${generationTaskId}/video_raw_${sceneNumber}.mp4`, 3600);
+                    
+                    const sceneDuration = sceneData.sceneDuration; // 1차 목표 길이
+                    const finalTargetDuration = sceneDuration / speedMultiplier; // 분자
+                    const rawVideoAvailableDuration = Math.round(sceneDuration + 0.2) - 0.2; // 분모 (Trim 0.2 제외)
+                    
+                    const videoPtsRatio = (finalTargetDuration / rawVideoAvailableDuration).toFixed(6);
+                    const atempoFilter = getAtempoFilterString(speedMultiplier);
+                    
+                    ffmpegArgs = `-ss 0.2 -filter:v "setpts=${videoPtsRatio}*PTS" -filter:a "${atempoFilter}" -c:v libx264 -c:a aac`;
+                }
+
+                // Replicate 샌드박스로 씬 완전체 1조각 굽기
+                const processedSceneUrl = await replicate.run(
+                    "lht1324/ffmpeg-sandbox-2:06262bdc243f9afe6d1b9a8d338ab536044d0604ce4c420c9cde7ee7fe781339",
+                    {
+                        input: {
+                            video_urls: JSON.stringify([videoUrl]),
+                            audio_url: audioUrl,
+                            ffmpeg_args: ffmpegArgs,
+                            output_extension: "mp4"
+                        }
+                    }
+                );
+                
+                if (!processedSceneUrl) {
+                    throw new Error(`Scene #${sceneNumber} 병합 실패`);
+                }
+                
+                return processedSceneUrl.toString();
+            });
+
+            const mergedSceneUrlList = await Promise.all(step1Promises);
+            console.log(`[Merge Service] Step 1: 씬별 영상/음성 병합 완료 (${mergedSceneUrlList.length}개)`);
+
+            // Step 2. 조각 모음 (Stitching - 재인코딩하여 타임스탬프 꼬임 방지)
+            console.log(`[Merge Service] Step 2: 씬 조각 모음 시작 (재인코딩 병합)`);
             const finalVideoUrl = await replicate.run(
                 "lht1324/ffmpeg-sandbox-2:06262bdc243f9afe6d1b9a8d338ab536044d0604ce4c420c9cde7ee7fe781339",
                 {
-                    input: videoMergeInput,
+                    input: {
+                        video_urls: JSON.stringify(mergedSceneUrlList),
+                        ffmpeg_args: "-c:v libx264 -pix_fmt yuv420p -an",
+                    },
                 },
-            )
+            );
 
             console.log(`[Merge Service] 최종 영상 병합 완료`);
 

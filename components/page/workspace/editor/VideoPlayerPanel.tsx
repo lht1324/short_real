@@ -111,8 +111,13 @@ const VideoPlayerPanel = forwardRef<VideoPlayerHandle, VideoPlayerPanelProps>(({
 
     // 씬별 캐싱 및 탐색 제어
     const currentSceneIndex = useMemo(() => {
-        return captionDataList.findIndex((scene) => {
-            return currentTime >= scene.startSec && currentTime < scene.endSec;
+        return captionDataList.findIndex((scene, index) => {
+            const nextScene = captionDataList[index + 1];
+            if (nextScene) {
+                return currentTime >= scene.startSec && currentTime < nextScene.startSec;
+            } else {
+                return currentTime >= scene.startSec && currentTime <= scene.endSec;
+            }
         });
     }, [captionDataList, currentTime]);
 
@@ -287,15 +292,19 @@ const VideoPlayerPanel = forwardRef<VideoPlayerHandle, VideoPlayerPanelProps>(({
     // 스토리 타임(대본 기준) → 실제 재생 시간(배속 반영) 변환 헬퍼
     const storyTimeToRealTime = useCallback((storyTime: number): number => {
         if (sceneRealStartTimes.length === 0) return storyTime;
-        const sceneIdx = captionDataList.findIndex(
-            (s) => storyTime >= s.startSec && storyTime < s.endSec
-        );
-        if (sceneIdx === -1) {
+        const sceneIndex = captionDataList.findIndex((s, index) => {
+            const nextScene = captionDataList[index + 1];
+            const startLimit = index === 0 ? 0 : s.startSec;
+            return nextScene 
+                ? (storyTime >= startLimit && storyTime < nextScene.startSec)
+                : (storyTime >= startLimit);
+        });
+        if (sceneIndex === -1) {
             return sceneRealStartTimes[sceneRealStartTimes.length - 1]?.realEndSec ?? storyTime;
         }
-        const realStart = sceneRealStartTimes[sceneIdx]?.realStartSec ?? 0;
-        const speed = sceneSpeedList.find(s => s.sceneNumber === captionDataList[sceneIdx].sceneNumber)?.speedMultiplier ?? 1.0;
-        const localOffset = (storyTime - captionDataList[sceneIdx].startSec) / speed;
+        const realStart = sceneRealStartTimes[sceneIndex]?.realStartSec ?? 0;
+        const speed = sceneSpeedList.find(s => s.sceneNumber === captionDataList[sceneIndex].sceneNumber)?.speedMultiplier ?? 1.0;
+        const localOffset = (storyTime - captionDataList[sceneIndex].startSec) / speed;
         return realStart + localOffset;
     }, [captionDataList, sceneRealStartTimes, sceneSpeedList]);
 
@@ -321,6 +330,14 @@ const VideoPlayerPanel = forwardRef<VideoPlayerHandle, VideoPlayerPanelProps>(({
             }
             
             try {
+                // 재생 시작 직전에 배속 멱살 고정 주입!
+                activeVideoElement.defaultPlaybackRate = activeSceneSpeed;
+                activeVideoElement.playbackRate = activeSceneSpeed;
+                if (activeVoiceElement) {
+                    activeVoiceElement.defaultPlaybackRate = activeSceneSpeed;
+                    activeVoiceElement.playbackRate = activeSceneSpeed;
+                }
+
                 await activeVideoElement.play();
                 if (activeSceneUrlData?.voiceUrl && activeVoiceElement) {
                     await activeVoiceElement.play();
@@ -390,9 +407,14 @@ const VideoPlayerPanel = forwardRef<VideoPlayerHandle, VideoPlayerPanelProps>(({
     const performSeek = useCallback((time: number) => {
         const bgm = bgmAudioRef.current;
 
-        const targetSceneIndex = captionDataList.findIndex(
-            (scene) => time >= scene.startSec && time < scene.endSec
-        );
+        const targetSceneIndex = captionDataList.findIndex((scene, index) => {
+            const nextScene = captionDataList[index + 1];
+            if (nextScene) {
+                return time >= scene.startSec && time < nextScene.startSec;
+            } else {
+                return time >= scene.startSec && time <= scene.endSec;
+            }
+        });
         const actualSceneIndex = targetSceneIndex !== -1 ? targetSceneIndex : 0;
         const targetScene = captionDataList[actualSceneIndex];
         const targetUrlData = scenesUrlData.find(s => s.sceneNumber === targetScene?.sceneNumber);
@@ -402,11 +424,15 @@ const VideoPlayerPanel = forwardRef<VideoPlayerHandle, VideoPlayerPanelProps>(({
         // 1. 내부 가상 시간 Ref 강제 동기화 (루프 엇박자 폭주 방지)
         currentTimeRef.current = time;
 
+        const targetSpeed = sceneSpeedList.find(s => s.sceneNumber === targetScene?.sceneNumber)?.speedMultiplier ?? 1.0;
+
         videoRefs.current.forEach((v, idx) => {
             if (!v) return;
             if (idx === actualSceneIndex) {
                 v.currentTime = localOffset;
-                // 재생 상태일 경우 비디오 플레이 재개!
+                // 재생 직전에 배속을 강제로 주입!
+                v.defaultPlaybackRate = targetSpeed;
+                v.playbackRate = targetSpeed;
                 if (isPlaying) {
                     v.play().catch(() => null);
                 }
@@ -420,6 +446,9 @@ const VideoPlayerPanel = forwardRef<VideoPlayerHandle, VideoPlayerPanelProps>(({
             if (!a) return;
             if (idx === actualSceneIndex) {
                 a.currentTime = localOffset;
+                // 재생 직전에 배속을 강제로 주입!
+                a.defaultPlaybackRate = targetSpeed;
+                a.playbackRate = targetSpeed;
                 if (isPlaying && targetUrlData?.voiceUrl) {
                     a.play().catch(() => null);
                 }
@@ -637,15 +666,15 @@ const VideoPlayerPanel = forwardRef<VideoPlayerHandle, VideoPlayerPanelProps>(({
 
     const timelineCurrentSec = useMemo(() => {
         if (!activeScene) return formatTime(0);
-        const localTime = Math.max(0, currentTime - activeScene.startSec);
+        const localTime = Math.max(0, currentTime - activeScene.startSec) / activeSceneSpeed;
         return formatTime(localTime);
-    }, [currentTime, activeScene, formatTime]);
+    }, [currentTime, activeScene, activeSceneSpeed, formatTime]);
 
     const timelineEndSec = useMemo(() => {
         if (!activeScene) return formatTime(0);
-        const activeSceneDuration = activeScene.endSec - activeScene.startSec;
+        const activeSceneDuration = (activeScene.endSec - activeScene.startSec) / activeSceneSpeed;
         return formatTime(activeSceneDuration);
-    }, [activeScene, formatTime]);
+    }, [activeScene, activeSceneSpeed, formatTime]);
 
     // Expose imperative methods to parent component
     useImperativeHandle(ref, () => ({
@@ -749,7 +778,7 @@ const VideoPlayerPanel = forwardRef<VideoPlayerHandle, VideoPlayerPanelProps>(({
             lastTime = now;
 
             // 가상 타임라인 시간 계산 (최신 ref를 참조하여 누적함으로써 Stale Closure 방지)
-            let nextVirtualTime = currentTimeRef.current + elapsed * activeVideoElement.playbackRate;
+            let nextVirtualTime = currentTimeRef.current + elapsed * activeSceneSpeed;
 
             if (nextVirtualTime >= videoDuration) {
                 nextVirtualTime = videoDuration;
@@ -762,9 +791,19 @@ const VideoPlayerPanel = forwardRef<VideoPlayerHandle, VideoPlayerPanelProps>(({
                 return;
             }
 
-            // 씬 교차 시점 감지
-            if (activeScene && nextVirtualTime >= activeScene.endSec) {
-                const nextSceneIndex = activeSceneIndex + 1;
+            // 가상 시간이 실제 포함된 기대 씬 인덱스를 찾음 (경계 중복 제거)
+            const expectedIndex = captionDataList.findIndex((scene, index) => {
+                const nextScene = captionDataList[index + 1];
+                if (nextScene) {
+                    return nextVirtualTime >= scene.startSec && nextVirtualTime < nextScene.startSec;
+                } else {
+                    return nextVirtualTime >= scene.startSec && nextVirtualTime <= scene.endSec;
+                }
+            });
+
+            // 씬 교차 시점 감지 (기대 씬이 현재 활성 씬과 다른 경우 전이 처리)
+            if (expectedIndex !== -1 && expectedIndex !== activeSceneIndex) {
+                const nextSceneIndex = expectedIndex;
                 
                 if (lastSwitchedIndexRef.current !== nextSceneIndex) {
                     const nextVideoElement = videoRefs.current[nextSceneIndex];
@@ -791,6 +830,15 @@ const VideoPlayerPanel = forwardRef<VideoPlayerHandle, VideoPlayerPanelProps>(({
                         const animStartTime = performance.now();
 
                         const executeResume = () => {
+                            // 재생 직전에 배속을 강제로 주입!
+                            const targetSpeed = sceneSpeedList.find(s => s.sceneNumber === nextScene.sceneNumber)?.speedMultiplier ?? 1.0;
+                            nextVideoElement.defaultPlaybackRate = targetSpeed;
+                            nextVideoElement.playbackRate = targetSpeed;
+                            if (nextVoiceElement) {
+                                nextVoiceElement.defaultPlaybackRate = targetSpeed;
+                                nextVoiceElement.playbackRate = targetSpeed;
+                            }
+
                             nextVideoElement.play().catch(() => null);
                             nextVoiceElement?.play().catch(() => null);
                             if (bgm && musicPlayConfig.audioUrl) {
@@ -817,16 +865,16 @@ const VideoPlayerPanel = forwardRef<VideoPlayerHandle, VideoPlayerPanelProps>(({
                             }
                         };
 
-                        // 비디오 재생 예약 (로딩 기동)
+                        // 비디오 재생 예약 (로딩 기동 및 예외 처리 완벽 방제 + 재생 직전 배속 주입)
+                        const targetSpeed = sceneSpeedList.find(s => s.sceneNumber === nextScene.sceneNumber)?.speedMultiplier ?? 1.0;
+                        nextVideoElement.defaultPlaybackRate = targetSpeed;
+                        nextVideoElement.playbackRate = targetSpeed;
+
                         nextVideoElement.play().then(() => {
                             handlePreloadComplete();
                         }).catch(() => {
-                            // 즉시 재생 실패 시 canplay 이벤트를 감지하여 애니메이션 이후 시점과 매핑
-                            const onCanPlay = () => {
-                                nextVideoElement.removeEventListener('canplay', onCanPlay);
-                                handlePreloadComplete();
-                            };
-                            nextVideoElement.addEventListener('canplay', onCanPlay);
+                            // 브라우저가 재생 요청을 거절하더라도 잠금이 영구히 지속되는 것을 예방하기 위해 즉시 잠금 해제 실행
+                            handlePreloadComplete();
                         });
                     }
                 }
@@ -847,7 +895,7 @@ const VideoPlayerPanel = forwardRef<VideoPlayerHandle, VideoPlayerPanelProps>(({
         return () => {
             if (animationFrameId) cancelAnimationFrame(animationFrameId);
         };
-    }, [isPlaying, activeSceneIndex, activeScene, captionDataList, scenesUrlData, videoDuration, sceneRealStartTimes, onChangeCurrentTime]);
+    }, [isPlaying, activeSceneIndex, activeScene, activeSceneSpeed, captionDataList, scenesUrlData, videoDuration, sceneRealStartTimes, onChangeCurrentTime]);
 
     // BGM 볼륨 동기화
     useEffect(() => {
@@ -1009,7 +1057,7 @@ const VideoPlayerPanel = forwardRef<VideoPlayerHandle, VideoPlayerPanelProps>(({
                                 <div className="absolute bottom-4 left-4 right-4 z-30 pointer-events-auto">
                                     {/* [2층]: 단독 속도 조절 슬라이더 캡슐 (SPEED 텍스트를 소거해 트랙 길이 2배 획득 & mb-2로 간격 밀착) */}
                                     <div className="flex justify-center mb-2 px-0.5 select-none">
-                                        <div className="flex items-center gap-2.5 bg-black/70 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-white/15 shadow-2xl w-[70%]">
+                                        <div className="flex items-center gap-2.5 bg-black/70 backdrop-blur-md px-4 py-1.5 rounded-full border border-white/15 shadow-2xl w-fit min-w-[240px] max-w-[80%] mx-auto">
                                             <input
                                                 type="range"
                                                 min="0.5"

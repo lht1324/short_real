@@ -228,7 +228,8 @@ export const imageServerAPI = {
                 success: false,
                 error: {
                     message: error instanceof Error ? error.message : 'Unknown error occurred',
-                    code: 'INTERNAL_ERROR'
+                    code: 'INTERNAL_ERROR',
+                    status: (error && typeof error === 'object' && 'status' in error) ? (error as any).status : undefined
                 }
             };
         }
