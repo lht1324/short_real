@@ -1,15 +1,15 @@
-# 작업 진행 상황 (Last Updated: 2026-07-23 02:30)
+# 작업 진행 상황 (Last Updated: 2026-07-23 03:15)
 
 ## 1. 최근 세션 작업 내용 (Current Session Changes)
-* **최종 오디오 병합 시 amix duration=longest 필터 옵션 주입 완료 (BGM 싹둑 끊김 완벽 해결)**:
-    * **배경음악 끊김 원천 소탕**: `videoServerAPI.ts` (`postVideoMergeMusic`)에서 배경음악 믹싱 시 기존 `amix` 기본값(`duration=shortest`)이 성우 대사가 53.28초에 끝나는 스트림을 따라가 배경음악(54.58초)을 싹둑 잘라버리던 현상을, `amix=inputs=2:duration=longest` 인자 주입으로 정밀 개정했습니다.
-    * **자연스러운 여운 완성**: 성우 대사가 53.28초에 끝난 후, 남은 1.3초 동안 배경 음악(BGM)이 끊기지 않고 54.58초 영상 마감까지 아름답게 계속 연주되는 기존 3박자 동기화 구조를 완전히 회복했습니다.
-    * **MediaBunny 실측 기반 비디오 배속 렌더링(MediaBunny computeDuration) 및 -bf 0 적용 완료**: 비디오 팽창(59초) 및 인코더 Flush 딜레이 현상을 완전히 차단했습니다.
+* **에디터 자동 저장 (30초 간격) 및 design-taste-frontend 프리미엄 UI 디자인 추가 완료**:
+    * **30초 간격 자동 저장 (Auto-save)**: `WorkspaceEditorPageClient.tsx`에서 사용자가 자막 스타일, 씬별 배속, 선택 음악/구간, 볼륨을 수정할 때 30초마다 조용히 DB에 자동으로 임시 저장(`patchVideoTaskByTaskId`)하는 `useEffect` 및 `onClickAutoSave` 로직 적용 완료.
+    * **플로팅 저장 알림 뱃지 (Floating Save Pill)**: 오토파일럿/대시보드 디자인 시스템과 통일된 `Fixed Floating Status Pill` (`Auto-saving...` / `Saved ✓` / `Connection lost`) 백드롭 글래스모피즘 뱃지 렌더링 추가.
+    * **프리미엄 로딩 오버레이 (Loading Overlay)**: 초기 에디터 데이터 로딩 및 렌더링 마감(`isFinishLoading`) 시 대시보드 수준의 `backdrop-blur-sm` 오버레이 및 고급형 카드 스타일 로더 연동.
+    * **최종 오디오 병합 amix duration=longest 주입**: 성우 대사 끝 지점에서 배경 음악이 잘리지 않고 영상 끝(54.58초)까지 연주되도록 `amix` 필터 개정 완료.
 
 * **수정 반영된 파일**:
-    * [lib/api/server/videoServerAPI.ts](file:///home/jaeho/Projects/short_real/lib/api/server/videoServerAPI.ts)
-    * [app/api/video/merge/final/route.ts](file:///home/jaeho/Projects/short_real/app/api/video/merge/final/route.ts)
     * [WorkspaceEditorPageClient.tsx](file:///home/jaeho/Projects/short_real/components/page/workspace/editor/WorkspaceEditorPageClient.tsx)
+    * [lib/api/server/videoServerAPI.ts](file:///home/jaeho/Projects/short_real/lib/api/server/videoServerAPI.ts)
 
 ---
 

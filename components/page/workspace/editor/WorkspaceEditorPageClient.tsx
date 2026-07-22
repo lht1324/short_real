@@ -4,7 +4,7 @@ import {memo, useCallback, useEffect, useMemo, useRef, useState} from "react";
 import Link from "next/link";
 import Image from "next/image";
 import {useRouter, useSearchParams} from 'next/navigation';
-import { ChevronLeft } from 'lucide-react';
+import { ChevronLeft, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
 import { fontMap, type FontName } from "@/lib/fonts";
 import FONT_FAMILY_LIST, {FontFamily} from "@/lib/FontFamilyList";
 import {videoClientAPI} from "@/lib/api/client/videoClientAPI";
@@ -327,9 +327,45 @@ function WorkspaceEditorPageClient() {
         }
     }, [taskId, finalVideoMergeData]);
 
+    const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
+
+    const onClickAutoSave = useCallback(async () => {
+        if (!finalVideoMergeData || !taskId || !videoData || isSaveLoading || isFinishLoading) return;
+        setSaveStatus('saving');
+        try {
+            const updatedSceneBreakdownList = videoData.sceneBreakdownList.map((sceneData) => {
+                const speedObj = sceneSpeedList.find(s => s.sceneNumber === sceneData.sceneNumber);
+                return {
+                    ...sceneData,
+                    speedMultiplier: speedObj?.speedMultiplier ?? sceneData.speedMultiplier,
+                };
+            });
+            await videoClientAPI.patchVideoTaskByTaskId(taskId, {
+                final_video_merge_data: finalVideoMergeData,
+                scene_breakdown_list: updatedSceneBreakdownList,
+            });
+            setSaveStatus('saved');
+            setTimeout(() => setSaveStatus('idle'), 3000);
+        } catch (error) {
+            console.error('[AutoSave] Save failed:', error);
+            setSaveStatus('error');
+            setTimeout(() => setSaveStatus('idle'), 3000);
+        }
+    }, [taskId, finalVideoMergeData, videoData, sceneSpeedList, isSaveLoading, isFinishLoading]);
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            if (taskId && finalVideoMergeData && videoData && !isSaveLoading && !isFinishLoading) {
+                onClickAutoSave();
+            }
+        }, 30000);
+        return () => clearInterval(interval);
+    }, [taskId, finalVideoMergeData, videoData, isSaveLoading, isFinishLoading, onClickAutoSave]);
+
     const onClickSave = useCallback(async () => {
         if (!finalVideoMergeData || !taskId || !videoData) return;
         setIsSaveLoading(true);
+        setSaveStatus('saving');
         try {
             // 현재 배속 설정을 scene_breakdown_list에 반영
             const updatedSceneBreakdownList = videoData.sceneBreakdownList.map((sceneData) => {
@@ -344,9 +380,15 @@ function WorkspaceEditorPageClient() {
                 scene_breakdown_list: updatedSceneBreakdownList,
             });
             setIsSaveSuccess(true);
-            setTimeout(() => setIsSaveSuccess(false), 2000);
+            setSaveStatus('saved');
+            setTimeout(() => {
+                setIsSaveSuccess(false);
+                setSaveStatus('idle');
+            }, 2500);
         } catch (error) {
             console.error(error);
+            setSaveStatus('error');
+            setTimeout(() => setSaveStatus('idle'), 3000);
         } finally {
             setIsSaveLoading(false);
         }
@@ -641,7 +683,38 @@ function WorkspaceEditorPageClient() {
     }, [user, router]);
 
     return (
-        <div className="min-h-screen bg-zinc-950 text-white">
+        <div className="min-h-screen bg-zinc-950 text-white relative overflow-hidden">
+            {/* Premium Loading Overlay */}
+            {(isPublicDataLoading || isFinishLoading) && (
+                <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[200] flex items-center justify-center animate-in fade-in duration-300">
+                    <div className="flex flex-col items-center gap-4 p-8 rounded-3xl bg-zinc-900/80 border border-white/10 shadow-2xl">
+                        <Loader2 className="w-10 h-10 animate-spin text-zinc-400" />
+                        <p className="text-sm font-medium text-zinc-300">
+                            {isFinishLoading ? 'Rendering Final Video...' : 'Loading Editor...'}
+                        </p>
+                    </div>
+                </div>
+            )}
+
+            {/* Floating Save Status Pill */}
+            {saveStatus !== 'idle' && (
+                <div className="fixed top-20 left-1/2 -translate-x-1/2 z-[100] animate-in fade-in slide-in-from-top-4 duration-500">
+                    <div className={`flex items-center gap-2 px-4 py-1.5 rounded-full border backdrop-blur-md shadow-lg transition-all ${
+                        saveStatus === 'saving' ? 'bg-zinc-900/80 border-white/10 text-zinc-300' :
+                        saveStatus === 'saved' ? 'bg-emerald-900/20 border-emerald-500/20 text-emerald-300' :
+                        'bg-red-900/20 border-red-500/20 text-red-300'
+                    }`}>
+                        {saveStatus === 'saving' && <Loader2 className="w-3.5 h-3.5 animate-spin text-zinc-400" />}
+                        {saveStatus === 'saved' && <CheckCircle className="w-3.5 h-3.5 text-emerald-400" />}
+                        {saveStatus === 'error' && <AlertCircle className="w-3.5 h-3.5 text-red-400" />}
+                        <span className="text-[13px] font-medium">
+                            {saveStatus === 'saving' ? 'Auto-saving...' :
+                             saveStatus === 'saved' ? 'Saved' :
+                             'Connection lost'}
+                        </span>
+                    </div>
+                </div>
+            )}
             {/* Top Header */}
             <div
                 ref={headerRef}
