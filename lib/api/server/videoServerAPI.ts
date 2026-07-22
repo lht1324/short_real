@@ -349,9 +349,9 @@ export const videoServerAPI = {
                 let ffmpegArgs = "";
 
                 if (speedMultiplier === 1.0) {
-                    // 배속이 1.0이면 가공본(processed) 사용 및 무손실 스트림 카피
+                    // 배속이 1.0이면 가공본(processed) 사용 및 정밀 프레임 인코딩
                     videoUrl = await this.getVideoSignedUrl(`${userId}/${generationTaskId}/video_processed_${sceneNumber}.mp4`, 3600);
-                    ffmpegArgs = "-c:v copy -c:a aac -shortest";
+                    ffmpegArgs = "-c:v libx264 -c:a aac -shortest";
                 } else {
                     // 배속이 변경되었으면 원본(raw) 사용 및 곱연산 인코딩 1회
                     videoUrl = await this.getVideoSignedUrl(`${userId}/${generationTaskId}/video_raw_${sceneNumber}.mp4`, 3600);
@@ -396,7 +396,7 @@ export const videoServerAPI = {
                 {
                     input: {
                         video_urls: JSON.stringify(mergedSceneUrlList),
-                        ffmpeg_args: "-c:v libx264 -pix_fmt yuv420p -an",
+                        ffmpeg_args: "-c:v libx264 -pix_fmt yuv420p -c:a aac",
                     },
                 },
             );

@@ -11,6 +11,7 @@ import {videoClientAPI} from "@/lib/api/client/videoClientAPI";
 import {
     FinalVideoMergeData,
     MusicData,
+    SceneData,
     SubtitleSegment,
     VideoGenerationTaskStatus
 } from "@/lib/api/types/supabase/VideoGenerationTasks";
@@ -40,6 +41,7 @@ interface VideoData {
         voiceUrl: string | null;
     }[];
     captionDataList: CaptionData[];
+    sceneBreakdownList: SceneData[];
 }
 
 export interface CaptionData {
@@ -167,6 +169,8 @@ function WorkspaceEditorPageClient() {
     }, [isPublicDataLoading, isSceneSequencePanelLoading, isVideoPlayerPanelLoading]);
 
     const [isFinishLoading, setIsFinishLoading] = useState(false);
+    const [isSaveLoading, setIsSaveLoading] = useState(false);
+    const [isSaveSuccess, setIsSaveSuccess] = useState(false);
 
     const [videoData, setVideoData] = useState<VideoData | null>(null);
     const [aspectRatio, setAspectRatio] = useState<'16:9' | '9:16'>('9:16');
@@ -322,6 +326,31 @@ function WorkspaceEditorPageClient() {
             setIsFinishLoading(false);
         }
     }, [taskId, finalVideoMergeData]);
+
+    const onClickSave = useCallback(async () => {
+        if (!finalVideoMergeData || !taskId || !videoData) return;
+        setIsSaveLoading(true);
+        try {
+            // 현재 배속 설정을 scene_breakdown_list에 반영
+            const updatedSceneBreakdownList = videoData.sceneBreakdownList.map((sceneData) => {
+                const speedObj = sceneSpeedList.find(s => s.sceneNumber === sceneData.sceneNumber);
+                return {
+                    ...sceneData,
+                    speedMultiplier: speedObj?.speedMultiplier ?? sceneData.speedMultiplier,
+                };
+            });
+            await videoClientAPI.patchVideoTaskByTaskId(taskId, {
+                final_video_merge_data: finalVideoMergeData,
+                scene_breakdown_list: updatedSceneBreakdownList,
+            });
+            setIsSaveSuccess(true);
+            setTimeout(() => setIsSaveSuccess(false), 2000);
+        } catch (error) {
+            console.error(error);
+        } finally {
+            setIsSaveLoading(false);
+        }
+    }, [taskId, finalVideoMergeData, videoData, sceneSpeedList]);
 
     const onToggleIsCaptionEnabled = useCallback(() => {
         setIsCaptionEnabled(prev => !prev)
@@ -529,6 +558,7 @@ function WorkspaceEditorPageClient() {
                     title: videoGenerationTask.video_title ?? "",
                     scenesUrlData: urlsResult.scenes,
                     captionDataList: captionDataList,
+                    sceneBreakdownList: videoGenerationTask.scene_breakdown_list,
                 });
 
                 const musicDataList = await musicClientAPI.getMusicData(taskId);
@@ -538,6 +568,16 @@ function WorkspaceEditorPageClient() {
                 }
 
                 setMusicDataList(musicDataList);
+
+                // final_video_merge_data가 있으면 이전 편집 설정을 초기 상태로 복원 (1회)
+                const savedData = videoGenerationTask.final_video_merge_data;
+                if (savedData) {
+                    setIsCaptionEnabled(savedData.isCaptionEnabled);
+                    setCaptionConfigState(savedData.captionConfigState);
+                    setMusicStartSec(savedData.cuttingAreaStartSec);
+                    setMusicVolume(savedData.volumePercentage / 100);
+                    setEditingMusicIndex(savedData.musicIndex);
+                }
             }
 
             loadData().then(() => {
@@ -618,12 +658,26 @@ function WorkspaceEditorPageClient() {
                         </p>
                     </div>
                 </div>
-                <button
-                    onClick={onClickFinish}
-                    className="bg-white hover:bg-zinc-200 text-black px-5 py-2 rounded-lg text-sm font-medium transition-all shadow-sm"
-                >
-                    Finish
-                </button>
+                <div className="flex items-center gap-3">
+                    <button
+                        onClick={onClickSave}
+                        disabled={isSaveLoading || isFinishLoading}
+                        className={`border px-5 py-2 rounded-lg text-sm font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
+                            isSaveSuccess
+                                ? 'border-green-500/50 text-green-400'
+                                : 'border-white/20 hover:border-white/40 text-zinc-300 hover:text-white'
+                        }`}
+                    >
+                        {isSaveLoading ? 'Saving...' : isSaveSuccess ? 'Saved ✓' : 'Save'}
+                    </button>
+                    <button
+                        onClick={onClickFinish}
+                        disabled={isFinishLoading || isSaveLoading}
+                        className="bg-white hover:bg-zinc-200 text-black px-5 py-2 rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                        {isFinishLoading ? 'Finishing...' : 'Finish'}
+                    </button>
+                </div>
             </div>
 
             <div
@@ -736,6 +790,7 @@ function WorkspaceEditorPageClient() {
                         <MusicEditPanel
                             musicData={editingMusicData}
                             videoDuration={realVideoDuration}
+                            initialVolume={musicVolume}
                             panelHeight={musicEditPanelHeight}
                             onChangeMusicStartSec={onChangeMusicStartSec}
                             onChangeMusicVolume={onChangeMusicVolume}

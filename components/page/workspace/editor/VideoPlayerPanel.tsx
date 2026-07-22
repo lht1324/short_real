@@ -518,6 +518,8 @@ const VideoPlayerPanel = forwardRef<VideoPlayerHandle, VideoPlayerPanelProps>(({
         if (index === activeSceneIndex) {
             const isLastScene = index === captionDataList.length - 1;
             if (isLastScene) {
+                const bgm = bgmAudioRef.current;
+                bgm?.pause();
                 setIsEnded(true);
                 setIsPlaying(false);
             } else {

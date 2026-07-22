@@ -13,6 +13,7 @@ interface MusicEditPanelProps {
     musicData: MusicData;
     videoDuration: number;
     panelHeight: number;
+    initialVolume?: number;
     onChangeMusicStartSec: (newStartSec: number) => void;
     onChangeMusicVolume: (newVolume: number) => void;
     onChangeIsMuted: (newIsMuted: boolean) => void;
@@ -22,6 +23,7 @@ function MusicEditPanel({
     musicData,
     videoDuration,
     panelHeight,
+    initialVolume,
     onChangeMusicStartSec,
     onChangeMusicVolume,
     onChangeIsMuted,
@@ -44,7 +46,7 @@ function MusicEditPanel({
     const [decodedAudioBuffer, setDecodedAudioBuffer] = useState<AudioBuffer | null>(null);
     const [isDownloading, setIsDownloading] = useState(false);
 
-    const [volume, setVolume] = useState(1.0);
+    const [volume, setVolume] = useState(initialVolume ?? 1.0);
     const [isMuted, setIsMuted] = useState(false);
 
     // 뷰 높이 계산
