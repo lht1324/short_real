@@ -177,12 +177,11 @@ export async function POST(
             const speed = captionData?.speedMultiplier ?? 1.0;
             return {
                 ...scene,
-                sceneDuration: parseFloat((scene.sceneDuration / speed).toFixed(3)),
                 speedMultiplier: speed,
             };
         });
 
-        // Supabase DB에 최종 배속이 완료된 자막과 씬 리스트 저장 (데이터 정합성 보존)
+        // Supabase DB에 최종 배속 정보가 완료된 자막과 씬 리스트 저장 (sceneDuration 원본 1.0배속 데이터 정합성 보전)
         await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, {
             final_video_merge_data: {
                 ...videoGenerationTask.final_video_merge_data,
@@ -213,8 +212,14 @@ export async function POST(
 
         // --- 4. 총 영상 길이 (배속 적용) 계산 ---
         const videoDuration = adjustedSceneBreakdownList.reduce((acc, sceneData) => {
-            return sceneData.sceneDuration + acc;
+            const speed = sceneData.sceneDuration ? (sceneData.speedMultiplier ?? 1.0) : 1.0;
+            return (sceneData.sceneDuration / speed) + acc;
         }, 0);
+
+        console.log(`==================================================`);
+        console.log(`[TEST LOG][Final Route] 배속 반영 총 영상/음성 목표 길이 (videoDuration): ${videoDuration.toFixed(4)}s`);
+        console.log(`[TEST LOG][Final Route] 음악 편집 구간: ${isMusicPreProcessed ? 0 : cuttingAreaStartSec}s ~ ${isMusicPreProcessed ? videoDuration : cuttingAreaEndSec}s (총 ${(isMusicPreProcessed ? videoDuration : (cuttingAreaEndSec - cuttingAreaStartSec)).toFixed(4)}s)`);
+        console.log(`==================================================`);
 
         // 1. Caption 번인 2. Music 편집을 병렬 실행
         const [captionPredictionId, musicPredictionId] = await Promise.all([
@@ -231,7 +236,7 @@ export async function POST(
                 taskId,
                 mixingGainDb
             )
-        ])
+        ]);
 
         console.log(`[API Final] Caption prediction: ${captionPredictionId}`);
         console.log(`[API Final] Music prediction: ${musicPredictionId}`);

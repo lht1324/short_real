@@ -183,6 +183,9 @@ export const musicServerAPI = {
         const webhookUrl = `${baseUrl}/webhook/replicate/music/modifying?taskId=${taskId}`;
 
         try {
+            const duration = cuttingAreaEndSec - cuttingAreaStartSec;
+            console.log(`[TEST LOG][Music Modifying] cutting start: ${cuttingAreaStartSec.toFixed(4)}s, end: ${cuttingAreaEndSec.toFixed(4)}s, totalDuration: ${duration.toFixed(4)}s, volume: ${volumePercentage}%, gainDb: ${mixingGainDb}`);
+
             const prediction = await replicate.predictions.create({
                 version: "lht1324/ffmpeg-audio-modifier:8706bda5af3fa52e103a0d441e3d6cb981d1aef7a23f22248ff1de6f557a0763",
                 input: {

@@ -526,16 +526,32 @@ function WorkspaceEditorPageClient() {
                 // 각 씬의 시작/종료 시간 및 자막 세그먼트 계산
                 let accumulatedTime = 0;
                 const initialSpeedList: { sceneNumber: number; speedMultiplier: number; }[] = [];
-                const captionDataList = videoGenerationTask.scene_breakdown_list.map((sceneData) => {
+                const captionDataList = videoGenerationTask.scene_breakdown_list.map((sceneData, index, array) => {
                     const subtitleSegmentationList = sceneData.sceneSubtitleSegments ?? [];
-                    const startSec = subtitleSegmentationList[0].startSec ?? accumulatedTime;
+                    const startSec = subtitleSegmentationList[0]?.startSec ?? accumulatedTime;
+
+                    // DB 데이터 오염 방지 및 1.0배속 순수 원본 sceneDuration 도출
+                    let originalSceneDuration: number;
+                    if (subtitleSegmentationList.length > 0) {
+                        const isLastScene = index === array.length - 1;
+                        if (isLastScene) {
+                            originalSceneDuration = subtitleSegmentationList[subtitleSegmentationList.length - 1].endSec - subtitleSegmentationList[0].startSec + 0.75;
+                        } else {
+                            const nextSubtitleList = array[index + 1]?.sceneSubtitleSegments ?? [];
+                            if (nextSubtitleList.length > 0) {
+                                originalSceneDuration = nextSubtitleList[0].startSec - subtitleSegmentationList[0].startSec;
+                            } else {
+                                originalSceneDuration = sceneData.sceneDuration;
+                            }
+                        }
+                    } else {
+                        originalSceneDuration = sceneData.sceneDuration;
+                    }
+
+                    const endSec = startSec + originalSceneDuration;
+                    accumulatedTime = endSec;
 
                     const speed = sceneData.speedMultiplier ?? 1.0;
-                    // DB에 이미 배속 가공이 되어 늘어난 sceneDuration을 1.0배속 오리지널 길이로 역산 환원
-                    const originalSceneDuration = sceneData.sceneDuration * speed;
-                    const endSec = startSec + originalSceneDuration;
-
-                    accumulatedTime = endSec;
 
                     initialSpeedList.push({
                         sceneNumber: sceneData.sceneNumber,
@@ -549,7 +565,7 @@ function WorkspaceEditorPageClient() {
                         endSec: endSec,
                         subtitleSegmentationList: subtitleSegmentationList,
                         speedMultiplier: speed,
-                    }
+                    };
                 });
 
                 setSceneSpeedList(initialSpeedList);

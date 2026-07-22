@@ -265,13 +265,15 @@ export const videoServerAPI = {
             console.log(`[Video-Music Merge] Caption Video URL: ${captionVideoUrl}`);
             console.log(`[Video-Music Merge] Modified Music URL: ${modifiedMusicUrl}`);
 
-            // 3. Replicate로 영상에 음악 병합 요청
+            // 3. Replicate로 영상에 음악 병합 요청 (amix duration=longest로 배경음악을 비디오 끝까지 유지)
             console.log(`[Video-Music Merge] Replicate prediction 생성 시작`);
             const prediction = await replicate.predictions.create({
-                version: "lht1324/ffmpeg-merge-video-audio:a3d58bc87983f123a8eb63cd3d6ab516bd92e0504ab5e7d830395dcd2663f735",
+                version: "lht1324/ffmpeg-sandbox-2:06262bdc243f9afe6d1b9a8d338ab536044d0604ce4c420c9cde7ee7fe781339",
                 input: {
-                    video_url: captionVideoUrl,
+                    video_urls: JSON.stringify([captionVideoUrl]),
                     audio_url: modifiedMusicUrl,
+                    ffmpeg_args: `-filter_complex "[0:a][1:a]amix=inputs=2:duration=longest[aout]" -map 0:v -map "[aout]" -c:v copy -c:a aac`,
+                    output_extension: "mp4"
                 },
                 webhook: webhookUrl,
                 webhook_events_filter: ["completed"],
@@ -313,10 +315,32 @@ export const videoServerAPI = {
             const sortedSceneDataList = videoGenerationTask.scene_breakdown_list
                 .sort((a, b) => a.sceneNumber - b.sceneNumber);
 
-            // [추가] 병합 시작 전, 통짜 오디오를 '영상 씬 길이'와 1:1로 완벽히 일치하도록 다시 썰어서 스토리지에 갱신합니다.
-            console.log(`[Merge Service] 음성 조각 완벽 싱크 맞춤 작업 (재슬라이싱) 시작`);
-            await voiceServerAPI.sliceVoiceToScenes(generationTaskId, userId, sortedSceneDataList);
-            console.log(`[Merge Service] 음성 조각 재슬라이싱 완료`);
+            // [안전장치] DB에 오염된 데이터가 존재하더라도 자막 타임스탬프를 기반으로 1.0배속 순수 원본 sceneDuration을 안전하게 정화
+            const sanitizedSceneDataList = sortedSceneDataList.map((sceneData, index, array) => {
+                const subtitleSegments = sceneData.sceneSubtitleSegments ?? [];
+                let pureOriginalDuration: number;
+
+                if (subtitleSegments.length > 0) {
+                    const isLastScene = index === array.length - 1;
+                    if (isLastScene) {
+                        pureOriginalDuration = subtitleSegments[subtitleSegments.length - 1].endSec - subtitleSegments[0].startSec + 0.75;
+                    } else {
+                        const nextSubtitleList = array[index + 1]?.sceneSubtitleSegments ?? [];
+                        if (nextSubtitleList.length > 0) {
+                            pureOriginalDuration = nextSubtitleList[0].startSec - subtitleSegments[0].startSec;
+                        } else {
+                            pureOriginalDuration = sceneData.sceneDuration;
+                        }
+                    }
+                } else {
+                    pureOriginalDuration = sceneData.sceneDuration;
+                }
+
+                return {
+                    ...sceneData,
+                    sceneDuration: pureOriginalDuration,
+                };
+            });
 
             // atempo 체인링 헬퍼
             const getAtempoFilterString = (speed: number) => {
@@ -336,43 +360,55 @@ export const videoServerAPI = {
                 return filters.join(",");
             };
 
-            // Step 1. 씬별 영상+음성 병합 (병렬)
-            const step1Promises = sortedSceneDataList.map(async (sceneData) => {
+            // Step 1. 씬별 비디오 조각 배속 렌더링 (무음 비디오 조각 생성)
+            console.log(`[Merge Service] Step 1: 씬별 무음 비디오 조각 렌더링 시작 (${sanitizedSceneDataList.length}개)`);
+            const step1Promises = sanitizedSceneDataList.map(async (sceneData) => {
                 const sceneNumber = sceneData.sceneNumber;
                 const captionData = captionDataList.find(c => c.sceneNumber === sceneNumber);
                 const speedMultiplier = captionData?.speedMultiplier ?? 1.0;
-
-                // 1. 음성 URL 가져오기
-                const audioUrl = await voiceServerAPI.getSceneVoiceSignedUrl(generationTaskId, userId, sceneNumber);
 
                 let videoUrl = "";
                 let ffmpegArgs = "";
 
                 if (speedMultiplier === 1.0) {
-                    // 배속이 1.0이면 가공본(processed) 사용 및 정밀 프레임 인코딩
+                    // 배속이 1.0이면 가공본(processed) 사용 (비디오만 추출)
                     videoUrl = await this.getVideoSignedUrl(`${userId}/${generationTaskId}/video_processed_${sceneNumber}.mp4`, 3600);
-                    ffmpegArgs = "-c:v libx264 -c:a aac -shortest";
+                    ffmpegArgs = "-an -c:v libx264 -pix_fmt yuv420p -bf 0 -flags +cgop";
+                    console.log(`[TEST LOG][Scene #${sceneNumber} Video] 1.0x speed -> originalDuration: ${sceneData.sceneDuration.toFixed(4)}s, targetDuration: ${sceneData.sceneDuration.toFixed(4)}s`);
                 } else {
-                    // 배속이 변경되었으면 원본(raw) 사용 및 곱연산 인코딩 1회
+                    // 배속이 변경되었으면 원본(raw) 사용 및 MediaBunny 실측 기반 곱연산 인코딩 1회
                     videoUrl = await this.getVideoSignedUrl(`${userId}/${generationTaskId}/video_raw_${sceneNumber}.mp4`, 3600);
                     
-                    const sceneDuration = sceneData.sceneDuration; // 1차 목표 길이
-                    const finalTargetDuration = sceneDuration / speedMultiplier; // 분자
-                    const rawVideoAvailableDuration = Math.round(sceneDuration + 0.2) - 0.2; // 분모 (Trim 0.2 제외)
-                    
-                    const videoPtsRatio = (finalTargetDuration / rawVideoAvailableDuration).toFixed(6);
-                    const atempoFilter = getAtempoFilterString(speedMultiplier);
-                    
-                    ffmpegArgs = `-ss 0.2 -filter:v "setpts=${videoPtsRatio}*PTS" -filter:a "${atempoFilter}" -c:v libx264 -c:a aac`;
+                    const sceneDuration = sceneData.sceneDuration; // 1.0배속 순수 원본 목표 길이
+                    const finalTargetDuration = sceneDuration / speedMultiplier; // 2차 배속 최종 목표 길이
+
+                    // 1. MediaBunny를 사용해 raw 영상 정보 실측 (실제 생성된 물리적 길이 측정)
+                    const mediaBunnyInput = new Input({
+                        source: new UrlSource(videoUrl),
+                        formats: ALL_FORMATS,
+                    });
+                    const generatedVideoDuration = await mediaBunnyInput.computeDuration();
+                    const availableDuration = generatedVideoDuration - 0.2; // 앞 0.2초 트림 후 실측 가용 영상 길이
+
+                    const totalNeeded = finalTargetDuration + 0.2;
+                    const isCutting = (totalNeeded <= 4.0) || (generatedVideoDuration >= totalNeeded);
+
+                    if (isCutting) {
+                        ffmpegArgs = `-ss 0.2 -t ${finalTargetDuration.toFixed(4)} -an -c:v libx264 -pix_fmt yuv420p -bf 0 -flags +cgop`;
+                        console.log(`[TEST LOG][Scene #${sceneNumber} Video] speed: ${speedMultiplier}x (isCutting) -> targetDuration: ${finalTargetDuration.toFixed(4)}s, generatedVideoDuration: ${generatedVideoDuration.toFixed(4)}s`);
+                    } else {
+                        const videoPtsRatio = (finalTargetDuration / availableDuration).toFixed(6);
+                        ffmpegArgs = `-ss 0.2 -filter:v "setpts=${videoPtsRatio}*PTS" -an -c:v libx264 -pix_fmt yuv420p -bf 0 -flags +cgop`;
+                        console.log(`[TEST LOG][Scene #${sceneNumber} Video] speed: ${speedMultiplier}x (PTS scaling) -> targetDuration: ${finalTargetDuration.toFixed(4)}s, generatedVideoDuration: ${generatedVideoDuration.toFixed(4)}s, availableDuration: ${availableDuration.toFixed(4)}s, videoPtsRatio: ${videoPtsRatio}`);
+                    }
                 }
 
-                // Replicate 샌드박스로 씬 완전체 1조각 굽기
+                // Replicate 샌드박스로 씬 비디오 조각 굽기
                 const processedSceneUrl = await replicate.run(
                     "lht1324/ffmpeg-sandbox-2:06262bdc243f9afe6d1b9a8d338ab536044d0604ce4c420c9cde7ee7fe781339",
                     {
                         input: {
                             video_urls: JSON.stringify([videoUrl]),
-                            audio_url: audioUrl,
                             ffmpeg_args: ffmpegArgs,
                             output_extension: "mp4"
                         }
@@ -380,26 +416,73 @@ export const videoServerAPI = {
                 );
                 
                 if (!processedSceneUrl) {
-                    throw new Error(`Scene #${sceneNumber} 병합 실패`);
+                    throw new Error(`Scene #${sceneNumber} 비디오 렌더링 실패`);
                 }
                 
                 return processedSceneUrl.toString();
             });
 
             const mergedSceneUrlList = await Promise.all(step1Promises);
-            console.log(`[Merge Service] Step 1: 씬별 영상/음성 병합 완료 (${mergedSceneUrlList.length}개)`);
+            console.log(`[Merge Service] Step 1: 씬별 무음 비디오 렌더링 완료 (${mergedSceneUrlList.length}개)`);
 
-            // Step 2. 조각 모음 (Stitching - 재인코딩하여 타임스탬프 꼬임 방지)
-            console.log(`[Merge Service] Step 2: 씬 조각 모음 시작 (재인코딩 병합)`);
-            const finalVideoUrl = await replicate.run(
+            // Step 2. 무음 비디오 조각 모음 (Stitching)
+            console.log(`[Merge Service] Step 2: 무음 비디오 조각 모음 시작`);
+            const stitchedVideoUrl = await replicate.run(
                 "lht1324/ffmpeg-sandbox-2:06262bdc243f9afe6d1b9a8d338ab536044d0604ce4c420c9cde7ee7fe781339",
                 {
                     input: {
                         video_urls: JSON.stringify(mergedSceneUrlList),
-                        ffmpeg_args: "-c:v libx264 -pix_fmt yuv420p -c:a aac",
+                        ffmpeg_args: "-c:v libx264 -pix_fmt yuv420p -bf 0 -flags +cgop -an",
                     },
                 },
             );
+
+            if (!stitchedVideoUrl) {
+                throw new Error("Stitched video creation failed.");
+            }
+
+            // Step 3. 통짜 원본 오디오(voice_full.mp3) 1개로 단 1회 filter_complex 구간 배속 인코딩 및 비디오 믹싱
+            console.log(`[Merge Service] Step 3: 통짜 오디오 기반 1회 filter_complex 배속 믹싱 시작`);
+            const fullVoiceSignedUrl = await voiceServerAPI.getVoiceSignedUrl(generationTaskId, userId);
+
+            let filterSegments: string[] = [];
+            let concatInputs: string[] = [];
+
+            sanitizedSceneDataList.forEach((sceneData, index) => {
+                const sceneNumber = sceneData.sceneNumber;
+                const captionData = captionDataList.find(c => c.sceneNumber === sceneNumber);
+                const speedMultiplier = captionData?.speedMultiplier ?? 1.0;
+                const subtitleSegments = sceneData.sceneSubtitleSegments ?? [];
+
+                const startSec = subtitleSegments[0]?.startSec ?? 0;
+                const duration = sceneData.sceneDuration;
+                const endSec = startSec + duration;
+
+                const atempoFilter = getAtempoFilterString(speedMultiplier);
+
+                filterSegments.push(`[1:a]atrim=start=${startSec.toFixed(4)}:end=${endSec.toFixed(4)},asetpts=PTS-STARTPTS,${atempoFilter}[a${index}]`);
+                concatInputs.push(`[a${index}]`);
+                console.log(`[TEST LOG][Scene #${sceneNumber} Voice] trim range: ${startSec.toFixed(4)}s ~ ${endSec.toFixed(4)}s (duration: ${duration.toFixed(4)}s), speed: ${speedMultiplier}x -> scaledDuration: ${(duration / speedMultiplier).toFixed(4)}s`);
+            });
+
+            const filterComplexStr = `${filterSegments.join("; ")}; ${concatInputs.join("")}concat=n=${sanitizedSceneDataList.length}:v=0:a=1[aout]`;
+            console.log(`[TEST LOG][Voice FilterComplex] ${filterComplexStr}`);
+
+            const finalVideoUrl = await replicate.run(
+                "lht1324/ffmpeg-sandbox-2:06262bdc243f9afe6d1b9a8d338ab536044d0604ce4c420c9cde7ee7fe781339",
+                {
+                    input: {
+                        video_urls: JSON.stringify([stitchedVideoUrl.toString()]),
+                        audio_url: fullVoiceSignedUrl,
+                        ffmpeg_args: `-filter_complex "${filterComplexStr}" -map 0:v -map "[aout]" -c:v libx264 -pix_fmt yuv420p -bf 0 -flags +cgop -c:a aac`,
+                        output_extension: "mp4"
+                    }
+                }
+            );
+
+            if (!finalVideoUrl) {
+                throw new Error("Final video-audio mixing failed.");
+            }
 
             console.log(`[Merge Service] 최종 영상 병합 완료`);
 

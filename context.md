@@ -1,18 +1,15 @@
-# 작업 진행 상황 (Last Updated: 2026-07-22 03:38)
+# 작업 진행 상황 (Last Updated: 2026-07-23 02:30)
 
 ## 1. 최근 세션 작업 내용 (Current Session Changes)
-* **속도 슬라이더 리셋 버튼 이탈 UI 레이아웃 수정 완료**:
-    * **반응형 w-fit 캡슐 스타일로 전환**: 기존에 가로 너비를 `w-[70%]` 고정 비율로 설정하여 요소들의 부피 대비 검은색 알약 컨테이너가 좁아져 리셋 버튼이 테두리 밖으로 탈출하던 문제를 해결했습니다. **`w-fit px-4 min-w-[240px] max-w-[80%] mx-auto`** 스타일을 도입하여 슬라이더 내부 폭에 맞추어 검은색 배경 컨테이너가 자연스럽게 늘어나며 리셋 버튼을 내부에 안정감 있게 가두도록 마크업을 보정 완료했습니다.
-* **에디터 이전/다음 횡이동 먹통 및 엇박자 오류 디버깅 완료**:
-    * **DB sceneDuration 오리지널 길이 역산 복원**: 완료되었던 태스크를 수동으로 EDITOR 상태로 되돌렸을 때, DB `scene_breakdown_list`의 `sceneDuration`에 이미 배속이 가공/나누기되어 늘어난 시간이 들어있는 현상을 잡았습니다. 최초 로딩 시점(`WorkspaceEditorPageClient.tsx` L500 부근)에 `sceneData.sceneDuration * speedMultiplier` 연산을 통해 **순수한 1.0배속 기준의 원래 씬 길이로 복원**하여 자막 타임테이블(`captionDataList`)의 시작/종료 경계축을 설계함으로써, 씬 전환 및 슬라이더 조작 시 시간 축이 뒤틀리는 근본 데이터 불일치를 완전 종식시켰습니다.
-    * **재생(`play()`) 직전 배속 강제 주입으로 정체 버그 해결**: 브라우저가 새 비디오를 버퍼링하며 재생하는 순간 `.playbackRate`를 기본값으로 되돌려버리거나, 리액트 상태 렉(Lag)으로 인해 이전 씬 배속을 타던 문제를 방지하기 위해 **모든 미디어의 `play()` 지점(네비게이션 클릭, 자동 씬 전환, 선제 로드, 일시정지 해제 등 4대 진입점) 바로 직전에 타겟 씬의 최신 배속값(`defaultPlaybackRate` & `playbackRate`)을 강제 고정 주입**하는 방식을 적용하여 싱크가 완벽히 고정되도록 해결했습니다.
-    * **expectedIndex 전이 방어망 및 재생 예외 복구**: 이전/다음 버튼 등으로 순간이동(Seek) 후 상태 렉 도중 타이머가 `activeSceneIndex + 1`을 잘못 지목해 재생 충돌을 내던 루프 감지를 `expectedIndex` 기반으로 개정하고, 비디오 `.play()` 거절 시 `.catch` 블록을 달아 잠금 플래그(`isTransitioning`)를 강제 해제하여 플레이어가 완전히 프리징되던 먹통 문제를 철저하게 방제했습니다.
-    * **최종 병합본 자막 싱크 밀림 원천 해결**: 개별 씬 비디오를 이어 붙일 때(`videoServerAPI.ts`) 타임스탬프(PTS) 왜곡 렉을 유발해 자막을 밀리게 만들던 `-c copy` 무손실 스트림 복사를 걷어내고, `-c:v libx264 -pix_fmt yuv420p -an`을 적용해 깔끔하게 재인코딩(Re-encode) 병합하도록 보정하여 자막 하이라이트 싱크 지연 버그를 종식시켰습니다.
+* **최종 오디오 병합 시 amix duration=longest 필터 옵션 주입 완료 (BGM 싹둑 끊김 완벽 해결)**:
+    * **배경음악 끊김 원천 소탕**: `videoServerAPI.ts` (`postVideoMergeMusic`)에서 배경음악 믹싱 시 기존 `amix` 기본값(`duration=shortest`)이 성우 대사가 53.28초에 끝나는 스트림을 따라가 배경음악(54.58초)을 싹둑 잘라버리던 현상을, `amix=inputs=2:duration=longest` 인자 주입으로 정밀 개정했습니다.
+    * **자연스러운 여운 완성**: 성우 대사가 53.28초에 끝난 후, 남은 1.3초 동안 배경 음악(BGM)이 끊기지 않고 54.58초 영상 마감까지 아름답게 계속 연주되는 기존 3박자 동기화 구조를 완전히 회복했습니다.
+    * **MediaBunny 실측 기반 비디오 배속 렌더링(MediaBunny computeDuration) 및 -bf 0 적용 완료**: 비디오 팽창(59초) 및 인코더 Flush 딜레이 현상을 완전히 차단했습니다.
 
 * **수정 반영된 파일**:
+    * [lib/api/server/videoServerAPI.ts](file:///home/jaeho/Projects/short_real/lib/api/server/videoServerAPI.ts)
+    * [app/api/video/merge/final/route.ts](file:///home/jaeho/Projects/short_real/app/api/video/merge/final/route.ts)
     * [WorkspaceEditorPageClient.tsx](file:///home/jaeho/Projects/short_real/components/page/workspace/editor/WorkspaceEditorPageClient.tsx)
-    * [VideoPlayerPanel.tsx](file:///home/jaeho/Projects/short_real/components/page/workspace/editor/VideoPlayerPanel.tsx)
-    * [videoServerAPI.ts](file:///home/jaeho/Projects/short_real/lib/api/server/videoServerAPI.ts)
 
 ---
 
