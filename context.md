@@ -1,4 +1,4 @@
-# 작업 진행 상황 (Last Updated: 2026-07-23 03:15)
+# 작업 진행 상황 (Last Updated: 2026-07-23 03:29)
 
 ## 1. 최근 세션 작업 내용 (Current Session Changes)
 * **에디터 자동 저장 (30초 간격) 및 design-taste-frontend 프리미엄 UI 디자인 추가 완료**:
@@ -15,44 +15,36 @@
 
 ## 2. 향후 작업 (Next Steps) - [Priority: CRITICAL]
 
-### 1) [백엔드] 비디오 렌더링 서버(FFmpeg)의 배속 곱연산 최종 병합 파이프라인 개정
-* **최종 곱연산 배율 `X` 계산**: 1차 비디오 배율 `A`와 사용자 조절 배율 `B`를 곱해 단일 팩터 도출.
-* **1회 인코딩 필터 개정**: 원본 비디오 파일(`videoRawUrl`)을 직접 입력 소스로 하여 `setpts=(1/X)*PTS` 및 `atempo=X` 필터로 단 1회만 인코딩을 거치도록 리팩토링 진행 예정. (화질 저하 0% 통제)Duration / (실제비디오길이 - 0.2초)`를 계산.
-   * Replicate FFmpeg Sandbox를 사용해 `setpts=${videoPtsRatio}*PTS` 필터 연산을 씌워 가공된 개별 클립 비디오(`.mp4`)를 추출하여 `processed_video_storage`에 업로드.
-2. **클립 Stitching 및 나레이션 믹싱 (`videoServerAPI.postFinalVideo`)**:
-   * 위에서 1차 가공 완료된 개별 비디오 클립들을 순서대로 다운로드한 뒤 하나로 Stitching하고, 그 위에 성우 전체 나레이션 목소리(`audioUrl`)를 믹싱하여 하나의 통합 비디오 파일로 결합.
-3. **자막 오버레이 버닝 (`videoServerAPI.postVideoMergeCaption`)**:
-   * 생성된 통합 비디오 위에 자막 ASS 파일을 버닝하여 자막 오버레이 영상 생성.
-4. **BGM 믹싱 (`videoServerAPI.postVideoMergeMusic`)**:
-   * 자막 버닝이 완료된 영상에 배경 음악(BGM) 오디오를 믹스 필터(`amix`)로 결합해 최종 영상 렌더링 완료.
+### 1) [백엔드/프론트엔드] 에디터 내 씬별 이미지 & 비디오 개별 재생성 파이프라인 구축 (초안)
 
-#### ⚠️ 기존 구조에 2차 속도 조절을 그냥 얹을 때의 심각한 문제점 (화질 뭉개짐)
-* 기존 체인은 이미 `[Fal 원본]` ➡️ `[1차 배속 인코딩]` ➡️ `[Stitching 인코딩]` ➡️ `[자막 인코딩]` ➡️ `[BGM 인코딩]`의 **다단계 재인코딩(Re-encoding)**을 거치고 있습니다.
-* 이 상태에서 사용자가 수정한 2차 배속 값(`speedMultiplier`)을 적용하기 위해 이미 가공 완료된 비디오를 또다시 가속/감속 인코딩하게 되면, **화질이 픽셀 단위로 뭉개지고(Compress Artifacts) 렌더링 소요 시간이 극적으로 지연**되는 치명적인 문제가 발생합니다.
+#### 🎯 1. 기능 개요 및 추진 목표
+* `WorkspaceEditorPageClient` ➡️ `SceneSequencePanel` ➡️ `SceneSequenceItem` 계층 구조를 확장하여, 에디터에서 마음에 들지 않는 **특정 장면(Scene) 단건의 이미지 및 비디오를 개별 재생성**할 수 있는 파이프라인을 구축함.
 
 ---
 
-#### 2. 배속 조절 연동에 따른 백엔드 변경 계획 (After)
-화질 손실을 원천 방지하기 위해, 1차 AI 배속 연산과 2차 사용자 배속 연산을 **FFmpeg 렌더링 파이프라인에서 단 1회의 필터 곱연산으로 처리**하도록 결합 설계해야 합니다.
+#### 🎨 2. 프론트엔드 UI/UX 설계 (`SceneSequenceItem` & 재생성 모달)
+* **씬 카드 썸네일 오버레이 액션 바 (`SceneSequenceItem.tsx`)**:
+  * 씬 썸네일 상단/하단에 **[🖼️ Image]**, **[🎬 Video]**, **[⚙️ Option]** 반투명 글래스모피즘 액션 버튼 추가 (9:16 및 16:9 반응형 호환).
+  * **1-Click 즉시 재생성**: [Image] 또는 [Video] 클릭 시, 기존 프로젝트 설정 모델 및 프롬프트를 사용하여 1클릭 즉시 단건 재생성을 쏘아보냄.
+* **씬 재생성 세부 옵션 모달 (`SceneRegenerateOptionModal.tsx`)**:
+  * [⚙️ Option] 클릭 시 모달이 팝업되어, 해당 씬 단건에 대한 **AI 모델 개별 변경(`BYOKModelSelector` 연동: T2I, I2I, I2V)** 및 **이미지/비디오 프롬프트 커스텀 수정** 지원.
+* **씬별 독립 로딩 인디케이터**:
+  * 특정 씬이 재생성 중일 때 전체 에디터를 블로킹하지 않고, **해당 씬 카드 영역에만 독립적인 반투명 로딩 오버레이 스피너**를 띄워 타 작업과 병행 가능하게 유도.
 
-```
-[Fal AI 원본 (videoRawUrl)] 
-      ↓
-[FFmpeg 1회 인코딩] ─── ( 1차 배속 배율 A * 2차 사용자 조절 배율 B ) 곱연산 적용
-      ↓
-[Stitching 및 최종 믹싱]
-```
+---
 
-* **1단계: 배속 데이터 결합**:
-  * DB의 `video_generation_tasks` 테이블에 저장되어 있는 AI 엔진의 1차 비디오 배율 `A` (`videoPtsRatio`)를 추출.
-  * 프론트엔드가 **[Finish]** 버튼 클릭 시 POST Body로 쏘아 보낸 JSON 내의 장면별 2차 사용자 배율 `B` (`speedMultiplier`)를 추출.
-  * **최종 곱연산 배율 `X` 계산**: `X = A * B` (또는 역산 반영을 위해 `A`와 `B`를 곱해 단일 팩터 도출)
-* **2단계: 원본 영상 기반의 1회 인코딩 필터 개정**:
-  * 1차 가공 완료된 영상(`.mp4`)을 입력물로 쓰지 않고, ** Fal AI가 생성한 최초 원본 비디오 파일(`videoRawUrl`)**을 직접 입력 소스로 타겟팅.
-  * FFmpeg 필터에 곱연산 배율 `X`를 주입하여 **단 1회만 인코딩**을 거치도록 리팩토링:
-    * **비디오 속도 제어**: `setpts=(1/X)*PTS`
-    * **오디오 속도 제어**: `atempo=X` (성우 보이스오버 배속 싱크 및 자막 지속 시간 일치 유도)
-  * 이로써 [reconstruction_plan.md](file:///home/jaeho/Projects/short_real/reconstruction_plan.md)에 상세 설계된 씬 슬라이싱 및 믹싱 순서를 충족하며 화질 저하를 0%로 통제함.
+#### 🛠️ 3. 백엔드 API & 파이프라인 설계
 
-#### 🚨 에이전트 주의 지침 (CRITICAL)
-* 백엔드 API 및 인코딩 서버 코드를 개정하기 전에, **FFmpeg 필터 명령어의 정확한 인코더 옵션 및 곱연산 스크립트 설계안에 대해 사장님께 먼저 보고하고 최종 승인을 득한 후 작업을 시작하십시오.** (AGENTS.md 규칙 준수)
+1. **단건 이미지 재생성 엔드포인트 (`POST /api/video/scene/regenerate-image`)**:
+   * **캐릭터 일관성(Consistency) 유지**: `post-master-style.ts`에서 이미 생성하여 DB (`entity_manifest_list`)에 보관 중인 캐릭터 시트 레퍼런스 이미지 URL을 그대로 참조(`I2I`)하여 캐릭터 연관성을 유지함.
+   * `imageServerAPI.postImage` 단건 호출 후 발급된 신규 이미지 URL을 Supabase Storage(`processed_video_storage`)의 `video_image_${sceneNumber}.png`에 덮어쓰기(`upsert`).
+
+2. **단건 비디오 재생성 엔드포인트 (`POST /api/video/scene/regenerate-video`)**:
+   * 최신 씬 이미지 URL 및 자막 오디오 시간(`targetDuration`)을 기반으로 Fal AI 비디오 엔진에 단건 비디오 생성 요청.
+   * 비디오 완공 웹훅 수신 시 `videoServerAPI.postProcessedVideo`로 1차 속도 조절을 수행하여 `video_raw_${sceneNumber}.mp4` 및 `video_processed_${sceneNumber}.mp4`를 저장하고 에디터 플레이어를 실시간 갱신.
+
+---
+
+#### 📌 4. 레퍼런스 캐릭터 시트 연동 전략 (`post-master-style.ts`)
+* 씬 재생성 시엔 기존 `entity_manifest_list` 레퍼런스 이미지를 재활용하여 캐릭터 무너짐 방지 및 처리 속도를 3배 이상 단축.
+* 만약 캐릭터 얼굴 자체를 아예 바꾸고 싶어 하는 유저 케이스를 대비해, 에디터 상단에 **Character Sheet (레퍼런스) Viewer/Regenerator 모달** 접점을 연동함.
