@@ -16,6 +16,7 @@ import {
     VideoGenerationTaskStatus
 } from "@/lib/api/types/supabase/VideoGenerationTasks";
 import SceneSequencePanel from "@/components/page/workspace/editor/SceneSequencePanel";
+import SceneImageLightboxModal from "@/components/page/workspace/editor/SceneImageLightboxModal";
 import CaptionConfigPanel, {ColorPickerType} from "@/components/page/workspace/editor/CaptionConfigPanel";
 import VideoPlayerPanel, {VideoPlayerHandle} from "@/components/page/workspace/editor/VideoPlayerPanel";
 import MusicPanel from "@/components/page/workspace/editor/MusicPanel";
@@ -174,6 +175,10 @@ function WorkspaceEditorPageClient() {
 
     const [videoData, setVideoData] = useState<VideoData | null>(null);
     const [aspectRatio, setAspectRatio] = useState<'16:9' | '9:16'>('9:16');
+
+    // 고화질 원본 씬 라이트박스 모달 상태
+    const [lightboxSceneIndex, setLightboxSceneIndex] = useState<number | null>(null);
+    const [sceneImageUrlList, setSceneImageUrlList] = useState<string[]>([]);
 
     const [isCaptionEnabled, setIsCaptionEnabled] = useState(true);
 
@@ -783,6 +788,8 @@ function WorkspaceEditorPageClient() {
                         sceneRealStartTimes={sceneRealStartTimes}
                         onClickSceneSequence={onClickSceneSequence}
                         onFinishLoading={onFinishSceneSequencePanelLoading}
+                        onImagesLoaded={(urls) => setSceneImageUrlList(urls)}
+                        onClickZoomImage={(index) => setLightboxSceneIndex(index)}
                     />
                 </div>}
 
@@ -912,6 +919,17 @@ function WorkspaceEditorPageClient() {
                     onClose={onCloseColorPicker}
                 />
             )}
+
+            {/* 고화질 원본 씬 이미지 라이트박스 모달 (페이지 최상위 정석 아키텍처) */}
+            <SceneImageLightboxModal
+                isOpen={lightboxSceneIndex !== null}
+                currentIndex={lightboxSceneIndex}
+                captionDataList={captionDataList}
+                imageUrlList={sceneImageUrlList}
+                aspectRatio={aspectRatio}
+                onClose={() => setLightboxSceneIndex(null)}
+                onChangeIndex={(newIndex) => setLightboxSceneIndex(newIndex)}
+            />
         </div>
     )
 }
