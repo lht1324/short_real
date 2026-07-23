@@ -2,7 +2,7 @@
 
 import {memo, useMemo} from "react";
 import Image from "next/image";
-import {Image as ImageIcon, Video, Settings, Maximize2, RefreshCw, RotateCcw} from "lucide-react";
+import {Image as ImageIcon, Video, Maximize2, RefreshCw, Loader2} from "lucide-react";
 import {CaptionData} from "@/components/page/workspace/editor/WorkspaceEditorPageClient";
 
 interface SceneSequenceItemProps {
@@ -14,13 +14,14 @@ interface SceneSequenceItemProps {
     aspectRatio: '16:9' | '9:16';
     realStartSec: number;
     realEndSec: number;
+    isRegeneratingImage?: boolean;
+    isRegeneratingVideo?: boolean;
     onClickSceneSequence: (sceneStartSec: number) => void;
     onMouseEnter: () => void;
     onMouseLeave: () => void;
     onLoadImage: () => void;
     onClickRegenerateImage?: (sceneNumber: number) => void;
     onClickRegenerateVideo?: (sceneNumber: number) => void;
-    onClickOpenOption?: (sceneNumber: number) => void;
     onClickZoomImage?: (sceneIndex: number) => void;
     sceneIndex?: number;
 }
@@ -34,13 +35,14 @@ function SceneSequenceItem({
     aspectRatio,
     realStartSec,
     realEndSec,
+    isRegeneratingImage = false,
+    isRegeneratingVideo = false,
     onClickSceneSequence,
     onMouseEnter,
     onMouseLeave,
     onLoadImage,
     onClickRegenerateImage,
     onClickRegenerateVideo,
-    onClickOpenOption,
     onClickZoomImage,
     sceneIndex = 0,
 }: SceneSequenceItemProps) {
@@ -88,6 +90,16 @@ function SceneSequenceItem({
                     <div className="absolute top-2 left-2 px-1.5 py-0.5 bg-black/60 rounded text-zinc-300 text-[11px] font-medium font-mono z-10">
                         #{captionData.sceneNumber}
                     </div>
+
+                    {/* 재생성 중 독립 로딩 오버레이 (16:9) */}
+                    {(isRegeneratingImage || isRegeneratingVideo) && (
+                        <div className="absolute inset-0 bg-black/75 backdrop-blur-sm z-20 flex flex-col items-center justify-center gap-1.5 p-2 text-center animate-in fade-in duration-200">
+                            <Loader2 className="w-5 h-5 animate-spin text-amber-400" />
+                            <span className="text-[11px] font-medium text-zinc-200">
+                                {isRegeneratingImage ? 'Generating Image...' : 'Rendering Motion...'}
+                            </span>
+                        </div>
+                    )}
 
                     {/* 썸네일 확대 전용 돋보기 버튼 (상단 우측 단독) */}
                     <div className="absolute top-2 right-2 flex items-center bg-black/60 backdrop-blur-md p-1 rounded-lg border border-white/10 opacity-90 group-hover:opacity-100 transition-opacity z-10">
@@ -146,17 +158,6 @@ function SceneSequenceItem({
                                     <Video size={13} className="transition-all duration-200 group-hover/btn:opacity-0 group-hover/btn:scale-75 group-hover/btn:rotate-45" />
                                     <RefreshCw size={12} className="absolute inset-0 m-auto opacity-0 scale-75 -rotate-45 transition-all duration-200 group-hover/btn:opacity-100 group-hover/btn:scale-100 group-hover/btn:rotate-0 text-cyan-400" />
                                 </div>
-                            </button>
-                            <button
-                                type="button"
-                                title="Scene Model Options"
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    if (onClickOpenOption) onClickOpenOption(captionData.sceneNumber);
-                                }}
-                                className="p-1.5 rounded-md text-zinc-400 hover:text-white hover:bg-white/10 transition-colors"
-                            >
-                                <Settings size={13} />
                             </button>
                         </div>
                     </div>
@@ -225,17 +226,6 @@ function SceneSequenceItem({
                                     <RefreshCw size={12} className="absolute inset-0 m-auto opacity-0 scale-75 -rotate-45 transition-all duration-200 group-hover/btn:opacity-100 group-hover/btn:scale-100 group-hover/btn:rotate-0 text-cyan-400" />
                                 </div>
                             </button>
-                            <button
-                                type="button"
-                                title="Scene Model Options"
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    if (onClickOpenOption) onClickOpenOption(captionData.sceneNumber);
-                                }}
-                                className="p-1.5 rounded-md text-zinc-400 hover:text-white hover:bg-white/10 transition-colors"
-                            >
-                                <Settings size={13} />
-                            </button>
                         </div>
                     </div>
                 </div>
@@ -264,6 +254,16 @@ function SceneSequenceItem({
                         ) : (
                             <div className="w-full h-full bg-zinc-800">
                                 <div className="w-full h-full bg-gradient-to-t from-black/20 to-transparent"></div>
+                            </div>
+                        )}
+
+                        {/* 재생성 중 독립 로딩 오버레이 (9:16) */}
+                        {(isRegeneratingImage || isRegeneratingVideo) && (
+                            <div className="absolute inset-0 bg-black/75 backdrop-blur-sm z-20 flex flex-col items-center justify-center gap-1.5 p-2 text-center animate-in fade-in duration-200">
+                                <Loader2 className="w-5 h-5 animate-spin text-cyan-400" />
+                                <span className="text-[10px] font-medium text-zinc-200 leading-tight">
+                                    {isRegeneratingImage ? 'Generating Image...' : 'Rendering Motion...'}
+                                </span>
                             </div>
                         )}
 

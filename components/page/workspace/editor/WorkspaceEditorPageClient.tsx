@@ -17,6 +17,9 @@ import {
 } from "@/lib/api/types/supabase/VideoGenerationTasks";
 import SceneSequencePanel from "@/components/page/workspace/editor/SceneSequencePanel";
 import SceneImageLightboxModal from "@/components/page/workspace/editor/SceneImageLightboxModal";
+import SceneRegenerateModal, { RegenerateMode } from "@/components/page/workspace/editor/SceneRegenerateModal";
+import { AIModelData } from "@/lib/api/types/supabase/AIModelData";
+import { aiModelDataClientAPI } from "@/lib/api/client/aiModelDataClientAPI";
 import CaptionConfigPanel, {ColorPickerType} from "@/components/page/workspace/editor/CaptionConfigPanel";
 import VideoPlayerPanel, {VideoPlayerHandle} from "@/components/page/workspace/editor/VideoPlayerPanel";
 import MusicPanel from "@/components/page/workspace/editor/MusicPanel";
@@ -180,11 +183,118 @@ function WorkspaceEditorPageClient() {
     const [lightboxSceneIndex, setLightboxSceneIndex] = useState<number | null>(null);
     const [sceneImageUrlList, setSceneImageUrlList] = useState<string[]>([]);
 
+    // 단건 씬 재생성 모달 상태 & AI 모델 데이터
+    const [aiModelList, setAiModelList] = useState<AIModelData[]>([]);
+    const [taskAiModelConfig, setTaskAiModelConfig] = useState<{
+        sceneImageI2IModelId?: string;
+        videoModelId?: string;
+    } | null>(null);
+
+    const [regenerateModalState, setRegenerateModalState] = useState<{
+        isOpen: boolean;
+        mode: RegenerateMode;
+        sceneNumber: number;
+        sceneDuration: number;
+        selectedModelId: string | null;
+    }>({
+        isOpen: false,
+        mode: RegenerateMode.IMAGE,
+        sceneNumber: 1,
+        sceneDuration: 4,
+        selectedModelId: null,
+    });
+
+    useEffect(() => {
+        const fetchModels = async () => {
+            try {
+                const models = await aiModelDataClientAPI.getAIModelData();
+                setAiModelList(models);
+            } catch (error) {
+                console.error("Failed to fetch AI models in editor:", error);
+            }
+        };
+        fetchModels();
+    }, []);
+
     const [isCaptionEnabled, setIsCaptionEnabled] = useState(true);
 
     const captionDataList = useMemo(() => {
         return videoData?.captionDataList ?? []
     }, [videoData]);
+
+    const onOpenImageRegenerateModal = useCallback((sceneNumber: number) => {
+        const targetCaption = captionDataList.find(c => c.sceneNumber === sceneNumber);
+        const duration = targetCaption ? targetCaption.endSec - targetCaption.startSec : 4;
+        setRegenerateModalState({
+            isOpen: true,
+            mode: RegenerateMode.IMAGE,
+            sceneNumber,
+            sceneDuration: duration,
+            selectedModelId: taskAiModelConfig?.sceneImageI2IModelId ?? null,
+        });
+    }, [captionDataList, taskAiModelConfig?.sceneImageI2IModelId]);
+
+    const onOpenVideoRegenerateModal = useCallback((sceneNumber: number) => {
+        const targetCaption = captionDataList.find(c => c.sceneNumber === sceneNumber);
+        const duration = targetCaption ? targetCaption.endSec - targetCaption.startSec : 4;
+        setRegenerateModalState({
+            isOpen: true,
+            mode: RegenerateMode.VIDEO,
+            sceneNumber,
+            sceneDuration: duration,
+            selectedModelId: taskAiModelConfig?.videoModelId ?? null,
+        });
+    }, [captionDataList, taskAiModelConfig?.videoModelId]);
+
+    const handleConfirmRegenerate = useCallback((payload: {
+        mode: RegenerateMode;
+        sceneNumber: number;
+        selectedModelId: string;
+        estimatedCost: number;
+        isAlsoRegenerateVideo?: boolean;
+    }) => {
+        const { mode, sceneNumber, selectedModelId, estimatedCost, isAlsoRegenerateVideo } = payload;
+        setRegenerateModalState(prev => ({ ...prev, isOpen: false }));
+
+        if (mode === RegenerateMode.IMAGE) {
+            /* 
+             * =========================================================================
+             * [단건 이미지 (+연쇄 비디오) 재생성 API 백엔드 연동부 주석]
+             * 엔드포인트: POST /api/video/scene/regenerate-image
+             * Payload: { taskId, sceneNumber, customModelId: selectedModelId }
+             * 
+             * 연쇄 옵션(isAlsoRegenerateVideo)이 true인 경우:
+             * 이미지 응답 수신 후 즉시 POST /api/video/scene/regenerate-video 연속 호출!
+             * =========================================================================
+             */
+            alert(
+                `[Image Regeneration Request]\n\n` +
+                `• Target: Scene #${sceneNumber}\n` +
+                `• Mode: IMAGE\n` +
+                `• Selected Model: ${selectedModelId || 'Default'}\n` +
+                `• Chained Video Regeneration: ${isAlsoRegenerateVideo ? 'YES (Auto-trigger video after image completion)' : 'NO'}\n` +
+                `• Total Estimated Cost: $${estimatedCost}\n\n` +
+                `* Primary API: POST /api/video/scene/regenerate-image` +
+                (isAlsoRegenerateVideo ? `\n* Chained API: POST /api/video/scene/regenerate-video` : ``)
+            );
+        } else {
+            /* 
+             * =========================================================================
+             * [단건 비디오 재생성 API 백엔드 연동부 주석]
+             * 엔드포인트: POST /api/video/scene/regenerate-video
+             * Payload: { taskId, sceneNumber, customModelId: selectedModelId }
+             * =========================================================================
+             */
+            alert(
+                `[Video Motion Regeneration Request]\n\n` +
+                `• Target: Scene #${sceneNumber}\n` +
+                `• Mode: VIDEO\n` +
+                `• Selected Model: ${selectedModelId || 'Default'}\n` +
+                `• Total Estimated Cost: $${estimatedCost}\n\n` +
+                `* API Endpoint: POST /api/video/scene/regenerate-video`
+            );
+        }
+    }, []);
 
     const [captionConfigState, setCaptionConfigState] = useState<CaptionConfigState>(INITIAL_CAPTION_CONFIG_STATE);
     const [sceneSpeedList, setSceneSpeedList] = useState<{ sceneNumber: number; speedMultiplier: number; }[]>([]);
@@ -567,8 +677,14 @@ function WorkspaceEditorPageClient() {
                     throw new Error("Invalid task status for editor")
                 }
 
-                // 종횡비 설정 (기본값 9:16)
+                // 종횡비 및 AI 모델 설정 적용
                 setAspectRatio(videoGenerationTask.aspect_ratio ?? '9:16');
+                if (videoGenerationTask.ai_model_config) {
+                    setTaskAiModelConfig({
+                        sceneImageI2IModelId: videoGenerationTask.ai_model_config.sceneImageI2IModelId,
+                        videoModelId: videoGenerationTask.ai_model_config.videoModelId,
+                    });
+                }
 
                 // 각 씬의 시작/종료 시간 및 자막 세그먼트 계산
                 let accumulatedTime = 0;
@@ -790,6 +906,8 @@ function WorkspaceEditorPageClient() {
                         onFinishLoading={onFinishSceneSequencePanelLoading}
                         onImagesLoaded={(urls) => setSceneImageUrlList(urls)}
                         onClickZoomImage={(index) => setLightboxSceneIndex(index)}
+                        onOpenImageRegenerateModal={onOpenImageRegenerateModal}
+                        onOpenVideoRegenerateModal={onOpenVideoRegenerateModal}
                     />
                 </div>}
 
@@ -929,6 +1047,20 @@ function WorkspaceEditorPageClient() {
                 aspectRatio={aspectRatio}
                 onClose={() => setLightboxSceneIndex(null)}
                 onChangeIndex={(newIndex) => setLightboxSceneIndex(newIndex)}
+            />
+
+            {/* 단건 씬 재생성 통합 모달 (페이지 최상위 정석 아키텍처) */}
+            <SceneRegenerateModal
+                isOpen={regenerateModalState.isOpen}
+                mode={regenerateModalState.mode}
+                sceneNumber={regenerateModalState.sceneNumber}
+                sceneDuration={regenerateModalState.sceneDuration}
+                aiModelList={aiModelList}
+                globalResolution={aspectRatio === '9:16' ? '1080p' : '1080p'}
+                defaultModelId={regenerateModalState.selectedModelId}
+                defaultVideoModelId={taskAiModelConfig?.videoModelId}
+                onClose={() => setRegenerateModalState(prev => ({ ...prev, isOpen: false }))}
+                onConfirmRegenerate={handleConfirmRegenerate}
             />
         </div>
     )

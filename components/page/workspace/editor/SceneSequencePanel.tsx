@@ -1,11 +1,9 @@
 'use client'
 
-import {memo, useEffect, useState} from "react";
-import Image from "next/image";
-import {CaptionData, SceneRealTime} from "@/components/page/workspace/editor/WorkspaceEditorPageClient";
-import {imageClientAPI} from "@/lib/api/client/imageClientAPI";
+import { memo, useEffect, useState } from "react";
+import { CaptionData, SceneRealTime } from "@/components/page/workspace/editor/WorkspaceEditorPageClient";
+import { imageClientAPI } from "@/lib/api/client/imageClientAPI";
 import SceneSequenceItem from "@/components/page/workspace/editor/SceneSequenceItem";
-import SceneImageLightboxModal from "@/components/page/workspace/editor/SceneImageLightboxModal";
 
 interface ImageData {
     url: string;
@@ -18,10 +16,14 @@ interface SceneSequencePanelProps {
     currentSceneIndex: number;
     aspectRatio: '16:9' | '9:16';
     sceneRealStartTimes: SceneRealTime[];
+    regeneratingImageMap?: Record<number, boolean>;
+    regeneratingVideoMap?: Record<number, boolean>;
     onClickSceneSequence: (sceneStartSec: number) => void;
     onFinishLoading: () => void;
     onImagesLoaded?: (urls: string[]) => void;
     onClickZoomImage?: (index: number) => void;
+    onOpenImageRegenerateModal?: (sceneNumber: number) => void;
+    onOpenVideoRegenerateModal?: (sceneNumber: number) => void;
 }
 
 function SceneSequencePanel({
@@ -30,13 +32,15 @@ function SceneSequencePanel({
     currentSceneIndex,
     aspectRatio,
     sceneRealStartTimes,
+    regeneratingImageMap = {},
+    regeneratingVideoMap = {},
     onClickSceneSequence,
     onFinishLoading,
     onImagesLoaded,
     onClickZoomImage,
+    onOpenImageRegenerateModal,
+    onOpenVideoRegenerateModal,
 }: SceneSequencePanelProps) {
-    // 컴포넌트 내부 주석은 정책 상 구현하기 애매해서 남겨둔 부분
-    // 선택은 클릭으로 선택하는 걸 빼고 자동으로 테두리 바꿔주는 기능으로 남기자
     const [isLoading, setIsLoading] = useState(true);
     const [imageDataList, setImageDataList] = useState<ImageData[]>([]);
     const [hoveredImageIndex, setHoveredImageIndex] = useState<number | null>(null);
@@ -83,6 +87,7 @@ function SceneSequencePanel({
             <div className="text-zinc-100 text-[15px] uppercase tracking-wider font-medium mb-4">Scene</div>
             {captionDataList.map((captionData, index) => {
                 const realTime = sceneRealStartTimes.find(r => r.sceneNumber === captionData.sceneNumber);
+                const sceneNum = captionData.sceneNumber;
                 return <SceneSequenceItem
                     key={index}
                     sceneIndex={index}
@@ -94,18 +99,17 @@ function SceneSequencePanel({
                     aspectRatio={aspectRatio}
                     realStartSec={realTime?.realStartSec ?? captionData.startSec}
                     realEndSec={realTime?.realEndSec ?? captionData.endSec}
+                    isRegeneratingImage={!!regeneratingImageMap[sceneNum]}
+                    isRegeneratingVideo={!!regeneratingVideoMap[sceneNum]}
                     onClickSceneSequence={onClickSceneSequence}
                     onClickZoomImage={(idx) => {
                         if (onClickZoomImage) onClickZoomImage(idx);
                     }}
-                    onClickRegenerateImage={(sceneNum) => {
-                        alert(`[Image Regeneration]\nInitiating image generation pipeline for Scene #${sceneNum}.`);
+                    onClickRegenerateImage={(num) => {
+                        if (onOpenImageRegenerateModal) onOpenImageRegenerateModal(num);
                     }}
-                    onClickRegenerateVideo={(sceneNum) => {
-                        alert(`[Video Motion Generation]\nInitiating video motion pipeline for Scene #${sceneNum}.`);
-                    }}
-                    onClickOpenOption={(sceneNum) => {
-                        alert(`[Scene Tonal Tuning]\nCustom AI model and prompt settings for Scene #${sceneNum} will open here.`);
+                    onClickRegenerateVideo={(num) => {
+                        if (onOpenVideoRegenerateModal) onOpenVideoRegenerateModal(num);
                     }}
                     onLoadImage={() => {
                         setImageDataList((prevImageDataList) => {
