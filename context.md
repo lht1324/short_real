@@ -1,4 +1,4 @@
-# 작업 진행 상황 (Last Updated: 2026-07-24 03:35)
+# 작업 진행 상황 (Last Updated: 2026-07-25 03:35)
 
 ## 1. 최근 세션 작업 내용 (Current Session Changes)
 * **에디터 씬 단건/연쇄 재생성 통합 모달 구축 및 UI/UX 정제 완료**:
@@ -37,9 +37,19 @@
 
 ### 1) [백엔드] 에디터 내 씬별 이미지 & 비디오 개별 재생성 API 라우트 구축
 1. **단건 이미지 재생성 엔드포인트 (`POST /api/video/scene/regenerate-image`)**:
-   * Fal AI `fal.subscribe` 동기 스트리밍 방식으로 씬 이미지 단건 생성 (기존 `entity_manifest_list` I2I 캐릭터 일관성 유지).
-   * Supabase Storage `scene_image_temp_storage`의 `${taskId}/${sceneNumber}.jpeg` 덮어쓰기(`upsert`) 및 신규 Signed URL 반환.
-   * `isAlsoRegenerateVideo: true` 응답 시 프론트엔드 2차 연쇄 호출 연동.
+    * Fal AI `fal.subscribe` 동기 스트리밍 방식으로 씬 이미지 단건 생성 (기존 `entity_manifest_list` I2I 캐릭터 일관성 유지).
+    * Supabase Storage `scene_image_temp_storage`의 `${taskId}/${sceneNumber}.jpeg` 덮어쓰기(`upsert`) 및 신규 Signed URL 반환.
+    * `isAlsoRegenerateVideo: true` 응답 시 프론트엔드 2차 연쇄 호출 연동.
 2. **단건 비디오 재생성 엔드포인트 (`POST /api/video/scene/regenerate-video`)**:
-   * Fal AI `fal.queue.submit` 비동기 웹훅 기반 단건 비디오 생성 요청.
-   * 비디오 완공 웹훅 수신 시 `videoServerAPI.postProcessedVideo` 재활용(속도/길이 조절) 후 `processed_video_storage`의 `video_raw_${sceneNumber}.mp4` 및 `video_processed_${sceneNumber}.mp4` 덮어쓰기.
+    * Fal AI `fal.queue.submit` 비동기 웹훅 기반 단건 비디오 생성 요청.
+    * 비디오 완공 웹훅 수신 시 `videoServerAPI.postProcessedVideo` 재활용(속도/길이 조절) 후 `processed_video_storage`의 `video_raw_${sceneNumber}.mp4` 및 `video_processed_${sceneNumber}.mp4` 덮어쓰기.
+
+### 2) [백엔드/파이프라인] 정규 생성 실패 건에 대한 기술적 실패 씬(Scene) 선택적 재생성 (Selective Retry) 및 상태 동기화 체계 구축
+1. **기술적 실패(Technical Failure) 범위 명확화**:
+    * 시스템/네트워크 장애, Fal AI API 실패, 정책 위반 등 **'기술적인 오류'**로 미완성된 씬만 실패 대상으로 간주.
+2. **선택적 재생성 (Selective Retry) 메커니즘 도입**:
+    * 이미 생성이 성공하여 파일이 존재하는 씬(`COMPLETED` 상태 또는 Storage 내 파일 존재)은 스킵하고, 실제 기술적 실패가 발생한 씬만 핀포인트로 재요청하도록 파이프라인(`orchestrate-image-generation`, `/api/video/process/video`) 및 `retry/route.ts` 로직 필터링 검토.
+3. **`SceneData.status` (`SceneGenerationStatus`) 동기화 점검 및 코드 보정**:
+    * 현재 코드상에서 `SceneData` 내부의 `status` (`IN_PROGRESS`, `COMPLETED`, `PROCESSED`, `FAILED`) 갱신 및 DB 저장 처리가 누락되거나 미흡했던 부분을 전면 점검하고 실시간으로 상태가 기록되도록 보정.
+4. **대시보드 UI 연동 ([DashboardItem.tsx](file:///home/jaeho/Projects/short_real/components/page/workspace/dashboard/DashboardItem.tsx))**:
+    * `SceneData.status` 동기화를 바탕으로 Retry 영수증 툴팁 가격이 실패한 씬의 수량(이미지) 및 실패 씬들의 총 duration(비디오) 기준으로만 동적으로 정확하게 표시되도록 연동 검토.
