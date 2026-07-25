@@ -35,6 +35,7 @@ export const imageServerAPI = {
             let imageUrl: string;
 
             const getSignedUrlPromiseList = subjectEntityManifestList.map(async (entity) => {
+                console.log(`${taskId}/reference_image_${entity.id}.jpeg`)
                 return await this.getImageSignedUrl(`${taskId}/reference_image_${entity.id}.jpeg`);
             });
             const imageSignedUrlList = (await Promise.all(getSignedUrlPromiseList))

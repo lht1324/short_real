@@ -28,6 +28,7 @@ import {musicClientAPI} from "@/lib/api/client/musicClientAPI";
 import ColorPickerPopover from "@/components/page/workspace/editor/ColorPickerPopover";
 import dynamic from "next/dynamic";
 import {useAuth} from "@/context/AuthContext";
+import {imageClientAPI} from "@/lib/api/client/imageClientAPI";
 const MusicEditPanel = dynamic(
     () => import('@/components/page/workspace/editor/MusicEditPanel'), // 컴포넌트 경로
     {
@@ -246,55 +247,65 @@ function WorkspaceEditorPageClient() {
         });
     }, [captionDataList, taskAiModelConfig?.videoModelId]);
 
-    const handleConfirmRegenerate = useCallback((payload: {
+    const handleConfirmRegenerate = useCallback(async (payload: {
         mode: RegenerateMode;
         sceneNumber: number;
         selectedModelId: string;
         estimatedCost: number;
         isAlsoRegenerateVideo?: boolean;
     }) => {
-        const { mode, sceneNumber, selectedModelId, estimatedCost, isAlsoRegenerateVideo } = payload;
-        setRegenerateModalState(prev => ({ ...prev, isOpen: false }));
+        const { mode, sceneNumber, selectedModelId, isAlsoRegenerateVideo } = payload;
+        setRegenerateModalState((previousState) => ({ ...previousState, isOpen: false }));
 
-        if (mode === RegenerateMode.IMAGE) {
-            /* 
-             * =========================================================================
-             * [단건 이미지 (+연쇄 비디오) 재생성 API 백엔드 연동부 주석]
-             * 엔드포인트: POST /api/video/scene/regenerate-image
-             * Payload: { taskId, sceneNumber, customModelId: selectedModelId }
-             * 
-             * 연쇄 옵션(isAlsoRegenerateVideo)이 true인 경우:
-             * 이미지 응답 수신 후 즉시 POST /api/video/scene/regenerate-video 연속 호출!
-             * =========================================================================
-             */
-            alert(
-                `[Image Regeneration Request]\n\n` +
-                `• Target: Scene #${sceneNumber}\n` +
-                `• Mode: IMAGE\n` +
-                `• Selected Model: ${selectedModelId || 'Default'}\n` +
-                `• Chained Video Regeneration: ${isAlsoRegenerateVideo ? 'YES (Auto-trigger video after image completion)' : 'NO'}\n` +
-                `• Total Estimated Cost: $${estimatedCost}\n\n` +
-                `* Primary API: POST /api/video/scene/regenerate-image` +
-                (isAlsoRegenerateVideo ? `\n* Chained API: POST /api/video/scene/regenerate-video` : ``)
-            );
-        } else {
-            /* 
-             * =========================================================================
-             * [단건 비디오 재생성 API 백엔드 연동부 주석]
-             * 엔드포인트: POST /api/video/scene/regenerate-video
-             * Payload: { taskId, sceneNumber, customModelId: selectedModelId }
-             * =========================================================================
-             */
-            alert(
-                `[Video Motion Regeneration Request]\n\n` +
-                `• Target: Scene #${sceneNumber}\n` +
-                `• Mode: VIDEO\n` +
-                `• Selected Model: ${selectedModelId || 'Default'}\n` +
-                `• Total Estimated Cost: $${estimatedCost}\n\n` +
-                `* API Endpoint: POST /api/video/scene/regenerate-video`
-            );
+        if (!taskId) return;
+
+        try {
+            if (mode === RegenerateMode.IMAGE) {
+                console.log(`[Regenerate Image] Requesting Scene #${sceneNumber}...`);
+                const regenerateResult = await imageClientAPI.postImageRegenerate({
+                    taskId: taskId,
+                    sceneNumber: sceneNumber,
+                    selectedImageModelId: selectedModelId,
+                    selectedI2VModelId: taskAiModelConfig?.videoModelId,
+                    isAlsoRegenerateVideo: isAlsoRegenerateVideo,
+                });
+
+                if (regenerateResult.success && regenerateResult.imageUrl) {
+                    console.log(`[Regenerate Image Success] Scene #${sceneNumber} Image:`, regenerateResult.imageUrl);
+
+                    // 씬 이미지 리스트 캐시 갱신
+                    setSceneImageUrlList((previousList) => {
+                        const nextList = [...previousList];
+                        if (nextList[sceneNumber - 1]) {
+                            nextList[sceneNumber - 1] = regenerateResult.imageUrl!;
+                        }
+                        return nextList;
+                    });
+
+                    alert(`Scene #${sceneNumber} 이미지 재생성이 완료되었습니다.`);
+                } else {
+                    alert(`Scene #${sceneNumber} 이미지 재생성에 실패했습니다: ${regenerateResult.error || '알 수 없는 오류'}`);
+                }
+            } else {
+                console.log(`[Regenerate Video] Requesting Scene #${sceneNumber}...`);
+                const regenerateResult = await videoClientAPI.postVideoRegenerate({
+                    taskId: taskId,
+                    sceneNumber: sceneNumber,
+                    selectedI2VModelId: selectedModelId,
+                });
+
+                if (regenerateResult.success) {
+                    console.log(`[Regenerate Video Success] Scene #${sceneNumber} Video Request ID:`, regenerateResult.requestId);
+                    alert(`Scene #${sceneNumber} 비디오 재생성 요청이 제출되었습니다. 백그라운드에서 렌더링이 진행됩니다.`);
+                } else {
+                    alert(`Scene #${sceneNumber} 비디오 재생성 요청에 실패했습니다: ${regenerateResult.error || '알 수 없는 오류'}`);
+                }
+            }
+        } catch (error) {
+            console.error("[Regenerate Error]:", error);
+            alert("재생성 요청 처리 중 오류가 발생했습니다.");
         }
-    }, []);
+    }, [taskId, taskAiModelConfig?.videoModelId]);
 
     const [captionConfigState, setCaptionConfigState] = useState<CaptionConfigState>(INITIAL_CAPTION_CONFIG_STATE);
     const [sceneSpeedList, setSceneSpeedList] = useState<{ sceneNumber: number; speedMultiplier: number; }[]>([]);

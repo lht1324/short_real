@@ -23,6 +23,7 @@ export const videoServerAPI = {
         aspectRatio: "16:9" | "9:16",
         resolution: '720p' | '1080p' | '2160p', // nP란 가로세로 중 짧은 쪽의 비율을 따라감
         isViolence: boolean = false,
+        isRegenerate: boolean = false,
     ) {
         const supabase = createSupabaseServiceRoleClient();
         const decryptedApiKey = cryptoUtils.decrypt(falAiApiKey, userId);
@@ -42,6 +43,10 @@ export const videoServerAPI = {
         const webhookUrlObject = new URL(`${baseUrl}/webhook/fal-ai/video`);
         webhookUrlObject.searchParams.set("taskId", taskId);
         webhookUrlObject.searchParams.set("isRetriedByViolence", isViolence ? 'true' : 'false');
+        if (isRegenerate) {
+            webhookUrlObject.searchParams.set("isRegenerate", "true");
+            webhookUrlObject.searchParams.set("sceneNumber", sceneData.sceneNumber.toString());
+        }
         const webhookUrl = webhookUrlObject.toString();
 
         // Signed URL 생성 (1시간 유효)

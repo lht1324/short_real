@@ -1,55 +1,41 @@
-# 작업 진행 상황 (Last Updated: 2026-07-25 03:35)
+# 작업 진행 상황 (Last Updated: 2026-07-26 03:33)
 
-## 1. 최근 세션 작업 내용 (Current Session Changes)
-* **에디터 씬 단건/연쇄 재생성 통합 모달 구축 및 UI/UX 정제 완료**:
-    * **통합 단건 재생성 모달 신설 ([SceneRegenerateModal.tsx](file:///home/jaeho/Projects/short_real/components/page/workspace/editor/SceneRegenerateModal.tsx))**:
-        * 이미지(`RegenerateMode.IMAGE`) 및 비디오(`RegenerateMode.VIDEO`) 단건 재생성을 단일 모달로 통합 구현.
-        * 유저 조작 부담 최적화를 위해 긴 영문 나레이션/시스템 프롬프트 Textarea를 전면 제거.
-        * 카테고리별 호환 AI 모델 선택 드롭다운 (`image-to-image`, `image-to-video`) 및 z-index 보정(모달 바깥 뷰포트로 시원하게 팝업).
-        * **`ESTIMATED DEDUCTION` 과금 명세서 카드**:
-            * 메인 요율($0.0500)을 `text-3xl font-extrabold font-mono text-zinc-100` 서체로 강조.
-            * **연쇄 비디오 재생성 옵션 (`[☑️ Also regenerate video with new image]`)**: 체크 토글 시 이미지 요금 + 비디오 요금이 실시간으로 합산 계산됨.
-            * **`Itemized Breakdown` (영수증 세부 내역서)**: 체크박스가 선택되었을 때만 카드 하단에 `• Scene Image ($0.0500)` 및 `• Motion Video (+$0.2333)` 세부 항목별 단가가 투명하게 분리 표시되도록 조건부 렌더링.
-        * **`design-taste-frontend` 지침 엄격 준수**:
-            * 답답하고 흐릿했던 11px 서체 및 `text-zinc-500`을 완전 폐지하고, `14px (text-sm)`와 `text-zinc-300 / text-zinc-100` High Contrast 명도 적용.
-        * **모달 Top Y축 고정 및 하향 확장(Downward Expansion) 보정**:
-            * 체크박스 토글 시 모달 중심점이 이동하면서 마우스 커서 위치에서 체크박스가 벗어나던 Target Drift 현상을 해결하기 위해 최외각 레이아웃을 `items-start pt-[15vh]`로 상단 고정.
-            * 체크박스를 껐다 켤 때 모달 상단 및 체크박스의 Y축 위치가 1px도 흔들리지 않고 아래쪽으로만 시원하고 안정적으로 확장되도록 UI/UX 보정.
-
-    * **씬 카드 UI 개정 ([SceneSequenceItem.tsx](file:///home/jaeho/Projects/short_real/components/page/workspace/editor/SceneSequenceItem.tsx))**:
-        * 기존 불필요한 `[Settings]` 버튼을 완전 제거하고 **[🖼️ Image]** 및 **[🎬 Video]** 버튼 클릭 시 해당 모드로 모달이 떠오르도록 바인딩.
-        * 특정 씬 재생성 진행 중 타 작업 블로킹 없이 해당 카드 영역에만 표시되는 **독립 스피너 오버레이(`Generating Image...` / `Rendering Motion...`)** 구현.
-
-    * **에디터 최상위 아키텍처 연동 및 사전 모델 로드 ([WorkspaceEditorPageClient.tsx](file:///home/jaeho/Projects/short_real/components/page/workspace/editor/WorkspaceEditorPageClient.tsx) & [SceneSequencePanel.tsx](file:///home/jaeho/Projects/short_real/components/page/workspace/editor/SceneSequencePanel.tsx))**:
-        * 부모 `backdrop-blur-sm` 속성으로 인해 좌측 패널(24% 폭) 내부로 `position: fixed` 구획이 갇히던 CSS Containing Block 문제를 해결하기 위해, `<SceneRegenerateModal>`을 최상위 루트(`WorkspaceEditorPageClient.tsx` 최하단)로 이동시킴.
-        * 에디터 진입 시(`loadData`) Task에 저장된 `videoGenerationTask.ai_model_config` 모델 ID(`Imagineart 2.0 Preview` / `Seedance 1.5 Pro`) 및 AI 모델 데이터를 사전 준비(Pre-loading)하여 비동기 지연 없이 모달에 1순위로 즉시 바인딩되도록 조치.
-        * 모달 확인 클릭 시 추후 백엔드 API 엔드포인트(`POST /api/video/scene/regenerate-image` 및 `POST /api/video/scene/regenerate-video`) 연속 호출 상세 가이드 주석 명시 및 alert() 안내 연동 완료.
-
-* **수정 반영된 파일**:
-    * [SceneRegenerateModal.tsx](file:///home/jaeho/Projects/short_real/components/page/workspace/editor/SceneRegenerateModal.tsx) (신규)
-    * [SceneSequenceItem.tsx](file:///home/jaeho/Projects/short_real/components/page/workspace/editor/SceneSequenceItem.tsx) (개정)
-    * [SceneSequencePanel.tsx](file:///home/jaeho/Projects/short_real/components/page/workspace/editor/SceneSequencePanel.tsx) (개정)
-    * [WorkspaceEditorPageClient.tsx](file:///home/jaeho/Projects/short_real/components/page/workspace/editor/WorkspaceEditorPageClient.tsx) (개정)
+## 1. 현재 상황 (Current Status)
+* **단건 이미지 재생성 테스트 성공**:
+    * 단건 씬 이미지 재생성, LLM 신규 프롬프트 재선출, `display_name` 1:1 T2I/I2I 모델 자동 매칭, Storage 파일 덮어쓰기 및 에디터 UI 갱신 테스트를 완료했습니다.
+    * `trigger/post-image.ts`와 동일하게 `subjectEntityManifestList`에서 `role === 'main_hero' || role === 'sub_character'` 필터링 및 `entityOrder` 정렬을 보정하여 Storage `Object not found` 500 에러를 전면 해소했습니다.
+    * `imageClientAPI.postImageRegenerate` 및 `videoClientAPI.postVideoRegenerate` 클라이언트 모듈 작성 완료.
+    * 에디터 UI에서 재생성 버튼 클릭 시 직관적인 `alert()` 알림 수신 연동 완료.
 
 ---
 
-## 2. 향후 작업 (Next Steps) - [Priority: CRITICAL]
+## 2. 향후 작업 (Next Steps) - [Priority: HIGH]
 
-### 1) [백엔드] 에디터 내 씬별 이미지 & 비디오 개별 재생성 API 라우트 구축
-1. **단건 이미지 재생성 엔드포인트 (`POST /api/video/scene/regenerate-image`)**:
-    * Fal AI `fal.subscribe` 동기 스트리밍 방식으로 씬 이미지 단건 생성 (기존 `entity_manifest_list` I2I 캐릭터 일관성 유지).
-    * Supabase Storage `scene_image_temp_storage`의 `${taskId}/${sceneNumber}.jpeg` 덮어쓰기(`upsert`) 및 신규 Signed URL 반환.
-    * `isAlsoRegenerateVideo: true` 응답 시 프론트엔드 2차 연쇄 호출 연동.
-2. **단건 비디오 재생성 엔드포인트 (`POST /api/video/scene/regenerate-video`)**:
-    * Fal AI `fal.queue.submit` 비동기 웹훅 기반 단건 비디오 생성 요청.
-    * 비디오 완공 웹훅 수신 시 `videoServerAPI.postProcessedVideo` 재활용(속도/길이 조절) 후 `processed_video_storage`의 `video_raw_${sceneNumber}.mp4` 및 `video_processed_${sceneNumber}.mp4` 덮어쓰기.
+### Task 1: `SceneData` 내 씬별 사용 AI 모델 ID 필드 신설 및 재생성 모달 연동
+1. **타입 추가 ([VideoGenerationTasks.ts](file:///home/jaeho/Projects/short_real/lib/api/types/supabase/VideoGenerationTasks.ts))**:
+    * `SceneData` 인터페이스에 해당 씬에 적용된 `selectedImageModelId?: string`, `selectedVideoModelId?: string` 필드를 신설.
+2. **모델 ID 생애주기 (Lifecycle) 구현**:
+    * **초기화**: `undefined` 또는 유저 프로필(`Users.preferred_ai_model_config`) 설정값으로 초기화.
+    * **태스크 생성 시**: 태스크 수준에서 최종 설정된 모델 ID로 덮어쓰기.
+    * **재생성 시**: 재생성 모달에서 다른 모델이 선택되면 **해당 씬 `SceneData`의 해당 필드값으로 덮어쓰기**.
+3. **모달 연동 ([SceneRegenerateModal.tsx](file:///home/jaeho/Projects/short_real/components/page/workspace/editor/SceneRegenerateModal.tsx))**:
+    * 모달을 열 때 기본(Default)으로 보여줄 모델 ID를 Task 전체 설정이 아닌 **해당 씬 `SceneData`의 필드값**에서 추출하여 표시.
 
-### 2) [백엔드/파이프라인] 정규 생성 실패 건에 대한 기술적 실패 씬(Scene) 선택적 재생성 (Selective Retry) 및 상태 동기화 체계 구축
-1. **기술적 실패(Technical Failure) 범위 명확화**:
-    * 시스템/네트워크 장애, Fal AI API 실패, 정책 위반 등 **'기술적인 오류'**로 미완성된 씬만 실패 대상으로 간주.
-2. **선택적 재생성 (Selective Retry) 메커니즘 도입**:
-    * 이미 생성이 성공하여 파일이 존재하는 씬(`COMPLETED` 상태 또는 Storage 내 파일 존재)은 스킵하고, 실제 기술적 실패가 발생한 씬만 핀포인트로 재요청하도록 파이프라인(`orchestrate-image-generation`, `/api/video/process/video`) 및 `retry/route.ts` 로직 필터링 검토.
-3. **`SceneData.status` (`SceneGenerationStatus`) 동기화 점검 및 코드 보정**:
-    * 현재 코드상에서 `SceneData` 내부의 `status` (`IN_PROGRESS`, `COMPLETED`, `PROCESSED`, `FAILED`) 갱신 및 DB 저장 처리가 누락되거나 미흡했던 부분을 전면 점검하고 실시간으로 상태가 기록되도록 보정.
-4. **대시보드 UI 연동 ([DashboardItem.tsx](file:///home/jaeho/Projects/short_real/components/page/workspace/dashboard/DashboardItem.tsx))**:
-    * `SceneData.status` 동기화를 바탕으로 Retry 영수증 툴팁 가격이 실패한 씬의 수량(이미지) 및 실패 씬들의 총 duration(비디오) 기준으로만 동적으로 정확하게 표시되도록 연동 검토.
+### Task 2: `SceneGenerationStatus` 세분화 및 씬 카드 로딩 UI 연동
+1. **상태 세분화 ([VideoGenerationTasks.ts](file:///home/jaeho/Projects/short_real/lib/api/types/supabase/VideoGenerationTasks.ts))**:
+    * `SceneGenerationStatus` enum에 씬 단위 생성 중 상태인 `GENERATING_IMAGE`, `GENERATING_VIDEO` 추가.
+2. **씬 카드 로딩 연동 ([SceneSequenceItem.tsx](file:///home/jaeho/Projects/short_real/components/page/workspace/editor/SceneSequenceItem.tsx))**:
+    * 재생성 시작 시 `SceneData.status`를 `GENERATING_IMAGE` 또는 `GENERATING_VIDEO`로 변경.
+    * `SceneSequenceItem.tsx` 씬 카드는 `SceneData.status` 값에 따라 로딩 스피너 오버레이("Generating Image...", "Rendering Motion...")를 동적으로 렌더링.
+
+### Task 3: 이미지 재생성 API의 비동기 Fire-and-Forget 구조 전환
+1. **응답 대기 해제 ([app/api/image/regenerate/route.ts](file:///home/jaeho/Projects/short_real/app/api/image/regenerate/route.ts))**:
+    * 현재 이미지 재생성이 Fal AI 렌더링 완공 시까지 HTTP 응답을 수 초간 지연 대기(await)하는 동기 방식인 문제점 개선.
+    * 요청 수신 및 `SceneData.status = GENERATING_IMAGE` 세팅 후 **1초 만에 HTTP 200 OK 비동기 응답(Fire-and-Forget) 반환 구조로 전환**.
+    * 완료 후 `SceneData.status`를 `COMPLETED`로 갱신하거나 이벤트/웹훅으로 상태 동기화.
+
+### Task 4: [백엔드/파이프라인] 정규 생성 실패 건 선택적 재생성 (Selective Retry) 및 상태 동기화 체계 구축
+1. **기술적 실패 씬 선택적 재요청**:
+    * 정규 생성 진행 중 기술적 오류로 실패한 씬만 선택적으로 재요청(Selective Retry)하는 파이프라인 필터링 검토.
+2. **대시보드 UI 연동 ([DashboardItem.tsx](file:///home/jaeho/Projects/short_real/components/page/workspace/dashboard/DashboardItem.tsx))**:
+    * `SceneData.status` 동기화를 바탕으로 Retry 영수증 툴팁 가격이 실패한 씬 기준으로 동적으로 정확히 계산되도록 연동.

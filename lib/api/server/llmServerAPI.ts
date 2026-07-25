@@ -866,7 +866,7 @@ Instruction: Generate the scene instruction JSON.
                 return {
                     success: false,
                     error: {
-                        message: 'No content in OpenAI response',
+                        message: 'No content in OpenRouter response',
                         code: 'NO_CONTENT'
                     }
                 };

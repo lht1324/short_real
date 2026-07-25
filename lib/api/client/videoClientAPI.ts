@@ -263,45 +263,38 @@ export const videoClientAPI = {
         }
     },
 
-    async postVideoExportYoutube(taskId: string): Promise<string | null> {
+    async postVideoRegenerate(payload: {
+        taskId: string;
+        sceneNumber: number;
+        selectedI2VModelId?: string;
+    }): Promise<{
+        success: boolean;
+        requestId?: string;
+        error?: string;
+    }> {
         try {
-            const response = await postFetch(`/api/video/export/youtube?taskId=${taskId}`);
+            const response = await postFetch('/api/video/regenerate', payload);
 
             if (!response.ok) {
                 throw Error(`HTTP error! status: ${response.status}`);
             }
 
-            const postVideoExportYoutubeResult = await response.json();
+            const regenerateResult = await response.json();
 
-            if (!postVideoExportYoutubeResult.success || !postVideoExportYoutubeResult.data) {
-                throw Error(postVideoExportYoutubeResult.error ?? "Unknown error occurred while fetching video upload.");
+            if (!regenerateResult.success) {
+                throw Error(regenerateResult.error ?? "Failed to regenerate scene video.");
             }
 
-            return postVideoExportYoutubeResult.data.authUrl;
+            return {
+                success: true,
+                requestId: regenerateResult.data?.requestId,
+            };
         } catch (error) {
-            console.error("Failed to start uploading video onto Youtube: ", error);
-
-            return null;
+            console.error("Video regenerate API call failed:", error);
+            return {
+                success: false,
+                error: error instanceof Error ? error.message : "Failed to regenerate scene video",
+            };
         }
-    },
-
-    async postVideoExportInstagram(userId: string, taskId: string): Promise<string | null> {
-        try {
-            return ""
-        } catch (error) {
-            console.error("Failed to start uploading video onto Instagram: ", error);
-
-            return null;
-        }
-    },
-
-    async postVideoExportTikTok(userId: string, taskId: string): Promise<string | null> {
-        try {
-            return "";
-        } catch (error) {
-            console.error("Failed to start uploading video onto TikTok: ", error);
-
-            return null;
-        }
-    },
+    }
 }
