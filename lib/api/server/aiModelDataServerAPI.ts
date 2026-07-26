@@ -36,5 +36,25 @@ export const aiModelDataServerAPI = {
         }
 
         return data;
+    },
+
+    async getAIModelDataByDisplayNameAndCategory(displayName: string, category: string): Promise<AIModelData | null> {
+        const supabase = createSupabaseServiceRoleClient();
+
+        const { data, error } = await supabase
+            .from('ai_model_data')
+            .select('*')
+            .eq('display_name', displayName)
+            .eq('category', category)
+            .maybeSingle();
+
+        if (error) {
+            if (error.code === 'PGRST116') { // No rows returned
+                return null;
+            }
+            throw new Error(`Failed to get ai model data by display name & category: ${error.message}`);
+        }
+
+        return data;
     }
 }

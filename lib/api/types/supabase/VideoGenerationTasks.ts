@@ -82,6 +82,9 @@ export interface SceneData {
     sceneVisualDescription?: string;
     status: SceneGenerationStatus;
     speedMultiplier: number; // default 1.0
+    selectedT2IAIModelId?: string;
+    selectedI2IAIModelId?: string;
+    selectedI2VAIModelId?: string;
 }
 
 export interface SubtitleSegment {
@@ -92,6 +95,8 @@ export interface SubtitleSegment {
 
 export enum SceneGenerationStatus {
     IN_PROGRESS = 'in_progress',
+    GENERATING_IMAGE = 'generating_image',
+    GENERATING_VIDEO = 'generating_video',
     COMPLETED = 'completed',
     PROCESSED = 'processed',
     FAILED = 'failed'

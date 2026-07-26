@@ -77,15 +77,65 @@ function SceneRegenerateModal({
         }
     };
 
-    // Mode별 호환 AI 모델 필터링
+    type SortOption = 'name' | 'price_asc' | 'price_desc';
+    const [sortBy, setSortBy] = useState<SortOption>('name');
+
+    const activeCategory = useMemo(() => {
+        return mode === RegenerateMode.IMAGE ? 'image-to-image' : 'image-to-video';
+    }, [mode]);
+
+    const targetPriceUnit = useMemo(() => {
+        const isVideo = mode === RegenerateMode.VIDEO;
+        if (isVideo) {
+            return globalResolution === '720p'
+                ? 'video_720p'
+                : globalResolution === '1080p'
+                    ? 'video_1080p'
+                    : 'video_2160p';
+        } else {
+            return globalResolution === '720p'
+                ? 'image_720p'
+                : globalResolution === '1080p'
+                    ? 'image_1080p'
+                    : 'image_2160p';
+        }
+    }, [globalResolution, mode]);
+
+    // Mode별 호환 & globalResolution 지원 AI 모델 필터링 및 정렬
     const filteredModelList = useMemo(() => {
+        // 1. Mode 필터링
+        let categoryFiltered: AIModelData[] = [];
         if (mode === RegenerateMode.IMAGE) {
             const i2iModels = aiModelList.filter(m => m.category === 'image-to-image');
-            return i2iModels.length > 0 ? i2iModels : aiModelList.filter(m => m.category === 'text-to-image');
+            categoryFiltered = i2iModels.length > 0 ? i2iModels : aiModelList.filter(m => m.category === 'text-to-image');
         } else {
-            return aiModelList.filter(m => m.category === 'image-to-video');
+            categoryFiltered = aiModelList.filter(m => m.category === 'image-to-video');
         }
-    }, [aiModelList, mode]);
+
+        // 2. globalResolution 단가가 실제로 존재하여 지원하는 모델만 필터링
+        const resFiltered = categoryFiltered.filter(model => {
+            if (!model.ai_model_price_list || model.ai_model_price_list.length === 0) return false;
+            return model.ai_model_price_list.some(p => p.unit === targetPriceUnit);
+        });
+
+        // 지원 모델이 없는 예외 상황 대비 fallback
+        const listToUse = resFiltered.length > 0 ? resFiltered : categoryFiltered;
+
+        // 3. 정렬 적용 (이름 / 가격 오름차순 / 가격 내림차순)
+        return [...listToUse].sort((a, b) => {
+            if (sortBy === 'name') {
+                return a.display_name.localeCompare(b.display_name);
+            }
+            const priceA = getMatchedModelPrice(a, globalResolution, activeCategory).price;
+            const priceB = getMatchedModelPrice(b, globalResolution, activeCategory).price;
+
+            if (sortBy === 'price_asc') {
+                return priceA - priceB;
+            } else {
+                return priceB - priceA;
+            }
+        });
+    }, [aiModelList, mode, globalResolution, targetPriceUnit, sortBy, activeCategory]);
 
     // 현재 선택된 모델 객체 (기본값 매칭 보정)
     const activeSelectedModel = useMemo(() => {
@@ -95,10 +145,6 @@ function SceneRegenerateModal({
         }
         return filteredModelList[0] ?? null;
     }, [filteredModelList, currentModelId]);
-
-    const activeCategory = useMemo(() => {
-        return mode === RegenerateMode.IMAGE ? 'image-to-image' : 'image-to-video';
-    }, [mode]);
 
     // 이미지 단건 요율 계산
     const matchedPriceInfo = useMemo(() => {
@@ -204,7 +250,41 @@ function SceneRegenerateModal({
 
                         {/* Model Dropdown Menu (High Z-Index & Clean Overflow) */}
                         {isDropdownOpen && (
-                            <div className="absolute left-0 right-0 top-full mt-2 bg-zinc-900 border border-white/10 rounded-xl shadow-2xl z-[200] max-h-64 overflow-y-auto custom-scrollbar p-2 flex flex-col gap-1">
+                            <div className="absolute left-0 right-0 top-full mt-2 bg-zinc-900 border border-white/10 rounded-xl shadow-2xl z-[200] max-h-72 overflow-y-auto custom-scrollbar p-2 flex flex-col gap-1">
+                                {/* Sort Filter Bar */}
+                                <div className="px-2 py-1.5 border-b border-white/10 mb-1 flex items-center justify-between text-xs text-zinc-400 font-mono">
+                                    <span>Sort by</span>
+                                    <div className="flex items-center gap-1.5">
+                                        <button
+                                            type="button"
+                                            onClick={() => setSortBy('name')}
+                                            className={`px-2 py-0.5 rounded text-[11px] font-semibold transition-colors ${
+                                                sortBy === 'name' ? 'bg-white text-black font-bold' : 'hover:bg-white/10 text-zinc-300'
+                                            }`}
+                                        >
+                                            Name
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setSortBy('price_asc')}
+                                            className={`px-2 py-0.5 rounded text-[11px] font-semibold transition-colors ${
+                                                sortBy === 'price_asc' ? 'bg-white text-black font-bold' : 'hover:bg-white/10 text-zinc-300'
+                                            }`}
+                                        >
+                                            Price ↑
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setSortBy('price_desc')}
+                                            className={`px-2 py-0.5 rounded text-[11px] font-semibold transition-colors ${
+                                                sortBy === 'price_desc' ? 'bg-white text-black font-bold' : 'hover:bg-white/10 text-zinc-300'
+                                            }`}
+                                        >
+                                            Price ↓
+                                        </button>
+                                    </div>
+                                </div>
+
                                 {filteredModelList.map((model) => {
                                     const isSelected = model.id === (activeSelectedModel?.id ?? currentModelId);
                                     const priceObj = getMatchedModelPrice(model, globalResolution, activeCategory);

@@ -8,11 +8,13 @@ import { ChevronLeft, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
 import { fontMap, type FontName } from "@/lib/fonts";
 import FONT_FAMILY_LIST, {FontFamily} from "@/lib/FontFamilyList";
 import {videoClientAPI} from "@/lib/api/client/videoClientAPI";
+import {imageClientAPI} from "@/lib/api/client/imageClientAPI";
 import {
     FinalVideoMergeData,
     MusicData,
-    SceneData,
+    SceneData, SceneGenerationStatus,
     SubtitleSegment,
+    VideoGenerationTask,
     VideoGenerationTaskStatus
 } from "@/lib/api/types/supabase/VideoGenerationTasks";
 import SceneSequencePanel from "@/components/page/workspace/editor/SceneSequencePanel";
@@ -25,10 +27,10 @@ import VideoPlayerPanel, {VideoPlayerHandle} from "@/components/page/workspace/e
 import MusicPanel from "@/components/page/workspace/editor/MusicPanel";
 // import MusicEditPanel from "@/components/page/workspace/editor/MusicEditPanel";
 import {musicClientAPI} from "@/lib/api/client/musicClientAPI";
-import ColorPickerPopover from "@/components/page/workspace/editor/ColorPickerPopover";
 import dynamic from "next/dynamic";
 import {useAuth} from "@/context/AuthContext";
-import {imageClientAPI} from "@/lib/api/client/imageClientAPI";
+import {createBrowserClient} from "@supabase/ssr";
+import ColorPickerPopover from "@/components/page/workspace/editor/ColorPickerPopover";
 const MusicEditPanel = dynamic(
     () => import('@/components/page/workspace/editor/MusicEditPanel'), // 컴포넌트 경로
     {
@@ -179,6 +181,7 @@ function WorkspaceEditorPageClient() {
 
     const [videoData, setVideoData] = useState<VideoData | null>(null);
     const [aspectRatio, setAspectRatio] = useState<'16:9' | '9:16'>('9:16');
+    const [globalResolution, setGlobalResolution] = useState<'720p' | '1080p' | '2160p'>('1080p');
 
     // 고화질 원본 씬 라이트박스 모달 상태
     const [lightboxSceneIndex, setLightboxSceneIndex] = useState<number | null>(null);
@@ -217,6 +220,90 @@ function WorkspaceEditorPageClient() {
         fetchModels();
     }, []);
 
+    // Supabase Realtime 구독 (태스크 & 씬 breakdown_list 실시간 DB 변경 감지)
+    useEffect(() => {
+        if (!taskId) return;
+
+        const supabase = createBrowserClient(
+            process.env.NEXT_PUBLIC_SUPABASE_URL!,
+            process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+        );
+
+        console.log('[Editor Realtime] Subscribing to task updates:', taskId);
+
+        const channel = supabase
+            .channel(`video_task_editor_${taskId}`)
+            .on(
+                'postgres_changes',
+                {
+                    event: 'UPDATE',
+                    schema: 'public',
+                    table: 'video_generation_tasks',
+                    filter: `id=eq.${taskId}`,
+                },
+                (payload) => {
+                    console.log('[Editor Realtime] Received UPDATE event:', payload);
+                    const updatedTask = payload.new as VideoGenerationTask;
+                    const newBreakdownList = updatedTask.scene_breakdown_list;
+
+                    if (newBreakdownList && newBreakdownList.length > 0) {
+                        setVideoData((prev) => {
+                            if (!prev) return prev;
+
+                            // 완공(COMPLETED) 상태로 바뀐 씬 탐지 및 완공 알림 / 비디오-이미지 URL 실시간 교체
+                            newBreakdownList.forEach(async (newScene) => {
+                                const oldScene = prev.sceneBreakdownList.find(s => s.sceneNumber === newScene.sceneNumber);
+                                if (oldScene && oldScene.status !== SceneGenerationStatus.COMPLETED && newScene.status === SceneGenerationStatus.COMPLETED) {
+                                    const sceneNum = newScene.sceneNumber;
+
+                                    // 1) 이미지 URL 리스트 갱신
+                                    imageClientAPI.getImages(taskId, newBreakdownList.length).then((latestUrls) => {
+                                        if (latestUrls && latestUrls.length > 0) {
+                                            const timestamp = Date.now();
+                                            const freshUrls = latestUrls.map(url => `${url}${url.includes("?") ? "&" : "?"}t=${timestamp}`);
+                                            setSceneImageUrlList(freshUrls);
+                                        }
+                                    });
+
+                                    // 2) 비디오 raw/processed URL 최신 갱신 및 scenesUrlData 실시간 교체
+                                    const userId = user?.id || searchParams.get('userId') || "";
+                                    const taskUrlsResult = await videoClientAPI.getVideoTaskUrls(taskId, userId);
+                                    if (taskUrlsResult && taskUrlsResult.scenes) {
+                                        setVideoData(currentPrev => {
+                                            if (!currentPrev) return currentPrev;
+                                            return {
+                                                ...currentPrev,
+                                                scenesUrlData: taskUrlsResult.scenes,
+                                            };
+                                        });
+                                    }
+
+                                    // 3) 완공 시점에 성공 alert() 안내
+                                    const isVideoFinished = oldScene.status === SceneGenerationStatus.GENERATING_VIDEO;
+                                    if (isVideoFinished) {
+                                        alert(`Scene #${sceneNum} video motion rendering has been completed!`);
+                                    } else {
+                                        alert(`Scene #${sceneNum} image has been successfully regenerated.`);
+                                    }
+                                }
+                            });
+
+                            return {
+                                ...prev,
+                                sceneBreakdownList: newBreakdownList,
+                            };
+                        });
+                    }
+                }
+            )
+            .subscribe();
+
+        return () => {
+            console.log('[Editor Realtime] Unsubscribing channel:', taskId);
+            channel.unsubscribe();
+        };
+    }, [taskId, user?.id, searchParams]);
+
     const [isCaptionEnabled, setIsCaptionEnabled] = useState(true);
 
     const captionDataList = useMemo(() => {
@@ -225,27 +312,29 @@ function WorkspaceEditorPageClient() {
 
     const onOpenImageRegenerateModal = useCallback((sceneNumber: number) => {
         const targetCaption = captionDataList.find(c => c.sceneNumber === sceneNumber);
+        const targetSceneData = videoData?.sceneBreakdownList?.find(s => s.sceneNumber === sceneNumber);
         const duration = targetCaption ? targetCaption.endSec - targetCaption.startSec : 4;
         setRegenerateModalState({
             isOpen: true,
             mode: RegenerateMode.IMAGE,
             sceneNumber,
             sceneDuration: duration,
-            selectedModelId: taskAiModelConfig?.sceneImageI2IModelId ?? null,
+            selectedModelId: targetSceneData?.selectedI2IAIModelId ?? taskAiModelConfig?.sceneImageI2IModelId ?? null,
         });
-    }, [captionDataList, taskAiModelConfig?.sceneImageI2IModelId]);
+    }, [captionDataList, videoData?.sceneBreakdownList, taskAiModelConfig?.sceneImageI2IModelId]);
 
     const onOpenVideoRegenerateModal = useCallback((sceneNumber: number) => {
         const targetCaption = captionDataList.find(c => c.sceneNumber === sceneNumber);
+        const targetSceneData = videoData?.sceneBreakdownList?.find(s => s.sceneNumber === sceneNumber);
         const duration = targetCaption ? targetCaption.endSec - targetCaption.startSec : 4;
         setRegenerateModalState({
             isOpen: true,
             mode: RegenerateMode.VIDEO,
             sceneNumber,
             sceneDuration: duration,
-            selectedModelId: taskAiModelConfig?.videoModelId ?? null,
+            selectedModelId: targetSceneData?.selectedI2VAIModelId ?? taskAiModelConfig?.videoModelId ?? null,
         });
-    }, [captionDataList, taskAiModelConfig?.videoModelId]);
+    }, [captionDataList, videoData?.sceneBreakdownList, taskAiModelConfig?.videoModelId]);
 
     const handleConfirmRegenerate = useCallback(async (payload: {
         mode: RegenerateMode;
@@ -258,6 +347,26 @@ function WorkspaceEditorPageClient() {
         setRegenerateModalState((previousState) => ({ ...previousState, isOpen: false }));
 
         if (!taskId) return;
+
+        // 재생성 시작 시 씬 카드를 즉시 로딩 오버레이 상태로 동기화
+        setVideoData((prevVideoData) => {
+            if (!prevVideoData) return prevVideoData;
+            const updatedBreakdownList = prevVideoData.sceneBreakdownList.map((sceneData) => {
+                if (sceneData.sceneNumber === sceneNumber) {
+                    return {
+                        ...sceneData,
+                        status: mode === RegenerateMode.IMAGE
+                            ? SceneGenerationStatus.GENERATING_IMAGE
+                            : SceneGenerationStatus.GENERATING_VIDEO,
+                    };
+                }
+                return sceneData;
+            });
+            return {
+                ...prevVideoData,
+                sceneBreakdownList: updatedBreakdownList,
+            };
+        });
 
         try {
             if (mode === RegenerateMode.IMAGE) {
@@ -282,9 +391,43 @@ function WorkspaceEditorPageClient() {
                         return nextList;
                     });
 
-                    alert(`Scene #${sceneNumber} 이미지 재생성이 완료되었습니다.`);
+                    // 씬 status COMPLETED로 복구
+                    setVideoData((prevVideoData) => {
+                        if (!prevVideoData) return prevVideoData;
+                        const updatedBreakdownList = prevVideoData.sceneBreakdownList.map((sceneData) => {
+                            if (sceneData.sceneNumber === sceneNumber) {
+                                return {
+                                    ...sceneData,
+                                    status: SceneGenerationStatus.COMPLETED,
+                                };
+                            }
+                            return sceneData;
+                        });
+                        return {
+                            ...prevVideoData,
+                            sceneBreakdownList: updatedBreakdownList,
+                        };
+                    });
                 } else {
-                    alert(`Scene #${sceneNumber} 이미지 재생성에 실패했습니다: ${regenerateResult.error || '알 수 없는 오류'}`);
+                    // 실패 시 status FAILED로 설정
+                    setVideoData((prevVideoData) => {
+                        if (!prevVideoData) return prevVideoData;
+                        const updatedBreakdownList = prevVideoData.sceneBreakdownList.map((sceneData) => {
+                            if (sceneData.sceneNumber === sceneNumber) {
+                                return {
+                                    ...sceneData,
+                                    status: SceneGenerationStatus.FAILED,
+                                };
+                            }
+                            return sceneData;
+                        });
+                        return {
+                            ...prevVideoData,
+                            sceneBreakdownList: updatedBreakdownList,
+                        };
+                    });
+
+                    alert(`Failed to regenerate image for Scene #${sceneNumber}: ${regenerateResult.error || 'Unknown error'}`);
                 }
             } else {
                 console.log(`[Regenerate Video] Requesting Scene #${sceneNumber}...`);
@@ -296,14 +439,46 @@ function WorkspaceEditorPageClient() {
 
                 if (regenerateResult.success) {
                     console.log(`[Regenerate Video Success] Scene #${sceneNumber} Video Request ID:`, regenerateResult.requestId);
-                    alert(`Scene #${sceneNumber} 비디오 재생성 요청이 제출되었습니다. 백그라운드에서 렌더링이 진행됩니다.`);
                 } else {
-                    alert(`Scene #${sceneNumber} 비디오 재생성 요청에 실패했습니다: ${regenerateResult.error || '알 수 없는 오류'}`);
+                    // 실패 시 status FAILED로 설정
+                    setVideoData((prevVideoData) => {
+                        if (!prevVideoData) return prevVideoData;
+                        const updatedBreakdownList = prevVideoData.sceneBreakdownList.map((sceneData) => {
+                            if (sceneData.sceneNumber === sceneNumber) {
+                                return {
+                                    ...sceneData,
+                                    status: SceneGenerationStatus.FAILED,
+                                };
+                            }
+                            return sceneData;
+                        });
+                        return {
+                            ...prevVideoData,
+                            sceneBreakdownList: updatedBreakdownList,
+                        };
+                    });
+
+                    alert(`Failed to render video motion for Scene #${sceneNumber}: ${regenerateResult.error || 'Unknown error'}`);
                 }
             }
         } catch (error) {
-            console.error("[Regenerate Error]:", error);
-            alert("재생성 요청 처리 중 오류가 발생했습니다.");
+            console.error("Regeneration error:", error);
+            setVideoData((prevVideoData) => {
+                if (!prevVideoData) return prevVideoData;
+                const updatedBreakdownList = prevVideoData.sceneBreakdownList.map((sceneData) => {
+                    if (sceneData.sceneNumber === sceneNumber) {
+                        return {
+                            ...sceneData,
+                            status: SceneGenerationStatus.FAILED,
+                        };
+                    }
+                    return sceneData;
+                });
+                return {
+                    ...prevVideoData,
+                    sceneBreakdownList: updatedBreakdownList,
+                };
+            });
         }
     }, [taskId, taskAiModelConfig?.videoModelId]);
 
@@ -688,8 +863,9 @@ function WorkspaceEditorPageClient() {
                     throw new Error("Invalid task status for editor")
                 }
 
-                // 종횡비 및 AI 모델 설정 적용
+                // 종횡비 및 해상도, AI 모델 설정 적용
                 setAspectRatio(videoGenerationTask.aspect_ratio ?? '9:16');
+                setGlobalResolution(videoGenerationTask.resolution ?? '1080p');
                 if (videoGenerationTask.ai_model_config) {
                     setTaskAiModelConfig({
                         sceneImageI2IModelId: videoGenerationTask.ai_model_config.sceneImageI2IModelId,
@@ -910,6 +1086,8 @@ function WorkspaceEditorPageClient() {
                     <SceneSequencePanel
                         taskId={taskId}
                         captionDataList={captionDataList}
+                        sceneBreakdownList={videoData?.sceneBreakdownList}
+                        imageUrlList={sceneImageUrlList}
                         currentSceneIndex={currentSceneIndex}
                         aspectRatio={aspectRatio}
                         sceneRealStartTimes={sceneRealStartTimes}
@@ -1067,7 +1245,7 @@ function WorkspaceEditorPageClient() {
                 sceneNumber={regenerateModalState.sceneNumber}
                 sceneDuration={regenerateModalState.sceneDuration}
                 aiModelList={aiModelList}
-                globalResolution={aspectRatio === '9:16' ? '1080p' : '1080p'}
+                globalResolution={globalResolution}
                 defaultModelId={regenerateModalState.selectedModelId}
                 defaultVideoModelId={taskAiModelConfig?.videoModelId}
                 onClose={() => setRegenerateModalState(prev => ({ ...prev, isOpen: false }))}

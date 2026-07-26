@@ -4,6 +4,7 @@ import {memo, useMemo} from "react";
 import Image from "next/image";
 import {Image as ImageIcon, Video, Maximize2, RefreshCw, Loader2} from "lucide-react";
 import {CaptionData} from "@/components/page/workspace/editor/WorkspaceEditorPageClient";
+import {SceneGenerationStatus} from "@/lib/api/types/supabase/VideoGenerationTasks";
 
 interface SceneSequenceItemProps {
     captionData: CaptionData;
@@ -16,6 +17,7 @@ interface SceneSequenceItemProps {
     realEndSec: number;
     isRegeneratingImage?: boolean;
     isRegeneratingVideo?: boolean;
+    sceneStatus?: SceneGenerationStatus;
     onClickSceneSequence: (sceneStartSec: number) => void;
     onMouseEnter: () => void;
     onMouseLeave: () => void;
@@ -37,6 +39,7 @@ function SceneSequenceItem({
     realEndSec,
     isRegeneratingImage = false,
     isRegeneratingVideo = false,
+    sceneStatus,
     onClickSceneSequence,
     onMouseEnter,
     onMouseLeave,
@@ -50,6 +53,10 @@ function SceneSequenceItem({
     const sceneEndSec = realEndSec;
 
     const is16by9 = useMemo(() => aspectRatio === '16:9', [aspectRatio]);
+
+    const isImageLoadingState = isRegeneratingImage || sceneStatus === SceneGenerationStatus.GENERATING_IMAGE;
+    const isVideoLoadingState = isRegeneratingVideo || sceneStatus === SceneGenerationStatus.GENERATING_VIDEO;
+    const isAnyLoadingState = isImageLoadingState || isVideoLoadingState;
 
     if (is16by9) {
         // 16:9 레이아웃: 썸네일 상단(전체 폭) + 텍스트 하단 세로 스택
@@ -91,13 +98,24 @@ function SceneSequenceItem({
                         #{captionData.sceneNumber}
                     </div>
 
-                    {/* 재생성 중 독립 로딩 오버레이 (16:9) */}
-                    {(isRegeneratingImage || isRegeneratingVideo) && (
-                        <div className="absolute inset-0 bg-black/75 backdrop-blur-sm z-20 flex flex-col items-center justify-center gap-1.5 p-2 text-center animate-in fade-in duration-200">
-                            <Loader2 className="w-5 h-5 animate-spin text-amber-400" />
-                            <span className="text-[11px] font-medium text-zinc-200">
-                                {isRegeneratingImage ? 'Generating Image...' : 'Rendering Motion...'}
-                            </span>
+                    {/* 재생성 중 고급 글래스모피즘 스피너 오버레이 (16:9) */}
+                    {isAnyLoadingState && (
+                        <div className="absolute inset-0 bg-zinc-950/85 backdrop-blur-md border border-white/10 z-20 flex flex-col items-center justify-center gap-2 p-2 text-center animate-in fade-in duration-200 shadow-2xl">
+                            {isImageLoadingState ? (
+                                <>
+                                    <Loader2 className="w-5 h-5 animate-spin text-amber-400 drop-shadow-[0_0_8px_rgba(251,191,36,0.5)]" />
+                                    <span className="text-[11px] font-mono font-semibold tracking-wider text-amber-200/90">
+                                        Generating Image...
+                                    </span>
+                                </>
+                            ) : (
+                                <>
+                                    <Loader2 className="w-5 h-5 animate-spin text-cyan-400 drop-shadow-[0_0_8px_rgba(34,211,238,0.5)]" />
+                                    <span className="text-[11px] font-mono font-semibold tracking-wider text-cyan-200/90">
+                                        Rendering Motion...
+                                    </span>
+                                </>
+                            )}
                         </div>
                     )}
 
@@ -257,13 +275,24 @@ function SceneSequenceItem({
                             </div>
                         )}
 
-                        {/* 재생성 중 독립 로딩 오버레이 (9:16) */}
-                        {(isRegeneratingImage || isRegeneratingVideo) && (
-                            <div className="absolute inset-0 bg-black/75 backdrop-blur-sm z-20 flex flex-col items-center justify-center gap-1.5 p-2 text-center animate-in fade-in duration-200">
-                                <Loader2 className="w-5 h-5 animate-spin text-cyan-400" />
-                                <span className="text-[10px] font-medium text-zinc-200 leading-tight">
-                                    {isRegeneratingImage ? 'Generating Image...' : 'Rendering Motion...'}
-                                </span>
+                        {/* 재생성 중 고급 글래스모피즘 스피너 오버레이 (9:16) */}
+                        {isAnyLoadingState && (
+                            <div className="absolute inset-0 bg-zinc-950/85 backdrop-blur-md border border-white/10 z-20 flex flex-col items-center justify-center gap-2 p-2 text-center animate-in fade-in duration-200 shadow-2xl">
+                                {isImageLoadingState ? (
+                                    <>
+                                        <Loader2 className="w-5 h-5 animate-spin text-amber-400 drop-shadow-[0_0_8px_rgba(251,191,36,0.5)]" />
+                                        <span className="text-[10px] font-mono font-semibold tracking-wider text-amber-200/90 leading-tight">
+                                            Generating Image...
+                                        </span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <Loader2 className="w-5 h-5 animate-spin text-cyan-400 drop-shadow-[0_0_8px_rgba(34,211,238,0.5)]" />
+                                        <span className="text-[10px] font-mono font-semibold tracking-wider text-cyan-200/90 leading-tight">
+                                            Rendering Motion...
+                                        </span>
+                                    </>
+                                )}
                             </div>
                         )}
 

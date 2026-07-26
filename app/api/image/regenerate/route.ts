@@ -134,42 +134,42 @@ export async function POST(request: NextRequest) {
         targetSceneData.imageGenPrompt = promptGenerationResult.imageGenPrompt;
         targetSceneData.imageGenPromptSentence = promptGenerationResult.imageGenPromptSentence || targetSceneData.narration;
 
-        // 5. DB scene_breakdown_list 상태 갱신
-        targetSceneData.status = SceneGenerationStatus.COMPLETED;
-        currentSceneBreakdownList[targetSceneIndex] = targetSceneData;
-
-        await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, {
-            scene_breakdown_list: currentSceneBreakdownList,
-        });
-
-        // 6. 선택한 AI Model Endpoint 매칭 (display_name 기준 T2I / I2I 1:1 짝 자동 매칭)
+        // 6. 선택한 AI Model Endpoint 매칭 및 SceneData 모델 ID 필드 저장
         let finalT2IEndpoint = videoGenerationTask.ai_model_config?.sceneImageT2IModelId || "fal-ai/flux-2";
         let finalI2IEndpoint = videoGenerationTask.ai_model_config?.sceneImageI2IModelId || "fal-ai/flux-2/edit";
 
         const targetModelId = selectedImageModelId || selectedI2IModelId;
 
         if (targetModelId) {
-            const allAiModelDataList = await aiModelDataServerAPI.getAIModelDataList();
-            const selectedModelData = allAiModelDataList.find(
-                (modelData) => modelData.id === targetModelId
-            );
+            const selectedI2IModelData = await aiModelDataServerAPI.getAIModelDataById(targetModelId);
 
-            if (selectedModelData) {
-                const textToImageModelData = allAiModelDataList.find(
-                    (modelData) => modelData.display_name === selectedModelData.display_name && modelData.category === "text-to-image"
-                );
-                const imageToImageModelData = allAiModelDataList.find(
-                    (modelData) => modelData.display_name === selectedModelData.display_name && modelData.category === "image-to-image"
-                );
-
-                if (textToImageModelData?.endpoint_id) {
-                    finalT2IEndpoint = textToImageModelData.endpoint_id;
+            if (selectedI2IModelData) {
+                targetSceneData.selectedI2IAIModelId = selectedI2IModelData.id;
+                if (selectedI2IModelData.endpoint_id) {
+                    finalI2IEndpoint = selectedI2IModelData.endpoint_id;
                 }
-                if (imageToImageModelData?.endpoint_id) {
-                    finalI2IEndpoint = imageToImageModelData.endpoint_id;
+
+                const selectedT2IModelData = await aiModelDataServerAPI.getAIModelDataByDisplayNameAndCategory(
+                    selectedI2IModelData.display_name,
+                    "text-to-image"
+                );
+
+                if (selectedT2IModelData) {
+                    targetSceneData.selectedT2IAIModelId = selectedT2IModelData.id;
+                    if (selectedT2IModelData.endpoint_id) {
+                        finalT2IEndpoint = selectedT2IModelData.endpoint_id;
+                    }
                 }
             }
         }
+
+        // 5. DB scene_breakdown_list 상태 및 모델 ID 갱신
+        targetSceneData.status = SceneGenerationStatus.COMPLETED;
+        currentSceneBreakdownList[targetSceneIndex] = targetSceneData;
+
+        await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, {
+            scene_breakdown_list: currentSceneBreakdownList,
+        });
 
         // 7. 정규 파이프라인(trigger/post-image.ts)과 100% 동일하게 reference_image용 subjectEntityManifestList 정밀 필터링 및 entityOrder 정렬
         const entityOrder = promptGenerationResult.entityOrder || [];

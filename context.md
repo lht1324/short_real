@@ -1,41 +1,33 @@
-# 작업 진행 상황 (Last Updated: 2026-07-26 03:33)
+# 작업 진행 상황 (Last Updated: 2026-07-27 03:24)
 
 ## 1. 현재 상황 (Current Status)
-* **단건 이미지 재생성 테스트 성공**:
-    * 단건 씬 이미지 재생성, LLM 신규 프롬프트 재선출, `display_name` 1:1 T2I/I2I 모델 자동 매칭, Storage 파일 덮어쓰기 및 에디터 UI 갱신 테스트를 완료했습니다.
-    * `trigger/post-image.ts`와 동일하게 `subjectEntityManifestList`에서 `role === 'main_hero' || role === 'sub_character'` 필터링 및 `entityOrder` 정렬을 보정하여 Storage `Object not found` 500 에러를 전면 해소했습니다.
-    * `imageClientAPI.postImageRegenerate` 및 `videoClientAPI.postVideoRegenerate` 클라이언트 모듈 작성 완료.
-    * 에디터 UI에서 재생성 버튼 클릭 시 직관적인 `alert()` 알림 수신 연동 완료.
+* **이미지 및 비디오 재생성 파이프라인 검증 성공 (테스트 통과)**:
+    * 단건 이미지 재생성 (`/api/image/regenerate`) 및 단건 비디오 재생성 (`/api/video/regenerate`) 기능 파이프라인 테스트 자체는 성공적으로 완료함.
+    * 씬 카드 글래스모피즘 스피너 오버레이 연동 및 Supabase Realtime 실시간 `COMPLETED` 완공 알림/비디오 URL 교체 체계 구축 완료.
+    * 비디오 완공 시 1차 속도 배율 후처리 및 Storage 덮어쓰기 완료 상태를 `COMPLETED`로 통합 관리.
+    * 재생성 모달 해상도(`globalResolution`) 필터링 및 **Sort by (Name / Price ↑ / Price ↓)** 정렬 기능 구현 완료.
 
 ---
 
-## 2. 향후 작업 (Next Steps) - [Priority: HIGH]
+## 2. 해결해야 할 미세 디테일 개선 사항 (Urgent Fixing Task) - [Priority: HIGH]
 
-### Task 1: `SceneData` 내 씬별 사용 AI 모델 ID 필드 신설 및 재생성 모달 연동
-1. **타입 추가 ([VideoGenerationTasks.ts](file:///home/jaeho/Projects/short_real/lib/api/types/supabase/VideoGenerationTasks.ts))**:
-    * `SceneData` 인터페이스에 해당 씬에 적용된 `selectedImageModelId?: string`, `selectedVideoModelId?: string` 필드를 신설.
-2. **모델 ID 생애주기 (Lifecycle) 구현**:
-    * **초기화**: `undefined` 또는 유저 프로필(`Users.preferred_ai_model_config`) 설정값으로 초기화.
-    * **태스크 생성 시**: 태스크 수준에서 최종 설정된 모델 ID로 덮어쓰기.
-    * **재생성 시**: 재생성 모달에서 다른 모델이 선택되면 **해당 씬 `SceneData`의 해당 필드값으로 덮어쓰기**.
-3. **모달 연동 ([SceneRegenerateModal.tsx](file:///home/jaeho/Projects/short_real/components/page/workspace/editor/SceneRegenerateModal.tsx))**:
-    * 모달을 열 때 기본(Default)으로 보여줄 모델 ID를 Task 전체 설정이 아닌 **해당 씬 `SceneData`의 필드값**에서 추출하여 표시.
+### [이슈] RegenerateModal 선택 AI 모델 ID의 DB 업데이트 누락 교정
+1. **현상**:
+    * `SceneRegenerateModal`에서 유저가 새로 선택한 모델 ID가 `video_generation_tasks` 테이블의 `scene_breakdown_list` 내 해당 씬 객체(`selectedI2IAIModelId`, `selectedI2VAIModelId`)에 올바르게 업데이트되지 않고 있는 현상이 존재함.
+    * 이로 인해 재생성 완료 후 페이지를 새로고침(F5)하거나 모달을 재오픈했을 때 유저가 바꾼 최신 모델 ID가 드롭다운 기본값으로 바인딩되지 않는 미세 디테일 문제 발생.
+2. **원인 및 해결 방안**:
+    * 백엔드 재생성 라우트([app/api/image/regenerate/route.ts](file:///home/jaeho/Projects/short_real/app/api/image/regenerate/route.ts) 및 [app/api/video/regenerate/route.ts](file:///home/jaeho/Projects/short_real/app/api/video/regenerate/route.ts))에서 전달받은 모델 ID를 DB 쿼리로 검증할 때 매칭 실패/조건문 스킵으로 인해 `SceneData` 필드 패치가 누락되던 현상을 교정할 예정.
+    * UUID 및 endpoint_id 조회를 보정하고 `patchVideoGenerationTask` 시 `selectedI2IAIModelId`, `selectedT2IAIModelId`, `selectedI2VAIModelId`가 100% 무조건 DB `scene_breakdown_list`에 저장되도록 보장해야 함.
+    * 프론트엔드([WorkspaceEditorPageClient.tsx](file:///home/jaeho/Projects/short_real/components/page/workspace/editor/WorkspaceEditorPageClient.tsx))에서도 컨펌 직후 로컬 state `videoData.sceneBreakdownList`에 선택 모델 ID를 즉시 동기화 반영할 예정.
 
-### Task 2: `SceneGenerationStatus` 세분화 및 씬 카드 로딩 UI 연동
-1. **상태 세분화 ([VideoGenerationTasks.ts](file:///home/jaeho/Projects/short_real/lib/api/types/supabase/VideoGenerationTasks.ts))**:
-    * `SceneGenerationStatus` enum에 씬 단위 생성 중 상태인 `GENERATING_IMAGE`, `GENERATING_VIDEO` 추가.
-2. **씬 카드 로딩 연동 ([SceneSequenceItem.tsx](file:///home/jaeho/Projects/short_real/components/page/workspace/editor/SceneSequenceItem.tsx))**:
-    * 재생성 시작 시 `SceneData.status`를 `GENERATING_IMAGE` 또는 `GENERATING_VIDEO`로 변경.
-    * `SceneSequenceItem.tsx` 씬 카드는 `SceneData.status` 값에 따라 로딩 스피너 오버레이("Generating Image...", "Rendering Motion...")를 동적으로 렌더링.
+---
+
+## 3. 향후 작업 (Next Steps)
 
 ### Task 3: 이미지 재생성 API의 비동기 Fire-and-Forget 구조 전환
 1. **응답 대기 해제 ([app/api/image/regenerate/route.ts](file:///home/jaeho/Projects/short_real/app/api/image/regenerate/route.ts))**:
-    * 현재 이미지 재생성이 Fal AI 렌더링 완공 시까지 HTTP 응답을 수 초간 지연 대기(await)하는 동기 방식인 문제점 개선.
     * 요청 수신 및 `SceneData.status = GENERATING_IMAGE` 세팅 후 **1초 만에 HTTP 200 OK 비동기 응답(Fire-and-Forget) 반환 구조로 전환**.
-    * 완료 후 `SceneData.status`를 `COMPLETED`로 갱신하거나 이벤트/웹훅으로 상태 동기화.
 
 ### Task 4: [백엔드/파이프라인] 정규 생성 실패 건 선택적 재생성 (Selective Retry) 및 상태 동기화 체계 구축
-1. **기술적 실패 씬 선택적 재요청**:
-    * 정규 생성 진행 중 기술적 오류로 실패한 씬만 선택적으로 재요청(Selective Retry)하는 파이프라인 필터링 검토.
-2. **대시보드 UI 연동 ([DashboardItem.tsx](file:///home/jaeho/Projects/short_real/components/page/workspace/dashboard/DashboardItem.tsx))**:
-    * `SceneData.status` 동기화를 바탕으로 Retry 영수증 툴팁 가격이 실패한 씬 기준으로 동적으로 정확히 계산되도록 연동.
+1. **기술적 실패 씬 선택적 재요청 및 대시보드 연동**:
+    * 실패한 씬만 선택적으로 재요청(Selective Retry)하는 파이프라인 필터링 및 대시보드 툴팁 금액 동적 연동.

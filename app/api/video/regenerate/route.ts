@@ -114,15 +114,7 @@ export async function POST(request: NextRequest) {
             targetSceneData.videoGenPrompt = videoPromptResult.videoGenPrompt;
         }
 
-        // 5. DB scene_breakdown_list 상태 갱신 (IN_PROGRESS)
-        targetSceneData.status = SceneGenerationStatus.IN_PROGRESS;
-        currentSceneBreakdownList[targetSceneIndex] = targetSceneData;
-
-        await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, {
-            scene_breakdown_list: currentSceneBreakdownList,
-        });
-
-        // 6. 비디오 AI Model 엔드포인트 세팅
+        // 6. 비디오 AI Model 엔드포인트 세팅 및 SceneData 모델 ID 필드 저장
         const defaultVideoModelId = videoGenerationTask.ai_model_config?.videoModelId || "fal-ai/kling-video/v1.5/pro/image-to-video";
         const videoModelIdToUse = selectedI2VModelId || defaultVideoModelId;
 
@@ -131,6 +123,16 @@ export async function POST(request: NextRequest) {
         if (!videoModelData) {
             throw new Error(`AI Model data not found for ID: ${videoModelIdToUse}`);
         }
+
+        targetSceneData.selectedI2VAIModelId = videoModelData.id;
+
+        // 5. DB scene_breakdown_list 상태 및 모델 ID 갱신 (IN_PROGRESS)
+        targetSceneData.status = SceneGenerationStatus.IN_PROGRESS;
+        currentSceneBreakdownList[targetSceneIndex] = targetSceneData;
+
+        await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, {
+            scene_breakdown_list: currentSceneBreakdownList,
+        });
 
         // 7. videoServerAPI.postVideo 호출 (isRegenerate: true 인자를 전달하여 웹훅에 isRegenerate=true 자동 부착)
         console.log(`[Regenerate Video] Submitting single scene video generation queue for Scene #${sceneNumber}...`);

@@ -134,8 +134,8 @@ export async function POST(request: NextRequest) {
                 upsert: true,
             });
 
-            // 5. 해당 씬의 status만 PROCESSED로 갱신 (전체 파이프라인 status 및 씬 카운트는 보존!)
-            targetSceneData.status = SceneGenerationStatus.PROCESSED;
+            // 5. 해당 씬의 status만 COMPLETED로 갱신 (완공 상태 전이)
+            targetSceneData.status = SceneGenerationStatus.COMPLETED;
             currentSceneBreakdownList[targetSceneIndex] = targetSceneData;
 
             await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, {

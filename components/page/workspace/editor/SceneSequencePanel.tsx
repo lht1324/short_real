@@ -2,6 +2,7 @@
 
 import { memo, useEffect, useState } from "react";
 import { CaptionData, SceneRealTime } from "@/components/page/workspace/editor/WorkspaceEditorPageClient";
+import { SceneData } from "@/lib/api/types/supabase/VideoGenerationTasks";
 import { imageClientAPI } from "@/lib/api/client/imageClientAPI";
 import SceneSequenceItem from "@/components/page/workspace/editor/SceneSequenceItem";
 
@@ -13,6 +14,8 @@ interface ImageData {
 interface SceneSequencePanelProps {
     taskId: string;
     captionDataList: CaptionData[];
+    sceneBreakdownList?: SceneData[];
+    imageUrlList?: string[];
     currentSceneIndex: number;
     aspectRatio: '16:9' | '9:16';
     sceneRealStartTimes: SceneRealTime[];
@@ -29,6 +32,8 @@ interface SceneSequencePanelProps {
 function SceneSequencePanel({
     taskId,
     captionDataList,
+    sceneBreakdownList = [],
+    imageUrlList,
     currentSceneIndex,
     aspectRatio,
     sceneRealStartTimes,
@@ -66,6 +71,26 @@ function SceneSequencePanel({
         }
     }, [taskId, captionDataList, imageDataList.length, onImagesLoaded]);
 
+    // 외부에서 전달된 imageUrlList가 변경되면 imageDataList의 URL 실시간 동기화
+    useEffect(() => {
+        if (imageUrlList && imageUrlList.length > 0) {
+            setImageDataList((prevList) => {
+                if (prevList.length === 0) return prevList;
+                return prevList.map((item, idx) => {
+                    const nextUrl = imageUrlList[idx];
+                    if (nextUrl && nextUrl !== item.url) {
+                        return {
+                            ...item,
+                            url: nextUrl,
+                            isLoaded: false, // 새로 로딩되도록
+                        };
+                    }
+                    return item;
+                });
+            });
+        }
+    }, [imageUrlList]);
+
     useEffect(() => {
         const isEveryImageLoaded = imageDataList.every((imageData) => {
             return imageData.isLoaded;
@@ -88,6 +113,8 @@ function SceneSequencePanel({
             {captionDataList.map((captionData, index) => {
                 const realTime = sceneRealStartTimes.find(r => r.sceneNumber === captionData.sceneNumber);
                 const sceneNum = captionData.sceneNumber;
+                const matchedSceneData = sceneBreakdownList.find(s => s.sceneNumber === sceneNum);
+
                 return <SceneSequenceItem
                     key={index}
                     sceneIndex={index}
@@ -101,6 +128,7 @@ function SceneSequencePanel({
                     realEndSec={realTime?.realEndSec ?? captionData.endSec}
                     isRegeneratingImage={!!regeneratingImageMap[sceneNum]}
                     isRegeneratingVideo={!!regeneratingVideoMap[sceneNum]}
+                    sceneStatus={matchedSceneData?.status}
                     onClickSceneSequence={onClickSceneSequence}
                     onClickZoomImage={(idx) => {
                         if (onClickZoomImage) onClickZoomImage(idx);
