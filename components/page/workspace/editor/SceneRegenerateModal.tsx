@@ -23,11 +23,13 @@ interface SceneRegenerateModalProps {
     onConfirmRegenerate: (payload: {
         mode: RegenerateMode;
         sceneNumber: number;
-        selectedModelId: string;
-        estimatedCost: number;
+        selectedI2IAIModelId?: string;
+        selectedI2VAIModelId?: string;
         isAlsoRegenerateVideo?: boolean;
     }) => void;
 }
+
+type SortOption = 'name' | 'price_asc' | 'price_desc';
 
 function SceneRegenerateModal({
     isOpen,
@@ -42,164 +44,163 @@ function SceneRegenerateModal({
     onConfirmRegenerate,
 }: SceneRegenerateModalProps) {
     const modalRef = useRef<HTMLDivElement>(null);
-    const dropdownRef = useRef<HTMLDivElement>(null);
+    const imageDropdownRef = useRef<HTMLDivElement>(null);
+    const videoDropdownRef = useRef<HTMLDivElement>(null);
 
-    const [currentModelId, setCurrentModelId] = useState<string | null>(defaultModelId);
-    const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-    
+    // 이미지 및 비디오 각각의 선택 상태 관리
+    const [currentImageModelId, setCurrentImageModelId] = useState<string | null>(null);
+    const [currentVideoModelId, setCurrentVideoModelId] = useState<string | null>(null);
+
+    const [isImageDropdownOpen, setIsImageDropdownOpen] = useState(false);
+    const [isVideoDropdownOpen, setIsVideoDropdownOpen] = useState(false);
+
     // 이미지 재생성 시 "비디오 연쇄 재생성" 체크박스 상태
     const [isAlsoRegenerateVideo, setIsAlsoRegenerateVideo] = useState(false);
 
-    // 모달이 열리거나 defaultModelId가 변경될 때 내부 선택 상태 즉시 동기화
+    const [sortByImage, setSortByImage] = useState<SortOption>('name');
+    const [sortByVideo, setSortByVideo] = useState<SortOption>('name');
+
+    // 모달 오픈 시 초기값 설정
     useEffect(() => {
         if (isOpen) {
-            setCurrentModelId(defaultModelId);
-            setIsDropdownOpen(false);
+            if (mode === RegenerateMode.IMAGE) {
+                setCurrentImageModelId(defaultModelId);
+                setCurrentVideoModelId(defaultVideoModelId ?? null);
+            } else {
+                setCurrentImageModelId(null);
+                setCurrentVideoModelId(defaultModelId);
+            }
+            setIsImageDropdownOpen(false);
+            setIsVideoDropdownOpen(false);
             setIsAlsoRegenerateVideo(false);
         }
-    }, [defaultModelId, mode, isOpen]);
+    }, [defaultModelId, defaultVideoModelId, mode, isOpen]);
 
-    // 바깥 클릭 시 드롭다운 닫기
+    // 외부 클릭 시 드롭다운 닫기
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
-            if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-                setIsDropdownOpen(false);
+            if (imageDropdownRef.current && !imageDropdownRef.current.contains(event.target as Node)) {
+                setIsImageDropdownOpen(false);
+            }
+            if (videoDropdownRef.current && !videoDropdownRef.current.contains(event.target as Node)) {
+                setIsVideoDropdownOpen(false);
             }
         };
         document.addEventListener("mousedown", handleClickOutside);
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
-    // 모달 바깥 백드롭 클릭 시 닫기
+    // 모달 백드롭 클릭 처리
     const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
         if (modalRef.current && !modalRef.current.contains(e.target as Node)) {
             onClose();
         }
     };
 
-    type SortOption = 'name' | 'price_asc' | 'price_desc';
-    const [sortBy, setSortBy] = useState<SortOption>('name');
+    // 1. 호환 이미지 모델 목록
+    const filteredImageModelList = useMemo(() => {
+        const i2iModels = aiModelList.filter(m => m.category === 'image-to-image');
+        const categoryFiltered = i2iModels.length > 0 ? i2iModels : aiModelList.filter(m => m.category === 'text-to-image');
+        const priceUnit = globalResolution === '720p' ? 'image_720p' : globalResolution === '1080p' ? 'image_1080p' : 'image_2160p';
 
-    const activeCategory = useMemo(() => {
-        return mode === RegenerateMode.IMAGE ? 'image-to-image' : 'image-to-video';
-    }, [mode]);
-
-    const targetPriceUnit = useMemo(() => {
-        const isVideo = mode === RegenerateMode.VIDEO;
-        if (isVideo) {
-            return globalResolution === '720p'
-                ? 'video_720p'
-                : globalResolution === '1080p'
-                    ? 'video_1080p'
-                    : 'video_2160p';
-        } else {
-            return globalResolution === '720p'
-                ? 'image_720p'
-                : globalResolution === '1080p'
-                    ? 'image_1080p'
-                    : 'image_2160p';
-        }
-    }, [globalResolution, mode]);
-
-    // Mode별 호환 & globalResolution 지원 AI 모델 필터링 및 정렬
-    const filteredModelList = useMemo(() => {
-        // 1. Mode 필터링
-        let categoryFiltered: AIModelData[] = [];
-        if (mode === RegenerateMode.IMAGE) {
-            const i2iModels = aiModelList.filter(m => m.category === 'image-to-image');
-            categoryFiltered = i2iModels.length > 0 ? i2iModels : aiModelList.filter(m => m.category === 'text-to-image');
-        } else {
-            categoryFiltered = aiModelList.filter(m => m.category === 'image-to-video');
-        }
-
-        // 2. globalResolution 단가가 실제로 존재하여 지원하는 모델만 필터링
-        const resFiltered = categoryFiltered.filter(model => {
-            if (!model.ai_model_price_list || model.ai_model_price_list.length === 0) return false;
-            return model.ai_model_price_list.some(p => p.unit === targetPriceUnit);
-        });
-
-        // 지원 모델이 없는 예외 상황 대비 fallback
+        const resFiltered = categoryFiltered.filter(model =>
+            model.ai_model_price_list?.some(p => p.unit === priceUnit)
+        );
         const listToUse = resFiltered.length > 0 ? resFiltered : categoryFiltered;
 
-        // 3. 정렬 적용 (이름 / 가격 오름차순 / 가격 내림차순)
         return [...listToUse].sort((a, b) => {
-            if (sortBy === 'name') {
+            if (sortByImage === 'name') {
                 return a.display_name.localeCompare(b.display_name);
             }
-            const priceA = getMatchedModelPrice(a, globalResolution, activeCategory).price;
-            const priceB = getMatchedModelPrice(b, globalResolution, activeCategory).price;
-
-            if (sortBy === 'price_asc') {
-                return priceA - priceB;
-            } else {
-                return priceB - priceA;
-            }
+            const priceA = getMatchedModelPrice(a, globalResolution, 'image-to-image').price;
+            const priceB = getMatchedModelPrice(b, globalResolution, 'image-to-image').price;
+            return sortByImage === 'price_asc' ? priceA - priceB : priceB - priceA;
         });
-    }, [aiModelList, mode, globalResolution, targetPriceUnit, sortBy, activeCategory]);
+    }, [aiModelList, globalResolution, sortByImage]);
 
-    // 현재 선택된 모델 객체 (기본값 매칭 보정)
-    const activeSelectedModel = useMemo(() => {
-        if (currentModelId) {
-            const found = filteredModelList.find(m => m.id === currentModelId);
+    // 2. 호환 비디오 모델 목록
+    const filteredVideoModelList = useMemo(() => {
+        const categoryFiltered = aiModelList.filter(m => m.category === 'image-to-video');
+        const priceUnit = globalResolution === '720p' ? 'video_720p' : globalResolution === '1080p' ? 'video_1080p' : 'video_2160p';
+
+        const resFiltered = categoryFiltered.filter(model =>
+            model.ai_model_price_list?.some(p => p.unit === priceUnit)
+        );
+        const listToUse = resFiltered.length > 0 ? resFiltered : categoryFiltered;
+
+        return [...listToUse].sort((a, b) => {
+            if (sortByVideo === 'name') {
+                return a.display_name.localeCompare(b.display_name);
+            }
+            const priceA = getMatchedModelPrice(a, globalResolution, 'image-to-video').price;
+            const priceB = getMatchedModelPrice(b, globalResolution, 'image-to-video').price;
+            return sortByVideo === 'price_asc' ? priceA - priceB : priceB - priceA;
+        });
+    }, [aiModelList, globalResolution, sortByVideo]);
+
+    // 선택된 이미지 모델 객체
+    const activeSelectedImageModel = useMemo(() => {
+        if (currentImageModelId) {
+            const found = filteredImageModelList.find(m => m.id === currentImageModelId);
             if (found) return found;
         }
-        return filteredModelList[0] ?? null;
-    }, [filteredModelList, currentModelId]);
+        return filteredImageModelList[0] ?? null;
+    }, [filteredImageModelList, currentImageModelId]);
 
-    // 이미지 단건 요율 계산
-    const matchedPriceInfo = useMemo(() => {
-        if (!activeSelectedModel) return null;
-        return getMatchedModelPrice(activeSelectedModel, globalResolution, activeCategory);
-    }, [activeSelectedModel, globalResolution, activeCategory]);
+    // 선택된 비디오 모델 객체
+    const activeSelectedVideoModel = useMemo(() => {
+        if (currentVideoModelId) {
+            const found = filteredVideoModelList.find(m => m.id === currentVideoModelId);
+            if (found) return found;
+        }
+        return filteredVideoModelList[0] ?? null;
+    }, [filteredVideoModelList, currentVideoModelId]);
 
-    // 연쇄 비디오 재생성용 모델 및 단가 계산
-    const chainedVideoModelInfo = useMemo(() => {
-        if (mode !== RegenerateMode.IMAGE) return null;
-        const videoModels = aiModelList.filter(m => m.category === 'image-to-video');
-        const videoModel = videoModels.find(m => m.id === defaultVideoModelId) ?? videoModels[0];
-        if (!videoModel) return null;
-        
-        const priceInfo = getMatchedModelPrice(videoModel, globalResolution, 'image-to-video');
+    // 이미지 단가 정보
+    const imagePriceInfo = useMemo(() => {
+        if (!activeSelectedImageModel) return null;
+        return getMatchedModelPrice(activeSelectedImageModel, globalResolution, 'image-to-image');
+    }, [activeSelectedImageModel, globalResolution]);
+
+    // 비디오 단가 정보
+    const videoPriceInfo = useMemo(() => {
+        if (!activeSelectedVideoModel) return null;
+        const priceInfo = getMatchedModelPrice(activeSelectedVideoModel, globalResolution, 'image-to-video');
         const safeSec = Math.ceil(sceneDuration > 0 ? sceneDuration : 4);
         const totalPrice = priceInfo.price * safeSec;
 
         return {
-            modelName: videoModel.display_name,
+            modelName: activeSelectedVideoModel.display_name,
             unitPrice: priceInfo.price,
             safeSec,
             totalPrice,
         };
-    }, [mode, aiModelList, defaultVideoModelId, globalResolution, sceneDuration]);
+    }, [activeSelectedVideoModel, globalResolution, sceneDuration]);
 
     // 최종 예상 가격 산출
     const estimatedCost = useMemo(() => {
-        if (!matchedPriceInfo) return 0;
-        const unitPrice = matchedPriceInfo.price;
-
         if (mode === RegenerateMode.IMAGE) {
-            const baseImageCost = unitPrice;
-            const chainedCost = (isAlsoRegenerateVideo && chainedVideoModelInfo) ? chainedVideoModelInfo.totalPrice : 0;
+            const baseImageCost = imagePriceInfo?.price ?? 0;
+            const chainedCost = (isAlsoRegenerateVideo && videoPriceInfo) ? videoPriceInfo.totalPrice : 0;
             return parseFloat((baseImageCost + chainedCost).toFixed(4));
         } else {
-            const safeSec = Math.ceil(sceneDuration > 0 ? sceneDuration : 4);
-            const total = unitPrice * safeSec;
-            return parseFloat(total.toFixed(4));
+            return parseFloat((videoPriceInfo?.totalPrice ?? 0).toFixed(4));
         }
-    }, [matchedPriceInfo, mode, sceneDuration, isAlsoRegenerateVideo, chainedVideoModelInfo]);
+    }, [mode, imagePriceInfo, isAlsoRegenerateVideo, videoPriceInfo]);
 
     if (!isOpen) return null;
 
     return (
         <div
-            className="fixed inset-0 z-[150] bg-black/80 backdrop-blur-md flex items-start justify-center pt-[15vh] p-4 animate-in fade-in duration-200"
+            className="fixed inset-0 z-[150] bg-black/80 backdrop-blur-md flex items-start justify-center pt-[18vh] p-4 animate-in fade-in duration-200 overflow-y-auto"
             onClick={handleBackdropClick}
         >
             <div
                 ref={modalRef}
-                className="w-full max-w-lg bg-zinc-900/95 border border-white/10 rounded-2xl shadow-2xl flex flex-col relative overflow-visible"
+                className="w-full max-w-lg bg-zinc-900/95 border border-white/10 rounded-2xl shadow-2xl flex flex-col relative overflow-visible mb-12"
             >
-                {/* Header - Design Taste Strict Typography Standard */}
-                <div className="flex items-center justify-between px-7 py-5 border-b border-white/5 bg-zinc-950/80">
+                {/* Header */}
+                <div className="flex items-center justify-between px-7 py-5 border-b border-white/5 bg-zinc-950/80 rounded-t-2xl">
                     <div>
                         <h3 className="text-lg font-bold text-zinc-100 leading-snug">
                             {mode === RegenerateMode.IMAGE
@@ -208,8 +209,8 @@ function SceneRegenerateModal({
                         </h3>
                         <p className="text-sm text-zinc-400 mt-1 font-medium">
                             {mode === RegenerateMode.IMAGE
-                                ? 'Select an Image-to-Image model for single scene regeneration.'
-                                : 'Select an Image-to-Video model for motion regeneration.'}
+                                ? 'Select an Image AI Model for scene regeneration.'
+                                : 'Select a Video AI Model for motion regeneration.'}
                         </p>
                     </div>
                     <button
@@ -221,102 +222,106 @@ function SceneRegenerateModal({
                     </button>
                 </div>
 
-                {/* Body Content - High Contrast Layout */}
+                {/* Body Content */}
                 <div className="p-7 space-y-6">
-                    {/* Model Dropdown Field */}
-                    <div className="space-y-2.5 relative" ref={dropdownRef}>
-                        <label className="text-xs font-mono uppercase tracking-wider font-semibold text-zinc-300 block">
-                            AI Engine Model
-                        </label>
+                    {/* 1. 이미지 모드일 때: 이미지 드롭다운 표출 */}
+                    {mode === RegenerateMode.IMAGE && (
+                        <div className="space-y-2.5 relative" ref={imageDropdownRef}>
+                            <label className="text-xs font-mono uppercase tracking-wider font-semibold text-zinc-300 block">
+                                Image AI Model (I2I)
+                            </label>
 
-                        {/* Dropdown Trigger Button */}
-                        <button
-                            type="button"
-                            onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                            className="w-full bg-black/70 border border-white/10 rounded-xl px-4.5 py-3.5 text-left text-sm text-zinc-200 flex items-center justify-between hover:bg-black/90 hover:border-white/20 focus:outline-none focus:border-zinc-500 transition-all"
-                        >
-                            <div className="flex flex-col min-w-0 pr-3">
-                                <span className="font-semibold text-zinc-100 text-sm truncate">
-                                    {activeSelectedModel?.display_name || "Select AI Model"}
-                                </span>
-                                {matchedPriceInfo && (
-                                    <span className="text-xs text-zinc-400 font-mono mt-1">
-                                        Rate: ${matchedPriceInfo.price}{mode === RegenerateMode.IMAGE ? ' / scene' : ' / sec'}
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setIsImageDropdownOpen(!isImageDropdownOpen);
+                                    setIsVideoDropdownOpen(false);
+                                }}
+                                className="w-full bg-black/70 border border-white/10 rounded-xl px-4.5 py-3.5 text-left text-sm text-zinc-200 flex items-center justify-between hover:bg-black/90 hover:border-white/20 focus:outline-none focus:border-zinc-500 transition-all"
+                            >
+                                <div className="flex flex-col min-w-0 pr-3">
+                                    <span className="font-semibold text-zinc-100 text-sm truncate">
+                                        {activeSelectedImageModel?.display_name || "Select Image Model"}
                                     </span>
-                                )}
-                            </div>
-                            <ChevronDown size={18} className={`text-zinc-400 flex-shrink-0 transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`} />
-                        </button>
+                                    {imagePriceInfo && (
+                                        <span className="text-xs text-zinc-400 font-mono mt-1">
+                                            Rate: ${imagePriceInfo.price} / scene
+                                        </span>
+                                    )}
+                                </div>
+                                <ChevronDown size={18} className={`text-zinc-400 flex-shrink-0 transition-transform duration-200 ${isImageDropdownOpen ? 'rotate-180' : ''}`} />
+                            </button>
 
-                        {/* Model Dropdown Menu (High Z-Index & Clean Overflow) */}
-                        {isDropdownOpen && (
-                            <div className="absolute left-0 right-0 top-full mt-2 bg-zinc-900 border border-white/10 rounded-xl shadow-2xl z-[200] max-h-72 overflow-y-auto custom-scrollbar p-2 flex flex-col gap-1">
-                                {/* Sort Filter Bar */}
-                                <div className="px-2 py-1.5 border-b border-white/10 mb-1 flex items-center justify-between text-xs text-zinc-400 font-mono">
-                                    <span>Sort by</span>
-                                    <div className="flex items-center gap-1.5">
-                                        <button
-                                            type="button"
-                                            onClick={() => setSortBy('name')}
-                                            className={`px-2 py-0.5 rounded text-[11px] font-semibold transition-colors ${
-                                                sortBy === 'name' ? 'bg-white text-black font-bold' : 'hover:bg-white/10 text-zinc-300'
-                                            }`}
-                                        >
-                                            Name
-                                        </button>
-                                        <button
-                                            type="button"
-                                            onClick={() => setSortBy('price_asc')}
-                                            className={`px-2 py-0.5 rounded text-[11px] font-semibold transition-colors ${
-                                                sortBy === 'price_asc' ? 'bg-white text-black font-bold' : 'hover:bg-white/10 text-zinc-300'
-                                            }`}
-                                        >
-                                            Price ↑
-                                        </button>
-                                        <button
-                                            type="button"
-                                            onClick={() => setSortBy('price_desc')}
-                                            className={`px-2 py-0.5 rounded text-[11px] font-semibold transition-colors ${
-                                                sortBy === 'price_desc' ? 'bg-white text-black font-bold' : 'hover:bg-white/10 text-zinc-300'
-                                            }`}
-                                        >
-                                            Price ↓
-                                        </button>
+                            {isImageDropdownOpen && (
+                                <div className="absolute left-0 right-0 top-full mt-2 bg-zinc-900 border border-white/10 rounded-xl shadow-2xl z-[200] p-2 flex flex-col">
+                                    <div className="px-2 py-1.5 border-b border-white/10 mb-1 flex items-center justify-between text-xs text-zinc-400 font-mono shrink-0 bg-zinc-900">
+                                        <span>Sort by</span>
+                                        <div className="flex items-center gap-1.5">
+                                            <button
+                                                type="button"
+                                                onClick={() => setSortByImage('name')}
+                                                className={`px-2 py-0.5 rounded text-[11px] font-semibold transition-colors ${
+                                                    sortByImage === 'name' ? 'bg-white text-black font-bold' : 'hover:bg-white/10 text-zinc-300'
+                                                }`}
+                                            >
+                                                Name
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => setSortByImage('price_asc')}
+                                                className={`px-2 py-0.5 rounded text-[11px] font-semibold transition-colors ${
+                                                    sortByImage === 'price_asc' ? 'bg-white text-black font-bold' : 'hover:bg-white/10 text-zinc-300'
+                                                }`}
+                                            >
+                                                Price ↑
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => setSortByImage('price_desc')}
+                                                className={`px-2 py-0.5 rounded text-[11px] font-semibold transition-colors ${
+                                                    sortByImage === 'price_desc' ? 'bg-white text-black font-bold' : 'hover:bg-white/10 text-zinc-300'
+                                                }`}
+                                            >
+                                                Price ↓
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <div className="max-h-52 overflow-y-auto custom-scrollbar flex flex-col gap-1">
+                                        {filteredImageModelList.map((model) => {
+                                            const isSelected = model.id === (activeSelectedImageModel?.id ?? currentImageModelId);
+                                            const priceObj = getMatchedModelPrice(model, globalResolution, 'image-to-image');
+                                            return (
+                                                <button
+                                                    key={model.id}
+                                                    type="button"
+                                                    onClick={() => {
+                                                        if (model.id) setCurrentImageModelId(model.id);
+                                                        setIsImageDropdownOpen(false);
+                                                    }}
+                                                    className={`w-full text-left p-3 rounded-lg transition-colors flex items-center justify-between ${
+                                                        isSelected ? "bg-zinc-800" : "hover:bg-zinc-800/50"
+                                                    }`}
+                                                >
+                                                    <div className="flex flex-col min-w-0 pr-2">
+                                                        <span className={`text-sm font-semibold truncate ${isSelected ? "text-white" : "text-zinc-200"}`}>
+                                                            {model.display_name}
+                                                        </span>
+                                                        <span className="text-xs text-zinc-400 font-mono mt-0.5">
+                                                            ${priceObj.price} / scene
+                                                        </span>
+                                                    </div>
+                                                    {isSelected && <Check size={16} className="text-white flex-shrink-0 ml-2" />}
+                                                </button>
+                                            );
+                                        })}
                                     </div>
                                 </div>
+                            )}
+                        </div>
+                    )}
 
-                                {filteredModelList.map((model) => {
-                                    const isSelected = model.id === (activeSelectedModel?.id ?? currentModelId);
-                                    const priceObj = getMatchedModelPrice(model, globalResolution, activeCategory);
-                                    return (
-                                        <button
-                                            key={model.id}
-                                            type="button"
-                                            onClick={() => {
-                                                if (model.id) setCurrentModelId(model.id);
-                                                setIsDropdownOpen(false);
-                                            }}
-                                            className={`w-full text-left p-3 rounded-lg transition-colors flex items-center justify-between ${
-                                                isSelected ? "bg-zinc-800" : "hover:bg-zinc-800/50"
-                                            }`}
-                                        >
-                                            <div className="flex flex-col min-w-0 pr-2">
-                                                <span className={`text-sm font-semibold truncate ${isSelected ? "text-white" : "text-zinc-200"}`}>
-                                                    {model.display_name}
-                                                </span>
-                                                <span className="text-xs text-zinc-400 font-mono mt-0.5">
-                                                    ${priceObj.price}{mode === RegenerateMode.IMAGE ? ' / scene' : ' / sec'}
-                                                </span>
-                                            </div>
-                                            {isSelected && <Check size={16} className="text-white flex-shrink-0 ml-2" />}
-                                        </button>
-                                    );
-                                })}
-                            </div>
-                        )}
-                    </div>
-
-                    {/* 이미지 모달 전용: 연쇄 비디오 재생성 옵션 체크박스 */}
+                    {/* 이미지 모드 전용: 연쇄 비디오 재생성 옵션 체크박스 */}
                     {mode === RegenerateMode.IMAGE && (
                         <div
                             onClick={() => setIsAlsoRegenerateVideo(!isAlsoRegenerateVideo)}
@@ -345,7 +350,108 @@ function SceneRegenerateModal({
                         </div>
                     )}
 
-                    {/* Central Receipt / Cost Summary Card - High Contrast Strict Type Scale */}
+                    {/* 2. 비디오 드롭다운 표출 조건:
+                        - 비디오 재생성 모드이거나 (mode === VIDEO)
+                        - 이미지 모드에서 "비디오 연쇄 재생성" 체크박스가 선택된 경우 (mode === IMAGE && isAlsoRegenerateVideo)
+                    */}
+                    {(mode === RegenerateMode.VIDEO || (mode === RegenerateMode.IMAGE && isAlsoRegenerateVideo)) && (
+                        <div className="space-y-2.5 relative animate-in fade-in slide-in-from-top-2 duration-200" ref={videoDropdownRef}>
+                            <label className="text-xs font-mono uppercase tracking-wider font-semibold text-zinc-300 block flex items-center gap-1.5">
+                                <Film size={14} className="text-zinc-400" />
+                                Video AI Model (I2V)
+                            </label>
+
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setIsVideoDropdownOpen(!isVideoDropdownOpen);
+                                    setIsImageDropdownOpen(false);
+                                }}
+                                className="w-full bg-black/70 border border-white/10 rounded-xl px-4.5 py-3.5 text-left text-sm text-zinc-200 flex items-center justify-between hover:bg-black/90 hover:border-white/20 focus:outline-none focus:border-zinc-500 transition-all"
+                            >
+                                <div className="flex flex-col min-w-0 pr-3">
+                                    <span className="font-semibold text-zinc-100 text-sm truncate">
+                                        {activeSelectedVideoModel?.display_name || "Select Video Model"}
+                                    </span>
+                                    {videoPriceInfo && (
+                                        <span className="text-xs text-zinc-400 font-mono mt-1">
+                                            Rate: ${videoPriceInfo.unitPrice} / sec (~{videoPriceInfo.safeSec}s)
+                                        </span>
+                                    )}
+                                </div>
+                                <ChevronDown size={18} className={`text-zinc-400 flex-shrink-0 transition-transform duration-200 ${isVideoDropdownOpen ? 'rotate-180' : ''}`} />
+                            </button>
+
+                            {isVideoDropdownOpen && (
+                                <div className="absolute left-0 right-0 top-full mt-2 bg-zinc-900 border border-white/10 rounded-xl shadow-2xl z-[200] p-2 flex flex-col">
+                                    <div className="px-2 py-1.5 border-b border-white/10 mb-1 flex items-center justify-between text-xs text-zinc-400 font-mono shrink-0 bg-zinc-900">
+                                        <span>Sort by</span>
+                                        <div className="flex items-center gap-1.5">
+                                            <button
+                                                type="button"
+                                                onClick={() => setSortByVideo('name')}
+                                                className={`px-2 py-0.5 rounded text-[11px] font-semibold transition-colors ${
+                                                    sortByVideo === 'name' ? 'bg-white text-black font-bold' : 'hover:bg-white/10 text-zinc-300'
+                                                }`}
+                                            >
+                                                Name
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => setSortByVideo('price_asc')}
+                                                className={`px-2 py-0.5 rounded text-[11px] font-semibold transition-colors ${
+                                                    sortByVideo === 'price_asc' ? 'bg-white text-black font-bold' : 'hover:bg-white/10 text-zinc-300'
+                                                }`}
+                                            >
+                                                Price ↑
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => setSortByVideo('price_desc')}
+                                                className={`px-2 py-0.5 rounded text-[11px] font-semibold transition-colors ${
+                                                    sortByVideo === 'price_desc' ? 'bg-white text-black font-bold' : 'hover:bg-white/10 text-zinc-300'
+                                                }`}
+                                            >
+                                                Price ↓
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <div className="max-h-52 overflow-y-auto custom-scrollbar flex flex-col gap-1">
+                                        {filteredVideoModelList.map((model) => {
+                                            const isSelected = model.id === (activeSelectedVideoModel?.id ?? currentVideoModelId);
+                                            const priceObj = getMatchedModelPrice(model, globalResolution, 'image-to-video');
+                                            return (
+                                                <button
+                                                    key={model.id}
+                                                    type="button"
+                                                    onClick={() => {
+                                                        if (model.id) setCurrentVideoModelId(model.id);
+                                                        setIsVideoDropdownOpen(false);
+                                                    }}
+                                                    className={`w-full text-left p-3 rounded-lg transition-colors flex items-center justify-between ${
+                                                        isSelected ? "bg-zinc-800" : "hover:bg-zinc-800/50"
+                                                    }`}
+                                                >
+                                                    <div className="flex flex-col min-w-0 pr-2">
+                                                        <span className={`text-sm font-semibold truncate ${isSelected ? "text-white" : "text-zinc-200"}`}>
+                                                            {model.display_name}
+                                                        </span>
+                                                        <span className="text-xs text-zinc-400 font-mono mt-0.5">
+                                                            ${priceObj.price} / sec
+                                                        </span>
+                                                    </div>
+                                                    {isSelected && <Check size={16} className="text-white flex-shrink-0 ml-2" />}
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {/* Central Receipt / Cost Summary Card */}
                     <div className="bg-zinc-950/90 border border-white/10 rounded-xl p-5 shadow-inner flex flex-col gap-4">
                         <div className="flex items-center justify-between">
                             <div className="flex flex-col gap-1">
@@ -370,32 +476,30 @@ function SceneRegenerateModal({
                             </div>
                         </div>
 
-                        {/* 영수증 세부 내역서 (Itemized Breakdown) - 체크박스 켜졌을 때만 렌더링 */}
-                        {mode === RegenerateMode.IMAGE && isAlsoRegenerateVideo && chainedVideoModelInfo && matchedPriceInfo && (
+                        {/* 영수증 세부 내역서 */}
+                        {mode === RegenerateMode.IMAGE && isAlsoRegenerateVideo && videoPriceInfo && imagePriceInfo && (
                             <div className="border-t border-white/10 pt-3.5 space-y-2">
                                 <div className="text-xs font-mono uppercase tracking-wider text-zinc-300 font-semibold mb-2">
                                     Itemized Breakdown
                                 </div>
                                 
-                                {/* 1번째 항목: 이미지 단가 */}
                                 <div className="flex items-center justify-between text-sm font-mono">
                                     <span className="text-zinc-300 flex items-center gap-2 font-medium">
                                         <span className="w-1.5 h-1.5 rounded-full bg-zinc-400 inline-block" />
-                                        Scene Image ({activeSelectedModel?.display_name})
+                                        Scene Image ({activeSelectedImageModel?.display_name})
                                     </span>
                                     <span className="text-zinc-100 font-bold">
-                                        ${matchedPriceInfo.price.toFixed(4)}
+                                        ${imagePriceInfo.price.toFixed(4)}
                                     </span>
                                 </div>
 
-                                {/* 2번째 항목: 연쇄 비디오 단가 */}
                                 <div className="flex items-center justify-between text-sm font-mono pt-1">
                                     <span className="text-zinc-300 flex items-center gap-2 font-medium">
                                         <span className="w-1.5 h-1.5 rounded-full bg-zinc-400 inline-block" />
-                                        Video Motion ({chainedVideoModelInfo.modelName}, ~{chainedVideoModelInfo.safeSec}s)
+                                        Video Motion ({videoPriceInfo.modelName}, ~{videoPriceInfo.safeSec}s)
                                     </span>
                                     <span className="text-zinc-100 font-bold">
-                                        +${chainedVideoModelInfo.totalPrice.toFixed(4)}
+                                        +${videoPriceInfo.totalPrice.toFixed(4)}
                                     </span>
                                 </div>
                             </div>
@@ -403,8 +507,8 @@ function SceneRegenerateModal({
                     </div>
                 </div>
 
-                {/* Footer - Action Buttons with Explicit Price Confirmation */}
-                <div className="flex items-center justify-between px-7 py-5 border-t border-white/5 bg-zinc-950/80">
+                {/* Footer */}
+                <div className="flex items-center justify-between px-7 py-5 border-t border-white/5 bg-zinc-950/80 rounded-b-2xl">
                     <button
                         type="button"
                         onClick={onClose}
@@ -416,12 +520,23 @@ function SceneRegenerateModal({
                     <button
                         type="button"
                         onClick={() => {
+                            const isImageMode = mode === RegenerateMode.IMAGE;
+                            const isChainedVideo = isImageMode && isAlsoRegenerateVideo;
+
+                            const selectedI2IId = isImageMode
+                                ? (activeSelectedImageModel?.id ?? currentImageModelId ?? undefined)
+                                : undefined;
+
+                            const selectedI2VId = isImageMode
+                                ? (isChainedVideo ? (activeSelectedVideoModel?.id ?? currentVideoModelId ?? undefined) : undefined)
+                                : (activeSelectedVideoModel?.id ?? currentVideoModelId ?? undefined);
+
                             onConfirmRegenerate({
                                 mode,
                                 sceneNumber,
-                                selectedModelId: activeSelectedModel?.id ?? currentModelId ?? '',
-                                estimatedCost,
-                                isAlsoRegenerateVideo: mode === RegenerateMode.IMAGE ? isAlsoRegenerateVideo : false,
+                                selectedI2IAIModelId: selectedI2IId,
+                                selectedI2VAIModelId: selectedI2VId,
+                                isAlsoRegenerateVideo: isChainedVideo,
                             });
                         }}
                         className="bg-white hover:bg-zinc-200 text-black px-6 py-2.5 rounded-xl font-bold text-sm shadow-lg transition-all active:scale-[0.98] flex items-center gap-2"

@@ -266,7 +266,7 @@ export const videoClientAPI = {
     async postVideoRegenerate(payload: {
         taskId: string;
         sceneNumber: number;
-        selectedI2VModelId?: string;
+        selectedI2VAIModelId?: string;
     }): Promise<{
         success: boolean;
         requestId?: string;

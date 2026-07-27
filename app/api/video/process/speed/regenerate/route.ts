@@ -60,17 +60,7 @@ export async function POST(request: NextRequest) {
         }
 
         const currentSceneBreakdownList = videoGenerationTask.scene_breakdown_list || [];
-        const targetSceneIndex = currentSceneBreakdownList.findIndex(
-            (sceneData) => sceneData.sceneNumber === sceneNumber
-        );
-
-        if (targetSceneIndex === -1) {
-            return getNextBaseResponse({
-                success: false,
-                status: 404,
-                error: `Scene #${sceneNumber} not found in task`,
-            });
-        }
+        const targetSceneIndex = sceneNumber - 1;
 
         const targetSceneData = currentSceneBreakdownList[targetSceneIndex];
         const userId = videoGenerationTask.user_id;
@@ -135,11 +125,14 @@ export async function POST(request: NextRequest) {
             });
 
             // 5. 해당 씬의 status만 COMPLETED로 갱신 (완공 상태 전이)
-            targetSceneData.status = SceneGenerationStatus.COMPLETED;
-            currentSceneBreakdownList[targetSceneIndex] = targetSceneData;
-
             await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, {
-                scene_breakdown_list: currentSceneBreakdownList,
+                scene_breakdown_list: currentSceneBreakdownList.map((sceneData, index) => {
+                    return targetSceneIndex === index
+                        ? {
+                            ...sceneData,
+                            status: SceneGenerationStatus.COMPLETED,
+                        } : sceneData;
+                }),
             });
 
             console.log(`[Single Scene Speed Process] Successfully completed Scene #${sceneNumber} video!`);
@@ -151,11 +144,15 @@ export async function POST(request: NextRequest) {
             });
         } else {
             console.error(`Fal AI Webhook error for Scene #${sceneNumber}:`, falError);
-            targetSceneData.status = SceneGenerationStatus.FAILED;
-            currentSceneBreakdownList[targetSceneIndex] = targetSceneData;
 
             await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, {
-                scene_breakdown_list: currentSceneBreakdownList,
+                scene_breakdown_list: currentSceneBreakdownList.map((sceneData, index) => {
+                    return targetSceneIndex === index
+                        ? {
+                            ...sceneData,
+                            status: SceneGenerationStatus.FAILED,
+                        } : sceneData;
+                }),
             });
 
             return getNextBaseResponse({

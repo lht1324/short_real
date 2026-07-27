@@ -3,8 +3,10 @@ import { getIsValidRequestS2S } from "@/lib/utils/getIsValidRequest";
 import { getNextBaseResponse } from "@/lib/utils/getNextBaseResponse";
 import { videoGenerationTasksServerAPI } from "@/lib/api/server/videoGenerationTasksServerAPI";
 import { usersServerAPI } from "@/lib/api/server/usersServerAPI";
-import { SceneGenerationStatus } from "@/lib/api/types/supabase/VideoGenerationTasks";
-import { internalFireAndForgetFetch } from "@/lib/utils/internalFetch";
+import { videoServerAPI } from "@/lib/api/server/videoServerAPI";
+import { imageServerAPI } from "@/lib/api/server/imageServerAPI";
+import { aiModelDataServerAPI } from "@/lib/api/server/aiModelDataServerAPI";
+import { llmServerAPI } from "@/lib/api/server/llmServerAPI";
 
 export async function POST(request: NextRequest) {
     if (!getIsValidRequestS2S(request)) {
@@ -21,8 +23,8 @@ export async function POST(request: NextRequest) {
     if (!userId) {
         return getNextBaseResponse({
             success: false,
-            status: 403,
-            error: "Forbidden. You can only write your own data."
+            status: 400,
+            error: "Missing required param: userId",
         });
     }
 
@@ -31,11 +33,9 @@ export async function POST(request: NextRequest) {
         const {
             taskId,
             sceneNumber,
-            selectedI2VAIModelId,
         }: {
             taskId: string;
             sceneNumber: number;
-            selectedI2VAIModelId?: string;
         } = requestBody;
 
         if (!taskId || !sceneNumber) {
@@ -64,14 +64,19 @@ export async function POST(request: NextRequest) {
             return getNextBaseResponse({
                 success: false,
                 status: 400,
-                error: "User not found",
+                error: "User API Key is missing or invalid",
             });
         }
+
+        const encryptedFalAiApiKey = user.fal_ai_api_key;
 
         const currentSceneBreakdownList = videoGenerationTask.scene_breakdown_list || [];
 
         // 2. 해당 sceneNumber의 SceneData 추출
         const targetSceneIndex = sceneNumber - 1;
+        const targetSceneData = currentSceneBreakdownList[targetSceneIndex];
+
+        const selectedI2VAIModelId = targetSceneData.selectedI2VAIModelId;
 
         if (!selectedI2VAIModelId) {
             return getNextBaseResponse({
@@ -81,40 +86,75 @@ export async function POST(request: NextRequest) {
             });
         }
 
-        // 3. DB scene_breakdown_list 1차 갱신 (선택한 비디오 모델 ID 저장 & status = GENERATING_VIDEO)
+        const selectedI2VAIModelData = await aiModelDataServerAPI.getAIModelDataById(selectedI2VAIModelId);
+
+        if (!selectedI2VAIModelData) {
+            return getNextBaseResponse({
+                success: false,
+                status: 404,
+                error: "Image generation model data not found.",
+            });
+        }
+
+        // 3. 씬 이미지 Signed URL 생성 및 Base64 변환
+        const sceneImageUrl = await imageServerAPI.getImageSignedUrl(`${taskId}/${sceneNumber}.jpeg`);
+        const imageFetchResponse = await fetch(sceneImageUrl);
+
+        if (!imageFetchResponse.ok) {
+            throw new Error(`Failed to fetch scene image for Scene #${sceneNumber}`);
+        }
+
+        const imageArrayBuffer = await imageFetchResponse.arrayBuffer();
+        const imageBase64 = Buffer.from(imageArrayBuffer).toString("base64");
+
+        // 4. Vision LLM을 통해 신규 비디오 모션 프롬프트 생성 (Regenerate Prompt)
+        console.log(`[Regenerate Video Prompt] Generating new motion prompt for Scene #${sceneNumber}...`);
+        const postVideoGenPromptResult = await llmServerAPI.postVideoGenPrompt(
+            sceneNumber,
+            imageBase64,
+            targetSceneData.narration
+        );
+
+        if (!postVideoGenPromptResult.success || !postVideoGenPromptResult.videoGenPrompt) {
+            throw Error(postVideoGenPromptResult.error?.message || "Failed to generate new video prompt");
+        }
+
+        const videoGenPrompt = postVideoGenPromptResult.videoGenPrompt;
+
+        // 5. videoServerAPI.postVideo 호출 (isRegenerate: true 인자를 전달하여 웹훅에 isRegenerate=true 자동 부착)
+        console.log(`[Regenerate Video] Submitting single scene video generation queue for Scene #${sceneNumber}...`);
+        const requestId = await videoServerAPI.postVideo(
+            targetSceneData,
+            taskId,
+            userId,
+            selectedI2VAIModelData,
+            encryptedFalAiApiKey,
+            videoGenerationTask.aspect_ratio || "9:16",
+            videoGenerationTask.resolution || "1080p",
+            false,
+            true,
+        );
+
+        console.log(`[Regenerate Video] Successfully submitted queue. Request ID: ${requestId}`);
+
+        // 7. DB scene_breakdown_list에 생성된 videoGenPrompt 패치
         await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, {
             scene_breakdown_list: currentSceneBreakdownList.map((sceneData, index) => {
                 return targetSceneIndex === index
                     ? {
                         ...sceneData,
-                        selectedI2VAIModelId: selectedI2VAIModelId,
-                        status: SceneGenerationStatus.GENERATING_VIDEO,
+                        videoGenPrompt: videoGenPrompt,
                     } : sceneData;
             }),
         });
 
-        // 4. internalFireAndForgetFetch로 백그라운드 비디오 재생성 프로세스 비동기 호출
-        const baseUrl = process.env.BASE_URL || "";
-        const internalVideoRegenerateProcessUrl = `${baseUrl}/api/video/regenerate/process?userId=${userId}`;
-
-        console.log(`[Regenerate Video Trigger] Fire-and-forget video regeneration for Scene #${sceneNumber}...`);
-        internalFireAndForgetFetch(
-            internalVideoRegenerateProcessUrl,
-            { method: "POST" },
-            {
-                taskId: taskId,
-                sceneNumber: sceneNumber,
-            }
-        );
-
-        // 5. 클라이언트에 즉시 200 OK 비동기 성공 응답
         return getNextBaseResponse({
             success: true,
             status: 200,
             message: `Single scene video generation submitted successfully for Scene #${sceneNumber}`,
         });
     } catch (error) {
-        console.error("Error in POST /api/video/regenerate:", error);
+        console.error("Error in POST /api/video/regenerate/process:", error);
         return getNextBaseResponse({
             success: false,
             status: 500,

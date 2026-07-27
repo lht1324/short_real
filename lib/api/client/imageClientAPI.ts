@@ -25,13 +25,11 @@ export const imageClientAPI = {
     async postImageRegenerate(payload: {
         taskId: string;
         sceneNumber: number;
-        selectedImageModelId?: string;
-        selectedI2VModelId?: string;
+        selectedI2IAIModelId?: string;
+        selectedI2VAIModelId?: string;
         isAlsoRegenerateVideo?: boolean;
     }): Promise<{
         success: boolean;
-        imageUrl?: string;
-        isAlsoRegenerateVideo?: boolean;
         error?: string;
     }> {
         try {
@@ -43,21 +41,19 @@ export const imageClientAPI = {
 
             const regenerateResult = await response.json();
 
-            if (!regenerateResult.success || !regenerateResult.data?.imageUrl) {
-                throw Error(regenerateResult.error ?? "Failed to regenerate scene image.");
+            if (!regenerateResult.success) {
+                throw Error(regenerateResult.error ?? "Failed to start image regeneration.");
             }
 
             return {
                 success: true,
-                imageUrl: regenerateResult.data.imageUrl,
-                isAlsoRegenerateVideo: regenerateResult.data.isAlsoRegenerateVideo,
             };
         } catch (error) {
             console.error("Image regenerate API call failed:", error);
             return {
                 success: false,
-                error: error instanceof Error ? error.message : "Failed to regenerate scene image",
+                error: error instanceof Error ? error.message : "Failed to start image regeneration",
             };
         }
-    }
+    },
 }
