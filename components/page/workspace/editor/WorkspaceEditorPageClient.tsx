@@ -246,7 +246,7 @@ function WorkspaceEditorPageClient() {
                     table: 'video_generation_tasks',
                     filter: `id=eq.${taskId}`,
                 },
-                (payload) => {
+                async (payload) => {
                     console.log('[Editor Realtime] Received UPDATE event:', payload);
                     const updatedTask = payload.new as VideoGenerationTask;
                     const newBreakdownList = updatedTask.scene_breakdown_list;
@@ -255,7 +255,7 @@ function WorkspaceEditorPageClient() {
 
                     const currentBreakdownList = videoDataRef.current?.sceneBreakdownList || [];
 
-                    // 1. SceneData.status 변경이 발생한 씬만 정밀 추출
+                    // 1. SceneData.status 변경이 발생한 씬 정밀 추출
                     const statusChangedScenes = newBreakdownList.filter((newScene) => {
                         const oldScene = currentBreakdownList.find((sceneData) => sceneData.sceneNumber === newScene.sceneNumber);
                         return oldScene && oldScene.status !== newScene.status;
@@ -268,53 +268,103 @@ function WorkspaceEditorPageClient() {
 
                     console.log('[Editor Realtime] Status changed scenes detected:', statusChangedScenes);
 
-                    // 2. 완공(COMPLETED) 상태로 바뀐 씬 탐지 및 완공 알림 / 비디오-이미지 URL 실시간 교체
-                    statusChangedScenes.forEach(async (newScene) => {
+                    // 새로 COMPLETED 상태로 전환된 단건 씬 탐지
+                    const newlyCompletedScene = newBreakdownList.find((newScene) => {
                         const oldScene = currentBreakdownList.find((sceneData) => sceneData.sceneNumber === newScene.sceneNumber);
-                        if (oldScene && newScene.status === SceneGenerationStatus.COMPLETED) {
-                            const sceneNum = newScene.sceneNumber;
+                        return oldScene && oldScene.status !== SceneGenerationStatus.COMPLETED && newScene.status === SceneGenerationStatus.COMPLETED;
+                    });
 
-                            // 1) 이미지 URL 리스트 갱신
-                            const latestUrls = await imageClientAPI.getImages(taskId, newBreakdownList.length);
-                            if (latestUrls && latestUrls.length > 0) {
-                                const timestamp = Date.now();
-                                const freshUrls = latestUrls.map((url) => `${url}${url.includes("?") ? "&" : "?"}t=${timestamp}`);
-                                setSceneImageUrlList(freshUrls);
-                            }
+                    // 2. COMPLETED 전환 씬이 있는 경우 단건 핀포인트 비동기 처리
+                    if (newlyCompletedScene) {
+                        const sceneNum = newlyCompletedScene.sceneNumber;
+                        const oldScene = currentBreakdownList.find((s) => s.sceneNumber === sceneNum);
+                        const isVideoFinished = oldScene?.status === SceneGenerationStatus.GENERATING_VIDEO;
 
-                            // 2) 비디오 raw/processed URL 최신 갱신 및 scenesUrlData 실시간 교체
-                            const userId = user?.id || searchParams.get('userId') || "";
-                            const taskUrlsResult = await videoClientAPI.getVideoTaskUrls(taskId, userId);
-                            if (taskUrlsResult && taskUrlsResult.scenes) {
-                                setVideoData((currentPrev) => {
-                                    if (!currentPrev) return currentPrev;
-                                    return {
-                                        ...currentPrev,
-                                        scenesUrlData: taskUrlsResult.scenes,
-                                    };
+                        // 1) 이미지 URL 최신 갱신
+                        const latestUrls = await imageClientAPI.getImages(taskId, newBreakdownList.length);
+                        let freshUrls: string[] = [];
+                        if (latestUrls && latestUrls.length > 0) {
+                            const timestamp = Date.now();
+                            freshUrls = latestUrls.map((url) => `${url}${url.includes("?") ? "&" : "?"}t=${timestamp}`);
+                        }
+
+                        // 2) 비디오 raw/processed URL 최신 갱신
+                        const userId = user?.id || searchParams.get('userId') || "";
+                        const taskUrlsResult = await videoClientAPI.getVideoTaskUrls(taskId, userId);
+                        const targetSceneUrlData = taskUrlsResult?.scenes?.find(s => s.sceneNumber === sceneNum);
+                        const freshVideoUrl = targetSceneUrlData?.videoProcessedUrl || targetSceneUrlData?.videoRawUrl;
+
+                        // 비디오 완공인 경우: 백그라운드 비디오 프리로드로 첫 프레임(loadeddata) 렌더링 준비 대기
+                        if (isVideoFinished && freshVideoUrl && typeof window !== 'undefined') {
+                            await new Promise<void>((resolve) => {
+                                const tempVideo = document.createElement('video');
+                                tempVideo.preload = 'auto';
+                                tempVideo.muted = true;
+
+                                const onReady = () => {
+                                    tempVideo.removeEventListener('loadeddata', onReady);
+                                    tempVideo.removeEventListener('error', onError);
+                                    resolve();
+                                };
+                                const onError = () => {
+                                    tempVideo.removeEventListener('loadeddata', onReady);
+                                    tempVideo.removeEventListener('error', onError);
+                                    resolve();
+                                };
+
+                                tempVideo.addEventListener('loadeddata', onReady);
+                                tempVideo.addEventListener('error', onError);
+                                tempVideo.src = freshVideoUrl;
+                                tempVideo.load();
+
+                                // 네트워크 지연 고려 3초 타임아웃 가드
+                                setTimeout(resolve, 3000);
+                            });
+                        } else if (!isVideoFinished && freshUrls.length > 0 && typeof window !== 'undefined') {
+                            // 이미지 완공인 경우: 해당 씬 이미지 인메모리 프리로드 완료 대기
+                            const targetImageUrl = freshUrls[sceneNum - 1] || freshUrls[0];
+                            if (targetImageUrl) {
+                                await new Promise<void>((resolve) => {
+                                    const tempImg = new window.Image();
+                                    tempImg.onload = () => resolve();
+                                    tempImg.onerror = () => resolve();
+                                    tempImg.src = targetImageUrl;
+                                    setTimeout(resolve, 3000);
                                 });
                             }
-
-                            // 3) UI 화면에 이미지가 먼저 교체된 후 alert() 안내 팝업 표시
-                            const isVideoFinished = oldScene.status === SceneGenerationStatus.GENERATING_VIDEO;
-                            setTimeout(() => {
-                                if (isVideoFinished) {
-                                    alert(`Scene #${sceneNum} video motion rendering has been completed!`);
-                                } else {
-                                    alert(`Scene #${sceneNum} image has been successfully regenerated.`);
-                                }
-                            }, 100);
                         }
-                    });
 
-                    // 3. React State 갱신
-                    setVideoData((prev) => {
-                        if (!prev) return prev;
-                        return {
-                            ...prev,
-                            sceneBreakdownList: newBreakdownList,
-                        };
-                    });
+                        // 이미지 및 비디오 URL state 적용 & breakdownList(스피너 해제) 동시에 동기화 갱신
+                        if (freshUrls.length > 0) {
+                            setSceneImageUrlList(freshUrls);
+                        }
+                        setVideoData((currentPrev) => {
+                            if (!currentPrev) return currentPrev;
+                            return {
+                                ...currentPrev,
+                                scenesUrlData: taskUrlsResult?.scenes || currentPrev.scenesUrlData,
+                                sceneBreakdownList: newBreakdownList,
+                            };
+                        });
+
+                        // 화면 렌더링(Paint) 후 alert() 노출
+                        setTimeout(() => {
+                            if (isVideoFinished) {
+                                alert(`Scene #${sceneNum} video motion rendering has been completed!`);
+                            } else {
+                                alert(`Scene #${sceneNum} image has been successfully regenerated.`);
+                            }
+                        }, 200);
+                    } else {
+                        // COMPLETED 전환이 아닌 경우 (FAILED 또는 GENERATING 상태 등)
+                        setVideoData((prev) => {
+                            if (!prev) return prev;
+                            return {
+                                ...prev,
+                                sceneBreakdownList: newBreakdownList,
+                            };
+                        });
+                    }
                 }
             )
             .subscribe();
@@ -999,7 +1049,7 @@ function WorkspaceEditorPageClient() {
     return (
         <div className="min-h-screen bg-zinc-950 text-white relative overflow-hidden">
             {/* Premium Loading Overlay */}
-            {(isPublicDataLoading || isFinishLoading) && (
+            {(isInitialLoading || isFinishLoading) && (
                 <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[200] flex items-center justify-center animate-in fade-in duration-300">
                     <div className="flex flex-col items-center gap-4 p-8 rounded-3xl bg-zinc-900/80 border border-white/10 shadow-2xl">
                         <Loader2 className="w-10 h-10 animate-spin text-zinc-400" />
@@ -1208,21 +1258,6 @@ function WorkspaceEditorPageClient() {
                     </div>}
                 </div>
             </div>
-            {/* Initial Loading Overlay */}
-            {isInitialLoading && (<div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50">
-                <div className="text-center">
-                    <div className="w-8 h-8 border-2 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"/>
-                    <p className="text-gray-400">Loading your pure video...</p>
-                </div>
-            </div>)}
-            {/* Final Loading Overlay */}
-            {isFinishLoading && (<div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50">
-                <div className="text-center">
-                    <div className="w-8 h-8 border-2 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"/>
-                    <p className="text-gray-400">Sending your video to the producer...</p>
-                </div>
-            </div>)}
-
             {/* Color Picker Popover */}
             {colorPickerState.isOpen && (
                 <ColorPickerPopover
