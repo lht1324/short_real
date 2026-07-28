@@ -2,11 +2,12 @@
 
 import {memo, useCallback, useEffect, useMemo, useState} from "react";
 import Link from "next/link";
-import {Coins, ListTodo, Loader2, Plus, Zap} from 'lucide-react';
+import {ListTodo, Loader2, Plus} from 'lucide-react';
 import {
     AIModelConfig,
     ExportPlatform,
     ExportStatus,
+    SceneGenerationStatus,
     VideoGenerationTask,
     VideoGenerationTaskStatus
 } from "@/lib/api/types/supabase/VideoGenerationTasks";
@@ -32,7 +33,7 @@ import ExportSettingsModal from "@/components/page/workspace/dashboard/export-se
 import {ExportPrivacySetting} from "@/components/page/workspace/dashboard/export-settings-modal/ExportPrivacySetting";
 import WorkspaceSidebar from "@/components/public/WorkspaceSidebar";
 import {WorkspaceSidebarItem} from "@/components/public/WorkspaceSidebarItem";
-import { AnimatePresence } from "framer-motion";
+import {AnimatePresence} from "framer-motion";
 
 export interface TaskData {
     id: string;
@@ -41,6 +42,7 @@ export interface TaskData {
     status: VideoGenerationTaskStatus;
     sceneCount: number;
     processedSceneCount?: number;
+    generatedImageCount?: number;
     videoDuration: number;
     progress?: number; // 0-100
     currentStep: number;
@@ -322,18 +324,25 @@ function WorkspaceDashboardPageClient() {
         }
 
         const status = task.status as VideoGenerationTaskStatus;
-        const {progress, currentStep, totalStep} = calculateProgress(status);
+        const { progress, currentStep, totalStep } = calculateProgress(status);
+
+        const sceneDataList = task.scene_breakdown_list;
 
         return {
             id: task.id,
             title: task.video_title,
             description: task.video_description,
             status: status,
-            videoDuration: task.scene_breakdown_list.reduce((acc, sceneData) => {
+            videoDuration: sceneDataList.reduce((acc, sceneData) => {
                 return acc + sceneData.sceneDuration;
             }, 0),
-            sceneCount: task.scene_breakdown_list.length,
-            processedSceneCount: task.processed_scene_count,
+            sceneCount: sceneDataList.length,
+            processedSceneCount: sceneDataList.filter((sceneData) => {
+                return sceneData.status === SceneGenerationStatus.COMPLETED;
+            }).length,
+            generatedImageCount: sceneDataList.filter((sceneData) => {
+                return sceneData.status === SceneGenerationStatus.GENERATING_VIDEO || sceneData.status === SceneGenerationStatus.COMPLETED;
+            }).length,
             progress: progress,
             currentStep: currentStep,
             totalStep: totalStep,

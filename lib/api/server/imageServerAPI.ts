@@ -20,7 +20,7 @@ export const imageServerAPI = {
         i2iAIModelEndpointId: string,
         resolution: '720p' | '1080p' | '2160p',
         aspectRatio: '16:9' | '9:16',
-    ): Promise<{ success: boolean; error?: { message: string; code: string } }> {
+    ): Promise<{ success: boolean; error?: { message: string; code: string; status?: number } }> {
         const supabase = createSupabaseServiceRoleClient();
 
         try {
@@ -163,6 +163,7 @@ export const imageServerAPI = {
         error?: {
             code: string;
             message: string;
+            status?: number;
         }
     }> {
         const supabase = createSupabaseServiceRoleClient();

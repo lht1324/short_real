@@ -135,13 +135,6 @@ export async function POST(
 
         // is_generation_failed를 false로 업데이트
         await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, {
-            // VIDEO/PROCESS
-            ...((
-                taskStatus === VideoGenerationTaskStatus.GENERATING_VIDEO_PROMPT || taskStatus === VideoGenerationTaskStatus.GENERATING_VIDEO
-            ) && {
-                processed_scene_count: 0,
-            }),
-
             // FINALIZING
             ...(taskStatus === VideoGenerationTaskStatus.FINALIZING && {
                 caption_completed: false,

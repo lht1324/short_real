@@ -7,7 +7,7 @@ import {getIsValidRequestS2S} from "@/lib/utils/getIsValidRequest";
 import {createSupabaseServiceRoleClient} from "@/lib/supabase/supabaseServiceRole";
 import {getErrorMessage} from "@/lib/utils/ErrorUtils";
 import {FalAiErrorDetail} from "@/lib/api/types/fal-ai/FalAIResponse";
-import {VideoGenerationTaskStatus} from "@/lib/api/types/supabase/VideoGenerationTasks";
+import {SceneGenerationStatus, VideoGenerationTaskStatus} from "@/lib/api/types/supabase/VideoGenerationTasks";
 import {internalFireAndForgetFetch} from "@/lib/utils/internalFetch";
 import {usersServerAPI} from "@/lib/api/server/usersServerAPI";
 import {aiModelDataServerAPI} from "@/lib/api/server/aiModelDataServerAPI";
@@ -167,6 +167,21 @@ export async function POST(request: NextRequest) {
                 throw new Error(`Processed video storage upload failed: ${uploadError.message}`);
             }
             console.log(`[Speed Process] 가공 비디오 업로드 완료: ${processedFileName}`);
+
+            // DB scene_breakdown_list 에서 해당 씬의 status를 SceneGenerationStatus.COMPLETED 로 갱신
+            const currentTaskForStatusUpdate = await videoGenerationTasksServerAPI.getVideoGenerationTaskById(taskId);
+            if (currentTaskForStatusUpdate && currentTaskForStatusUpdate.scene_breakdown_list) {
+                const updatedBreakdownList = currentTaskForStatusUpdate.scene_breakdown_list.map((sceneData) => {
+                    return sceneData.sceneNumber === sceneToProcess.sceneNumber || sceneData.requestId === requestId
+                        ? {
+                            ...sceneData,
+                            status: SceneGenerationStatus.COMPLETED,
+                        } : sceneData;
+                });
+                await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, {
+                    scene_breakdown_list: updatedBreakdownList,
+                });
+            }
 
             // =========================================================
             // [병합 트리거] "내가 마지막인가?" 확인 로직

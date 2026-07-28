@@ -1,10 +1,10 @@
-import {logger, task } from "@trigger.dev/sdk/v3";
-import { videoGenerationTasksServerAPI } from "@/lib/api/server/videoGenerationTasksServerAPI";
-import { taskCheckAndCleanupIfCancelled } from "@/lib/utils/taskCheckAndCleanupIfCancelled";
-import { VideoGenerationTaskStatus } from "@/lib/api/types/supabase/VideoGenerationTasks";
-import { llmServerAPI } from "@/lib/api/server/llmServerAPI";
-import { STYLE_DATA_LIST } from "@/lib/styles";
-import { internalFireAndForgetFetch } from "@/lib/utils/internalFetch";
+import {logger, task} from "@trigger.dev/sdk/v3";
+import {videoGenerationTasksServerAPI} from "@/lib/api/server/videoGenerationTasksServerAPI";
+import {taskCheckAndCleanupIfCancelled} from "@/lib/utils/taskCheckAndCleanupIfCancelled";
+import {SceneGenerationStatus, VideoGenerationTaskStatus} from "@/lib/api/types/supabase/VideoGenerationTasks";
+import {llmServerAPI} from "@/lib/api/server/llmServerAPI";
+import {STYLE_DATA_LIST} from "@/lib/styles";
+import {internalFireAndForgetFetch} from "@/lib/utils/internalFetch";
 import {imageServerAPI} from "@/lib/api/server/imageServerAPI";
 import {usersServerAPI} from "@/lib/api/server/usersServerAPI";
 import {aiModelDataServerAPI} from "@/lib/api/server/aiModelDataServerAPI";
@@ -228,6 +228,7 @@ export const postMasterStyle = task({
                         ...sceneData,
                         sceneVisualDescription: sceneCastingData?.sceneVisualDescription,
                         sceneCastingEntityIdList: sceneCastingData?.castIdList,
+                        status: SceneGenerationStatus.GENERATING_IMAGE,
                     };
                 })
             });

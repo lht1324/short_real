@@ -2,7 +2,7 @@
 
 import {memo, ReactNode, useCallback, useMemo, useState} from "react";
 import {TaskData} from "@/components/page/workspace/dashboard/WorkspaceDashboardPageClient";
-import {ExportPlatform, VideoGenerationTaskStatus} from "@/lib/api/types/supabase/VideoGenerationTasks";
+import {ExportPlatform, SceneGenerationStatus, VideoGenerationTaskStatus} from "@/lib/api/types/supabase/VideoGenerationTasks";
 import {
     AlertCircle,
     Calendar,
@@ -176,7 +176,7 @@ function DashboardItem({
     const retryPrice = useMemo(() => {
         if (!taskData.isGenerationFailed || !taskData.aiModelConfig) return null;
 
-        const { status, sceneCount, videoDuration, resolution, estimatedCharacterCount, aiModelConfig } = taskData;
+        const { status, sceneCount, processedSceneCount, generatedImageCount, videoDuration, resolution, estimatedCharacterCount, aiModelConfig } = taskData;
         const effectiveResolution = resolution ?? '720p';
 
         const findPricePerUnit = (modelId: string, res: string): number | null => {
@@ -195,7 +195,9 @@ function DashboardItem({
             case VideoGenerationTaskStatus.GENERATING_IMAGE_PROMPT: {
                 const price = findPricePerUnit(aiModelConfig.sceneImageI2IModelId, effectiveResolution);
                 if (price === null) return null;
-                return price * sceneCount;
+                const failedSceneCount = sceneCount - processedSceneCount;
+
+                return price * failedSceneCount;
             }
             case VideoGenerationTaskStatus.GENERATING_VIDEO_PROMPT:
             case VideoGenerationTaskStatus.GENERATING_VIDEO: {
@@ -276,13 +278,14 @@ function DashboardItem({
                 if (!model) return null;
                 const price = findPricePerUnit(aiModelConfig.sceneImageI2IModelId, effectiveResolution);
                 if (price === null) return null;
+                const failedSceneCount = sceneCount - generatedImageCount;
                 return renderReceipt(
                     "Scene Images",
                     "text-pink-400",
                     <ImageIcon size={14} />,
                     model.display_name,
                     [
-                        { label: "Scenes", value: `${sceneCount}` },
+                        { label: "Failed Scenes", value: `${failedSceneCount}` },
                         { label: "Price / scene", value: formatUSD(price) },
                     ]
                 );
