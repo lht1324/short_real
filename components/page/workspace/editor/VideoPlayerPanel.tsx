@@ -929,8 +929,6 @@ const VideoPlayerPanel = forwardRef<VideoPlayerHandle, VideoPlayerPanelProps>(({
                 <div
                     ref={carouselRef}
                     className="relative w-full h-full overflow-hidden flex items-center justify-center"
-                    onMouseEnter={() => setIsHoveringVideo(true)}
-                    onMouseLeave={() => setIsHoveringVideo(false)}
                 >
                     {scenesUrlData && scenesUrlData.length > 0 ? (
                         <div className="relative w-full h-full">
@@ -1012,7 +1010,12 @@ const VideoPlayerPanel = forwardRef<VideoPlayerHandle, VideoPlayerPanelProps>(({
                             />
 
                             {/* 재생 버튼 및 타임라인 오버레이 (정중앙 메인 비디오 위에 얹힘 - zIndex 최상위 50 부여) */}
-                            <div className="absolute top-1/2 left-1/2 pointer-events-none" style={{ width: `${videoContainerWidth}px`, height: `${videoContainerHeight}px`, transform: 'translate(-50%, -50%)', zIndex: 50 }}>
+                            <div
+                                className="absolute top-1/2 left-1/2 pointer-events-auto"
+                                style={{ width: `${videoContainerWidth}px`, height: `${videoContainerHeight}px`, transform: 'translate(-50%, -50%)', zIndex: 50 }}
+                                onMouseEnter={() => setIsHoveringVideo(true)}
+                                onMouseLeave={() => setIsHoveringVideo(false)}
+                            >
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent pointer-events-none rounded-xl"></div>
                                 
                                 {/* [상단 HUD]: 장면 횡이동 버튼 캡슐 (카드 상단 중앙 정렬 - 서클 버튼 및 SCENE 01 텍스트 스케일업) */}

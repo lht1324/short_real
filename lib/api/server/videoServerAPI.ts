@@ -465,8 +465,9 @@ export const videoServerAPI = {
                 const endSec = startSec + duration;
 
                 const atempoFilter = getAtempoFilterString(speedMultiplier);
+                const atempoStr = atempoFilter ? `,${atempoFilter}` : '';
 
-                filterSegments.push(`[1:a]atrim=start=${startSec.toFixed(4)}:end=${endSec.toFixed(4)},asetpts=PTS-STARTPTS,${atempoFilter}[a${index}]`);
+                filterSegments.push(`[1:a]atrim=start=${startSec.toFixed(4)}:end=${endSec.toFixed(4)},asetpts=PTS-STARTPTS${atempoStr}[a${index}]`);
                 concatInputs.push(`[a${index}]`);
                 console.log(`[TEST LOG][Scene #${sceneNumber} Voice] trim range: ${startSec.toFixed(4)}s ~ ${endSec.toFixed(4)}s (duration: ${duration.toFixed(4)}s), speed: ${speedMultiplier}x -> scaledDuration: ${(duration / speedMultiplier).toFixed(4)}s`);
             });
@@ -479,7 +480,7 @@ export const videoServerAPI = {
                 input: {
                     video_urls: JSON.stringify([stitchedVideoUrl.toString()]),
                     audio_url: fullVoiceSignedUrl,
-                    ffmpeg_args: `-filter_complex "${filterComplexStr}" -map 0:v -map "[aout]" -c:v libx264 -pix_fmt yuv420p -bf 0 -flags +cgop -c:a aac`,
+                    ffmpeg_args: `-filter_complex "${filterComplexStr}" -map 0:v -map [aout] -c:v libx264 -pix_fmt yuv420p -bf 0 -flags +cgop -c:a aac`,
                     output_extension: "mp4"
                 }
             });
