@@ -1,6 +1,6 @@
 import {NextRequest, NextResponse} from 'next/server'
 import {usersServerAPI} from '@/lib/api/server/usersServerAPI'
-import {createSupabaseServer} from "@/lib/supabaseServer";
+import {createSupabaseServer} from "@/lib/supabase/supabaseServer";
 import {SubscriptionPlan, User} from "@/lib/api/types/supabase/Users";
 
 export async function GET(request: NextRequest) {
@@ -65,7 +65,7 @@ export async function GET(request: NextRequest) {
                 ? "/profile"
                 : "/workspace/dashboard"
 
-        return NextResponse.redirect(new URL(redirectPath, request.url))
+        return NextResponse.redirect(new URL(redirectPath, process.env.NODE_ENV === 'production' ? request.url : "http://localhost:3000"))
     } catch (error) {
         console.error('Unexpected auth callback error:', error)
         return NextResponse.redirect(new URL('/sign-in?error=oauth_failed', request.url))

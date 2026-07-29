@@ -13,6 +13,7 @@ interface MusicEditPanelProps {
     musicData: MusicData;
     videoDuration: number;
     panelHeight: number;
+    initialVolume?: number;
     onChangeMusicStartSec: (newStartSec: number) => void;
     onChangeMusicVolume: (newVolume: number) => void;
     onChangeIsMuted: (newIsMuted: boolean) => void;
@@ -22,6 +23,7 @@ function MusicEditPanel({
     musicData,
     videoDuration,
     panelHeight,
+    initialVolume,
     onChangeMusicStartSec,
     onChangeMusicVolume,
     onChangeIsMuted,
@@ -44,7 +46,7 @@ function MusicEditPanel({
     const [decodedAudioBuffer, setDecodedAudioBuffer] = useState<AudioBuffer | null>(null);
     const [isDownloading, setIsDownloading] = useState(false);
 
-    const [volume, setVolume] = useState(1.0);
+    const [volume, setVolume] = useState(initialVolume ?? 1.0);
     const [isMuted, setIsMuted] = useState(false);
 
     // 뷰 높이 계산
@@ -186,10 +188,10 @@ function MusicEditPanel({
         const options: PeaksOptions = {
             zoomview: {
                 container: zoomviewRef.current,
-                // [디자인 복구] 보라색 계열
-                waveformColor: 'rgba(168, 85, 247, 0.4)',
-                playedWaveformColor: 'rgba(168, 85, 247, 0.9)',
-                playheadColor: 'rgba(236, 72, 153, 1)',
+                // [디자인 복구] 모노톤/인디고 계열
+                waveformColor: 'rgba(161, 161, 170, 0.4)',
+                playedWaveformColor: 'rgba(99, 102, 241, 0.9)',
+                playheadColor: 'rgba(244, 244, 245, 1)',
                 showPlayheadTime: true,
                 axisLabelColor: '#aaa',
                 wheelMode: "scroll",
@@ -198,9 +200,9 @@ function MusicEditPanel({
             },
             overview: {
                 container: overviewRef.current,
-                waveformColor: 'rgba(255, 255, 255, 0.35)',
-                playedWaveformColor: 'rgba(236, 72, 153, 0.9)',
-                playheadColor: 'rgba(236, 72, 153, 1)',
+                waveformColor: 'rgba(255, 255, 255, 0.2)',
+                playedWaveformColor: 'rgba(99, 102, 241, 0.9)',
+                playheadColor: 'rgba(244, 244, 245, 1)',
                 highlightColor: 'transparent',
                 axisLabelColor: '#aaa',
             },
@@ -362,7 +364,7 @@ function MusicEditPanel({
 
     return (
         <div
-            className="w-full bg-gray-900 border-t border-purple-500/20 flex flex-col select-none overflow-hidden"
+            className="w-full bg-zinc-950 border-t border-white/5 flex flex-col select-none overflow-hidden"
             style={{ height: `${panelHeight}px` }}
             ref={containerRef}
         >
@@ -371,24 +373,24 @@ function MusicEditPanel({
             )}
 
             {/* --- Controls --- */}
-            <div className="flex items-center justify-between px-3 py-2 bg-gray-900/50 border-b border-purple-500/10 h-10 shrink-0 z-20">
+            <div className="flex items-center justify-between px-3 py-2 bg-zinc-900/50 border-b border-white/5 h-10 shrink-0 z-20">
                 <div className="flex items-center gap-3">
                     <button
                         onClick={togglePlay}
                         disabled={isDownloading}
-                        className={`p-1.5 rounded-full text-white shadow-sm flex items-center justify-center transition-transform active:scale-95 ${
-                            isDownloading ? 'bg-gray-600 cursor-not-allowed' : 'bg-purple-600 hover:bg-purple-500'
+                        className={`p-1.5 rounded-full shadow-sm flex items-center justify-center transition-transform active:scale-95 ${
+                            isDownloading ? 'bg-zinc-800 text-zinc-500 cursor-not-allowed' : 'bg-white text-black hover:bg-zinc-200'
                         }`}
                     >
                         {isDownloading ? (
-                            <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                            <div className="w-3.5 h-3.5 border-2 border-zinc-500/30 border-t-zinc-400 rounded-full animate-spin" />
                         ) : isPlaying ? (
                             <Pause size={14} fill="currentColor" />
                         ) : (
                             <Play size={14} fill="currentColor" />
                         )}
                     </button>
-                    <span className="text-xs text-gray-300 font-mono">
+                    <span className="text-xs text-zinc-400 font-mono font-medium">
                         {startTime.toFixed(1)}s ~ {(startTime + videoDuration).toFixed(1)}s
                     </span>
                 </div>
@@ -397,7 +399,7 @@ function MusicEditPanel({
                 <div className="flex items-center gap-2">
                     <button
                         onClick={onToggleMute}
-                        className="p-1.5 rounded-full text-gray-400 hover:text-white hover:bg-white/10 transition-colors"
+                        className="p-1.5 rounded-full text-zinc-500 hover:text-zinc-300 hover:bg-white/5 transition-colors"
                         title={isMuted ? "Unmute" : "Mute"}
                     >
                         {isMuted ? (
@@ -414,39 +416,39 @@ function MusicEditPanel({
                         step="0.01"
                         value={volume}
                         onChange={onChangeVolume}
-                        className="w-20 h-1 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-purple-500 hover:accent-purple-400"
+                        className="w-20 h-1 bg-zinc-700 rounded-lg appearance-none cursor-pointer accent-zinc-300 hover:accent-white"
                     />
-                    <span className="text-[10px] text-gray-400 w-6 text-right tabular-nums">
+                    <span className="text-[10px] text-zinc-500 font-medium w-6 text-right tabular-nums">
                             {Math.round(volume * 100)}%
                         </span>
                 </div>
             </div>
 
             <div className="flex-1 flex flex-col relative min-h-0">
-                <div className="w-full relative bg-gray-800/20 border-b border-gray-700/50 shrink-0 group" style={{ height: `${waveformHeight}px` }}>
+                <div className="w-full relative bg-zinc-900/30 border-b border-white/5 shrink-0 group" style={{ height: `${waveformHeight}px` }}>
                     <div ref={zoomviewRef} className="w-full h-full" />
                     <div ref={zoomOverlayRef} onMouseDown={handleZoomScrub} className="absolute inset-0 z-30 cursor-crosshair bg-transparent" title="Click or Drag to scrub" />
-                    <div className="absolute top-2 right-2 px-1.5 py-0.5 bg-black/40 text-[9px] text-purple-300 rounded border border-purple-500/20 pointer-events-none z-10">Detailed View</div>
+                    <div className="absolute top-2 right-2 px-1.5 py-0.5 bg-black/40 text-[9px] text-zinc-400 font-medium tracking-wide rounded border border-white/10 pointer-events-none z-10">Detailed View</div>
                 </div>
 
-                <div className="w-full relative bg-gray-900/40 flex-1 min-h-0" style={{ height: `${waveformHeight}px` }}>
+                <div className="w-full relative bg-zinc-900/10 flex-1 min-h-0" style={{ height: `${waveformHeight}px` }}>
                     <div ref={overviewRef} className="w-full h-full" />
                     {audioDuration > 0 && (
                         <div className="absolute top-0 bottom-0 left-0 right-0 pointer-events-none">
-                            <div onMouseDown={handleDragStart} className="absolute h-full bg-pink-500/20 border-x border-pink-500 cursor-grab active:cursor-grabbing hover:bg-pink-500/30 transition-colors z-10 group" style={{ width: `${boxWidth}px`, transform: `translateX(${boxLeft}px)`, pointerEvents: 'auto' }}>
-                                <div className="absolute top-0 left-0 bottom-0 w-1 bg-pink-500/50" />
-                                <div className="absolute top-0 right-0 bottom-0 w-1 bg-pink-500/50" />
-                                <div className="absolute -top-4 left-0 text-[9px] text-pink-400 font-bold opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap bg-black/80 px-1 rounded">Move</div>
+                            <div onMouseDown={handleDragStart} className="absolute h-full bg-indigo-500/10 border-x border-indigo-500/50 cursor-grab active:cursor-grabbing hover:bg-indigo-500/20 transition-colors z-10 group" style={{ width: `${boxWidth}px`, transform: `translateX(${boxLeft}px)`, pointerEvents: 'auto' }}>
+                                <div className="absolute top-0 left-0 bottom-0 w-1 bg-indigo-500/30" />
+                                <div className="absolute top-0 right-0 bottom-0 w-1 bg-indigo-500/30" />
+                                <div className="absolute -top-4 left-0 text-[9px] text-indigo-400 font-bold opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap bg-zinc-900 border border-white/10 px-1 rounded shadow-lg">Move</div>
                             </div>
                         </div>
                     )}
                 </div>
 
                 {(audioDuration === 0 || isDownloading) && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-gray-900/80 z-50">
-                        <div className="flex flex-col items-center gap-2">
-                            <div className="animate-spin w-5 h-5 border-2 border-purple-500 border-t-transparent rounded-full" />
-                            <span className="text-xs text-gray-400">{isDownloading ? "Analysing Audio..." : "Waiting for Audio..."}</span>
+                    <div className="absolute inset-0 flex items-center justify-center bg-zinc-950/80 backdrop-blur-sm z-50">
+                        <div className="flex flex-col items-center gap-3">
+                            <div className="animate-spin w-5 h-5 border-2 border-zinc-500 border-t-transparent rounded-full" />
+                            <span className="text-xs font-medium text-zinc-400 tracking-wide">{isDownloading ? "Analysing Audio..." : "Waiting for Audio..."}</span>
                         </div>
                     </div>
                 )}

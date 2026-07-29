@@ -1,0 +1,1009 @@
+'use client'
+
+import {memo, useCallback, useEffect, useMemo, useRef, useState, MouseEvent, ChangeEvent, forwardRef, useImperativeHandle} from "react";
+import {Eye, EyeOff, Play, Pause, RotateCcw} from "lucide-react";
+import {
+    CaptionConfigState,
+    CaptionData,
+    MusicPlayConfig, VideoPlayerUIData
+} from "@/components/page/workspace/editor/WorkspaceEditorPageClient";
+import {Properties} from "csstype";
+
+const CAPTION_AREA_LINE_TOGGLE_BUTTON_SIZE = 24;
+const CAPTION_AREA_LINE_HEIGHT = 2;
+const CAPTION_POSITION_SLIDER_TRACK_SIZE_PX = 20;
+const CAPTION_POSITION_SLIDER_PADDING_PX = 2;
+
+export interface PairedSegment {
+    word: string;
+    startSec: number;
+    endSec: number;
+    isActive: boolean;
+}
+
+export interface VideoPlayerHandle {
+    seekTo: (time: number) => void;
+    play: () => void;
+    pause: () => void;
+}
+
+interface VideoPlayerPanelProps {
+    scenesUrlData: {
+        sceneNumber: number;
+        videoRawUrl: string | null;
+        videoProcessedUrl: string | null;
+        voiceUrl: string | null;
+    }[];
+    currentTime: number;
+    isCaptionEnabled: boolean;
+    captionDataList: CaptionData[];
+    captionConfigState: CaptionConfigState;
+    selectedFontFamilyFullShape: string;
+    musicPlayConfig: MusicPlayConfig;
+    onChangeVideoPanelContainerHeight: (containerHeight: number) => void;
+    onChangeCaptionConfigState: (captionConfigState: CaptionConfigState) => void;
+    onChangeVideoPlayerUIData: (uiData: VideoPlayerUIData) => void;
+    onChangeCurrentTime: (currentTime: number) => void;
+    onFinishLoading: () => void;
+}
+
+const VideoPlayerPanel = forwardRef<VideoPlayerHandle, VideoPlayerPanelProps>(({
+    scenesUrlData,
+    currentTime,
+    isCaptionEnabled,
+    captionDataList,
+    captionConfigState,
+    selectedFontFamilyFullShape,
+    musicPlayConfig,
+    onChangeVideoPanelContainerHeight,
+    onChangeCaptionConfigState,
+    onChangeVideoPlayerUIData,
+    onChangeCurrentTime,
+    onFinishLoading,
+}, ref) => {
+    const containerRef = useRef<HTMLDivElement>(null);
+    const currentTimeRef = useRef(currentTime);
+    
+    // Props currentTime을 최신 ref에 실시간 동기화 (Stale Closure 차단)
+    useEffect(() => {
+        currentTimeRef.current = currentTime;
+    }, [currentTime]);
+    
+    // 멀티 비디오 레퍼런스 배열
+    const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
+    
+    // 씬 나레이션 오디오 레퍼런스 배열 (1:1 매핑)
+    const voiceAudioRefs = useRef<(HTMLAudioElement | null)[]>([]);
+    
+    // 씬 전환 중복 트리거 차단용 잠금 플래그 Ref
+    const lastSwitchedIndexRef = useRef<number>(-1);
+    
+    // 씬 스크롤 애니메이션 도중 가상 시간 및 자막 동결용 플래그 Ref
+    const isTransitioningRef = useRef<boolean>(false);
+    
+    // BGM 레퍼런스
+    const bgmAudioRef = useRef<HTMLAudioElement>(null);
+    
+    const captionRef = useRef<HTMLParagraphElement>(null);
+    const timelineRef = useRef<HTMLDivElement>(null);
+    const videoNaturalAspectRatioRef = useRef<number | null>(null);
+
+    // 재생 제어 상태
+    const [isPlaying, setIsPlaying] = useState<boolean>(false);
+    const [isEnded, setIsEnded] = useState(false);
+    const [isDraggingTimeline, setIsDraggingTimeline] = useState(false);
+    const [isHoveringVideo, setIsHoveringVideo] = useState(false);
+    const [videoContainerWidth, setVideoContainerWidth] = useState<number>(324);
+    const [videoContainerHeight, setVideoContainerHeight] = useState<number>(576);
+
+    // 씬별 캐싱 및 탐색 제어
+    const currentSceneIndex = useMemo(() => {
+        return captionDataList.findIndex((scene) => {
+            return currentTime >= scene.startSec && currentTime < scene.endSec;
+        });
+    }, [captionDataList, currentTime]);
+
+    // Props 비동기 업데이트 딜레이 중 장면 1(인덱스 0)로 튕겨나가는 것을 막는 Lock Guard
+    const activeSceneIndex = useMemo(() => {
+        if (lastSwitchedIndexRef.current !== -1) {
+            return lastSwitchedIndexRef.current;
+        }
+        return currentSceneIndex !== -1 ? currentSceneIndex : 0;
+    }, [currentSceneIndex]);
+
+    const activeScene = captionDataList[activeSceneIndex];
+    const activeSceneUrlData = scenesUrlData.find(s => s.sceneNumber === activeScene?.sceneNumber);
+
+    const videoDuration = useMemo(() => {
+        return captionDataList.length > 0
+            ? captionDataList[captionDataList.length - 1].endSec
+            : 0;
+    }, [captionDataList]);
+
+    // Font settings state
+    const fontSize = useMemo(() => {
+        return captionConfigState.fontSize;
+    }, [captionConfigState.fontSize]);
+
+
+    const captionHeight = useMemo(() => {
+        return captionConfigState.captionHeight;
+    }, [captionConfigState.captionHeight]);
+    const showCaptionLine = useMemo(() => {
+        return captionConfigState.showCaptionLine;
+    }, [captionConfigState.showCaptionLine]);
+
+    const [captionLineCount, setCaptionLineCount] = useState<1 | 2>(1);
+    // 두 줄 텍스트 높이 계산
+    const twoLineTextHeight = useMemo(() => {
+        return captionLineCount === 2
+            ? captionHeight
+            : captionHeight * 2;
+    }, [captionHeight, captionLineCount]);
+
+    const captionAreaTop = useMemo(() => {
+        return videoContainerHeight * (captionConfigState.captionPosition / 100.0);
+    }, [videoContainerHeight, captionConfigState.captionPosition]);
+
+    const captionStyle = useMemo(() => {
+        return {
+            fontFamily: selectedFontFamilyFullShape,
+            fontSize: `${captionConfigState.fontSize * 0.7}px`,
+            fontWeight: captionConfigState.fontWeight,
+        }
+    }, [
+        selectedFontFamilyFullShape,
+        captionConfigState.fontSize,
+        captionConfigState.fontWeight,
+    ]);
+
+    const getPairedCaptionStyle = useCallback((isActive: boolean) => {
+        const activeColor = captionConfigState.activeColor;
+        const inactiveColor = captionConfigState.inactiveColor;
+        const activeOutlineEnabled = captionConfigState.isActiveOutlineEnabled;
+        const inactiveOutlineEnabled = captionConfigState.isInactiveOutlineEnabled;
+        const activeOutlineColor = captionConfigState.activeOutlineColor;
+        const inactiveOutlineColor = captionConfigState.inactiveOutlineColor;
+        const activeOutlineThickness = captionConfigState.activeOutlineThickness;
+        const inactiveOutlineThickness = captionConfigState.inactiveOutlineThickness;
+
+        return {
+            position: 'relative',
+            color: isActive ? activeColor : inactiveColor,
+            // Stroke를 두 배로 설정 (절반이 Fill에 가려지므로)
+            WebkitTextStroke: isActive
+                ? activeOutlineEnabled
+                    ? `${(activeOutlineThickness / 100) * 12}px ${activeOutlineColor}`
+                    : '0px transparent'
+                : inactiveOutlineEnabled
+                    ? `${(inactiveOutlineThickness / 100) * 12}px ${inactiveOutlineColor}`
+                    : '0px transparent',
+            paintOrder: 'stroke fill',
+        } as Properties
+    }, [
+        captionConfigState.activeColor,
+        captionConfigState.inactiveColor,
+        captionConfigState.isActiveOutlineEnabled,
+        captionConfigState.isInactiveOutlineEnabled,
+        captionConfigState.activeOutlineColor,
+        captionConfigState.inactiveOutlineColor,
+        captionConfigState.activeOutlineThickness,
+        captionConfigState.inactiveOutlineThickness,
+    ]);
+
+    const currentPairedSegmentDataList = useMemo(() => {
+        const currentSceneCaption = currentTime < captionDataList[0]?.startSec
+            ? captionDataList[0]
+            : captionDataList.find((captionData) => {
+                return currentTime >= captionData.startSec && currentTime <= captionData.endSec;
+            });
+
+        if (!currentSceneCaption) return null;
+
+        // 두 단어씩 묶기 (개별 단어 정보 유지)
+        const pairedSegments: PairedSegment[][] = []; // SubtitleSegment[1~2][]
+        const segments = currentSceneCaption.subtitleSegmentationList;
+
+        for (let index = 0; index < segments.length; index += 2) {
+            const hasSecondWord = index + 1 < segments.length;
+            const words = hasSecondWord
+                ? [segments[index], segments[index + 1]]
+                : [segments[index]];
+
+            const mappedWords = words.map((word, wordIndex) => {
+                const startSec = index === 0 && wordIndex === 0
+                    ? 0
+                    : word.startSec;
+
+                return {
+                    ...word,
+                    startSec: startSec,
+                    isActive: currentTime >= startSec && currentTime <= word.endSec,
+                }
+            })
+            pairedSegments.push(mappedWords);
+        }
+
+        // 현재 시간에 해당하는 세그먼트 찾기
+        return pairedSegments
+    }, [currentTime, captionDataList]);
+
+    const currentPairedSegmentData: PairedSegment[] | null = useMemo(() => {
+        if (!currentPairedSegmentDataList) return null;
+
+        return currentPairedSegmentDataList.find((pairedSegmentData) => {
+            return pairedSegmentData.some((segmentData) => {
+                return segmentData.isActive;
+            })
+        }) ?? null;
+    }, [currentPairedSegmentDataList]);
+
+    const onChangeCaptionHeight = useCallback((newCaptionHeight: number) => {
+        if (captionConfigState.captionHeight !== newCaptionHeight) {
+            onChangeCaptionConfigState({
+                ...captionConfigState,
+                captionHeight: newCaptionHeight,
+            });
+        }
+    }, [captionConfigState, onChangeCaptionConfigState]);
+
+    const formatTime = useCallback((seconds: number) => {
+        const mins = Math.floor(seconds / 60);
+        const secs = Math.floor(seconds % 60);
+        return `${mins}:${secs.toString().padStart(2, '0')}`;
+    }, []);
+
+    const onClickPlayAndPause = useCallback(async () => {
+        const activeVideoElement = videoRefs.current[activeSceneIndex];
+        const activeVoiceElement = voiceAudioRefs.current[activeSceneIndex];
+        const bgm = bgmAudioRef.current;
+
+        if (!activeVideoElement) return;
+
+        if (isPlaying) {
+            videoRefs.current.forEach(v => v?.pause());
+            voiceAudioRefs.current.forEach(a => a?.pause());
+            bgm?.pause();
+            setIsPlaying(false);
+        } else {
+            if (activeScene) {
+                const localOffset = currentTime - activeScene.startSec;
+                activeVideoElement.currentTime = localOffset;
+                if (activeVoiceElement) {
+                    activeVoiceElement.currentTime = localOffset;
+                }
+            }
+            
+            try {
+                await activeVideoElement.play();
+                if (activeSceneUrlData?.voiceUrl && activeVoiceElement) {
+                    await activeVoiceElement.play();
+                }
+                if (bgm && musicPlayConfig.audioUrl) {
+                    bgm.currentTime = currentTime + musicPlayConfig.startSec;
+                    await bgm.play();
+                }
+                setIsPlaying(true);
+            } catch (err) {
+                console.error("Play failed:", err);
+            }
+        }
+    }, [isPlaying, activeSceneIndex, activeScene, activeSceneUrlData, currentTime, musicPlayConfig]);
+
+    const recalculateVideoSize = useCallback((containerWidth: number, containerHeight: number) => {
+        const ratio = videoNaturalAspectRatioRef.current;
+        if (!ratio) return;
+
+        const isHorizontal = ratio > 1;
+
+        if (isHorizontal) {
+            const overhead = 160;
+            const newWidth = Math.max(Math.min(containerWidth - overhead, 850), 320);
+            const newHeight = Math.round(newWidth / ratio);
+            setVideoContainerWidth(newWidth);
+            setVideoContainerHeight(newHeight);
+        } else {
+            const overhead = 80;
+            const newHeight = Math.max(Math.min(containerHeight - overhead, 720), 300);
+            const newWidth = Math.round(newHeight * ratio);
+            setVideoContainerWidth(newWidth);
+            setVideoContainerHeight(newHeight);
+        }
+    }, []);
+
+    const onLoadedMetadata = useCallback(() => {
+        const video = videoRefs.current[0];
+        if (video) {
+            const videoNaturalWidth = video.videoWidth;
+            const videoNaturalHeight = video.videoHeight;
+
+            if (videoNaturalWidth > 0 && videoNaturalHeight > 0) {
+                videoNaturalAspectRatioRef.current = videoNaturalWidth / videoNaturalHeight;
+
+                if (containerRef.current) {
+                    recalculateVideoSize(
+                        containerRef.current.offsetWidth,
+                        containerRef.current.offsetHeight
+                    );
+                }
+            }
+        }
+        onFinishLoading();
+    }, [onFinishLoading, recalculateVideoSize]);
+
+    const updateTimelinePosition = useCallback(async (clientX: number, element: HTMLDivElement) => {
+        const bgm = bgmAudioRef.current;
+
+        const rect = element.getBoundingClientRect();
+        const clickX = Math.max(0, Math.min(clientX - rect.left, rect.width));
+        const percentage = clickX / rect.width;
+        const newVirtualTime = parseFloat((percentage * videoDuration).toFixed(3));
+
+        const targetSceneIndex = captionDataList.findIndex(
+            (scene) => newVirtualTime >= scene.startSec && newVirtualTime < scene.endSec
+        );
+        const actualSceneIndex = targetSceneIndex !== -1 ? targetSceneIndex : 0;
+        const targetScene = captionDataList[actualSceneIndex];
+        const targetUrlData = scenesUrlData.find(s => s.sceneNumber === targetScene?.sceneNumber);
+
+        const localOffset = newVirtualTime - targetScene.startSec;
+
+        // 다른 비디오들은 정지 및 리셋, 타겟 비디오 시간 동기화
+        videoRefs.current.forEach((v, idx) => {
+            if (!v) return;
+            if (idx === actualSceneIndex) {
+                v.currentTime = localOffset;
+                if (isPlaying) {
+                    v.play().catch(() => null);
+                }
+            } else {
+                v.pause();
+                v.currentTime = 0;
+            }
+        });
+
+        // 짝꿍 나레이션 오디오들 정지 및 리셋, 타겟 오디오 동기화
+        voiceAudioRefs.current.forEach((a, idx) => {
+            if (!a) return;
+            if (idx === actualSceneIndex) {
+                a.currentTime = localOffset;
+                if (isPlaying && targetUrlData?.voiceUrl) {
+                    a.play().catch(() => null);
+                }
+            } else {
+                a.pause();
+                a.currentTime = 0;
+            }
+        });
+
+        // 잠금 플래그를 타겟 인덱스로 동기화
+        lastSwitchedIndexRef.current = actualSceneIndex;
+
+        // BGM 동기화
+        if (bgm && musicPlayConfig.audioUrl) {
+            bgm.currentTime = newVirtualTime + musicPlayConfig.startSec;
+        }
+
+        onChangeCurrentTime(newVirtualTime);
+
+        if (isEnded) {
+            setIsEnded(false);
+        }
+    }, [videoDuration, isEnded, scenesUrlData, captionDataList, isPlaying, musicPlayConfig, onChangeCurrentTime]);
+
+    const onClickTimeline = useCallback((e: MouseEvent<HTMLDivElement>) => {
+        updateTimelinePosition(e.clientX, e.currentTarget);
+    }, [updateTimelinePosition]);
+
+    const onMouseDownTimeline = useCallback((e: MouseEvent<HTMLDivElement>) => {
+        setIsDraggingTimeline(true);
+        updateTimelinePosition(e.clientX, e.currentTarget);
+    }, [updateTimelinePosition]);
+
+    const onVideoEnded = useCallback((index: number) => {
+        if (index === activeSceneIndex) {
+            const isLastScene = index === captionDataList.length - 1;
+            if (isLastScene) {
+                setIsEnded(true);
+                setIsPlaying(false);
+            } else {
+                const nextSceneIndex = index + 1;
+                if (lastSwitchedIndexRef.current === nextSceneIndex) return;
+
+                // 다음 씬 재생 유도
+                const nextVideo = videoRefs.current[nextSceneIndex];
+                const nextVoice = voiceAudioRefs.current[nextSceneIndex];
+                const nextScene = captionDataList[nextSceneIndex];
+                const nextUrlData = scenesUrlData.find(s => s.sceneNumber === nextScene?.sceneNumber);
+                const bgm = bgmAudioRef.current;
+
+                if (nextVideo) {
+                    lastSwitchedIndexRef.current = nextSceneIndex;
+                    isTransitioningRef.current = true;
+                    
+                    // 현재 활성 비디오 및 오디오 일시 정지 (정지/호흡)
+                    const currentVideo = videoRefs.current[index];
+                    currentVideo?.pause();
+                    const currentVoice = voiceAudioRefs.current[index];
+                    currentVoice?.pause();
+                    bgm?.pause();
+
+                    nextVideo.currentTime = 0;
+                    if (nextVoice) {
+                        nextVoice.currentTime = 0;
+                    }
+                    
+                    const animDuration = 350;
+                    const animStartTime = performance.now();
+
+                    const executeResume = () => {
+                        nextVideo.play().catch(() => null);
+                        nextVoice?.play().catch(() => null);
+                        if (bgm && musicPlayConfig.audioUrl) {
+                            bgm.currentTime = nextScene.startSec + musicPlayConfig.startSec;
+                            bgm.play().catch(() => null);
+                        }
+                        currentTimeRef.current = nextScene.startSec;
+                        onChangeCurrentTime(nextScene.startSec);
+                        isTransitioningRef.current = false;
+                        setIsPlaying(true);
+                    };
+
+                    const handlePreloadComplete = () => {
+                        const elapsed = performance.now() - animStartTime;
+                        const remaining = animDuration - elapsed;
+
+                        if (remaining > 0) {
+                            nextVideo.pause();
+                            setTimeout(executeResume, remaining);
+                        } else {
+                            executeResume();
+                        }
+                    };
+
+                    nextVideo.play().then(() => {
+                        handlePreloadComplete();
+                    }).catch(() => {
+                        const onCanPlay = () => {
+                            nextVideo.removeEventListener('canplay', onCanPlay);
+                            handlePreloadComplete();
+                        };
+                        nextVideo.addEventListener('canplay', onCanPlay);
+                    });
+                }
+            }
+        }
+    }, [activeSceneIndex, captionDataList, scenesUrlData, musicPlayConfig, onChangeCurrentTime]);
+
+    const onClickReplay = useCallback(async () => {
+        const bgm = bgmAudioRef.current;
+        const firstVideo = videoRefs.current[0];
+        const firstVoice = voiceAudioRefs.current[0];
+
+        // 모든 비디오 일시정지 및 리셋
+        videoRefs.current.forEach(v => {
+            if (v) {
+                v.pause();
+                v.currentTime = 0;
+            }
+        });
+
+        // 모든 나레이션 일시정지 및 리셋
+        voiceAudioRefs.current.forEach(a => {
+            if (a) {
+                a.pause();
+                a.currentTime = 0;
+            }
+        });
+
+        if (firstVideo) {
+            firstVideo.currentTime = 0;
+        }
+        if (firstVoice) {
+            firstVoice.currentTime = 0;
+        }
+
+        // 씬 전환 잠금 플래그 초기화
+        lastSwitchedIndexRef.current = 0;
+        isTransitioningRef.current = false;
+
+        onChangeCurrentTime(0);
+        setIsEnded(false);
+
+        try {
+            if (firstVideo) {
+                await firstVideo.play();
+            }
+            if (firstVoice) {
+                await firstVoice.play();
+            }
+            if (bgm && musicPlayConfig.audioUrl) {
+                bgm.currentTime = musicPlayConfig.startSec;
+                await bgm.play();
+            }
+            setIsPlaying(true);
+        } catch (err) {
+            console.error("Replay failed:", err);
+        }
+    }, [captionDataList, scenesUrlData, musicPlayConfig, onChangeCurrentTime]);
+
+    const setCaptionRef = useCallback((node: HTMLParagraphElement | null) => {
+        captionRef.current = node;
+        if (node) {
+            const computedStyle = window.getComputedStyle(node);
+            const lineHeight = parseFloat(computedStyle.lineHeight);
+            const lineCount = Math.round(node.offsetHeight / lineHeight);
+
+            if (lineCount === 1 || lineCount === 2) {
+                setCaptionLineCount(lineCount);
+            }
+
+            onChangeCaptionHeight(node.offsetHeight);
+        }
+    }, [onChangeCaptionHeight]);
+
+    const progressPercentage = useMemo(() => {
+        return videoDuration > 0
+            ? (currentTime / videoDuration) * 100
+            : 0;
+    }, [currentTime, videoDuration]);
+
+    const timelineCurrentSec = useMemo(() => {
+        return formatTime(currentTime);
+    }, [currentTime, formatTime]);
+
+    const timelineEndSec = useMemo(() => {
+        return formatTime(videoDuration);
+    }, [videoDuration, formatTime]);
+
+    // Expose imperative methods to parent component
+    useImperativeHandle(ref, () => ({
+        seekTo: (time: number) => {
+            const bgm = bgmAudioRef.current;
+
+            const targetSceneIndex = captionDataList.findIndex(
+                (scene) => time >= scene.startSec && time < scene.endSec
+            );
+            const actualSceneIndex = targetSceneIndex !== -1 ? targetSceneIndex : 0;
+            const targetScene = captionDataList[actualSceneIndex];
+            const targetUrlData = scenesUrlData.find(s => s.sceneNumber === targetScene?.sceneNumber);
+
+            const localOffset = time - targetScene.startSec;
+
+            videoRefs.current.forEach((v, idx) => {
+                if (!v) return;
+                if (idx === actualSceneIndex) {
+                    v.currentTime = localOffset;
+                } else {
+                    v.pause();
+                    v.currentTime = 0;
+                }
+            });
+
+            voiceAudioRefs.current.forEach((a, idx) => {
+                if (!a) return;
+                if (idx === actualSceneIndex) {
+                    a.currentTime = localOffset;
+                    if (isPlaying && targetUrlData?.voiceUrl) {
+                        a.play().catch(() => null);
+                    }
+                } else {
+                    a.pause();
+                    a.currentTime = 0;
+                }
+            });
+
+            // 잠금 플래그를 타겟 인덱스로 동기화
+            lastSwitchedIndexRef.current = actualSceneIndex;
+
+            if (bgm && musicPlayConfig.audioUrl) {
+                bgm.currentTime = time + musicPlayConfig.startSec;
+            }
+
+            onChangeCurrentTime(time);
+        },
+        play: () => {
+            const bgm = bgmAudioRef.current;
+            const activeVideoElement = videoRefs.current[activeSceneIndex];
+            const activeVoiceElement = voiceAudioRefs.current[activeSceneIndex];
+
+            activeVideoElement?.play().catch(() => null);
+            activeVoiceElement?.play().catch(() => null);
+            bgm?.play().catch(() => null);
+            setIsPlaying(true);
+        },
+        pause: () => {
+            const bgm = bgmAudioRef.current;
+
+            videoRefs.current.forEach(v => v?.pause());
+            voiceAudioRefs.current.forEach(a => a?.pause());
+            bgm?.pause();
+            setIsPlaying(false);
+        },
+    }), [captionDataList, scenesUrlData, activeSceneIndex, isPlaying, musicPlayConfig, onChangeCurrentTime]);
+
+    // Measure caption height when fontSize changes
+    useEffect(() => {
+        if (captionRef.current) {
+            onChangeCaptionHeight(captionRef.current.offsetHeight);
+        }
+    }, [fontSize, onChangeCaptionHeight]);
+
+
+
+    useEffect(() => {
+        if (!isDraggingTimeline) return;
+
+        const onMouseMove = (e: globalThis.MouseEvent) => {
+            if (timelineRef.current) {
+                updateTimelinePosition(e.clientX, timelineRef.current);
+            }
+        };
+
+        const onMouseUp = () => {
+            setIsDraggingTimeline(false);
+        };
+
+        document.addEventListener('mousemove', onMouseMove);
+        document.addEventListener('mouseup', onMouseUp);
+
+        return () => {
+            document.removeEventListener('mousemove', onMouseMove);
+            document.removeEventListener('mouseup', onMouseUp);
+        };
+    }, [isDraggingTimeline, updateTimelinePosition]);
+
+    // 드래그 중일 때 다른 요소들의 상호작용 차단
+    useEffect(() => {
+        if (isDraggingTimeline) {
+            document.body.style.userSelect = 'none';
+        } else {
+            document.body.style.userSelect = '';
+        }
+
+        return () => {
+            document.body.style.userSelect = '';
+        };
+    }, [isDraggingTimeline]);
+
+
+
+    // 비디오 패널 실제 높이를 실시간으로 측정하여 부모에게 보고 (하단 음악 슬라이더 렌더링용)
+    useEffect(() => {
+        if (containerRef.current) {
+            onChangeVideoPanelContainerHeight(containerRef.current.offsetHeight);
+        }
+    }, [onChangeVideoPanelContainerHeight, videoContainerHeight]);
+
+    // requestAnimationFrame 기반 가상 타임라인 제어 루프 (Stale Closure 차단)
+    useEffect(() => {
+        if (!isPlaying) return;
+
+        let animationFrameId: number;
+        let lastTime = performance.now();
+
+        const updateLoop = () => {
+            // 스크롤 애니메이션 전환 중에는 가상 시간 흐름과 자막을 완전 동결(Freeze)시킴
+            if (isTransitioningRef.current) {
+                lastTime = performance.now();
+                animationFrameId = requestAnimationFrame(updateLoop);
+                return;
+            }
+
+            const bgm = bgmAudioRef.current;
+            const activeVideoElement = videoRefs.current[activeSceneIndex];
+            const activeVoiceElement = voiceAudioRefs.current[activeSceneIndex];
+
+            if (!activeVideoElement) return;
+
+            const now = performance.now();
+            const elapsed = (now - lastTime) / 1000;
+            lastTime = now;
+
+            // 가상 타임라인 시간 계산 (최신 ref를 참조하여 누적함으로써 Stale Closure 방지)
+            let nextVirtualTime = currentTimeRef.current + elapsed * activeVideoElement.playbackRate;
+
+            if (nextVirtualTime >= videoDuration) {
+                nextVirtualTime = videoDuration;
+                videoRefs.current.forEach(v => v?.pause());
+                voiceAudioRefs.current.forEach(a => a?.pause());
+                bgm?.pause();
+                setIsEnded(true);
+                setIsPlaying(false);
+                onChangeCurrentTime(videoDuration);
+                return;
+            }
+
+            // 씬 교차 시점 감지
+            if (activeScene && nextVirtualTime >= activeScene.endSec) {
+                const nextSceneIndex = activeSceneIndex + 1;
+                
+                if (lastSwitchedIndexRef.current !== nextSceneIndex) {
+                    const nextVideoElement = videoRefs.current[nextSceneIndex];
+                    const nextVoiceElement = voiceAudioRefs.current[nextSceneIndex];
+                    const nextScene = captionDataList[nextSceneIndex];
+                    const nextUrlData = scenesUrlData.find(s => s.sceneNumber === nextScene?.sceneNumber);
+
+                    if (nextVideoElement && nextScene && nextUrlData) {
+                        // 1. 스위칭 전 잠금 즉시 세팅 & 가상 시간 동결 가동
+                        lastSwitchedIndexRef.current = nextSceneIndex;
+                        isTransitioningRef.current = true;
+                        
+                        // 2. 현재 활성 비디오 및 음악 일시정지 (정돈)
+                        activeVideoElement.pause();
+                        activeVoiceElement?.pause();
+                        bgm?.pause();
+                        
+                        // 3. 선제적 로드 타이밍 제어
+                        nextVideoElement.currentTime = 0;
+                        if (nextVoiceElement) {
+                            nextVoiceElement.currentTime = 0;
+                        }
+                        const animDuration = 350; // 스크롤 애니메이션 시간
+                        const animStartTime = performance.now();
+
+                        const executeResume = () => {
+                            nextVideoElement.play().catch(() => null);
+                            nextVoiceElement?.play().catch(() => null);
+                            if (bgm && musicPlayConfig.audioUrl) {
+                                bgm.currentTime = nextScene.startSec + musicPlayConfig.startSec;
+                                bgm.play().catch(() => null);
+                            }
+                            currentTimeRef.current = nextScene.startSec;
+                            onChangeCurrentTime(nextScene.startSec);
+                            isTransitioningRef.current = false;
+                            setIsPlaying(true);
+                        };
+
+                        const handlePreloadComplete = () => {
+                            const elapsed = performance.now() - animStartTime;
+                            const remaining = animDuration - elapsed;
+
+                            if (remaining > 0) {
+                                // 애니메이션 도중에 로딩이 먼저 완료됨 ➡️ 350ms 끝날 때까지 정지하고 대기 후 재생!
+                                nextVideoElement.pause();
+                                setTimeout(executeResume, remaining);
+                            } else {
+                                // 애니메이션이 완료된 시점에 로딩이 끝남 ➡️ 즉시 재생!
+                                executeResume();
+                            }
+                        };
+
+                        // 비디오 재생 예약 (로딩 기동)
+                        nextVideoElement.play().then(() => {
+                            handlePreloadComplete();
+                        }).catch(() => {
+                            // 즉시 재생 실패 시 canplay 이벤트를 감지하여 애니메이션 이후 시점과 매핑
+                            const onCanPlay = () => {
+                                nextVideoElement.removeEventListener('canplay', onCanPlay);
+                                handlePreloadComplete();
+                            };
+                            nextVideoElement.addEventListener('canplay', onCanPlay);
+                        });
+                    }
+                }
+            } else {
+                // 평상시: 보이스오버 싱크 강제 일치
+                if (activeVoiceElement && !activeVoiceElement.paused && Math.abs(activeVoiceElement.currentTime - activeVideoElement.currentTime) > 0.15) {
+                    activeVoiceElement.currentTime = activeVideoElement.currentTime;
+                }
+            }
+
+            currentTimeRef.current = nextVirtualTime;
+            onChangeCurrentTime(parseFloat(nextVirtualTime.toFixed(3)));
+            animationFrameId = requestAnimationFrame(updateLoop);
+        };
+
+        animationFrameId = requestAnimationFrame(updateLoop);
+
+        return () => {
+            if (animationFrameId) cancelAnimationFrame(animationFrameId);
+        };
+    }, [isPlaying, activeSceneIndex, activeScene, captionDataList, scenesUrlData, videoDuration, onChangeCurrentTime]);
+
+    // BGM 볼륨 동기화
+    useEffect(() => {
+        const bgm = bgmAudioRef.current;
+        if (!bgm || musicPlayConfig.volume === undefined) return;
+        bgm.volume = musicPlayConfig.volume;
+    }, [musicPlayConfig.volume]);
+
+    useEffect(() => {
+        onChangeVideoPlayerUIData({
+            videoWidth: videoContainerWidth,
+            videoHeight: videoContainerHeight,
+            captionAreaTop: captionAreaTop,
+            captionAreaVerticalPadding: 10,
+            captionOneLineHeight: captionLineCount === 1
+                ? captionHeight
+                : captionHeight / 2,
+        })
+    }, [videoContainerWidth, videoContainerHeight, captionAreaTop, captionLineCount, captionHeight, onChangeVideoPlayerUIData]);
+
+    return (
+        <div
+            className="h-full bg-zinc-950 flex flex-col relative"
+            style={{ pointerEvents: isDraggingTimeline ? 'none' : 'auto' }}
+            ref={containerRef}
+        >
+            <div className="flex flex-row p-8 justify-center items-center flex-1 z-10 w-full relative">
+                {/* Video Area (우측 빈 공간 전체를 100% 활용하는 3D 카드 병풍 뷰포트) */}
+                <div
+                    className="relative w-full h-[620px] overflow-hidden flex items-center justify-center"
+                    onMouseEnter={() => setIsHoveringVideo(true)}
+                    onMouseLeave={() => setIsHoveringVideo(false)}
+                >
+                    {scenesUrlData && scenesUrlData.length > 0 ? (
+                        <div className="relative w-full h-full">
+                            {/* 병풍 Carousel 비디오 정렬 루프 */}
+                            {scenesUrlData.map((sceneUrl, index) => {
+                                const diff = index - activeSceneIndex;
+                                const isActive = diff === 0;
+                                const isPrev = diff === -1;
+                                const isNext = diff === 1;
+                                const isVisible = Math.abs(diff) <= 1;
+
+                                // 3D 카드 오버랩 튜닝 비례 상수 (55%만 옆으로 이동시켜 45% 중첩 유도)
+                                const overlapFactor = 0.55;
+                                const shiftX = diff * (videoContainerWidth * overlapFactor);
+
+                                // left-1/2 top-1/2 absolute 기준의 정밀한 calc 트랜스폼 계산
+                                let transformStyle = '';
+                                if (isActive) {
+                                    transformStyle = `translate3d(calc(-50% + ${shiftX}px), -50%, 0) scale(1)`;
+                                } else if (isPrev || isNext) {
+                                    transformStyle = `translate3d(calc(-50% + ${shiftX}px), -50%, 0) scale(0.85)`;
+                                } else {
+                                    // 화면 바깥에 대기할 먼 씬
+                                    const farShiftX = diff > 0 
+                                        ? (videoContainerWidth * overlapFactor) * 2.2 
+                                        : -(videoContainerWidth * overlapFactor) * 2.2;
+                                    transformStyle = `translate3d(calc(-50% + ${farShiftX}px), -50%, 0) scale(0.7)`;
+                                }
+
+                                return (
+                                    <div
+                                        key={sceneUrl.sceneNumber}
+                                        className="absolute top-1/2 left-1/2 transition-all duration-300 ease-out origin-center flex items-center justify-center bg-zinc-900 rounded-xl overflow-hidden border border-white/10 shadow-xl"
+                                        style={{
+                                            width: `${videoContainerWidth}px`,
+                                            height: `${videoContainerHeight}px`,
+                                            transform: transformStyle,
+                                            opacity: isActive ? 1 : isVisible ? 0.35 : 0,
+                                            zIndex: isActive ? 30 : isVisible ? 10 : 0,
+                                            pointerEvents: isActive ? 'auto' : 'none',
+                                        }}
+                                    >
+                                        <video
+                                            ref={(el) => {
+                                                videoRefs.current[index] = el;
+                                            }}
+                                            src={sceneUrl.videoProcessedUrl || ''}
+                                            preload="auto"
+                                            className="w-full h-full object-contain"
+                                            onLoadedMetadata={index === 0 ? onLoadedMetadata : undefined}
+                                            onEnded={() => onVideoEnded(index)}
+                                        />
+                                        <audio
+                                            ref={(el) => {
+                                                voiceAudioRefs.current[index] = el;
+                                            }}
+                                            src={sceneUrl.voiceUrl || ''}
+                                            preload="auto"
+                                        />
+                                    </div>
+                                );
+                            })}
+
+                            <audio
+                                ref={bgmAudioRef}
+                                src={musicPlayConfig?.audioUrl || ''}
+                                preload="auto"
+                            />
+
+                            {/* 컨트롤 및 타임라인 오버레이 (정중앙 메인 비디오 위에 얹힘 - zIndex 최상위 50 부여) */}
+                            <div className="absolute top-1/2 left-1/2 pointer-events-none" style={{ width: `${videoContainerWidth}px`, height: `${videoContainerHeight}px`, transform: 'translate(-50%, -50%)', zIndex: 50 }}>
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent pointer-events-none rounded-xl"></div>
+                                <div className={`absolute inset-0 flex items-center justify-center z-30 pointer-events-none transition-opacity duration-200 ${
+                                    (currentTime === 0 || isHoveringVideo || isEnded) ? 'opacity-100' : 'opacity-0'
+                                }`}>
+                                    <button
+                                        onClick={isEnded ? onClickReplay : onClickPlayAndPause}
+                                        className="w-16 h-16 bg-black/40 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-black/60 transition-all border border-white/10 pointer-events-auto shadow-xl"
+                                    >
+                                        {isEnded ? (
+                                            <RotateCcw size={24} className="text-zinc-100" />
+                                        ) : isPlaying ? (
+                                            <Pause size={24} className="text-zinc-100" />
+                                        ) : (
+                                            <Play size={24} className="text-zinc-100 ml-1" />
+                                        )}
+                                    </button>
+                                </div>
+                                <div className="absolute bottom-4 left-4 right-4 z-30">
+                                    <div className="flex items-center justify-between text-zinc-300 text-xs font-medium tracking-wide mb-2 px-1">
+                                        <span>{timelineCurrentSec}</span>
+                                        <span>{timelineEndSec}</span>
+                                    </div>
+                                    <div
+                                        ref={timelineRef}
+                                        className="w-full h-1.5 bg-white/20 rounded-full cursor-pointer relative hover:h-2 transition-all duration-200 group/timeline"
+                                        onClick={onClickTimeline}
+                                        onMouseDown={onMouseDownTimeline}
+                                        style={{ pointerEvents: 'auto' }}
+                                    >
+                                        <div
+                                            className="h-full bg-indigo-500 rounded-full relative"
+                                            style={{
+                                                width: `${progressPercentage}%`,
+                                                transition: 'none',
+                                            }}
+                                        >
+                                            <div
+                                                className="absolute top-1/2 left-full w-0 h-0 group-hover/timeline:w-3 group-hover/timeline:h-3 bg-white rounded-full shadow-lg pointer-events-none transition-all duration-200"
+                                                style={{
+                                                    transform: 'translate(-50%, -50%)',
+                                                }}
+                                            ></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="w-full h-full flex items-center justify-center text-zinc-500 bg-zinc-900 rounded-2xl border border-white/5">
+                            <p className="text-[13px] font-medium">No video generated yet</p>
+                        </div>
+                    )}
+
+                    {/* Caption Area (백분율 고정 배치로 극단적인 렉 최적화 - 중앙 메인 비디오 가두리) */}
+                    {isCaptionEnabled && fontSize > 0 && <div
+                        className="absolute flex flex-col z-40 pointer-events-none"
+                        style={{
+                            top: `${captionConfigState.captionPosition}%`,
+                            left: '50%',
+                            transform: 'translate(-50%, -50%)',
+                            width: `${videoContainerWidth}px`,
+                            height: 'fit-content',
+                        }}
+                    >
+                        {/* Caption Overlay */}
+                        {currentPairedSegmentData ? (
+                            <div
+                                className="mx-auto z-20"
+                                style={{
+                                    width: `${videoContainerWidth}px`,
+                                    height: `${twoLineTextHeight}px`
+                                }}
+                            >
+                                <p
+                                    ref={setCaptionRef}
+                                    className="text-center leading-tight px-2 cursor-default"
+                                    style={captionStyle}
+                                >
+                                    {currentPairedSegmentData.map((pairedSegmentData, index) => {
+                                        return <span
+                                            key={index}
+                                            style={{
+                                                ...getPairedCaptionStyle(pairedSegmentData.isActive),
+                                            }}
+                                        >
+                                            {pairedSegmentData.word
+                                                .replaceAll('—', '...')
+                                                .replace(/["\u201C\u201D]/g, '')
+                                            }{(index + 1) % 2 === 1 ? ' ' : ''}
+                                        </span>
+                                    })}
+                                </p>
+                            </div>
+                        ) : <div style={{ height: `${twoLineTextHeight}px` }} />}
+                    </div>}
+                </div>
+            </div>
+        </div>
+    );
+});
+
+VideoPlayerPanel.displayName = 'VideoPlayerPanel';
+
+export default memo(VideoPlayerPanel);

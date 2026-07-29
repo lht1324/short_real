@@ -1,0 +1,82 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { getIsValidRequestC2S } from '@/lib/utils/getIsValidRequest';
+import { getNextBaseResponse } from '@/lib/utils/getNextBaseResponse';
+import { createSupabaseServiceRoleClient } from "@/lib/supabase/supabaseServiceRole";
+
+/**
+ * GET /api/video/export/tiktok/autopilot/oauth
+ * Initiates TikTok OAuth process for an Autopilot series.
+ * Now includes a check for existing tokens to provide a better UX.
+ */
+export async function GET(request: NextRequest) {
+    const { isValidRequest, user } = await getIsValidRequestC2S();
+
+    if (!isValidRequest || !user || !user.id) {
+        return getNextBaseResponse({
+            success: false,
+            status: 401,
+            error: 'Unauthorized. Sign-in required.',
+        });
+    }
+
+    const searchParams = request.nextUrl.searchParams;
+    const seriesIdRaw = searchParams.get('seriesId') || searchParams.get('taskId');
+    const seriesId = (seriesIdRaw === 'null' || seriesIdRaw === 'undefined') ? null : seriesIdRaw;
+
+    if (!seriesId) {
+        return getNextBaseResponse({
+            success: false,
+            status: 400,
+            error: 'Missing required query param: seriesId',
+        });
+    }
+
+    const supabase = createSupabaseServiceRoleClient();
+
+    try {
+        // 1. autopilot_data에서 해당 시리즈의 토큰 ID 조회
+        const { data: autopilot } = await supabase
+            .from('autopilot_data')
+            .select('tiktok_token_id')
+            .eq('id', seriesId)
+            .single();
+
+        let existingToken = null;
+        if (autopilot?.tiktok_token_id) {
+            const { data: token } = await supabase
+                .from('user_tiktok_tokens')
+                .select('refresh_token')
+                .eq('user_id', user.id)
+                .eq('id', autopilot.tiktok_token_id)
+                .maybeSingle();
+            existingToken = token;
+        }
+
+        if (existingToken?.refresh_token) {
+            // 이미 연동되어 있다면 즉시 오토파일럿 설정 페이지로 리다이렉트
+            return NextResponse.redirect(`${process.env.BASE_URL}/workspace/autopilot`);
+        }
+
+        // 2. 연동되지 않은 경우 틱톡 OAuth 프로세스 시작
+        const params = new URLSearchParams({
+            client_key: process.env.TIKTOK_CLIENT_KEY!,
+            scope: 'user.info.basic,video.publish',
+            response_type: 'code',
+            redirect_uri: `${process.env.BASE_URL}/callback/tiktok`,
+            state: JSON.stringify({ 
+                seriesId: seriesId, 
+                userId: user.id, 
+                mode: 'autopilot' 
+            }),
+        });
+
+        return NextResponse.redirect(`https://www.tiktok.com/v2/auth/authorize?${params}`);
+    } catch (error) {
+        console.error('TikTok autopilot auth initiate error:', error);
+        return getNextBaseResponse({
+            success: false,
+            status: 500,
+            error: 'Internal server error',
+        });
+    }
+}

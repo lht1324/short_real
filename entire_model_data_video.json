@@ -1,0 +1,2967 @@
+[
+  {
+    "endpoint_id": "fal-ai/kling-video/v3/pro/image-to-video",
+    "provider": "fal.ai",
+    "display_name": "Kling Video v3 Image to Video [Pro]",
+    "description": "Kling 3.0 Pro: Top-tier image-to-video with cinematic visuals, fluid motion, and native audio generation, with custom element support.",
+    "category": "image-to-video",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/0a8cfd08/Ji4e0i6Afbeql3Wr5UTz6_ab60b14661424612bf19059e97e996a5.jpg",
+    "model_url": "https://fal.run/fal-ai/kling-video/v3/pro/image-to-video",
+    "ai_model_price_list": [],
+    "is_valuable": false,
+    "supported_durations": [],
+    "pricingText": "None"
+  },
+  {
+    "endpoint_id": "bytedance/seedance-2.0/image-to-video",
+    "provider": "fal.ai",
+    "display_name": "Seedance 2 Image to Video",
+    "description": "ByteDance's most advanced image-to-video model. Animate still images into cinematic video with synchronized audio, start and end frame control, and motion prompts.",
+    "category": "image-to-video",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/0a9460f5/jQItvS4Jif9E_7aLum2Bk_58643cd65d6143c19c101c10ba0d2bae.jpg",
+    "model_url": "https://fal.run/bytedance/seedance-2.0/image-to-video",
+    "ai_model_price_list": [],
+    "is_valuable": false,
+    "supported_durations": [
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15
+    ],
+    "pricingText": "For every second of 720p video you generated, you will be charged $0.3024/second. Your request will cost $0.014 per 1000 tokens. The number of tokens is given by (height of output video * width of output video * duration * 24) / 1024."
+  },
+  {
+    "endpoint_id": "bytedance/seedance-2.0/reference-to-video",
+    "provider": "fal.ai",
+    "display_name": "Seedance 2 Reference to Video",
+    "description": "ByteDance's most advanced reference-to-video model. Generate video from up to 9 images, 3 videos, and 3 audio clips with native audio and cinematic camera control.",
+    "category": "image-to-video",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/0a9460e8/feWTER1QDLrosJ7ZsmKU7_7f3a598b345c4f9eb424d4fb6cf8f6b8.jpg",
+    "model_url": "https://fal.run/bytedance/seedance-2.0/reference-to-video",
+    "ai_model_price_list": [],
+    "is_valuable": false,
+    "supported_durations": [
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15
+    ],
+    "pricingText": "For every second of 720p video you generated, you will be charged $0.3024/second. Your request will cost $0.014 per 1000 tokens. The number of tokens is given by (height of output video * width of output video * ( input duration + output duration) * 24) / 1024. If video inputs are provided the price is multiplied by 0.6. With video inputs and 720p resolution the price is $0.1814 per second."
+  },
+  {
+    "endpoint_id": "fal-ai/kling-video/v2.5-turbo/pro/image-to-video",
+    "provider": "fal.ai",
+    "display_name": "Kling Video",
+    "description": "Kling 2.5 Turbo Pro: Top-tier image-to-video generation with unparalleled motion fluidity, cinematic visuals, and exceptional prompt precision.",
+    "category": "image-to-video",
+    "status": "active",
+    "thumbnail_url": "https://v3.fal.media/files/rabbit/2KNBk1qkmEBXK0FLgfHCl_ee4bb1ada254433bbab296893a8636e3.jpg",
+    "model_url": "https://fal.run/fal-ai/kling-video/v2.5-turbo/pro/image-to-video",
+    "ai_model_price_list": [],
+    "is_valuable": false,
+    "supported_durations": [
+      5,
+      10
+    ],
+    "pricingText": "For 5s video your request will cost $0.35. For every additional second you will be charged $0.07."
+  },
+  {
+    "endpoint_id": "fal-ai/kling-video/v2.6/pro/image-to-video",
+    "provider": "fal.ai",
+    "display_name": "Kling Video v2.6 Image to Video",
+    "description": "Kling 2.6 Pro: Top-tier image-to-video with cinematic visuals, fluid motion, and native audio generation.",
+    "category": "image-to-video",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/0a84aa9c/tRb6fibztV71jrhSPfdqP_3359db6ee74a4e4e9fb408a00b02e114.jpg",
+    "model_url": "https://fal.run/fal-ai/kling-video/v2.6/pro/image-to-video",
+    "ai_model_price_list": [],
+    "is_valuable": false,
+    "supported_durations": [
+      5,
+      10
+    ],
+    "pricingText": "Videos generated without audio cost $0.07 per second. Videos with native audio cost $0.14 per second, and videos with native audio and voice control cost $0.168 per second. For example, a 5-second video with audio costs $0.70, while a 10-second video with audio and voice control costs $1.68"
+  },
+  {
+    "endpoint_id": "xai/grok-imagine-video/image-to-video",
+    "provider": "fal.ai",
+    "display_name": "Grok Imagine Video",
+    "description": "Generate videos from images with audio using xAI's Grok Imagine Video model. ",
+    "category": "image-to-video",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/0a8a0dd0/3wXg362MQ0pczC2ZQFBfW_c153dd469fd14b75bbd9fa6d27f1b63e.jpg",
+    "model_url": "https://fal.run/xai/grok-imagine-video/image-to-video",
+    "ai_model_price_list": [
+      {
+        "unit": "720p",
+        "price_per_unit": 0.07
+      }
+    ],
+    "is_valuable": true,
+    "supported_durations": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15
+    ],
+    "pricingText": "A 6s 480p video will cost $0.302 ($0.05 per second of 480p video + $0.002 for image input). At an output resolution of 480p, every second costs $0.05, and at 720p, every second costs $0.07."
+  },
+  {
+    "endpoint_id": "fal-ai/kling-video/v3/standard/image-to-video",
+    "provider": "fal.ai",
+    "display_name": "Kling Video v3 Image to Video [Standard]",
+    "description": "Kling 3.0 Standard: Top-tier image-to-video with cinematic visuals, fluid motion, and native audio generation, with custom element support.",
+    "category": "image-to-video",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/0a8cfcdb/TywpxxNj5_vDG8AUw3Yum_e2172b5c00e64a91a434ab5a38e496f0.jpg",
+    "model_url": "https://fal.run/fal-ai/kling-video/v3/standard/image-to-video",
+    "ai_model_price_list": [],
+    "is_valuable": false,
+    "supported_durations": [],
+    "pricingText": "None"
+  },
+  {
+    "endpoint_id": "fal-ai/veo3.1/fast/image-to-video",
+    "provider": "fal.ai",
+    "display_name": "Veo 3.1 Fast",
+    "description": "Generate videos from your image prompts using Veo 3.1 fast.",
+    "category": "image-to-video",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/tiger/CcVVXXOo5stpgsAJV_6UO_74aa2dbdc79447e7ae69b533a7863038.jpg",
+    "model_url": "https://fal.run/fal-ai/veo3.1/fast/image-to-video",
+    "ai_model_price_list": [
+      {
+        "unit": "720p",
+        "price_per_unit": 0.1
+      },
+      {
+        "unit": "1080p",
+        "price_per_unit": 0.1
+      }
+    ],
+    "is_valuable": true,
+    "supported_durations": [
+      4,
+      6,
+      8
+    ],
+    "pricingText": "For every second of video you generate you will be charged $0.10 without audio or $0.15 with audio for 720p or 1080p. At 4k, you will be charged $0.30 per second without audio, or $0.35 with. For example, a 5 second video at 1080p with audio on will cost $0.75."
+  },
+  {
+    "endpoint_id": "fal-ai/veo3.1/image-to-video",
+    "provider": "fal.ai",
+    "display_name": "Veo 3.1",
+    "description": "Veo 3.1 is the latest state-of-the art video generation model from Google DeepMind",
+    "category": "image-to-video",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/zebra/G680VZS5VpMMQO1pSt2uj_dfbae33f738344aa98a62cf2022c427c.jpg",
+    "model_url": "https://fal.run/fal-ai/veo3.1/image-to-video",
+    "ai_model_price_list": [
+      {
+        "unit": "720p",
+        "price_per_unit": 0.2
+      },
+      {
+        "unit": "1080p",
+        "price_per_unit": 0.2
+      }
+    ],
+    "is_valuable": true,
+    "supported_durations": [
+      4,
+      6,
+      8
+    ],
+    "pricingText": "For every second of video you generate you will be charged $0.20 without audio or $0.40 with audio for 720p or 1080p. At 4k, you will be charged $0.40 per second without audio, or $0.60 with. For example, a 5 second video at 1080p with audio on will cost $2.00."
+  },
+  {
+    "endpoint_id": "bytedance/seedance-2.0/fast/image-to-video",
+    "provider": "fal.ai",
+    "display_name": "Seedance 2.0 Fast Image to Video",
+    "description": "ByteDance's most advanced image-to-video model, fast tier. Lower latency and cost with synchronized audio, start and end frame control, and motion prompts.",
+    "category": "image-to-video",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/0a9460fd/T3K2mVx51M-pOewqVAb1g_408d1bcc1efc4cfa902293ac5b1f378d.jpg",
+    "model_url": "https://fal.run/bytedance/seedance-2.0/fast/image-to-video",
+    "ai_model_price_list": [
+      {
+        "unit": "720p",
+        "price_per_unit": 0.2419
+      }
+    ],
+    "is_valuable": true,
+    "supported_durations": [
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15
+    ],
+    "pricingText": "For every second of 720p video you generated, you will be charged $0.2419/second. Your request will cost $0.0112 per 1000 tokens. The number of tokens is given by (height of output video * width of output video * duration * 24) / 1024."
+  },
+  {
+    "endpoint_id": "fal-ai/bytedance/seedance/v1.5/pro/image-to-video",
+    "provider": "fal.ai",
+    "display_name": "Bytedance Seedance V1.5 Pro Image To Video",
+    "description": "Generate videos with audio with Seedance 1.5 (supports start & end frame) ",
+    "category": "image-to-video",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/0a876c74/q6J8OsmO08A3zCFGCtsUj_cb48562eeef345b29269689dd4f95671.jpg",
+    "model_url": "https://fal.run/fal-ai/bytedance/seedance/v1.5/pro/image-to-video",
+    "ai_model_price_list": [
+      {
+        "unit": "720p",
+        "price_per_unit": 0.05195
+      },
+      {
+        "unit": "1080p",
+        "price_per_unit": 0.11688
+      }
+    ],
+    "is_valuable": true,
+    "supported_durations": [
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12
+    ],
+    "pricingText": "Each 720p 5 second video with audio costs roughly $0.26. For other resolutions, 1 million video tokens with audio costs $2.4. Without audio, the price is 1.2 per millition tokens. tokens(video) = (height x width x FPS x duration) / 1024."
+  },
+  {
+    "endpoint_id": "bytedance/seedance-2.0/fast/reference-to-video",
+    "provider": "fal.ai",
+    "display_name": "Seedance 2.0 Fast Reference to Video",
+    "description": "ByteDance's most advanced reference-to-video model, fast tier. Lower latency and cost with up to 9 images, 3 videos, and 3 audio clips as inputs.",
+    "category": "image-to-video",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/0a9460b6/VCevn6m8ZHXjzngj0GP01_3ef8a526ee82468c9b2154bc6d10764e.jpg",
+    "model_url": "https://fal.run/bytedance/seedance-2.0/fast/reference-to-video",
+    "ai_model_price_list": [
+      {
+        "unit": "720p",
+        "price_per_unit": 0.2419
+      }
+    ],
+    "is_valuable": true,
+    "supported_durations": [
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15
+    ],
+    "pricingText": "For every second of 720p video you generated, you will be charged $0.2419/second. Your request will cost $0.0112 per 1000 tokens. The number of tokens is given by (height of output video * width of output video * (input video duration + output video duration) * 24) / 1024. If video inputs are provided the price is multiplied by 0.6. With video inputs and 720p resolution the price is $0.14515 per second."
+  },
+  {
+    "endpoint_id": "alibaba/happy-horse/image-to-video",
+    "provider": "fal.ai",
+    "display_name": "Happy Horse",
+    "description": "Alibaba's #1-ranked Happy Horse 1.0 — generate 1080p video with synchronized native audio and multilingual lip-sync from text prompts or images.",
+    "category": "image-to-video",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/0a975556/jB--KHf1a0VK5l_IML8nX_9a0d18b9f1cf4292a33907002e02a1ba.jpg",
+    "model_url": "https://fal.run/alibaba/happy-horse/image-to-video",
+    "ai_model_price_list": [
+      {
+        "unit": "720p",
+        "price_per_unit": 0.14
+      },
+      {
+        "unit": "1080p",
+        "price_per_unit": 0.28
+      }
+    ],
+    "is_valuable": true,
+    "supported_durations": [
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15
+    ],
+    "pricingText": "For every second of 720p video you generated, you will be charged $0.14/second. For 1080p video you will be charged $0.28/second."
+  },
+  {
+    "endpoint_id": "fal-ai/kling-video/o3/pro/image-to-video",
+    "provider": "fal.ai",
+    "display_name": "Kling O3 Image to Video [Pro]",
+    "description": "Generate a video by taking a start frame and an end frame, animating the transition between them while following text-driven style and scene guidance.",
+    "category": "image-to-video",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/0a8cfcae/X9YwYvvnjSHOx_K4G8s69_395daf17841f4097a7cff719154bfad4.jpg",
+    "model_url": "https://fal.run/fal-ai/kling-video/o3/pro/image-to-video",
+    "ai_model_price_list": [],
+    "is_valuable": false,
+    "supported_durations": [
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15
+    ],
+    "pricingText": "For every second of video you generated, you will be charged $0.112 (audio off) or $0.14 (audio on). For example, a 5s video with audio on will cost $0.70"
+  },
+  {
+    "endpoint_id": "fal-ai/kling-video/v2.1/standard/image-to-video",
+    "provider": "fal.ai",
+    "display_name": "Kling 2.1 (standard)",
+    "description": "Kling 2.1 Standard is a cost-efficient endpoint for the Kling 2.1 model, delivering high-quality image-to-video generation \n\n",
+    "category": "image-to-video",
+    "status": "active",
+    "thumbnail_url": "https://v3.fal.media/files/elephant/5Yt8D9tl-IaGQ-6czSXL1_HHQ_VCby6xP_DFLkQQLpV_3c8622214c4c4ac29b4b64e157746507.jpg",
+    "model_url": "https://fal.run/fal-ai/kling-video/v2.1/standard/image-to-video",
+    "ai_model_price_list": [],
+    "is_valuable": false,
+    "supported_durations": [
+      5,
+      10
+    ],
+    "pricingText": "For 5s video your request will cost $0.28. For every additional second you will be charged $0.056."
+  },
+  {
+    "endpoint_id": "fal-ai/bytedance/seedance/v1/pro/image-to-video",
+    "provider": "fal.ai",
+    "display_name": "Seedance 1.0 Pro",
+    "description": "Seedance 1.0 Pro, a high quality video generation model developed by Bytedance.",
+    "category": "image-to-video",
+    "status": "active",
+    "thumbnail_url": "https://storage.googleapis.com/fal_cdn/fal/for%20videos-3.jpg",
+    "model_url": "https://fal.run/fal-ai/bytedance/seedance/v1/pro/image-to-video",
+    "ai_model_price_list": [
+      {
+        "unit": "720p",
+        "price_per_unit": 0.0075
+      },
+      {
+        "unit": "1080p",
+        "price_per_unit": 0.124
+      }
+    ],
+    "is_valuable": true,
+    "supported_durations": [
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12
+    ],
+    "pricingText": "Each 1080p 5 second video costs roughly $0.62. For other resolutions, 1 million video tokens costs $2.5. tokens(video) = (height x width x FPS x duration) / 1024."
+  },
+  {
+    "endpoint_id": "fal-ai/sora-2/image-to-video",
+    "provider": "fal.ai",
+    "display_name": "Sora 2",
+    "description": "Image-to-video endpoint for Sora 2, OpenAI's state-of-the-art video model capable of creating richly detailed, dynamic clips with audio from natural language or images.",
+    "category": "image-to-video",
+    "status": "active",
+    "thumbnail_url": "https://v3.fal.media/files/kangaroo/8n-yLTQvW5q0BEvW0H2J3_8233c7e127124290b6dfa965f44ebc79.jpg",
+    "model_url": "https://fal.run/fal-ai/sora-2/image-to-video",
+    "ai_model_price_list": [
+      {
+        "unit": "720p",
+        "price_per_unit": 0.1
+      }
+    ],
+    "is_valuable": false,
+    "supported_durations": [
+      4,
+      8,
+      12,
+      16,
+      20
+    ],
+    "pricingText": "The pricing is $0.1/s for Sora 2."
+  },
+  {
+    "endpoint_id": "fal-ai/minimax/hailuo-02/standard/image-to-video",
+    "provider": "fal.ai",
+    "display_name": "MiniMax Hailuo 02 [Standard] (Image to Video)",
+    "description": "MiniMax Hailuo-02 Image To Video API (Standard, 768p, 512p): Advanced image-to-video generation model with 768p and 512p resolutions",
+    "category": "image-to-video",
+    "status": "active",
+    "thumbnail_url": "https://storage.googleapis.com/fal_cdn/fal/Upscale.jpg",
+    "model_url": "https://fal.run/fal-ai/minimax/hailuo-02/standard/image-to-video",
+    "ai_model_price_list": [
+      {
+        "unit": "720p",
+        "price_per_unit": 0.045
+      }
+    ],
+    "is_valuable": true,
+    "supported_durations": [
+      6,
+      10
+    ],
+    "pricingText": "For each second of video generated at 768P, it will cost $0.045/sec. For each second of video generated at 512P, it will cost roughly $0.017/sec. A single 6 second 768p video will cost $0.27/video."
+  },
+  {
+    "endpoint_id": "fal-ai/veo3.1/lite/image-to-video",
+    "provider": "fal.ai",
+    "display_name": "Veo3.1 Lite Image to Video",
+    "description": "Veo 3.1 Lite balances practical utility with professional capabilities, supporting Text-to-Video and Image-to-Video",
+    "category": "image-to-video",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/0a946101/jRTUp9enYBh3ypsb0Ux0a_fe5ca5e28e704976bfff127c5d23f6a9.jpg",
+    "model_url": "https://fal.run/fal-ai/veo3.1/lite/image-to-video",
+    "ai_model_price_list": [
+      {
+        "unit": "720p",
+        "price_per_unit": 0.03
+      },
+      {
+        "unit": "1080p",
+        "price_per_unit": 0.05
+      }
+    ],
+    "is_valuable": true,
+    "supported_durations": [
+      4,
+      6,
+      8
+    ],
+    "pricingText": "Waiting for your input...\nFor every second of video you generate you will be charged $0.05 for 720p with audio, $0.03 for 720p without audio, $0.08 for 1080p with audio or $0.05 for 1080p without audio. For example, a 4 second video at 720p with audio will cost $0.20."
+  },
+  {
+    "endpoint_id": "fal-ai/kling-video/o3/standard/image-to-video",
+    "provider": "fal.ai",
+    "display_name": "Kling O3 Image to Video [Pro]",
+    "description": "Generate a video by taking a start frame and an end frame, animating the transition between them while following text-driven style and scene guidance.",
+    "category": "image-to-video",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/0a8d2007/gV_LMXNrguqRaDB9sLqir_b5d36b36de5a40bdb5cb2cd3f8af29d7.jpg",
+    "model_url": "https://fal.run/fal-ai/kling-video/o3/standard/image-to-video",
+    "ai_model_price_list": [
+      {
+        "unit": "720p",
+        "price_per_unit": 0.084
+      },
+      {
+        "unit": "1080p",
+        "price_per_unit": 0.084
+      }
+    ],
+    "is_valuable": true,
+    "supported_durations": [
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15
+    ],
+    "pricingText": "For every second of video you generated, you will be charged $0.084 (audio off) or $0.112 (audio on). For example, a 5s video with audio on will cost $0.56."
+  },
+  {
+    "endpoint_id": "fal-ai/kling-video/o3/pro/reference-to-video",
+    "provider": "fal.ai",
+    "display_name": "Kling O3 Reference to Video [Pro]",
+    "description": "Transform images, elements, and text into consistent, high-quality video scenes, ensuring stable character identity, object details, and environments.",
+    "category": "image-to-video",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/0a8cfcbc/DK-poq8omK9dUDtf0KCbr_41eb518e86be4c40ac1864a4a4fba2be.jpg",
+    "model_url": "https://fal.run/fal-ai/kling-video/o3/pro/reference-to-video",
+    "ai_model_price_list": [],
+    "is_valuable": false,
+    "supported_durations": [],
+    "pricingText": "None"
+  },
+  {
+    "endpoint_id": "fal-ai/kling-video/v2.5-turbo/standard/image-to-video",
+    "provider": "fal.ai",
+    "display_name": "Kling Video",
+    "description": "Kling 2.5 Turbo Standard: Top-tier image-to-video generation with unparalleled motion fluidity, cinematic visuals, and exceptional prompt precision.",
+    "category": "image-to-video",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/elephant/BJ1ZIdeClgqnUTW9XgEUS_d00e816ad20849ae9f92b735358d610d.jpg",
+    "model_url": "https://fal.run/fal-ai/kling-video/v2.5-turbo/standard/image-to-video",
+    "ai_model_price_list": [],
+    "is_valuable": false,
+    "supported_durations": [
+      5,
+      10
+    ],
+    "pricingText": "For 5s video your request will cost $0.21. For every additional second you will be charged $0.042."
+  },
+  {
+    "endpoint_id": "alibaba/happy-horse/reference-to-video",
+    "provider": "fal.ai",
+    "display_name": "Happy Horse",
+    "description": "Generate 1080p video with synchronized native audio from a text prompt and references. Aspect ratios: 16:9, 9:16, 1:1, 4:3, 3:4. Duration: 3–15s.",
+    "category": "image-to-video",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/0a97e906/Sv4Xl8Vak5gLNHrBjEMMO_03a850ef23034759adf81fb7121bf35a.jpg",
+    "model_url": "https://fal.run/alibaba/happy-horse/reference-to-video",
+    "ai_model_price_list": [
+      {
+        "unit": "720p",
+        "price_per_unit": 0.14
+      },
+      {
+        "unit": "1080p",
+        "price_per_unit": 0.28
+      }
+    ],
+    "is_valuable": true,
+    "supported_durations": [
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15
+    ],
+    "pricingText": "For every second of 720p video you generated, you will be charged $0.14/second. For 1080p video you will be charged $0.28/second."
+  },
+  {
+    "endpoint_id": "fal-ai/kling-video/v2.1/pro/image-to-video",
+    "provider": "fal.ai",
+    "display_name": "Kling 2.1 (pro)",
+    "description": "Kling 2.1 Pro is an advanced endpoint for the Kling 2.1 model, offering professional-grade videos with enhanced visual fidelity, precise camera movements, and dynamic motion control, perfect for cinematic storytelling.\n\n",
+    "category": "image-to-video",
+    "status": "active",
+    "thumbnail_url": "https://storage.googleapis.com/fal_cdn/fal/Upscale-1.jpeg",
+    "model_url": "https://fal.run/fal-ai/kling-video/v2.1/pro/image-to-video",
+    "ai_model_price_list": [
+      {
+        "unit": "720p",
+        "price_per_unit": 0.098
+      },
+      {
+        "unit": "1080p",
+        "price_per_unit": 0.098
+      }
+    ],
+    "is_valuable": true,
+    "supported_durations": [
+      5,
+      10
+    ],
+    "pricingText": "For 5s video your request will cost $0.49. For every additional second you will be charged $0.098."
+  },
+  {
+    "endpoint_id": "fal-ai/veo3.1/fast/first-last-frame-to-video",
+    "provider": "fal.ai",
+    "display_name": "Veo 3.1 Fast",
+    "description": "Generate videos from a first/last frame using Google's Veo 3.1 Fast",
+    "category": "image-to-video",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/rabbit/8tRJcj1P_EtIcpbdkP3m7_f9984366e4054165a8919d0671acbcb3.jpg",
+    "model_url": "https://fal.run/fal-ai/veo3.1/fast/first-last-frame-to-video",
+    "ai_model_price_list": [],
+    "is_valuable": false,
+    "supported_durations": [],
+    "pricingText": "For every second of video you generate you will be charged $0.10 without audio or $0.15 with audio for 720p or 1080p. At 4k, you will be charged $0.30 per second without audio, or $0.35 with. For example, a 5 second video at 1080p with audio on will cost $0.75."
+  },
+  {
+    "endpoint_id": "veed/fabric-1.0",
+    "provider": "fal.ai",
+    "display_name": "Fabric 1.0",
+    "description": "VEED Fabric 1.0 is an image-to-video API that turns any image into a talking video",
+    "category": "image-to-video",
+    "status": "active",
+    "thumbnail_url": "https://v3.fal.media/files/zebra/t3xqW_dkjrcRc2vmUS0EN_10a217d1a5ba4488be7bb1967189ef65.jpg",
+    "model_url": "https://fal.run/veed/fabric-1.0",
+    "ai_model_price_list": [],
+    "is_valuable": false,
+    "supported_durations": [],
+    "pricingText": "480p - $0.08 per second, 720p - $0.15 per second"
+  },
+  {
+    "endpoint_id": "fal-ai/veo3.1/first-last-frame-to-video",
+    "provider": "fal.ai",
+    "display_name": "Veo 3.1",
+    "description": "Generate videos from a first and last framed using Google's Veo 3.1",
+    "category": "image-to-video",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/monkey/5YSsAJ8Fbwuj97_9vBiTW.jpg",
+    "model_url": "https://fal.run/fal-ai/veo3.1/first-last-frame-to-video",
+    "ai_model_price_list": [],
+    "is_valuable": false,
+    "supported_durations": [],
+    "pricingText": "For every second of video you generate you will be charged $0.20 without audio or $0.40 with audio for 720p or 1080p. At 4k, you will be charged $0.40 per second without audio, or $0.60 with. For example, a 5 second video at 1080p with audio on will cost $2.00."
+  },
+  {
+    "endpoint_id": "fal-ai/wan/v2.7/image-to-video",
+    "provider": "fal.ai",
+    "display_name": "Wan",
+    "description": "Wan 2.7 is the latest generation AI video model, delivering enhanced motion smoothness, superior scene fidelity, and greater visual coherence.",
+    "category": "image-to-video",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/0a94048a/7oM_ro6v_fh2pGHvBbpyc_9db05a8e25034dcbb16db5192560d4af.jpg",
+    "model_url": "https://fal.run/fal-ai/wan/v2.7/image-to-video",
+    "ai_model_price_list": [
+      {
+        "unit": "720p",
+        "price_per_unit": 0.1
+      },
+      {
+        "unit": "1080p",
+        "price_per_unit": 0.15
+      }
+    ],
+    "is_valuable": true,
+    "supported_durations": [
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15
+    ],
+    "pricingText": "Waiting for your input...\nYour request will cost $0.1 per second for 720p resolution. For 1080p your request will cost $0.15 per second."
+  },
+  {
+    "endpoint_id": "fal-ai/pixverse/v6/image-to-video",
+    "provider": "fal.ai",
+    "display_name": "PixVerse V6 Image To Video",
+    "description": "Pixverse's latest V6 Model",
+    "category": "image-to-video",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/0a94048a/NbqGsBzItNNlvMmlYie7E_7d241b8764b64124b42edbcd5da51960.jpg",
+    "model_url": "https://fal.run/fal-ai/pixverse/v6/image-to-video",
+    "ai_model_price_list": [
+      {
+        "unit": "720p",
+        "price_per_unit": 0.045
+      },
+      {
+        "unit": "1080p",
+        "price_per_unit": 0.09
+      }
+    ],
+    "is_valuable": true,
+    "supported_durations": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15
+    ],
+    "pricingText": "Billing is calculated per second of video generated. For 360p, your request will cost $0.025 per second without audio and $0.035 per second with audio. For 540p, it will cost $0.035 per second without audio and $0.045 per second with audio. For 720p, it will cost $0.045 per second without audio and $0.060 per second with audio. For 1080p, it will cost $0.090 per second without audio and $0.115 per second with audio. For $1 you can run this model for approximately 40 seconds at 360p (no audio) or about 11 seconds at 1080p (no audio)."
+  },
+  {
+    "endpoint_id": "fal-ai/kling-video/o3/standard/reference-to-video",
+    "provider": "fal.ai",
+    "display_name": "Kling O3 Reference to Video [Standard]",
+    "description": "Transform images, elements, and text into consistent, high-quality video scenes, ensuring stable character identity, object details, and environments.",
+    "category": "image-to-video",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/0a8d1fe9/PkQKfXd6hVfEW3ckzhBep_2bab784ff390459d971d45c8da8f6a8c.jpg",
+    "model_url": "https://fal.run/fal-ai/kling-video/o3/standard/reference-to-video",
+    "ai_model_price_list": [],
+    "is_valuable": false,
+    "supported_durations": [],
+    "pricingText": "None"
+  },
+  {
+    "endpoint_id": "fal-ai/veo3.1/reference-to-video",
+    "provider": "fal.ai",
+    "display_name": "Veo 3.1",
+    "description": "Generate Videos from images using Google's Veo 3.1",
+    "category": "image-to-video",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/tiger/IwzOGSbzp6e8N00QuLtFF_129417bb24f248298e95c3fa2b1b82fb.jpg",
+    "model_url": "https://fal.run/fal-ai/veo3.1/reference-to-video",
+    "ai_model_price_list": [],
+    "is_valuable": false,
+    "supported_durations": [
+      8
+    ],
+    "pricingText": "For every second of video you generate you will be charged $0.20 without audio or $0.40 with audio for 720p or 1080p. At 4k, you will be charged $0.40 per second without audio, or $0.60 with audio. For example, 8 second video at 1080p with audio on will cost $3.20"
+  },
+  {
+    "endpoint_id": "fal-ai/sora-2/image-to-video/pro",
+    "provider": "fal.ai",
+    "display_name": "Sora 2",
+    "description": "Image-to-video endpoint for Sora 2 Pro, OpenAI's state-of-the-art video model capable of creating richly detailed, dynamic clips with audio from natural language or images.",
+    "category": "image-to-video",
+    "status": "active",
+    "thumbnail_url": "https://v3.fal.media/files/koala/19D6ouLhOE6EKGbUTnfzf_b958de62e48c4356a1c58abef534060b.jpg",
+    "model_url": "https://fal.run/fal-ai/sora-2/image-to-video/pro",
+    "ai_model_price_list": [
+      {
+        "unit": "720p",
+        "price_per_unit": 0.3
+      },
+      {
+        "unit": "1080p",
+        "price_per_unit": 0.7
+      }
+    ],
+    "is_valuable": true,
+    "supported_durations": [
+      4,
+      8,
+      12,
+      16,
+      20
+    ],
+    "pricingText": "The pricing is $0.30/s for 720p, $0.50/s for legacy 1080p (1792x1024 or 1024x1792) or $0.70/s for true 1080p (1920x1080 or 1080x1920)."
+  },
+  {
+    "endpoint_id": "fal-ai/wan-25-preview/image-to-video",
+    "provider": "fal.ai",
+    "display_name": "Wan 2.5 Image to Video",
+    "description": "Wan 2.5 image-to-video model.",
+    "category": "image-to-video",
+    "status": "active",
+    "thumbnail_url": "https://v3.fal.media/files/rabbit/jryVrAZdQNdLdN_4rTlN7_9bebc94cb69a482fb4d948bdd06d6a5e.jpg",
+    "model_url": "https://fal.run/fal-ai/wan-25-preview/image-to-video",
+    "ai_model_price_list": [],
+    "is_valuable": false,
+    "supported_durations": [
+      5,
+      10
+    ],
+    "pricingText": "Your request will cost $0.05 per second for 480p, $0.10 per second for 720p, $0.15 per second for 1080p."
+  },
+  {
+    "endpoint_id": "fal-ai/veo3/fast/image-to-video",
+    "provider": "fal.ai",
+    "display_name": "Veo 3 Fast [Image to Video]",
+    "description": "Now with a 50% price drop. Generate videos from your image prompts using Veo 3 fast.",
+    "category": "image-to-video",
+    "status": "active",
+    "thumbnail_url": "https://storage.googleapis.com/fal_cdn/fal/for%20videos-1.jpg",
+    "model_url": "https://fal.run/fal-ai/veo3/fast/image-to-video",
+    "ai_model_price_list": [],
+    "is_valuable": false,
+    "supported_durations": [
+      4,
+      6,
+      8
+    ],
+    "pricingText": "For every second of video you generated, you will be charged $0.10 (audio off) or $0.15 (audio on). For example, a 5s video with audio on will cost $0.75."
+  },
+  {
+    "endpoint_id": "xai/grok-imagine-video/reference-to-video",
+    "provider": "fal.ai",
+    "display_name": "Grok Imagine Reference to Video",
+    "description": "Generate videos using multiple reference images with xAI's Grok Imagine video model",
+    "category": "image-to-video",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/0a937ab6/vW4pJVZGWgLX9tSTMZPiz_314f49c562014442a5a64eed32ab69ae.jpg",
+    "model_url": "https://fal.run/xai/grok-imagine-video/reference-to-video",
+    "ai_model_price_list": [],
+    "is_valuable": false,
+    "supported_durations": [],
+    "pricingText": "A 6s 480p video will cost $0.302 ($0.05 per second of 480p video + $0.002 for image input). At an output resolution of 480p, every second costs $0.05, and at 720p, every second costs $0.07."
+  },
+  {
+    "endpoint_id": "fal-ai/bytedance/seedance/v1/pro/fast/image-to-video",
+    "provider": "fal.ai",
+    "display_name": "Bytedance Seedance V1 Pro Fast Image To Video",
+    "description": "Image to Video endpoint for Seedance 1.0 Pro Fast, a next-generation video model designed to deliver maximum performance at minimal cost",
+    "category": "image-to-video",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/kangaroo/OHnRF5artsmMtvv5DikBL_0d31376b45fc47c28ad70e15245ca449.jpg",
+    "model_url": "https://fal.run/fal-ai/bytedance/seedance/v1/pro/fast/image-to-video",
+    "ai_model_price_list": [
+      {
+        "unit": "720p",
+        "price_per_unit": 0.02164
+      },
+      {
+        "unit": "1080p",
+        "price_per_unit": 0.04869
+      }
+    ],
+    "is_valuable": true,
+    "supported_durations": [
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12
+    ],
+    "pricingText": "Each 1080p 5 second video costs roughly $0.243. For other resolutions, 1 million video tokens costs $1.0. tokens(video) = (height x width x FPS x duration) / 1024."
+  },
+  {
+    "endpoint_id": "wan/v2.6/image-to-video",
+    "provider": "fal.ai",
+    "display_name": "Wan v2.6 Image to Video",
+    "description": "Wan 2.6 image-to-video model.",
+    "category": "image-to-video",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/0a86d2e1/KF3SBRRkzqdothbEr6ANe.png",
+    "model_url": "https://fal.run/wan/v2.6/image-to-video",
+    "ai_model_price_list": [],
+    "is_valuable": false,
+    "supported_durations": [
+      5,
+      10,
+      15
+    ],
+    "pricingText": "Your request will cost $0.10 per second for 720p, $0.15 per second for 1080p."
+  },
+  {
+    "endpoint_id": "fal-ai/veo3/image-to-video",
+    "provider": "fal.ai",
+    "display_name": "Veo3",
+    "description": "Veo 3 is the latest state-of-the art video generation model from Google DeepMind",
+    "category": "image-to-video",
+    "status": "active",
+    "thumbnail_url": "https://storage.googleapis.com/fal_cdn/fal/for%20videos-5.jpg",
+    "model_url": "https://fal.run/fal-ai/veo3/image-to-video",
+    "ai_model_price_list": [
+      {
+        "unit": "720p",
+        "price_per_unit": 0.2
+      },
+      {
+        "unit": "1080p",
+        "price_per_unit": 0.2
+      }
+    ],
+    "is_valuable": false,
+    "supported_durations": [
+      4,
+      6,
+      8
+    ],
+    "pricingText": "For every second of video you generated, you will be charged $0.20 (audio off) or $0.40 (audio on). For example, a 5s video with audio on will cost $2."
+  },
+  {
+    "endpoint_id": "fal-ai/kling-video/v2.1/master/image-to-video",
+    "provider": "fal.ai",
+    "display_name": "Kling 2.1 Master",
+    "description": "Kling 2.1 Master: The premium endpoint for Kling 2.1, designed for top-tier image-to-video generation with unparalleled motion fluidity, cinematic visuals, and exceptional prompt precision.\n\n",
+    "category": "image-to-video",
+    "status": "active",
+    "thumbnail_url": "https://storage.googleapis.com/fal_cdn/fal/Upscale-5.jpeg",
+    "model_url": "https://fal.run/fal-ai/kling-video/v2.1/master/image-to-video",
+    "ai_model_price_list": [],
+    "is_valuable": false,
+    "supported_durations": [
+      5,
+      10
+    ],
+    "pricingText": "For 5s video your request will cost $1.40. For every additional second you will be charged $0.28."
+  },
+  {
+    "endpoint_id": "fal-ai/kling-video/v3/4k/image-to-video",
+    "provider": "fal.ai",
+    "display_name": "Kling Video",
+    "description": "Kling's Native 4K is a video generation model that directly outputs professional-grade 4K video in one step, eliminating the need for post-production upscaling",
+    "category": "image-to-video",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/0a9740b3/ctjfWfLHCPzYgYUcWgTAz_ea95e9bfce584107b6937050fa127cca.jpg",
+    "model_url": "https://fal.run/fal-ai/kling-video/v3/4k/image-to-video",
+    "ai_model_price_list": [],
+    "is_valuable": false,
+    "supported_durations": [],
+    "pricingText": "None"
+  },
+  {
+    "endpoint_id": "fal-ai/wan/v2.2-a14b/image-to-video/turbo",
+    "provider": "fal.ai",
+    "display_name": "Wan",
+    "description": "Wan-2.2 Turbo image-to-video is a video model that generates high-quality videos with high visual quality and motion diversity from text prompts. ",
+    "category": "image-to-video",
+    "status": "active",
+    "thumbnail_url": "https://storage.googleapis.com/fal_cdn/fal/Sound-1.jpg",
+    "model_url": "https://fal.run/fal-ai/wan/v2.2-a14b/image-to-video/turbo",
+    "ai_model_price_list": [
+      {
+        "unit": "720p",
+        "price_per_unit": 0.1
+      }
+    ],
+    "is_valuable": true,
+    "supported_durations": [
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12
+    ],
+    "pricingText": "Your request will cost $0.10 per video for 720p, $0.075 per video for 580p, $0.05 per video for 480p."
+  },
+  {
+    "endpoint_id": "fal-ai/ltx-2.3/image-to-video/fast",
+    "provider": "fal.ai",
+    "display_name": "LTX 2.3 Video Fast",
+    "description": "LTX-2.3 is a high-quality, fast AI video model available in Pro and Fast variants for text-to-video, image-to-video, and audio-to-video.",
+    "category": "image-to-video",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/0a90deec/VLgiT5pFEJA28BXrrulvj_7d7b24f447f945ffab1acb33ae27d9b9.jpg",
+    "model_url": "https://fal.run/fal-ai/ltx-2.3/image-to-video/fast",
+    "ai_model_price_list": [],
+    "is_valuable": false,
+    "supported_durations": [],
+    "pricingText": "None"
+  },
+  {
+    "endpoint_id": "fal-ai/wan/v2.2-a14b/image-to-video",
+    "provider": "fal.ai",
+    "display_name": "Wan v2.2 A14B",
+    "description": "fal-ai/wan/v2.2-A14B/image-to-video",
+    "category": "image-to-video",
+    "status": "active",
+    "thumbnail_url": "https://v3.fal.media/files/penguin/xWl1TIQn-uRe7BsctByJk_3e01d1a4f7ff488c9483be0d81f5a3cc.jpg",
+    "model_url": "https://fal.run/fal-ai/wan/v2.2-a14B/image-to-video",
+    "ai_model_price_list": [],
+    "is_valuable": false,
+    "supported_durations": [],
+    "pricingText": "None"
+  },
+  {
+    "endpoint_id": "fal-ai/kling-video/o1/image-to-video",
+    "provider": "fal.ai",
+    "display_name": "Kling O1 First Frame Last Frame to Video [Pro]",
+    "description": "Generate a video by taking a start frame and an end frame, animating the transition between them while following text-driven style and scene guidance.",
+    "category": "image-to-video",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/monkey/fPJwa1EtpB5bYyqS2u7us_ddd5fec670b149288123785cd5ee6e54.jpg",
+    "model_url": "https://fal.run/fal-ai/kling-video/o1/image-to-video",
+    "ai_model_price_list": [],
+    "is_valuable": false,
+    "supported_durations": [
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10
+    ],
+    "pricingText": "Your request will cost $0.112 per second."
+  },
+  {
+    "endpoint_id": "fal-ai/minimax/hailuo-02/pro/image-to-video",
+    "provider": "fal.ai",
+    "display_name": "MiniMax Hailuo 02 [Pro] (Image to Video)",
+    "description": "MiniMax Hailuo-02 Image To Video API (Pro, 1080p): Advanced image-to-video generation model with 1080p resolution",
+    "category": "image-to-video",
+    "status": "active",
+    "thumbnail_url": "https://storage.googleapis.com/fal_cdn/fal/Upscale-1.jpeg",
+    "model_url": "https://fal.run/fal-ai/minimax/hailuo-02/pro/image-to-video",
+    "ai_model_price_list": [],
+    "is_valuable": false,
+    "supported_durations": [],
+    "pricingText": "For each second of video generated, it will cost $0.08/sec. A single 6 second video will cost $0.48/video."
+  },
+  {
+    "endpoint_id": "fal-ai/kling-video/ai-avatar/v2/pro",
+    "provider": "fal.ai",
+    "display_name": "Kling AI Avatar v2 Pro",
+    "description": "Kling AI Avatar v2 Pro: The premium endpoint for creating avatar videos with realistic humans, animals, cartoons, or stylized characters",
+    "category": "image-to-video",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/0a84f36f/CYuWetfKsuQC0MR6G4EG8_cd62fa685e9844aaaf086c293eddb2ee.jpg",
+    "model_url": "https://fal.run/fal-ai/kling-video/ai-avatar/v2/pro",
+    "ai_model_price_list": [],
+    "is_valuable": false,
+    "supported_durations": [],
+    "pricingText": "Your request will cost $0.115 per second."
+  },
+  {
+    "endpoint_id": "fal-ai/bytedance/omnihuman/v1.5",
+    "provider": "fal.ai",
+    "display_name": "Bytedance Omnihuman V1.5",
+    "description": "Omnihuman v1.5 is a new and improved version of Omnihuman. It generates video using an image of a human figure paired with an audio file. It produces vivid, high-quality videos where the character’s emotions and movements maintain a strong correlation with the audio.",
+    "category": "image-to-video",
+    "status": "active",
+    "thumbnail_url": "https://v3.fal.media/files/penguin/E4JFEyBXM1DccJUOvp5_e_6414b61bc2e141edb34671e5308addef.jpg",
+    "model_url": "https://fal.run/fal-ai/bytedance/omnihuman/v1.5",
+    "ai_model_price_list": [],
+    "is_valuable": false,
+    "supported_durations": [],
+    "pricingText": "Your request will cost $0.16 per second."
+  },
+  {
+    "endpoint_id": "fal-ai/kling-video/ai-avatar/v2/standard",
+    "provider": "fal.ai",
+    "display_name": "Kling AI Avatar v2 Standard",
+    "description": "Kling AI Avatar v2 Standard:  Endpoint for creating avatar videos with realistic humans, animals, cartoons, or stylized characters",
+    "category": "image-to-video",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/0a84f39a/V_Zy58fLpOlS1jN3balTm_bf4c62c984b34a1597340c007fac8fe8.jpg",
+    "model_url": "https://fal.run/fal-ai/kling-video/ai-avatar/v2/standard",
+    "ai_model_price_list": [],
+    "is_valuable": false,
+    "supported_durations": [],
+    "pricingText": "Your request will cost $0.0562 per second."
+  },
+  {
+    "endpoint_id": "fal-ai/heygen/avatar4/image-to-video",
+    "provider": "fal.ai",
+    "display_name": "Heygen",
+    "description": "Heygen Photo Avatar 4 Model",
+    "category": "image-to-video",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/0a90145c/8wK3ckSYxnnVDeNdGTbc8_4c2266798c21413da1f19c6026d5df52.jpg",
+    "model_url": "https://fal.run/fal-ai/heygen/avatar4/image-to-video",
+    "ai_model_price_list": [],
+    "is_valuable": false,
+    "supported_durations": [],
+    "pricingText": "Your request will cost $0.1 per output video second."
+  },
+  {
+    "endpoint_id": "fal-ai/ltx-2.3/image-to-video",
+    "provider": "fal.ai",
+    "display_name": "LTX 2.3 Video Pro",
+    "description": "LTX-2.3 is a high-quality, fast AI video model available in Pro and Fast variants for text-to-video, image-to-video, and audio-to-video.",
+    "category": "image-to-video",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/0a90ded1/KHsHxOVl1jWRMKZRuGWOz_391501da7abf4cbda1dd04894882d967.jpg",
+    "model_url": "https://fal.run/fal-ai/ltx-2.3/image-to-video",
+    "ai_model_price_list": [],
+    "is_valuable": false,
+    "supported_durations": [],
+    "pricingText": "None"
+  },
+  {
+    "endpoint_id": "fal-ai/minimax/hailuo-2.3/pro/image-to-video",
+    "provider": "fal.ai",
+    "display_name": "MiniMax Hailuo 2.3 [Pro] (Image to Video)",
+    "description": "MiniMax Hailuo-2.3 Image To Video API (Pro, 1080p): Advanced image-to-video generation model with 1080p resolution",
+    "category": "image-to-video",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/elephant/tFrccsrBCt7X_80Je77Ie_a073f11dc9354f5eab801768841430a9.jpg",
+    "model_url": "https://fal.run/fal-ai/minimax/hailuo-2.3/pro/image-to-video",
+    "ai_model_price_list": [],
+    "is_valuable": false,
+    "supported_durations": [],
+    "pricingText": "Your request will cost $0.49 per video generation."
+  },
+  {
+    "endpoint_id": "fal-ai/veo3.1/lite/first-last-frame-to-video",
+    "provider": "fal.ai",
+    "display_name": "Veo3.1 Lite FLF",
+    "description": "Veo 3.1 Lite balances practical utility with professional capabilities, supporting Text-to-Video and Image-to-Video",
+    "category": "image-to-video",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/0a9460ff/_H3biJgSOvAGtxsxEVvCo_509e251f717a47cd9b5bad4a878551cd.jpg",
+    "model_url": "https://fal.run/fal-ai/veo3.1/lite/first-last-frame-to-video",
+    "ai_model_price_list": [],
+    "is_valuable": false,
+    "supported_durations": [],
+    "pricingText": "Waiting for your input...\nFor every second of video you generate you will be charged $0.05 for 720p with audio, $0.03 for 720p without audio, $0.08 for 1080p with audio or $0.05 for 1080p without audio. For example, a 4 second video at 720p with audio will cost $0.20."
+  },
+  {
+    "endpoint_id": "fal-ai/minimax/hailuo-2.3/standard/image-to-video",
+    "provider": "fal.ai",
+    "display_name": "MiniMax Hailuo 2.3 [Standard] (Image to Video)",
+    "description": "MiniMax Hailuo-2.3 Image To Video API (Standard, 768p): Advanced image-to-video generation model with 768p resolution",
+    "category": "image-to-video",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/zebra/7kDvX2hsHnnUu9mSt-I_C_3a18467c2b234f6590e01edd53840f2d.jpg",
+    "model_url": "https://fal.run/fal-ai/minimax/hailuo-2.3/standard/image-to-video",
+    "ai_model_price_list": [],
+    "is_valuable": false,
+    "supported_durations": [],
+    "pricingText": "Your request will cost $0.28 per 6 second video generation, and a $0.56 per 10 second video generation."
+  },
+  {
+    "endpoint_id": "fal-ai/minimax/hailuo-2.3-fast/standard/image-to-video",
+    "provider": "fal.ai",
+    "display_name": "MiniMax Hailuo 2.3 Fast [Standard] (Image to Video)",
+    "description": "MiniMax Hailuo-2.3-Fast Image To Video API (Standard, 768p): Advanced fast image-to-video generation model with 768p resolution",
+    "category": "image-to-video",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/penguin/wEXBG5qZxdJ1Ed5P-EWYT_c69665fc168a437bb53d99ae8534eabe.jpg",
+    "model_url": "https://fal.run/fal-ai/minimax/hailuo-2.3-fast/standard/image-to-video",
+    "ai_model_price_list": [],
+    "is_valuable": false,
+    "supported_durations": [
+      6,
+      10
+    ],
+    "pricingText": "Your request will cost $0.19 per 6 second video generation, and a $0.32 per 10 second video generation."
+  },
+  {
+    "endpoint_id": "fal-ai/creatify/aurora",
+    "provider": "fal.ai",
+    "display_name": "Creatify Aurora",
+    "description": "Generate high fidelity, studio quality videos of your avatar speaking or singing using the Aurora from Creatify team!",
+    "category": "image-to-video",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/0a85dac5/xLlxwj9XXOpVjGF9iUvla_d44dd53425ac4f94911ec73fa6119fc8.jpg",
+    "model_url": "https://fal.run/fal-ai/creatify/aurora",
+    "ai_model_price_list": [],
+    "is_valuable": false,
+    "supported_durations": [],
+    "pricingText": "Your request will cost $0.07 per video second for 480p, $0.14 per video second for 720p generation. Video seconds will be rounded upwards, meaning that a generation with an output video of 9.4 seconds will be billed as a 10 second video."
+  },
+  {
+    "endpoint_id": "fal-ai/vidu/q3/image-to-video",
+    "provider": "fal.ai",
+    "display_name": "Vidu",
+    "description": "Vidu's latest Q3 pro models.",
+    "category": "image-to-video",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/0a8c915a/He8Pvpz77hcWVcUYC5hRZ_98109f8630944133a904fad6fe3a701d.jpg",
+    "model_url": "https://fal.run/fal-ai/vidu/q3/image-to-video",
+    "ai_model_price_list": [],
+    "is_valuable": false,
+    "supported_durations": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16
+    ],
+    "pricingText": "Your request will cost 0.07 $ per video second for 360p and 540 p, cost will be 2.2x for 720p and 1080p resolution."
+  },
+  {
+    "endpoint_id": "fal-ai/wan/v2.7/reference-to-video",
+    "provider": "fal.ai",
+    "display_name": "Wan 2.7 Reference to Video",
+    "description": "Wan 2.7 is the latest generation AI video model, delivering enhanced motion smoothness, superior scene fidelity, and greater visual coherence.",
+    "category": "image-to-video",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/0a940488/7aXOy6uHTo2EHtaZX89Uj_f2a95842752d4ef999d2b00006960480.jpg",
+    "model_url": "https://fal.run/fal-ai/wan/v2.7/reference-to-video",
+    "ai_model_price_list": [
+      {
+        "unit": "720p",
+        "price_per_unit": 0.1
+      },
+      {
+        "unit": "1080p",
+        "price_per_unit": 0.1
+      }
+    ],
+    "is_valuable": true,
+    "supported_durations": [
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10
+    ],
+    "pricingText": "Waiting for your input...\nYour request will cost $0.10 per second. When video inputs are provided, billing duration is calculated as input video duration + output video duration. For example, an 8s input video with a 3s output will be billed for 11 seconds ($1.10)."
+  },
+  {
+    "endpoint_id": "fal-ai/kling-video/o3/4k/image-to-video",
+    "provider": "fal.ai",
+    "display_name": "Kling Video",
+    "description": "Kling's Native 4K is a video generation model that directly outputs professional-grade 4K video in one step, eliminating the need for post-production upscaling",
+    "category": "image-to-video",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/0a9740be/nUTPtoiXouNNHisPlCKB6_4c0365b62d0c413dbd5c12152b7d1fc5.jpg",
+    "model_url": "https://fal.run/fal-ai/kling-video/o3/4k/image-to-video",
+    "ai_model_price_list": [
+      {
+        "unit": "720p",
+        "price_per_unit": 0.42
+      },
+      {
+        "unit": "1080p",
+        "price_per_unit": 0.42
+      }
+    ],
+    "is_valuable": true,
+    "supported_durations": [
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15
+    ],
+    "pricingText": "For every second of video you generated, you will be charged $0.42 regardless of whether audio is on or off. For example, a 5s video will cost $2.10."
+  },
+  {
+    "endpoint_id": "fal-ai/minimax/hailuo-2.3-fast/pro/image-to-video",
+    "provider": "fal.ai",
+    "display_name": "MiniMax Hailuo 2.3 Fast [Pro] (Image to Video)",
+    "description": "MiniMax Hailuo-2.3-Fast Image To Video API (Pro, 1080p): Advanced fast image-to-video generation model with 1080p resolution",
+    "category": "image-to-video",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/penguin/37ZHJodysdkE5NcfUc3fu_5731672b9b3c4e47b4b851a5145e5d3c.jpg",
+    "model_url": "https://fal.run/fal-ai/minimax/hailuo-2.3-fast/pro/image-to-video",
+    "ai_model_price_list": [],
+    "is_valuable": false,
+    "supported_durations": [],
+    "pricingText": "Your request will cost $0.33 per video."
+  },
+  {
+    "endpoint_id": "fal-ai/minimax/hailuo-02-fast/image-to-video",
+    "provider": "fal.ai",
+    "display_name": "Minimax",
+    "description": "Create blazing fast and economical videos with MiniMax Hailuo-02 Image To Video API at 512p resolution",
+    "category": "image-to-video",
+    "status": "active",
+    "thumbnail_url": "https://fal.media/files/elephant/f_EeVaEkzmhhcRXL1Xruj_8fd7a6cbb43b460b8a6ff550a153f4af.jpg",
+    "model_url": "https://fal.run/fal-ai/minimax/hailuo-02-fast/image-to-video",
+    "ai_model_price_list": [],
+    "is_valuable": false,
+    "supported_durations": [
+      6,
+      10
+    ],
+    "pricingText": "For each second of video generated at 512P, it will cost roughly $0.017/sec"
+  },
+  {
+    "endpoint_id": "fal-ai/kling-video/o1/standard/image-to-video",
+    "provider": "fal.ai",
+    "display_name": "Kling O1 First Frame Last Frame to Video [Standard]",
+    "description": "Generate a video by taking a start frame and an end frame, animating the transition between them while following text-driven style and scene guidance.",
+    "category": "image-to-video",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/0a86000e/kN3PH-dHrMpnHW9OlNlTQ_813cef4c332f4a6c9120e6890b013b91.jpg",
+    "model_url": "https://fal.run/fal-ai/kling-video/o1/standard/image-to-video",
+    "ai_model_price_list": [],
+    "is_valuable": false,
+    "supported_durations": [
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10
+    ],
+    "pricingText": "Your request will cost $0.084 per second."
+  },
+  {
+    "endpoint_id": "fal-ai/kling-video/o1/reference-to-video",
+    "provider": "fal.ai",
+    "display_name": "Kling O1 Reference Image to Video [Pro]",
+    "description": "Transform images, elements, and text into consistent, high-quality video scenes, ensuring stable character identity, object details, and environments.",
+    "category": "image-to-video",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/kangaroo/L7EgH8_I_ZIngBtpKaL-Y_ca0bcf7b2c8f4319b8af7dc386bdb3d9.jpg",
+    "model_url": "https://fal.run/fal-ai/kling-video/o1/reference-to-video",
+    "ai_model_price_list": [],
+    "is_valuable": false,
+    "supported_durations": [],
+    "pricingText": "None"
+  },
+  {
+    "endpoint_id": "fal-ai/kling-video/o3/4k/reference-to-video",
+    "provider": "fal.ai",
+    "display_name": "Kling Video",
+    "description": "Kling's Native 4K is a video generation model that directly outputs professional-grade 4K video in one step, eliminating the need for post-production upscaling",
+    "category": "image-to-video",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/0a9740db/W8nvw836T_PoFZvZSKaHF_24c88000032c446ab22f4824a9b09a66.jpg",
+    "model_url": "https://fal.run/fal-ai/kling-video/o3/4k/reference-to-video",
+    "ai_model_price_list": [
+      {
+        "unit": "720p",
+        "price_per_unit": 0.42
+      },
+      {
+        "unit": "1080p",
+        "price_per_unit": 0.42
+      }
+    ],
+    "is_valuable": true,
+    "supported_durations": [
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15
+    ],
+    "pricingText": "For every second of video you generated, you will be charged $0.42 regardless of whether audio is on or off. For example, a 5s video will cost $2.10."
+  },
+  {
+    "endpoint_id": "fal-ai/wan/v2.2-a14b/image-to-video/lora",
+    "provider": "fal.ai",
+    "display_name": "Wan v2.2 A14B Image-to-Video A14B with LoRAs",
+    "description": "Wan-2.2 image-to-video is a video model that generates high-quality videos with high visual quality and motion diversity from text prompts and images. This endpoint supports LoRAs made for Wan 2.2",
+    "category": "image-to-video",
+    "status": "active",
+    "thumbnail_url": "https://fal.media/files/monkey/Pu175Pi1Z0phr_hCod2pk_51e51de631a54b58ba789155b6955c94.jpg",
+    "model_url": "https://fal.run/fal-ai/wan/v2.2-a14b/image-to-video/lora",
+    "ai_model_price_list": [],
+    "is_valuable": false,
+    "supported_durations": [],
+    "pricingText": "None"
+  },
+  {
+    "endpoint_id": "veed/fabric-1.0/fast",
+    "provider": "fal.ai",
+    "display_name": "Fabric 1.0 Fast",
+    "description": "VEED Fabric 1.0 is an image-to-video API that turns any image into a talking video",
+    "category": "image-to-video",
+    "status": "active",
+    "thumbnail_url": "https://v3.fal.media/files/zebra/AGRvOvMtrM0o02wz8-hRF_cb5739a5199b49a7971c5319881c6765.jpg",
+    "model_url": "https://fal.run/veed/fabric-1.0/fast",
+    "ai_model_price_list": [],
+    "is_valuable": false,
+    "supported_durations": [],
+    "pricingText": "480p - $0.10 per second, 720p - $0.20 per second"
+  },
+  {
+    "endpoint_id": "fal-ai/pixverse/v5/image-to-video",
+    "provider": "fal.ai",
+    "display_name": "PixVerse V5 Image To Video",
+    "description": "Generate high quality video clips from text and image prompts using PixVerse v5",
+    "category": "image-to-video",
+    "status": "active",
+    "thumbnail_url": "https://fal.media/files/panda/eTq_2p2OlIBu7MyDFdtWz_6290f4acd92c4382b04ed302b2aa5a3a.jpg",
+    "model_url": "https://fal.run/fal-ai/pixverse/v5/image-to-video",
+    "ai_model_price_list": [],
+    "is_valuable": false,
+    "supported_durations": [
+      5,
+      8
+    ],
+    "pricingText": "For 5s video your request will cost $0.15 for 360p and 540p, $0.2 for 720p and $0.4 for 1080p. For $1 you can run this model with approximately 2 times."
+  },
+  {
+    "endpoint_id": "fal-ai/pixverse/swap",
+    "provider": "fal.ai",
+    "display_name": "PixVerse Swap",
+    "description": "Generate high quality video clips by swapping person, objects and background using Pixverse Swap.",
+    "category": "image-to-video",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/lion/NannfsqTmo5KZP4HWcpBx_ee601644250b4ed589741220176495fe.jpg",
+    "model_url": "https://fal.run/fal-ai/pixverse/swap",
+    "ai_model_price_list": [],
+    "is_valuable": false,
+    "supported_durations": [],
+    "pricingText": "For 5s video your request will cost $0.15 for 360p and 540p, $0.2 for 720p and $0.4 for 1080p. If input video duration is greater than 5 s the cost will double. For $1 you can run this model with approximately 2 times."
+  },
+  {
+    "endpoint_id": "fal-ai/pixverse/v5.5/image-to-video",
+    "provider": "fal.ai",
+    "display_name": "PixVerse V5.5 Image To Video",
+    "description": "Generate high quality video clips from text and image prompts using PixVerse v5.5",
+    "category": "image-to-video",
+    "status": "active",
+    "thumbnail_url": "blob:https://fal.ai/b3fcd77f-16db-4201-9801-bed4e7eb63bf",
+    "model_url": "https://fal.run/fal-ai/pixverse/v5.5/image-to-video",
+    "ai_model_price_list": [
+      {
+        "unit": "720p",
+        "price_per_unit": 0.04
+      },
+      {
+        "unit": "1080p",
+        "price_per_unit": 0.08
+      }
+    ],
+    "is_valuable": true,
+    "supported_durations": [
+      5,
+      8,
+      10
+    ],
+    "pricingText": "For a 5s video in single-clip mode without audio, your request will cost $0.15 for 360p and 540p, $0.2 for 720p, and $0.4 for 1080p. Enabling audio adds $0.05, and multi-clip mode adds $0.10 (or $0.15 with audio). For 8-second videos, costs double; for 10-second videos, costs are 2.2x the 5-second base (1080p not supported for 10s). For $1 you can run this model with approximately 2 times."
+  },
+  {
+    "endpoint_id": "fal-ai/pixverse/v6/transition",
+    "provider": "fal.ai",
+    "display_name": "PixVerse V6 Transition",
+    "description": "Pixverse's latest v6 Model.",
+    "category": "image-to-video",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/0a94048c/mHSoHdPA4NFw5xaGR8lgF_4fb060e5ef624dc6a038a532134bee1e.jpg",
+    "model_url": "https://fal.run/fal-ai/pixverse/v6/transition",
+    "ai_model_price_list": [
+      {
+        "unit": "720p",
+        "price_per_unit": 0.045
+      },
+      {
+        "unit": "1080p",
+        "price_per_unit": 0.09
+      }
+    ],
+    "is_valuable": true,
+    "supported_durations": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15
+    ],
+    "pricingText": "Billing is calculated per second of video generated. For 360p, your request will cost $0.025 per second without audio and $0.035 per second with audio. For 540p, it will cost $0.035 per second without audio and $0.045 per second with audio. For 720p, it will cost $0.045 per second without audio and $0.060 per second with audio. For 1080p, it will cost $0.090 per second without audio and $0.115 per second with audio. For $1 you can run this model for approximately 40 seconds at 360p (no audio) or about 11 seconds at 1080p (no audio)."
+  },
+  {
+    "endpoint_id": "fal-ai/pixverse/v5/transition",
+    "provider": "fal.ai",
+    "display_name": "PixVerse V5 Transition",
+    "description": "Create seamless transition between images using PixVerse v5",
+    "category": "image-to-video",
+    "status": "active",
+    "thumbnail_url": "https://storage.googleapis.com/falserverless/gallery/pixverse-v3.5.webp",
+    "model_url": "https://fal.run/fal-ai/pixverse/v5/transition",
+    "ai_model_price_list": [],
+    "is_valuable": false,
+    "supported_durations": [
+      5,
+      8
+    ],
+    "pricingText": "For 5s video your request will cost $0.15 for 360p and 540p, $0.2 for 720p and $0.4 for 1080p. For $1 you can run this model with approximately 2 times."
+  },
+  {
+    "endpoint_id": "fal-ai/vidu/q3/image-to-video/turbo",
+    "provider": "fal.ai",
+    "display_name": "Vidu",
+    "description": "Vidu's Q3 Turbo Model",
+    "category": "image-to-video",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/0a8d6e07/fD4jASVWB2HcQCVy2wpCd_857d6e5041134ad3a094285c4adb2e94.jpg",
+    "model_url": "https://fal.run/fal-ai/vidu/q3/image-to-video/turbo",
+    "ai_model_price_list": [],
+    "is_valuable": false,
+    "supported_durations": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16
+    ],
+    "pricingText": "Your request will cost 0.035 $ per video second for 360p and 540 p, cost will be 2.2x for 720p and 1080p resolution."
+  },
+  {
+    "endpoint_id": "fal-ai/ltx-2-19b/distilled/image-to-video",
+    "provider": "fal.ai",
+    "display_name": "LTX-2 19B Distilled",
+    "description": "Generate video with audio from images using LTX-2 Distilled",
+    "category": "image-to-video",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/0a8936e5/XvktxWU-OjPy48InEFQEs_bd9da8a5712846b694091a93ff5b1df0.jpg",
+    "model_url": "https://fal.run/fal-ai/ltx-2-19b/distilled/image-to-video",
+    "ai_model_price_list": [],
+    "is_valuable": false,
+    "supported_durations": [],
+    "pricingText": "None"
+  },
+  {
+    "endpoint_id": "fal-ai/ltx-2/image-to-video/fast",
+    "provider": "fal.ai",
+    "display_name": "LTX Video 2.0 Fast",
+    "description": "Create high-fidelity video with audio from images with LTX-2 Fast",
+    "category": "image-to-video",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/lion/WmwWdXjeVdd34i5AevK5B_cf7f489dec6f4b378e057bc4d34ac0b9.jpg",
+    "model_url": "https://fal.run/fal-ai/ltx-2/image-to-video/fast",
+    "ai_model_price_list": [],
+    "is_valuable": false,
+    "supported_durations": [
+      6,
+      8,
+      10,
+      12,
+      14,
+      16,
+      18,
+      20
+    ],
+    "pricingText": "Your request will cost $0.04 per second for 1080p, $0.08 per second for 1440p or $0.16 per second for 2160p."
+  },
+  {
+    "endpoint_id": "fal-ai/pixverse/v5.5/effects",
+    "provider": "fal.ai",
+    "display_name": "PixVerse V5.5 Effects",
+    "description": "Pixverse Effects",
+    "category": "image-to-video",
+    "status": "active",
+    "thumbnail_url": "blob:https://fal.ai/0e08061f-2f95-4ab6-9ade-39560f7554ac",
+    "model_url": "https://fal.run/fal-ai/pixverse/v5.5/effects",
+    "ai_model_price_list": [],
+    "is_valuable": false,
+    "supported_durations": [
+      5,
+      8,
+      10
+    ],
+    "pricingText": "For a 5s video in single-clip mode without audio, your request will cost $0.15 for 360p and 540p, $0.2 for 720p, and $0.4 for 1080p. Enabling audio adds $0.05, and multi-clip mode adds $0.10 (or $0.15 with audio). For 8-second videos, costs double; for 10-second videos, costs are 2.2x the 5-second base (1080p not supported for 10s). For $1 you can run this model with approximately 2 times."
+  },
+  {
+    "endpoint_id": "fal-ai/pixverse/c1/image-to-video",
+    "provider": "fal.ai",
+    "display_name": "PixVerse C1 Image To Video",
+    "description": "Animate images into cinematic videos with PixVerse C1, supporting 1080p resolution and native audio generation.",
+    "category": "image-to-video",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/0a957a2b/vPLdm8Nrb6L_q1c2wObcX_c1d8db8dbfe1407fa539f4477f5ba550.jpg",
+    "model_url": "https://fal.run/fal-ai/pixverse/c1/image-to-video",
+    "ai_model_price_list": [
+      {
+        "unit": "720p",
+        "price_per_unit": 0.05
+      },
+      {
+        "unit": "1080p",
+        "price_per_unit": 0.095
+      }
+    ],
+    "is_valuable": true,
+    "supported_durations": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15
+    ],
+    "pricingText": "Waiting for your input...\nBilling is calculated per second of video generated. For 360p, your request will cost $0.030 per second without audio and $0.040 per second with audio. For 540p, it will cost $0.040 per second without audio and $0.050 per second with audio. For 720p, it will cost $0.050 per second without audio and $0.065 per second with audio. For 1080p, it will cost $0.095 per second without audio and $0.120 per second with audio. For $1 you can run this model for approximately 33 seconds at 360p (no audio) or about 10 seconds at 1080p (no audio)."
+  },
+  {
+    "endpoint_id": "fal-ai/wan/v2.2-5b/image-to-video",
+    "provider": "fal.ai",
+    "display_name": "Wan v2.2 5B",
+    "description": "Wan 2.2's 5B model produces up to 5 seconds of video 720p at 24FPS with fluid motion and powerful prompt understanding",
+    "category": "image-to-video",
+    "status": "active",
+    "thumbnail_url": "https://storage.googleapis.com/fal_cdn/fal/Sound-2.jpg",
+    "model_url": "https://fal.run/fal-ai/wan/v2.2-5b/image-to-video",
+    "ai_model_price_list": [],
+    "is_valuable": false,
+    "supported_durations": [],
+    "pricingText": "None"
+  },
+  {
+    "endpoint_id": "fal-ai/ltx-2-19b/image-to-video",
+    "provider": "fal.ai",
+    "display_name": "LTX-2 19B",
+    "description": "Generate video with audio from images using LTX-2",
+    "category": "image-to-video",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/0a8935fe/Ezbvf27opeW6gEoDS4nlw_da7064399f9c4342b5e118f6875ec389.jpg",
+    "model_url": "https://fal.run/fal-ai/ltx-2-19b/image-to-video",
+    "ai_model_price_list": [],
+    "is_valuable": false,
+    "supported_durations": [],
+    "pricingText": "None"
+  },
+  {
+    "endpoint_id": "fal-ai/ltx-video-13b-distilled/image-to-video",
+    "provider": "fal.ai",
+    "display_name": "LTX Video-0.9.7 13B Distilled",
+    "description": "Generate videos from prompts and images using LTX Video-0.9.7 13B Distilled and custom LoRA",
+    "category": "image-to-video",
+    "status": "active",
+    "thumbnail_url": "https://fal.media/files/rabbit/N3sm2TCARXV47JxgfxZJt_8caf31dada5249d996b99fea8028fef8.jpg",
+    "model_url": "https://fal.run/fal-ai/ltx-video-13b-distilled/image-to-video",
+    "ai_model_price_list": [],
+    "is_valuable": false,
+    "supported_durations": [],
+    "pricingText": "Your request will cost $0.04 per video. For $1 you can run this model approximately 25 times."
+  },
+  {
+    "endpoint_id": "fal-ai/bytedance/omnihuman",
+    "provider": "fal.ai",
+    "display_name": "OmniHuman",
+    "description": "OmniHuman generates video using an image of a human figure paired with an audio file. It produces vivid, high-quality videos where the character’s emotions and movements maintain a strong correlation with the audio.",
+    "category": "image-to-video",
+    "status": "active",
+    "thumbnail_url": "https://storage.googleapis.com/fal_cdn/fal/Sound.jpg",
+    "model_url": "https://fal.run/fal-ai/bytedance/omnihuman",
+    "ai_model_price_list": [],
+    "is_valuable": false,
+    "supported_durations": [],
+    "pricingText": "Your request will cost $0.14 per second."
+  },
+  {
+    "endpoint_id": "wan/v2.6/image-to-video/flash",
+    "provider": "fal.ai",
+    "display_name": "V2.6",
+    "description": "Wan 2.6 image-to-video flash model.",
+    "category": "image-to-video",
+    "status": "active",
+    "thumbnail_url": "https://storage.googleapis.com/falserverless/model_tests/video_models/Gemini_Generated_Image_k9ohc1k9ohc1k9oh.png",
+    "model_url": "https://fal.run/wan/v2.6/image-to-video/flash",
+    "ai_model_price_list": [
+      {
+        "unit": "720p",
+        "price_per_unit": 0.05
+      },
+      {
+        "unit": "1080p",
+        "price_per_unit": 0.075
+      }
+    ],
+    "is_valuable": true,
+    "supported_durations": [
+      5,
+      10,
+      15
+    ],
+    "pricingText": "Your request will cost $0.05 per second for 720p, $0.075 per second for 1080p."
+  },
+  {
+    "endpoint_id": "fal-ai/pixverse/v4.5/image-to-video",
+    "provider": "fal.ai",
+    "display_name": "PixVerse V4.5 Image To Video",
+    "description": "Generate high quality video clips from text and image prompts using PixVerse v4.5",
+    "category": "image-to-video",
+    "status": "active",
+    "thumbnail_url": "https://storage.googleapis.com/fal_cdn/fal/Upscale-2.jpg",
+    "model_url": "https://fal.run/fal-ai/pixverse/v4.5/image-to-video",
+    "ai_model_price_list": [],
+    "is_valuable": false,
+    "supported_durations": [
+      5,
+      8
+    ],
+    "pricingText": "For 5s video your request will cost $0.15 for 360p and 540p, $0.2 for 720p and $0.4 for 1080p. For $1 you can run this model with approximately 2 times."
+  },
+  {
+    "endpoint_id": "fal-ai/ltx-2/image-to-video",
+    "provider": "fal.ai",
+    "display_name": "LTX Video 2.0 Pro",
+    "description": "Create high-fidelity video with audio from images with LTX-2 Pro",
+    "category": "image-to-video",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/tiger/wwf0gbfywaeym-Zh4SMcg_5d51eb236a484230afff239319c70234.jpg",
+    "model_url": "https://fal.run/fal-ai/ltx-2/image-to-video",
+    "ai_model_price_list": [],
+    "is_valuable": false,
+    "supported_durations": [
+      6,
+      8,
+      10
+    ],
+    "pricingText": "Your request will cost $0.06 per second for 1080p, $0.12 per second for 1440p or $0.24 per second for 2160p."
+  },
+  {
+    "endpoint_id": "fal-ai/pixverse/c1/reference-to-video",
+    "provider": "fal.ai",
+    "display_name": "PixVerse C1 Reference To Video",
+    "description": "Generate character-consistent videos from reference images using PixVerse C1, with subject and background references.",
+    "category": "image-to-video",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/0a95798a/fCnVWzH0_WkQiWSdjqkwO_e7cc6f7bfb2c4bb1b4e7c915466455f8.jpg",
+    "model_url": "https://fal.run/fal-ai/pixverse/c1/reference-to-video",
+    "ai_model_price_list": [],
+    "is_valuable": false,
+    "supported_durations": [],
+    "pricingText": "None"
+  },
+  {
+    "endpoint_id": "fal-ai/kling-video/o1/standard/reference-to-video",
+    "provider": "fal.ai",
+    "display_name": "Kling O1 Reference Image to Video [Standard]",
+    "description": "Transform images, elements, and text into consistent, high-quality video scenes, ensuring stable character identity, object details, and environments.",
+    "category": "image-to-video",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/0a860024/IeH4LL0fTNCVBiDW7YTyc_48485917433c4e6ebe9a042112c8147f.jpg",
+    "model_url": "https://fal.run/fal-ai/kling-video/o1/standard/reference-to-video",
+    "ai_model_price_list": [],
+    "is_valuable": false,
+    "supported_durations": [],
+    "pricingText": "None"
+  },
+  {
+    "endpoint_id": "fal-ai/pixverse/v4.5/effects",
+    "provider": "fal.ai",
+    "display_name": "PixVerse V4.5 Effects",
+    "description": "Generate high quality video clips with different effects using PixVerse v4.5",
+    "category": "image-to-video",
+    "status": "active",
+    "thumbnail_url": "https://storage.googleapis.com/falserverless/gallery/pixverse-v3.5.webp",
+    "model_url": "https://fal.run/fal-ai/pixverse/v4.5/effects",
+    "ai_model_price_list": [],
+    "is_valuable": false,
+    "supported_durations": [
+      5,
+      8
+    ],
+    "pricingText": "For 5s video your request will cost $0.15 for 360p and 540p, $0.2 for 720p and $0.4 for 1080p. For $1 you can run this model with approximately 2 times."
+  },
+  {
+    "endpoint_id": "fal-ai/kling-video/v1/standard/ai-avatar",
+    "provider": "fal.ai",
+    "display_name": "Kling AI Avatar",
+    "description": "Kling AI Avatar Standard:  Endpoint for creating avatar videos with realistic humans, animals, cartoons, or stylized characters",
+    "category": "image-to-video",
+    "status": "active",
+    "thumbnail_url": "https://v3.fal.media/files/rabbit/me_wmKnQJJevTKvSLGMF7_2948b05301c24578b9d28acb927f9c5c.jpg",
+    "model_url": "https://fal.run/fal-ai/kling-video/v1/standard/ai-avatar",
+    "ai_model_price_list": [],
+    "is_valuable": false,
+    "supported_durations": [],
+    "pricingText": "Your request will cost $0.0562 per second."
+  },
+  {
+    "endpoint_id": "fal-ai/vidu/q3/reference-to-video/mix",
+    "provider": "fal.ai",
+    "display_name": "Vidu",
+    "description": "Vidu's latest Q3 Reference to Video Mix model",
+    "category": "image-to-video",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/0a957345/pZ89MiBhy31s0LcoTlN0N_895614a220bb4020a3e1410421a18b26.png",
+    "model_url": "https://fal.run/fal-ai/vidu/q3/reference-to-video/mix",
+    "ai_model_price_list": [
+      {
+        "unit": "720p",
+        "price_per_unit": 0.154
+      },
+      {
+        "unit": "1080p",
+        "price_per_unit": 0.154
+      }
+    ],
+    "is_valuable": true,
+    "supported_durations": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16
+    ],
+    "pricingText": "Your request will cost 0.07 $ per video second for 360p and 540 p, cost will be 2.2x for 720p and 1080p resolution."
+  },
+  {
+    "endpoint_id": "fal-ai/kling-video/v1/pro/ai-avatar",
+    "provider": "fal.ai",
+    "display_name": "Kling AI Avatar Pro",
+    "description": "Kling AI Avatar Pro: The premium endpoint for creating avatar videos with realistic humans, animals, cartoons, or stylized characters",
+    "category": "image-to-video",
+    "status": "active",
+    "thumbnail_url": "https://fal.media/files/tiger/JkgpF_2-txAoKmW7MuTqt_0871571d0ba34433b57f86fbce62d273.jpg",
+    "model_url": "https://fal.run/fal-ai/kling-video/v1/pro/ai-avatar",
+    "ai_model_price_list": [],
+    "is_valuable": false,
+    "supported_durations": [],
+    "pricingText": "Your request will cost $0.115 per second."
+  },
+  {
+    "endpoint_id": "fal-ai/ai-avatar",
+    "provider": "fal.ai",
+    "display_name": "Ai Avatar",
+    "description": "MultiTalk model generates a talking avatar video from an image and audio file. The avatar lip-syncs to the provided audio with natural facial expressions.",
+    "category": "image-to-video",
+    "status": "active",
+    "thumbnail_url": "https://storage.googleapis.com/fal_cdn/fal/Sound.jpg",
+    "model_url": "https://fal.run/fal-ai/ai-avatar",
+    "ai_model_price_list": [],
+    "is_valuable": false,
+    "supported_durations": [],
+    "pricingText": "Your request will cost $0.2 per second.\nFor 720p price will be doubled."
+  },
+  {
+    "endpoint_id": "fal-ai/kling-video/v1.6/standard/elements",
+    "provider": "fal.ai",
+    "display_name": "Kling 1.6 Elements",
+    "description": "Generate video clips from your multiple image references using Kling 1.6 (standard)",
+    "category": "image-to-video",
+    "status": "active",
+    "thumbnail_url": "https://storage.googleapis.com/falserverless/gallery/kling-1-6-image-to-video.webp",
+    "model_url": "https://fal.run/fal-ai/kling-video/v1.6/standard/elements",
+    "ai_model_price_list": [
+      {
+        "unit": "720p",
+        "price_per_unit": 0.056
+      },
+      {
+        "unit": "1080p",
+        "price_per_unit": 0.056
+      }
+    ],
+    "is_valuable": true,
+    "supported_durations": [
+      5,
+      10
+    ],
+    "pricingText": "Your request will cost $0.056 per second."
+  },
+  {
+    "endpoint_id": "fal-ai/ffmpeg-api/images-to-video",
+    "provider": "fal.ai",
+    "display_name": "Ffmpeg Api Images to Video",
+    "description": "A fal.ai endpoint that stitches an ordered list of images into an MP4 video by holding each image for a specified number of frames at a configurable frame rate",
+    "category": "image-to-video",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/0a99021f/66-TU4tuGYUlScYEZCwkp_f2989ba3ae084e379f0a4362f6f54e9c.jpg",
+    "model_url": "https://fal.run/fal-ai/ffmpeg-api/images-to-video",
+    "ai_model_price_list": [],
+    "is_valuable": false,
+    "supported_durations": [],
+    "pricingText": "None"
+  },
+  {
+    "endpoint_id": "fal-ai/ovi/image-to-video",
+    "provider": "fal.ai",
+    "display_name": "Ovi",
+    "description": "Ovi can generate videos with audio from image and text inputs.",
+    "category": "image-to-video",
+    "status": "active",
+    "thumbnail_url": "https://v3.fal.media/files/elephant/0C5YI172kcCI9lcCtXDJI_61f25dd2c735440aafb1a2ec647b6bd0.jpg",
+    "model_url": "https://fal.run/fal-ai/ovi/image-to-video",
+    "ai_model_price_list": [],
+    "is_valuable": false,
+    "supported_durations": [],
+    "pricingText": "Your request will cost $0.2 per video."
+  },
+  {
+    "endpoint_id": "fal-ai/pixverse/v5/effects",
+    "provider": "fal.ai",
+    "display_name": "PixVerse V5 Effects",
+    "description": "Generate high quality video clips with different effects using PixVerse v5",
+    "category": "image-to-video",
+    "status": "active",
+    "thumbnail_url": "https://storage.googleapis.com/falserverless/gallery/pixverse-v3.5.webp",
+    "model_url": "https://fal.run/fal-ai/pixverse/v5/effects",
+    "ai_model_price_list": [],
+    "is_valuable": false,
+    "supported_durations": [
+      5,
+      8
+    ],
+    "pricingText": "For 5s video your request will cost $0.15 for 360p and 540p, $0.2 for 720p and $0.4 for 1080p. For $1 you can run this model with approximately 2 times."
+  },
+  {
+    "endpoint_id": "fal-ai/pixverse/v4.5/transition",
+    "provider": "fal.ai",
+    "display_name": "PixVerse V4.5 Transition",
+    "description": "Create seamless transition between images using PixVerse v4.5",
+    "category": "image-to-video",
+    "status": "active",
+    "thumbnail_url": "https://storage.googleapis.com/falserverless/gallery/pixverse-v3.5.webp",
+    "model_url": "https://fal.run/fal-ai/pixverse/v4.5/transition",
+    "ai_model_price_list": [],
+    "is_valuable": false,
+    "supported_durations": [
+      5,
+      8
+    ],
+    "pricingText": "For 5s video your request will cost $0.15 for 360p and 540p, $0.2 for 720p and $0.4 for 1080p. For $1 you can run this model with approximately 2 times."
+  },
+  {
+    "endpoint_id": "fal-ai/hunyuan-video-v1.5/image-to-video",
+    "provider": "fal.ai",
+    "display_name": "Hunyuan Video V1.5",
+    "description": "Hunyuan Video 1.5 is Tencent's latest and best video model",
+    "category": "image-to-video",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/panda/yRuXc12ZmJxhXiGcd_1jW_9ebc91f64d1a44b7995e66b3410547e9.jpg",
+    "model_url": "https://fal.run/fal-ai/hunyuan-video-v1.5/image-to-video",
+    "ai_model_price_list": [],
+    "is_valuable": false,
+    "supported_durations": [
+      5
+    ],
+    "pricingText": "Your request will cost $0.075 per second."
+  },
+  {
+    "endpoint_id": "fal-ai/pixverse/v5.5/transition",
+    "provider": "fal.ai",
+    "display_name": "PixVerse V5.5 Transition",
+    "description": "Pixverse Transition",
+    "category": "image-to-video",
+    "status": "active",
+    "thumbnail_url": "blob:https://fal.ai/a3342541-0a6a-4117-a70f-4b43a6483e07",
+    "model_url": "https://fal.run/fal-ai/pixverse/v5.5/transition",
+    "ai_model_price_list": [],
+    "is_valuable": false,
+    "supported_durations": [
+      5,
+      8,
+      10
+    ],
+    "pricingText": "For a 5-second video in single-clip mode without audio, your request will cost $0.45 for 360p and 540p, $0.60 for 720p, and $1.20 for 1080p. Enabling audio adds $0.10, and multi-clip mode adds $0.30 (or $0.40 with audio). For 8-second videos, costs double; for 10-second videos, costs are 2.2x the 5-second base (1080p not supported for 10s). With $1, you can run this model approximately 2.2 times for a basic 5s video at 540p."
+  },
+  {
+    "endpoint_id": "fal-ai/pixverse/v5.6/image-to-video",
+    "provider": "fal.ai",
+    "display_name": "PixVerse V5.6 Image To Video",
+    "description": "Use the latest pixverse v5.6 model to turn your texts and images into amazing videos.",
+    "category": "image-to-video",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/0a8bf684/NHFUK0Vloyg4QuqEQDdxP_e3dc7704795542dfa183ecf6423c7883.jpg",
+    "model_url": "https://fal.run/fal-ai/pixverse/v5.6/image-to-video",
+    "ai_model_price_list": [],
+    "is_valuable": false,
+    "supported_durations": [
+      5,
+      8,
+      10
+    ],
+    "pricingText": "For a 5s video without audio, your request will cost $0.35 for 360p and 540p, $0.45 for 720p, and $0.75 for 1080p. Enabling audio adds $0.45 for 360p/540p/720p, and $0.75 for 1080p. For 8-second videos, costs are 2x the 5-second base; for 10-second videos, costs are 2.2x the 5-second base for 360p/540p and 720p (1080p not supported for 10s)."
+  },
+  {
+    "endpoint_id": "fal-ai/pixverse/c1/transition",
+    "provider": "fal.ai",
+    "display_name": "PixVerse C1 Transition",
+    "description": "Create seamless cinematic transitions between two images with PixVerse C1, with native audio and up to 1080p.",
+    "category": "image-to-video",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/0a957a29/yTOKdpiOzGEDrcl3TZri4_98c2405835e64049949b4230eb082ce1.jpg",
+    "model_url": "https://fal.run/fal-ai/pixverse/c1/transition",
+    "ai_model_price_list": [
+      {
+        "unit": "720p",
+        "price_per_unit": 0.05
+      },
+      {
+        "unit": "1080p",
+        "price_per_unit": 0.095
+      }
+    ],
+    "is_valuable": true,
+    "supported_durations": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15
+    ],
+    "pricingText": "Waiting for your input...\nBilling is calculated per second of video generated. For 360p, your request will cost $0.030 per second without audio and $0.040 per second with audio. For 540p, it will cost $0.040 per second without audio and $0.050 per second with audio. For 720p, it will cost $0.050 per second without audio and $0.065 per second with audio. For 1080p, it will cost $0.095 per second without audio and $0.120 per second with audio. For $1 you can run this model for approximately 33 seconds at 360p (no audio) or about 10 seconds at 1080p (no audio)."
+  },
+  {
+    "endpoint_id": "fal-ai/pika/v2.2/pikaframes",
+    "provider": "fal.ai",
+    "display_name": "Pika",
+    "description": "Discover ultimate control with Pikaframes key frame interpolation, a stunning image-to-video feature that allows you to upload up to 5 keyframes, customize their transition length and prompt, and see their images come to life as seamless videos.",
+    "category": "image-to-video",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/koala/CtOfvKi8w3X6qO495bKva_4377f203234f47d69a57efef836c93aa.jpg",
+    "model_url": "https://fal.run/fal-ai/pika/v2.2/pikaframes",
+    "ai_model_price_list": [],
+    "is_valuable": false,
+    "supported_durations": [],
+    "pricingText": "Your request will cost $0.04 per second for 720p or $0.06 per second for 1080p, with a minimum of 5 billable seconds - $0.20 for 720p and $0.30 for 1080p."
+  },
+  {
+    "endpoint_id": "fal-ai/kandinsky5-pro/image-to-video",
+    "provider": "fal.ai",
+    "display_name": "Kandinsky5 Pro",
+    "description": "Kandinsky 5.0 Pro is a diffusion model for fast, high-quality image-to-video generation.",
+    "category": "image-to-video",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/0a877601/AN-bEqsfOmQj46SKwy4Ms_5288905eb5e744f99cb3ac61339a2bd9.jpg",
+    "model_url": "https://fal.run/fal-ai/kandinsky5-pro/image-to-video",
+    "ai_model_price_list": [],
+    "is_valuable": false,
+    "supported_durations": [
+      5
+    ],
+    "pricingText": "Your request will cost $0.04 per 512P video second and $0.12 per 1024P video second."
+  },
+  {
+    "endpoint_id": "fal-ai/ltx-2.3-22b/image-to-video",
+    "provider": "fal.ai",
+    "display_name": "LTX-2.3 22B",
+    "description": "Generate video with audio from images using LTX-2.3",
+    "category": "image-to-video",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/0a9289c9/kEEMVVpXrSdQAUe8zVqbg__tmp_b046-liqu-phoenix.jpg",
+    "model_url": "https://fal.run/fal-ai/ltx-2.3-22b/image-to-video",
+    "ai_model_price_list": [],
+    "is_valuable": false,
+    "supported_durations": [],
+    "pricingText": "None"
+  },
+  {
+    "endpoint_id": "fal-ai/vidu/q1/reference-to-video",
+    "provider": "fal.ai",
+    "display_name": "Vidu",
+    "description": "Generate video clips from your multiple image references using Vidu Q1",
+    "category": "image-to-video",
+    "status": "active",
+    "thumbnail_url": "https://storage.googleapis.com/fal_cdn/fal/Upscale-1.jpeg",
+    "model_url": "https://fal.run/fal-ai/vidu/q1/reference-to-video",
+    "ai_model_price_list": [],
+    "is_valuable": false,
+    "supported_durations": [],
+    "pricingText": "For 5s video your request will cost $0.40."
+  },
+  {
+    "endpoint_id": "fal-ai/ltxv-13b-098-distilled/image-to-video",
+    "provider": "fal.ai",
+    "display_name": "LTX-Video 13B 0.9.8 Distilled",
+    "description": "Generate long videos from prompts and images using LTX Video-0.9.8 13B Distilled and custom LoRA",
+    "category": "image-to-video",
+    "status": "active",
+    "thumbnail_url": "https://storage.googleapis.com/fal_cdn/fal/Training-5.jpg",
+    "model_url": "https://fal.run/fal-ai/ltxv-13b-098-distilled/image-to-video",
+    "ai_model_price_list": [
+      {
+        "unit": "720p",
+        "price_per_unit": 0.02
+      }
+    ],
+    "is_valuable": true,
+    "supported_durations": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20,
+      21,
+      22,
+      23,
+      24,
+      25,
+      26,
+      27,
+      28,
+      29,
+      30,
+      31,
+      32,
+      33,
+      34,
+      35,
+      36,
+      37,
+      38,
+      39,
+      40,
+      41,
+      42,
+      43,
+      44,
+      45,
+      46,
+      47,
+      48,
+      49,
+      50,
+      51,
+      52,
+      53,
+      54,
+      55,
+      56,
+      57,
+      58,
+      59,
+      60
+    ],
+    "pricingText": "Your request will cost $0.02 per second, billed at 24 frames per second. For $1 you can generate 50 seconds of video. Enabling detail_pass will double the billed seconds."
+  },
+  {
+    "endpoint_id": "fal-ai/vidu/q2/image-to-video/turbo",
+    "provider": "fal.ai",
+    "display_name": "Vidu",
+    "description": "Use the latest Vidu Q2 models which much more better quality and control on your videos.",
+    "category": "image-to-video",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/monkey/pV-tsWf3pDIWfSzE8Y8QD_405c6376ad454bdd9aec52cfcc23a97e.jpg",
+    "model_url": "https://fal.run/fal-ai/vidu/q2/image-to-video/turbo",
+    "ai_model_price_list": [
+      {
+        "unit": "720p",
+        "price_per_unit": 0.05
+      },
+      {
+        "unit": "1080p",
+        "price_per_unit": 0.25
+      }
+    ],
+    "is_valuable": true,
+    "supported_durations": [
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8
+    ],
+    "pricingText": "For 720 p each video second will cost 0.05 $. For 1080 p each request will cost 0.2 $ along with 0.05 $ for every video second."
+  },
+  {
+    "endpoint_id": "fal-ai/vidu/q1/image-to-video",
+    "provider": "fal.ai",
+    "display_name": "Vidu Image to Video",
+    "description": "Vidu Q1 Image to Video generates high-quality 1080p videos with exceptional visual quality and motion diversity from a single image",
+    "category": "image-to-video",
+    "status": "active",
+    "thumbnail_url": "https://storage.googleapis.com/fal_cdn/fal/Upscale-1.jpeg",
+    "model_url": "https://fal.run/fal-ai/vidu/q1/image-to-video",
+    "ai_model_price_list": [],
+    "is_valuable": false,
+    "supported_durations": [],
+    "pricingText": "For 5s video your request will cost $0.40."
+  },
+  {
+    "endpoint_id": "fal-ai/ltx-2.3-22b/distilled/image-to-video",
+    "provider": "fal.ai",
+    "display_name": "LTX-2.3 22B Distilled",
+    "description": "Generate video with audio from images using LTX-2.3 Distilled",
+    "category": "image-to-video",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/0a9289cb/yE3z6Q_sJBywhLxYsyNnB__tmp_b047-ice--phoenix.jpg",
+    "model_url": "https://fal.run/fal-ai/ltx-2.3-22b/distilled/image-to-video",
+    "ai_model_price_list": [],
+    "is_valuable": false,
+    "supported_durations": [],
+    "pricingText": "None"
+  },
+  {
+    "endpoint_id": "fal-ai/kling-video/v1.6/pro/elements",
+    "provider": "fal.ai",
+    "display_name": "Kling 1.6 Elements",
+    "description": "Generate video clips from your multiple image references using Kling 1.6 (pro)",
+    "category": "image-to-video",
+    "status": "active",
+    "thumbnail_url": "https://storage.googleapis.com/falserverless/gallery/kling-1-6-image-to-video.webp",
+    "model_url": "https://fal.run/fal-ai/kling-video/v1.6/pro/elements",
+    "ai_model_price_list": [],
+    "is_valuable": false,
+    "supported_durations": [],
+    "pricingText": "Your request will cost $0.098 per second."
+  },
+  {
+    "endpoint_id": "fal-ai/ai-avatar/single-text",
+    "provider": "fal.ai",
+    "display_name": "AI Avatar Single Text",
+    "description": "MultiTalk model generates a talking avatar video from an image and text. Converts text to speech automatically, then generates the avatar speaking with lip-sync.",
+    "category": "image-to-video",
+    "status": "active",
+    "thumbnail_url": "https://fal.media/files/penguin/ETFEnZEbEj9nc6e1XdFG8_6f87551d505640c89d59f8018dd0ffb0.jpg",
+    "model_url": "https://fal.run/fal-ai/ai-avatar/single-text",
+    "ai_model_price_list": [],
+    "is_valuable": false,
+    "supported_durations": [],
+    "pricingText": "Your request will cost $0.2 per second.\nFor 720p price will be doubled."
+  },
+  {
+    "endpoint_id": "fal-ai/longcat-video/image-to-video/720p",
+    "provider": "fal.ai",
+    "display_name": "LongCat Video",
+    "description": "Generate long videos in 720p/30fps from images using LongCat Video",
+    "category": "image-to-video",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/tiger/s_V-U5ax-L7FjU5Ua0Jmk_723a0755259f44d492e6cf825608804c.jpg",
+    "model_url": "https://fal.run/fal-ai/longcat-video/image-to-video/720p",
+    "ai_model_price_list": [],
+    "is_valuable": false,
+    "supported_durations": [],
+    "pricingText": "None"
+  },
+  {
+    "endpoint_id": "fal-ai/lyra-2/zoom",
+    "provider": "fal.ai",
+    "display_name": "Lyra 2",
+    "description": "Lyra 2.0 is an image-to-video model that turns a single image into an explorable 3D-style video with camera-controlled motion.",
+    "category": "image-to-video",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/0a97314c/DmYwb8643DIh-Z74dX4Qg_91d43dc1645c42bc8003352cd944bafe.jpg",
+    "model_url": "https://fal.run/fal-ai/lyra-2/zoom",
+    "ai_model_price_list": [],
+    "is_valuable": false,
+    "supported_durations": [],
+    "pricingText": "Your request will cost $0.10 for an 81-frame video at 480p, and $20 for an 81-frame video at 720p."
+  },
+  {
+    "endpoint_id": "fal-ai/longcat-video/image-to-video/480p",
+    "provider": "fal.ai",
+    "display_name": "LongCat Video",
+    "description": "Generate long videos from images using LongCat Video",
+    "category": "image-to-video",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/tiger/kqIypfhdZ87GT5n4t5mx__a7a61a1a39ec4ef2af632def10db2776.jpg",
+    "model_url": "https://fal.run/fal-ai/longcat-video/image-to-video/480p",
+    "ai_model_price_list": [],
+    "is_valuable": false,
+    "supported_durations": [],
+    "pricingText": "None"
+  },
+  {
+    "endpoint_id": "fal-ai/framepack/f1",
+    "provider": "fal.ai",
+    "display_name": "Framepack F1",
+    "description": "Framepack is an efficient Image-to-video model that autoregressively generates videos.",
+    "category": "image-to-video",
+    "status": "active",
+    "thumbnail_url": "https://v3.fal.media/files/koala/dUfFd9Z7aSX06gL2_qXn0_image.webp",
+    "model_url": "https://fal.run/fal-ai/framepack/f1",
+    "ai_model_price_list": [],
+    "is_valuable": false,
+    "supported_durations": [],
+    "pricingText": "Your request will cost $0.0333 per second."
+  },
+  {
+    "endpoint_id": "fal-ai/vidu/q2/image-to-video/pro",
+    "provider": "fal.ai",
+    "display_name": "Vidu",
+    "description": "Use the latest Vidu Q2 models which much more better quality and control on your videos.",
+    "category": "image-to-video",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/rabbit/9ZFHimyaNGh_0WHvVLfOn_67d61fe778bd4257a402b467aaff6f66.jpg",
+    "model_url": "https://fal.run/fal-ai/vidu/q2/image-to-video/pro",
+    "ai_model_price_list": [
+      {
+        "unit": "720p",
+        "price_per_unit": 0.15
+      },
+      {
+        "unit": "1080p",
+        "price_per_unit": 0.4
+      }
+    ],
+    "is_valuable": true,
+    "supported_durations": [
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8
+    ],
+    "pricingText": "For 720 p your video request would cost 0.1 $ along with a 0.05 $ for every video second. For 1080 p each request will cost 0.3 $ along with 0.1 $ for every video second."
+  },
+  {
+    "endpoint_id": "fal-ai/longcat-video/distilled/image-to-video/720p",
+    "provider": "fal.ai",
+    "display_name": "LongCat Video Distilled",
+    "description": "Generate long videos in 720p/30fps from images using LongCat Video Distilled",
+    "category": "image-to-video",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/lion/PlEcqdZVUsm3jFXpUPvvT_5da6319dbf674dffbea088eaa87a979c.jpg",
+    "model_url": "https://fal.run/fal-ai/longcat-video/distilled/image-to-video/720p",
+    "ai_model_price_list": [],
+    "is_valuable": false,
+    "supported_durations": [],
+    "pricingText": "None"
+  },
+  {
+    "endpoint_id": "fal-ai/hunyuan-avatar",
+    "provider": "fal.ai",
+    "display_name": "Hunyuan Avatar",
+    "description": "HunyuanAvatar is a High-Fidelity Audio-Driven Human Animation model for Multiple Characters .",
+    "category": "image-to-video",
+    "status": "active",
+    "thumbnail_url": "https://storage.googleapis.com/fal_cdn/fal/for%20videos-3.jpg",
+    "model_url": "https://fal.run/fal-ai/hunyuan-avatar",
+    "ai_model_price_list": [],
+    "is_valuable": false,
+    "supported_durations": [],
+    "pricingText": "For 5s video your request will cost $1.40"
+  },
+  {
+    "endpoint_id": "fal-ai/vidu/q1/start-end-to-video",
+    "provider": "fal.ai",
+    "display_name": "Vidu Start End to Video",
+    "description": "Vidu Q1 Start-End to Video generates smooth transition 1080p videos between specified start and end images.",
+    "category": "image-to-video",
+    "status": "active",
+    "thumbnail_url": "https://storage.googleapis.com/fal_cdn/fal/Upscale-1.jpeg",
+    "model_url": "https://fal.run/fal-ai/vidu/q1/start-end-to-video",
+    "ai_model_price_list": [],
+    "is_valuable": false,
+    "supported_durations": [],
+    "pricingText": "For 4s video your request will cost $0.40."
+  },
+  {
+    "endpoint_id": "fal-ai/pixverse/v5.6/transition",
+    "provider": "fal.ai",
+    "display_name": "PixVerse V5.6 Transition",
+    "description": "Use the latest pixverse v5.6 model to turn your texts and images into amazing videos.",
+    "category": "image-to-video",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/0a8bf6c6/5g6zE3Sjy-aR-GBc8DhWT_603ad74d67aa47b68cab750e1cf9b5a6.jpg",
+    "model_url": "https://fal.run/fal-ai/pixverse/v5.6/transition",
+    "ai_model_price_list": [
+      {
+        "unit": "720p",
+        "price_per_unit": 0.09
+      },
+      {
+        "unit": "1080p",
+        "price_per_unit": 0.15
+      }
+    ],
+    "is_valuable": true,
+    "supported_durations": [
+      5,
+      8,
+      10
+    ],
+    "pricingText": "For a 5s video without audio, your request will cost $0.35 for 360p and 540p, $0.45 for 720p, and $0.75 for 1080p. Enabling audio adds $0.45 for 360p/540p/720p, and $0.75 for 1080p. For 8-second videos, costs are 2x the 5-second base; for 10-second videos, costs are 2.2x the 5-second base for 360p/540p and 720p (1080p not supported for 10s)."
+  },
+  {
+    "endpoint_id": "fal-ai/ltx-2.3-22b/image-to-video/lora",
+    "provider": "fal.ai",
+    "display_name": "LTX-2.3 22B",
+    "description": "Generate video with audio from images using LTX-2.3 and custom LoRA",
+    "category": "image-to-video",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/0a9289ce/XPxxPt7YTRFqdahRCUEa1__tmp_b057-chro-origami-cran.jpg",
+    "model_url": "https://fal.run/fal-ai/ltx-2.3-22b/image-to-video/lora",
+    "ai_model_price_list": [],
+    "is_valuable": false,
+    "supported_durations": [],
+    "pricingText": "None"
+  },
+  {
+    "endpoint_id": "fal-ai/longcat-video/distilled/image-to-video/480p",
+    "provider": "fal.ai",
+    "display_name": "LongCat Video Distilled",
+    "description": "Generate long videos from images using LongCat Video Distilled",
+    "category": "image-to-video",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/rabbit/iOwf_UFypDFAPX27ciX7N_03c77dfefc0a4e82a7f500216b609240.jpg",
+    "model_url": "https://fal.run/fal-ai/longcat-video/distilled/image-to-video/480p",
+    "ai_model_price_list": [],
+    "is_valuable": false,
+    "supported_durations": [],
+    "pricingText": "None"
+  },
+  {
+    "endpoint_id": "fal-ai/vidu/q2/reference-to-video/pro",
+    "provider": "fal.ai",
+    "display_name": "Vidu",
+    "description": "Use the latest Vidu Q2 Pro models which much more better quality and control on your videos.",
+    "category": "image-to-video",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/0a8b0dde/etLT9wcPxiw9gdfI1asZ2_4d84e99d288340748ed4af813552e8f1.jpg",
+    "model_url": "https://fal.run/fal-ai/vidu/q2/reference-to-video/pro",
+    "ai_model_price_list": [],
+    "is_valuable": false,
+    "supported_durations": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8
+    ],
+    "pricingText": "The model will cost 0.1 $ for every 360p video, 0.2 $ for every 520p video, 0.3 $ for 720 p video. For 1080 p the cost would be 0.2 $ along with 0.1 $ for every video second."
+  },
+  {
+    "endpoint_id": "fal-ai/davinci-magihuman",
+    "provider": "fal.ai",
+    "display_name": "Davinci Magihuman",
+    "description": "Expressive facial performance, natural speech-expression coordination, realistic body motion, and accurate audio-video synchronization with DaVinci-MagiHuman model",
+    "category": "image-to-video",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/0a93a33a/pmKu_XIgnIr5iks3pT5-8_4843332a93674340ab52144e2d533c1e.jpg",
+    "model_url": "https://fal.run/fal-ai/davinci-magihuman",
+    "ai_model_price_list": [],
+    "is_valuable": false,
+    "supported_durations": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20,
+      21,
+      22,
+      23,
+      24,
+      25,
+      26,
+      27,
+      28,
+      29,
+      30
+    ],
+    "pricingText": "Waiting for your input...\nYour request will cost $0.05 per second."
+  },
+  {
+    "endpoint_id": "fal-ai/sora-2/characters",
+    "provider": "fal.ai",
+    "display_name": "Sora 2",
+    "description": "Generate character ids to use with Sora 2 generations",
+    "category": "image-to-video",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/0a91ee57/xEfDqX8_tr5k0oO591ShR_5a1a6c98c58e47f2b909421387e44423.jpg",
+    "model_url": "https://fal.run/fal-ai/sora-2/characters",
+    "ai_model_price_list": [],
+    "is_valuable": false,
+    "supported_durations": [],
+    "pricingText": "Waiting for your input...\nYour request will cost $0 per unit."
+  },
+  {
+    "endpoint_id": "fal-ai/pixverse/v4.5/image-to-video/fast",
+    "provider": "fal.ai",
+    "display_name": "PixVerse V4.5 Image To Video Fast",
+    "description": "Generate fast high quality video clips from text and image prompts using PixVerse v4.5",
+    "category": "image-to-video",
+    "status": "active",
+    "thumbnail_url": "https://storage.googleapis.com/falserverless/gallery/pixverse-v3.5.webp",
+    "model_url": "https://fal.run/fal-ai/pixverse/v4.5/image-to-video/fast",
+    "ai_model_price_list": [],
+    "is_valuable": false,
+    "supported_durations": [],
+    "pricingText": "For 5s video your request will cost 0.3$ for 360p and 540p, 0.4$ for 720p and 0.8$ for 1080p. For $1 you can run this model with approximately 2 times."
+  },
+  {
+    "endpoint_id": "moonvalley/marey/i2v",
+    "provider": "fal.ai",
+    "display_name": "Marey Realism V1.5",
+    "description": "Generate a video starting from an image as the first frame with Marey, a generative video model trained exclusively on fully licensed data.",
+    "category": "image-to-video",
+    "status": "active",
+    "thumbnail_url": "https://fal.media/files/elephant/ZYJf9OjFksJF5QIMxEjCh_85dff19060504c08b66d4a0675788c3a.jpg",
+    "model_url": "https://fal.run/moonvalley/marey/i2v",
+    "ai_model_price_list": [],
+    "is_valuable": false,
+    "supported_durations": [
+      5,
+      10
+    ],
+    "pricingText": "Waiting for your input...\nYour request will cost $1.50 for a 5s video or $3.00 for a 10s video."
+  },
+  {
+    "endpoint_id": "fal-ai/ltx-2.3-22b/distilled/image-to-video/lora",
+    "provider": "fal.ai",
+    "display_name": "LTX-2.3 22B Distilled",
+    "description": "Generate video with audio from images using LTX-2.3 Distilled and custom LoRA",
+    "category": "image-to-video",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/0a9289ce/20zCxq0nC6akyUyph0bID__tmp_b066-silk-cactus-bloom.jpg",
+    "model_url": "https://fal.run/fal-ai/ltx-2.3-22b/distilled/image-to-video/lora",
+    "ai_model_price_list": [],
+    "is_valuable": false,
+    "supported_durations": [],
+    "pricingText": "None"
+  },
+  {
+    "endpoint_id": "fal-ai/ai-avatar/multi",
+    "provider": "fal.ai",
+    "display_name": "AI Avatar Multi",
+    "description": "MultiTalk model generates a multi-person conversation video from an image and audio files. Creates a realistic scene where multiple people speak in sequence.",
+    "category": "image-to-video",
+    "status": "active",
+    "thumbnail_url": "https://storage.googleapis.com/fal_cdn/fal/Sound.jpg",
+    "model_url": "https://fal.run/fal-ai/ai-avatar/multi",
+    "ai_model_price_list": [],
+    "is_valuable": false,
+    "supported_durations": [],
+    "pricingText": "Your request will cost $0.2 per second.\nFor 720p price will be doubled."
+  },
+  {
+    "endpoint_id": "fal-ai/cosmos-predict-2.5/image-to-video",
+    "provider": "fal.ai",
+    "display_name": "Cosmos Predict 2.5 2B",
+    "description": "Generate video from text and images using NVIDIA's 2B Cosmos Post-Trained Model",
+    "category": "image-to-video",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/0a8fcd1d/bqbrB-KoKCNBQG4jEOeZm_ee4d331bf9504f38b7d2ebd823275578.jpg",
+    "model_url": "https://fal.run/fal-ai/cosmos-predict-2.5/image-to-video",
+    "ai_model_price_list": [],
+    "is_valuable": false,
+    "supported_durations": [
+      5.8125
+    ],
+    "pricingText": "Your request will cost $0.20 per video. Videos have a fixed size of 1280x704 and a fixed duration of 93 frames at 16 frames per second (5.8 seconds.)"
+  },
+  {
+    "endpoint_id": "fal-ai/ltx-video-13b-dev/image-to-video",
+    "provider": "fal.ai",
+    "display_name": "LTX Video-0.9.7 13B",
+    "description": "Generate videos from prompts and images using LTX Video-0.9.7 13B and custom LoRA",
+    "category": "image-to-video",
+    "status": "active",
+    "thumbnail_url": "https://storage.googleapis.com/fal_cdn/fal/Training-5.jpg",
+    "model_url": "https://fal.run/fal-ai/ltx-video-13b-dev/image-to-video",
+    "ai_model_price_list": [],
+    "is_valuable": false,
+    "supported_durations": [],
+    "pricingText": "Your request will cost $0.20 per video. For $1 you can run this model approximately 5 times."
+  },
+  {
+    "endpoint_id": "fal-ai/ltx-2-19b/distilled/image-to-video/lora",
+    "provider": "fal.ai",
+    "display_name": "LTX-2 19B Distilled",
+    "description": "Generate video with audio from images using LTX-2 Distilled and custom LoRA",
+    "category": "image-to-video",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/0a8936e5/-h8aDgobm8qIgSCkOXrcN_6f4888dc7dee4cc9a61ba27199f64c9a.jpg",
+    "model_url": "https://fal.run/fal-ai/ltx-2-19b/distilled/image-to-video/lora",
+    "ai_model_price_list": [],
+    "is_valuable": false,
+    "supported_durations": [],
+    "pricingText": "None"
+  },
+  {
+    "endpoint_id": "fal-ai/ai-avatar/multi-text",
+    "provider": "fal.ai",
+    "display_name": "AI Avatar Multi Text",
+    "description": "MultiTalk model generates a multi-person conversation video from an image and text inputs. Converts text to speech for each person, generating a realistic conversation scene.",
+    "category": "image-to-video",
+    "status": "active",
+    "thumbnail_url": "https://storage.googleapis.com/fal_cdn/fal/Sound.jpg",
+    "model_url": "https://fal.run/fal-ai/ai-avatar/multi-text",
+    "ai_model_price_list": [],
+    "is_valuable": false,
+    "supported_durations": [],
+    "pricingText": "Your request will cost $0.2 per second.\nFor 720p price will be doubled."
+  },
+  {
+    "endpoint_id": "fal-ai/ltx-video-lora/image-to-video",
+    "provider": "fal.ai",
+    "display_name": "LTX Video-0.9.7 LoRA",
+    "description": "Generate videos from prompts and images using LTX Video-0.9.7 and custom LoRA",
+    "category": "image-to-video",
+    "status": "active",
+    "thumbnail_url": "https://storage.googleapis.com/fal_cdn/fal/Training-5.jpg",
+    "model_url": "https://fal.run/fal-ai/ltx-video-lora/image-to-video",
+    "ai_model_price_list": [
+      {
+        "unit": "720p",
+        "price_per_unit": 0.2
+      }
+    ],
+    "is_valuable": true,
+    "supported_durations": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6
+    ],
+    "pricingText": "Your request will cost $0.20 per video. For $1 you can run this model approximately 5 times."
+  },
+  {
+    "endpoint_id": "fal-ai/wan-move",
+    "provider": "fal.ai",
+    "display_name": "Wan Move [480p]",
+    "description": "Use Wan-Move to generate videos with controlled the motion using trajectories",
+    "category": "image-to-video",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/0a87a28e/4m7n8IspYT6G8xgRmi4bP_3ddaa7037cec429d916f965bed0613f9.jpg",
+    "model_url": "https://fal.run/fal-ai/wan-move",
+    "ai_model_price_list": [],
+    "is_valuable": false,
+    "supported_durations": [],
+    "pricingText": "Your request will cost $0.2 per video."
+  },
+  {
+    "endpoint_id": "fal-ai/ltx-2-19b/image-to-video/lora",
+    "provider": "fal.ai",
+    "display_name": "LTX-2 19B",
+    "description": "Generate video with audio from images using LTX-2 and custom LoRA",
+    "category": "image-to-video",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/0a89365f/rZwl5Yceudvyc6Cd3Y_KN_eb6ff726b82948398bb475dca6cd1b9d.jpg",
+    "model_url": "https://fal.run/fal-ai/ltx-2-19b/image-to-video/lora",
+    "ai_model_price_list": [],
+    "is_valuable": false,
+    "supported_durations": [],
+    "pricingText": "None"
+  },
+  {
+    "endpoint_id": "bytedance/lynx",
+    "provider": "fal.ai",
+    "display_name": "Lynx",
+    "description": "Generate subject consistent videos using Lynx from ByteDance!",
+    "category": "image-to-video",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/lion/46Az_CH4LkzpoBBIJYiSf_c6c1e1cb386b4e30b7c0e8eee627379c.jpg",
+    "model_url": "https://fal.run/bytedance/lynx",
+    "ai_model_price_list": [
+      {
+        "unit": "720p",
+        "price_per_unit": 0.0384
+      }
+    ],
+    "is_valuable": true,
+    "supported_durations": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20,
+      21,
+      22,
+      23,
+      24,
+      25,
+      26,
+      27,
+      28,
+      29,
+      30,
+      31,
+      32,
+      33,
+      34,
+      35,
+      36,
+      37,
+      38,
+      39,
+      40,
+      41,
+      42,
+      43,
+      44,
+      45,
+      46,
+      47,
+      48,
+      49,
+      50,
+      51,
+      52,
+      53,
+      54,
+      55,
+      56,
+      57,
+      58,
+      59,
+      60,
+      61,
+      62,
+      63,
+      64,
+      65,
+      66,
+      67,
+      68,
+      69,
+      70,
+      71,
+      72,
+      73,
+      74,
+      75,
+      76,
+      77,
+      78,
+      79,
+      80,
+      81
+    ],
+    "pricingText": "Your request will cost $0.6 per second."
+  },
+  {
+    "endpoint_id": "fal-ai/wan-ati",
+    "provider": "fal.ai",
+    "display_name": "Wan Ati",
+    "description": "WAN-ATI is a controllable video generation model that uses trajectory instructions to guide object, local, and camera motion, enabling precise and flexible image-to-video creation.",
+    "category": "image-to-video",
+    "status": "active",
+    "thumbnail_url": "https://fal.media/files/zebra/08UqxLqr7sMO2AoVe9S7y_74d97134c50643e287a332aaae11b3d1.jpg",
+    "model_url": "https://fal.run/fal-ai/wan-ati",
+    "ai_model_price_list": [],
+    "is_valuable": false,
+    "supported_durations": [],
+    "pricingText": "Your request will cost $0.15 per video."
+  },
+  {
+    "endpoint_id": "fal-ai/hunyuan-custom",
+    "provider": "fal.ai",
+    "display_name": "Hunyuan Custom",
+    "description": "HunyuanCustom revolutionizes video generation with unmatched identity consistency across multiple input types. Its innovative fusion modules and alignment networks outperform competitors, maintaining subject integrity while responding flexibly to text, image, audio, and video conditions.",
+    "category": "image-to-video",
+    "status": "active",
+    "thumbnail_url": "https://storage.googleapis.com/fal_cdn/fal/Sound-3.jpg",
+    "model_url": "https://fal.run/fal-ai/hunyuan-custom",
+    "ai_model_price_list": [
+      {
+        "unit": "720p",
+        "price_per_unit": 0.3713
+      }
+    ],
+    "is_valuable": true,
+    "supported_durations": [
+      4,
+      5,
+      6
+    ],
+    "pricingText": "For a video generation, your request will cost $0.8 at 512p resolution and 2.4$ at 720p resolution."
+  },
+  {
+    "endpoint_id": "fal-ai/goal-force",
+    "provider": "fal.ai",
+    "display_name": "Goal Force",
+    "description": "Physics-based video generation with Goal Force. Point where you want objects to move, set force direction and strength, get physically plausible results.",
+    "category": "image-to-video",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/0a928c9f/g9EG5JEuSo_2SqV0hL_h8_fde32fbb53b24e8d963f321aa36c4403.jpg",
+    "model_url": "https://fal.run/fal-ai/goal-force",
+    "ai_model_price_list": [],
+    "is_valuable": false,
+    "supported_durations": [],
+    "pricingText": "None"
+  },
+  {
+    "endpoint_id": "fal-ai/hunyuan-portrait",
+    "provider": "fal.ai",
+    "display_name": "Hunyuan Portrait",
+    "description": "HunyuanPortrait is a diffusion-based framework for generating lifelike, temporally consistent portrait animations.",
+    "category": "image-to-video",
+    "status": "active",
+    "thumbnail_url": "https://storage.googleapis.com/fal_cdn/fal/Upscale-4.jpeg",
+    "model_url": "https://fal.run/fal-ai/hunyuan-portrait",
+    "ai_model_price_list": [],
+    "is_valuable": false,
+    "supported_durations": [],
+    "pricingText": "Your request will cost $0.4 for videos up to 5 seconds. For longer videos, you will be charged $0.08 per second of output video."
+  },
+  {
+    "endpoint_id": "fal-ai/decart/lucy-5b/image-to-video",
+    "provider": "fal.ai",
+    "display_name": "Decart",
+    "description": "Lucy-5B is a model that can create 5-second I2V videos in under 5 seconds, achieving >1x RTF end-to-end",
+    "category": "image-to-video",
+    "status": "active",
+    "thumbnail_url": "https://fal.media/files/kangaroo/srM1hEjGsuYwd4UhvzpE7_c5bddd630600497e918bb16e99e21653.jpg",
+    "model_url": "https://fal.run/fal-ai/decart/lucy-5b/image-to-video",
+    "ai_model_price_list": [],
+    "is_valuable": false,
+    "supported_durations": [],
+    "pricingText": "None"
+  },
+  {
+    "endpoint_id": "fal-ai/veo3.1/fast/reference-to-video",
+    "provider": "fal.ai",
+    "display_name": "Veo 3.1 Fast",
+    "description": "Generate videos from reference images using Google's Veo 3.1 Fast",
+    "category": "image-to-video",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/penguin/G4gMW4C57OPjhZxeHjr5n_afcc67d98aa7435aa3c3e0fcb3f76d12.jpg",
+    "model_url": "https://fal.run/fal-ai/veo3.1/fast/reference-to-video",
+    "ai_model_price_list": [],
+    "is_valuable": false,
+    "supported_durations": [],
+    "pricingText": "For every second of video you generated, you will be charged $0.10 (audio off) or $0.15 (audio on). For example, a 5s video with audio on will cost $0.75."
+  },
+  {
+    "endpoint_id": "fal-ai/flashhead",
+    "provider": "fal.ai",
+    "display_name": "Flashhead",
+    "description": "SoulX-FlashHead is a unified 1.3B-parameter framework designed for high-fidelity, infinite-length, and real-time streaming portrait video generation.",
+    "category": "image-to-video",
+    "status": "active",
+    "thumbnail_url": "https://v3b.fal.media/files/b/0a94db4d/aMNytcPYimW1YyGVRoxH3_2b4f538f1c174926a2183f0a7da66c7a.jpg",
+    "model_url": "https://fal.run/fal-ai/flashhead",
+    "ai_model_price_list": [],
+    "is_valuable": false,
+    "supported_durations": [],
+    "pricingText": "Your request will cost $0.005 per second."
+  }
+]

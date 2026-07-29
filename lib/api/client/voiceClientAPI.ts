@@ -19,9 +19,9 @@ export const voiceClientAPI = {
         return getVoicesResult.data.voiceDataList;
     },
 
-    async getVoiceUrl(taskId: string): Promise<string | null> {
+    async getVoiceUrl(taskId: string, userId: string): Promise<string | null> {
         try {
-            const response = await getFetch(`/api/voice/url?taskId=${taskId}`);
+            const response = await getFetch(`/api/voice/url?taskId=${taskId}&userId=${userId}`);
 
             if (!response.ok) {
                 throw Error(`HTTP error! status: ${response.status}`);

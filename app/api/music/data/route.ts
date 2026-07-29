@@ -1,11 +1,21 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { musicServerAPI } from "@/lib/api/server/musicServerAPI";
-import {getNextBaseResponse} from "@/utils/getNextBaseResponse";
+import { getNextBaseResponse } from "@/lib/utils/getNextBaseResponse";
+import { getIsValidRequestS2S } from "@/lib/utils/getIsValidRequest";
 
 export async function GET(request: NextRequest) {
+    if (!getIsValidRequestS2S(request)) {
+        return getNextBaseResponse({
+            success: false,
+            status: 401,
+            error: "Unauthorized internal request",
+        });
+    }
+
     try {
         const searchParams = request.nextUrl.searchParams;
         const taskId = searchParams.get("taskId");
+        const userId = searchParams.get("userId");
 
         if (!taskId) {
             return getNextBaseResponse({
@@ -15,7 +25,15 @@ export async function GET(request: NextRequest) {
             });
         }
 
-        const musicDataList = await musicServerAPI.getMusicData(taskId);
+        if (!userId) {
+            return getNextBaseResponse({
+                success: false,
+                status: 403,
+                error: "Forbidden. You can only read your own data."
+            });
+        }
+
+        const musicDataList = await musicServerAPI.getMusicData(taskId, userId);
 
         return getNextBaseResponse({
             success: true,

@@ -1,0 +1,13 @@
+# ShortReal AI
+
+> A harnessed AI-powered video generation studio. Just bring the idea, and create videos with identical characters and high-end visuals in minutes.
+
+## Core Features
+- **Harnessed Video Generation Pipeline**: We integrate and manage complex AI models and pipelines so you don't have to.
+- **Identical Characters**: Generate videos keeping characters identical across multiple scenes.
+- **High-end Visuals in Minutes**: Generate stunning shortforms and videos from simple text ideas.
+
+## Main Links
+- [Homepage](https://shortreal.ai/)
+- [Terms of Service](https://shortreal.ai/legal/terms)
+- [Privacy Policy](https://shortreal.ai/legal/privacy)

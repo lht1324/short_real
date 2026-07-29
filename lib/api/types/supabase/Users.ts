@@ -1,3 +1,5 @@
+import {AIModelConfig} from "@/lib/api/types/supabase/VideoGenerationTasks";
+
 export interface User {
     id: string;
     email: string;
@@ -12,6 +14,12 @@ export interface User {
     last_subscribed_at: string;
     scheduled_downgrade_at?: string;
     downgrade_target_plan_id?: string;
+
+    preferred_ai_model_config: AIModelConfig;
+
+    // BYOK Keys
+    fal_ai_api_key?: string | null;
+    replicate_api_key?: string | null;
 }
 
 export enum SubscriptionPlan {

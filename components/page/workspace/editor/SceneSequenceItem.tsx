@@ -2,7 +2,9 @@
 
 import {memo, useMemo} from "react";
 import Image from "next/image";
+import {Image as ImageIcon, Video, Maximize2, RefreshCw, Loader2} from "lucide-react";
 import {CaptionData} from "@/components/page/workspace/editor/WorkspaceEditorPageClient";
+import {SceneGenerationStatus} from "@/lib/api/types/supabase/VideoGenerationTasks";
 
 interface SceneSequenceItemProps {
     captionData: CaptionData;
@@ -10,10 +12,20 @@ interface SceneSequenceItemProps {
     isHovered: boolean;
     isCurrentScene: boolean;
     isLastItem: boolean;
+    aspectRatio: '16:9' | '9:16';
+    realStartSec: number;
+    realEndSec: number;
+    isRegeneratingImage?: boolean;
+    isRegeneratingVideo?: boolean;
+    sceneStatus?: SceneGenerationStatus;
     onClickSceneSequence: (sceneStartSec: number) => void;
     onMouseEnter: () => void;
     onMouseLeave: () => void;
     onLoadImage: () => void;
+    onClickRegenerateImage?: (sceneNumber: number) => void;
+    onClickRegenerateVideo?: (sceneNumber: number) => void;
+    onClickZoomImage?: (sceneIndex: number) => void;
+    sceneIndex?: number;
 }
 
 function SceneSequenceItem({
@@ -22,43 +34,224 @@ function SceneSequenceItem({
     isHovered,
     isCurrentScene,
     isLastItem,
+    aspectRatio,
+    realStartSec,
+    realEndSec,
+    isRegeneratingImage = false,
+    isRegeneratingVideo = false,
+    sceneStatus,
     onClickSceneSequence,
     onMouseEnter,
     onMouseLeave,
     onLoadImage,
+    onClickRegenerateImage,
+    onClickRegenerateVideo,
+    onClickZoomImage,
+    sceneIndex = 0,
 }: SceneSequenceItemProps) {
-    const sceneStartSec = useMemo(() => {
-        return captionData.startSec;
-    }, [captionData.startSec]);
-    const sceneEndSec = useMemo(() => {
-        return captionData.endSec;
-    }, [captionData.endSec]);
+    const sceneStartSec = realStartSec;
+    const sceneEndSec = realEndSec;
 
+    const is16by9 = useMemo(() => aspectRatio === '16:9', [aspectRatio]);
+
+    const isImageLoadingState = isRegeneratingImage || sceneStatus === SceneGenerationStatus.GENERATING_IMAGE;
+    const isVideoLoadingState = isRegeneratingVideo || sceneStatus === SceneGenerationStatus.GENERATING_VIDEO;
+    const isAnyLoadingState = isImageLoadingState || isVideoLoadingState;
+
+    if (is16by9) {
+        // 16:9 레이아웃: 썸네일 상단(전체 폭) + 텍스트 하단 세로 스택
+        return (
+            <div
+                className={`
+                    relative rounded-xl border transition-all cursor-pointer backdrop-blur-sm bg-zinc-900/40 hover:bg-zinc-900/60 overflow-hidden
+                    ${isCurrentScene ? "border-zinc-500 shadow-sm" : "border-white/5"}
+                    ${isHovered ? 'z-50' : 'z-0'}
+                `}
+                onClick={() => {
+                    onClickSceneSequence(captionData.sceneNumber === 1 ? 0.00 : captionData.startSec + 0.1);
+                }}
+            >
+                {/* 썸네일 — 상단, 16:9 비율 */}
+                <div
+                    className="relative w-full overflow-hidden group"
+                    style={{ aspectRatio: '16/9' }}
+                    onMouseEnter={onMouseEnter}
+                    onMouseLeave={onMouseLeave}
+                >
+                    {imageUrl ? (
+                        <Image
+                            src={imageUrl}
+                            className="object-cover"
+                            alt={`Scene ${captionData.sceneNumber}`}
+                            fill
+                            sizes="(max-width: 768px) 100vw, 320px"
+                            onLoad={onLoadImage}
+                        />
+                    ) : (
+                        <div className="w-full h-full bg-zinc-800">
+                            <div className="w-full h-full bg-gradient-to-t from-black/20 to-transparent"/>
+                        </div>
+                    )}
+
+                    {/* Scene 번호 뱃지 */}
+                    <div className="absolute top-2 left-2 px-1.5 py-0.5 bg-black/60 rounded text-zinc-300 text-[11px] font-medium font-mono z-10">
+                        #{captionData.sceneNumber}
+                    </div>
+
+                    {/* 재생성 중 고급 글래스모피즘 스피너 오버레이 (16:9) */}
+                    {isAnyLoadingState && (
+                        <div className="absolute inset-0 bg-zinc-950/85 backdrop-blur-md border border-white/10 z-20 flex flex-col items-center justify-center gap-2 p-2 text-center animate-in fade-in duration-200 shadow-2xl">
+                            {isImageLoadingState ? (
+                                <>
+                                    <Loader2 className="w-5 h-5 animate-spin text-amber-400 drop-shadow-[0_0_8px_rgba(251,191,36,0.5)]" />
+                                    <span className="text-[11px] font-mono font-semibold tracking-wider text-amber-200/90">
+                                        Generating Image...
+                                    </span>
+                                </>
+                            ) : (
+                                <>
+                                    <Loader2 className="w-5 h-5 animate-spin text-cyan-400 drop-shadow-[0_0_8px_rgba(34,211,238,0.5)]" />
+                                    <span className="text-[11px] font-mono font-semibold tracking-wider text-cyan-200/90">
+                                        Rendering Motion...
+                                    </span>
+                                </>
+                            )}
+                        </div>
+                    )}
+
+                    {/* 썸네일 확대 전용 돋보기 버튼 (상단 우측 단독) */}
+                    <div className="absolute top-2 right-2 flex items-center bg-black/60 backdrop-blur-md p-1 rounded-lg border border-white/10 opacity-90 group-hover:opacity-100 transition-opacity z-10">
+                        <button
+                            type="button"
+                            title="Inspect Image Lightbox"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                if (onClickZoomImage) onClickZoomImage(sceneIndex);
+                            }}
+                            className="p-1 rounded text-zinc-300 hover:text-white hover:bg-white/10 transition-colors"
+                        >
+                            <Maximize2 size={13} />
+                        </button>
+                    </div>
+                </div>
+
+                {/* 텍스트 하단 스택 */}
+                <div className="p-3.5 flex flex-col gap-2">
+                    <p className="text-zinc-400 text-[12px] leading-relaxed line-clamp-2">
+                        {captionData.script}
+                    </p>
+                    
+                    {/* 타임코드 (좌) + 슬림 아이콘 캡슐 바 (우) */}
+                    <div className="flex items-center justify-between pt-1">
+                        <span className="text-zinc-500 text-[11px] font-mono">
+                            ⏱ {sceneStartSec.toFixed(2)}s – {sceneEndSec.toFixed(2)}s
+                        </span>
+
+                        {/* 럭셔리 슬림 아이콘 캡슐 바 (호버 시 재시도 RefreshCw 아이콘으로 모핑) */}
+                        <div className="flex items-center gap-1 bg-black/50 backdrop-blur-md p-1 rounded-lg border border-white/10">
+                            <button
+                                type="button"
+                                title="Regenerate Image"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (onClickRegenerateImage) onClickRegenerateImage(captionData.sceneNumber);
+                                }}
+                                className="group/btn relative p-1.5 rounded-md text-zinc-400 hover:text-white hover:bg-white/10 transition-all duration-200"
+                            >
+                                <div className="relative w-3.5 h-3.5 flex items-center justify-center">
+                                    <ImageIcon size={13} className="transition-all duration-200 group-hover/btn:opacity-0 group-hover/btn:scale-75 group-hover/btn:rotate-45" />
+                                    <RefreshCw size={12} className="absolute inset-0 m-auto opacity-0 scale-75 -rotate-45 transition-all duration-200 group-hover/btn:opacity-100 group-hover/btn:scale-100 group-hover/btn:rotate-0 text-amber-400" />
+                                </div>
+                            </button>
+                            <button
+                                type="button"
+                                title="Regenerate Video"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (onClickRegenerateVideo) onClickRegenerateVideo(captionData.sceneNumber);
+                                }}
+                                className="group/btn relative p-1.5 rounded-md text-zinc-400 hover:text-white hover:bg-white/10 transition-all duration-200"
+                            >
+                                <div className="relative w-3.5 h-3.5 flex items-center justify-center">
+                                    <Video size={13} className="transition-all duration-200 group-hover/btn:opacity-0 group-hover/btn:scale-75 group-hover/btn:rotate-45" />
+                                    <RefreshCw size={12} className="absolute inset-0 m-auto opacity-0 scale-75 -rotate-45 transition-all duration-200 group-hover/btn:opacity-100 group-hover/btn:scale-100 group-hover/btn:rotate-0 text-cyan-400" />
+                                </div>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    // 9:16 레이아웃 (기존): 텍스트 좌 + 썸네일 우
     return (
         <div
             key={captionData.sceneNumber}
             className={`
-                        relative p-4 rounded-xl border transition-all cursor-pointer backdrop-blur-sm bg-gray-800/30
-                        ${isCurrentScene ? "border-pink-500" : "border-purple-500/20 hover:border-purple-400/40"}
+                        relative p-4 rounded-xl border transition-all cursor-pointer backdrop-blur-sm bg-zinc-900/40 hover:bg-zinc-900/60
+                        ${isCurrentScene ? "border-zinc-500 shadow-sm" : "border-white/5"}
                         ${isHovered ? 'z-50' : 'z-0'}
                     `}
             onClick={() => {
-                onClickSceneSequence(captionData.sceneNumber === 1 ? 0.00 : sceneStartSec);
+                onClickSceneSequence(captionData.sceneNumber === 1 ? 0.00 : captionData.startSec + 0.1);
             }}
         >
             <div className="flex items-stretch justify-between">
-                <div className="flex flex-1 flex-col justify-between mr-4">
-                    <div className="space-y-3">
-                        <div className="text-purple-300 text-lg font-medium">Scene #{captionData.sceneNumber}</div>
-                        <p className="text-white text-base leading-relaxed">
+                {/* 텍스트 구역 */}
+                <div className="flex flex-1 flex-col justify-between mr-3">
+                    <div className="space-y-2">
+                        <div className="text-zinc-100 text-[13px] font-medium tracking-wide">Scene #{captionData.sceneNumber}</div>
+                        
+                        <p className="text-zinc-400 text-[12px] leading-relaxed line-clamp-3">
                             {captionData.script}
                         </p>
                     </div>
-                    <span className="text-purple-300 text-base pt-3">⏱ {sceneStartSec.toFixed(2)}s ~ {sceneEndSec.toFixed(2)}s</span>
+
+                    {/* 하단 행: 좌 측 타임코드 & 우 측 슬림 아이콘 캡슐 바 */}
+                    <div className="flex items-center justify-between pt-3">
+                        <div className="text-zinc-500 text-[11px] font-mono">
+                            ⏱ {sceneStartSec.toFixed(2)}s ~ {sceneEndSec.toFixed(2)}s
+                        </div>
+
+                        {/* 우 측 럭셔리 슬림 글래스 아이콘 캡슐 바 (호버 시 재시도 RefreshCw 아이콘으로 모핑) */}
+                        <div className="flex items-center gap-1 bg-black/50 backdrop-blur-md p-1 rounded-lg border border-white/10">
+                            <button
+                                type="button"
+                                title="Regenerate Image"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (onClickRegenerateImage) onClickRegenerateImage(captionData.sceneNumber);
+                                }}
+                                className="group/btn relative p-1.5 rounded-md text-zinc-400 hover:text-white hover:bg-white/10 transition-all duration-200"
+                            >
+                                <div className="relative w-3.5 h-3.5 flex items-center justify-center">
+                                    <ImageIcon size={13} className="transition-all duration-200 group-hover/btn:opacity-0 group-hover/btn:scale-75 group-hover/btn:rotate-45" />
+                                    <RefreshCw size={12} className="absolute inset-0 m-auto opacity-0 scale-75 -rotate-45 transition-all duration-200 group-hover/btn:opacity-100 group-hover/btn:scale-100 group-hover/btn:rotate-0 text-amber-400" />
+                                </div>
+                            </button>
+                            <button
+                                type="button"
+                                title="Regenerate Video"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (onClickRegenerateVideo) onClickRegenerateVideo(captionData.sceneNumber);
+                                }}
+                                className="group/btn relative p-1.5 rounded-md text-zinc-400 hover:text-white hover:bg-white/10 transition-all duration-200"
+                            >
+                                <div className="relative w-3.5 h-3.5 flex items-center justify-center">
+                                    <Video size={13} className="transition-all duration-200 group-hover/btn:opacity-0 group-hover/btn:scale-75 group-hover/btn:rotate-45" />
+                                    <RefreshCw size={12} className="absolute inset-0 m-auto opacity-0 scale-75 -rotate-45 transition-all duration-200 group-hover/btn:opacity-100 group-hover/btn:scale-100 group-hover/btn:rotate-0 text-cyan-400" />
+                                </div>
+                            </button>
+                        </div>
+                    </div>
                 </div>
-                <div className="relative">
+
+                {/* 썸네일 구역 */}
+                <div className="relative flex-shrink-0">
                     <div
-                        className="relative w-32 rounded-lg overflow-hidden border border-purple-500/30 flex-shrink-0 cursor-pointer hover:border-purple-400/50 transition-all"
+                        className="relative w-32 rounded-lg overflow-hidden border border-white/10 cursor-pointer transition-all group"
                         style={{aspectRatio: '9/16'}}
                         onMouseEnter={() => {
                              onMouseEnter();
@@ -77,30 +270,47 @@ function SceneSequenceItem({
                                 onLoad={() => { onLoadImage() }}
                             />
                         ) : (
-                            <div className="w-full h-full bg-gradient-to-br from-pink-400 via-purple-500 to-indigo-600">
+                            <div className="w-full h-full bg-zinc-800">
                                 <div className="w-full h-full bg-gradient-to-t from-black/20 to-transparent"></div>
                             </div>
                         )}
-                    </div>
 
-                    {/* 확대된 이미지 툴팁 */}
-                    {isHovered && imageUrl && (
-                        <div
-                            className={!isLastItem
-                                ? "absolute right-0 top-0 w-64 rounded-lg overflow-hidden border-2 border-purple-400/80 shadow-2xl z-50 pointer-events-none"
-                                : "absolute right-0 bottom-0 w-64 rounded-lg overflow-hidden border-2 border-purple-400/80 shadow-2xl z-50 pointer-events-none"
-                            }
-                            style={{aspectRatio: '9/16'}}
-                        >
-                            <Image
-                                src={imageUrl}
-                                alt={`Scene ${captionData.sceneNumber} - Enlarged`}
-                                width={256}
-                                height={456}
-                                className="object-cover"
-                            />
+                        {/* 재생성 중 고급 글래스모피즘 스피너 오버레이 (9:16) */}
+                        {isAnyLoadingState && (
+                            <div className="absolute inset-0 bg-zinc-950/85 backdrop-blur-md border border-white/10 z-20 flex flex-col items-center justify-center gap-2 p-2 text-center animate-in fade-in duration-200 shadow-2xl">
+                                {isImageLoadingState ? (
+                                    <>
+                                        <Loader2 className="w-5 h-5 animate-spin text-amber-400 drop-shadow-[0_0_8px_rgba(251,191,36,0.5)]" />
+                                        <span className="text-[10px] font-mono font-semibold tracking-wider text-amber-200/90 leading-tight">
+                                            Generating Image...
+                                        </span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <Loader2 className="w-5 h-5 animate-spin text-cyan-400 drop-shadow-[0_0_8px_rgba(34,211,238,0.5)]" />
+                                        <span className="text-[10px] font-mono font-semibold tracking-wider text-cyan-200/90 leading-tight">
+                                            Rendering Motion...
+                                        </span>
+                                    </>
+                                )}
+                            </div>
+                        )}
+
+                        {/* 썸네일 확대 전용 돋보기 버튼 (상단 우측 단독) */}
+                        <div className="absolute top-1.5 right-1.5 flex items-center bg-black/70 backdrop-blur-md p-1 rounded-lg border border-white/10 opacity-90 group-hover:opacity-100 transition-opacity z-10">
+                            <button
+                                type="button"
+                                title="Inspect Image Lightbox"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (onClickZoomImage) onClickZoomImage(sceneIndex);
+                                }}
+                                className="p-1 rounded text-zinc-300 hover:text-white hover:bg-white/10 transition-colors"
+                            >
+                                <Maximize2 size={12} />
+                            </button>
                         </div>
-                    )}
+                    </div>
                 </div>
             </div>
         </div>

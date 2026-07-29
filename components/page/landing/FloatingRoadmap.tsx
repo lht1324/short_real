@@ -77,7 +77,7 @@ function FloatingRoadmap({
                 <div className="p-2 space-y-1 max-h-[60vh] overflow-y-auto custom-scrollbar">
                     {isLoading ? (
                         <div className="flex flex-col items-center justify-center py-8 text-white/50 space-y-2">
-                            <Loader2 className="w-6 h-6 animate-spin text-purple-500" />
+                            <Loader2 className="w-6 h-6 animate-spin text-white" />
                             <span className="text-sm">Loading roadmap...</span>
                         </div>
                     ) : roadmapItemList.length === 0 ? (
@@ -118,8 +118,8 @@ function FloatingRoadmap({
             {/* 트리거 버튼 (알약 형태) */}
             <button
                 onClick={() => setIsOpen(!isOpen)}
-                className={`pointer-events-auto group flex items-center gap-2 h-10 pl-3 pr-4 rounded-full border border-white/10 bg-black/40 shadow-lg backdrop-blur-xl transition-all hover:scale-105 hover:bg-white/10 hover:border-purple-500/50 ${
-                    isOpen ? "bg-white/10 border-purple-500/50 text-white" : "text-white/80"
+                className={`pointer-events-auto group flex items-center gap-2 h-10 pl-3 pr-4 rounded-full border border-white/10 bg-black/40 shadow-lg backdrop-blur-xl transition-all hover:scale-105 hover:bg-white/10 hover:border-white/30 ${
+                    isOpen ? "bg-white/10 border-white/30 text-white" : "text-white/80"
                 }`}
             >
                 <Sparkles className={`w-4 h-4 text-yellow-400 transition-transform ${isOpen ? "rotate-12" : "group-hover:rotate-12"}`} />
@@ -130,8 +130,8 @@ function FloatingRoadmap({
 
                 {!isOpen && !isLoading && roadmapItemList.length > 0 && (
                     <span className="absolute -top-1 -right-1 flex h-2.5 w-2.5">
-                        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-purple-500 opacity-75"></span>
-                        <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-purple-500"></span>
+                        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-zinc-400 opacity-75"></span>
+                        <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-zinc-400"></span>
                     </span>
                 )}
             </button>

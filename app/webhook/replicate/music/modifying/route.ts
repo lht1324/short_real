@@ -1,9 +1,9 @@
 import { NextRequest } from 'next/server';
-import { createSupabaseServiceRoleClient } from '@/lib/supabaseServiceRole';
+import { createSupabaseServiceRoleClient } from '@/lib/supabase/supabaseServiceRole';
 import {videoGenerationTasksServerAPI} from "@/lib/api/server/videoGenerationTasksServerAPI";
-import {taskCheckAndCleanupIfCancelled} from "@/utils/taskCheckAndCleanupIfCancelled";
-import {getNextBaseResponse} from "@/utils/getNextBaseResponse";
-import {internalFireAndForgetFetch} from "@/utils/internalFetch";
+import {taskCheckAndCleanupIfCancelled} from "@/lib/utils/taskCheckAndCleanupIfCancelled";
+import {getNextBaseResponse} from "@/lib/utils/getNextBaseResponse";
+import {internalFireAndForgetFetch} from "@/lib/utils/internalFetch";
 
 export async function POST(request: NextRequest) {
     const supabase = createSupabaseServiceRoleClient();
@@ -54,7 +54,7 @@ export async function POST(request: NextRequest) {
             }
 
             const audioBuffer = await audioResponse.arrayBuffer();
-            const filePath = `${taskId}/${taskId}_processed_audio.mp3`; // 어차피 하나만 선택해 처리하니 index 불필요
+            const filePath = `${videoGenerationTask.user_id}/${taskId}/${taskId}_processed_audio.mp3`; // 어차피 하나만 선택해 처리하니 index 불필요
 
             const { error: uploadError } = await supabase.storage
                 .from('video_music_temp_storage')
@@ -106,7 +106,6 @@ export async function POST(request: NextRequest) {
                 console.log(`[Webhook Audio] 최종 병합 시작 조건 충족: ${taskId}`);
 
                 // 최종 병합 API 호출 (fire-and-forget)
-
                 internalFireAndForgetFetch(`${process.env.BASE_URL}/api/video/merge/music?taskId=${taskId}`, {
                     method: 'POST',
                 });
@@ -122,9 +121,10 @@ export async function POST(request: NextRequest) {
                 .from('video_generation_tasks')
                 .update({
                     music_completed: false,
-                    // 필요시 에러 메시지 저장 필드 추가 가능
                 })
                 .eq('id', taskId);
+
+            await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
         }
 
         return getNextBaseResponse({
@@ -135,10 +135,11 @@ export async function POST(request: NextRequest) {
 
     } catch (error) {
         console.error('[Webhook Audio] Error:', error);
+        await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
         return getNextBaseResponse({
             success: false,
             status: 500,
-            error: 'Webhook processing failed'
+            error: error instanceof Error ? error.message : 'Webhook processing failed'
         });
     }
 }

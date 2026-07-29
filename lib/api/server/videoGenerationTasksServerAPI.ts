@@ -1,6 +1,6 @@
-import { createSupabaseServer } from '@/lib/supabaseServer';
+import { createSupabaseServer } from '@/lib/supabase/supabaseServer';
 import {VideoGenerationTask, VideoGenerationTaskStatus} from '@/lib/api/types/supabase/VideoGenerationTasks';
-import {createSupabaseServiceRoleClient} from "@/lib/supabaseServiceRole";
+import {createSupabaseServiceRoleClient} from "@/lib/supabase/supabaseServiceRole";
 
 export const videoGenerationTasksServerAPI = {
     // POST - 새로운 영상 생성 작업 생성
@@ -146,7 +146,7 @@ export const videoGenerationTasksServerAPI = {
             // 1. narration_voice_storage 삭제
             const { error: voiceError } = await supabase.storage
                 .from('narration_voice_storage')
-                .remove([`${taskId}.mp3`]);
+                .remove([`${existingTask.user_id}/${taskId}.mp3`]);
             if (voiceError) console.error('Storage delete error (narration_voice):', voiceError.message);
 
             // 2-4. 나머지 버킷들 (폴더 기반 - taskId 폴더 내 모든 파일 조회 후 삭제)
@@ -167,7 +167,7 @@ export const videoGenerationTasksServerAPI = {
                 }
 
                 if (files && files.length > 0) {
-                    const filePaths = files.map(file => `${taskId}/${file.name}`);
+                    const filePaths = files.map(file => `${existingTask.user_id}/${taskId}/${file.name}`);
                     const { error: removeError } = await supabase.storage
                         .from(bucketName)
                         .remove(filePaths);

@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { usersServerAPI } from "@/lib/api/server/usersServerAPI";
-import { getNextBaseResponse } from "@/utils/getNextBaseResponse";
+import { getNextBaseResponse } from "@/lib/utils/getNextBaseResponse";
 import { User } from "@/lib/api/types/supabase/Users";
 
 export async function GET(
@@ -20,11 +20,24 @@ export async function GET(
             });
         }
 
+        // --- Security Masking ---
+        // Mask API keys before sending to the client (e.g., '************' if key exists)
+        const maskKey = (key: string | null | undefined) => {
+            if (!key) return null;
+            return "************";
+        };
+
+        const maskedUser: User = {
+            ...user,
+            fal_ai_api_key: maskKey(user.fal_ai_api_key),
+            replicate_api_key: maskKey(user.replicate_api_key),
+        };
+
         return getNextBaseResponse({
             success: true,
             status: 200,
             data: {
-                user: user,
+                user: maskedUser,
             },
             message: "Fetched user data successfully."
         });

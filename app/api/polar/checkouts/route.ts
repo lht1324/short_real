@@ -1,5 +1,6 @@
 import { NextRequest } from "next/server";
-import { getNextBaseResponse } from "@/utils/getNextBaseResponse";
+import { getNextBaseResponse } from "@/lib/utils/getNextBaseResponse";
+import { getIsValidRequestS2S } from "@/lib/utils/getIsValidRequest";
 import { PolarClient } from "@/lib/PolarClient";
 
 /**
@@ -8,6 +9,13 @@ import { PolarClient } from "@/lib/PolarClient";
  * checkouts:write 권한 필요
  */
 export async function POST(request: NextRequest) {
+    if (!getIsValidRequestS2S(request)) {
+        return getNextBaseResponse({
+            success: false,
+            status: 401,
+            error: 'Unauthorized internal request',
+        });
+    }
     try {
         const polar = new PolarClient().getClient();
 

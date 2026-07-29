@@ -1,12 +1,22 @@
 import { NextRequest } from "next/server";
 import { videoServerAPI } from "@/lib/api/server/videoServerAPI";
-import {getNextBaseResponse} from "@/utils/getNextBaseResponse";
+import { getNextBaseResponse } from "@/lib/utils/getNextBaseResponse";
+import { getIsValidRequestS2S } from "@/lib/utils/getIsValidRequest";
 
 export async function GET(request: NextRequest) {
+    if (!getIsValidRequestS2S(request)) {
+        return getNextBaseResponse({
+            success: false,
+            status: 401,
+            error: "Unauthorized internal request",
+        });
+    }
+
     try {
         const searchParams = request.nextUrl.searchParams;
         const taskId = searchParams.get("taskId");
         const fileName = searchParams.get("fileName");
+        const userId = searchParams.get("userId");
 
         if (!taskId) {
             return getNextBaseResponse({
@@ -16,8 +26,15 @@ export async function GET(request: NextRequest) {
             });
         }
 
-        const filePath = `${taskId}/${taskId}_final.mp4`;
-        const signedUrl = await videoServerAPI.getVideoSignedUrl(filePath, 60 * 60, fileName ?? undefined);
+        if (!userId) {
+            return getNextBaseResponse({
+                success: false,
+                status: 403,
+                error: "Forbidden. You can only read your own data."
+            });
+        }
+
+        const signedUrl = await videoServerAPI.getVideoSignedUrl(`${userId}/${taskId}/${taskId}_final.mp4`, 60 * 60, fileName ?? undefined);
 
         return getNextBaseResponse({
             success: true,

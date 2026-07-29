@@ -1,7 +1,7 @@
 // video_generation_tasks 테이블 타입 정의
 import {MasterStyleInfo} from "@/lib/api/types/supabase/MasterStyleInfo";
 import {CaptionConfigState, CaptionData} from "@/components/page/workspace/editor/WorkspaceEditorPageClient";
-import {Entity, InitialEntityManifestItem} from "@/lib/api/types/open-ai/Entity";
+import {InitialEntityManifestItem} from "@/lib/api/types/open-ai/Entity";
 import {FluxPrompt} from "@/lib/api/types/open-ai/FluxPrompt";
 
 export interface VideoGenerationTask {
@@ -26,6 +26,11 @@ export interface VideoGenerationTask {
     is_generation_failed?: boolean; // boolean, default false - 실패 여부 (Retry 시 기존 status 조회하기)
     export_status?: ExportStatus | null;
     export_platform?: ExportPlatform | null;
+    ai_model_config?: AIModelConfig | null;
+    resolution?: '720p' | '1080p' | '2160p' | null;
+    aspect_ratio?: '16:9' | '9:16' | null;
+    estimated_character_count?: number;
+    series_id?: string;
     created_at?: string; // timestamp with time zone, default CURRENT_TIMESTAMP
     updated_at?: string;
 }
@@ -70,14 +75,16 @@ export interface SceneData {
     imageGenPromptDirective: string;
     imageGenPrompt?: FluxPrompt; // 각 Scene 이미지 생성에 넣을 프롬프트
     imageGenPromptSentence?: string;
-    videoGenPrompt?: string; // 각 Scene 영상 생성에 넣을 프롬프트
-    videoGenPromptShort?: string;
-    sceneEntityManifestList?: Entity[];
+    videoGenPrompt?: string; // 각 Scene 영상 생성에 넣을 프롬프트\
     requestId?: string;
     sceneSubtitleSegments?: SubtitleSegment[];
     sceneCastingEntityIdList?: string[];
     sceneVisualDescription?: string;
     status: SceneGenerationStatus;
+    speedMultiplier: number; // default 1.0
+    selectedT2IAIModelId?: string;
+    selectedI2IAIModelId?: string;
+    selectedI2VAIModelId?: string;
 }
 
 export interface SubtitleSegment {
@@ -88,6 +95,8 @@ export interface SubtitleSegment {
 
 export enum SceneGenerationStatus {
     IN_PROGRESS = 'in_progress',
+    GENERATING_IMAGE = 'generating_image',
+    GENERATING_VIDEO = 'generating_video',
     COMPLETED = 'completed',
     PROCESSED = 'processed',
     FAILED = 'failed'
@@ -117,6 +126,10 @@ export interface FinalVideoMergeData {
     cuttingAreaStartSec: number;
     cuttingAreaEndSec: number;
     volumePercentage: number;
+    mixingGainDb?: number; // Intensity 기반 계산된 최종 게인값 (dB)
+
+    // Autopilot
+    isMusicPreProcessed?: boolean;
 }
 
 export enum ExportStatus {
@@ -129,4 +142,11 @@ export enum ExportPlatform {
     YOUTUBE = "youtube",
     INSTAGRAM = "instagram",
     TIKTOK = "tiktok",
+}
+
+export interface AIModelConfig {
+    referenceImageModelId: string;
+    sceneImageT2IModelId: string;
+    sceneImageI2IModelId: string;
+    videoModelId: string;
 }

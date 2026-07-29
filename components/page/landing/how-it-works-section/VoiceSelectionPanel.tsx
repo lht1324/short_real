@@ -57,11 +57,11 @@ function VoiceSelectionPanel({
 
     return (
         <div className="flex-1 bg-[#0f0f16] border border-white/10 rounded-3xl p-6 relative flex flex-col overflow-hidden">
-            <div className="flex items-center gap-2 mb-4 text-pink-400 shrink-0">
-                <div className="p-1.5 bg-pink-500/10 rounded-md">
+            <div className="flex items-center gap-2 mb-4 text-zinc-300 shrink-0">
+                <div className="p-1.5 bg-white/5 rounded-md">
                     <Mic size={16} />
                 </div>
-                <span className="text-sm font-bold tracking-wide">STEP 2: CASTING</span>
+                <span className="text-sm font-bold tracking-wide">Voice Selection</span>
             </div>
 
             {/* [수정] max-h-[320px] 추가로 높이 제한 및 스크롤 활성화 */}

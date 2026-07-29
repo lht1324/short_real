@@ -11,18 +11,22 @@ import HeroSection from "@/components/page/landing/hero-section/HeroSection";
 import FeaturesSection from "@/components/page/landing/features-section/FeaturesSection";
 import ComparisonSection from "@/components/page/landing/comparison-section/ComparisonSection";
 import HowItWorksSection from "@/components/page/landing/how-it-works-section/HowItWorksSection";
+import CostStructureSection from "@/components/page/landing/cost-structure-section/CostStructureSection";
 import PricingSection from "@/components/page/landing/pricing-section/PricingSection";
 import FAQSection from "@/components/page/landing/faq-section/FAQSection";
 import Footer from "@/components/public/footer/Footer";
 import FloatingRoadmap from "@/components/page/landing/FloatingRoadmap";
 import {RoadmapItem} from "@/lib/api/types/supabase/RoadmapItem";
 import {roadmapClientAPI} from "@/lib/api/client/roadmapClientAPI";
+import { aiModelDataClientAPI } from "@/lib/api/client/aiModelDataClientAPI";
+import { AIModelData } from "@/lib/api/types/supabase/AIModelData";
 
 function LandingPageClient() {
     const router = useRouter();
     const { user } = useAuth();
     const [productDataList, setProductDataList] = useState<ProductData[]>([]);
     const [roadmapItemList, setRoadmapItemList] = useState<RoadmapItem[]>([]);
+    const [aiModelDataList, setAiModelDataList] = useState<AIModelData[]>([]);
 
     const [isLoadingRoadmapItemList, setIsLoadingRoadmapItemList] = useState(false);
 
@@ -68,16 +72,21 @@ function LandingPageClient() {
             }
             setRoadmapItemList(roadmapItemList);
         }
+        const loadAiModelDataList = async () => {
+            const dataList = await aiModelDataClientAPI.getAIModelData();
+            setAiModelDataList(dataList || []);
+        }
         loadProductDataList().then();
         loadRoadmapItemList().then(() => {
             setIsLoadingRoadmapItemList(false);
         });
+        loadAiModelDataList().then();
     }, []);
 
     return (
         // 1. [Global Base] 전체 페이지 배경색 (#0b0b15) 및 기본 설정
         <main
-            className="relative min-h-screen pt-16 bg-[#0b0b15] text-white selection:bg-pink-500/30 overflow-x-hidden"
+            className="relative min-h-screen pt-16 bg-[#0b0b15] text-white selection:bg-[#c21a2e]/30 overflow-x-hidden"
             style={{
                 overflowAnchor: "none"
             }}
@@ -94,15 +103,15 @@ function LandingPageClient() {
                 - 섹션별로 끊기지 않고 자연스럽게 이어지도록 큰 조명들을 배치합니다.
             */}
             <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden h-full">
-                {/* Hero Section Area Glows (Purple & Pink) */}
-                <div className="absolute top-0 left-[-10%] w-[1000px] h-[1000px] bg-purple-900/20 blur-[150px] rounded-full mix-blend-screen opacity-70" />
-                <div className="absolute top-[10%] right-[-10%] w-[800px] h-[800px] bg-pink-900/10 blur-[150px] rounded-full mix-blend-screen opacity-70" />
+                {/* Hero Section Area Glows (Muted Red & Zinc) */}
+                <div className="absolute top-0 left-[-10%] w-[1000px] h-[1000px] bg-red-950/10 blur-[150px] rounded-full mix-blend-screen opacity-70" />
+                <div className="absolute top-[10%] right-[-10%] w-[800px] h-[800px] bg-zinc-950/5 blur-[150px] rounded-full mix-blend-screen opacity-70" />
 
-                {/* Features & Comparison Area Glows (Cyan & Blue) */}
-                <div className="absolute top-[40%] left-[-20%] w-[1200px] h-[1200px] bg-cyan-900/10 blur-[150px] rounded-full mix-blend-screen opacity-60" />
+                {/* Features & Comparison Area Glows (Neutral Zinc) */}
+                <div className="absolute top-[40%] left-[-20%] w-[1200px] h-[1200px] bg-zinc-950/5 blur-[150px] rounded-full mix-blend-screen opacity-60" />
 
-                {/* Pricing & Bottom Area Glows (Return to Purple) */}
-                <div className="absolute bottom-0 right-[-10%] w-[1000px] h-[1000px] bg-purple-900/10 blur-[150px] rounded-full mix-blend-screen opacity-70" />
+                {/* Pricing & Bottom Area Glows (Return to Muted Red) */}
+                <div className="absolute bottom-0 right-[-10%] w-[1000px] h-[1000px] bg-red-950/10 blur-[150px] rounded-full mix-blend-screen opacity-70" />
             </div>
 
             {/* 4. [Content Layer] 실제 섹션들 (z-index를 10으로 올려서 배경 위에 띄움) */}
@@ -114,6 +123,8 @@ function LandingPageClient() {
                 <ComparisonSection />
 
                 <HowItWorksSection />
+
+                <CostStructureSection aiModelDataList={aiModelDataList} />
 
                 <PricingSection
                     productDataList={productDataList}

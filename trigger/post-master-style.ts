@@ -1,16 +1,13 @@
-import {logger, task } from "@trigger.dev/sdk/v3";
-import { videoGenerationTasksServerAPI } from "@/lib/api/server/videoGenerationTasksServerAPI";
-import { taskCheckAndCleanupIfCancelled } from "@/utils/taskCheckAndCleanupIfCancelled";
-import { VideoGenerationTaskStatus } from "@/lib/api/types/supabase/VideoGenerationTasks";
-import { llmServerAPI } from "@/lib/api/server/llmServerAPI";
-import { STYLE_DATA_LIST } from "@/lib/styles";
-import { usersServerAPI } from "@/lib/api/server/usersServerAPI";
-import { internalFireAndForgetFetch } from "@/utils/internalFetch";
-import {
-    BASE_CREDIT_PER_SCENE, BASE_CREDIT_PER_VIDEO_DURATION,
-    BASE_SCENE_COUNT_STANDARD,
-    BASE_VIDEO_DURATION_STANDARD
-} from "@/lib/ADDITIONAL_CREDIT_AMOUNT";
+import {logger, task} from "@trigger.dev/sdk/v3";
+import {videoGenerationTasksServerAPI} from "@/lib/api/server/videoGenerationTasksServerAPI";
+import {taskCheckAndCleanupIfCancelled} from "@/lib/utils/taskCheckAndCleanupIfCancelled";
+import {SceneGenerationStatus, VideoGenerationTaskStatus} from "@/lib/api/types/supabase/VideoGenerationTasks";
+import {llmServerAPI} from "@/lib/api/server/llmServerAPI";
+import {STYLE_DATA_LIST} from "@/lib/styles";
+import {internalFireAndForgetFetch} from "@/lib/utils/internalFetch";
+import {imageServerAPI} from "@/lib/api/server/imageServerAPI";
+import {usersServerAPI} from "@/lib/api/server/usersServerAPI";
+import {aiModelDataServerAPI} from "@/lib/api/server/aiModelDataServerAPI";
 
 export const postMasterStyle = task({
     id: "post-master-style",
@@ -34,6 +31,12 @@ export const postMasterStyle = task({
             if (!videoGenerationTask) {
                 throw new Error('Video Generation Task not found.');
             }
+
+            const user = await usersServerAPI.getUserByUserId(videoGenerationTask.user_id);
+            if (!user || !user.fal_ai_api_key) {
+                throw new Error('User or fal_ai_api_key not found.');
+            }
+            const falAiApiKey = user.fal_ai_api_key;
 
             // 취소 체크
             const checkResultInitialResult = await taskCheckAndCleanupIfCancelled(videoGenerationTask);
@@ -59,7 +62,9 @@ export const postMasterStyle = task({
                 ? lastSceneSubtitleSegmentList[lastSceneSubtitleSegmentList.length - 1].endSec
                 : undefined;
 
-            if (!selectedStyle || !videoTitle || !videoDescription || !videoDuration) {
+            const aiModelConfig = videoGenerationTask.ai_model_config;
+
+            if (!selectedStyle || !videoTitle || !videoDescription || !videoDuration || !aiModelConfig) {
                 throw new Error('Task data is invalid (missing required fields).');
             }
 
@@ -95,7 +100,86 @@ export const postMasterStyle = task({
                 throw new Error(postEntityManifestListResult?.error?.message || 'Failed to generate entityManifestList with OpenRouter');
             }
 
-            // --- DeepSeek 호출 3: MasterStyleInfo ---
+            // // TEST!!
+            // await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
+            //
+            // return {
+            //     success: true,
+            //     message: "Generating EntityManifestList Test finished."
+            // };
+
+            const entityReferenceImagePromptList: {
+                id: string;
+                prompt: string;
+            }[] = []
+            const isSubjectExisting = postEntityManifestListResult.entityManifestList.some((entity) => {
+                return entity.role === 'main_hero' || entity.role === 'sub_character';
+            })
+
+            if (isSubjectExisting) {
+                const aiModelConfig = videoGenerationTask.ai_model_config;
+
+                if (!aiModelConfig) {
+                    throw new Error(`Task's AI Model config is invalid.`);
+                }
+
+                // --- DeepSeek 호출 3: EntityCharacterSheetPromptList ---
+                const postEntityCharacterSheetPromptListResult = await llmServerAPI.postEntityReferenceImagePromptList(
+                    postEntityManifestListResult.entityManifestList.filter((entity) => {
+                        return entity.role === 'main_hero' || entity.role === 'sub_character';
+                    }),
+                    selectedStyle.uiMetadata.label,
+                );
+
+                if (!postEntityCharacterSheetPromptListResult.success || !postEntityCharacterSheetPromptListResult.entityReferenceImagePromptList) {
+                    throw new Error(postEntityCharacterSheetPromptListResult?.error?.message || 'Failed to generate entityReferenceImagePromptList with OpenRouter');
+                }
+
+                entityReferenceImagePromptList.push(...postEntityCharacterSheetPromptListResult.entityReferenceImagePromptList);
+
+                const referenceImageAIModelDataId = aiModelConfig.referenceImageModelId;
+                const referenceImageAIModelData = await aiModelDataServerAPI.getAIModelDataById(referenceImageAIModelDataId);
+
+                if (!referenceImageAIModelData) {
+                    throw new Error('Failed to fetch ai model data from database.');
+                }
+
+                const postReferenceImagePromiseList = entityReferenceImagePromptList.map(async (referenceImageData) => {
+                    const {
+                        id: entityId,
+                        prompt: referenceImagePrompt,
+                    } = referenceImageData;
+
+                    return await imageServerAPI.postReferenceImage(
+                        referenceImagePrompt,
+                        taskId,
+                        entityId,
+                        falAiApiKey,
+                        referenceImageAIModelData.endpoint_id,
+                        user.id
+                    );
+                });
+
+                const referenceImageResults = await Promise.all(postReferenceImagePromiseList);
+
+                const failedResults = referenceImageResults.filter((r) => !r.success);
+                if (failedResults.length > 0) {
+                    const firstError = failedResults[0].error;
+                    const customError = new Error(`Character sheet image generation failed: ${firstError?.message ?? 'Unknown error'}`);
+                    (customError as any).status = firstError?.status;
+                    throw customError;
+                }
+            }
+
+            // // TEST!!
+            // await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
+            //
+            // return {
+            //     success: true,
+            //     message: "Generating EntityCharacterSheetPromptList Test finished."
+            // };
+
+            // --- DeepSeek 호출 4: MasterStyleInfo ---
             const postMasterStyleInfoResult = await llmServerAPI.postMasterStyleInfo(
                 selectedStyle.generationParams,
                 sceneDataList.map((sceneData) => ({
@@ -117,7 +201,7 @@ export const postMasterStyle = task({
             //
             // return {
             //     success: true,
-            //     message: "Generating MasterStyle Test finished."
+            //     message: "Generating MasterStyleInfo Test finished."
             // };
 
             // 결과 저장 및 상태 업데이트
@@ -128,36 +212,26 @@ export const postMasterStyle = task({
             const patchVideoGenerationTaskStatusFinalResult = await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, {
                 status: VideoGenerationTaskStatus.GENERATING_IMAGE_PROMPT,
                 master_style_info: masterStylePositivePromptInfo,
-                entity_manifest_list: entityManifestList,
+                entity_manifest_list: entityManifestList.map((entity) => {
+                    const referenceImageData = entityReferenceImagePromptList.find((referenceImagePromptData) => {
+                        return referenceImagePromptData.id === entity.id;
+                    });
+
+                    return {
+                        ...entity,
+                        reference_image_prompt: referenceImageData?.prompt,
+                    }
+                }),
                 scene_breakdown_list: sceneDataList.map((sceneData) => {
                     const sceneCastingData = sceneCastingDataList?.find((cd) => cd.sceneNumber === sceneData.sceneNumber);
                     return {
                         ...sceneData,
                         sceneVisualDescription: sceneCastingData?.sceneVisualDescription,
                         sceneCastingEntityIdList: sceneCastingData?.castIdList,
+                        status: SceneGenerationStatus.GENERATING_IMAGE,
                     };
                 })
             });
-
-            // 크레딧 차감 로직
-            const sceneCount = sceneDataList.length;
-            const totalDuration = sceneDataList.reduce((acc, sceneData) => {
-                return acc + sceneData.sceneDuration;
-            }, 0);
-            const additionalTotalDurationUsage = totalDuration > BASE_VIDEO_DURATION_STANDARD
-                ? Math.ceil(totalDuration - BASE_VIDEO_DURATION_STANDARD) * BASE_CREDIT_PER_VIDEO_DURATION
-                : 0;
-            const additionalSceneCountUsage = sceneCount > BASE_SCENE_COUNT_STANDARD
-                ? (sceneCount - BASE_SCENE_COUNT_STANDARD) * BASE_CREDIT_PER_SCENE
-                : 0;
-            const creditUsage = 100 + additionalTotalDurationUsage + additionalSceneCountUsage;
-
-            const patchUserCreditCountResult = await usersServerAPI.patchUserCreditCountByUserId(videoGenerationTask.user_id, -creditUsage);
-
-            if (!patchUserCreditCountResult) {
-                // 크레딧 차감 실패 시에도 일단 진행? 혹은 에러? (기존 로직 따름)
-                throw new Error('Failed to patch user credit count.');
-            }
 
             const checkFinalResult = await taskCheckAndCleanupIfCancelled(patchVideoGenerationTaskStatusFinalResult);
             if (checkFinalResult) return { status: 'cancelled' };
@@ -178,21 +252,22 @@ export const postMasterStyle = task({
                 error: error
             });
 
-            // [핵심 로직] 마지막 시도인지 확인
-            // ctx.attempt.number: 현재 시도 횟수 (1, 2, 3...)
-            // ctx.task.retry.maxAttempts: 설정된 최대 횟수 (여기서는 3)
-            // 주의: ctx 구조는 버전에 따라 다를 수 있으므로 안전하게 접근하거나 하드코딩된 값(3)과 비교해도 됩니다.
-
             const currentAttempt = ctx.attempt.number;
             const maxAttempts = 3; // 위 retry 설정과 동일하게 맞춤
 
-            if (currentAttempt >= maxAttempts) {
-                // [마지막 시도] 이제 진짜 망했음 -> DB에 실패 상태 기록
+            // fal.ai 잔액 부족 / 정지 등의 계정 관련 치명적 에러 감지 (403 이면서 balance, top up 포함)
+            const errStr = (error instanceof Error ? error.message : String(error)).toLowerCase();
+            const isStatus403 = (error && typeof error === 'object' && 'status' in error && (error as any).status === 403);
+            const hasBalanceOrTopUp = errStr.includes("balance") || errStr.includes("top up");
+
+            const isFalAiFatalError = isStatus403 && hasBalanceOrTopUp;
+
+            if (currentAttempt >= maxAttempts || isFalAiFatalError) {
+                // [마지막 시도 또는 치명적 계정 에러] DB에 실패 상태 기록
                 await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
-                logger.error(`Task permanently failed after ${maxAttempts} attempts.`);
+                logger.error(`Task permanently failed. Fatal error or attempt limit reached.`);
             } else {
                 // [재시도 예정] DB 업데이트 안 함 (사용자는 여전히 '생성 중'으로 봄)
-                // Trigger 대시보드에는 에러가 찍히지만, 재시도 스케줄링됨
                 logger.warn(`Attempt ${currentAttempt} failed. Retrying...`);
             }
 

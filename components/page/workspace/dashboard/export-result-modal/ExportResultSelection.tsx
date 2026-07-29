@@ -5,7 +5,7 @@ import {ExportPlatform, ExportStatus} from "@/lib/api/types/supabase/VideoGenera
 
 const PLATFORM_META: Record<ExportPlatform, { label: string; src: string; width: number; height: number }> = {
     [ExportPlatform.YOUTUBE]:   { label: 'YouTube Shorts', src: '/icons/youtube-logo.png',   width: 36, height: 32 },
-    [ExportPlatform.TIKTOK]:    { label: 'TikTok',         src: '/icons/tiktok-logo.svg',    width: 32, height: 32 },
+    [ExportPlatform.TIKTOK]:    { label: 'TikTok',         src: '/icons/tiktok-logo-white.svg',    width: 32, height: 32 },
     [ExportPlatform.INSTAGRAM]: { label: 'Instagram Reels',src: '/icons/instagram-logo.png', width: 28, height: 28 },
 };
 

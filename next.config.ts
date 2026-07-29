@@ -5,6 +5,8 @@ const isDev = process.env.NODE_ENV === 'development';
 const isDocker = process.env.DOCKER === 'true';
 
 const nextConfig: NextConfig = {
+    distDir: isDocker ? '.next-docker' : '.next',
+
     // 외부 이미지 허용
     images: {
         remotePatterns: [

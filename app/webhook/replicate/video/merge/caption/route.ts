@@ -1,9 +1,9 @@
 import { NextRequest } from 'next/server';
-import { createSupabaseServiceRoleClient } from '@/lib/supabaseServiceRole';
+import { createSupabaseServiceRoleClient } from '@/lib/supabase/supabaseServiceRole';
 import {videoGenerationTasksServerAPI} from "@/lib/api/server/videoGenerationTasksServerAPI";
-import {taskCheckAndCleanupIfCancelled} from "@/utils/taskCheckAndCleanupIfCancelled";
-import {getNextBaseResponse} from "@/utils/getNextBaseResponse";
-import {internalFireAndForgetFetch} from "@/utils/internalFetch";
+import {taskCheckAndCleanupIfCancelled} from "@/lib/utils/taskCheckAndCleanupIfCancelled";
+import {getNextBaseResponse} from "@/lib/utils/getNextBaseResponse";
+import {internalFireAndForgetFetch} from "@/lib/utils/internalFetch";
 
 export async function POST(request: NextRequest) {
     const supabase = createSupabaseServiceRoleClient();
@@ -54,7 +54,7 @@ export async function POST(request: NextRequest) {
             }
 
             const videoBuffer = await videoResponse.arrayBuffer();
-            const filePath = `${taskId}/${taskId}_caption_added.mp4`;
+            const filePath = `${videoGenerationTask.user_id}/${taskId}/${taskId}_caption_added.mp4`;
 
             const { error: uploadError } = await supabase.storage
                 .from('processed_video_storage')

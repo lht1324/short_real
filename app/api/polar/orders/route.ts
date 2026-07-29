@@ -1,5 +1,6 @@
 import { NextRequest } from "next/server";
-import { getNextBaseResponse } from "@/utils/getNextBaseResponse";
+import { getNextBaseResponse } from "@/lib/utils/getNextBaseResponse";
+import { getIsValidRequestS2S } from "@/lib/utils/getIsValidRequest";
 import { PolarClient } from "@/lib/PolarClient";
 
 /**
@@ -8,12 +9,29 @@ import { PolarClient } from "@/lib/PolarClient";
  * customers:read, orders:read 권한 필요
  */
 export async function GET(request: NextRequest) {
+    if (!getIsValidRequestS2S(request)) {
+        return getNextBaseResponse({
+            success: false,
+            status: 401,
+            error: 'Unauthorized internal request',
+        });
+    }
+
     try {
         const polar = new PolarClient().getClient();
 
-        // Query parameter에서 email 추출
+        // Query parameter에서 email, userId 추출
         const { searchParams } = new URL(request.url);
         const email = searchParams.get("email");
+        const userId = searchParams.get("userId");
+
+        if (!userId) {
+            return getNextBaseResponse({
+                success: false,
+                status: 403,
+                error: "Forbidden. You can only read your own data."
+            });
+        }
 
         // email 필수 검증
         if (!email) {

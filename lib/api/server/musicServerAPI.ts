@@ -1,11 +1,12 @@
-import {createSupabaseServiceRoleClient} from "@/lib/supabaseServiceRole";
+import {createSupabaseServiceRoleClient} from "@/lib/supabase/supabaseServiceRole";
 import {MusicData} from "@/lib/api/types/supabase/VideoGenerationTasks";
 import Replicate from "replicate";
 import {videoGenerationTasksServerAPI} from "@/lib/api/server/videoGenerationTasksServerAPI";
 
 export const musicServerAPI = {
     async postMusic(
-        generationTaskId: string,
+        taskId: string,
+        userId: string,
         musicFileList: (File | Blob | ArrayBuffer)[],
         musicDataList: MusicData[],
     ): Promise<{ success: boolean, error?: string }> {
@@ -19,7 +20,7 @@ export const musicServerAPI = {
                 const musicData = musicDataList[index];
 
                 // 1. mp3 파일 업로드
-                const audioFilePath = `${generationTaskId}/${generationTaskId}_${index}.mp3`;
+                const audioFilePath = `${userId}/${taskId}/${taskId}_${index}.mp3`;
 
                 const { error: audioError } = await supabase.storage
                     .from('video_music_temp_storage')
@@ -39,7 +40,7 @@ export const musicServerAPI = {
                         const imageResponse = await fetch(musicData.imageUrl);
                         if (imageResponse.ok) {
                             const imageBlob = await imageResponse.blob();
-                            const imageFilePath = `${generationTaskId}/${generationTaskId}_${index}.jpeg`;
+                            const imageFilePath = `${userId}/${taskId}/${taskId}_${index}.jpeg`;
 
                             const { error: imageError } = await supabase.storage
                                 .from('video_music_temp_storage')
@@ -65,10 +66,9 @@ export const musicServerAPI = {
             }
 
             // 3. DB에 music_data_list 저장
-            await videoGenerationTasksServerAPI.patchVideoGenerationTask(
-                generationTaskId,
-                { music_data_list: musicDataList }
-            );
+            await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, {
+                music_data_list: musicDataList
+            });
 
             return {
                 success: uploadSuccessCount === musicFileList.length,
@@ -82,7 +82,7 @@ export const musicServerAPI = {
         }
     },
 
-    async getMusicData(taskId: string): Promise<MusicData[]> {
+    async getMusicData(taskId: string, userId: string): Promise<MusicData[]> {
         const supabase = createSupabaseServiceRoleClient();
 
         try {
@@ -105,8 +105,7 @@ export const musicServerAPI = {
             const musicDataList = taskData.music_data_list as MusicData[];
 
             // 2. video_music_temp_storage에서 파일 리스트 확인
-            const { data: fileList, error: listError } = await supabase
-                .storage
+            const { data: fileList, error: listError } = await supabase.storage
                 .from('video_music_temp_storage')
                 .list(taskId);
 
@@ -125,12 +124,11 @@ export const musicServerAPI = {
             // 4. 각 index에 대해 signedUrl 생성
             const pathList: string[] = [];
             for (let index = 0; index < musicCount; index++) {
-                pathList.push(`${taskId}/${taskId}_${index}.mp3`);
-                pathList.push(`${taskId}/${taskId}_${index}.jpeg`);
+                pathList.push(`${userId}/${taskId}/${taskId}_${index}.mp3`);
+                pathList.push(`${userId}/${taskId}/${taskId}_${index}.jpeg`);
             }
 
-            const { data: signedUrlDataList, error: urlError } = await supabase
-                .storage
+            const { data: signedUrlDataList, error: urlError } = await supabase.storage
                 .from('video_music_temp_storage')
                 .createSignedUrls(pathList, 86400);
 
@@ -139,13 +137,13 @@ export const musicServerAPI = {
                 throw urlError;
             }
 
-            // 5. music_data_list와 signedUrl 결합
-            const completeMusicDataList: MusicData[] = musicDataList.map((musicData, index) => {
+            // 5. music_data_list와 signedUrl 결합 후 return
+            return musicDataList.map((musicData, index) => {
                 const audioSignedData = signedUrlDataList?.find(
-                    item => item.path === `${taskId}/${taskId}_${index}.mp3`
+                    item => item.path === `${userId}/${taskId}/${taskId}_${index}.mp3`
                 );
                 const imageSignedData = signedUrlDataList?.find(
-                    item => item.path === `${taskId}/${taskId}_${index}.jpeg`
+                    item => item.path === `${userId}/${taskId}/${taskId}_${index}.jpeg`
                 );
 
                 return {
@@ -154,8 +152,6 @@ export const musicServerAPI = {
                     imageUrl: imageSignedData?.signedUrl || musicData.imageUrl,
                 };
             });
-
-            return completeMusicDataList;
         } catch (error) {
             console.error('Unexpected error in getMusicDatas:', error);
             return [];
@@ -167,7 +163,8 @@ export const musicServerAPI = {
         cuttingAreaStartSec: number,
         cuttingAreaEndSec: number,
         volumePercentage: number,
-        taskId: string
+        taskId: string,
+        mixingGainDb?: number,
     ) {
         const replicate = new Replicate({
             auth: process.env.REPLICATE_API_TOKEN,
@@ -182,6 +179,9 @@ export const musicServerAPI = {
         const webhookUrl = `${baseUrl}/webhook/replicate/music/modifying?taskId=${taskId}`;
 
         try {
+            const duration = cuttingAreaEndSec - cuttingAreaStartSec;
+            console.log(`[TEST LOG][Music Modifying] cutting start: ${cuttingAreaStartSec.toFixed(4)}s, end: ${cuttingAreaEndSec.toFixed(4)}s, totalDuration: ${duration.toFixed(4)}s, volume: ${volumePercentage}%, gainDb: ${mixingGainDb}`);
+
             const prediction = await replicate.predictions.create({
                 version: "lht1324/ffmpeg-audio-modifier:8706bda5af3fa52e103a0d441e3d6cb981d1aef7a23f22248ff1de6f557a0763",
                 input: {
@@ -189,6 +189,7 @@ export const musicServerAPI = {
                     cutting_area_start_sec: cuttingAreaStartSec,
                     cutting_area_end_sec: cuttingAreaEndSec,
                     volume_percentage: volumePercentage,
+                    mixing_gain_db: mixingGainDb,
                 },
                 webhook: webhookUrl,
                 webhook_events_filter: ["completed"],
@@ -219,5 +220,68 @@ export const musicServerAPI = {
         }
 
         return data.signedUrl;
+    },
+
+    async resampleAudioForLLM(
+        audioUrl: string,
+        tempIdentifier: string
+    ): Promise<string> {
+        const replicate = new Replicate({
+            auth: process.env.REPLICATE_API_TOKEN,
+        });
+        const supabase = createSupabaseServiceRoleClient();
+
+        try {
+            // 1. 오디오 다운로드
+            const response = await fetch(audioUrl);
+            if (!response.ok) throw new Error(`Failed to fetch audio from ${audioUrl}`);
+            const audioBuffer = Buffer.from(await response.arrayBuffer());
+
+            // 2. 임시 업로드 (Replicate 호출용)
+            const tempFileName = `temp/resample-llm-${tempIdentifier}.mp3`;
+            const { error: uploadError } = await supabase.storage
+                .from('video_music_temp_storage')
+                .upload(tempFileName, audioBuffer, {
+                    contentType: 'audio/mpeg',
+                    upsert: true
+                });
+
+            if (uploadError) throw new Error(`Temp audio upload failed: ${uploadError.message}`);
+
+            const { data: signedData, error: signedError } = await supabase.storage
+                .from('video_music_temp_storage')
+                .createSignedUrl(tempFileName, 300);
+
+            if (signedError || !signedData?.signedUrl) throw new Error("Failed to create signed URL for temp audio.");
+
+            // 3. Replicate FFmpeg Sandbox 호출 (Mono, 24kHz, 64kbps)
+            const ffmpegArgs = `-ar 24000 -ac 1 -b:a 64k`;
+
+            const prediction = await replicate.predictions.create({
+                version: "lht1324/ffmpeg-sandbox-2:06262bdc243f9afe6d1b9a8d338ab536044d0604ce4c420c9cde7ee7fe781339",
+                input: {
+                    video_urls: JSON.stringify([signedData.signedUrl]),
+                    ffmpeg_args: ffmpegArgs,
+                }
+            });
+            const completedPrediction = await replicate.wait(prediction);
+            const processedAudioUrl = completedPrediction.output;
+
+            if (!processedAudioUrl) throw new Error("Replicate audio resampling failed.");
+
+            // 4. 결과 다운로드
+            const processedResponse = await fetch(processedAudioUrl.toString());
+            if (!processedResponse.ok) throw new Error("Failed to download resampled audio.");
+
+            const resampledBuffer = Buffer.from(await processedResponse.arrayBuffer());
+
+            // 5. 임시 파일 삭제 (비동기로 진행하여 응답 속도 확보)
+            supabase.storage.from('video_music_temp_storage').remove([tempFileName]).catch(console.error);
+
+            return resampledBuffer.toString('base64');
+        } catch (error) {
+            console.error("[resampleAudioForLLM] Error:", error);
+            throw error;
+        }
     }
 }

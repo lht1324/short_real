@@ -1,11 +1,11 @@
 import { NextRequest } from "next/server";
-import { getNextBaseResponse } from "@/utils/getNextBaseResponse";
+import { getNextBaseResponse } from "@/lib/utils/getNextBaseResponse";
 import { usersServerAPI } from "@/lib/api/server/usersServerAPI";
 import { getCachedPolarProducts } from "@/lib/api/cached/polarCached";
 import {
     PostPolarSubscriptionsChangeRequest
 } from "@/lib/api/types/api/polar/subscriptions/change/PostPolarSubscriptionsChangeRequest";
-import { getIsValidRequestC2S } from "@/utils/getIsValidRequest";
+import { getIsValidRequestS2S } from "@/lib/utils/getIsValidRequest";
 import { PolarClient } from "@/lib/PolarClient";
 
 /**
@@ -16,15 +16,21 @@ import { PolarClient } from "@/lib/PolarClient";
  * 다운그레이드: (TODO) 다음 결제 주기에 변경되도록 스케줄링
  */
 export async function POST(request: NextRequest) {
-    const {
-        isValidRequest,
-    } = await getIsValidRequestC2S();
-
-    if (!isValidRequest) {
+    if (!getIsValidRequestS2S(request)) {
         return getNextBaseResponse({
             success: false,
             status: 401,
-            error: "Unauthorized request."
+            error: 'Unauthorized internal request',
+        });
+    }
+
+    const sessionUserId = request.nextUrl.searchParams.get('userId');
+
+    if (!sessionUserId) {
+        return getNextBaseResponse({
+            success: false,
+            status: 403,
+            error: "Forbidden. You can only read your own data."
         });
     }
 
@@ -33,20 +39,10 @@ export async function POST(request: NextRequest) {
 
         // Request body 파싱
         const {
-            userId,
             subscriptionId,
             prevProductId,
             newProductId,
         }: PostPolarSubscriptionsChangeRequest = await request.json();
-
-        // userId 필수 검증
-        if (!userId) {
-            return getNextBaseResponse({
-                success: false,
-                status: 400,
-                error: "userId is required and must be a string."
-            });
-        }
 
         // subscriptionId 필수 검증
         if (!subscriptionId) {
@@ -97,7 +93,7 @@ export async function POST(request: NextRequest) {
 
         // 업그레이드 처리
         if (isUpgrade) {
-            const user = await usersServerAPI.getUserByUserId(userId);
+            const user = await usersServerAPI.getUserByUserId(sessionUserId);
 
             if (!user) {
                 return getNextBaseResponse({
@@ -115,14 +111,6 @@ export async function POST(request: NextRequest) {
                 },
             });
 
-            const patchUserResult = await usersServerAPI.patchUserByUserId(userId, {
-                credit_count: (user.credit_count ?? 0) + (newProductData.planData.creditCount - prevProductData.planData.creditCount)
-            });
-
-            if (!patchUserResult) {
-                throw new Error("Patching user failed.");
-            }
-
             return getNextBaseResponse({
                 success: true,
                 status: 200,
@@ -136,7 +124,7 @@ export async function POST(request: NextRequest) {
                 }
             });
 
-            const patchUserResult = await usersServerAPI.patchUserByUserId(userId, {
+            const patchUserResult = await usersServerAPI.patchUserByUserId(sessionUserId, {
                 subscription_id: subscriptionId,
                 downgrade_target_plan_id: newProductId,
                 scheduled_downgrade_at: subscriptionCancelResult.currentPeriodEnd?.toISOString(),
