@@ -65,3 +65,12 @@ body {
 ::-webkit-scrollbar-corner {
   background: rgba(17, 24, 39, 0.5); /* gray-900/50 */
 }
+
+/* Global button mouse cursor styles */
+button, [role="button"] {
+  cursor: pointer;
+}
+
+button:disabled, [role="button"][aria-disabled="true"] {
+  cursor: not-allowed;
+}
