@@ -47,7 +47,7 @@ export const autopilotUploadOrchestrator = schedules.task({
 
         // 2. Check if the video file exists in storage
         try {
-            const finalFilePath = `${taskId}/${taskId}_final.mp4`;
+            const finalFilePath = `${autopilotData.user_id}/${taskId}/${taskId}_final.mp4`;
             // This will throw or return an error if the file doesn't exist
             const videoUrl = await videoServerAPI.getVideoSignedUrl(finalFilePath, 3600);
             

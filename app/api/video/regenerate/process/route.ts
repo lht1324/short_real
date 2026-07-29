@@ -97,7 +97,7 @@ export async function POST(request: NextRequest) {
         }
 
         // 3. 씬 이미지 Signed URL 생성 및 Base64 변환
-        const sceneImageUrl = await imageServerAPI.getImageSignedUrl(`${taskId}/${sceneNumber}.jpeg`);
+        const sceneImageUrl = await imageServerAPI.getImageSignedUrl(`${userId}/${taskId}/${sceneNumber}.jpeg`);
         const imageFetchResponse = await fetch(sceneImageUrl);
 
         if (!imageFetchResponse.ok) {

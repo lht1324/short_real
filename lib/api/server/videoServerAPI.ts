@@ -52,7 +52,7 @@ export const videoServerAPI = {
         // Signed URL 생성 (1시간 유효)
         const { data, error } = await supabase.storage
             .from('scene_image_temp_storage')
-            .createSignedUrl(`${taskId}/${sceneData.sceneNumber}.jpeg`, 60 * 60 * 24);
+            .createSignedUrl(`${userId}/${taskId}/${sceneData.sceneNumber}.jpeg`, 60 * 60 * 24);
 
         if (error || !data?.signedUrl) {
             throw new Error(error?.message || `Scene ${sceneData.sceneNumber}: 이미지 데이터가 없습니다.`);
@@ -148,15 +148,15 @@ export const videoServerAPI = {
                 ffmpegArgs = `-ss 0.2 -filter:v "setpts=${videoPtsRatio}*PTS" -c:v libx264 -c:a copy`;
             }
 
-            const processedVideoUrl = await replicate.run(
-                'lht1324/ffmpeg-sandbox-2:06262bdc243f9afe6d1b9a8d338ab536044d0604ce4c420c9cde7ee7fe781339',
-                {
-                    input: {
-                        video_urls: JSON.stringify([replicateVideoUrl]),
-                        ffmpeg_args: ffmpegArgs,
-                    }
+            const prediction = await replicate.predictions.create({
+                version: 'lht1324/ffmpeg-sandbox-2:06262bdc243f9afe6d1b9a8d338ab536044d0604ce4c420c9cde7ee7fe781339',
+                input: {
+                    video_urls: JSON.stringify([replicateVideoUrl]),
+                    ffmpeg_args: ffmpegArgs,
                 }
-            )
+            });
+            const completedPrediction = await replicate.wait(prediction);
+            const processedVideoUrl = completedPrediction.output;
 
             return {
                 success: true,
@@ -212,7 +212,8 @@ export const videoServerAPI = {
     },
 
     async postVideoMergeMusic(
-        taskId: string
+        taskId: string,
+        userId: string,
     ) {
         const supabase = createSupabaseServiceRoleClient();
         const replicate = new Replicate({
@@ -241,7 +242,7 @@ export const videoServerAPI = {
 
             // 2. Supabase Storage에서 Signed URL 생성
             console.log(`[Video-Music Merge] Caption 영상 Signed URL 생성 시작`);
-            const captionVideoPath = `${taskId}/${taskId}_caption_added.mp4`;
+            const captionVideoPath = `${userId}/${taskId}/${taskId}_caption_added.mp4`;
             const { data: captionVideoData, error: captionVideoError } = await supabase.storage
                 .from('processed_video_storage')
                 .createSignedUrl(captionVideoPath, 86400);
@@ -253,7 +254,7 @@ export const videoServerAPI = {
             console.log(`[Video-Music Merge] Caption 영상 URL 생성 완료`);
 
             console.log(`[Video-Music Merge] 음악 Signed URL 생성 시작`);
-            const modifiedMusicPath = `${taskId}/${taskId}_processed_audio.mp3`;
+            const modifiedMusicPath = `${userId}/${taskId}/${taskId}_processed_audio.mp3`;
             const { data: modifiedMusicData, error: modifiedMusicError } = await supabase.storage
                 .from('video_music_temp_storage')
                 .createSignedUrl(modifiedMusicPath, 86400);
@@ -306,7 +307,7 @@ export const videoServerAPI = {
         }
     },
 
-    async postFinalVideo(generationTaskId: string, videoGenerationTask: VideoGenerationTask) {
+    async postFinalVideo(taskId: string, videoGenerationTask: VideoGenerationTask) {
         const supabase = createSupabaseServiceRoleClient();
         const replicate = new Replicate({
             auth: process.env.REPLICATE_API_TOKEN,
@@ -377,12 +378,12 @@ export const videoServerAPI = {
 
                 if (speedMultiplier === 1.0) {
                     // 배속이 1.0이면 가공본(processed) 사용 (비디오만 추출)
-                    videoUrl = await this.getVideoSignedUrl(`${userId}/${generationTaskId}/video_processed_${sceneNumber}.mp4`, 3600);
+                    videoUrl = await this.getVideoSignedUrl(`${userId}/${taskId}/video_processed_${sceneNumber}.mp4`, 3600);
                     ffmpegArgs = "-an -c:v libx264 -pix_fmt yuv420p -bf 0 -flags +cgop";
                     console.log(`[TEST LOG][Scene #${sceneNumber} Video] 1.0x speed -> originalDuration: ${sceneData.sceneDuration.toFixed(4)}s, targetDuration: ${sceneData.sceneDuration.toFixed(4)}s`);
                 } else {
                     // 배속이 변경되었으면 원본(raw) 사용 및 MediaBunny 실측 기반 곱연산 인코딩 1회
-                    videoUrl = await this.getVideoSignedUrl(`${userId}/${generationTaskId}/video_raw_${sceneNumber}.mp4`, 3600);
+                    videoUrl = await this.getVideoSignedUrl(`${userId}/${taskId}/video_raw_${sceneNumber}.mp4`, 3600);
                     
                     const sceneDuration = sceneData.sceneDuration; // 1.0배속 순수 원본 목표 길이
                     const finalTargetDuration = sceneDuration / speedMultiplier; // 2차 배속 최종 목표 길이
@@ -409,16 +410,16 @@ export const videoServerAPI = {
                 }
 
                 // Replicate 샌드박스로 씬 비디오 조각 굽기
-                const processedSceneUrl = await replicate.run(
-                    "lht1324/ffmpeg-sandbox-2:06262bdc243f9afe6d1b9a8d338ab536044d0604ce4c420c9cde7ee7fe781339",
-                    {
-                        input: {
-                            video_urls: JSON.stringify([videoUrl]),
-                            ffmpeg_args: ffmpegArgs,
-                            output_extension: "mp4"
-                        }
+                const prediction = await replicate.predictions.create({
+                    version: "lht1324/ffmpeg-sandbox-2:06262bdc243f9afe6d1b9a8d338ab536044d0604ce4c420c9cde7ee7fe781339",
+                    input: {
+                        video_urls: JSON.stringify([videoUrl]),
+                        ffmpeg_args: ffmpegArgs,
+                        output_extension: "mp4"
                     }
-                );
+                });
+                const completedPrediction = await replicate.wait(prediction);
+                const processedSceneUrl = completedPrediction.output;
                 
                 if (!processedSceneUrl) {
                     throw new Error(`Scene #${sceneNumber} 비디오 렌더링 실패`);
@@ -432,15 +433,15 @@ export const videoServerAPI = {
 
             // Step 2. 무음 비디오 조각 모음 (Stitching)
             console.log(`[Merge Service] Step 2: 무음 비디오 조각 모음 시작`);
-            const stitchedVideoUrl = await replicate.run(
-                "lht1324/ffmpeg-sandbox-2:06262bdc243f9afe6d1b9a8d338ab536044d0604ce4c420c9cde7ee7fe781339",
-                {
-                    input: {
-                        video_urls: JSON.stringify(mergedSceneUrlList),
-                        ffmpeg_args: "-c:v libx264 -pix_fmt yuv420p -bf 0 -flags +cgop -an",
-                    },
+            const stitchedPrediction = await replicate.predictions.create({
+                version: "lht1324/ffmpeg-sandbox-2:06262bdc243f9afe6d1b9a8d338ab536044d0604ce4c420c9cde7ee7fe781339",
+                input: {
+                    video_urls: JSON.stringify(mergedSceneUrlList),
+                    ffmpeg_args: "-c:v libx264 -pix_fmt yuv420p -bf 0 -flags +cgop -an",
                 },
-            );
+            });
+            const completedStitchedPrediction = await replicate.wait(stitchedPrediction);
+            const stitchedVideoUrl = completedStitchedPrediction.output;
 
             if (!stitchedVideoUrl) {
                 throw new Error("Stitched video creation failed.");
@@ -448,7 +449,7 @@ export const videoServerAPI = {
 
             // Step 3. 통짜 원본 오디오(voice_full.mp3) 1개로 단 1회 filter_complex 구간 배속 인코딩 및 비디오 믹싱
             console.log(`[Merge Service] Step 3: 통짜 오디오 기반 1회 filter_complex 배속 믹싱 시작`);
-            const fullVoiceSignedUrl = await voiceServerAPI.getVoiceSignedUrl(generationTaskId, userId);
+            const fullVoiceSignedUrl = await voiceServerAPI.getVoiceSignedUrl(taskId, userId);
 
             let filterSegments: string[] = [];
             let concatInputs: string[] = [];
@@ -473,17 +474,17 @@ export const videoServerAPI = {
             const filterComplexStr = `${filterSegments.join("; ")}; ${concatInputs.join("")}concat=n=${sanitizedSceneDataList.length}:v=0:a=1[aout]`;
             console.log(`[TEST LOG][Voice FilterComplex] ${filterComplexStr}`);
 
-            const finalVideoUrl = await replicate.run(
-                "lht1324/ffmpeg-sandbox-2:06262bdc243f9afe6d1b9a8d338ab536044d0604ce4c420c9cde7ee7fe781339",
-                {
-                    input: {
-                        video_urls: JSON.stringify([stitchedVideoUrl.toString()]),
-                        audio_url: fullVoiceSignedUrl,
-                        ffmpeg_args: `-filter_complex "${filterComplexStr}" -map 0:v -map "[aout]" -c:v libx264 -pix_fmt yuv420p -bf 0 -flags +cgop -c:a aac`,
-                        output_extension: "mp4"
-                    }
+            const finalPrediction = await replicate.predictions.create({
+                version: "lht1324/ffmpeg-sandbox-2:06262bdc243f9afe6d1b9a8d338ab536044d0604ce4c420c9cde7ee7fe781339",
+                input: {
+                    video_urls: JSON.stringify([stitchedVideoUrl.toString()]),
+                    audio_url: fullVoiceSignedUrl,
+                    ffmpeg_args: `-filter_complex "${filterComplexStr}" -map 0:v -map "[aout]" -c:v libx264 -pix_fmt yuv420p -bf 0 -flags +cgop -c:a aac`,
+                    output_extension: "mp4"
                 }
-            );
+            });
+            const completedFinalPrediction = await replicate.wait(finalPrediction);
+            const finalVideoUrl = completedFinalPrediction.output;
 
             if (!finalVideoUrl) {
                 throw new Error("Final video-audio mixing failed.");
@@ -499,7 +500,7 @@ export const videoServerAPI = {
             }
 
             const finalVideoBuffer = await finalVideoResponse.arrayBuffer();
-            const finalFilePath = `${generationTaskId}/${generationTaskId}.mp4`;
+            const finalFilePath = `${userId}/${taskId}/${taskId}.mp4`;
 
             // Supabase Storage에 최종 영상 업로드
             const { error: uploadError } = await supabase.storage
@@ -516,7 +517,7 @@ export const videoServerAPI = {
             return true;
         } catch (error) {
             console.error(`[Merge Service] 최종 영상 병합 중 에러:`, error);
-            await videoGenerationTasksServerAPI.patchVideoGenerationTask(generationTaskId, {
+            await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, {
                 is_generation_failed: true,
             })
             return false;

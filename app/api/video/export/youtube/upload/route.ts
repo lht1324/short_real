@@ -186,7 +186,7 @@ export async function POST(request: NextRequest) {
         console.log('[YouTube Upload] Downloading video from storage...');
         const { data: fileData, error: downloadError }: DownloadResult<Blob> = await supabase.storage
             .from('processed_video_storage')
-            .download(`${taskId}/${taskId}_final.mp4`);
+            .download(`${userId}/${taskId}/${taskId}_final.mp4`);
 
         if (downloadError || !fileData) {
             console.error('[YouTube Upload] Video download failed:', downloadError);

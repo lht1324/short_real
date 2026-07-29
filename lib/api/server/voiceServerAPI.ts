@@ -186,15 +186,15 @@ export const voiceServerAPI = {
             // atempo 필터는 0.5 ~ 2.0 사이만 지원하나, 현재 우리의 보정 범위(1.0 ~ 1.15)는 안전함.
             const ffmpegArgs = `-filter:a "atempo=${speed}" -c:a libmp3lame -q:a 2`;
             
-            const processedAudioUrl = await replicate.run(
-                "lht1324/ffmpeg-sandbox-2:06262bdc243f9afe6d1b9a8d338ab536044d0604ce4c420c9cde7ee7fe781339",
-                {
-                    input: {
-                        video_urls: JSON.stringify([signedData.signedUrl]),
-                        ffmpeg_args: ffmpegArgs,
-                    }
+            const prediction = await replicate.predictions.create({
+                version: "lht1324/ffmpeg-sandbox-2:06262bdc243f9afe6d1b9a8d338ab536044d0604ce4c420c9cde7ee7fe781339",
+                input: {
+                    video_urls: JSON.stringify([signedData.signedUrl]),
+                    ffmpeg_args: ffmpegArgs,
                 }
-            );
+            });
+            const completedPrediction = await replicate.wait(prediction);
+            const processedAudioUrl = completedPrediction.output;
 
             if (!processedAudioUrl) throw new Error("Replicate audio scaling failed.");
 
@@ -315,16 +315,16 @@ export const voiceServerAPI = {
                 // Replicate ffmpeg-sandbox-2 용 컷팅 인수 지정
                 const ffmpegArgs = `-ss ${startSec.toFixed(4)} -t ${duration.toFixed(4)} -c:a libmp3lame -q:a 2`;
 
-                const processedAudioUrl = await replicate.run(
-                    "lht1324/ffmpeg-sandbox-2:06262bdc243f9afe6d1b9a8d338ab536044d0604ce4c420c9cde7ee7fe781339",
-                    {
-                        input: {
-                            video_urls: JSON.stringify([fullVoiceSignedUrl]),
-                            ffmpeg_args: ffmpegArgs,
-                            output_extension: "mp3"
-                        }
+                const prediction = await replicate.predictions.create({
+                    version: "lht1324/ffmpeg-sandbox-2:06262bdc243f9afe6d1b9a8d338ab536044d0604ce4c420c9cde7ee7fe781339",
+                    input: {
+                        video_urls: JSON.stringify([fullVoiceSignedUrl]),
+                        ffmpeg_args: ffmpegArgs,
+                        output_extension: "mp3"
                     }
-                );
+                });
+                const completedPrediction = await replicate.wait(prediction);
+                const processedAudioUrl = completedPrediction.output;
 
                 if (!processedAudioUrl) {
                     throw new Error(`Failed to slice audio for scene ${sceneNumber}`);

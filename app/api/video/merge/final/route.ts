@@ -192,10 +192,10 @@ export async function POST(
 
         // --- 2. 렌더링 완료된 비디오 및 오디오 URL 획득 ---
         const audioFilePath = isMusicPreProcessed
-            ? `${taskId}/autopilot_cut_music.mp3`
-            : `${taskId}/${taskId}_${musicIndex}.mp3`;
+            ? `${sessionUserId}/${taskId}/autopilot_cut_music.mp3`
+            : `${sessionUserId}/${taskId}/${taskId}_${musicIndex}.mp3`;
 
-        const videoUrl = await videoServerAPI.getVideoSignedUrl(`${taskId}/${taskId}.mp4`, 60 * 60);
+        const videoUrl = await videoServerAPI.getVideoSignedUrl(`${sessionUserId}/${taskId}/${taskId}.mp4`, 60 * 60);
         const audioUrl = await musicServerAPI.getMusicSignedUrl(audioFilePath, 60 * 60);
 
         // --- 3. ASS 자막 생성 ---

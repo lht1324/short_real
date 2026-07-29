@@ -1,15 +1,24 @@
+import { NextRequest } from "next/server";
 import { voiceServerAPI } from '@/lib/api/server/voiceServerAPI';
-import {getNextBaseResponse} from "@/lib/utils/getNextBaseResponse";
-import {NextRequest} from "next/server";
+import { getNextBaseResponse } from "@/lib/utils/getNextBaseResponse";
+import { getIsValidRequestS2S } from "@/lib/utils/getIsValidRequest";
 
 export async function GET(request: NextRequest) {
+    if (!getIsValidRequestS2S(request)) {
+        return getNextBaseResponse({
+            success: false,
+            status: 401,
+            error: 'Unauthorized internal request',
+        });
+    }
+
     const { searchParams } = new URL(request.url);
     const taskId = searchParams.get('taskId');
     const sessionUserId = searchParams.get('userId');
 
     if (!taskId) {
         return getNextBaseResponse({
-            success: true,
+            success: false,
             status: 400,
             error: "Missing param 'taskId'"
         });
@@ -17,9 +26,9 @@ export async function GET(request: NextRequest) {
 
     if (!sessionUserId) {
         return getNextBaseResponse({
-            success: true,
-            status: 400,
-            error: "Missing param 'userId'"
+            success: false,
+            status: 403,
+            error: "Forbidden. You can only read your own data."
         });
     }
 

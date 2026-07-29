@@ -1,18 +1,36 @@
 import { NextRequest } from 'next/server';
 import { imageServerAPI } from '@/lib/api/server/imageServerAPI';
 import { getNextBaseResponse } from "@/lib/utils/getNextBaseResponse";
+import { getIsValidRequestS2S } from "@/lib/utils/getIsValidRequest";
 
 export async function GET(request: NextRequest) {
+    if (!getIsValidRequestS2S(request)) {
+        return getNextBaseResponse({
+            success: false,
+            status: 401,
+            error: 'Unauthorized internal request',
+        });
+    }
+
     try {
         const searchParams = request.nextUrl.searchParams;
         const taskId = searchParams.get('taskId');
         const sceneCountStr = searchParams.get('sceneCount');
+        const userId = searchParams.get('userId');
 
         if (!taskId || !sceneCountStr) {
             return getNextBaseResponse({
                 success: false,
                 status: 400,
                 error: 'taskId and sceneCount are required'
+            });
+        }
+
+        if (!userId) {
+            return getNextBaseResponse({
+                success: false,
+                status: 403,
+                error: "Forbidden. You can only read your own data."
             });
         }
 
@@ -29,7 +47,7 @@ export async function GET(request: NextRequest) {
         // sceneNumber는 1부터 시작
         const imageUrlPromises = Array.from({ length: sceneCount }, async (_, index) => {
             const sceneNumber = index + 1;
-            const filePath = `${taskId}/${sceneNumber}.jpeg`;
+            const filePath = `${userId}/${taskId}/${sceneNumber}.jpeg`;
             try {
                 const url = await imageServerAPI.getImageSignedUrl(filePath);
                 return ({sceneNumber, url});

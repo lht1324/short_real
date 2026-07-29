@@ -117,7 +117,7 @@ export async function POST(request: NextRequest) {
 
             const { data: imageData, error: imageError } = await supabase.storage
                 .from("scene_image_temp_storage")
-                .download(`${taskId}/${sceneData.sceneNumber}.jpeg`);
+                .download(`${userId}/${taskId}/${sceneData.sceneNumber}.jpeg`);
 
             if (imageError || !imageData) {
                 throw new Error(`Supabase image download error for scene #${sceneData.sceneNumber}: ${imageError?.message}`);
