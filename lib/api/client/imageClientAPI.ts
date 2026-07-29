@@ -1,4 +1,4 @@
-import {getFetch} from "@/lib/api/client/baseFetch";
+import { getFetch, postFetch } from "@/lib/api/client/baseFetch";
 
 export const imageClientAPI = {
     async getImages(taskId: string, sceneCount: number): Promise<string[]> {
@@ -20,5 +20,40 @@ export const imageClientAPI = {
             console.error('Get images API call failed:', error);
             return [];
         }
-    }
+    },
+
+    async postImageRegenerate(payload: {
+        taskId: string;
+        sceneNumber: number;
+        selectedI2IAIModelId?: string;
+        selectedI2VAIModelId?: string;
+        isAlsoRegenerateVideo?: boolean;
+    }): Promise<{
+        success: boolean;
+        error?: string;
+    }> {
+        try {
+            const response = await postFetch('/api/image/regenerate', payload);
+
+            if (!response.ok) {
+                throw Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const regenerateResult = await response.json();
+
+            if (!regenerateResult.success) {
+                throw Error(regenerateResult.error ?? "Failed to start image regeneration.");
+            }
+
+            return {
+                success: true,
+            };
+        } catch (error) {
+            console.error("Image regenerate API call failed:", error);
+            return {
+                success: false,
+                error: error instanceof Error ? error.message : "Failed to start image regeneration",
+            };
+        }
+    },
 }

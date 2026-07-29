@@ -416,7 +416,7 @@ function WorkspaceCreatePageClient() {
     useEffect(() => {
         if (taskId && sceneDataList.length !== 0) {
             const loadVoiceUrl = async () => {
-                const newVoiceUrl = await voiceClientAPI.getVoiceUrl(taskId);
+                const newVoiceUrl = await voiceClientAPI.getVoiceUrl(taskId, user?.id || "");
 
                 setVoiceUrl(newVoiceUrl);
             }

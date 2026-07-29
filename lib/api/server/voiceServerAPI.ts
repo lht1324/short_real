@@ -7,7 +7,7 @@ import {
     VoiceGenerationResult,
     VoiceSettings
 } from "@/lib/api/types/eleven-labs/Voice";
-import {SubtitleSegment} from "@/lib/api/types/supabase/VideoGenerationTasks";
+import {SceneData, SubtitleSegment} from "@/lib/api/types/supabase/VideoGenerationTasks";
 import {createSupabaseServiceRoleClient} from "@/lib/supabase/supabaseServiceRole";
 import Replicate from "replicate";
 
@@ -186,15 +186,15 @@ export const voiceServerAPI = {
             // atempo 필터는 0.5 ~ 2.0 사이만 지원하나, 현재 우리의 보정 범위(1.0 ~ 1.15)는 안전함.
             const ffmpegArgs = `-filter:a "atempo=${speed}" -c:a libmp3lame -q:a 2`;
             
-            const processedAudioUrl = await replicate.run(
-                "lht1324/ffmpeg-sandbox-2:06262bdc243f9afe6d1b9a8d338ab536044d0604ce4c420c9cde7ee7fe781339",
-                {
-                    input: {
-                        video_urls: JSON.stringify([signedData.signedUrl]),
-                        ffmpeg_args: ffmpegArgs,
-                    }
+            const prediction = await replicate.predictions.create({
+                version: "lht1324/ffmpeg-sandbox-2:06262bdc243f9afe6d1b9a8d338ab536044d0604ce4c420c9cde7ee7fe781339",
+                input: {
+                    video_urls: JSON.stringify([signedData.signedUrl]),
+                    ffmpeg_args: ffmpegArgs,
                 }
-            );
+            });
+            const completedPrediction = await replicate.wait(prediction);
+            const processedAudioUrl = completedPrediction.output;
 
             if (!processedAudioUrl) throw new Error("Replicate audio scaling failed.");
 
@@ -229,10 +229,11 @@ export const voiceServerAPI = {
     async postNarrationBufferStream(
         audioBuffer: Buffer,
         taskId: string,
+        userId: string,
     ) {
         // Supabase Storage에 저장
         const supabase = createSupabaseServiceRoleClient();
-        const fileName = `${taskId}.mp3`;
+        const fileName = `${userId}/${taskId}/voice_full.mp3`;
 
         const { data, error: uploadError } = await supabase.storage
             .from('narration_voice_storage')
@@ -251,17 +252,111 @@ export const voiceServerAPI = {
         };
     },
 
-    async getVoiceSignedUrl(taskId: string) {
+    async getVoiceSignedUrl(taskId: string, userId: string) {
         const supabase = createSupabaseServiceRoleClient();
 
         const { data, error } = await supabase.storage
             .from('narration_voice_storage')
-            .createSignedUrl(`${taskId}.mp3`, 60 * 60);
+            .createSignedUrl(`${userId}/${taskId}/voice_full.mp3`, 60 * 60);
 
         if (!data || !data.signedUrl) {
             throw new Error(error instanceof Error ? error.message : "Unexpected error in getVoiceSignedUrl()");
         }
 
         return data.signedUrl;
+    },
+
+    async getSceneVoiceSignedUrl(taskId: string, userId: string, sceneNumber: number) {
+        const supabase = createSupabaseServiceRoleClient();
+
+        const { data, error } = await supabase.storage
+            .from('narration_voice_storage')
+            .createSignedUrl(`${userId}/${taskId}/voice_${sceneNumber}.mp3`, 60 * 60);
+
+        if (!data || !data.signedUrl) {
+            throw new Error(error instanceof Error ? error.message : "Unexpected error in getSceneVoiceSignedUrl()");
+        }
+
+        return data.signedUrl;
+    },
+
+    async sliceVoiceToScenes(
+        taskId: string,
+        userId: string,
+        sceneDataList: SceneData[]
+    ): Promise<boolean> {
+        const replicate = new Replicate({
+            auth: process.env.REPLICATE_API_TOKEN,
+        });
+        const supabase = createSupabaseServiceRoleClient();
+
+        try {
+            // 1. 이미 업로드되어 있는 통짜 오디오의 Signed URL을 확보합니다.
+            const fullVoiceSignedUrl = await this.getVoiceSignedUrl(taskId, userId);
+
+            // 2. 각 씬의 타임스탬프(영상 길이) 기준으로 병렬 슬라이싱을 실행합니다.
+            let fallbackAccumulatedTime = 0;
+            
+            // 씬 번호 순으로 정렬 보장
+            const sortedSceneList = [...sceneDataList].sort((a, b) => a.sceneNumber - b.sceneNumber);
+
+            const slicePromises = sortedSceneList.map(async (scene) => {
+                const { sceneNumber, sceneDuration, sceneSubtitleSegments } = scene;
+                
+                // 첫 단어의 절대 시작 시간이 이 씬의 오디오 시작점이 됩니다.
+                // (자막 세그먼트가 없는 예외적인 경우에만 누적 시간 fallback 사용)
+                const startSec = (sceneSubtitleSegments && sceneSubtitleSegments.length > 0)
+                    ? sceneSubtitleSegments[0].startSec
+                    : fallbackAccumulatedTime;
+                
+                const duration = sceneDuration;
+                fallbackAccumulatedTime = startSec + duration; // Fallback용 누적값 업데이트
+
+                // Replicate ffmpeg-sandbox-2 용 컷팅 인수 지정
+                const ffmpegArgs = `-ss ${startSec.toFixed(4)} -t ${duration.toFixed(4)} -c:a libmp3lame -q:a 2`;
+
+                const prediction = await replicate.predictions.create({
+                    version: "lht1324/ffmpeg-sandbox-2:06262bdc243f9afe6d1b9a8d338ab536044d0604ce4c420c9cde7ee7fe781339",
+                    input: {
+                        video_urls: JSON.stringify([fullVoiceSignedUrl]),
+                        ffmpeg_args: ffmpegArgs,
+                        output_extension: "mp3"
+                    }
+                });
+                const completedPrediction = await replicate.wait(prediction);
+                const processedAudioUrl = completedPrediction.output;
+
+                if (!processedAudioUrl) {
+                    throw new Error(`Failed to slice audio for scene ${sceneNumber}`);
+                }
+
+                // 3. 잘려진 오디오 파일을 다운로드하여 Supabase Storage에 업로드합니다.
+                const response = await fetch(processedAudioUrl.toString());
+                if (!response.ok) {
+                    throw new Error(`Failed to download sliced audio for scene ${sceneNumber}`);
+                }
+                const slicedAudioBuffer = Buffer.from(await response.arrayBuffer());
+
+                const storagePath = `${userId}/${taskId}/voice_${sceneNumber}.mp3`;
+                const { error: uploadError } = await supabase.storage
+                    .from('narration_voice_storage')
+                    .upload(storagePath, slicedAudioBuffer, {
+                        contentType: 'audio/mpeg',
+                        upsert: true
+                    });
+
+                if (uploadError) {
+                    throw new Error(`Storage upload failed for scene ${sceneNumber}: ${uploadError.message}`);
+                }
+
+                console.log(`[sliceVoiceToScenes] Scene ${sceneNumber} sliced & uploaded successfully.`);
+            });
+
+            await Promise.all(slicePromises);
+            return true;
+        } catch (error) {
+            console.error("[sliceVoiceToScenes] Error:", error);
+            throw error;
+        }
     }
 }

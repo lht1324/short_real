@@ -1,12 +1,10 @@
-import {NextRequest} from 'next/server';
-import {videoServerAPI} from '@/lib/api/server/videoServerAPI';
-import {musicServerAPI} from '@/lib/api/server/musicServerAPI';
-import {generateASSContent} from "@/lib/utils/captionUtils";
-import {videoGenerationTasksServerAPI} from "@/lib/api/server/videoGenerationTasksServerAPI";
-import {FinalVideoMergeData, VideoGenerationTaskStatus } from "@/lib/api/types/supabase/VideoGenerationTasks";
-import {taskCheckAndCleanupIfCancelled} from "@/lib/utils/taskCheckAndCleanupIfCancelled";
-import {getNextBaseResponse} from "@/lib/utils/getNextBaseResponse";
-import {getIsValidRequestS2S} from "@/lib/utils/getIsValidRequest";
+import { NextRequest } from 'next/server';
+import { videoGenerationTasksServerAPI } from "@/lib/api/server/videoGenerationTasksServerAPI";
+import { VideoGenerationTaskStatus } from "@/lib/api/types/supabase/VideoGenerationTasks";
+import { taskCheckAndCleanupIfCancelled } from "@/lib/utils/taskCheckAndCleanupIfCancelled";
+import { getNextBaseResponse } from "@/lib/utils/getNextBaseResponse";
+import { getIsValidRequestS2S } from "@/lib/utils/getIsValidRequest";
+import { internalFireAndForgetFetch } from "@/lib/utils/internalFetch";
 
 export async function POST(
     request: NextRequest,
@@ -21,7 +19,7 @@ export async function POST(
 
     const searchParams = request.nextUrl.searchParams;
 
-    const taskId = searchParams.get('taskId')
+    const taskId = searchParams.get('taskId');
     const sessionUserId = searchParams.get('userId');
 
     if (!taskId) {
@@ -61,54 +59,6 @@ export async function POST(
             });
         }
 
-
-        // video, audio url 저장이 아닌 새로 받아오는 걸로 수정 (잘못하면 만료됨)
-        const {
-            // Caption 관련
-            isCaptionEnabled,
-            captionDataList,
-            captionConfigState,
-            videoWidth,
-            videoHeight,
-            captionAreaTop,
-            captionAreaVerticalPadding,
-            captionOneLineHeight,
-            // Music 관련
-            musicIndex,
-            cuttingAreaStartSec,
-            cuttingAreaEndSec,
-            volumePercentage,
-            mixingGainDb,
-
-            isMusicPreProcessed,
-        }: FinalVideoMergeData = videoGenerationTask.final_video_merge_data;
-
-        if (!isMusicPreProcessed && (cuttingAreaEndSec <= cuttingAreaStartSec)) {
-            await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
-            return getNextBaseResponse({
-                success: false,
-                status: 400,
-                error: 'cuttingAreaEndSec must be greater than cuttingAreaStartSec'
-            });
-        }
-
-        // volumePercentage(%) 혹은 mixingGainDb(dB) 중 하나는 유효해야 함
-        if ((volumePercentage < 0 || volumePercentage > 100) && (mixingGainDb === undefined)) {
-            await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
-            return getNextBaseResponse({
-                success: false,
-                status: 400,
-                error: 'Invalid volume settings: volumePercentage or mixingGainDb required'
-            });
-        }
-
-        const audioFilePath = isMusicPreProcessed
-            ? `${taskId}/autopilot_cut_music.mp3`
-            : `${taskId}/${taskId}_${musicIndex}.mp3`;
-
-        const videoUrl = await videoServerAPI.getVideoSignedUrl(`${taskId}/${taskId}.mp4`, 60 * 60);
-        const audioUrl = await musicServerAPI.getMusicSignedUrl(audioFilePath, 60 * 60);
-
         const patchVideoGenerationTaskStatusResult = await videoGenerationTasksServerAPI.patchVideoGenerationTaskStatus(taskId, VideoGenerationTaskStatus.FINALIZING);
 
         const checkingInitialResult = await taskCheckAndCleanupIfCancelled(patchVideoGenerationTaskStatusResult);
@@ -117,50 +67,23 @@ export async function POST(
             return checkingInitialResult;
         }
 
-        // ASS 콘텐츠 생성
-        const assContent = generateASSContent(
-            isCaptionEnabled,
-            captionDataList,
-            captionConfigState,
-            videoWidth,
-            videoHeight,
-            captionAreaTop,
-            captionAreaVerticalPadding,
-            captionOneLineHeight,
+        // Fire-and-Forget으로 백그라운드 프로세스 엔드포인트 비동기 호출
+        const baseUrl = process.env.BASE_URL || "";
+        const internalProcessUrl = `${baseUrl}/api/video/merge/final/process?taskId=${taskId}`;
+
+        console.log(`[Merge Final Trigger] Fire-and-forget final video merge process for Task #${taskId}...`);
+        internalFireAndForgetFetch(
+            internalProcessUrl,
+            { method: "POST" }
         );
-
-        const videoDuration = videoGenerationTask.scene_breakdown_list.reduce((acc, sceneData) => {
-            return sceneData.sceneDuration + acc;
-        }, 0);
-
-        // 1. Caption 번인 2. Music 편집을 병렬 실행
-        const [captionPredictionId, musicPredictionId] = await Promise.all([
-            videoServerAPI.postVideoMergeCaption(
-                videoUrl,
-                assContent,
-                taskId
-            ),
-            musicServerAPI.postMusicModifying(
-                audioUrl,
-                isMusicPreProcessed ? 0 : cuttingAreaStartSec,
-                isMusicPreProcessed ? videoDuration : cuttingAreaEndSec,
-                volumePercentage,
-                taskId,
-                mixingGainDb
-            )
-        ])
-
-        console.log(`[API Final] Caption prediction: ${captionPredictionId}`);
-        console.log(`[API Final] Music prediction: ${musicPredictionId}`);
 
         return getNextBaseResponse({
             success: true,
             status: 200,
-            message: `Requested merging caption and modifying music successfully. caption: ${captionPredictionId}, music: ${musicPredictionId}}`,
+            message: "Final video merge process started successfully.",
         });
-
     } catch (error) {
-        console.error('[API Final] Error:', error);
+        console.error('[API Final Trigger] Error:', error);
 
         await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
         return getNextBaseResponse({

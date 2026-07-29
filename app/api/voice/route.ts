@@ -1,6 +1,8 @@
+import { NextRequest } from 'next/server';
 import { voiceServerAPI } from '@/lib/api/server/voiceServerAPI';
-import {getNextBaseResponse} from "@/lib/utils/getNextBaseResponse";
-import {unstable_cache} from "next/cache";
+import { getNextBaseResponse } from "@/lib/utils/getNextBaseResponse";
+import { getIsValidRequestS2S } from "@/lib/utils/getIsValidRequest";
+import { unstable_cache } from "next/cache";
 
 /**
  * 목소리 목록을 조회하는 내부 함수 (캐싱 대상)
@@ -17,7 +19,15 @@ const getCachedVoices = unstable_cache(
     }
 );
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+    if (!getIsValidRequestS2S(request)) {
+        return getNextBaseResponse({
+            success: false,
+            status: 401,
+            error: 'Unauthorized internal request',
+        });
+    }
+
     try {
         const voiceDataList = await getCachedVoices();
 

@@ -83,6 +83,7 @@ export async function POST(request: NextRequest) {
                 // Supabase Storage에 업로드
                 const uploadResult = await musicServerAPI.postMusic(
                     taskId,
+                    videoGenerationTask.user_id,
                     musicFileList,
                     musicMetadataList.map((musicMetaData) => {
                         return {
@@ -99,7 +100,7 @@ export async function POST(request: NextRequest) {
                     console.log(`Successfully uploaded ${musicFileList.length} music files for task: ${taskId}`);
 
                     // Task 상태 'EDITOR'로 업데이트
-                    if (videoGenerationTask.final_video_merge_data) {
+                    if (videoGenerationTask.series_id) {
                         internalFireAndForgetFetch(
                             `${process.env.BASE_URL}/api/autopilot/music?taskId=${taskId}&seriesId=${videoGenerationTask.series_id}`,
                             {

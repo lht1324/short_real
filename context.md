@@ -1,35 +1,48 @@
-# 작업 진행 상황 (Last Updated: 2026-07-19 03:15)
+# 작업 진행 상황 (Last Updated: 2026-07-28 03:00)
 
-## 1. 최근 세션 작업 내용 (Current Session Changes)
-* **브랜드 로고 리디자인 및 고가시성 웹 에셋 적용 완료**:
-    * **로고 디자인 시안 확정**: 올드한 Sunset 원형 로고를 버리고, `shortreal` 서비스 정체성에 걸맞은 미니멀 기하학 로고인 "Layered Slash with Parallelogram Ends" 시안을 최종 도출했습니다.
-    * **웹 헤더 배경 융합 및 에셋 투명화**: 헤더의 남색 배경(`#0b0b15`) 위에 검은색 사각형이 붕 뜨는 이물감을 지우기 위해, Krita의 앤티앨리어싱 및 영역 확장 기법을 이용해 테두리 잔해 없이 깨끗하게 배경을 투명화한 PNG 에셋으로 교체했습니다.
-    * **OS/앱 아이콘 규격 고수**: 기기별 자체 마스킹 및 라이트/다크 모드 대응을 위해 브라우저 탭 및 모바일 홈 화면 책갈피 아이콘은 검은 배경(`#000000`)의 사각형 PNG 규격을 유지했습니다.
-    * **교체 반영된 파일**:
-        * [logo-32.png](file:///home/jaeho/Projects/short_real/public/logo/logo-32.png) (32x32px, 투명 PNG) - 헤더 로고용
-        * [logo-64.png](file:///home/jaeho/Projects/short_real/public/logo/logo-64.png) (64x64px, 투명 PNG)
-        * [logo-180.png](file:///home/jaeho/Projects/short_real/public/logo/logo-180.png) (180x180px, 투명 PNG)
-        * [logo-512.png](file:///home/jaeho/Projects/short_real/public/logo/logo-512.png) (512x512px, 투명 PNG)
-        * [icon.png](file:///home/jaeho/Projects/short_real/app/icon.png) (32x32px, 검은 배경 사각형 PNG) - Next.js 파비콘용
-        * [apple-icon.png](file:///home/jaeho/Projects/short_real/app/apple-icon.png) (180x180px, 검은 배경 사각형 PNG) - Next.js 애플 홈 아이콘용
-* **도커-로컬 빌드 캐시 격리 및 소유권 충돌 해결**:
-    * **[next.config.ts](file:///home/jaeho/Projects/short_real/next.config.ts)**: 도커 환경(`isDocker`)일 때는 빌드 캐시를 `.next-docker`에, 호스트 로컬 환경일 때는 `.next`에 쌓도록 경로를 격리하여 컴파일러 캐시 파일 리네임(`rename`) 잠금 충돌을 원천 차단했습니다.
-    * **[Dockerfile](file:///home/jaeho/Projects/short_real/Dockerfile) & [docker-compose.yml](file:///home/jaeho/Projects/short_real/docker-compose.yml)**: 복잡하게 얽혔던 `USER node` 설정을 걷어내고, 원래대로 순정 `root` 권한으로 편리하게 띄워지도록 롤백하여 빌드 및 권한 환경을 단순화했습니다.
-    * **[.gitignore](file:///home/jaeho/Projects/short_real/.gitignore)**: 새로 생성되는 `/.next-docker/` 디렉토리를 git 추적 제외 목록에 등록했습니다.
-* **디자인 시스템 고급화 정제 (Vaporwave ➡️ Monochrome & Restrained Crimson)**:
-    * **[design-taste-frontend](file:///home/jaeho/.gemini/skills/design-taste-frontend/SKILL.md)** 스킬의 "Color Consistency Lock" 및 "Extreme Restraint (레드 1.5% 미만 아껴 쓰기)" 원칙에 따라, 사이트 곳곳에 땜빵식으로 묻어있던 옛날 베이퍼웨이브(핑크-퍼플-시안)와 과하게 도배되었던 붉은색 게이밍 기어 룩을 완전히 롤백했습니다.
-    * 오프닝 이미지 및 히어로의 마스터 블레이드 시그니처 컬러인 **크림슨 레드(`#c21a2e`)**는 오직 히어로의 강렬한 칼날(취소선) 한 줄에만 단일 악센트로 아껴서 배치했습니다.
-    * 하부의 다른 기믹 및 섹션들은 철저히 고급스러운 **모노크롬(무채색: 화이트/블랙/아연 회색)** 스타일로 가라앉혀 중2병 게이밍 느낌을 차단했습니다.
-    * **수정 반영된 파일**:
-        * [LandingPageClient.tsx](file:///home/jaeho/Projects/short_real/components/page/landing/LandingPageClient.tsx)
-        * [CostStructureSection.tsx](file:///home/jaeho/Projects/short_real/components/page/landing/cost-structure-section/CostStructureSection.tsx)
-        * [VoiceSelectionItem.tsx](file:///home/jaeho/Projects/short_real/components/page/landing/how-it-works-section/VoiceSelectionItem.tsx)
-        * [CTAModal.tsx](file:///home/jaeho/Projects/short_real/components/page/landing/how-it-works-section/CTAModal.tsx)
-        * [FloatingRoadmap.tsx](file:///home/jaeho/Projects/short_real/components/page/landing/FloatingRoadmap.tsx)
-        * [HowItWorksSection.tsx](file:///home/jaeho/Projects/short_real/components/page/landing/how-it-works-section/HowItWorksSection.tsx)
+## 1. 현재 상황 (Current Status)
+* **단건 이미지/비디오 비동기 Fire-and-Forget 재생성 파이프라인 연동 완료**:
+    * 단건 이미지 재생성 (`/api/image/regenerate`) 및 단건 비디오 재생성 (`/api/video/regenerate`)의 비동기 200 OK 응답 규격 연동 완료.
+    * 씬 카드 글래스모피즘 스피너 오버레이 연동 및 Supabase Realtime 실시간 `COMPLETED` 완공 알림/비디오 URL 교체 체계 구축 완료.
+    * 비디오 완공 시 1차 속도 배율 후처리 및 Storage 덮어쓰기 완료 상태를 `COMPLETED`로 통합 관리.
 
-## 2. 향후 작업 (Next Steps) - [Priority: HIGH]
-1. **[기능] BYOK 공급처에 Replicate 추가 연동**:
-    * 현재 fal.ai 위주로 연동되어 있는 BYOK 시스템에 사용자 본인의 Replicate API Key를 연동하고, Replicate 호스팅 모델들을 영상 생성 파이프라인에서 직접 선택 및 원가 과금으로 구동할 수 있도록 기능 설계 및 UI 반영.
-2. **[검증] 요금제 개편 후 결제 완료 및 오토파일럿 설정 플로우 최종 실기기 테스트**:
-    * 갱신된 Polar 상품 결제 완료 다이얼로그 디자인이 실기기 모바일 및 좁은 화면에서 예쁘게 연출되는지 사장님 컨펌 하에 최종 확인.
+---
+
+## 2. 세션 진행 작업 (Work Accomplished in Current Session)
+
+### [UI/UX] 단건 재생성 모달 개편 및 UI 고정 (`SceneRegenerateModal.tsx`)
+1. **드롭다운 정렬 헤더 상단 고정 (`sticky top-0`)**:
+    * 드롭다운 내부 목록 스크롤 시 `Sort by (Name | Price ↑ | Price ↓)` 헤더가 상단에 착 붙어 고정되도록 구조 개편 (`sticky top-0 bg-zinc-900 z-10 shrink-0`).
+2. **모달 화면 수직 위치 고정 (`pt-[18vh] mb-12`)**:
+    * 이미지 재생성 시 "비디오 연쇄 재생성" 체크박스를 켜고 끌 때 모달의 전체 높이가 바뀌면서 세로 중앙(`my-auto`) 위치가 변해 마우스 커서 위치가 튀는 UX 현상 해결.
+    * `my-auto` 마진을 제거하고 상단 위치를 `pt-[18vh]`로 고정하여 체크박스 연쇄 클릭 시 모달 상단 및 마우스 Y축 위치가 1px도 안 움직이도록 처리.
+3. **비디오 드롭다운 슬라이드 애니메이션**:
+    * 체크박스 클릭 시 비디오 드롭다운이 아래 방향으로 부드럽게 펼쳐지도록 `animate-in fade-in slide-in-from-top-2 duration-200` 적용.
+
+### [통신/API] 비동기 Fire-and-Forget 통신 약속 규격 통일
+1. **클라이언트 API 수신 규격 통일 (`imageClientAPI.ts`)**:
+    * 백엔드 비동기 return 규격 (`{ success: boolean, status: number, message?: string, error?: string }`)에 맞춰 `postImageRegenerate` 메서드의 구형 동기식 `imageUrl` 체크 로직 제거 및 표준 반환형으로 개편.
+2. **프론트엔드 재생성 핸들러 교정 (`WorkspaceEditorPageClient.tsx`)**:
+    * `handleConfirmRegenerate` 내 이미지 재생성 완료 검사 조건(`if (regenerateResult.success)`)을 비동기 표준에 맞추어 교정.
+    * 백엔드가 백그라운드 처리를 수행하는 동안 UI 씬 카드는 `status = GENERATING_IMAGE` 로딩 스피너 상태를 안전하게 유지하며, 완공 시 Supabase Realtime 채널이 DB `COMPLETED` 이벤트를 받을 때까지 조용히 대기하도록 수정.
+
+### [Realtime/UX] Supabase Realtime 수신 최적화 및 브라우저 스레드 차단 해제 (`WorkspaceEditorPageClient.tsx`)
+1. **`SceneData.status` 변동 씬 정밀 감지 가드 구축**:
+    * `videoDataRef`를 도입하여, 수신된 신규 씬 데이터 중 `SceneData.status`가 기존과 실제로 달라진 씬이 1개라도 있을 때만 후속 연산을 타도록 가드 구축 (`statusChangedScenes.length === 0` 시 즉시 반환하여 헛스윙 DB UPDATE 릴레이 연산 완전 차단).
+2. **React Strict Mode 중복 팝업 해제**:
+    * React 18 개발 모드(Strict Mode)의 State Updater 콜백 2회 실행(Double Invocation)으로 인한 `alert()` 중복 출력 방지를 위해 Side Effect(`alert()`, URL fetch)를 State Updater 함수 바깥으로 분리.
+3. **브라우저 동기 블로킹 해제 및 UX 순서 교정**:
+    * 브라우저 `alert()`의 동기적 스레드 차단(Freeze) 현상 해결: `await`로 최신 이미지/비디오 URL State를 먼저 바꾼 뒤 UI 화면에 새 이미지가 먼저 교체 렌더링되게 하고, `setTimeout(..., 100)`을 써서 유저 눈으로 바뀐 이미지를 확인한 후 완공 알림 팝업이 출현하도록 UX 순서 완벽 교정.
+
+---
+
+## 3. 향후 작업 (Next Steps)
+
+### Task 4: [백엔드/파이프라인] 정규 생성 실패 건 선택적 재생성 (Selective Retry) 및 상태 동기화 체계 구축
+1. **배경 및 필요성**:
+    * 외부 AI API(Fal AI 등)의 일시적 서버 오류, 네트워크 타임아웃 등으로 인해 전체 10개 씬 중 특정 1~2개 씬만 생성 실패(`status: FAILED`)하는 경우 발생.
+    * 전체 재요청 없이 실패한 씬만 선택적으로 재요청(Selective Retry)하는 파이프라인 필터링 및 대시보드 연동 필요.
+2. **구체적 구현 내용**:
+    * **[에디터 UI]**: `status === FAILED`인 씬 카드에 **[Retry Scene / 씬 재시도]** 전용 버튼 및 실패 원인 툴팁 표시. 차감 예상 금액 툴팁에 실패한 N개 씬 재시도 금액만 동적으로 계산하여 표시.
+    * **[백엔드 파이프라인]**: 실패한 씬 번호 목록(예: `failedSceneNumbers: [3, 5]`)만 전달받아 해당 씬들만 핀포인트로 백그라운드 재요청을 수행하고 성공한 기존 씬은 유지하며 DB `scene_breakdown_list`에 병합 패치.
+    * **[Realtime 반응]**: 재시도가 완료되면 기존과 동일하게 Realtime 채널을 통해 화면 스피너가 꺼지고 새 이미지가 장착되도록 상태 동기화.

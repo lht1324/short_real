@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
             // const videoBlob = await videoResponse.blob();
             const videoArrayBuffer = await videoResponse.arrayBuffer();
             const videoNodeBuffer = Buffer.from(videoArrayBuffer);
-            const filePath = `${taskId}/${taskId}_final.mp4`;
+            const filePath = `${videoGenerationTask.user_id}/${taskId}/${taskId}_final.mp4`;
 
             const { error: uploadError } = await supabase.storage
                 .from('processed_video_storage')

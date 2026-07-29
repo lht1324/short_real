@@ -2,13 +2,17 @@ import { task, tasks } from "@trigger.dev/sdk/v3";
 import { logger } from "@trigger.dev/sdk";
 import { videoGenerationTasksServerAPI } from "@/lib/api/server/videoGenerationTasksServerAPI";
 import { postImage } from "@/trigger/post-image";
-import {AIModelConfig, SceneData, VideoGenerationTaskStatus} from "@/lib/api/types/supabase/VideoGenerationTasks";
+import {
+    SceneData,
+    SceneGenerationStatus,
+    VideoGenerationTaskStatus
+} from "@/lib/api/types/supabase/VideoGenerationTasks";
 import { MasterStyleInfo } from "@/lib/api/types/supabase/MasterStyleInfo";
 import { InitialEntityManifestItem } from "@/lib/api/types/open-ai/Entity";
 import { internalFireAndForgetFetch } from "@/lib/utils/internalFetch";
-import {usersServerAPI} from "@/lib/api/server/usersServerAPI";
-import {aiModelDataServerAPI} from "@/lib/api/server/aiModelDataServerAPI";
-import {FalAIEndpointID} from "@/lib/falAIInputMapper";
+import { usersServerAPI } from "@/lib/api/server/usersServerAPI";
+import { aiModelDataServerAPI } from "@/lib/api/server/aiModelDataServerAPI";
+import { FalAIEndpointID } from "@/lib/falAIInputMapper";
 
 export const orchestrateImageGeneration = task({
     id: "orchestrate-image-generation",
@@ -73,97 +77,112 @@ export const orchestrateImageGeneration = task({
                 throw new Error(`AI model data are not found.`);
             }
 
-            // 1. N개의 자식 태스크 병렬 실행 및 대기 (Fan-out & Wait)
-            // Trigger 시스템이 각 자식 태스크의 재시도(Retry)를 알아서 관리함.
-            // 여기서는 모든 자식이 '최종 성공'하거나 '최종 실패'할 때까지 기다림.
-            const batchResults = await tasks.batchTriggerAndWait<typeof postImage>(
-                "post-image", // 1. 태스크 ID (문자열)
-                sceneDataList.map(sceneData => ({
-                    // 2. 아이템 배열
-                    payload: {
-                        taskId,
-                        videoTitle,
-                        videoDescription,
-                        masterStyleInfo,
-                        entityManifestList,
-                        sceneData,
-                        styleId,
-                        falAiApiKey,
-                        userId: videoGenerationTask.user_id,
-                        sceneImageT2IAIModelEndpointId: sceneImageT2IAIModelData.endpoint_id,
-                        sceneImageI2IAIModelEndpointId: sceneImageI2IAIModelData.endpoint_id,
-                        resolution,
-                        aspectRatio,
-                    }
-                }))
-            );
+            // 1. 이미지가 아직 생성되지 않은 대상 씬만 선별 (GENERATING_IMAGE 또는 FAILED 인 씬)
+            const targetScenes = sceneDataList.filter((sceneData) => {
+                return sceneData.status !== SceneGenerationStatus.GENERATING_VIDEO &&
+                       sceneData.status !== SceneGenerationStatus.COMPLETED;
+            });
 
-            // 2. 결과 확인 (Fan-in)
-            const successfulRuns = batchResults.runs.filter(run => run.ok);
-            const failedRuns = batchResults.runs.filter(run => !run.ok);
+            logger.info(`[Orchestrator] Target scenes for image generation: ${targetScenes.length}/${sceneDataList.length}`);
 
-            if (failedRuns.length > 0) {
-                // 3-1. 하나라도 최종 실패 시 (재시도 횟수 초과) -> 전체 실패 처리
-                const failedSceneNumbers = failedRuns.map(run => {
-                    // 에러 메시지나 페이로드에서 씬 번호 추적 가능하면 좋음
-                    return run.id;
-                });
+            let newSuccessfulRuns: Array<{
+                output: {
+                    sceneNumber: number;
+                    imageGenPrompt: any;
+                    imageGenPromptSentence: string;
+                }
+            }> = [];
 
-                logger.error(`[Orchestrator] ${failedRuns.length} scenes failed permanently after retries.`, {
-                    failedRunIds: failedSceneNumbers,
-                    errors: failedRuns.map(r => r.error)
-                });
+            if (targetScenes.length > 0) {
+                // Trigger 시스템이 각 자식 태스크의 재시도(Retry)를 알아서 관리함.
+                const batchResults = await tasks.batchTriggerAndWait<typeof postImage>(
+                    "post-image",
+                    targetScenes.map(sceneData => ({
+                        payload: {
+                            taskId,
+                            videoTitle,
+                            videoDescription,
+                            masterStyleInfo,
+                            entityManifestList,
+                            sceneData,
+                            styleId,
+                            falAiApiKey,
+                            userId: videoGenerationTask.user_id,
+                            sceneImageT2IAIModelEndpointId: sceneImageT2IAIModelData.endpoint_id,
+                            sceneImageI2IAIModelEndpointId: sceneImageI2IAIModelData.endpoint_id,
+                            resolution,
+                            aspectRatio,
+                        }
+                    }))
+                );
 
-                await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
-                throw new Error(`${failedRuns.length} scenes failed permanently.`);
-            }
+                // 결과 확인 (Fan-in)
+                const failedRuns = batchResults.runs.filter(run => !run.ok);
 
-            // 3-2. 전부 성공 시 -> 다음 단계 진행
-            logger.info(`[Orchestrator] All ${successfulRuns.length} scenes completed successfully.`);
-
-            // // TEST !!
-            // await videoGenerationTasksServerAPI.patchVideoGenerationTaskFailed(taskId);
-            // return {
-            //     success: true,
-            //     message: "Image generation test completed and next step triggered.",
-            //     completedScenes: successfulRuns.length
-            // };
-
-            const imageGenPromptDataList = successfulRuns.map((run) => {
-                const {
-                    sceneNumber,
-                    imageGenPrompt,
-                    imageGenPromptSentence,
-                } = run.output;
-
-                return {
-                    sceneNumber,
-                    imageGenPrompt,
-                    imageGenPromptSentence,
-                };
-            })
-            await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, {
-                status: VideoGenerationTaskStatus.GENERATING_VIDEO_PROMPT,
-                scene_breakdown_list: sceneDataList.map((sceneData) => {
-                    const imageGenPromptData = imageGenPromptDataList.find((imageGenPromptData) => {
-                        return imageGenPromptData.sceneNumber === sceneData.sceneNumber;
+                if (failedRuns.length > 0) {
+                    logger.error(`[Orchestrator] ${failedRuns.length} scenes failed permanently after retries.`, {
+                        failedRunIds: failedRuns.map(r => r.id),
+                        errors: failedRuns.map(r => r.error)
                     });
 
-                    if (!imageGenPromptData) {
-                        throw Error("ImageGenPromptDataList is invalid.");
+                    // 실패한 씬은 status: FAILED로 DB에 기록하고 성공한 씬은 데이터 보존
+                    const updatedSceneBreakdownList = sceneDataList.map((sceneData) => {
+                        const isTarget = targetScenes.some(ts => ts.sceneNumber === sceneData.sceneNumber);
+                        if (!isTarget) return sceneData;
+
+                        const successRun = batchResults.runs.find(r => r.ok && r.output.sceneNumber === sceneData.sceneNumber);
+                        if (successRun && successRun.ok) {
+                            return {
+                                ...sceneData,
+                                imageGenPrompt: successRun.output.imageGenPrompt,
+                                imageGenPromptSentence: successRun.output.imageGenPromptSentence,
+                                status: SceneGenerationStatus.GENERATING_VIDEO,
+                            };
+                        } else {
+                            return {
+                                ...sceneData,
+                                status: SceneGenerationStatus.FAILED,
+                            };
+                        }
+                    });
+
+                    await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, {
+                        scene_breakdown_list: updatedSceneBreakdownList,
+                        is_generation_failed: true,
+                    });
+
+                    throw new Error(`${failedRuns.length} scenes failed permanently.`);
+                }
+
+                newSuccessfulRuns = batchResults.runs.filter((run): run is typeof run & { ok: true } => run.ok);
+            }
+
+            // 2. 새로 성공한 씬들의 프롬프트 데이터 맵 생성
+            const newPromptMap = new Map(
+                newSuccessfulRuns.map(run => [
+                    run.output.sceneNumber,
+                    {
+                        imageGenPrompt: run.output.imageGenPrompt,
+                        imageGenPromptSentence: run.output.imageGenPromptSentence,
                     }
+                ])
+            );
 
-                    const {
-                        imageGenPrompt,
-                        imageGenPromptSentence,
-                    } = imageGenPromptData;
+            // 3. 전체 씬 breakdown list 업데이트 (모든 씬 status: GENERATING_VIDEO로 전환)
+            const finalSceneBreakdownList = sceneDataList.map((sceneData) => {
+                const newPrompt = newPromptMap.get(sceneData.sceneNumber);
+                return {
+                    ...sceneData,
+                    imageGenPrompt: newPrompt?.imageGenPrompt ?? sceneData.imageGenPrompt,
+                    imageGenPromptSentence: newPrompt?.imageGenPromptSentence ?? sceneData.imageGenPromptSentence,
+                    status: SceneGenerationStatus.GENERATING_VIDEO,
+                };
+            });
 
-                    return {
-                        ...sceneData,
-                        imageGenPrompt: imageGenPrompt,
-                        imageGenPromptSentence: imageGenPromptSentence,
-                    };
-                })
+            await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, {
+                status: VideoGenerationTaskStatus.GENERATING_VIDEO_PROMPT,
+                scene_breakdown_list: finalSceneBreakdownList,
+                is_generation_failed: false,
             });
 
             // 4. 다음 단계(비디오 프롬프트 생성) 호출 (Fire-and-Forget)
@@ -177,7 +196,7 @@ export const orchestrateImageGeneration = task({
             return {
                 success: true,
                 message: "Image generation completed and next step triggered.",
-                completedScenes: successfulRuns.length
+                completedScenes: sceneDataList.length
             };
         } catch (error) {
             logger.error("[Orchestrator] Fatal error:", {

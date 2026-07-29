@@ -67,6 +67,7 @@ export async function POST(
         }
 
         const {
+            user_id: userId,
             scene_breakdown_list: sceneBreakdownList,
             final_video_merge_data: videoMergeData,
             music_data_list: musicDataList,
@@ -84,9 +85,9 @@ export async function POST(
         }: AutopilotData = autopilotData;
 
         // [Step 1] 예술적 곡 선택 (Artistic Song Selection) Prep
-        const firstMusicUrl = await musicServerAPI.getMusicSignedUrl(`${taskId}/${taskId}_0.mp3`, 60 * 60);
-        const secondMusicUrl = await musicServerAPI.getMusicSignedUrl(`${taskId}/${taskId}_1.mp3`, 60 * 60);
-        const narrationVoiceUrl = await voiceServerAPI.getVoiceSignedUrl(taskId);
+        const firstMusicUrl = await musicServerAPI.getMusicSignedUrl(`${userId}/${taskId}/${taskId}_0.mp3`, 60 * 60);
+        const secondMusicUrl = await musicServerAPI.getMusicSignedUrl(`${userId}/${taskId}/${taskId}_1.mp3`, 60 * 60);
+        const narrationVoiceUrl = await voiceServerAPI.getVoiceSignedUrl(taskId, userId);
 
         // 오디오 리샘플링 (LLM 분석용: Mono 24kHz 64kbps)
         console.log(`[Music Selection] Resampling audio for Step 1 analysis...`);
@@ -132,17 +133,17 @@ export async function POST(
         console.log(`[Music Preprocessor] Calling Librosa model for selected index: ${selectedMusicIndex}, duration: ${totalDuration}`);
 
         // Processed audio files' path list
-        const preprocessorResult = await replicate.run(
-            "lht1324/audio-preprocessor:23202b8a079e2bacc0f634035550d8325173010be30aa5209d806ee3db3b0ad9",
-            {
-                input: {
-                    music_audio_url: selectedMusicUrl,
-                    voice_audio_url: narrationVoiceUrl,
-                    target_duration: totalDuration,
-                    candidate_count: 3,
-                }
+        const prediction = await replicate.predictions.create({
+            version: "lht1324/audio-preprocessor:23202b8a079e2bacc0f634035550d8325173010be30aa5209d806ee3db3b0ad9",
+            input: {
+                music_audio_url: selectedMusicUrl,
+                voice_audio_url: narrationVoiceUrl,
+                target_duration: totalDuration,
+                candidate_count: 3,
             }
-        ) as string[];
+        });
+        const completedPrediction = await replicate.wait(prediction);
+        const preprocessorResult = completedPrediction.output as string[];
 
         if (!preprocessorResult || preprocessorResult.length === 0) {
             throw new Error("Music preprocessing failed: No output from Replicate");
@@ -154,7 +155,7 @@ export async function POST(
             if (!response.ok) throw new Error(`Failed to fetch candidate ${index} from ${url}`);
 
             const arrayBuffer = await response.arrayBuffer();
-            const storagePath = `${taskId}/candidate_${index}.mp3`;
+            const storagePath = `${userId}/${taskId}/candidate_${index}.mp3`;
 
             const { error: uploadError } = await supabase.storage
                 .from('video_music_temp_storage')
@@ -208,8 +209,8 @@ export async function POST(
         console.log(`[Music Mixing] Calculated mixingGainDb: ${mixingGainDb}dB (Intensity: ${scriptIntensity})`);
 
         // [Step 3.5] 최종 선택된 파일을 autopilot_cut_music.mp3로 고정 (사장님 요청사항)
-        const selectedCandidatePath = `${taskId}/candidate_${finalCandidateIndex}.mp3`;
-        const finalCutMusicPath = `${taskId}/autopilot_cut_music.mp3`;
+        const selectedCandidatePath = `${userId}/${taskId}/candidate_${finalCandidateIndex}.mp3`;
+        const finalCutMusicPath = `${userId}/${taskId}/autopilot_cut_music.mp3`;
 
         const { error: copyError } = await supabase.storage
             .from('video_music_temp_storage')

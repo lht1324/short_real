@@ -2,11 +2,12 @@
 
 import {memo, useCallback, useEffect, useMemo, useState} from "react";
 import Link from "next/link";
-import {Coins, ListTodo, Loader2, Plus, Zap} from 'lucide-react';
+import {ListTodo, Loader2, Plus} from 'lucide-react';
 import {
     AIModelConfig,
     ExportPlatform,
     ExportStatus,
+    SceneGenerationStatus,
     VideoGenerationTask,
     VideoGenerationTaskStatus
 } from "@/lib/api/types/supabase/VideoGenerationTasks";
@@ -32,7 +33,7 @@ import ExportSettingsModal from "@/components/page/workspace/dashboard/export-se
 import {ExportPrivacySetting} from "@/components/page/workspace/dashboard/export-settings-modal/ExportPrivacySetting";
 import WorkspaceSidebar from "@/components/public/WorkspaceSidebar";
 import {WorkspaceSidebarItem} from "@/components/public/WorkspaceSidebarItem";
-import { AnimatePresence } from "framer-motion";
+import {AnimatePresence} from "framer-motion";
 
 export interface TaskData {
     id: string;
@@ -41,14 +42,13 @@ export interface TaskData {
     status: VideoGenerationTaskStatus;
     sceneCount: number;
     processedSceneCount?: number;
-    videoDuration: number;
+    failedImageCount?: number;
+    failedVideoDuration?: number;
     progress?: number; // 0-100
     currentStep: number;
     totalStep: number;
     createdAt: Date;
     updatedAt: Date;
-    selectedVoiceId?: string;
-    selectedStyleId?: string;
     isGenerationFailed: boolean;
     estimatedCharacterCount?: number;
     resolution?: '720p' | '1080p' | '2160p';
@@ -322,25 +322,39 @@ function WorkspaceDashboardPageClient() {
         }
 
         const status = task.status as VideoGenerationTaskStatus;
-        const {progress, currentStep, totalStep} = calculateProgress(status);
+        const { progress, currentStep, totalStep } = calculateProgress(status);
+
+        const sceneDataList = task.scene_breakdown_list;
+        const isGenerationFailed = task.is_generation_failed;
 
         return {
             id: task.id,
             title: task.video_title,
             description: task.video_description,
             status: status,
-            videoDuration: task.scene_breakdown_list.reduce((acc, sceneData) => {
-                return acc + sceneData.sceneDuration;
-            }, 0),
-            sceneCount: task.scene_breakdown_list.length,
-            processedSceneCount: task.processed_scene_count,
+            sceneCount: sceneDataList.length,
+            processedSceneCount: !isGenerationFailed
+                ? sceneDataList.filter((sceneData) => {
+                    return sceneData.status === SceneGenerationStatus.COMPLETED;
+                }).length
+                : 0,
+            failedImageCount: isGenerationFailed
+                ? sceneDataList.filter((sceneData) => {
+                    return sceneData.status === SceneGenerationStatus.GENERATING_IMAGE || sceneData.status === SceneGenerationStatus.FAILED;
+                }).length
+                : undefined,
+            failedVideoDuration: isGenerationFailed
+                ? sceneDataList.filter((sceneData) => {
+                    return sceneData.status === SceneGenerationStatus.GENERATING_VIDEO || sceneData.status === SceneGenerationStatus.FAILED;
+                }).reduce((acc, sceneData) => {
+                    return acc + sceneData.sceneDuration;
+                }, 0)
+                : undefined,
             progress: progress,
             currentStep: currentStep,
             totalStep: totalStep,
             createdAt: new Date(task.created_at),
             updatedAt: new Date(task.updated_at),
-            selectedVoiceId: task.selected_voice_id,
-            selectedStyleId: task.selected_style_id,
             isGenerationFailed: task.is_generation_failed,
             estimatedCharacterCount: task.estimated_character_count,
             resolution: task.resolution ?? undefined,

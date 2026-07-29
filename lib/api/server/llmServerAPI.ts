@@ -866,7 +866,7 @@ Instruction: Generate the scene instruction JSON.
                 return {
                     success: false,
                     error: {
-                        message: 'No content in OpenAI response',
+                        message: 'No content in OpenRouter response',
                         code: 'NO_CONTENT'
                     }
                 };
@@ -937,6 +937,7 @@ Instruction: Generate the scene instruction JSON.
     async postVideoGenPrompt(
         sceneNumber: number,
         imageBase64: string,
+        sceneNarration: string,
     ): Promise<{
         success: boolean;
         videoGenPrompt?: string;
@@ -948,8 +949,10 @@ Instruction: Generate the scene instruction JSON.
 
             // 4. User Message 구성 (physics_instruction_set 주입)
             const userMessage = `
+<scene_narration>${sceneNarration}</scene_narration>
 The attached image is the base frame for I2V video generation.
 Analyze its visual context and latent kinetic energy to architect a professional cinematic prompt.
+The <scene_narration> above is the Intent Anchor — the action it describes must be faithfully reflected in the output, even if the image alone suggests a different interpretation.
 Focus strictly on the motion delta and kinematic progression as defined in the system logic.
 Proceed with the prompt generation.
             `;

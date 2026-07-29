@@ -54,7 +54,7 @@ export async function POST(request: NextRequest) {
             }
 
             const audioBuffer = await audioResponse.arrayBuffer();
-            const filePath = `${taskId}/${taskId}_processed_audio.mp3`; // 어차피 하나만 선택해 처리하니 index 불필요
+            const filePath = `${videoGenerationTask.user_id}/${taskId}/${taskId}_processed_audio.mp3`; // 어차피 하나만 선택해 처리하니 index 불필요
 
             const { error: uploadError } = await supabase.storage
                 .from('video_music_temp_storage')
@@ -106,7 +106,6 @@ export async function POST(request: NextRequest) {
                 console.log(`[Webhook Audio] 최종 병합 시작 조건 충족: ${taskId}`);
 
                 // 최종 병합 API 호출 (fire-and-forget)
-
                 internalFireAndForgetFetch(`${process.env.BASE_URL}/api/video/merge/music?taskId=${taskId}`, {
                     method: 'POST',
                 });

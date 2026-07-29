@@ -3,7 +3,6 @@ import {fal} from "@fal-ai/client";
 import {FluxPrompt} from "@/lib/api/types/open-ai/FluxPrompt";
 import {ImageFile} from "@fal-ai/client/endpoints";
 import {Entity} from "@/lib/api/types/open-ai/Entity";
-import {AIModelData} from "@/lib/api/types/supabase/AIModelData";
 import {cryptoUtils} from "@/lib/utils/cryptoUtils";
 import {FalAIEndpointID, falAIInputMapper} from "@/lib/falAIInputMapper";
 
@@ -20,7 +19,7 @@ export const imageServerAPI = {
         i2iAIModelEndpointId: string,
         resolution: '720p' | '1080p' | '2160p',
         aspectRatio: '16:9' | '9:16',
-    ): Promise<{ success: boolean; error?: { message: string; code: string } }> {
+    ): Promise<{ success: boolean; error?: { message: string; code: string; status?: number } }> {
         const supabase = createSupabaseServiceRoleClient();
 
         try {
@@ -35,7 +34,8 @@ export const imageServerAPI = {
             let imageUrl: string;
 
             const getSignedUrlPromiseList = subjectEntityManifestList.map(async (entity) => {
-                return await this.getImageSignedUrl(`${taskId}/reference_image_${entity.id}.jpeg`);
+                console.log(`${userId}/${taskId}/reference_image_${entity.id}.jpeg`)
+                return await this.getImageSignedUrl(`${userId}/${taskId}/reference_image_${entity.id}.jpeg`);
             });
             const imageSignedUrlList = (await Promise.all(getSignedUrlPromiseList))
                 .filter((url): url is string => !!url);
@@ -124,7 +124,7 @@ export const imageServerAPI = {
             // Supabase Storage에 이미지 업로드
             const { error: uploadError } = await supabase.storage
                 .from('scene_image_temp_storage') // 버킷 이름
-                .upload(`${taskId}/${sceneNumber}.jpeg`, imageBuffer, {
+                .upload(`${userId}/${taskId}/${sceneNumber}.jpeg`, imageBuffer, {
                     contentType: 'image/jpeg', // 파일 포맷 지정
                     upsert: true // 덮어쓰기 허용
                 });
@@ -162,6 +162,7 @@ export const imageServerAPI = {
         error?: {
             code: string;
             message: string;
+            status?: number;
         }
     }> {
         const supabase = createSupabaseServiceRoleClient();
@@ -208,7 +209,7 @@ export const imageServerAPI = {
             // Supabase Storage에 이미지 업로드
             const { error: uploadError } = await supabase.storage
                 .from('scene_image_temp_storage') // 버킷 이름
-                .upload(`${taskId}/reference_image_${entityId}.jpeg`, imageBuffer, {
+                .upload(`${userId}/${taskId}/reference_image_${entityId}.jpeg`, imageBuffer, {
                     contentType: 'image/jpeg', // 파일 포맷 지정
                     upsert: true // 덮어쓰기 허용
                 });
@@ -228,7 +229,8 @@ export const imageServerAPI = {
                 success: false,
                 error: {
                     message: error instanceof Error ? error.message : 'Unknown error occurred',
-                    code: 'INTERNAL_ERROR'
+                    code: 'INTERNAL_ERROR',
+                    status: (error && typeof error === 'object' && 'status' in error) ? (error as any).status : undefined
                 }
             };
         }

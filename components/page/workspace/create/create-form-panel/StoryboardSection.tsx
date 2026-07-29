@@ -31,45 +31,73 @@ function StoryboardSection({
     const [isPlayingVoice, setIsPlayingVoice] = useState<boolean>(false);
     const [currentPlayTime, setCurrentPlayTime] = useState<number>(0);
 
-    const onClickPlayAndStopButton = useCallback(async () => {
+    const stopNarration = useCallback(() => {
+        if (narrationPreviewRef.current) {
+            narrationPreviewRef.current.pause();
+            narrationPreviewRef.current.currentTime = 0;
+            narrationPreviewRef.current = null;
+        }
+        setIsPlayingVoice(false);
+        setCurrentPlayTime(0);
+    }, []);
+
+    const onClickPlayAndStopButton = useCallback(() => {
         if (!voiceUrl) return;
 
+        // 1. 이미 재생 중일 때 -> 정지
         if (isPlayingVoice) {
-            // 재생 중일 때: 정지
-            if (narrationPreviewRef.current) {
-                narrationPreviewRef.current.pause();
-                narrationPreviewRef.current.currentTime = 0;
-            }
-            setIsPlayingVoice(false);
-            setCurrentPlayTime(0);
-        } else {
-            // 재생 중이 아닐 때: 재생
-            if (!narrationPreviewRef.current) {
-                narrationPreviewRef.current = new Audio(voiceUrl);
-                narrationPreviewRef.current.onended = () => {
-                    setIsPlayingVoice(false);
-                    setCurrentPlayTime(0);
-                };
-                narrationPreviewRef.current.ontimeupdate = () => {
-                    if (narrationPreviewRef.current) {
-                        setCurrentPlayTime(narrationPreviewRef.current.currentTime);
-                    }
-                };
-            } else {
-                // voiceUrl이 변경되었을 수 있으므로 src 업데이트
-                narrationPreviewRef.current.src = voiceUrl;
-                narrationPreviewRef.current.currentTime = 0;
-            }
-            await narrationPreviewRef.current.play();
-            setIsPlayingVoice(true);
+            stopNarration();
+            return;
         }
-    }, [voiceUrl, isPlayingVoice]);
+
+        // 2. 정지 상태일 때 -> 기존 오디오 멈춤 후 신규 재생
+        stopNarration();
+
+        // 버튼 클릭 0ms 시점에 아이콘을 즉시 정지(Square)로 동기 세팅
+        setIsPlayingVoice(true);
+
+        const audio = new Audio(voiceUrl);
+        narrationPreviewRef.current = audio;
+
+        audio.onended = () => {
+            if (narrationPreviewRef.current === audio) {
+                stopNarration();
+            }
+        };
+
+        audio.ontimeupdate = () => {
+            if (narrationPreviewRef.current === audio) {
+                setCurrentPlayTime(audio.currentTime);
+            }
+        };
+
+        audio.onerror = (error) => {
+            console.error("Narration preview playback error:", error);
+            if (narrationPreviewRef.current === audio) {
+                stopNarration();
+            }
+        };
+
+        const playPromise = audio.play();
+        if (playPromise !== undefined) {
+            playPromise.catch((error) => {
+                if (error.name === 'AbortError') {
+                    return;
+                }
+                console.error("Failed to play narration audio:", error);
+                if (narrationPreviewRef.current === audio) {
+                    stopNarration();
+                }
+            });
+        }
+    }, [voiceUrl, isPlayingVoice, stopNarration]);
 
     // 컴포넌트 언마운트 시 오디오 정지
     useEffect(() => {
         return () => {
             if (narrationPreviewRef.current) {
                 narrationPreviewRef.current.pause();
+                narrationPreviewRef.current.currentTime = 0;
                 narrationPreviewRef.current = null;
             }
         };

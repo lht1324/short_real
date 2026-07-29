@@ -1,6 +1,6 @@
 'use client'
 
-import {memo, MouseEvent, useCallback, useEffect, useMemo, useState} from "react";
+import {memo, MouseEvent, useCallback, useEffect, useMemo, useRef, useState} from "react";
 import {Voice} from "@/lib/api/types/eleven-labs/Voice";
 import {voiceClientAPI} from "@/lib/api/client/voiceClientAPI";
 import VoiceSelectionPanelItem from "@/components/page/workspace/create/voice-selection-panel/VoiceSelectionPanelItem";
@@ -56,9 +56,18 @@ function VoiceSelectionPanel({
         })
     }, [selectedVoiceId, voiceList, voiceGenderTagRecord, voiceAgeTagRecord, voiceAccentTagRecord]);
 
-    // Audio state management
-    const [currentAudio, setCurrentAudio] = useState<HTMLAudioElement | null>(null);
+    // Audio state management using useRef for singleton control
+    const audioRef = useRef<HTMLAudioElement | null>(null);
     const [playingSoundId, setPlayingSoundId] = useState<string | null>(null);
+
+    const stopAudio = useCallback(() => {
+        if (audioRef.current) {
+            audioRef.current.pause();
+            audioRef.current.currentTime = 0;
+            audioRef.current = null;
+        }
+        setPlayingSoundId(null);
+    }, []);
 
     const onToggleVoiceGenderTag = useCallback((tagName: string) => {
         setVoiceGenderTagRecord(prev => ({
@@ -100,72 +109,55 @@ function VoiceSelectionPanel({
         });
     }, [isAllTagSelected]);
 
-    const onClickPlaySoundPreview = useCallback((soundId: string, soundPreviewUrl?: string) => {
-        // 음성 재생 중 다른 음성 재생
-        if (playingSoundId !== soundId && currentAudio) {
-            currentAudio.pause();
-            currentAudio.currentTime = 0;
-            setCurrentAudio(null);
-            setPlayingSoundId(null);
-        }
-
-        // 새로운 음성 재생
-        if (soundPreviewUrl) {
-            const audio = new Audio(soundPreviewUrl);
-
-            // 재생 종료 시 state 초기화 (해당 오디오만)
-            audio.addEventListener('ended', () => {
-                setCurrentAudio((current) => {
-                    if (current === audio) {
-                        setPlayingSoundId(null);
-                        return null;
-                    }
-
-                    return current;
-                });
-            });
-
-            // 에러 처리 (해당 오디오만)
-            audio.addEventListener('error', (error) => {
-                console.error('Audio playback error:', error);
-                setCurrentAudio((current) => {
-                    if (current === audio) {
-                        setPlayingSoundId(null);
-                        return null;
-                    }
-                    return current;
-                });
-            });
-
-            audio.play().then(() => {
-                setCurrentAudio(audio);
-                setPlayingSoundId(soundId);
-            }).catch((error) => {
-                console.error('Failed to play audio:', error);
-                setCurrentAudio(null);
-                setPlayingSoundId(null);
-                // 재생 실패 시에만 state 초기화 (기존 오디오는 그대로 유지)
-            });
-        } else {
-            console.log('No preview URL available for:', soundId);
-        }
-    }, [currentAudio, playingSoundId]);
-
-    const onClickStopSoundPreview = useCallback(() => {
-        currentAudio?.pause();
-        setCurrentAudio(null);
-        setPlayingSoundId(null);
-    }, [currentAudio]);
-
     const onClickPlayAndPauseButton = useCallback((e: MouseEvent, voiceId: string, voicePreviewUrl?: string) => {
         e.stopPropagation();
 
-        if (!currentAudio || playingSoundId !== voiceId) {
-            onClickPlaySoundPreview(voiceId, voicePreviewUrl);
-        } else {
-            onClickStopSoundPreview();
+        // 1. 이미 재생 중인 음성 아이템 클릭 시 -> 즉시 정지
+        if (playingSoundId === voiceId) {
+            stopAudio();
+            return;
         }
-    }, [currentAudio, playingSoundId, onClickPlaySoundPreview, onClickStopSoundPreview])
+
+        // 2. 정지 중이거나 다른 음성 아이템 클릭 시 -> 기존 오디오 멈춤 및 즉시 신규 재생
+        stopAudio();
+
+        if (!voicePreviewUrl) {
+            console.log('No preview URL available for:', voiceId);
+            return;
+        }
+
+        // 버튼 클릭 0ms 시점에 즉시 UI 정지(Square) 아이콘으로 동기 세팅
+        setPlayingSoundId(voiceId);
+
+        const audio = new Audio(voicePreviewUrl);
+        audioRef.current = audio;
+
+        audio.onended = () => {
+            if (audioRef.current === audio) {
+                stopAudio();
+            }
+        };
+
+        audio.onerror = (error) => {
+            console.error('Audio playback error:', error);
+            if (audioRef.current === audio) {
+                stopAudio();
+            }
+        };
+
+        const playPromise = audio.play();
+        if (playPromise !== undefined) {
+            playPromise.catch((error) => {
+                if (error.name === 'AbortError') {
+                    return;
+                }
+                console.error('Failed to play audio:', error);
+                if (audioRef.current === audio) {
+                    stopAudio();
+                }
+            });
+        }
+    }, [playingSoundId, stopAudio]);
 
     useEffect(() => {
         const loadData = async () => {
@@ -227,14 +219,13 @@ function VoiceSelectionPanel({
     // 컴포넌트 언마운트 시 오디오 정리
     useEffect(() => {
         return () => {
-            if (currentAudio) {
-                currentAudio.pause();
-                currentAudio.currentTime = 0;
-                setCurrentAudio(null);
-                setPlayingSoundId(null);
+            if (audioRef.current) {
+                audioRef.current.pause();
+                audioRef.current.currentTime = 0;
+                audioRef.current = null;
             }
         };
-    }, [currentAudio]);
+    }, []);
 
     return (
         <div className={className ?? "flex-[2.7] flex-shrink-0 bg-zinc-900/40 border-l border-white/5 overflow-y-auto custom-scrollbar"}>
