@@ -83,6 +83,7 @@ export async function POST(request: NextRequest) {
                 // Supabase Storage에 업로드
                 const uploadResult = await musicServerAPI.postMusic(
                     taskId,
+                    videoGenerationTask.user_id,
                     musicFileList,
                     musicMetadataList.map((musicMetaData) => {
                         return {
