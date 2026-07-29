@@ -67,6 +67,7 @@ export async function POST(
         }
 
         const {
+            user_id: userId,
             scene_breakdown_list: sceneBreakdownList,
             final_video_merge_data: videoMergeData,
             music_data_list: musicDataList,
@@ -86,7 +87,7 @@ export async function POST(
         // [Step 1] 예술적 곡 선택 (Artistic Song Selection) Prep
         const firstMusicUrl = await musicServerAPI.getMusicSignedUrl(`${taskId}/${taskId}_0.mp3`, 60 * 60);
         const secondMusicUrl = await musicServerAPI.getMusicSignedUrl(`${taskId}/${taskId}_1.mp3`, 60 * 60);
-        const narrationVoiceUrl = await voiceServerAPI.getVoiceSignedUrl(taskId);
+        const narrationVoiceUrl = await voiceServerAPI.getVoiceSignedUrl(taskId, userId);
 
         // 오디오 리샘플링 (LLM 분석용: Mono 24kHz 64kbps)
         console.log(`[Music Selection] Resampling audio for Step 1 analysis...`);
