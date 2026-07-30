@@ -250,10 +250,10 @@ function WorkspaceAutopilotPageClient() {
                 return {
                     ...series,
                     ai_model_config: {
-                        referenceImageModelId: legacyT2i || user?.preferred_ai_model_config?.referenceImageModelId || 'ca637a97-f060-4b81-a7d4-118a6f4aac0c',
-                        sceneImageT2IModelId: user?.preferred_ai_model_config?.sceneImageT2IModelId || '1bd90bd4-e476-40e9-8a1e-1649288786e7',
-                        sceneImageI2IModelId: series.ai_model_config?.sceneImageI2IModelId || user?.preferred_ai_model_config?.sceneImageI2IModelId || '79a506ac-eced-4643-b017-c8a2bb0f028b',
-                        videoModelId: series.ai_model_config?.videoModelId || user?.preferred_ai_model_config?.videoModelId || '326a9a71-26a9-4142-8371-5467f316bcd6',
+                        referenceImageModelId: legacyT2i || user?.preferred_ai_model_config?.referenceImageModelId || 'd59b7307-ab54-4efd-82f5-62649c2976cc',
+                        sceneImageT2IModelId: user?.preferred_ai_model_config?.sceneImageT2IModelId || '918afd0a-cc7d-41dc-ad42-914c224ef04b',
+                        sceneImageI2IModelId: series.ai_model_config?.sceneImageI2IModelId || user?.preferred_ai_model_config?.sceneImageI2IModelId || '5c094112-82c3-4dee-998f-7f8438ab30c8',
+                        videoModelId: series.ai_model_config?.videoModelId || user?.preferred_ai_model_config?.videoModelId || 'b5382c55-f9bb-45e9-bfcf-7b98224ae81c',
                     }
                 };
             }
@@ -406,9 +406,9 @@ function WorkspaceAutopilotPageClient() {
                 updateCurrentSeries({
                     ai_model_config: {
                         ...(currentSeries.ai_model_config || {
-                            referenceImageModelId: 'ca637a97-f060-4b81-a7d4-118a6f4aac0c',
-                            sceneImageT2IModelId: '1bd90bd4-e476-40e9-8a1e-1649288786e7',
-                            sceneImageI2IModelId: '79a506ac-eced-4643-b017-c8a2bb0f028b',
+                            referenceImageModelId: 'd59b7307-ab54-4efd-82f5-62649c2976cc',
+                            sceneImageT2IModelId: '918afd0a-cc7d-41dc-ad42-914c224ef04b',
+                            sceneImageI2IModelId: '5c094112-82c3-4dee-998f-7f8438ab30c8',
                         }),
                         videoModelId: compatibleI2vModel.id,
                     }
@@ -440,10 +440,10 @@ function WorkspaceAutopilotPageClient() {
 
         setIsActionPending(true);
         try {
-            const defaultReference = user?.preferred_ai_model_config?.referenceImageModelId || 'ca637a97-f060-4b81-a7d4-118a6f4aac0c';
-            const defaultSceneT2i = user?.preferred_ai_model_config?.sceneImageT2IModelId || '1bd90bd4-e476-40e9-8a1e-1649288786e7';
-            const defaultI2i = user?.preferred_ai_model_config?.sceneImageI2IModelId || '79a506ac-eced-4643-b017-c8a2bb0f028b';
-            const defaultI2v = user?.preferred_ai_model_config?.videoModelId || '326a9a71-26a9-4142-8371-5467f316bcd6';
+            const defaultReference = user?.preferred_ai_model_config?.referenceImageModelId || 'd59b7307-ab54-4efd-82f5-62649c2976cc';
+            const defaultSceneT2i = user?.preferred_ai_model_config?.sceneImageT2IModelId || '918afd0a-cc7d-41dc-ad42-914c224ef04b';
+            const defaultI2i = user?.preferred_ai_model_config?.sceneImageI2IModelId || '5c094112-82c3-4dee-998f-7f8438ab30c8';
+            const defaultI2v = user?.preferred_ai_model_config?.videoModelId || 'b5382c55-f9bb-45e9-bfcf-7b98224ae81c';
 
             const newSeriesTemplate: Partial<AutopilotData> = {
                 user_id: user.id,

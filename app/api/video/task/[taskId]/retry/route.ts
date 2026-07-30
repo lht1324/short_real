@@ -147,7 +147,7 @@ export async function POST(
 
         // Fire and Forget으로 재시작 엔드포인트 호출
         internalFireAndForgetFetch(
-            `${process.env.BASE_URL}${retryPathData.path}?taskId=${taskId}&isRetry=true`,
+            `${process.env.BASE_URL}${retryPathData.path}?taskId=${taskId}&userId=${sessionUserId}&isRetry=true`,
             {
                 method: 'POST',
             },

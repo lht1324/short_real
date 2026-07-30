@@ -14,6 +14,7 @@ interface MusicEditPanelProps {
     videoDuration: number;
     panelHeight: number;
     initialVolume?: number;
+    initialStartSec?: number;
     onChangeMusicStartSec: (newStartSec: number) => void;
     onChangeMusicVolume: (newVolume: number) => void;
     onChangeIsMuted: (newIsMuted: boolean) => void;
@@ -24,6 +25,7 @@ function MusicEditPanel({
     videoDuration,
     panelHeight,
     initialVolume,
+    initialStartSec,
     onChangeMusicStartSec,
     onChangeMusicVolume,
     onChangeIsMuted,
@@ -40,7 +42,7 @@ function MusicEditPanel({
     const [isPlaying, setIsPlaying] = useState(false);
     const [containerWidth, setContainerWidth] = useState(0);
     const [audioDuration, setAudioDuration] = useState(0);
-    const [startTime, setStartTime] = useState(0);
+    const [startTime, setStartTime] = useState(initialStartSec ?? 0);
 
     const [audioBlobUrl, setAudioBlobUrl] = useState<string | null>(null);
     const [decodedAudioBuffer, setDecodedAudioBuffer] = useState<AudioBuffer | null>(null);
@@ -48,6 +50,20 @@ function MusicEditPanel({
 
     const [volume, setVolume] = useState(initialVolume ?? 1.0);
     const [isMuted, setIsMuted] = useState(false);
+
+    // initialVolume props 변경 시 (DB 저장 데이터 비동기 완료 시) 볼륨 state 즉시 동기화
+    useEffect(() => {
+        if (initialVolume !== undefined) {
+            setVolume(initialVolume);
+        }
+    }, [initialVolume]);
+
+    // initialStartSec props 변경 시 (DB 저장 데이터 비동기 완료 시) 시작 구간 state 즉시 동기화
+    useEffect(() => {
+        if (initialStartSec !== undefined) {
+            setStartTime(initialStartSec);
+        }
+    }, [initialStartSec]);
 
     // 뷰 높이 계산
     const waveformHeight = Math.floor((panelHeight - 40) / 2);
@@ -80,11 +96,11 @@ function MusicEditPanel({
 
     useEffect(() => {
         if (audioRef.current) {
-            audioRef.current.volume = isMuted
-                ? 0
-                : Math.max(0, Math.min(1, volume));
+            // Peaks.js 감쇄 보정을 위해 1.3배 부스트 적용하여 영상 패널과 음량 동등성 확보
+            const boostedVolume = Math.max(0, Math.min(1, volume * 1.3));
+            audioRef.current.volume = isMuted ? 0 : boostedVolume;
         }
-    }, [volume, isMuted]);
+    }, [volume, isMuted, audioBlobUrl]);
 
     // 1. 컨테이너 너비 감지
     useEffect(() => {
@@ -105,7 +121,7 @@ function MusicEditPanel({
         if (!musicData.audioUrl) return;
 
         // [초기화] 오디오 소스가 변경되면 상태를 리셋하고 기존 인스턴스 파괴
-        setStartTime(0);
+        setStartTime(initialStartSec ?? 0);
         setIsPlaying(false);
         setDecodedAudioBuffer(null);
         setPeaksInstance((prev) => {
@@ -369,7 +385,19 @@ function MusicEditPanel({
             ref={containerRef}
         >
             {audioBlobUrl && (
-                <audio ref={audioRef} src={audioBlobUrl} className="hidden" />
+                <audio
+                    ref={audioRef}
+                    src={audioBlobUrl}
+                    className="hidden"
+                    onLoadedMetadata={(e) => {
+                        const boostedVolume = Math.max(0, Math.min(1, volume * 1.3));
+                        e.currentTarget.volume = isMuted ? 0 : boostedVolume;
+                    }}
+                    onCanPlay={(e) => {
+                        const boostedVolume = Math.max(0, Math.min(1, volume * 1.3));
+                        e.currentTarget.volume = isMuted ? 0 : boostedVolume;
+                    }}
+                />
             )}
 
             {/* --- Controls --- */}
