@@ -90,17 +90,6 @@ function ScriptGenerationModal({
                             />
                         </div>
 
-                        {/* Warning Message - Simplified */}
-                        <div className="bg-amber-500/5 border border-amber-500/10 rounded-lg p-3">
-                            <div className="flex items-start space-x-2">
-                                <AlertTriangle className="w-4 h-4 text-amber-500/80 mt-0.5 flex-shrink-0" />
-                                <div className="text-[13px] text-amber-500/90">
-                                    <p className="font-medium">Be specific to avoid wasting credits</p>
-                                    <p className="text-[11px] opacity-80 mt-0.5">Vague requests may produce unwanted results.</p>
-                                </div>
-                            </div>
-                        </div>
-
                         <button
                             onClick={onClickGenerateScript}
                             disabled={isGeneratingScript || !aiPrompt.trim()}

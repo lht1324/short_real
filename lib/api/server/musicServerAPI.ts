@@ -104,26 +104,23 @@ export const musicServerAPI = {
 
             const musicDataList = taskData.music_data_list as MusicData[];
 
-            // 2. video_music_temp_storage에서 파일 리스트 확인
+            // 2. video_music_temp_storage에서 유저/태스크 경로 파일 리스트 확인
+            const storageFolderPath = `${userId}/${taskId}`;
             const { data: fileList, error: listError } = await supabase.storage
                 .from('video_music_temp_storage')
-                .list(taskId);
+                .list(storageFolderPath);
 
             if (listError) {
                 console.error('Error listing music files:', listError);
-                throw listError;
             }
 
             if (!fileList || fileList.length === 0) {
                 return musicDataList;
             }
 
-            // 3. 파일 개수 / 2로 music 개수 파악
-            const musicCount = Math.floor(fileList.length / 2);
-
-            // 4. 각 index에 대해 signedUrl 생성
+            // 3. 각 index에 대해 signedUrl 생성
             const pathList: string[] = [];
-            for (let index = 0; index < musicCount; index++) {
+            for (let index = 0; index < musicDataList.length; index++) {
                 pathList.push(`${userId}/${taskId}/${taskId}_${index}.mp3`);
                 pathList.push(`${userId}/${taskId}/${taskId}_${index}.jpeg`);
             }
@@ -134,17 +131,16 @@ export const musicServerAPI = {
 
             if (urlError) {
                 console.error('Error creating signed URLs:', urlError);
-                throw urlError;
+                return musicDataList;
             }
 
-            // 5. music_data_list와 signedUrl 결합 후 return
+            // 4. music_data_list와 signedUrl 결합 후 return
             return musicDataList.map((musicData, index) => {
-                const audioSignedData = signedUrlDataList?.find(
-                    item => item.path === `${userId}/${taskId}/${taskId}_${index}.mp3`
-                );
-                const imageSignedData = signedUrlDataList?.find(
-                    item => item.path === `${userId}/${taskId}/${taskId}_${index}.jpeg`
-                );
+                const targetAudioPath = `${userId}/${taskId}/${taskId}_${index}.mp3`;
+                const targetImagePath = `${userId}/${taskId}/${taskId}_${index}.jpeg`;
+
+                const audioSignedData = signedUrlDataList?.find(item => item.path === targetAudioPath);
+                const imageSignedData = signedUrlDataList?.find(item => item.path === targetImagePath);
 
                 return {
                     ...musicData,

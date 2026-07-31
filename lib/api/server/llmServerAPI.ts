@@ -3,54 +3,29 @@ import { ScriptGenerationResponse } from "@/lib/api/types/open-ai/ScriptGenerati
 import { StyleGenerationParams } from "@/lib/api/types/supabase/Styles";
 import { MusicData, SceneData, SubtitleSegment } from "@/lib/api/types/supabase/VideoGenerationTasks";
 import { StoryboardData } from "@/lib/api/types/api/open-ai/scene/PostOpenAISceneResponse";
-import { Entity, InitialEntityManifestItem } from "@/lib/api/types/open-ai/Entity";
+import { InitialEntityManifestItem } from "@/lib/api/types/open-ai/Entity";
 import { MasterStyleInfo } from "@/lib/api/types/supabase/MasterStyleInfo";
 import { FluxPrompt } from "@/lib/api/types/open-ai/FluxPrompt";
 import { MusicGenerationData } from "@/lib/api/types/suno-api/MusicGenerationData";
 import { cleanAndParseJSON } from "@/lib/utils/jsonUtils";
 import { logger } from "@trigger.dev/sdk";
 import { OpenRouterClient, OpenRouterModel } from "@/lib/OpenRouterClient";
-import {STYLE_DATA_LIST} from "@/lib/styles";
-import {POST_SCRIPT_PROMPT} from "@/lib/llm-prompts/POST_SCRIPT_PROMPT";
-import {POST_SCENE_SEGMENTATION_PROMPT} from "@/lib/llm-prompts/POST_SCENE_SEGMENTATION_PROMPT";
-import {POST_SCENE_CASTING_DATA_LIST_PROMPT} from "@/lib/llm-prompts/POST_SCENE_CASTING_DATA_LIST_PROMPT";
-import {POST_ENTITY_MANIFEST_LIST} from "@/lib/llm-prompts/POST_ENTITY_MANIFEST_LIST";
-import {POST_ENTITY_REFERENCE_IMAGE_PROMPT_PROMPT} from "@/lib/llm-prompts/POST_ENTITY_REFERENCE_IMAGE_PROMPT_PROMPT";
-import {POST_MASTER_STYLE_INFO_PROMPT} from "@/lib/llm-prompts/POST_MASTER_STYLE_INFO_PROMPT";
-import {POST_IMAGE_GEN_PROMPT_PROMPT} from "@/lib/llm-prompts/POST_IMAGE_GEN_PROMPT_PROMPT";
-import {POST_VIDEO_GEN_PROMPT_PROMPT} from "@/lib/llm-prompts/POST_VIDEO_GEN_PROMPT_PROMPT";
-import {POST_MUSIC_GENERATION_DATA_PROMPT} from "@/lib/llm-prompts/POST_MUSIC_GENERATION_DATA_PROMPT";
-import {POST_MUSIC_SELECTION_PROMPT} from "@/lib/llm-prompts/POST_MUSIC_SELECTION_PROMPT";
-import {POST_MUSIC_HIGHLIGHT_SELECTION_PROMPT} from "@/lib/llm-prompts/POST_MUSIC_HIGHLIGHT_SELECTION_PROMPT";
-import {AIModelPrice, PriceByResolution} from "@/lib/api/types/supabase/AIModelData";
-import {POST_VIDEO_PRICE_ANALYSIS_PROMPT} from "../../llm-prompts/POST_VIDEO_PRICE_ANALYSIS_PROMPT";
-import {POST_IMAGE_PRICE_ANALYSIS_PROMPT} from "../../llm-prompts/POST_IMAGE_PRICE_ANALYSIS_PROMPT";
-
-const POST_AUTOPILOT_NICHE_TOPIC_PROMPT = `
-<developer_instruction>
-  <role>
-    You are a Content Strategy Expert specializing in viral short-form video topic discovery (e.g., YouTube Shorts, Reels, TikTok).
-    Your primary mission is to extract the strategic intent from the provided context and generate a high-impact, specific topic.
-  </role>
-  <input_data_interpretation>
-    - <instruction_context>: The core niche, persona, and strategic goals for content discovery. It may be structured text or raw user input.
-    - <topic_history>: A list of previously covered topics to ensure absolute uniqueness and variety.
-  </input_data_interpretation>
-  <processing_logic>
-    1. Analyze the <instruction_context>. Identify the niche, target audience, and specific content goals.
-    2. Review the <topic_history> to identify and avoid any redundant or overlapping subjects.
-    3. Brainstorm a fresh, specific, high-impact topic that fulfills the strategic intent.
-    4. Ensure the topic is "hook-ready" and likely to captivate an audience within the first 3 seconds.
-  </processing_logic>
-  <output_schema>
-    Return the JSON object in a compact, single-line format, removing all extra whitespace and newlines within fields.
-    {
-      "new_topic": "string (The final selected specific topic)",
-      "reasoning": "string (Brief technical justification for the selection)"
-    }
-  </output_schema>
-</developer_instruction>
-`
+import { STYLE_DATA_LIST } from "@/lib/styles";
+import { AIModelPrice } from "@/lib/api/types/supabase/AIModelData";
+import { POST_AUTOPILOT_NICHE_TOPIC_PROMPT } from "@/lib/llm-prompts/POST_AUTOPILOT_NICHE_TOPIC_PROMPT";
+import { POST_SCRIPT_PROMPT } from "@/lib/llm-prompts/POST_SCRIPT_PROMPT";
+import { POST_SCENE_SEGMENTATION_PROMPT } from "@/lib/llm-prompts/POST_SCENE_SEGMENTATION_PROMPT";
+import { POST_SCENE_CASTING_DATA_LIST_PROMPT } from "@/lib/llm-prompts/POST_SCENE_CASTING_DATA_LIST_PROMPT";
+import { POST_ENTITY_MANIFEST_LIST } from "@/lib/llm-prompts/POST_ENTITY_MANIFEST_LIST";
+import { POST_ENTITY_REFERENCE_IMAGE_PROMPT_PROMPT } from "@/lib/llm-prompts/POST_ENTITY_REFERENCE_IMAGE_PROMPT_PROMPT";
+import { POST_MASTER_STYLE_INFO_PROMPT } from "@/lib/llm-prompts/POST_MASTER_STYLE_INFO_PROMPT";
+import { POST_IMAGE_GEN_PROMPT_PROMPT } from "@/lib/llm-prompts/POST_IMAGE_GEN_PROMPT_PROMPT";
+import { POST_VIDEO_GEN_PROMPT_PROMPT } from "@/lib/llm-prompts/POST_VIDEO_GEN_PROMPT_PROMPT";
+import { POST_MUSIC_GENERATION_DATA_PROMPT } from "@/lib/llm-prompts/POST_MUSIC_GENERATION_DATA_PROMPT";
+import { POST_MUSIC_SELECTION_PROMPT } from "@/lib/llm-prompts/POST_MUSIC_SELECTION_PROMPT";
+import { POST_MUSIC_HIGHLIGHT_SELECTION_PROMPT } from "@/lib/llm-prompts/POST_MUSIC_HIGHLIGHT_SELECTION_PROMPT";
+import { POST_VIDEO_PRICE_ANALYSIS_PROMPT } from "../../llm-prompts/POST_VIDEO_PRICE_ANALYSIS_PROMPT";
+import { POST_IMAGE_PRICE_ANALYSIS_PROMPT } from "../../llm-prompts/POST_IMAGE_PRICE_ANALYSIS_PROMPT";
 
 export const llmServerAPI = {
     async postAutopilotNicheTopic(
@@ -126,12 +101,24 @@ Instruction: Process the input data and generate the next viral topic based on t
 
             try {
                 const parsedData: {
-                    scene_number: number;
-                    narration: string;
-                }[] = cleanAndParseJSON(generatedContent);
+                    reasoning?: string;
+                    scenes?: {
+                        scene_number: number;
+                        narration: string;
+                    }[];
+                } = cleanAndParseJSON(generatedContent);
+
+                const {
+                    reasoning,
+                    scenes,
+                } = parsedData;
+
+                console.log(`Raw content: ${generatedContent}`);
+                console.log(`Parsed content: `, parsedData);
+                console.log(`Reasoning: ${reasoning}`);
 
                 // 1. 순서 보장 (AI가 가끔 순서를 섞어 줄 때를 대비해 오름차순 정렬)
-                const sortedScenes = parsedData.sort((a, b) => a.scene_number - b.scene_number);
+                const sortedScenes = (scenes ?? []).sort((a, b) => a.scene_number - b.scene_number);
 
                 // 2. 하나의 문자열로 결합 (double new line으로 구분)
                 const generatedScript = sortedScenes.map(item => item.narration).join('\n\n');
