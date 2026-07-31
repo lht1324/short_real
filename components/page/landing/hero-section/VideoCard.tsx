@@ -8,6 +8,7 @@ interface VideoCardProps {
     src: string;
     className?: string;
     isMutedOverride?: boolean;
+    isLeftCard?: boolean;
     preload?: "auto" | "metadata" | "none";
     posterSrc?: string;
     lazyLoad?: boolean;
@@ -20,6 +21,7 @@ function VideoCard({
     isMutedOverride,
     preload = "auto",
     posterSrc,
+    isLeftCard,
     lazyLoad = false,
     threshold = 0.1,
 }: VideoCardProps) {
@@ -90,7 +92,10 @@ function VideoCard({
             {/* Mute Button */}
             <button
                 onClick={toggleMute}
-                className={`absolute bottom-4 right-4 p-2.5 rounded-full bg-black/50 border border-white/20 text-white transition-opacity duration-300 hover:bg-black/80 hover:scale-105 backdrop-blur-md z-30 ${!isMuted ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
+                className={`absolute bottom-4 p-2.5 rounded-full bg-black/50 border border-white/20 text-white transition-opacity duration-300 hover:bg-black/80 hover:scale-105 backdrop-blur-md z-30 ${!isMuted ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
+                style={{
+                    ...(isLeftCard ? { left: "16px" } : { right: "16px" }),
+                }}
             >
                 {isMuted ? <VolumeX size={16} /> : <Volume2 size={16} />}
             </button>

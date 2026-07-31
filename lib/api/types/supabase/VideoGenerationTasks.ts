@@ -14,7 +14,6 @@ export interface VideoGenerationTask {
     entity_manifest_list?: InitialEntityManifestItem[];
     video_title?: string;
     video_description?: string;
-    processed_scene_count?: number;
     music_data_list?: MusicData[];
     final_video_merge_data?: FinalVideoMergeData;
     selected_style_id?: string; // varchar(100), nullable

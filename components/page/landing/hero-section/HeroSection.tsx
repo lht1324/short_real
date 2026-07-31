@@ -89,6 +89,7 @@ function HeroSection() {
                             <VideoCard
                                 src={`${process.env.NEXT_PUBLIC_DEMO_ASSETS_URL}/demo_main_left.mp4`}
                                 posterSrc="/preview/demo_main_left.webp"
+                                isLeftCard={true}
                                 lazyLoad={true}
                                 preload="none"
                                 threshold={0.5}

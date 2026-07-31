@@ -18,9 +18,9 @@ function CostStructureSection({ aiModelDataList }: CostStructureSectionProps) {
     const i2iModels = useMemo(() => aiModelDataList.filter(m => m.category === 'image-to-image'), [aiModelDataList]);
     const i2vModels = useMemo(() => aiModelDataList.filter(m => m.category === 'image-to-video'), [aiModelDataList]);
 
-    const [selectedT2iId, setSelectedT2iId] = useState<string>('ca637a97-f060-4b81-a7d4-118a6f4aac0c');
-    const [selectedI2iId, setSelectedI2iId] = useState<string>('79a506ac-eced-4643-b017-c8a2bb0f028b');
-    const [selectedI2vId, setSelectedI2vId] = useState<string>('326a9a71-26a9-4142-8371-5467f316bcd6');
+    const [selectedT2iId, setSelectedT2iId] = useState<string>('d59b7307-ab54-4efd-82f5-62649c2976cc');
+    const [selectedI2iId, setSelectedI2iId] = useState<string>('918afd0a-cc7d-41dc-ad42-914c224ef04b');
+    const [selectedI2vId, setSelectedI2vId] = useState<string>('b5382c55-f9bb-45e9-bfcf-7b98224ae81c');
 
     const [resolution, setResolution] = useState<'720p' | '1080p'>('1080p');
 

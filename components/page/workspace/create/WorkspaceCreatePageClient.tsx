@@ -346,9 +346,9 @@ function WorkspaceCreatePageClient() {
                 setAiModelList(models);
 
                 // Set default models using user preferences or specific hardcoded fallback IDs
-                const defaultReference = user?.preferred_ai_model_config?.referenceImageModelId || 'ca637a97-f060-4b81-a7d4-118a6f4aac0c';
-                const defaultI2i = user?.preferred_ai_model_config?.sceneImageI2IModelId || '79a506ac-eced-4643-b017-c8a2bb0f028b';
-                const defaultI2v = user?.preferred_ai_model_config?.videoModelId || '326a9a71-26a9-4142-8371-5467f316bcd6';
+                const defaultReference = user?.preferred_ai_model_config?.referenceImageModelId || 'd59b7307-ab54-4efd-82f5-62649c2976cc';
+                const defaultI2i = user?.preferred_ai_model_config?.sceneImageI2IModelId || '918afd0a-cc7d-41dc-ad42-914c224ef04b';
+                const defaultI2v = user?.preferred_ai_model_config?.videoModelId || 'b5382c55-f9bb-45e9-bfcf-7b98224ae81c';
 
                 setSelectedReferenceId(prev => prev ?? defaultReference);
                 setSelectedI2iId(prev => prev ?? defaultI2i);

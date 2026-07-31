@@ -152,11 +152,12 @@ function SceneSequenceItem({
                             <button
                                 type="button"
                                 title="Regenerate Image"
+                                disabled={isAnyLoadingState}
                                 onClick={(e) => {
                                     e.stopPropagation();
                                     if (onClickRegenerateImage) onClickRegenerateImage(captionData.sceneNumber);
                                 }}
-                                className="group/btn relative p-1.5 rounded-md text-zinc-400 hover:text-white hover:bg-white/10 transition-all duration-200"
+                                className="group/btn relative p-1.5 rounded-md text-zinc-400 hover:text-white hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed disabled:pointer-events-none transition-all duration-200"
                             >
                                 <div className="relative w-3.5 h-3.5 flex items-center justify-center">
                                     <ImageIcon size={13} className="transition-all duration-200 group-hover/btn:opacity-0 group-hover/btn:scale-75 group-hover/btn:rotate-45" />
@@ -166,11 +167,12 @@ function SceneSequenceItem({
                             <button
                                 type="button"
                                 title="Regenerate Video"
+                                disabled={isAnyLoadingState}
                                 onClick={(e) => {
                                     e.stopPropagation();
                                     if (onClickRegenerateVideo) onClickRegenerateVideo(captionData.sceneNumber);
                                 }}
-                                className="group/btn relative p-1.5 rounded-md text-zinc-400 hover:text-white hover:bg-white/10 transition-all duration-200"
+                                className="group/btn relative p-1.5 rounded-md text-zinc-400 hover:text-white hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed disabled:pointer-events-none transition-all duration-200"
                             >
                                 <div className="relative w-3.5 h-3.5 flex items-center justify-center">
                                     <Video size={13} className="transition-all duration-200 group-hover/btn:opacity-0 group-hover/btn:scale-75 group-hover/btn:rotate-45" />
@@ -219,11 +221,12 @@ function SceneSequenceItem({
                             <button
                                 type="button"
                                 title="Regenerate Image"
+                                disabled={isAnyLoadingState}
                                 onClick={(e) => {
                                     e.stopPropagation();
                                     if (onClickRegenerateImage) onClickRegenerateImage(captionData.sceneNumber);
                                 }}
-                                className="group/btn relative p-1.5 rounded-md text-zinc-400 hover:text-white hover:bg-white/10 transition-all duration-200"
+                                className="group/btn relative p-1.5 rounded-md text-zinc-400 hover:text-white hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed disabled:pointer-events-none transition-all duration-200"
                             >
                                 <div className="relative w-3.5 h-3.5 flex items-center justify-center">
                                     <ImageIcon size={13} className="transition-all duration-200 group-hover/btn:opacity-0 group-hover/btn:scale-75 group-hover/btn:rotate-45" />
@@ -233,11 +236,12 @@ function SceneSequenceItem({
                             <button
                                 type="button"
                                 title="Regenerate Video"
+                                disabled={isAnyLoadingState}
                                 onClick={(e) => {
                                     e.stopPropagation();
                                     if (onClickRegenerateVideo) onClickRegenerateVideo(captionData.sceneNumber);
                                 }}
-                                className="group/btn relative p-1.5 rounded-md text-zinc-400 hover:text-white hover:bg-white/10 transition-all duration-200"
+                                className="group/btn relative p-1.5 rounded-md text-zinc-400 hover:text-white hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed disabled:pointer-events-none transition-all duration-200"
                             >
                                 <div className="relative w-3.5 h-3.5 flex items-center justify-center">
                                     <Video size={13} className="transition-all duration-200 group-hover/btn:opacity-0 group-hover/btn:scale-75 group-hover/btn:rotate-45" />

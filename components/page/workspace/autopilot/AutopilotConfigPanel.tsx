@@ -8,7 +8,7 @@ import {Voice} from "@/lib/api/types/eleven-labs/Voice";
 import {NICHE_DATA_LIST} from "@/lib/niches";
 import {AutopilotData} from "@/lib/api/types/supabase/AutopilotData";
 import {AIModelData} from "@/lib/api/types/supabase/AIModelData";
-import BYOKModelSelector from "@/components/public/BYOKModelSelector";
+import BYOKModelSelector from "@/components/public/byok-model-selector/BYOKModelSelector";
 import VideoSpecsSelector from "@/components/public/VideoSpecsSelector";
 
 
@@ -328,10 +328,10 @@ function AutopilotConfigPanel({
                                 onChangeReferenceId={(id) => updateSeries({
                                     ai_model_config: {
                                         ...(currentSeries.ai_model_config || {
-                                            referenceImageModelId: 'ca637a97-f060-4b81-a7d4-118a6f4aac0c',
-                                            sceneImageT2IModelId: '1bd90bd4-e476-40e9-8a1e-1649288786e7',
-                                            sceneImageI2IModelId: '79a506ac-eced-4643-b017-c8a2bb0f028b',
-                                            videoModelId: '326a9a71-26a9-4142-8371-5467f316bcd6',
+                                            referenceImageModelId: 'd59b7307-ab54-4efd-82f5-62649c2976cc',
+                                            sceneImageT2IModelId: '918afd0a-cc7d-41dc-ad42-914c224ef04b',
+                                            sceneImageI2IModelId: '5c094112-82c3-4dee-998f-7f8438ab30c8',
+                                            videoModelId: 'b5382c55-f9bb-45e9-bfcf-7b98224ae81c',
                                         }),
                                         referenceImageModelId: id,
                                     }
@@ -339,10 +339,10 @@ function AutopilotConfigPanel({
                                 onChangeI2iId={(id) => updateSeries({
                                     ai_model_config: {
                                         ...(currentSeries.ai_model_config || {
-                                            referenceImageModelId: 'ca637a97-f060-4b81-a7d4-118a6f4aac0c',
-                                            sceneImageT2IModelId: '1bd90bd4-e476-40e9-8a1e-1649288786e7',
-                                            sceneImageI2IModelId: '79a506ac-eced-4643-b017-c8a2bb0f028b',
-                                            videoModelId: '326a9a71-26a9-4142-8371-5467f316bcd6',
+                                            referenceImageModelId: 'd59b7307-ab54-4efd-82f5-62649c2976cc',
+                                            sceneImageT2IModelId: '918afd0a-cc7d-41dc-ad42-914c224ef04b',
+                                            sceneImageI2IModelId: '5c094112-82c3-4dee-998f-7f8438ab30c8',
+                                            videoModelId: 'b5382c55-f9bb-45e9-bfcf-7b98224ae81c',
                                         }),
                                         sceneImageI2IModelId: id,
                                     }
@@ -350,10 +350,10 @@ function AutopilotConfigPanel({
                                 onChangeI2vId={(id) => updateSeries({
                                     ai_model_config: {
                                         ...(currentSeries.ai_model_config || {
-                                            referenceImageModelId: 'ca637a97-f060-4b81-a7d4-118a6f4aac0c',
-                                            sceneImageT2IModelId: '1bd90bd4-e476-40e9-8a1e-1649288786e7',
-                                            sceneImageI2IModelId: '79a506ac-eced-4643-b017-c8a2bb0f028b',
-                                            videoModelId: '326a9a71-26a9-4142-8371-5467f316bcd6',
+                                            referenceImageModelId: 'd59b7307-ab54-4efd-82f5-62649c2976cc',
+                                            sceneImageT2IModelId: '918afd0a-cc7d-41dc-ad42-914c224ef04b',
+                                            sceneImageI2IModelId: '5c094112-82c3-4dee-998f-7f8438ab30c8',
+                                            videoModelId: 'b5382c55-f9bb-45e9-bfcf-7b98224ae81c',
                                         }),
                                         videoModelId: id,
                                     }

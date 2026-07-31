@@ -3,7 +3,7 @@ import {useRouter} from "next/navigation";
 import {Sparkles, MonitorPlay, AlertTriangle, AlertCircle, ChevronDown} from "lucide-react";
 import {SceneData} from "@/lib/api/types/supabase/VideoGenerationTasks";
 import StoryboardSection from "@/components/page/workspace/create/create-form-panel/StoryboardSection";
-import BYOKModelSelector from "@/components/public/BYOKModelSelector";
+import BYOKModelSelector from "@/components/public/byok-model-selector/BYOKModelSelector";
 import VideoSpecsSelector from "@/components/public/VideoSpecsSelector";
 import {AIModelData} from "@/lib/api/types/supabase/AIModelData";
 
