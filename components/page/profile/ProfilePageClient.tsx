@@ -2,7 +2,7 @@
 
 import {memo, useCallback, useEffect, useMemo, useState} from "react";
 import {SubscriptionPlan} from "@/lib/api/types/supabase/Users";
-import {CreditCard, Crown, Calendar, Mail, User as UserIcon, Receipt, FileText, Settings, Sparkles, Loader2, Bot, Save, ExternalLink, CheckCircle2, Shield, Share2, Trash2, Plus} from "lucide-react";
+import {CreditCard, Crown, Calendar, Mail, User as UserIcon, Receipt, FileText, Settings, Sparkles, Loader2, Bot, Save, ExternalLink, CheckCircle2, Shield, Share2, Trash2, Plus, HelpCircle} from "lucide-react";
 import {useAuth} from "@/context/AuthContext";
 import {polarClientAPI} from "@/lib/api/client/polarClientAPI";
 import {OrderData} from "@/lib/api/types/api/polar/orders/GetPolarOrdersResponse";
@@ -58,6 +58,7 @@ function ProfilePageClient() {
     // API Key Edit states
     const [isEditingFalKey, setIsEditingFalKey] = useState(false);
     const [falKeyInput, setFalKeyInput] = useState("");
+    const [showFalGuide, setShowFalGuide] = useState(false);
 
     const [showChangePlanModal, setShowChangePlanModal] = useState(false);
     const [showCancelSubscriptionModal, setShowCancelSubscriptionModal] = useState(false);
@@ -671,63 +672,127 @@ function ProfilePageClient() {
 
                     <div className="space-y-4">
                         {/* fal.ai Item */}
-                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-6 rounded-2xl bg-zinc-950/50 border border-white/5 hover:border-white/10 transition-colors">
-                            <div className="flex items-center gap-4 min-w-0">
-                                <div className="w-12 h-12 rounded-xl bg-zinc-900 border border-white/5 flex items-center justify-center flex-shrink-0 shadow-inner">
-                                    <FalIcon size={24} className={isUserRegisteredFalAi ? "" : "grayscale opacity-40"} />
-                                </div>
-                                <div className="min-w-0">
-                                    <div className="flex items-center gap-2 mb-1">
-                                        <span className="text-sm font-bold text-zinc-100">fal.ai</span>
-                                        {isUserRegisteredFalAi && <CheckCircle2 size={14} className="text-emerald-500" />}
+                        <div className="flex flex-col gap-4 p-6 rounded-2xl bg-zinc-950/50 border border-white/5 hover:border-white/10 transition-colors">
+                            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                                <div className="flex items-center gap-4 min-w-0">
+                                    <div className="w-12 h-12 rounded-xl bg-zinc-900 border border-white/5 flex items-center justify-center flex-shrink-0 shadow-inner">
+                                        <FalIcon size={24} className={isUserRegisteredFalAi ? "" : "grayscale opacity-40"} />
                                     </div>
-                                    <p className="text-[11px] text-zinc-500 font-medium tracking-tight">Advanced Text-to-Image & Image-to-Video Engine</p>
+                                    <div className="min-w-0">
+                                        <div className="flex items-center gap-2 mb-1">
+                                            <span className="text-sm font-bold text-zinc-100">fal.ai</span>
+                                            {isUserRegisteredFalAi && <CheckCircle2 size={14} className="text-emerald-500" />}
+                                            <button
+                                                type="button"
+                                                onClick={() => setShowFalGuide(!showFalGuide)}
+                                                className="text-[11px] text-zinc-400 hover:text-white underline ml-2 flex items-center gap-1 transition-colors"
+                                            >
+                                                <HelpCircle size={13} className="text-indigo-400" />
+                                                <span>{showFalGuide ? "Hide Guide" : "How to get a key?"}</span>
+                                            </button>
+                                        </div>
+                                        <p className="text-[11px] text-zinc-500 font-medium tracking-tight">Advanced Text-to-Image & Image-to-Video Engine</p>
+                                    </div>
+                                </div>
+
+                                <div className="flex-1 md:max-w-md">
+                                    {isEditingFalKey ? (
+                                        <div className="flex items-center gap-2">
+                                            <input
+                                                type="password"
+                                                value={falKeyInput}
+                                                onChange={(e) => setFalKeyInput(e.target.value)}
+                                                placeholder="Enter your fal.ai API Key..."
+                                                className="w-full bg-zinc-900 border border-white/10 rounded-lg px-4 py-2.5 text-base tracking-[0.2em] placeholder:tracking-normal placeholder:text-sm text-zinc-200 focus:outline-none focus:border-zinc-500 transition-colors"
+                                                autoFocus
+                                            />
+                                            <div className="flex items-center gap-1.5">
+                                                <button
+                                                    onClick={onClickSaveFalKey}
+                                                    disabled={isSavingKeys || !falKeyInput.trim()}
+                                                    className="px-4 py-2.5 bg-white text-black font-bold text-xs rounded-lg hover:bg-zinc-200 transition-all disabled:opacity-50"
+                                                >
+                                                    {isSavingKeys ? <Loader2 size={14} className="animate-spin" /> : "Save"}
+                                                </button>
+                                                <button
+                                                    onClick={() => { setIsEditingFalKey(false); setFalKeyInput(""); }}
+                                                    className="px-3 py-2.5 text-zinc-500 hover:text-zinc-300 font-bold text-xs transition-colors"
+                                                >
+                                                    Cancel
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <div className="flex items-center justify-between gap-4 px-4 py-2.5 bg-zinc-900/60 rounded-xl border border-white/5 group/key">
+                                            <span className={`truncate font-mono ${isUserRegisteredFalAi ? "text-base tracking-[0.15em] text-zinc-400 select-none" : "text-sm text-zinc-500"}`}>
+                                                {isUserRegisteredFalAi ? "●●●●●●●●●●●●" : "No Key Registered"}
+                                            </span>
+                                            <button
+                                                onClick={() => {
+                                                    setIsEditingFalKey(true);
+                                                }}
+                                                className="text-[11px] font-bold text-zinc-300 hover:text-white transition-colors px-2 py-1"
+                                            >
+                                                {isUserRegisteredFalAi ? "Update" : "Register Key"}
+                                            </button>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
 
-                            <div className="flex-1 md:max-w-md">
-                                {isEditingFalKey ? (
-                                    <div className="flex items-center gap-2">
-                                        <input
-                                            type="password"
-                                            value={falKeyInput}
-                                            onChange={(e) => setFalKeyInput(e.target.value)}
-                                            placeholder="Enter your fal.ai API Key..."
-                                            className="w-full bg-zinc-900 border border-white/10 rounded-lg px-4 py-2.5 text-base tracking-[0.2em] placeholder:tracking-normal placeholder:text-sm text-zinc-200 focus:outline-none focus:border-zinc-500 transition-colors"
-                                            autoFocus
-                                        />
-                                        <div className="flex items-center gap-1.5">
-                                            <button
-                                                onClick={onClickSaveFalKey}
-                                                disabled={isSavingKeys || !falKeyInput.trim()}
-                                                className="px-4 py-2.5 bg-white text-black font-bold text-xs rounded-lg hover:bg-zinc-200 transition-all disabled:opacity-50"
-                                            >
-                                                {isSavingKeys ? <Loader2 size={14} className="animate-spin" /> : "Save"}
-                                            </button>
-                                            <button
-                                                onClick={() => { setIsEditingFalKey(false); setFalKeyInput(""); }}
-                                                className="px-3 py-2.5 text-zinc-500 hover:text-zinc-300 font-bold text-xs transition-colors"
-                                            >
-                                                Cancel
-                                            </button>
+                            {/* fal.ai Key Guide Panel */}
+                            {showFalGuide && (
+                                <div className="mt-4 pt-5 border-t border-white/10 space-y-5 animate-in fade-in slide-in-from-top-2 duration-200">
+                                    <div className="flex items-center justify-between">
+                                        <h4 className="text-xs font-bold text-zinc-200 uppercase tracking-wider flex items-center gap-2">
+                                            <span>fal.ai API Key Setup Tutorial</span>
+                                        </h4>
+                                        <a
+                                            href="https://fal.ai/dashboard/keys"
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-600/30 border border-indigo-500/40 text-indigo-300 hover:text-white text-xs font-medium transition-all hover:bg-indigo-600/50"
+                                        >
+                                            <span>Open fal.ai Keys Page</span>
+                                            <ExternalLink size={12} />
+                                        </a>
+                                    </div>
+
+                                    <div className="space-y-4 text-xs text-zinc-400">
+                                        {/* Step 1 */}
+                                        <div className="space-y-2">
+                                            <p className="font-semibold text-zinc-200">
+                                                <span className="text-indigo-400 font-bold mr-1">Step 1.</span>
+                                                Sign in to fal.ai and navigate to the API Keys section in your dashboard.
+                                            </p>
+                                            {/* Prominent Pink Placeholder Box (Image 1) */}
+                                            <div className="w-full h-44 bg-pink-500/20 border-2 border-dashed border-pink-500 rounded-xl flex items-center justify-center text-pink-400 font-bold text-lg shadow-lg">
+                                                Image 1
+                                            </div>
+                                        </div>
+
+                                        {/* Step 2 */}
+                                        <div className="space-y-2">
+                                            <p className="font-semibold text-zinc-200">
+                                                <span className="text-indigo-400 font-bold mr-1">Step 2.</span>
+                                                Click <strong className="text-white font-bold">&quot;Create Key&quot;</strong>, assign a name, and copy the newly generated Key Secret.
+                                            </p>
+                                            {/* Prominent Yellow Placeholder Box (Image 2) */}
+                                            <div className="w-full h-44 bg-yellow-500/20 border-2 border-dashed border-yellow-500 rounded-xl flex items-center justify-center text-yellow-400 font-bold text-lg shadow-lg">
+                                                Image 2
+                                            </div>
+                                        </div>
+
+                                        {/* Step 3 */}
+                                        <div className="space-y-1 pt-1">
+                                            <p className="font-semibold text-zinc-200">
+                                                <span className="text-indigo-400 font-bold mr-1">Step 3.</span>
+                                                Paste your key into the input field above and click <strong className="text-white font-bold">&quot;Save&quot;</strong>.
+                                            </p>
                                         </div>
                                     </div>
-                                ) : (
-                                    <div className="flex items-center justify-between gap-4 px-4 py-2.5 bg-zinc-900/60 rounded-xl border border-white/5 group/key">
-                                        <span className={`truncate font-mono ${isUserRegisteredFalAi ? "text-base tracking-[0.15em] text-zinc-400 select-none" : "text-sm text-zinc-500"}`}>
-                                            {isUserRegisteredFalAi ? "●●●●●●●●●●●●" : "No Key Registered"}
-                                        </span>
-                                        <button
-                                            onClick={() => {
-                                                setIsEditingFalKey(true);
-                                            }}
-                                            className="text-[11px] font-bold text-zinc-300 hover:text-white transition-colors px-2 py-1"
-                                        >
-                                            {isUserRegisteredFalAi ? "Update" : "Register Key"}
-                                        </button>
-                                    </div>
-                                )}
-                            </div>
+                                </div>
+                            )}
                         </div>
 
                         {/* Replicate Item (Coming Soon) */}
