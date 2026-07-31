@@ -1250,6 +1250,7 @@ function WorkspaceEditorPageClient() {
                             musicData={editingMusicData}
                             videoDuration={realVideoDuration}
                             initialVolume={musicVolume}
+                            initialStartSec={musicStartSec}
                             panelHeight={musicEditPanelHeight}
                             onChangeMusicStartSec={onChangeMusicStartSec}
                             onChangeMusicVolume={onChangeMusicVolume}

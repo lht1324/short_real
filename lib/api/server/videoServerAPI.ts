@@ -271,14 +271,31 @@ export const videoServerAPI = {
             console.log(`[Video-Music Merge] Caption Video URL: ${captionVideoUrl}`);
             console.log(`[Video-Music Merge] Modified Music URL: ${modifiedMusicUrl}`);
 
-            // 3. Replicate로 영상에 음악 병합 요청 (amix duration=longest로 배경음악을 비디오 끝까지 유지)
+            // 총 영상 길이 계산 (배속 반영)
+            const totalDuration = (videoGenerationTask.scene_breakdown_list || []).reduce((acc, scene) => {
+                const speed = scene.speedMultiplier ?? 1.0;
+                const duration = scene.sceneDuration || 0;
+                return acc + (duration / speed);
+            }, 0);
+
+            const fadeDuration = 0.9;
+            let filterComplexStr = `[0:a][1:a]amix=inputs=2:duration=longest[aout]`;
+
+            if (totalDuration > 0) {
+                const fadeOutStart = Math.max(0, totalDuration - fadeDuration).toFixed(3);
+                filterComplexStr = `[1:a]afade=t=in:ss=0:d=${fadeDuration},afade=t=out:st=${fadeOutStart}:d=${fadeDuration}[bgm];[0:a][bgm]amix=inputs=2:duration=longest[aout]`;
+            }
+
+            console.log(`[Video-Music Merge] totalDuration: ${totalDuration.toFixed(3)}s, filterComplex: ${filterComplexStr}`);
+
+            // 3. Replicate로 영상에 음악 병합 요청 (배경음악에만 0.9초 페이드인/아웃 적용 후 음성과 amix 병합)
             console.log(`[Video-Music Merge] Replicate prediction 생성 시작`);
             const prediction = await replicate.predictions.create({
                 version: "lht1324/ffmpeg-sandbox-2:06262bdc243f9afe6d1b9a8d338ab536044d0604ce4c420c9cde7ee7fe781339",
                 input: {
                     video_urls: JSON.stringify([captionVideoUrl]),
                     audio_url: modifiedMusicUrl,
-                    ffmpeg_args: `-filter_complex "[0:a][1:a]amix=inputs=2:duration=longest[aout]" -map 0:v -map "[aout]" -c:v copy -c:a aac`,
+                    ffmpeg_args: `-filter_complex "${filterComplexStr}" -map 0:v -map "[aout]" -c:v copy -c:a aac`,
                     output_extension: "mp4"
                 },
                 webhook: webhookUrl,
@@ -394,19 +411,12 @@ export const videoServerAPI = {
                         formats: ALL_FORMATS,
                     });
                     const generatedVideoDuration = await mediaBunnyInput.computeDuration();
-                    const availableDuration = generatedVideoDuration - 0.2; // 앞 0.2초 트림 후 실측 가용 영상 길이
+                    const availableDuration = Math.max(0.1, generatedVideoDuration - 0.2); // 앞 0.2초 트림 후 실측 가용 영상 길이
 
-                    const totalNeeded = finalTargetDuration + 0.2;
-                    const isCutting = (totalNeeded <= 4.0) || (generatedVideoDuration >= totalNeeded);
-
-                    if (isCutting) {
-                        ffmpegArgs = `-ss 0.2 -t ${finalTargetDuration.toFixed(4)} -an -c:v libx264 -pix_fmt yuv420p -bf 0 -flags +cgop`;
-                        console.log(`[TEST LOG][Scene #${sceneNumber} Video] speed: ${speedMultiplier}x (isCutting) -> targetDuration: ${finalTargetDuration.toFixed(4)}s, generatedVideoDuration: ${generatedVideoDuration.toFixed(4)}s`);
-                    } else {
-                        const videoPtsRatio = (finalTargetDuration / availableDuration).toFixed(6);
-                        ffmpegArgs = `-ss 0.2 -filter:v "setpts=${videoPtsRatio}*PTS" -an -c:v libx264 -pix_fmt yuv420p -bf 0 -flags +cgop`;
-                        console.log(`[TEST LOG][Scene #${sceneNumber} Video] speed: ${speedMultiplier}x (PTS scaling) -> targetDuration: ${finalTargetDuration.toFixed(4)}s, generatedVideoDuration: ${generatedVideoDuration.toFixed(4)}s, availableDuration: ${availableDuration.toFixed(4)}s, videoPtsRatio: ${videoPtsRatio}`);
-                    }
+                    // 배속이 변경된 경우(speedMultiplier !== 1.0) 영상을 자르지 않고 원본 전체 분량을 PTS 스케일링으로 속도 조절
+                    const videoPtsRatio = (finalTargetDuration / availableDuration).toFixed(6);
+                    ffmpegArgs = `-ss 0.2 -filter:v "setpts=${videoPtsRatio}*PTS" -an -c:v libx264 -pix_fmt yuv420p -bf 0 -flags +cgop`;
+                    console.log(`[TEST LOG][Scene #${sceneNumber} Video] speed: ${speedMultiplier}x (PTS scaling) -> targetDuration: ${finalTargetDuration.toFixed(4)}s, generatedVideoDuration: ${generatedVideoDuration.toFixed(4)}s, availableDuration: ${availableDuration.toFixed(4)}s, videoPtsRatio: ${videoPtsRatio}`);
                 }
 
                 // Replicate 샌드박스로 씬 비디오 조각 굽기

@@ -176,37 +176,44 @@ function DashboardItem({
     const retryPrice = useMemo(() => {
         if (!taskData.isGenerationFailed || !taskData.aiModelConfig) return null;
 
-        const { status, failedImageCount, failedVideoDuration, resolution, estimatedCharacterCount, aiModelConfig } = taskData;
+        const { status, failedImageCount, failedVideoDuration, resolution, estimatedCharacterCount, aiModelConfig, sceneCount } = taskData;
         const effectiveResolution = resolution ?? '720p';
 
-        const findPricePerUnit = (modelId: string, res: string): number | null => {
+        const findPricePerUnit = (modelId: string, res: string, type: 'image' | 'video'): number | null => {
             const model = aiModelDataList.find(m => m.id === modelId);
-            if (!model) return null;
-            return model.ai_model_price_list.find(p => p.unit.endsWith(res))?.price_per_unit ?? null;
+            if (!model || !model.ai_model_price_list || model.ai_model_price_list.length === 0) return null;
+
+            const targetUnit = `${type}_${res.toLowerCase()}`;
+            const matched = model.ai_model_price_list.find(p => p.unit === targetUnit || p.unit.endsWith(res));
+            if (matched) return matched.price_per_unit;
+
+            return model.ai_model_price_list[0].price_per_unit;
         };
 
         switch (status) {
             case VideoGenerationTaskStatus.GENERATING_MASTER_STYLE_PROMPT: {
                 if (!estimatedCharacterCount) return null;
-                const price = findPricePerUnit(aiModelConfig.referenceImageModelId, '720p');
+                const price = findPricePerUnit(aiModelConfig.referenceImageModelId, '720p', 'image');
                 if (price === null) return null;
 
                 return price * estimatedCharacterCount;
             }
             case VideoGenerationTaskStatus.GENERATING_IMAGE_PROMPT: {
-                const price = findPricePerUnit(aiModelConfig.sceneImageI2IModelId, effectiveResolution);
+                const price = findPricePerUnit(aiModelConfig.sceneImageI2IModelId, effectiveResolution, 'image');
+                const count = failedImageCount && failedImageCount > 0 ? failedImageCount : (sceneCount || 1);
 
-                if (price === null || !failedImageCount) return null;
+                if (price === null) return null;
 
-                return price * failedImageCount;
+                return price * count;
             }
             case VideoGenerationTaskStatus.GENERATING_VIDEO_PROMPT:
             case VideoGenerationTaskStatus.GENERATING_VIDEO: {
-                const price = findPricePerUnit(aiModelConfig.videoModelId, effectiveResolution);
+                const price = findPricePerUnit(aiModelConfig.videoModelId, effectiveResolution, 'video');
+                const duration = failedVideoDuration && failedVideoDuration > 0 ? failedVideoDuration : ((sceneCount || 1) * 4);
 
-                if (price === null || !failedVideoDuration) return null;
+                if (price === null) return null;
 
-                return price * Math.round(failedVideoDuration);
+                return price * Math.round(duration);
             }
             default:
                 return null;
@@ -216,14 +223,19 @@ function DashboardItem({
     const retryTooltipContent = useMemo(() => {
         if (!taskData.isGenerationFailed || !taskData.aiModelConfig || retryPrice === null) return null;
 
-        const { status, failedImageCount, failedVideoDuration, resolution, estimatedCharacterCount, aiModelConfig } = taskData;
+        const { status, failedImageCount, failedVideoDuration, resolution, estimatedCharacterCount, aiModelConfig, sceneCount } = taskData;
         const effectiveResolution = resolution ?? '720p';
 
         const findModel = (modelId: string) => aiModelDataList.find(m => m.id === modelId) ?? null;
-        const findPricePerUnit = (modelId: string, res: string): number | null => {
+        const findPricePerUnit = (modelId: string, res: string, type: 'image' | 'video'): number | null => {
             const model = findModel(modelId);
-            if (!model) return null;
-            return model.ai_model_price_list.find(p => p.unit.endsWith(res))?.price_per_unit ?? null;
+            if (!model || !model.ai_model_price_list || model.ai_model_price_list.length === 0) return null;
+
+            const targetUnit = `${type}_${res.toLowerCase()}`;
+            const matched = model.ai_model_price_list.find(p => p.unit === targetUnit || p.unit.endsWith(res));
+            if (matched) return matched.price_per_unit;
+
+            return model.ai_model_price_list[0].price_per_unit;
         };
         const formatUSD = (val: number) => `$${val.toFixed(4)}`;
 
@@ -263,7 +275,7 @@ function DashboardItem({
             case VideoGenerationTaskStatus.GENERATING_MASTER_STYLE_PROMPT: {
                 const model = findModel(aiModelConfig.referenceImageModelId);
                 if (!model || !estimatedCharacterCount) return null;
-                const price = findPricePerUnit(aiModelConfig.referenceImageModelId, '720p');
+                const price = findPricePerUnit(aiModelConfig.referenceImageModelId, '720p', 'image');
                 if (price === null) return null;
                 return renderReceipt(
                     "Character Sheet",
@@ -278,12 +290,12 @@ function DashboardItem({
             }
             case VideoGenerationTaskStatus.GENERATING_IMAGE_PROMPT: {
                 const model = findModel(aiModelConfig.sceneImageI2IModelId);
-
                 if (!model) return null;
 
-                const price = findPricePerUnit(aiModelConfig.sceneImageI2IModelId, effectiveResolution);
+                const price = findPricePerUnit(aiModelConfig.sceneImageI2IModelId, effectiveResolution, 'image');
+                const count = failedImageCount && failedImageCount > 0 ? failedImageCount : (sceneCount || 1);
 
-                if (price === null || !failedImageCount) return null;
+                if (price === null) return null;
 
                 return renderReceipt(
                     "Scene Images",
@@ -291,7 +303,7 @@ function DashboardItem({
                     <ImageIcon size={14} />,
                     model.display_name,
                     [
-                        { label: "Failed Scenes", value: `${failedImageCount}` },
+                        { label: "Failed Scenes", value: `${count}` },
                         { label: "Price / scene", value: formatUSD(price) },
                     ]
                 );
@@ -299,12 +311,12 @@ function DashboardItem({
             case VideoGenerationTaskStatus.GENERATING_VIDEO_PROMPT:
             case VideoGenerationTaskStatus.GENERATING_VIDEO: {
                 const model = findModel(aiModelConfig.videoModelId);
-
                 if (!model) return null;
 
-                const price = findPricePerUnit(aiModelConfig.videoModelId, effectiveResolution);
+                const price = findPricePerUnit(aiModelConfig.videoModelId, effectiveResolution, 'video');
+                const duration = failedVideoDuration && failedVideoDuration > 0 ? failedVideoDuration : ((sceneCount || 1) * 4);
 
-                if (price === null || !failedVideoDuration) return null;
+                if (price === null) return null;
 
                 return renderReceipt(
                     "Video Generation",
@@ -312,7 +324,7 @@ function DashboardItem({
                     <FileVideo size={14} />,
                     model.display_name,
                     [
-                        { label: "Duration", value: `${Math.round(failedVideoDuration)}s` },
+                        { label: "Retry duration", value: `${Math.round(duration)}s` },
                         { label: "Price / sec", value: formatUSD(price) },
                     ]
                 );

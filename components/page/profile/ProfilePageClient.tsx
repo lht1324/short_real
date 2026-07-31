@@ -224,9 +224,9 @@ function ProfilePageClient() {
                 setSelectedI2iId(user.preferred_ai_model_config.sceneImageI2IModelId);
                 setSelectedI2vId(user.preferred_ai_model_config.videoModelId);
             } else {
-                setSelectedReferenceId('ca637a97-f060-4b81-a7d4-118a6f4aac0c');
-                setSelectedI2iId('79a506ac-eced-4643-b017-c8a2bb0f028b');
-                setSelectedI2vId('326a9a71-26a9-4142-8371-5467f316bcd6');
+                setSelectedReferenceId('d59b7307-ab54-4efd-82f5-62649c2976cc');
+                setSelectedI2iId('918afd0a-cc7d-41dc-ad42-914c224ef04b');
+                setSelectedI2vId('b5382c55-f9bb-45e9-bfcf-7b98224ae81c');
             }
         } catch (error) {
             console.error("Failed to load AI models:", error);
