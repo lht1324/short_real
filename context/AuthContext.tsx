@@ -35,17 +35,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     // 서버에서 사용자 프로필 가져오기 (중복 호출 방지)
     const fetchUserProfile = useCallback(async (userId: string) => {
-        console.log('fetchUserProfile called with userId:', userId);
-        
         // 이미 같은 사용자의 프로필이 있다면 스킵
         if (user?.id === userId) {
-            console.log('User already exists, skipping fetch');
             return user;
         }
 
-        console.log('Fetching user profile from API...');
         const result = await usersClientAPI.getUserByUserId(userId);
-        console.log('API result:', result);
         return result;
     }, [user]);
 
@@ -96,8 +91,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // Auth 상태 변경 감지 (초기 상태도 포함)
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
             async (event, session) => {
-                console.log('Auth state change:', event, session?.user?.id);
-
                 if (!isInitialized) {
                     setIsInitialized(true)
                 }
@@ -106,12 +99,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 setSupabaseUser(session?.user ?? null)
 
                 if (session?.user) {
-                    console.log('Session user exists, fetching profile...');
                     const profile = await fetchUserProfile(session.user.id)
-                    console.log('Setting user to:', profile);
                     setUser(profile)
                 } else {
-                    console.log('No session user, setting user to null');
                     setUser(null)
                 }
                 setIsLoading(false)
@@ -127,8 +117,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     useEffect(() => {
         if (!user?.id) return;
 
-        console.log('Setting up realtime channel for user:', user.id);
-
         const channel = supabase
             .channel(`user-${user.id}`)
             .on(
@@ -140,16 +128,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                     filter: `id=eq.${user.id}`,
                 },
                 (payload) => {
-                    console.log('User data updated via realtime:', payload.new);
                     setUser(payload.new as User);
                 }
             )
             .subscribe(() => {
-                console.log("user channel");
             });
 
         return () => {
-            console.log('Cleaning up realtime channel for user:', user.id);
             supabase.removeChannel(channel);
         };
     }, [user?.id]);
