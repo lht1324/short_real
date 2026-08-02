@@ -27,13 +27,33 @@ export async function proxy(request: NextRequest) {
         }
     }
 
+    // 3. /workspace 하위 경로 보호 (구독 플랜 확인)
+    if (path.startsWith('/workspace')) {
+        const { data: { user } } = await supabase.auth.getUser();
+
+        if (!user) {
+            return NextResponse.redirect(new URL('/sign-in', request.url));
+        }
+
+        const { data: userData } = await supabase
+            .from('users')
+            .select('plan')
+            .eq('id', user.id)
+            .single();
+
+        if (!userData?.plan || userData.plan === 'none') {
+            return NextResponse.redirect(new URL('/profile', request.url));
+        }
+    }
+
     return supabaseResponse;
 }
 
 export const config = {
     // 미들웨어가 실행될 경로 지정
     matcher: [
-        '/admin/:path*', // /admin 및 그 하위 모든 경로
-        '/sign-in',      // 로그인 페이지
+        '/admin/:path*',    // /admin 및 그 하위 모든 경로
+        '/sign-in',         // 로그인 페이지
+        '/workspace/:path*', // /workspace 및 그 하위 모든 경로
     ],
 };

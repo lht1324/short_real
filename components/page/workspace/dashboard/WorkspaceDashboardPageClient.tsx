@@ -71,10 +71,6 @@ function WorkspaceDashboardPageClient() {
         return searchParams.get('customer_session_token');
     }, [searchParams]);
 
-    const userCreditCount = useMemo(() => {
-        return user?.credit_count ?? 0;
-    }, [user?.credit_count]);
-
     const [checkoutResultDialogData, setCheckoutResultDialogData] = useState<CheckoutResultDialogData | null>(null);
 
     const [pendingEditTaskId, setPendingEditTaskId] = useState<string | null>(null);
