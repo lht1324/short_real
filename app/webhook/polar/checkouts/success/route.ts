@@ -3,8 +3,7 @@ import { getNextBaseResponse } from "@/lib/utils/getNextBaseResponse";
 import { SubscriptionPlan } from "@/lib/api/types/supabase/Users";
 import { usersServerAPI } from "@/lib/api/server/usersServerAPI";
 import { PolarClient } from "@/lib/PolarClient";
-import { tracker } from "@/lib/hellyeah";
-import { cv } from "@hellyeah/x-ray/server";
+import {createXRay, cv} from "@hellyeah/x-ray/server";
 
 /**
  * POST /webhook/polar/checkouts/success
@@ -13,6 +12,12 @@ import { cv } from "@hellyeah/x-ray/server";
 export async function POST(request: NextRequest) {
     try {
         const polar = new PolarClient().getClient();
+        const hellYeahTracker = process.env.NEXT_PUBLIC_HELLYEAH_TRACKER_ID ? createXRay(
+            process.env.NEXT_PUBLIC_HELLYEAH_TRACKER_ID,
+            {
+                env: process.env.HELLYEAH_TRACKER_ENV,
+            }
+        ) : null;
 
         // Webhook payload 파싱
         const payload = await request.json();
@@ -68,9 +73,9 @@ export async function POST(request: NextRequest) {
 
         console.log("User updated successfully:", updatedUser);
 
-        if (process.env.NEXT_PUBLIC_HELLYEAH_TRACKER_ID) {
+        if (hellYeahTracker) {
             try {
-                await tracker.trackImmediate(cv.subscribe, {
+                await hellYeahTracker?.trackImmediate(cv.subscribe, {
                     distinctId: userId,
                     revenue: typeof payload.data?.amount === "number" ? payload.data.amount / 100 : undefined,
                     currency: (payload.data?.currency as string)?.toUpperCase() || "USD",

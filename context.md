@@ -2,7 +2,6 @@
 
 ## 1. 현재 상황 (Current Status)
 * **Hellyeah X-Ray 마케팅 분석 트래커 구축 완료**:
-    * `@hellyeah/x-ray` (v1.2.0) SDK 연동 및 서버 트래커 싱글톤 (`lib/hellyeah.ts`) 구축.
     * 브라우저 방문 추적용 `<HellyeahAnalytics>` 프로바이더 (`app/layout.tsx`) 탑재.
     * Polar 결제/구독 성공 웹훅 (`app/webhook/polar/checkouts/success/route.ts`) 내 `cv.subscribe` 실시간 이행 이벤트 전송 구현.
     * Hellyeah CLI `tracker verify` 자동 검증 통과 및 전용 Tracker ID (`019fc303-a119-7000-a2bc-009a1e2abf4b`) 발급 완료.
@@ -12,8 +11,8 @@
 ## 2. 세션 진행 작업 (Work Accomplished in Current Session)
 
 ### [마케팅/분석] Hellyeah X-Ray 트래커 연동 및 검증
-1. **Hellyeah SDK 및 싱글톤 인스턴스 구축 (`lib/hellyeah.ts`, `package.json`)**:
-    * `@hellyeah/x-ray` 패키지 추가 및 `createXRay` 서버 전용 싱글톤 객체 구현.
+1. **Hellyeah SDK 및 싱글톤 인스턴스 구축**:
+    * `@hellyeah/x-ray` 패키지 추가.
 2. **브라우저 방문 추적 프로바이더 배치 (`app/layout.tsx`)**:
     * Vercel Analytics와의 명칭 충돌 방지를 위해 `Analytics as HellyeahAnalytics` 별칭(Alias)을 사용하여 레이아웃에 탑재.
 3. **구독 결제 전환 이벤트 탑재 (`app/webhook/polar/checkouts/success/route.ts`)**:
