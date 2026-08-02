@@ -1,38 +1,26 @@
-# 작업 진행 상황 (Last Updated: 2026-07-28 03:00)
+# 작업 진행 상황 (Last Updated: 2026-08-03 00:14)
 
 ## 1. 현재 상황 (Current Status)
-* **단건 이미지/비디오 비동기 Fire-and-Forget 재생성 파이프라인 연동 완료**:
-    * 단건 이미지 재생성 (`/api/image/regenerate`) 및 단건 비디오 재생성 (`/api/video/regenerate`)의 비동기 200 OK 응답 규격 연동 완료.
-    * 씬 카드 글래스모피즘 스피너 오버레이 연동 및 Supabase Realtime 실시간 `COMPLETED` 완공 알림/비디오 URL 교체 체계 구축 완료.
-    * 비디오 완공 시 1차 속도 배율 후처리 및 Storage 덮어쓰기 완료 상태를 `COMPLETED`로 통합 관리.
+* **Hellyeah X-Ray 마케팅 분석 트래커 구축 완료**:
+    * `@hellyeah/x-ray` (v1.2.0) SDK 연동 및 서버 트래커 싱글톤 (`lib/hellyeah.ts`) 구축.
+    * 브라우저 방문 추적용 `<HellyeahAnalytics>` 프로바이더 (`app/layout.tsx`) 탑재.
+    * Polar 결제/구독 성공 웹훅 (`app/webhook/polar/checkouts/success/route.ts`) 내 `cv.subscribe` 실시간 이행 이벤트 전송 구현.
+    * Hellyeah CLI `tracker verify` 자동 검증 통과 및 전용 Tracker ID (`019fc303-a119-7000-a2bc-009a1e2abf4b`) 발급 완료.
 
 ---
 
 ## 2. 세션 진행 작업 (Work Accomplished in Current Session)
 
-### [UI/UX] 단건 재생성 모달 개편 및 UI 고정 (`SceneRegenerateModal.tsx`)
-1. **드롭다운 정렬 헤더 상단 고정 (`sticky top-0`)**:
-    * 드롭다운 내부 목록 스크롤 시 `Sort by (Name | Price ↑ | Price ↓)` 헤더가 상단에 착 붙어 고정되도록 구조 개편 (`sticky top-0 bg-zinc-900 z-10 shrink-0`).
-2. **모달 화면 수직 위치 고정 (`pt-[18vh] mb-12`)**:
-    * 이미지 재생성 시 "비디오 연쇄 재생성" 체크박스를 켜고 끌 때 모달의 전체 높이가 바뀌면서 세로 중앙(`my-auto`) 위치가 변해 마우스 커서 위치가 튀는 UX 현상 해결.
-    * `my-auto` 마진을 제거하고 상단 위치를 `pt-[18vh]`로 고정하여 체크박스 연쇄 클릭 시 모달 상단 및 마우스 Y축 위치가 1px도 안 움직이도록 처리.
-3. **비디오 드롭다운 슬라이드 애니메이션**:
-    * 체크박스 클릭 시 비디오 드롭다운이 아래 방향으로 부드럽게 펼쳐지도록 `animate-in fade-in slide-in-from-top-2 duration-200` 적용.
-
-### [통신/API] 비동기 Fire-and-Forget 통신 약속 규격 통일
-1. **클라이언트 API 수신 규격 통일 (`imageClientAPI.ts`)**:
-    * 백엔드 비동기 return 규격 (`{ success: boolean, status: number, message?: string, error?: string }`)에 맞춰 `postImageRegenerate` 메서드의 구형 동기식 `imageUrl` 체크 로직 제거 및 표준 반환형으로 개편.
-2. **프론트엔드 재생성 핸들러 교정 (`WorkspaceEditorPageClient.tsx`)**:
-    * `handleConfirmRegenerate` 내 이미지 재생성 완료 검사 조건(`if (regenerateResult.success)`)을 비동기 표준에 맞추어 교정.
-    * 백엔드가 백그라운드 처리를 수행하는 동안 UI 씬 카드는 `status = GENERATING_IMAGE` 로딩 스피너 상태를 안전하게 유지하며, 완공 시 Supabase Realtime 채널이 DB `COMPLETED` 이벤트를 받을 때까지 조용히 대기하도록 수정.
-
-### [Realtime/UX] Supabase Realtime 수신 최적화 및 브라우저 스레드 차단 해제 (`WorkspaceEditorPageClient.tsx`)
-1. **`SceneData.status` 변동 씬 정밀 감지 가드 구축**:
-    * `videoDataRef`를 도입하여, 수신된 신규 씬 데이터 중 `SceneData.status`가 기존과 실제로 달라진 씬이 1개라도 있을 때만 후속 연산을 타도록 가드 구축 (`statusChangedScenes.length === 0` 시 즉시 반환하여 헛스윙 DB UPDATE 릴레이 연산 완전 차단).
-2. **React Strict Mode 중복 팝업 해제**:
-    * React 18 개발 모드(Strict Mode)의 State Updater 콜백 2회 실행(Double Invocation)으로 인한 `alert()` 중복 출력 방지를 위해 Side Effect(`alert()`, URL fetch)를 State Updater 함수 바깥으로 분리.
-3. **브라우저 동기 블로킹 해제 및 UX 순서 교정**:
-    * 브라우저 `alert()`의 동기적 스레드 차단(Freeze) 현상 해결: `await`로 최신 이미지/비디오 URL State를 먼저 바꾼 뒤 UI 화면에 새 이미지가 먼저 교체 렌더링되게 하고, `setTimeout(..., 100)`을 써서 유저 눈으로 바뀐 이미지를 확인한 후 완공 알림 팝업이 출현하도록 UX 순서 완벽 교정.
+### [마케팅/분석] Hellyeah X-Ray 트래커 연동 및 검증
+1. **Hellyeah SDK 및 싱글톤 인스턴스 구축 (`lib/hellyeah.ts`, `package.json`)**:
+    * `@hellyeah/x-ray` 패키지 추가 및 `createXRay` 서버 전용 싱글톤 객체 구현.
+2. **브라우저 방문 추적 프로바이더 배치 (`app/layout.tsx`)**:
+    * Vercel Analytics와의 명칭 충돌 방지를 위해 `Analytics as HellyeahAnalytics` 별칭(Alias)을 사용하여 레이아웃에 탑재.
+3. **구독 결제 전환 이벤트 탑재 (`app/webhook/polar/checkouts/success/route.ts`)**:
+    * Polar 웹훅 성공 시 `distinctId`, `revenue`, `currency`, `planId`, `customer_email` 정보를 실시간 전송하는 `cv.subscribe` 이벤트 연동.
+4. **X-Ray CLI 검증 및 환경변수 발급 (`.env.local`)**:
+    * `hellyeah tracker verify`를 실행하여 4개 검증 오류 해결 후 최종 검증 통과 (`success: true`).
+    * 전용 Tracker ID (`019fc303-a119-7000-a2bc-009a1e2abf4b`) 발급 및 `.env.local` 세팅 완료.
 
 ---
 

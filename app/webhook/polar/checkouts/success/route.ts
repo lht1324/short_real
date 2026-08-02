@@ -3,6 +3,8 @@ import { getNextBaseResponse } from "@/lib/utils/getNextBaseResponse";
 import { SubscriptionPlan } from "@/lib/api/types/supabase/Users";
 import { usersServerAPI } from "@/lib/api/server/usersServerAPI";
 import { PolarClient } from "@/lib/PolarClient";
+import { tracker } from "@/lib/hellyeah";
+import { cv } from "@hellyeah/x-ray/server";
 
 /**
  * POST /webhook/polar/checkouts/success
@@ -65,6 +67,25 @@ export async function POST(request: NextRequest) {
         }
 
         console.log("User updated successfully:", updatedUser);
+
+        if (process.env.NEXT_PUBLIC_HELLYEAH_TRACKER_ID) {
+            try {
+                await tracker.trackImmediate(cv.subscribe, {
+                    distinctId: userId,
+                    revenue: typeof payload.data?.amount === "number" ? payload.data.amount / 100 : undefined,
+                    currency: (payload.data?.currency as string)?.toUpperCase() || "USD",
+                    metadata: {
+                        planId: planId as string,
+                        checkoutId: payload.data?.id,
+                    },
+                    identity: {
+                        email: payload.data?.customer_email || payload.data?.email,
+                    }
+                });
+            } catch (trackerErr) {
+                console.error("X-Ray tracker error in webhook:", trackerErr);
+            }
+        }
 
         return getNextBaseResponse({
             success: true,
