@@ -234,8 +234,6 @@ function WorkspaceEditorPageClient() {
             process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
         );
 
-        console.log('[Editor Realtime] Subscribing to task updates:', taskId);
-
         const channel = supabase
             .channel(`video_task_editor_${taskId}`)
             .on(
@@ -247,7 +245,6 @@ function WorkspaceEditorPageClient() {
                     filter: `id=eq.${taskId}`,
                 },
                 async (payload) => {
-                    console.log('[Editor Realtime] Received UPDATE event:', payload);
                     const updatedTask = payload.new as VideoGenerationTask;
                     const newBreakdownList = updatedTask.scene_breakdown_list;
 
@@ -265,8 +262,6 @@ function WorkspaceEditorPageClient() {
                     if (statusChangedScenes.length === 0) {
                         return;
                     }
-
-                    console.log('[Editor Realtime] Status changed scenes detected:', statusChangedScenes);
 
                     // 새로 COMPLETED 상태로 전환된 단건 씬 탐지
                     const newlyCompletedScene = newBreakdownList.find((newScene) => {
@@ -370,7 +365,6 @@ function WorkspaceEditorPageClient() {
             .subscribe();
 
         return () => {
-            console.log('[Editor Realtime] Unsubscribing channel:', taskId);
             channel.unsubscribe();
         };
     }, [taskId, user?.id, searchParams]);
@@ -453,7 +447,6 @@ function WorkspaceEditorPageClient() {
 
         try {
             if (isImageMode) {
-                console.log(`[Regenerate Image] Requesting Scene #${sceneNumber}...`);
                 const regenerateResult = await imageClientAPI.postImageRegenerate({
                     taskId: taskId,
                     sceneNumber: sceneNumber,
@@ -463,7 +456,6 @@ function WorkspaceEditorPageClient() {
                 });
 
                 if (regenerateResult.success) {
-                    console.log(`[Regenerate Image Success] Scene #${sceneNumber} Image request submitted successfully.`);
                 } else {
                     // 실패 시 status FAILED로 설정
                     setVideoData((prevVideoData) => {
@@ -486,7 +478,6 @@ function WorkspaceEditorPageClient() {
                     alert(`Failed to regenerate image for Scene #${sceneNumber}: ${regenerateResult.error || 'Unknown error'}`);
                 }
             } else {
-                console.log(`[Regenerate Video] Requesting Scene #${sceneNumber}...`);
                 const regenerateResult = await videoClientAPI.postVideoRegenerate({
                     taskId: taskId,
                     sceneNumber: sceneNumber,
@@ -494,7 +485,6 @@ function WorkspaceEditorPageClient() {
                 });
 
                 if (regenerateResult.success) {
-                    console.log(`[Regenerate Video Success] Scene #${sceneNumber} Video Request ID:`, regenerateResult.requestId);
                 } else {
                     // 실패 시 status FAILED로 설정
                     setVideoData((prevVideoData) => {
@@ -664,7 +654,6 @@ function WorkspaceEditorPageClient() {
                 const result = await videoClientAPI.postVideoMergeFinal(taskId);
 
                 if (result && result.success) {
-                    console.log('최종 병합 요청 성공:', result.captionPredictionId);
                     window.location.href = '/workspace/dashboard';
                 } else {
                     console.error('최종 병합 요청 실패:', result?.error);
@@ -1008,19 +997,15 @@ function WorkspaceEditorPageClient() {
                 console.error(error);
 
                 if (window.history.length > 1) {
-                    console.log("back")
                     window.history.back()
                 } else {
-                    console.log("href")
                     window.location.href = '/workspace/dashboard'
                 }
             });
         } else {
             if (window.history.length > 1) {
-                console.log("back")
                 window.history.back()
             } else {
-                console.log("href")
                 window.location.href = '/workspace/dashboard'
             }
         }

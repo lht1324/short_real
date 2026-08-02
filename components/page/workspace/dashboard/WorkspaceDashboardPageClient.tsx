@@ -192,7 +192,6 @@ function WorkspaceDashboardPageClient() {
             alert(error instanceof Error ? error.message : 'Unknown error occurred. Try again.');
             setShowRetryLoadingModal(false);
         }
-        console.log('Retry generation:', taskId);
     }, []);
 
     const editMetadata = useCallback(async (title: string, description: string) => {
@@ -431,8 +430,6 @@ function WorkspaceDashboardPageClient() {
                 process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
             );
 
-            console.log('[Realtime] 구독 시작, user.id:', user.id);
-
             const channel = supabase
                 .channel('video_generation_tasks_changes')
                 .on(
@@ -444,8 +441,6 @@ function WorkspaceDashboardPageClient() {
                         filter: `user_id=eq.${user.id}` // 현재 사용자의 task만 필터링
                     },
                     (payload) => {
-                        console.log('[Realtime] 이벤트 수신:', payload);
-
                         switch (payload.eventType) {
                             case 'INSERT': {
                                 // 새로운 task 추가
@@ -511,7 +506,6 @@ function WorkspaceDashboardPageClient() {
                     }
                 )
                 .subscribe((status) => {
-                    console.log('[Realtime] 구독 상태:', status);
                 });
 
             return () => {

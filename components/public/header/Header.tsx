@@ -3,6 +3,7 @@
 import {memo, useCallback, useMemo, useState} from 'react';
 import { Menu, LogOut, User as UserIcon, LayoutDashboard } from 'lucide-react';
 import Image from "next/image";
+import Link from "next/link";
 import {usePathname, useRouter} from "next/navigation";
 import {useAuth} from "@/context/AuthContext";
 import LandingPageNavigation from "@/components/public/header/LandingPageNavigation";
@@ -44,29 +45,32 @@ function Header() {
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex items-center justify-between h-16">
                     {/* Logo */}
-                    <div
-                        className="flex items-center space-x-3 cursor-pointer group"
-                        onClick={() => {
+                    <Link
+                        href="/"
+                        className="flex items-center space-x-3 cursor-pointer group h-10"
+                        onClick={(e) => {
                             if (pathname === '/') {
+                                e.preventDefault();
                                 window.scrollTo({ top: 0, behavior: 'smooth' });
-                            } else {
-                                router.push("/");
                             }
                         }}
                     >
-                        <div className="relative w-10 h-10 transition-transform duration-300 group-hover:scale-110">
+                        <div className="relative w-10 h-10 shrink-0 flex items-center justify-center transition-transform duration-300 group-hover:scale-110">
                             <Image
                                 src="/logo/logo-64.png"
-                                alt="Short Real"
-                                width={64}
-                                height={64}
+                                alt="ShortReal AI"
+                                fill
+                                sizes="40px"
                                 className="object-contain"
+                                priority
                             />
                         </div>
-                        <span className="font-black text-2xl md:text-3xl text-white tracking-tight">
-                            ShortReal AI
-                        </span>
-                    </div>
+                        <div className="flex items-center pt-2.5">
+                            <span className="font-black text-2xl md:text-3xl text-white tracking-tight leading-none">
+                                ShortReal AI
+                            </span>
+                        </div>
+                    </Link>
 
                     {/* Desktop Navigation */}
                     <div className="hidden md:block">
