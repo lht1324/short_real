@@ -122,7 +122,6 @@ function VoiceSelectionPanel({
         stopAudio();
 
         if (!voicePreviewUrl) {
-            console.log('No preview URL available for:', voiceId);
             return;
         }
 

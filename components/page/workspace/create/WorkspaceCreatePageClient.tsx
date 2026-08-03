@@ -131,7 +131,6 @@ function WorkspaceCreatePageClient() {
             setIsGeneratingStoryboardData(true);
             setSceneDataList([]);
 
-            console.log(`selectedVoice = ${voiceId}`)
             const request: PostOpenAISceneRequest = {
                 taskId: taskId,
                 narrationScript: script,
@@ -248,7 +247,6 @@ function WorkspaceCreatePageClient() {
             const postVideoResult = await videoClientAPI.postVideo(taskId, user.id as string, selectedStyleId);
 
             if (postVideoResult) {
-                console.log('Video data generation succeed.');
                 // setVideoDataResponse(result.data);
 
                 // 성공 시 대시보드로 이동

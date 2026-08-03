@@ -1,38 +1,27 @@
-# 작업 진행 상황 (Last Updated: 2026-07-28 03:00)
+# 작업 진행 상황 (Last Updated: 2026-08-03 15:55)
 
 ## 1. 현재 상황 (Current Status)
-* **단건 이미지/비디오 비동기 Fire-and-Forget 재생성 파이프라인 연동 완료**:
-    * 단건 이미지 재생성 (`/api/image/regenerate`) 및 단건 비디오 재생성 (`/api/video/regenerate`)의 비동기 200 OK 응답 규격 연동 완료.
-    * 씬 카드 글래스모피즘 스피너 오버레이 연동 및 Supabase Realtime 실시간 `COMPLETED` 완공 알림/비디오 URL 교체 체계 구축 완료.
-    * 비디오 완공 시 1차 속도 배율 후처리 및 Storage 덮어쓰기 완료 상태를 `COMPLETED`로 통합 관리.
+* **Hellyeah Google Ads 캠페인 런칭 완료**:
+    * 'WILL YOU WATCH THAT?' 우주비행사 소재 기반 Performance Max ($100/7일) 광고 런칭 및 구글 심사 대기 중 (`PENDING`).
+    * Hellyeah X-Ray 트래커 수신 대기 및 실서버 배포 완료.
+* **접근 제어 미들웨어 및 Auth UI / 로고 레이아웃 정제 완료**:
+    * `proxy.ts` 미구독자/비로그인 유저 `/workspace` 접근 차단 및 `/profile` 리다이렉트 구현.
+    * 구글 & 깃허브 공식 브랜딩 가이드라인 준수 1:1 통일 소셜 로그인 버튼 리팩토링.
+    * 헤더 및 푸터 브랜드 로고 타이포그래피 정제 (`Short`: White, `Real`: `#FF3B30` 네온 레드, `AI`: `text-zinc-300 font-bold` 옅은 쿨화이트) 적용 완료.
 
 ---
 
 ## 2. 세션 진행 작업 (Work Accomplished in Current Session)
-
-### [UI/UX] 단건 재생성 모달 개편 및 UI 고정 (`SceneRegenerateModal.tsx`)
-1. **드롭다운 정렬 헤더 상단 고정 (`sticky top-0`)**:
-    * 드롭다운 내부 목록 스크롤 시 `Sort by (Name | Price ↑ | Price ↓)` 헤더가 상단에 착 붙어 고정되도록 구조 개편 (`sticky top-0 bg-zinc-900 z-10 shrink-0`).
-2. **모달 화면 수직 위치 고정 (`pt-[18vh] mb-12`)**:
-    * 이미지 재생성 시 "비디오 연쇄 재생성" 체크박스를 켜고 끌 때 모달의 전체 높이가 바뀌면서 세로 중앙(`my-auto`) 위치가 변해 마우스 커서 위치가 튀는 UX 현상 해결.
-    * `my-auto` 마진을 제거하고 상단 위치를 `pt-[18vh]`로 고정하여 체크박스 연쇄 클릭 시 모달 상단 및 마우스 Y축 위치가 1px도 안 움직이도록 처리.
-3. **비디오 드롭다운 슬라이드 애니메이션**:
-    * 체크박스 클릭 시 비디오 드롭다운이 아래 방향으로 부드럽게 펼쳐지도록 `animate-in fade-in slide-in-from-top-2 duration-200` 적용.
-
-### [통신/API] 비동기 Fire-and-Forget 통신 약속 규격 통일
-1. **클라이언트 API 수신 규격 통일 (`imageClientAPI.ts`)**:
-    * 백엔드 비동기 return 규격 (`{ success: boolean, status: number, message?: string, error?: string }`)에 맞춰 `postImageRegenerate` 메서드의 구형 동기식 `imageUrl` 체크 로직 제거 및 표준 반환형으로 개편.
-2. **프론트엔드 재생성 핸들러 교정 (`WorkspaceEditorPageClient.tsx`)**:
-    * `handleConfirmRegenerate` 내 이미지 재생성 완료 검사 조건(`if (regenerateResult.success)`)을 비동기 표준에 맞추어 교정.
-    * 백엔드가 백그라운드 처리를 수행하는 동안 UI 씬 카드는 `status = GENERATING_IMAGE` 로딩 스피너 상태를 안전하게 유지하며, 완공 시 Supabase Realtime 채널이 DB `COMPLETED` 이벤트를 받을 때까지 조용히 대기하도록 수정.
-
-### [Realtime/UX] Supabase Realtime 수신 최적화 및 브라우저 스레드 차단 해제 (`WorkspaceEditorPageClient.tsx`)
-1. **`SceneData.status` 변동 씬 정밀 감지 가드 구축**:
-    * `videoDataRef`를 도입하여, 수신된 신규 씬 데이터 중 `SceneData.status`가 기존과 실제로 달라진 씬이 1개라도 있을 때만 후속 연산을 타도록 가드 구축 (`statusChangedScenes.length === 0` 시 즉시 반환하여 헛스윙 DB UPDATE 릴레이 연산 완전 차단).
-2. **React Strict Mode 중복 팝업 해제**:
-    * React 18 개발 모드(Strict Mode)의 State Updater 콜백 2회 실행(Double Invocation)으로 인한 `alert()` 중복 출력 방지를 위해 Side Effect(`alert()`, URL fetch)를 State Updater 함수 바깥으로 분리.
-3. **브라우저 동기 블로킹 해제 및 UX 순서 교정**:
-    * 브라우저 `alert()`의 동기적 스레드 차단(Freeze) 현상 해결: `await`로 최신 이미지/비디오 URL State를 먼저 바꾼 뒤 UI 화면에 새 이미지가 먼저 교체 렌더링되게 하고, `setTimeout(..., 100)`을 써서 유저 눈으로 바뀐 이미지를 확인한 후 완공 알림 팝업이 출현하도록 UX 순서 완벽 교정.
+1. **Hellyeah Google Ads 캠페인 런칭 가이드 및 세팅 검수**:
+    * Performance Max (영미권 1티어 6개국, 18-54세, 우주비행사 'WILL YOU WATCH THAT?' 이미지 소재, $100/7일) 최종 검수 및 런칭.
+2. **`proxy.ts` 미들웨어 접근 제어 강화**:
+    * `/workspace/:path*` 매처 추가. 비로그인 유저 `/sign-in` 이동, 미구독 유저 (`!plan` 또는 `plan === 'none'`) `/profile` 이동.
+3. **구글 & 깃허브 로그인 버튼 가이드라인 통일 및 UI 튜닝**:
+    * `GoogleSignInButton.tsx` & `DefaultSignInButton.tsx`: `text-sm/20` 높이 찌그러짐 버그 수정, 44px (`h-11`), `rounded-xl`, `#F2F2F2` (hover `#E3E3E3`) 통일.
+    * 광학 텍스트 중앙 정렬: 아이콘 `absolute left-4`, 텍스트 수학적 정중앙 배치.
+4. **헤더 및 푸터 브랜드 로고 옅은 쿨화이트 AI 스타일 적용 (`Header.tsx`, `Footer.tsx`)**:
+    * 어두운 배경에서 파묻히던 `Real` 레드를 다크 배경 시인성 극대화 네온 레드(`text-[#FF3B30]`)로 적용.
+    * `AI` 텍스트를 굵은 폰트 두께(`font-bold`)로 칼 같은 픽셀 선명도를 유지하면서 은은하게 밝은 **`text-zinc-300 font-bold` (옅은 쿨화이트)**로 변경하여 비교 확인 준비.
 
 ---
 
@@ -43,6 +32,5 @@
     * 외부 AI API(Fal AI 등)의 일시적 서버 오류, 네트워크 타임아웃 등으로 인해 전체 10개 씬 중 특정 1~2개 씬만 생성 실패(`status: FAILED`)하는 경우 발생.
     * 전체 재요청 없이 실패한 씬만 선택적으로 재요청(Selective Retry)하는 파이프라인 필터링 및 대시보드 연동 필요.
 2. **구체적 구현 내용**:
-    * **[에디터 UI]**: `status === FAILED`인 씬 카드에 **[Retry Scene / 씬 재시도]** 전용 버튼 및 실패 원인 툴팁 표시. 차감 예상 금액 툴팁에 실패한 N개 씬 재시도 금액만 동적으로 계산하여 표시.
+    * **[에디터 UI]**: `status === FAILED`인 씬 카드에 **[Retry Scene / 씬 재시도]** 전용 버튼 및 실패 원인 툴팁 표시.
     * **[백엔드 파이프라인]**: 실패한 씬 번호 목록(예: `failedSceneNumbers: [3, 5]`)만 전달받아 해당 씬들만 핀포인트로 백그라운드 재요청을 수행하고 성공한 기존 씬은 유지하며 DB `scene_breakdown_list`에 병합 패치.
-    * **[Realtime 반응]**: 재시도가 완료되면 기존과 동일하게 Realtime 채널을 통해 화면 스피너가 꺼지고 새 이미지가 장착되도록 상태 동기화.

@@ -370,7 +370,6 @@ function WorkspaceAutopilotPageClient() {
                 // 사용자가 수동 저장을 통해 경고 모달을 인지하고 즉시 시작 여부를 직접 결정할 수 있게 유도함
                 const isClosed = currentSeries && isAutopilotWindowClosed(currentSeries.schedule_cron, currentSeries.user_timezone);
                 if (isClosed && currentSeries?.is_active) {
-                    console.log("[AutoSave] Skipped auto-save because schedule window is closed for active series. Waiting for manual save confirmation.");
                     return;
                 }
 

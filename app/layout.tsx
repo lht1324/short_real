@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import { ReactNode } from "react";
 import { Rajdhani } from "next/font/google";
 import ConditionalHeader from "@/components/public/header/ConditionalHeader";
-import { Analytics } from "@vercel/analytics/next";
+import { Analytics as VercelAnalytics } from "@vercel/analytics/next";
+import { Analytics as HellyeahAnalytics } from "@hellyeah/x-ray/next";
 import {AuthProvider} from "@/context/AuthContext";
 import "./globals.css";
 import Script from "next/script";
@@ -79,7 +80,13 @@ export default function RootLayout({
                         </main>
                     </div>
                 </AuthProvider>
-                <Analytics/>
+                <VercelAnalytics />
+                {process.env.NEXT_PUBLIC_HELLYEAH_TRACKER_ID && (
+                    <HellyeahAnalytics
+                        websiteId={process.env.NEXT_PUBLIC_HELLYEAH_TRACKER_ID}
+                        env={process.env.NEXT_PUBLIC_HELLYEAH_TRACKER_ENV}
+                    />
+                )}
             </body>
         </html>
     );

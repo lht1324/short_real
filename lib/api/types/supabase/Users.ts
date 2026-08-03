@@ -5,7 +5,6 @@ export interface User {
     email: string;
     name: string;
     avatar_url: string;
-    credit_count?: number;
     plan?: SubscriptionPlan;
     created_at: string;
     updated_at: string;

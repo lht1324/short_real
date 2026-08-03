@@ -33,8 +33,6 @@ function ScriptGenerationModal({
                 userPrompt: aiPrompt,
             };
 
-            console.log('Generating script with data:', requestData);
-
             // OpenAI API 호출
             const result = await openAIClientAPI.postOpenAIScript(requestData);
 

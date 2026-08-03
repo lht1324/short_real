@@ -49,7 +49,7 @@ function AuthForm({
             )}
 
             {/* OAuth Buttons */}
-            <div className="space-y-3 mb-8 flex flex-col items-center">
+            <div className="space-y-3 mb-8 flex flex-col w-full">
                 <GoogleSignInButton
                     text="Continue with Google"
                     onClick={() => oAuthSignIn(OAuthProvider.Google)}
