@@ -21,8 +21,10 @@ function Footer() {
                                     className="object-contain"
                                 />
                             </div>
-                            <span className="font-black text-2xl text-white tracking-tight">
-                                ShortReal AI
+                            <span className="font-black text-2xl tracking-tight">
+                                <span className="text-white">Short</span>
+                                <span className="text-[#FF3B30]">Real</span>
+                                <span className="text-zinc-300 font-bold text-xl ml-1.5">AI</span>
                             </span>
                         </Link>
                         <p className="text-2xl md:text-3xl lg:text-4xl font-black text-white max-w-lg tracking-tight leading-[1.1]">

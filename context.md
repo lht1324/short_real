@@ -1,4 +1,4 @@
-# 작업 진행 상황 (Last Updated: 2026-08-03 03:10)
+# 작업 진행 상황 (Last Updated: 2026-08-03 15:55)
 
 ## 1. 현재 상황 (Current Status)
 * **Hellyeah Google Ads 캠페인 런칭 완료**:
@@ -7,7 +7,7 @@
 * **접근 제어 미들웨어 및 Auth UI / 로고 레이아웃 정제 완료**:
     * `proxy.ts` 미구독자/비로그인 유저 `/workspace` 접근 차단 및 `/profile` 리다이렉트 구현.
     * 구글 & 깃허브 공식 브랜딩 가이드라인 준수 1:1 통일 소셜 로그인 버튼 리팩토링.
-    * 헤더 로고 40px 쌍둥이 컨테이너 수직 중앙 정렬 (`Header.tsx`) 구현.
+    * 헤더 및 푸터 브랜드 로고 타이포그래피 정제 (`Short`: White, `Real`: `#FF3B30` 네온 레드, `AI`: `text-zinc-300 font-bold` 옅은 쿨화이트) 적용 완료.
 
 ---
 
@@ -19,9 +19,9 @@
 3. **구글 & 깃허브 로그인 버튼 가이드라인 통일 및 UI 튜닝**:
     * `GoogleSignInButton.tsx` & `DefaultSignInButton.tsx`: `text-sm/20` 높이 찌그러짐 버그 수정, 44px (`h-11`), `rounded-xl`, `#F2F2F2` (hover `#E3E3E3`) 통일.
     * 광학 텍스트 중앙 정렬: 아이콘 `absolute left-4`, 텍스트 수학적 정중앙 배치.
-4. **헤더 로고 수직 정렬 정제 (`Header.tsx`)**:
-    * `<Link href="/">` 구조 전환.
-    * 40px 로고 상자 + 40px 텍스트 상자 쌍둥이 컨테이너 (`h-10 flex items-center`) 래핑으로 로고 이미지와 `ShortReal AI` 텍스트 수직 중앙 정렬 일치.
+4. **헤더 및 푸터 브랜드 로고 옅은 쿨화이트 AI 스타일 적용 (`Header.tsx`, `Footer.tsx`)**:
+    * 어두운 배경에서 파묻히던 `Real` 레드를 다크 배경 시인성 극대화 네온 레드(`text-[#FF3B30]`)로 적용.
+    * `AI` 텍스트를 굵은 폰트 두께(`font-bold`)로 칼 같은 픽셀 선명도를 유지하면서 은은하게 밝은 **`text-zinc-300 font-bold` (옅은 쿨화이트)**로 변경하여 비교 확인 준비.
 
 ---
 

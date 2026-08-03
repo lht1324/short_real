@@ -66,8 +66,10 @@ function Header() {
                             />
                         </div>
                         <div className="flex items-center pt-2.5">
-                            <span className="font-black text-2xl md:text-3xl text-white tracking-tight leading-none">
-                                ShortReal AI
+                            <span className="font-black text-2xl md:text-3xl tracking-tight leading-none">
+                                <span className="text-white">Short</span>
+                                <span className="text-[#FF3B30]">Real</span>
+                                <span className="text-zinc-300 font-bold text-xl md:text-2xl ml-1.5">AI</span>
                             </span>
                         </div>
                     </Link>
