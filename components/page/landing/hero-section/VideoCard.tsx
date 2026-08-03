@@ -51,6 +51,13 @@ function VideoCard({
         }
     }, [isIntersecting, lazyLoad]);
 
+    // 동적 muted 상태 실시간 반영
+    useEffect(() => {
+        if (videoRef.current) {
+            videoRef.current.muted = isMuted;
+        }
+    }, [isMuted]);
+
     // lazyLoad가 true이면 화면에 한 번이라도 노출되었을 때만 src 할당
     const shouldLoad = !lazyLoad || hasIntersected;
     
@@ -89,16 +96,7 @@ function VideoCard({
             {/* Overlay Gradient for contrast */}
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none z-20" />
 
-            {/* Mute Button */}
-            <button
-                onClick={toggleMute}
-                className={`absolute bottom-4 p-2.5 rounded-full bg-black/50 border border-white/20 text-white transition-opacity duration-300 hover:bg-black/80 hover:scale-105 backdrop-blur-md z-30 ${!isMuted ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
-                style={{
-                    ...(isLeftCard ? { left: "16px" } : { right: "16px" }),
-                }}
-            >
-                {isMuted ? <VolumeX size={16} /> : <Volume2 size={16} />}
-            </button>
+
         </div>
     );
 }
