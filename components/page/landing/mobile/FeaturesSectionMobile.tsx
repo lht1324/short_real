@@ -1,27 +1,50 @@
 'use client'
 
-import { memo, useState, useCallback, useRef } from "react";
+import { memo, useState, useCallback, useEffect, useRef } from "react";
 import { FEATURES_DATA } from "@/components/page/landing/data/featuresData";
-import { ArrowDown } from "lucide-react";
+import { ArrowDown, ArrowUp } from "lucide-react";
 import { useHeaderHeight } from "@/hooks/useHeaderHeight";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+
+gsap.registerPlugin(ScrollTrigger);
 
 function FeaturesSectionMobile() {
     const [activeIndex, setActiveIndex] = useState<number>(0);
-    const activeFeature = FEATURES_DATA[activeIndex] || FEATURES_DATA[0];
-    const Icon = activeFeature.icon;
     const headerHeight = useHeaderHeight(64);
+    const sectionRef = useRef<HTMLElement>(null);
 
-    const touchStartYRef = useRef<number>(0);
+    // GSAP ScrollTrigger pin: true Viewport Locking Engine (Zero Jitter, Zero Stutter)
+    useEffect(() => {
+        const sectionEl = sectionRef.current;
+        if (!sectionEl) return;
+
+        const st = ScrollTrigger.create({
+            trigger: sectionEl,
+            start: `top top+=${headerHeight}`,
+            end: "+=240%", // Scroll distance required to cycle through all 4 reels
+            pin: true,
+            pinSpacing: true,
+            scrub: 0.3,
+            onUpdate: (self) => {
+                // Calculate reel index (0, 1, 2, 3) based on scroll progress (0.0 ~ 1.0)
+                const newIdx = Math.min(FEATURES_DATA.length - 1, Math.floor(self.progress * FEATURES_DATA.length));
+                setActiveIndex(newIdx);
+            }
+        });
+
+        return () => {
+            st.kill();
+        };
+    }, [headerHeight]);
 
     const onClickNext = useCallback(() => {
         if (activeIndex < FEATURES_DATA.length - 1) {
             setActiveIndex(prev => prev + 1);
         } else {
-            // Escape to Comparison Section smoothly
             const comparisonEl = document.getElementById("comparison");
-            if (comparisonEl) {
-                const y = comparisonEl.getBoundingClientRect().top + window.pageYOffset - headerHeight;
-                window.scrollTo({ top: y, behavior: "smooth" });
+            if (comparisonEl && (window as any).lenis) {
+                (window as any).lenis.scrollTo("#comparison", { offset: -headerHeight, duration: 0.8 });
             }
         }
     }, [activeIndex, headerHeight]);
@@ -30,48 +53,37 @@ function FeaturesSectionMobile() {
         setActiveIndex(index);
     }, []);
 
-    // Vertical Touch Swipe Gesture Handler for Video-to-Video Swapping
-    const onTouchStart = useCallback((e: React.TouchEvent) => {
-        touchStartYRef.current = e.touches[0].clientY;
-    }, []);
-
-    const onTouchEnd = useCallback((e: React.TouchEvent) => {
-        const touchEndY = e.changedTouches[0].clientY;
-        const diffY = touchEndY - touchStartYRef.current;
-        const threshold = 35; // 35px vertical swipe threshold
-
-        if (diffY < -threshold) {
-            // Swiped Up -> Move to Next Feature Video
-            if (activeIndex < FEATURES_DATA.length - 1) {
-                setActiveIndex(prev => prev + 1);
-            }
-        } else if (diffY > threshold) {
-            // Swiped Down -> Move to Prev Feature Video
-            if (activeIndex > 0) {
-                setActiveIndex(prev => prev - 1);
-            }
-        }
-    }, [activeIndex]);
+    const activeFeature = FEATURES_DATA[activeIndex] || FEATURES_DATA[0];
+    const Icon = activeFeature.icon;
 
     return (
         <section
+            ref={sectionRef}
             id="features"
-            onTouchStart={onTouchStart}
-            onTouchEnd={onTouchEnd}
             style={{ height: `calc(100dvh - ${headerHeight}px)` }}
-            className="relative w-full bg-black overflow-hidden flex flex-col justify-between select-none snap-start snap-always touch-pan-x"
+            className="relative w-full bg-black overflow-hidden flex flex-col justify-between select-none"
         >
-            {/* 100% Unclipped Video Box with Letterbox/Pillarbox Fit */}
-            <div className="relative w-full h-full flex items-center justify-center bg-black">
-                <video
-                    key={activeFeature.id}
-                    src={activeFeature.videoSrc}
-                    className="w-full h-full object-contain pointer-events-none transition-opacity duration-300"
-                    autoPlay
-                    loop
-                    muted
-                    playsInline
-                />
+            {/* Smooth 4-Video Vertical Sliding Rail Track (GSAP Pin & Scrub Synced) */}
+            <div className="relative w-full h-full bg-black overflow-hidden">
+                <div
+                    className="w-full h-full flex flex-col transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]"
+                    style={{
+                        transform: `translate3d(0, -${activeIndex * 100}%, 0)`
+                    }}
+                >
+                    {FEATURES_DATA.map((feat) => (
+                        <div key={feat.id} className="relative w-full h-full shrink-0 flex items-center justify-center bg-black">
+                            <video
+                                src={feat.videoSrc}
+                                className="w-full h-full object-contain pointer-events-none"
+                                autoPlay
+                                loop
+                                muted
+                                playsInline
+                            />
+                        </div>
+                    ))}
+                </div>
 
                 {/* Top Category Badge */}
                 <div className="absolute top-4 inset-x-0 px-4 flex items-center justify-between z-10">
@@ -99,9 +111,9 @@ function FeaturesSectionMobile() {
                         </div>
                     </div>
 
-                    {/* 4-Feature Dot Indicator Bar & Skip Arrow */}
+                    {/* 4-Feature Dot Indicator Bar & Skip Button Layer */}
                     <div className="flex items-center justify-between gap-2 p-1.5 rounded-2xl bg-white/10 backdrop-blur-lg border border-white/20">
-                        {/* Dot Tabs */}
+                        {/* Dot Indicator Buttons */}
                         <div className="flex items-center gap-1.5 pl-1">
                             {FEATURES_DATA.map((feat, idx) => {
                                 const isSelected = idx === activeIndex;
@@ -122,13 +134,13 @@ function FeaturesSectionMobile() {
                             })}
                         </div>
 
-                        {/* Next Feature Skip Arrow Button */}
+                        {/* Next / Escape Arrow Button */}
                         <button
                             onClick={onClickNext}
                             className="h-7 px-3 rounded-xl bg-white text-black font-bold text-[10px] flex items-center gap-1 active:scale-95 transition-transform shadow-lg shrink-0"
                         >
                             <span>{activeIndex < FEATURES_DATA.length - 1 ? "NEXT" : "ESCAPE"}</span>
-                            <ArrowDown size={12} />
+                            {activeIndex < FEATURES_DATA.length - 1 ? <ArrowDown size={12} /> : <ArrowUp size={12} />}
                         </button>
                     </div>
                 </div>

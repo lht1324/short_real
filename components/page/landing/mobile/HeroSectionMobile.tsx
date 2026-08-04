@@ -156,7 +156,7 @@ function HeroSectionMobile() {
     return (
         <section
             style={{ height: `calc(100dvh - ${headerHeight}px)` }}
-            className="relative w-full px-4 pt-1 pb-12 overflow-hidden z-10 flex flex-col justify-between items-center select-none snap-start snap-always"
+            className="relative w-full px-4 pt-1 pb-12 overflow-hidden z-10 flex flex-col justify-between items-center select-none"
         >
             {/* Top Headline Cluster (Fixed Content Height - Exact Y-Axis Preserved with pt-20 & Grand Scale) */}
             <div className="flex flex-col items-center justify-center text-left w-full px-4 pt-20 pb-2 h-auto shrink-0">

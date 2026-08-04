@@ -75,7 +75,10 @@ function ComparisonSectionMobile() {
     }, []);
 
     return (
-        <section id="comparison" className="relative py-12 px-4 overflow-hidden">
+        <section
+            id="comparison"
+            className="relative py-12 px-4 overflow-hidden"
+        >
             <div className="relative z-10">
                 {/* Header */}
                 <div className="mb-5 text-center">
