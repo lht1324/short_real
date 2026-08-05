@@ -11,10 +11,19 @@ gsap.registerPlugin(ScrollTrigger);
 
 function FeaturesSectionMobile() {
     const [activeIndex, setActiveIndex] = useState<number>(0);
+    const [dragOffset, setDragOffset] = useState<number>(0);
+    const [isDragging, setIsDragging] = useState<boolean>(false);
+
     const headerHeight = useHeaderHeight(64);
     const sectionRef = useRef<HTMLElement>(null);
+    const touchStartYRef = useRef<number>(0);
+    const activeIndexRef = useRef<number>(0);
 
-    // GSAP ScrollTrigger pin: true Viewport Locking Engine (Zero Jitter, Zero Stutter)
+    useEffect(() => {
+        activeIndexRef.current = activeIndex;
+    }, [activeIndex]);
+
+    // Step 1: Features Precision Pin Lock Engine with High Constant Buffer (4000px)
     useEffect(() => {
         const sectionEl = sectionRef.current;
         if (!sectionEl) return;
@@ -22,19 +31,76 @@ function FeaturesSectionMobile() {
         const st = ScrollTrigger.create({
             trigger: sectionEl,
             start: `top top+=${headerHeight}`,
-            end: "+=240%", // Scroll distance required to cycle through all 4 reels
+            end: "+=4000px",
             pin: true,
             pinSpacing: true,
-            scrub: 0.3,
-            onUpdate: (self) => {
-                // Calculate reel index (0, 1, 2, 3) based on scroll progress (0.0 ~ 1.0)
-                const newIdx = Math.min(FEATURES_DATA.length - 1, Math.floor(self.progress * FEATURES_DATA.length));
-                setActiveIndex(newIdx);
-            }
+            anticipatePin: 1,
         });
 
         return () => {
             st.kill();
+        };
+    }, [headerHeight]);
+
+    // Step 2 & 3-A: 1:1 Touch Drag Tracking, Reels Snap & Option A Boundary Escape
+    useEffect(() => {
+        const sectionEl = sectionRef.current;
+        if (!sectionEl) return;
+
+        const onTouchStart = (e: TouchEvent) => {
+            touchStartYRef.current = e.touches[0].clientY;
+            setIsDragging(true);
+            setDragOffset(0);
+        };
+
+        const onTouchMove = (e: TouchEvent) => {
+            const currentY = e.touches[0].clientY;
+            const diffY = touchStartYRef.current - currentY;
+            setDragOffset(diffY);
+        };
+
+        const onTouchEnd = (e: TouchEvent) => {
+            const touchEndY = e.changedTouches[0].clientY;
+            const diffY = touchStartYRef.current - touchEndY;
+            const currentIdx = activeIndexRef.current;
+
+            setIsDragging(false);
+            setDragOffset(0);
+
+            // Minimum 30px swipe threshold
+            if (Math.abs(diffY) > 30) {
+                if (diffY > 0) {
+                    // Swiped UP -> Go to NEXT reel or Escape Down (Option A)
+                    if (currentIdx < FEATURES_DATA.length - 1) {
+                        setActiveIndex(currentIdx + 1);
+                    } else {
+                        // Option A: Escape to Comparison Section
+                        const comparisonEl = document.getElementById("comparison");
+                        if (comparisonEl) {
+                            const y = comparisonEl.getBoundingClientRect().top + window.pageYOffset - headerHeight;
+                            window.scrollTo({ top: y, behavior: 'smooth' });
+                        }
+                    }
+                } else {
+                    // Swiped DOWN -> Go to PREV reel or Escape Up (Option A)
+                    if (currentIdx > 0) {
+                        setActiveIndex(currentIdx - 1);
+                    } else {
+                        // Option A: Escape to Hero Section
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }
+                }
+            }
+        };
+
+        sectionEl.addEventListener("touchstart", onTouchStart, { passive: true });
+        sectionEl.addEventListener("touchmove", onTouchMove, { passive: true });
+        sectionEl.addEventListener("touchend", onTouchEnd, { passive: true });
+
+        return () => {
+            sectionEl.removeEventListener("touchstart", onTouchStart);
+            sectionEl.removeEventListener("touchmove", onTouchMove);
+            sectionEl.removeEventListener("touchend", onTouchEnd);
         };
     }, [headerHeight]);
 
@@ -43,8 +109,9 @@ function FeaturesSectionMobile() {
             setActiveIndex(prev => prev + 1);
         } else {
             const comparisonEl = document.getElementById("comparison");
-            if (comparisonEl && (window as any).lenis) {
-                (window as any).lenis.scrollTo("#comparison", { offset: -headerHeight, duration: 0.8 });
+            if (comparisonEl) {
+                const y = comparisonEl.getBoundingClientRect().top + window.pageYOffset - headerHeight;
+                window.scrollTo({ top: y, behavior: 'smooth' });
             }
         }
     }, [activeIndex, headerHeight]);
@@ -63,12 +130,14 @@ function FeaturesSectionMobile() {
             style={{ height: `calc(100dvh - ${headerHeight}px)` }}
             className="relative w-full bg-black overflow-hidden flex flex-col justify-between select-none"
         >
-            {/* Smooth 4-Video Vertical Sliding Rail Track (GSAP Pin & Scrub Synced) */}
+            {/* Smooth 4-Video Vertical Sliding Rail Track with 1:1 Drag Offset */}
             <div className="relative w-full h-full bg-black overflow-hidden">
                 <div
-                    className="w-full h-full flex flex-col transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]"
+                    className={`w-full h-full flex flex-col ${
+                        isDragging ? '' : 'transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]'
+                    }`}
                     style={{
-                        transform: `translate3d(0, -${activeIndex * 100}%, 0)`
+                        transform: `translate3d(0, calc(-${activeIndex * 100}% - ${dragOffset}px), 0)`
                     }}
                 >
                     {FEATURES_DATA.map((feat) => (
@@ -150,3 +219,5 @@ function FeaturesSectionMobile() {
 }
 
 export default memo(FeaturesSectionMobile);
+
+

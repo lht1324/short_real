@@ -1,7 +1,6 @@
 'use client'
 
 import { memo, useState, useEffect } from "react";
-import Lenis from "lenis";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import HeroSectionMobile from "@/components/page/landing/mobile/HeroSectionMobile";
@@ -37,32 +36,6 @@ function LandingPageMobileClient({
     onClickPurchasePlan,
 }: LandingPageMobileClientProps) {
     const [isFeaturesVisible, setIsFeaturesVisible] = useState(false);
-
-    // Initialize Lenis & Sync with GSAP ScrollTrigger
-    useEffect(() => {
-        const lenis = new Lenis({
-            duration: 1.2,
-            easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-            touchMultiplier: 1.5,
-            smoothWheel: true,
-        });
-
-        // Sync Lenis scroll with GSAP ScrollTrigger
-        lenis.on("scroll", ScrollTrigger.update);
-
-        // Tell GSAP to use Lenis for scroll positions
-        gsap.ticker.add((time) => {
-            lenis.raf(time * 1000);
-        });
-        gsap.ticker.lagSmoothing(0);
-
-        (window as any).lenis = lenis;
-
-        return () => {
-            delete (window as any).lenis;
-            lenis.destroy();
-        };
-    }, []);
 
     // Hide Floating Roadmap while Features Section is active in Viewport
     useEffect(() => {
