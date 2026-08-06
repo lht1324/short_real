@@ -1,51 +1,73 @@
 'use client'
 
-import { memo, useState, useRef, useEffect, useCallback } from "react";
-import { AlertTriangle, CheckCircle2, Volume2, VolumeX, MoveHorizontal } from "lucide-react";
+import { memo, useState, useRef, useEffect } from "react";
+import { AlertTriangle, CheckCircle2, Volume2, VolumeX, Sparkles, SlidersHorizontal } from "lucide-react";
 import { SCRIPT_LINES } from "@/components/page/landing/data/comparisonScriptData";
+import { useIntersectionObserver } from "@/hooks/useIntersectionObserver";
 
 function ComparisonSectionMobile() {
-    const [sliderPos, setSliderPos] = useState(50); // 0% ~ 100%
+    const [isAutoPlay, setIsAutoPlay] = useState(true);
+    const [activePreset, setActivePreset] = useState<'slideshow' | 'split' | 'truemotion' | null>(null);
+
     const containerRef = useRef<HTMLDivElement>(null);
+    const topLayerRef = useRef<HTMLDivElement>(null);
+    const dividerRef = useRef<HTMLDivElement>(null);
     const badVideoRef = useRef<HTMLVideoElement>(null);
     const goodVideoRef = useRef<HTMLVideoElement>(null);
     const scriptRefs = useRef<(HTMLParagraphElement | null)[]>([]);
 
-    const [isMuted, setIsMuted] = useState(true);
-    const [isDragging, setIsDragging] = useState(false);
+    const sliderPosRef = useRef(50);
 
-    // Sync subtitle
+    const updateSliderUI = (pos: number) => {
+        sliderPosRef.current = pos;
+        if (topLayerRef.current) {
+            topLayerRef.current.style.clipPath = `inset(0 ${100 - pos}% 0 0)`;
+            topLayerRef.current.style.webkitClipPath = `inset(0 ${100 - pos}% 0 0)`;
+        }
+        if (dividerRef.current) {
+            dividerRef.current.style.transform = `translate3d(${pos * 3.1}px, 0, 0)`;
+        }
+    };
+
+    const [isMuted, setIsMuted] = useState(true);
+
+    // Viewport Intersection Observer for Dormant Sleep Engine & Lazy Video Source
+    const { targetRef: sectionRef, isIntersecting, hasIntersected } = useIntersectionObserver(0.1);
+
+    // Sync subtitle active index
     const activeIndexRef = useRef(0);
 
-    const handleTouchMove = useCallback((clientX: number) => {
-        if (!containerRef.current) return;
-        const rect = containerRef.current.getBoundingClientRect();
-        const x = clientX - rect.left;
-        let percentage = (x / rect.width) * 100;
-        if (percentage < 3) percentage = 0;
-        if (percentage > 97) percentage = 100;
-        setSliderPos(percentage);
-    }, []);
-
-    const onTouchMove = useCallback((e: React.TouchEvent) => {
-        handleTouchMove(e.touches[0].clientX);
-    }, [handleTouchMove]);
-
-    const onMouseMove = useCallback((e: React.MouseEvent) => {
-        if (isDragging) {
-            handleTouchMove(e.clientX);
-        }
-    }, [isDragging, handleTouchMove]);
-
-    // Video synchronization
+    // 60fps GPU Harmonic Oscillation Auto Ping-Pong (Zero React Re-render direct DOM updates)
     useEffect(() => {
-        const interval = setInterval(() => {
-            const goodVideo = goodVideoRef.current;
-            const badVideo = badVideoRef.current;
-            if (!goodVideo || !badVideo) return;
+        if (!isAutoPlay || !isIntersecting) return;
 
+        let animationFrameId: number;
+        const startTime = Date.now();
+
+        const animate = () => {
+            const elapsed = (Date.now() - startTime) / 1000; // in seconds
+            const sinVal = Math.sin((elapsed * Math.PI * 2) / 3.5);
+            // Center is 50%, amplitude is 35% (ranges from 15% to 85%)
+            const newPos = 50 + sinVal * 35;
+            updateSliderUI(newPos);
+            animationFrameId = requestAnimationFrame(animate);
+        };
+
+        animationFrameId = requestAnimationFrame(animate);
+        return () => cancelAnimationFrame(animationFrameId);
+    }, [isAutoPlay, isIntersecting]);
+
+    const [activeSubtitleIndex, setActiveSubtitleIndex] = useState<number>(0);
+
+    // Video synchronization & Subtitle sync without memory leaks via native timeupdate
+    useEffect(() => {
+        const goodVideo = goodVideoRef.current;
+        const badVideo = badVideoRef.current;
+        if (!goodVideo) return;
+
+        const onTimeUpdate = () => {
             const currentTime = goodVideo.currentTime;
-            if (Math.abs(goodVideo.currentTime - badVideo.currentTime) > 0.15) {
+            if (badVideo && Math.abs(goodVideo.currentTime - badVideo.currentTime) > 0.15) {
                 badVideo.currentTime = goodVideo.currentTime;
             }
 
@@ -54,59 +76,80 @@ function ComparisonSectionMobile() {
             );
 
             if (newIndex !== -1 && newIndex !== activeIndexRef.current) {
-                const prevIndex = activeIndexRef.current;
-                const prevEl = scriptRefs.current[prevIndex];
-                if (prevEl) {
-                    prevEl.style.color = '#71717a';
-                    prevEl.style.fontWeight = '500';
-                }
-
-                const currEl = scriptRefs.current[newIndex];
-                if (currEl) {
-                    currEl.style.color = '#ffffff';
-                    currEl.style.fontWeight = '800';
-                }
-
                 activeIndexRef.current = newIndex;
+                setActiveSubtitleIndex(newIndex);
             }
-        }, 150);
+        };
 
-        return () => clearInterval(interval);
+        goodVideo.addEventListener("timeupdate", onTimeUpdate);
+        return () => {
+            goodVideo.removeEventListener("timeupdate", onTimeUpdate);
+        };
+    }, []);
+
+    // Dormant Sleep for Video Media when scrolled out of viewport
+    useEffect(() => {
+        const goodVideo = goodVideoRef.current;
+        const badVideo = badVideoRef.current;
+        if (!goodVideo) return;
+
+        if (isIntersecting) {
+            goodVideo.play().catch(() => {});
+            if (badVideo) badVideo.play().catch(() => {});
+        } else {
+            goodVideo.pause();
+            if (badVideo) badVideo.pause();
+        }
+    }, [isIntersecting]);
+
+    // Release Video Media Stream GPU Memory on Unmount
+    useEffect(() => {
+        const goodVideo = goodVideoRef.current;
+        const badVideo = badVideoRef.current;
+        return () => {
+            if (goodVideo) {
+                goodVideo.pause();
+                goodVideo.removeAttribute('src');
+                goodVideo.load();
+            }
+            if (badVideo) {
+                badVideo.pause();
+                badVideo.removeAttribute('src');
+                badVideo.load();
+            }
+        };
     }, []);
 
     return (
         <section
+            ref={sectionRef}
             id="comparison"
             className="relative py-12 px-4 overflow-hidden"
         >
             <div className="relative z-10">
-                {/* Header */}
+                {/* Section Header */}
                 <div className="mb-5 text-center">
                     <h2 className="text-3xl font-black text-white tracking-tight mb-2 leading-tight">
                         Same Script.<br />
                         <span className="text-zinc-500">Different Reality.</span>
                     </h2>
                     <p className="text-xs text-zinc-400 max-w-xs mx-auto">
-                        Drag the handle to compare Slideshow vs True Motion in real-time.
+                        See how True Motion transforms static slideshows in real-time.
                     </p>
                 </div>
 
-                {/* Interactive Split Viewfinder Frame (100% Opaque, 0% Ghosting) */}
+                {/* Split Viewfinder Frame (100% Native Vertical Scroll Pass-through) */}
                 <div
                     ref={containerRef}
-                    onTouchMove={onTouchMove}
-                    onMouseMove={onMouseMove}
-                    onMouseDown={() => setIsDragging(true)}
-                    onMouseUp={() => setIsDragging(false)}
-                    onMouseLeave={() => setIsDragging(false)}
-                    className="relative w-full max-w-[310px] mx-auto aspect-[9/16] rounded-3xl overflow-hidden border border-white/20 bg-black shadow-2xl select-none touch-none"
+                    className="relative w-full max-w-[310px] mx-auto aspect-[9/16] rounded-3xl overflow-hidden border border-white/20 bg-black shadow-2xl select-none"
                 >
-                    {/* BOTTOM LAYER: TRUE MOTION (Good Video - 100% Opaque Full Color) */}
+                    {/* BOTTOM LAYER: TRUE MOTION (Good Video) */}
                     <div className="absolute inset-0 w-full h-full bg-black">
                         <video
                             ref={goodVideoRef}
-                            src={`${process.env.NEXT_PUBLIC_DEMO_ASSETS_URL}/demo_good_example_low.mp4`}
+                            src={hasIntersected ? `${process.env.NEXT_PUBLIC_DEMO_ASSETS_URL}/demo_good_example_low.mp4` : undefined}
                             poster="/preview/demo_good_example.webp"
+                            preload={!hasIntersected ? "none" : "auto"}
                             className="w-full h-full object-cover opacity-100"
                             autoPlay
                             loop
@@ -119,16 +162,23 @@ function ComparisonSectionMobile() {
                         </div>
                     </div>
 
-                    {/* TOP LAYER: SLIDESHOW (Bad Video - 100% Opaque Grayscale Opaque Layer) */}
+                    {/* TOP LAYER: SLIDESHOW (GPU Hardware Accelerated clip-path: Zero Reflow, Zero CLS) */}
                     <div
-                        className="absolute inset-0 w-full h-full overflow-hidden border-r-2 border-white/90 bg-black z-20"
-                        style={{ width: `${sliderPos}%` }}
+                        ref={topLayerRef}
+                        className={`absolute inset-0 w-full h-full overflow-hidden border-r-2 border-white/90 bg-black z-20 ${
+                            isAutoPlay ? 'transition-none' : 'transition-all duration-300 ease-out'
+                        }`}
+                        style={{
+                            clipPath: `inset(0 ${100 - sliderPosRef.current}% 0 0)`,
+                            WebkitClipPath: `inset(0 ${100 - sliderPosRef.current}% 0 0)`
+                        }}
                     >
                         <div className="absolute inset-0 w-[310px] h-full bg-black">
                             <video
                                 ref={badVideoRef}
-                                src={`${process.env.NEXT_PUBLIC_DEMO_ASSETS_URL}/demo_bad_example_low.mp4`}
+                                src={hasIntersected ? `${process.env.NEXT_PUBLIC_DEMO_ASSETS_URL}/demo_bad_example_low.mp4` : undefined}
                                 poster="/preview/demo_bad_example.webp"
+                                preload={!hasIntersected ? "none" : "auto"}
                                 className="w-full h-full object-cover grayscale opacity-100"
                                 autoPlay
                                 loop
@@ -142,12 +192,18 @@ function ComparisonSectionMobile() {
                         </div>
                     </div>
 
-                    {/* DRAGGABLE SPLIT HANDLE */}
+                    {/* Anti-Slop Precision Laser Hairline Split Divider (GPU translate3d: Zero Reflow, Zero CLS) */}
                     <div
-                        className="absolute top-1/2 z-30 -translate-y-1/2 -translate-x-1/2 w-10 h-10 rounded-full bg-white text-black shadow-2xl flex items-center justify-center cursor-ew-resize active:scale-110 transition-transform"
-                        style={{ left: `${sliderPos}%` }}
+                        ref={dividerRef}
+                        className={`absolute top-0 bottom-0 left-0 z-30 w-[1px] bg-white/90 pointer-events-none flex items-center justify-center ${
+                            isAutoPlay ? 'transition-none' : 'transition-all duration-300 ease-out'
+                        }`}
+                        style={{
+                            transform: `translate3d(${sliderPosRef.current * 3.1}px, 0, 0)`
+                        }}
                     >
-                        <MoveHorizontal size={18} />
+                        {/* Subtle Crisp Divider Center Marker */}
+                        <div className="w-[3px] h-5 rounded-full bg-white border border-black/30 shadow-sm" />
                     </div>
 
                     {/* Mute Button */}
@@ -156,33 +212,81 @@ function ComparisonSectionMobile() {
                             e.stopPropagation();
                             setIsMuted(!isMuted);
                         }}
-                        className="absolute bottom-4 right-4 z-30 h-9 w-9 rounded-full bg-black/70 backdrop-blur-md border border-white/20 flex items-center justify-center text-white active:scale-95"
+                        className="absolute bottom-4 right-4 z-30 h-9 w-9 rounded-full bg-black/70 backdrop-blur-md border border-white/20 flex items-center justify-center text-white active:scale-95 transition-transform"
                     >
                         {isMuted ? <VolumeX size={15} /> : <Volume2 size={15} />}
                     </button>
                 </div>
 
-                {/* Quick Touch Presets */}
-                <div className="flex justify-center gap-3 mt-3">
+                {/* Taste Skill Monochromatic Apple-Style Segmented Control Panel */}
+                <div className="max-w-[310px] mx-auto mt-4 space-y-2">
+                    {/* Segmented Preset Switcher */}
+                    <div className="p-1 rounded-2xl bg-white/5 backdrop-blur-2xl border border-white/10 flex items-center justify-between gap-1 shadow-xl">
+                        <button
+                            onClick={() => {
+                                setIsAutoPlay(false);
+                                setActivePreset('slideshow');
+                                updateSliderUI(100);
+                            }}
+                            className={`flex-1 py-1.5 rounded-xl text-[11px] font-bold transition-all duration-200 active:scale-[0.96] flex items-center justify-center gap-1.5 ${
+                                activePreset === 'slideshow'
+                                    ? 'bg-white text-black shadow-md'
+                                    : 'text-zinc-400 hover:text-white'
+                            }`}
+                        >
+                            <span>Slideshow</span>
+                        </button>
+
+                        <button
+                            onClick={() => {
+                                setIsAutoPlay(false);
+                                setActivePreset('split');
+                                updateSliderUI(50);
+                            }}
+                            className={`flex-1 py-1.5 rounded-xl text-[11px] font-bold transition-all duration-200 active:scale-[0.96] flex items-center justify-center gap-1.5 ${
+                                activePreset === 'split'
+                                    ? 'bg-white text-black shadow-md'
+                                    : 'text-zinc-400 hover:text-white'
+                            }`}
+                        >
+                            <span>50 : 50</span>
+                        </button>
+
+                        <button
+                            onClick={() => {
+                                setIsAutoPlay(false);
+                                setActivePreset('truemotion');
+                                updateSliderUI(0);
+                            }}
+                            className={`flex-1 py-1.5 rounded-xl text-[11px] font-bold transition-all duration-200 active:scale-[0.96] flex items-center justify-center gap-1.5 ${
+                                activePreset === 'truemotion'
+                                    ? 'bg-white text-black shadow-md'
+                                    : 'text-zinc-400 hover:text-white'
+                            }`}
+                        >
+                            <span>True Motion</span>
+                        </button>
+                    </div>
+
+                    {/* Dedicated Auto Ping-Pong Toggle Control Bar */}
                     <button
-                        onClick={() => setSliderPos(100)}
-                        className="text-[11px] font-bold text-zinc-400 underline decoration-zinc-600 underline-offset-4"
+                        onClick={() => {
+                            const nextAuto = !isAutoPlay;
+                            setIsAutoPlay(nextAuto);
+                            if (nextAuto) {
+                                setActivePreset(null);
+                            }
+                        }}
+                        className={`w-full py-2 px-3 rounded-xl text-xs font-bold transition-all duration-200 active:scale-[0.97] flex items-center justify-center gap-2 border ${
+                            isAutoPlay
+                                ? 'bg-white/15 text-white border-white/30 shadow-md'
+                                : 'bg-white/5 text-zinc-400 border-white/10 hover:text-white'
+                        }`}
                     >
-                        Full Slideshow
-                    </button>
-                    <span className="text-zinc-600">·</span>
-                    <button
-                        onClick={() => setSliderPos(50)}
-                        className="text-[11px] font-bold text-white underline decoration-white underline-offset-4"
-                    >
-                        50/50 Split
-                    </button>
-                    <span className="text-zinc-600">·</span>
-                    <button
-                        onClick={() => setSliderPos(0)}
-                        className="text-[11px] font-bold text-zinc-400 underline decoration-zinc-600 underline-offset-4"
-                    >
-                        Full True Motion
+                        <Sparkles size={13} className={isAutoPlay ? 'text-white animate-pulse' : 'text-zinc-500'} />
+                        <span className="tracking-wide uppercase text-[11px]">
+                            {isAutoPlay ? 'Auto Motion Active' : 'Enable Auto Motion'}
+                        </span>
                     </button>
                 </div>
 
@@ -191,8 +295,11 @@ function ComparisonSectionMobile() {
                     {SCRIPT_LINES.map((line, idx) => (
                         <p
                             key={idx}
-                            ref={el => { scriptRefs.current[idx] = el; }}
-                            className="text-xs transition-all duration-300 text-zinc-500 font-medium leading-relaxed"
+                            className={`text-xs transition-all duration-300 leading-relaxed ${
+                                idx === activeSubtitleIndex
+                                    ? 'text-white font-extrabold'
+                                    : 'text-zinc-500 font-medium'
+                            }`}
                         >
                             {line.text}
                         </p>

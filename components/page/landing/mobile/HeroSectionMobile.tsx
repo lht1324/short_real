@@ -2,8 +2,9 @@
 
 import { memo, useState, useCallback, useRef } from "react";
 import { Zap, ArrowRight, Volume2, VolumeX } from "lucide-react";
-import VideoCard from "@/components/page/landing/hero-section/VideoCard";
-import { useHeaderHeight } from "@/hooks/useHeaderHeight";
+import VideoCard from "@/components/page/landing/mobile/VideoCard";
+import { useIntersectionObserver } from "@/hooks/useIntersectionObserver";
+import {useHeaderHeight} from "@/hooks/useHeaderHeight";
 
 type HeroVideoKey = "left" | "center" | "right";
 
@@ -40,23 +41,24 @@ function HeroSectionMobile() {
     const [dragProgress, setDragProgress] = useState<number>(1); // 0.0 ~ 2.0 continuous float
     const [isDragging, setIsDragging] = useState<boolean>(false);
     const [isMuted, setIsMuted] = useState<boolean>(true);
-    
+
     const headerHeight = useHeaderHeight(64);
+
+    // Viewport Intersection Observer for Dormant Sleep Engine
+    const { targetRef: sectionRef, isIntersecting } = useIntersectionObserver(0.1);
 
     const startXRef = useRef<number>(0);
     const startProgressRef = useRef<number>(1);
     const containerWidthRef = useRef<number>(300);
     const touchContainerRef = useRef<HTMLDivElement>(null);
 
-    const focusedKey = HERO_VIDEOS[focusedIndex]?.key || "center";
-
     const onClickGetStarted = useCallback(() => {
         const pricingEl = document.getElementById('pricing');
         if (pricingEl) {
-            const y = pricingEl.getBoundingClientRect().top + window.pageYOffset - headerHeight;
+            const y = pricingEl.getBoundingClientRect().top + window.pageYOffset - 64;
             window.scrollTo({ top: y, behavior: 'smooth' });
         }
-    }, [headerHeight]);
+    }, []);
 
     const onClickCard = useCallback((key: HeroVideoKey) => {
         const idx = HERO_VIDEOS.findIndex(v => v.key === key);
@@ -155,6 +157,7 @@ function HeroSectionMobile() {
 
     return (
         <section
+            ref={sectionRef}
             style={{ height: `calc(100dvh - ${headerHeight}px)` }}
             className="relative w-full px-4 pt-1 pb-12 overflow-hidden z-10 flex flex-col justify-between items-center select-none"
         >
@@ -228,9 +231,9 @@ function HeroSectionMobile() {
                 onMouseLeave={onMouseLeave}
                 className="w-full relative h-[300px] mb-4 select-none flex items-center justify-center touch-pan-y shrink-0 cursor-grab active:cursor-grabbing"
             >
-                {HERO_VIDEOS.map((item, idx) => {
-                    const isMain = idx === focusedIndex;
-                    const dynamicStyle = getCardStyle(idx);
+                {HERO_VIDEOS.map((item, index) => {
+                    const isFocused = index === focusedIndex;
+                    const dynamicStyle = getCardStyle(index);
 
                     return (
                         <div
@@ -243,20 +246,18 @@ function HeroSectionMobile() {
                                 transition: dynamicStyle.transition
                             }}
                             className={`
-                                absolute w-[180px] aspect-[9/16] rounded-3xl overflow-hidden border cursor-pointer bg-black ${isMain ? 'border-white/30 shadow-[0_15px_40px_rgba(0,0,0,0.9)]' : 'border-white/10 hover:opacity-100'}
+                                absolute w-[180px] aspect-[9/16] rounded-3xl overflow-hidden border cursor-pointer bg-black ${isFocused ? 'border-white/30 shadow-[0_15px_40px_rgba(0,0,0,0.9)]' : 'border-white/10 hover:opacity-100'}
                             `}
                         >
                             <VideoCard
                                 src={item.src}
                                 posterSrc={item.poster}
-                                isMutedOverride={isMain ? isMuted : true}
-                                lazyLoad={!isMain}
-                                preload={isMain ? "auto" : "none"}
+                                isMuted={isMuted || !isFocused}
                                 className="w-full h-full object-cover pointer-events-none"
                             />
 
                             {/* Audio Mute/Unmute Control (Visible on Main Card) */}
-                            {isMain && (
+                            {isFocused && (
                                 <button
                                     onClick={onClickToggleMute}
                                     className="absolute top-3 right-3 z-30 h-8 w-8 rounded-full bg-black/70 backdrop-blur-md border border-white/20 flex items-center justify-center text-white active:scale-95 shadow-lg pointer-events-auto"

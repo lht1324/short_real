@@ -49,7 +49,7 @@ function HeaderMobile() {
 
     return (
         <>
-            <header className="fixed top-0 left-0 right-0 z-50 bg-[#0b0b15]/80 backdrop-blur-xl border-b border-white/10 transition-all duration-300">
+            <header id="main-header" className="fixed top-0 left-0 right-0 z-50 bg-[#0b0b15]/80 backdrop-blur-xl border-b border-white/10 transition-all duration-500">
                 <div className="px-4 h-16 flex items-center justify-between">
                     {/* Logo */}
                     <Link

@@ -37,7 +37,7 @@ function LandingPageMobileClient({
 }: LandingPageMobileClientProps) {
     const [isFeaturesVisible, setIsFeaturesVisible] = useState(false);
 
-    // Hide Floating Roadmap while Features Section is active in Viewport
+    // Hide Floating Roadmap & Main Header while Features Section is active in Viewport
     useEffect(() => {
         const featuresEl = document.getElementById("features");
         if (!featuresEl) return;
@@ -52,6 +52,22 @@ function LandingPageMobileClient({
         observer.observe(featuresEl);
         return () => observer.disconnect();
     }, []);
+
+    // Toggle Main Header visibility when Features section is active (GPU translate3d: Zero Layout Shift)
+    useEffect(() => {
+        const headerEl = document.getElementById("main-header");
+        if (!headerEl) return;
+
+        if (isFeaturesVisible) {
+            headerEl.style.transform = "translate3d(0, -100%, 0)";
+            headerEl.style.opacity = "0";
+            headerEl.style.pointerEvents = "none";
+        } else {
+            headerEl.style.transform = "translate3d(0, 0, 0)";
+            headerEl.style.opacity = "1";
+            headerEl.style.pointerEvents = "auto";
+        }
+    }, [isFeaturesVisible]);
 
     return (
         <main

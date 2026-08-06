@@ -2,49 +2,88 @@
 
 import { memo, useState, useCallback, useEffect, useRef } from "react";
 import { FEATURES_DATA } from "@/components/page/landing/data/featuresData";
-import { ArrowDown, ArrowUp } from "lucide-react";
-import { useHeaderHeight } from "@/hooks/useHeaderHeight";
+import { ArrowDown, ArrowUp, Volume2, VolumeX } from "lucide-react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { useIntersectionObserver } from "@/hooks/useIntersectionObserver";
 
 gsap.registerPlugin(ScrollTrigger);
 
 function FeaturesSectionMobile() {
     const [activeIndex, setActiveIndex] = useState<number>(0);
-    const [dragOffset, setDragOffset] = useState<number>(0);
     const [isDragging, setIsDragging] = useState<boolean>(false);
+    const [isMuted, setIsMuted] = useState<boolean>(true);
 
-    const headerHeight = useHeaderHeight(64);
-    const sectionRef = useRef<HTMLElement>(null);
+    const [isPinned, setIsPinned] = useState<boolean>(false);
+    const isPinnedRef = useRef<boolean>(false);
+
+    // Viewport Intersection Observer for Lazy Video Source Loading (0B initial decoder footprint)
+    const { targetRef: sectionRef, hasIntersected } = useIntersectionObserver(0.1);
     const overlayRef = useRef<HTMLDivElement>(null);
+    const railTrackRef = useRef<HTMLDivElement>(null);
 
     const touchStartYRef = useRef<number>(0);
+    const dragOffsetRef = useRef<number>(0);
     const activeIndexRef = useRef<number>(0);
     const lastWheelTimeRef = useRef<number>(0);
     const lastTransitionTimeRef = useRef<number>(0);
+    const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
 
     useEffect(() => {
         activeIndexRef.current = activeIndex;
     }, [activeIndex]);
 
-    // Step 1: Features Precision Pin Lock Engine with High Constant Buffer (4000px)
+    useEffect(() => {
+        isPinnedRef.current = isPinned;
+    }, [isPinned]);
+
+    const onClickToggleMute = useCallback((e: React.MouseEvent) => {
+        e.stopPropagation();
+        setIsMuted(prev => !prev);
+    }, []);
+
+    // Active Reel Video Playback & Mute Sync Controller (Viewport & Pin Aware - Remembers User Mute Preference)
+    useEffect(() => {
+        if (!hasIntersected) return;
+
+        videoRefs.current.forEach((videoEl, idx) => {
+            if (!videoEl) return;
+
+            if (isPinned && idx === activeIndex) {
+                // Features 섹션 고정 시: 유저가 설정한 isMuted 복원 및 재생
+                videoEl.muted = isMuted;
+                videoEl.play().catch(() => {});
+            } else {
+                // 이탈 시 또는 비활성 비디오: 음소거 & Pause 수면 모드
+                videoEl.muted = true;
+                videoEl.pause();
+            }
+        });
+    }, [activeIndex, isMuted, hasIntersected, isPinned]);
+
+    // Step 1: Features Precision Pin Lock Engine with High Constant Buffer (6000px)
     useEffect(() => {
         const sectionEl = sectionRef.current;
         if (!sectionEl) return;
 
-        const st = ScrollTrigger.create({
-            trigger: sectionEl,
-            start: `top top+=${headerHeight}`,
-            end: "+=4000px",
-            pin: true,
-            pinSpacing: true,
-            anticipatePin: 1,
-        });
+        const ctx = gsap.context(() => {
+            ScrollTrigger.create({
+                trigger: sectionEl,
+                start: "top top",
+                end: "+=6000px",
+                pin: true,
+                pinSpacing: true,
+                anticipatePin: 1,
+                onToggle: (self) => {
+                    setIsPinned(self.isActive);
+                },
+            });
+        }, sectionEl);
 
         return () => {
-            st.kill();
+            ctx.revert();
         };
-    }, [headerHeight]);
+    }, []);
 
     // Boundary Escape Helper Functions
     const escapeToHero = useCallback(() => {
@@ -54,40 +93,53 @@ function FeaturesSectionMobile() {
     const escapeToComparison = useCallback(() => {
         const comparisonEl = document.getElementById("comparison");
         if (comparisonEl) {
-            const y = comparisonEl.getBoundingClientRect().top + window.pageYOffset - headerHeight;
+            const y = comparisonEl.getBoundingClientRect().top + window.pageYOffset - 64;
             window.scrollTo({ top: y, behavior: 'smooth' });
         }
-    }, [headerHeight]);
+    }, []);
 
-    // Step 2 & 3: Pure Swipe Event Data Controller (Zero Scroll, 100% UI Motion Control + Debounce Lock)
+    // Step 2 & 3: Pure Swipe Event Data Controller (Zero Scroll when pinned, Direct DOM Motion + Debounce Lock)
     useEffect(() => {
         const overlayEl = overlayRef.current;
         if (!overlayEl) return;
 
         const onTouchStart = (e: TouchEvent) => {
+            if (!isPinnedRef.current) return;
             touchStartYRef.current = e.touches[0].clientY;
             setIsDragging(true);
-            setDragOffset(0);
+            dragOffsetRef.current = 0;
         };
 
         const onTouchMove = (e: TouchEvent) => {
-            // 100% Cancel Native Browser Scroll
+            if (!isPinnedRef.current) return;
             if (e.cancelable) {
                 e.preventDefault();
             }
             const currentY = e.touches[0].clientY;
-            const diffY = touchStartYRef.current - currentY;
-            // Feed raw Y-swipe data directly to UI transform
-            setDragOffset(diffY);
+            let diffY = touchStartYRef.current - currentY;
+            const currentIdx = activeIndexRef.current;
+
+            // Apply elastic resistance only on boundaries (first & last card escapes)
+            if ((currentIdx === 0 && diffY < 0) || (currentIdx === FEATURES_DATA.length - 1 && diffY > 0)) {
+                diffY = diffY * 0.2; // 80% resistance
+            }
+
+            dragOffsetRef.current = diffY;
+
+            // Direct DOM GPU transform (Zero React State Re-render)
+            if (railTrackRef.current) {
+                railTrackRef.current.style.transform = `translate3d(0, calc(-${currentIdx * 100}% - ${diffY}px), 0)`;
+            }
         };
 
         const onTouchEnd = (e: TouchEvent) => {
+            if (!isPinnedRef.current) return;
             const touchEndY = e.changedTouches[0].clientY;
             const diffY = touchStartYRef.current - touchEndY;
             const currentIdx = activeIndexRef.current;
 
             setIsDragging(false);
-            setDragOffset(0);
+            dragOffsetRef.current = 0;
 
             // Minimum 30px swipe threshold
             if (Math.abs(diffY) > 30) {
@@ -96,36 +148,56 @@ function FeaturesSectionMobile() {
                 if (diffY > 0) {
                     // Swiped UP -> Next Reel UI or Escape to Comparison
                     if (currentIdx < FEATURES_DATA.length - 1) {
-                        // Debounce Guard: Enforce 350ms Cooldown between Reels Jump
-                        if (now - lastTransitionTimeRef.current < 350) return;
+                        if (now - lastTransitionTimeRef.current < 300) return;
                         lastTransitionTimeRef.current = now;
-                        setActiveIndex(currentIdx + 1);
+                        const nextIdx = currentIdx + 1;
+                        setActiveIndex(nextIdx);
+                        if (railTrackRef.current) {
+                            railTrackRef.current.style.transform = `translate3d(0, -${nextIdx * 100}%, 0)`;
+                        }
                     } else {
+                        // Only on last video (index 3) -> Escape to Comparison with clean reset
+                        if (railTrackRef.current) {
+                            railTrackRef.current.style.transform = `translate3d(0, -300%, 0)`;
+                        }
                         escapeToComparison();
                     }
                 } else {
                     // Swiped DOWN -> Prev Reel UI or Escape to Hero
                     if (currentIdx > 0) {
-                        // Debounce Guard: Enforce 350ms Cooldown between Reels Jump
-                        if (now - lastTransitionTimeRef.current < 350) return;
+                        if (now - lastTransitionTimeRef.current < 300) return;
                         lastTransitionTimeRef.current = now;
-                        setActiveIndex(currentIdx - 1);
+                        const prevIdx = currentIdx - 1;
+                        setActiveIndex(prevIdx);
+                        if (railTrackRef.current) {
+                            railTrackRef.current.style.transform = `translate3d(0, -${prevIdx * 100}%, 0)`;
+                        }
                     } else {
+                        // Only on first video (index 0) -> Escape to Hero with clean reset
+                        if (railTrackRef.current) {
+                            railTrackRef.current.style.transform = `translate3d(0, 0%, 0)`;
+                        }
                         escapeToHero();
                     }
+                }
+            } else {
+                // Under threshold: snap back to current index cleanly
+                if (railTrackRef.current) {
+                    railTrackRef.current.style.transform = `translate3d(0, -${currentIdx * 100}%, 0)`;
                 }
             }
         };
 
         const onWheel = (e: WheelEvent) => {
-            // 100% Cancel Native Wheel Scroll
+            if (!isPinnedRef.current) return;
+            // 100% Cancel Native Wheel Scroll only when pinned
             if (e.cancelable) {
                 e.preventDefault();
             }
 
             const now = Date.now();
-            if (now - lastWheelTimeRef.current < 350) return;
-            if (now - lastTransitionTimeRef.current < 350) return;
+            if (now - lastWheelTimeRef.current < 300) return;
+            if (now - lastTransitionTimeRef.current < 300) return;
 
             const deltaY = e.deltaY;
             if (Math.abs(deltaY) < 15) return;
@@ -137,15 +209,29 @@ function FeaturesSectionMobile() {
             if (deltaY > 0) {
                 // Scroll DOWN -> Next Reel UI or Escape to Comparison
                 if (currentIdx < FEATURES_DATA.length - 1) {
-                    setActiveIndex(currentIdx + 1);
+                    const nextIdx = currentIdx + 1;
+                    setActiveIndex(nextIdx);
+                    if (railTrackRef.current) {
+                        railTrackRef.current.style.transform = `translate3d(0, -${nextIdx * 100}%, 0)`;
+                    }
                 } else {
+                    if (railTrackRef.current) {
+                        railTrackRef.current.style.transform = `translate3d(0, -300%, 0)`;
+                    }
                     escapeToComparison();
                 }
             } else {
                 // Scroll UP -> Prev Reel UI or Escape to Hero
                 if (currentIdx > 0) {
-                    setActiveIndex(currentIdx - 1);
+                    const prevIdx = currentIdx - 1;
+                    setActiveIndex(prevIdx);
+                    if (railTrackRef.current) {
+                        railTrackRef.current.style.transform = `translate3d(0, -${prevIdx * 100}%, 0)`;
+                    }
                 } else {
+                    if (railTrackRef.current) {
+                        railTrackRef.current.style.transform = `translate3d(0, 0%, 0)`;
+                    }
                     escapeToHero();
                 }
             }
@@ -168,14 +254,24 @@ function FeaturesSectionMobile() {
     // Next / Escape Button Callback
     const onClickNext = useCallback(() => {
         if (activeIndex < FEATURES_DATA.length - 1) {
-            setActiveIndex(prev => prev + 1);
+            const nextIdx = activeIndex + 1;
+            setActiveIndex(nextIdx);
+            if (railTrackRef.current) {
+                railTrackRef.current.style.transform = `translate3d(0, -${nextIdx * 100}%, 0)`;
+            }
         } else {
+            if (railTrackRef.current) {
+                railTrackRef.current.style.transform = `translate3d(0, -300%, 0)`;
+            }
             escapeToComparison();
         }
     }, [activeIndex, escapeToComparison]);
 
     const onClickSelectFeature = useCallback((index: number) => {
         setActiveIndex(index);
+        if (railTrackRef.current) {
+            railTrackRef.current.style.transform = `translate3d(0, -${index * 100}%, 0)`;
+        }
     }, []);
 
     const activeFeature = FEATURES_DATA[activeIndex] || FEATURES_DATA[0];
@@ -185,33 +281,38 @@ function FeaturesSectionMobile() {
         <section
             ref={sectionRef}
             id="features"
-            style={{ height: `calc(100dvh - ${headerHeight}px)` }}
-            className="relative w-full bg-black overflow-hidden flex flex-col justify-between select-none"
+            className="relative w-full h-[100dvh] bg-black overflow-hidden flex flex-col justify-between select-none"
         >
-            {/* Transparent Gesture Overlay (100% Scroll Prevented, Pure Swipe Data Capturer) */}
+            {/* Transparent Gesture Overlay (Active only when GSAP Pin is locked) */}
             <div
                 ref={overlayRef}
-                className="absolute inset-0 z-20 touch-none cursor-grab active:cursor-grabbing"
+                className={`absolute inset-0 z-20 ${
+                    isPinned ? "pointer-events-auto touch-none cursor-grab active:cursor-grabbing" : "pointer-events-none"
+                }`}
             />
 
-            {/* Smooth 4-Video Vertical Sliding Rail Track with 1:1 Drag Offset */}
+            {/* Smooth 4-Video Vertical Sliding Rail Track with Direct DOM Drag Offset */}
             <div className="relative w-full h-full bg-black overflow-hidden">
                 <div
+                    ref={railTrackRef}
                     className={`w-full h-full flex flex-col ${
                         isDragging ? '' : 'transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]'
                     }`}
                     style={{
-                        transform: `translate3d(0, calc(-${activeIndex * 100}% - ${dragOffset}px), 0)`
+                        transform: `translate3d(0, -${activeIndex * 100}%, 0)`
                     }}
                 >
-                    {FEATURES_DATA.map((feat) => (
+                    {FEATURES_DATA.map((feat, idx) => (
                         <div key={feat.id} className="relative w-full h-full shrink-0 flex items-center justify-center bg-black">
                             <video
-                                src={feat.videoSrc}
+                                ref={(el) => { videoRefs.current[idx] = el; }}
+                                src={hasIntersected ? feat.videoSrc : undefined}
+                                poster={`/preview/demo_${feat.title.toLowerCase()}.webp`}
+                                preload={!hasIntersected ? "none" : "auto"}
                                 className="w-full h-full object-contain pointer-events-none"
                                 autoPlay
                                 loop
-                                muted
+                                muted={isMuted}
                                 playsInline
                             />
                         </div>
@@ -226,28 +327,36 @@ function FeaturesSectionMobile() {
                             {activeFeature.title} Engine
                         </span>
                     </div>
-                    <span className="text-[10px] font-mono font-bold text-white/50 tracking-widest uppercase">
+                    <span className="text-xs font-mono font-bold text-white/50 tracking-widest uppercase">
                         {activeIndex + 1} / {FEATURES_DATA.length}
                     </span>
                 </div>
 
                 {/* Bottom Reel Caption & Skip Control Overlay (Elevated to z-30 for Click Interactivity) */}
                 <div className="absolute bottom-3 inset-x-0 px-4 z-30 space-y-2.5 pointer-events-none">
-                    {/* Active Reel Caption */}
-                    <div className="p-3.5 rounded-2xl bg-black/80 backdrop-blur-md border border-white/10 space-y-1 pointer-events-auto">
-                        <h3 className="text-xs xs:text-sm font-extrabold text-white leading-snug tracking-tight whitespace-pre-line">
+                    {/* Active Reel Caption with Integrated Right Mute Button */}
+                    <div className="p-4 rounded-2xl bg-black/80 backdrop-blur-md border border-white/10 flex items-center justify-between gap-3 pointer-events-auto shadow-2xl">
+                        <h3 className="text-sm xs:text-base font-extrabold text-white leading-snug tracking-tight whitespace-pre-line min-w-0 flex-1">
                             {activeFeature.description}
                         </h3>
-                        <div className="flex items-center gap-2 text-[10px] font-mono text-zinc-400">
-                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                            <span>Real Video Diffusion · 9:16 True Motion</span>
-                        </div>
+
+                        {/* Integrated Right Mute Button */}
+                        <button
+                            onClick={onClickToggleMute}
+                            className="h-10 w-10 shrink-0 rounded-xl bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/20 flex items-center justify-center text-white active:scale-95 transition-all shadow-lg"
+                        >
+                            {isMuted ? (
+                                <VolumeX size={18} className="text-zinc-400" />
+                            ) : (
+                                <Volume2 size={18} className="text-emerald-400 animate-pulse" />
+                            )}
+                        </button>
                     </div>
 
                     {/* 4-Feature Dot Indicator Bar & Skip Button Layer */}
-                    <div className="flex items-center justify-between gap-2 p-1.5 rounded-2xl bg-white/10 backdrop-blur-lg border border-white/20 pointer-events-auto">
+                    <div className="flex items-center justify-between gap-2 p-2 rounded-2xl bg-white/10 backdrop-blur-lg border border-white/20 pointer-events-auto">
                         {/* Dot Indicator Buttons */}
-                        <div className="flex items-center gap-1.5 pl-1">
+                        <div className="flex items-center gap-1.5 px-1 overflow-x-auto no-scrollbar">
                             {FEATURES_DATA.map((feat, idx) => {
                                 const isSelected = idx === activeIndex;
                                 return (
@@ -255,7 +364,7 @@ function FeaturesSectionMobile() {
                                         key={feat.id}
                                         onClick={() => onClickSelectFeature(idx)}
                                         className={`
-                                            h-7 px-2.5 rounded-xl text-[10px] font-mono font-bold transition-all active:scale-95 flex items-center gap-1 border
+                                            h-8 px-3 rounded-xl text-xs font-mono font-bold transition-all active:scale-95 flex items-center gap-1 border whitespace-nowrap shrink-0
                                             ${isSelected
                                                 ? 'bg-white text-black border-white shadow-md'
                                                 : 'bg-black/40 text-zinc-400 border-white/10 hover:text-white'}
@@ -270,10 +379,10 @@ function FeaturesSectionMobile() {
                         {/* Next / Escape Arrow Button */}
                         <button
                             onClick={onClickNext}
-                            className="h-7 px-3 rounded-xl bg-white text-black font-bold text-[10px] flex items-center gap-1 active:scale-95 transition-transform shadow-lg shrink-0"
+                            className="h-8 px-3.5 rounded-xl bg-white text-black font-bold text-xs flex items-center gap-1 active:scale-95 transition-transform shadow-lg shrink-0"
                         >
                             <span>{activeIndex < FEATURES_DATA.length - 1 ? "NEXT" : "ESCAPE"}</span>
-                            {activeIndex < FEATURES_DATA.length - 1 ? <ArrowDown size={12} /> : <ArrowUp size={12} />}
+                            {activeIndex < FEATURES_DATA.length - 1 ? <ArrowDown size={14} /> : <ArrowUp size={14} />}
                         </button>
                     </div>
                 </div>
