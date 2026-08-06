@@ -16,8 +16,12 @@ function FeaturesSectionMobile() {
 
     const headerHeight = useHeaderHeight(64);
     const sectionRef = useRef<HTMLElement>(null);
+    const overlayRef = useRef<HTMLDivElement>(null);
+
     const touchStartYRef = useRef<number>(0);
     const activeIndexRef = useRef<number>(0);
+    const lastWheelTimeRef = useRef<number>(0);
+    const lastTransitionTimeRef = useRef<number>(0);
 
     useEffect(() => {
         activeIndexRef.current = activeIndex;
@@ -42,10 +46,23 @@ function FeaturesSectionMobile() {
         };
     }, [headerHeight]);
 
-    // Step 2 & 3-A: 1:1 Touch Drag Tracking, Reels Snap & Option A Boundary Escape
+    // Boundary Escape Helper Functions
+    const escapeToHero = useCallback(() => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }, []);
+
+    const escapeToComparison = useCallback(() => {
+        const comparisonEl = document.getElementById("comparison");
+        if (comparisonEl) {
+            const y = comparisonEl.getBoundingClientRect().top + window.pageYOffset - headerHeight;
+            window.scrollTo({ top: y, behavior: 'smooth' });
+        }
+    }, [headerHeight]);
+
+    // Step 2 & 3: Pure Swipe Event Data Controller (Zero Scroll, 100% UI Motion Control + Debounce Lock)
     useEffect(() => {
-        const sectionEl = sectionRef.current;
-        if (!sectionEl) return;
+        const overlayEl = overlayRef.current;
+        if (!overlayEl) return;
 
         const onTouchStart = (e: TouchEvent) => {
             touchStartYRef.current = e.touches[0].clientY;
@@ -54,8 +71,13 @@ function FeaturesSectionMobile() {
         };
 
         const onTouchMove = (e: TouchEvent) => {
+            // 100% Cancel Native Browser Scroll
+            if (e.cancelable) {
+                e.preventDefault();
+            }
             const currentY = e.touches[0].clientY;
             const diffY = touchStartYRef.current - currentY;
+            // Feed raw Y-swipe data directly to UI transform
             setDragOffset(diffY);
         };
 
@@ -69,52 +91,88 @@ function FeaturesSectionMobile() {
 
             // Minimum 30px swipe threshold
             if (Math.abs(diffY) > 30) {
+                const now = Date.now();
+
                 if (diffY > 0) {
-                    // Swiped UP -> Go to NEXT reel or Escape Down (Option A)
+                    // Swiped UP -> Next Reel UI or Escape to Comparison
                     if (currentIdx < FEATURES_DATA.length - 1) {
+                        // Debounce Guard: Enforce 350ms Cooldown between Reels Jump
+                        if (now - lastTransitionTimeRef.current < 350) return;
+                        lastTransitionTimeRef.current = now;
                         setActiveIndex(currentIdx + 1);
                     } else {
-                        // Option A: Escape to Comparison Section
-                        const comparisonEl = document.getElementById("comparison");
-                        if (comparisonEl) {
-                            const y = comparisonEl.getBoundingClientRect().top + window.pageYOffset - headerHeight;
-                            window.scrollTo({ top: y, behavior: 'smooth' });
-                        }
+                        escapeToComparison();
                     }
                 } else {
-                    // Swiped DOWN -> Go to PREV reel or Escape Up (Option A)
+                    // Swiped DOWN -> Prev Reel UI or Escape to Hero
                     if (currentIdx > 0) {
+                        // Debounce Guard: Enforce 350ms Cooldown between Reels Jump
+                        if (now - lastTransitionTimeRef.current < 350) return;
+                        lastTransitionTimeRef.current = now;
                         setActiveIndex(currentIdx - 1);
                     } else {
-                        // Option A: Escape to Hero Section
-                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                        escapeToHero();
                     }
                 }
             }
         };
 
-        sectionEl.addEventListener("touchstart", onTouchStart, { passive: true });
-        sectionEl.addEventListener("touchmove", onTouchMove, { passive: true });
-        sectionEl.addEventListener("touchend", onTouchEnd, { passive: true });
+        const onWheel = (e: WheelEvent) => {
+            // 100% Cancel Native Wheel Scroll
+            if (e.cancelable) {
+                e.preventDefault();
+            }
+
+            const now = Date.now();
+            if (now - lastWheelTimeRef.current < 350) return;
+            if (now - lastTransitionTimeRef.current < 350) return;
+
+            const deltaY = e.deltaY;
+            if (Math.abs(deltaY) < 15) return;
+
+            lastWheelTimeRef.current = now;
+            lastTransitionTimeRef.current = now;
+            const currentIdx = activeIndexRef.current;
+
+            if (deltaY > 0) {
+                // Scroll DOWN -> Next Reel UI or Escape to Comparison
+                if (currentIdx < FEATURES_DATA.length - 1) {
+                    setActiveIndex(currentIdx + 1);
+                } else {
+                    escapeToComparison();
+                }
+            } else {
+                // Scroll UP -> Prev Reel UI or Escape to Hero
+                if (currentIdx > 0) {
+                    setActiveIndex(currentIdx - 1);
+                } else {
+                    escapeToHero();
+                }
+            }
+        };
+
+        // Attach non-passive native listeners to force e.preventDefault()
+        overlayEl.addEventListener("touchstart", onTouchStart, { passive: true });
+        overlayEl.addEventListener("touchmove", onTouchMove, { passive: false });
+        overlayEl.addEventListener("touchend", onTouchEnd, { passive: true });
+        overlayEl.addEventListener("wheel", onWheel, { passive: false });
 
         return () => {
-            sectionEl.removeEventListener("touchstart", onTouchStart);
-            sectionEl.removeEventListener("touchmove", onTouchMove);
-            sectionEl.removeEventListener("touchend", onTouchEnd);
+            overlayEl.removeEventListener("touchstart", onTouchStart);
+            overlayEl.removeEventListener("touchmove", onTouchMove);
+            overlayEl.removeEventListener("touchend", onTouchEnd);
+            overlayEl.removeEventListener("wheel", onWheel);
         };
-    }, [headerHeight]);
+    }, [escapeToComparison, escapeToHero]);
 
+    // Next / Escape Button Callback
     const onClickNext = useCallback(() => {
         if (activeIndex < FEATURES_DATA.length - 1) {
             setActiveIndex(prev => prev + 1);
         } else {
-            const comparisonEl = document.getElementById("comparison");
-            if (comparisonEl) {
-                const y = comparisonEl.getBoundingClientRect().top + window.pageYOffset - headerHeight;
-                window.scrollTo({ top: y, behavior: 'smooth' });
-            }
+            escapeToComparison();
         }
-    }, [activeIndex, headerHeight]);
+    }, [activeIndex, escapeToComparison]);
 
     const onClickSelectFeature = useCallback((index: number) => {
         setActiveIndex(index);
@@ -130,6 +188,12 @@ function FeaturesSectionMobile() {
             style={{ height: `calc(100dvh - ${headerHeight}px)` }}
             className="relative w-full bg-black overflow-hidden flex flex-col justify-between select-none"
         >
+            {/* Transparent Gesture Overlay (100% Scroll Prevented, Pure Swipe Data Capturer) */}
+            <div
+                ref={overlayRef}
+                className="absolute inset-0 z-20 touch-none cursor-grab active:cursor-grabbing"
+            />
+
             {/* Smooth 4-Video Vertical Sliding Rail Track with 1:1 Drag Offset */}
             <div className="relative w-full h-full bg-black overflow-hidden">
                 <div
@@ -154,9 +218,9 @@ function FeaturesSectionMobile() {
                     ))}
                 </div>
 
-                {/* Top Category Badge */}
-                <div className="absolute top-4 inset-x-0 px-4 flex items-center justify-between z-10">
-                    <div className="px-3.5 py-1.5 rounded-full bg-black/70 backdrop-blur-md border border-white/20 flex items-center gap-2">
+                {/* Top Category Badge (Elevated to z-30) */}
+                <div className="absolute top-4 inset-x-0 px-4 flex items-center justify-between z-30 pointer-events-none">
+                    <div className="px-3.5 py-1.5 rounded-full bg-black/70 backdrop-blur-md border border-white/20 flex items-center gap-2 pointer-events-auto">
                         <Icon size={14} className="text-white" />
                         <span className="text-xs font-black tracking-widest text-white uppercase">
                             {activeFeature.title} Engine
@@ -167,10 +231,10 @@ function FeaturesSectionMobile() {
                     </span>
                 </div>
 
-                {/* Bottom Reel Caption & Skip Control Overlay */}
-                <div className="absolute bottom-3 inset-x-0 px-4 z-10 space-y-2.5">
+                {/* Bottom Reel Caption & Skip Control Overlay (Elevated to z-30 for Click Interactivity) */}
+                <div className="absolute bottom-3 inset-x-0 px-4 z-30 space-y-2.5 pointer-events-none">
                     {/* Active Reel Caption */}
-                    <div className="p-3.5 rounded-2xl bg-black/80 backdrop-blur-md border border-white/10 space-y-1">
+                    <div className="p-3.5 rounded-2xl bg-black/80 backdrop-blur-md border border-white/10 space-y-1 pointer-events-auto">
                         <h3 className="text-xs xs:text-sm font-extrabold text-white leading-snug tracking-tight whitespace-pre-line">
                             {activeFeature.description}
                         </h3>
@@ -181,7 +245,7 @@ function FeaturesSectionMobile() {
                     </div>
 
                     {/* 4-Feature Dot Indicator Bar & Skip Button Layer */}
-                    <div className="flex items-center justify-between gap-2 p-1.5 rounded-2xl bg-white/10 backdrop-blur-lg border border-white/20">
+                    <div className="flex items-center justify-between gap-2 p-1.5 rounded-2xl bg-white/10 backdrop-blur-lg border border-white/20 pointer-events-auto">
                         {/* Dot Indicator Buttons */}
                         <div className="flex items-center gap-1.5 pl-1">
                             {FEATURES_DATA.map((feat, idx) => {
@@ -218,6 +282,6 @@ function FeaturesSectionMobile() {
     );
 }
 
-export default memo(FeaturesSectionMobile);
+export default memo(FeaturesSectionMobile);;;
 
 
