@@ -55,7 +55,7 @@ const FAQ_ITEMS: FAQItemData[] = [
     }
 ];
 
-function FAQSectionMobile() {
+function FAQSection() {
     const [selectedCategory, setSelectedCategory] = useState<string>("all");
     const [openItemIds, setOpenItemIds] = useState<number[]>([1]); // Default open item 1
 
@@ -146,4 +146,4 @@ function FAQSectionMobile() {
     );
 }
 
-export default memo(FAQSectionMobile);
+export default memo(FAQSection);

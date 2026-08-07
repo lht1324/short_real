@@ -2,20 +2,20 @@
 
 import { memo, useState, useCallback } from "react";
 import { ProductData } from "@/lib/api/types/api/polar/products/ProductData";
-import { PRICING_BENEFIT_LIST } from "@/components/page/landing/pricing-section/PRICING_BENEFIT_LIST";
+import { PRICING_BENEFIT_LIST } from "@/components/page/landing/PRICING_BENEFIT_LIST";
 import { Sparkles, Zap, LogIn } from "lucide-react";
 
-export interface PricingSectionMobileProps {
+export interface PricingSectionProps {
     productDataList: ProductData[];
     isLoggedIn: boolean;
     onClickPurchasePlan: (productId: string) => void;
 }
 
-function PricingSectionMobile({
+function PricingSection({
     productDataList,
     isLoggedIn,
     onClickPurchasePlan,
-}: PricingSectionMobileProps) {
+}: PricingSectionProps) {
     // Default to Studio plan if available
     const defaultIndex = productDataList.findIndex(p => p.isPopular || p.name.toLowerCase().includes('studio'));
     const [selectedPlanId, setSelectedPlanId] = useState<string>(
@@ -162,4 +162,4 @@ function PricingSectionMobile({
     );
 }
 
-export default memo(PricingSectionMobile);
+export default memo(PricingSection);

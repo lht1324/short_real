@@ -2,7 +2,7 @@
 
 import { memo, useState, useCallback, useRef } from "react";
 import { Zap, ArrowRight, Volume2, VolumeX } from "lucide-react";
-import VideoCard from "@/components/page/landing/mobile/VideoCard";
+import VideoCard from "@/components/page/landing/mobile/hero-section/VideoCard";
 import { useIntersectionObserver } from "@/hooks/useIntersectionObserver";
 import {useHeaderHeight} from "@/hooks/useHeaderHeight";
 
@@ -36,7 +36,7 @@ const HERO_VIDEOS: HeroVideoItem[] = [
     }
 ];
 
-function HeroSectionMobile() {
+function HeroSection() {
     const [focusedIndex, setFocusedIndex] = useState<number>(1); // 0: left, 1: center, 2: right
     const [dragProgress, setDragProgress] = useState<number>(1); // 0.0 ~ 2.0 continuous float
     const [isDragging, setIsDragging] = useState<boolean>(false);
@@ -273,4 +273,4 @@ function HeroSectionMobile() {
     );
 }
 
-export default memo(HeroSectionMobile);
+export default memo(HeroSection);

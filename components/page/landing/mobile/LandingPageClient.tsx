@@ -3,13 +3,13 @@
 import { memo, useState, useEffect } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import HeroSectionMobile from "@/components/page/landing/mobile/HeroSectionMobile";
-import FeaturesSectionMobile from "@/components/page/landing/mobile/FeaturesSectionMobile";
-import ComparisonSectionMobile from "@/components/page/landing/mobile/ComparisonSectionMobile";
-import HowItWorksSectionMobile from "@/components/page/landing/mobile/HowItWorksSectionMobile";
-import CostStructureSectionMobile from "@/components/page/landing/mobile/CostStructureSectionMobile";
-import PricingSectionMobile from "@/components/page/landing/mobile/PricingSectionMobile";
-import FAQSectionMobile from "@/components/page/landing/mobile/FAQSectionMobile";
+import HeroSection from "@/components/page/landing/mobile/hero-section/HeroSection";
+import FeaturesSection from "@/components/page/landing/mobile/FeaturesSection";
+import ComparisonSection from "@/components/page/landing/mobile/ComparisonSection";
+import HowItWorksSection from "@/components/page/landing/mobile/HowItWorksSection";
+import CostStructureSection from "@/components/page/landing/mobile/cost-structure-section/CostStructureSection";
+import PricingSection from "@/components/page/landing/mobile/PricingSection";
+import FAQSection from "@/components/page/landing/mobile/FAQSection";
 import Footer from "@/components/public/footer/Footer";
 import FloatingRoadmap from "@/components/page/landing/FloatingRoadmap";
 import { ProductData } from "@/lib/api/types/api/polar/products/ProductData";
@@ -18,7 +18,7 @@ import { AIModelData } from "@/lib/api/types/supabase/AIModelData";
 
 gsap.registerPlugin(ScrollTrigger);
 
-export interface LandingPageMobileClientProps {
+export interface LandingPageClientProps {
     productDataList: ProductData[];
     roadmapItemList: RoadmapItem[];
     aiModelDataList: AIModelData[];
@@ -27,14 +27,14 @@ export interface LandingPageMobileClientProps {
     onClickPurchasePlan: (productId: string) => void;
 }
 
-function LandingPageMobileClient({
+function LandingPageClient({
     productDataList,
     roadmapItemList,
     aiModelDataList,
     isLoadingRoadmapItemList,
     isLoggedIn,
     onClickPurchasePlan,
-}: LandingPageMobileClientProps) {
+}: LandingPageClientProps) {
     const [isFeaturesVisible, setIsFeaturesVisible] = useState(false);
 
     // Hide Floating Roadmap & Main Header while Features Section is active in Viewport
@@ -89,17 +89,17 @@ function LandingPageMobileClient({
 
             {/* Mobile Dedicated Content Layers */}
             <div className="relative z-10">
-                <HeroSectionMobile />
-                <FeaturesSectionMobile />
-                <ComparisonSectionMobile />
-                <HowItWorksSectionMobile />
-                <CostStructureSectionMobile aiModelDataList={aiModelDataList} />
-                <PricingSectionMobile
+                <HeroSection />
+                <FeaturesSection />
+                <ComparisonSection />
+                <HowItWorksSection />
+                <CostStructureSection aiModelDataList={aiModelDataList} />
+                <PricingSection
                     productDataList={productDataList}
                     isLoggedIn={isLoggedIn}
                     onClickPurchasePlan={onClickPurchasePlan}
                 />
-                <FAQSectionMobile />
+                <FAQSection />
                 <Footer />
             </div>
 
@@ -114,4 +114,4 @@ function LandingPageMobileClient({
     );
 }
 
-export default memo(LandingPageMobileClient);
+export default memo(LandingPageClient);

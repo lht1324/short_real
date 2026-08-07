@@ -3,7 +3,7 @@
 import { memo } from "react";
 import { Sparkles, ArrowRight, Wand2, Mic } from "lucide-react";
 
-function HowItWorksSectionMobile() {
+function HowItWorksSection() {
     return (
         <section id="how-it-works" className="relative py-12 px-4 overflow-hidden">
             <div className="relative z-10 max-w-sm mx-auto">
@@ -98,4 +98,4 @@ function HowItWorksSectionMobile() {
     );
 }
 
-export default memo(HowItWorksSectionMobile);
+export default memo(HowItWorksSection);

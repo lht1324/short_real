@@ -85,9 +85,9 @@ components/page/landing/
 ├── LandingPageServer.tsx                     # User-Agent / 뷰포트 기반 모바일/데스크톱 라우터
 ├── landing-page-mobile-plan.md               # [본 문서] 기획 및 분석서
 ├── desktop/
-│   └── LandingPageDesktopClient.tsx          # 기존 데스크톱 전용 랜딩페이지
+│   └── LandingPageClient.tsx          # 기존 데스크톱 전용 랜딩페이지
 └── mobile/
-    ├── LandingPageMobileClient.tsx           # 모바일 전용 메인 클라이언트
+    ├── LandingPageClient.tsx           # 모바일 전용 메인 클라이언트
     ├── MobileHeader.tsx                      # 모바일 앱 스타일 헤더 & 풀스크린 드로어
     ├── MobileHeroSection.tsx                 # 앱-네이티브 풀터치 히어로 & 스와이프 비디오
     ├── MobileFeaturesSection.tsx             # 탭/카드 터치 슬라이더 (모바일 스크롤 압축)
@@ -132,7 +132,7 @@ components/page/landing/
 
 1. **[1단계 - 문서화 완료]**: 현재 구조 기록 및 모바일 전용 설계서 작성 (`landing-page-mobile-plan.md`).
 2. **[2단계 - 아키텍처 분기]**: 
-    * `LandingPageDesktopClient.tsx` 생성 및 기존 데스크톱 코드 이전.
+    * `LandingPageClient.tsx` 생성 및 기존 데스크톱 코드 이전.
     * `LandingPageServer.tsx`에서 클라이언트 뷰포트에 따른 분기 준비.
 3. **[3단계 - 모바일 컴포넌트 연쇄 개발]**:
     * `MobileHeader`, `MobileHero`, `MobileFeatures`, `MobileComparison`, `MobilePricing`, `MobileDockingCTA` 순차 제작.

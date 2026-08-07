@@ -9,7 +9,7 @@ import { useIntersectionObserver } from "@/hooks/useIntersectionObserver";
 
 gsap.registerPlugin(ScrollTrigger);
 
-function FeaturesSectionMobile() {
+function FeaturesSection() {
     const [activeIndex, setActiveIndex] = useState<number>(0);
     const [isDragging, setIsDragging] = useState<boolean>(false);
     const [isMuted, setIsMuted] = useState<boolean>(true);
@@ -408,6 +408,6 @@ function FeaturesSectionMobile() {
     );
 }
 
-export default memo(FeaturesSectionMobile);;;
+export default memo(FeaturesSection);;;
 
 

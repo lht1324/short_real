@@ -5,7 +5,7 @@ import { AlertTriangle, CheckCircle2, Volume2, VolumeX, Sparkles, SlidersHorizon
 import { SCRIPT_LINES } from "@/components/page/landing/data/comparisonScriptData";
 import { useIntersectionObserver } from "@/hooks/useIntersectionObserver";
 
-function ComparisonSectionMobile() {
+function ComparisonSection() {
     const [isAutoPlay, setIsAutoPlay] = useState(true);
     const [activePreset, setActivePreset] = useState<'slideshow' | 'split' | 'truemotion' | null>(null);
 
@@ -22,7 +22,6 @@ function ComparisonSectionMobile() {
         sliderPosRef.current = pos;
         if (topLayerRef.current) {
             topLayerRef.current.style.clipPath = `inset(0 ${100 - pos}% 0 0)`;
-            topLayerRef.current.style.webkitClipPath = `inset(0 ${100 - pos}% 0 0)`;
         }
         if (dividerRef.current) {
             dividerRef.current.style.transform = `translate3d(${pos * 3.1}px, 0, 0)`;
@@ -316,4 +315,4 @@ function ComparisonSectionMobile() {
     );
 }
 
-export default memo(ComparisonSectionMobile);
+export default memo(ComparisonSection);

@@ -6,7 +6,7 @@ import {ProductData} from "@/lib/api/types/api/polar/products/ProductData";
 import {Loader2, X} from "lucide-react";
 import ChangePlanModalPricingItem from "@/components/page/profile/ChangePlanModalPricingItem";
 import ChangePlanConfirmModal from "@/components/page/profile/ChangePlanConfirmModal";
-import {PRICING_BENEFIT_LIST} from "@/components/page/landing/pricing-section/PRICING_BENEFIT_LIST";
+import {PRICING_BENEFIT_LIST} from "@/components/page/landing/PRICING_BENEFIT_LIST";
 
 interface ChangePlanModalProps {
     userCurrentProductId: string | null;

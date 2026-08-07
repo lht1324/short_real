@@ -2,7 +2,7 @@
 
 import { memo, useCallback } from "react";
 import { ArrowRight, Zap } from "lucide-react";
-import VideoCard from "@/components/page/landing/hero-section/VideoCard";
+import VideoCard from "./VideoCard";
 import { useIsMobile } from "@/hooks/useIsMobile";
 
 function HeroSection() {

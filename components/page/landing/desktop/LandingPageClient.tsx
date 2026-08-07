@@ -1,20 +1,20 @@
 'use client'
 
 import { memo } from "react";
-import HeroSection from "@/components/page/landing/hero-section/HeroSection";
-import FeaturesSection from "@/components/page/landing/features-section/FeaturesSection";
-import ComparisonSection from "@/components/page/landing/comparison-section/ComparisonSection";
-import HowItWorksSection from "@/components/page/landing/how-it-works-section/HowItWorksSection";
-import CostStructureSection from "@/components/page/landing/cost-structure-section/CostStructureSection";
-import PricingSection from "@/components/page/landing/pricing-section/PricingSection";
-import FAQSection from "@/components/page/landing/faq-section/FAQSection";
+import HeroSection from "@/components/page/landing/desktop/hero-section/HeroSection";
+import FeaturesSection from "@/components/page/landing/desktop/features-section/FeaturesSection";
+import ComparisonSection from "@/components/page/landing/desktop/ComparisonSection";
+import HowItWorksSection from "@/components/page/landing/desktop/how-it-works-section/HowItWorksSection";
+import CostStructureSection from "@/components/page/landing/desktop/CostStructureSection";
+import PricingSection from "@/components/page/landing/desktop/pricing-section/PricingSection";
+import FAQSection from "@/components/page/landing/desktop/faq-section/FAQSection";
 import Footer from "@/components/public/footer/Footer";
 import FloatingRoadmap from "@/components/page/landing/FloatingRoadmap";
 import { ProductData } from "@/lib/api/types/api/polar/products/ProductData";
 import { RoadmapItem } from "@/lib/api/types/supabase/RoadmapItem";
 import { AIModelData } from "@/lib/api/types/supabase/AIModelData";
 
-export interface LandingPageDesktopClientProps {
+export interface LandingPageClientProps {
     productDataList: ProductData[];
     roadmapItemList: RoadmapItem[];
     aiModelDataList: AIModelData[];
@@ -23,14 +23,14 @@ export interface LandingPageDesktopClientProps {
     onClickPurchasePlan: (productId: string) => void;
 }
 
-function LandingPageDesktopClient({
+function LandingPageClient({
     productDataList,
     roadmapItemList,
     aiModelDataList,
     isLoadingRoadmapItemList,
     isLoggedIn,
     onClickPurchasePlan,
-}: LandingPageDesktopClientProps) {
+}: LandingPageClientProps) {
     return (
         <main
             className="relative min-h-screen pt-16 bg-[#0b0b15] text-white selection:bg-[#c21a2e]/30 overflow-x-hidden"
@@ -74,4 +74,4 @@ function LandingPageDesktopClient({
     );
 }
 
-export default memo(LandingPageDesktopClient);
+export default memo(LandingPageClient);

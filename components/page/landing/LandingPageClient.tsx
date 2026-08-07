@@ -10,8 +10,8 @@ import { roadmapClientAPI } from "@/lib/api/client/roadmapClientAPI";
 import { aiModelDataClientAPI } from "@/lib/api/client/aiModelDataClientAPI";
 import { AIModelData } from "@/lib/api/types/supabase/AIModelData";
 
-import LandingPageDesktopClient from "@/components/page/landing/desktop/LandingPageDesktopClient";
-import LandingPageMobileClient from "@/components/page/landing/mobile/LandingPageMobileClient";
+import LandingPageDesktopClient from "@/components/page/landing/desktop/LandingPageClient";
+import LandingPageMobileClient from "@/components/page/landing/mobile/LandingPageClient";
 import { useIsMobile } from "@/hooks/useIsMobile";
 
 function LandingPageClient() {
