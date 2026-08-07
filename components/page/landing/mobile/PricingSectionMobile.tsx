@@ -44,7 +44,7 @@ function PricingSectionMobile({
             <div className="relative z-10 max-w-sm mx-auto">
                 {/* Header */}
                 <div className="mb-6 text-center">
-                    <h2 className="text-3xl font-black text-white tracking-tight mb-2 leading-tight">
+                    <h2 className="text-3xl font-bold text-white tracking-tight mb-2 leading-tight">
                         Choose Your <span className="text-zinc-500">Power</span>
                     </h2>
                     <p className="text-xs text-zinc-400 max-w-xs mx-auto">
@@ -79,7 +79,7 @@ function PricingSectionMobile({
                                         <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
                                     )}
                                 </div>
-                                <span className={`text-[10px] ${isSelected ? 'text-black font-extrabold' : 'text-zinc-500'}`}>
+                                <span className={`text-[10px] ${isSelected ? 'text-black font-semibold' : 'text-zinc-500'}`}>
                                     {priceStr}
                                 </span>
                             </button>
@@ -108,7 +108,7 @@ function PricingSectionMobile({
                     </h3>
 
                     <div className="flex items-baseline gap-1 mb-4">
-                        <span className="text-4xl font-black text-white tracking-tight">
+                        <span className="text-4xl font-bold text-white tracking-tight">
                             {formattedPrice}
                         </span>
                         <span className="text-xs text-zinc-500 font-medium">
@@ -119,7 +119,7 @@ function PricingSectionMobile({
                     <button
                         onClick={() => onClickSubscribe(activeProduct.id)}
                         className={`
-                            w-full h-12 rounded-xl font-extrabold text-sm flex items-center justify-center gap-2 mb-6 active:scale-95 transition-all border
+                            w-full h-12 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 mb-6 active:scale-95 transition-all border
                             ${activeProduct.isPopular
                                 ? "bg-white text-black border-transparent shadow-[0_0_20px_rgba(255,255,255,0.2)]"
                                 : "bg-white/10 text-white border-white/10 active:bg-white/20"}

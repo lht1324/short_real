@@ -74,7 +74,7 @@ function FAQSectionMobile() {
             <div className="relative z-10 max-w-sm mx-auto space-y-6">
                 {/* Header */}
                 <div className="text-center">
-                    <h2 className="text-3xl font-black text-white tracking-tight mb-2 leading-tight">
+                    <h2 className="text-3xl font-bold text-white tracking-tight mb-2 leading-tight">
                         Frequently Asked <span className="text-zinc-500">Questions</span>
                     </h2>
                     <p className="text-xs text-zinc-400 max-w-xs mx-auto">

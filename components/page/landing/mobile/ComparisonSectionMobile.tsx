@@ -42,14 +42,19 @@ function ComparisonSectionMobile() {
         if (!isAutoPlay || !isIntersecting) return;
 
         let animationFrameId: number;
+        let frameCount = 0;
         const startTime = Date.now();
 
+        // 30fps 샘플링: 60fps rAF 루프에서 2프레임마다 1회 DOM 업데이트 (clip-path 페인트 부담 절반)
         const animate = () => {
-            const elapsed = (Date.now() - startTime) / 1000; // in seconds
-            const sinVal = Math.sin((elapsed * Math.PI * 2) / 3.5);
-            // Center is 50%, amplitude is 35% (ranges from 15% to 85%)
-            const newPos = 50 + sinVal * 35;
-            updateSliderUI(newPos);
+            frameCount++;
+            if (frameCount % 2 === 0) {
+                const elapsed = (Date.now() - startTime) / 1000; // in seconds
+                const sinVal = Math.sin((elapsed * Math.PI * 2) / 3.5);
+                // Center is 50%, amplitude is 35% (ranges from 15% to 85%)
+                const newPos = 50 + sinVal * 35;
+                updateSliderUI(newPos);
+            }
             animationFrameId = requestAnimationFrame(animate);
         };
 
@@ -129,7 +134,7 @@ function ComparisonSectionMobile() {
             <div className="relative z-10">
                 {/* Section Header */}
                 <div className="mb-5 text-center">
-                    <h2 className="text-3xl font-black text-white tracking-tight mb-2 leading-tight">
+                    <h2 className="text-3xl font-bold text-white tracking-tight mb-2 leading-tight">
                         Same Script.<br />
                         <span className="text-zinc-500">Different Reality.</span>
                     </h2>
@@ -158,7 +163,7 @@ function ComparisonSectionMobile() {
                         />
                         <div className="absolute top-4 right-4 px-2.5 py-1 bg-white/20 backdrop-blur-md rounded-full border border-white/30 flex items-center gap-1 z-10">
                             <CheckCircle2 size={11} className="text-white" />
-                            <span className="text-[9px] font-extrabold text-white">TRUE MOTION</span>
+                            <span className="text-[9px] font-semibold text-white">TRUE MOTION</span>
                         </div>
                     </div>
 
@@ -297,7 +302,7 @@ function ComparisonSectionMobile() {
                             key={idx}
                             className={`text-xs transition-all duration-300 leading-relaxed ${
                                 idx === activeSubtitleIndex
-                                    ? 'text-white font-extrabold'
+                                    ? 'text-white font-semibold'
                                     : 'text-zinc-500 font-medium'
                             }`}
                         >

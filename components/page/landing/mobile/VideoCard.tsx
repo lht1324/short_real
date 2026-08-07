@@ -74,7 +74,7 @@ function VideoCard({
                 className="absolute inset-0 z-10 block cursor-default"
                 onClick={(e) => e.preventDefault()}
             >
-                <span className="sr-only">Open Original Resolution Video</span>
+                <span className="sr-only">Long-press or right-click to open original video</span>
             </a>
 
             <video

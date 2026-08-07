@@ -169,14 +169,14 @@ function HeroSectionMobile() {
                     
                     {/* Mobile Headline - Sliced Blade Main Anchor */}
                     <h1 className="relative leading-[0.88] flex flex-col items-start select-none">
-                        <span className="block text-[5.5rem] xs:text-[6.4rem] font-black tracking-tighter text-white drop-shadow-2xl">
+                        <span className="block text-[5.5rem] xs:text-[6.4rem] font-bold tracking-tighter text-white drop-shadow-2xl">
                             F*ck
                         </span>
                         <div className="relative mt-1 inline-block">
                             <div className="relative overflow-visible">
                                 {/* UPPER SLICE */}
                                 <span
-                                    className="block text-[3.5rem] xs:text-[4.2rem] font-black tracking-tighter text-zinc-400/90 uppercase [clip-path:polygon(0%_0%,100%_0%,100%_15%,0_70%)] whitespace-nowrap"
+                                    className="block text-[3.5rem] xs:text-[4.2rem] font-bold tracking-tighter text-zinc-400/90 uppercase [clip-path:polygon(0%_0%,100%_0%,100%_15%,0_70%)] whitespace-nowrap"
                                     aria-hidden="true"
                                 >
                                     AI slideshows<span className="text-[#0a0a0c]">.</span>
@@ -184,7 +184,7 @@ function HeroSectionMobile() {
 
                                 {/* LOWER SLICE */}
                                 <span 
-                                    className="absolute inset-0 text-[3.5rem] xs:text-[4.2rem] font-black tracking-tighter text-zinc-500/70 uppercase [clip-path:polygon(0%_80%,100%_25%,100%_100%,0_100%)] translate-x-[1px] whitespace-nowrap"
+                                    className="absolute inset-0 text-[3.5rem] xs:text-[4.2rem] font-bold tracking-tighter text-zinc-500/70 uppercase [clip-path:polygon(0%_80%,100%_25%,100%_100%,0_100%)] translate-x-[1px] whitespace-nowrap"
                                 >
                                     AI slideshows<span className="text-[#0a0a0c]">.</span>
                                 </span>
@@ -200,7 +200,7 @@ function HeroSectionMobile() {
 
                     {/* Sub Copy */}
                     <p className="text-sm xs:text-base font-medium text-zinc-400 tracking-wide max-w-[32ch] leading-relaxed pt-1">
-                        Finally, <span className="text-white font-black drop-shadow-sm">True Motion</span> Generation.<br />
+                        Finally, <span className="text-white font-bold drop-shadow-sm">True Motion</span> Generation.<br />
                         Don&#39;t settle for zooming images.
                     </p>
 

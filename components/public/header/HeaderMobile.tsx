@@ -108,7 +108,7 @@ function HeaderMobile() {
                                 { id: "features", label: "Features" },
                                 { id: "comparison", label: "The Gap" },
                                 { id: "how-it-works", label: "How It Works" },
-                                { id: "cost-calc", label: "Cost Calculator" },
+                                { id: "coststructure", label: "Cost Calculator" },
                                 { id: "pricing", label: "Pricing" },
                                 { id: "faq", label: "FAQ" },
                             ].map((item) => (

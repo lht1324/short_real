@@ -61,6 +61,16 @@ function FeaturesSectionMobile() {
         });
     }, [activeIndex, isMuted, hasIntersected, isPinned]);
 
+    // Next Reel Forced Preload: 인덱스 이동 즉시 다음 영상 다운로드 강제 시작
+    // (iOS Safari는 화면 밖 video 로드를 지연시키므로 명시적 load() 호출로 파이프라인 확보)
+    useEffect(() => {
+        if (!hasIntersected) return;
+        const nextEl = videoRefs.current[activeIndex + 1];
+        if (nextEl) {
+            nextEl.load();
+        }
+    }, [activeIndex, hasIntersected]);
+
     // Step 1: Features Precision Pin Lock Engine with High Constant Buffer (6000px)
     useEffect(() => {
         const sectionEl = sectionRef.current;
@@ -302,28 +312,35 @@ function FeaturesSectionMobile() {
                         transform: `translate3d(0, -${activeIndex * 100}%, 0)`
                     }}
                 >
-                    {FEATURES_DATA.map((feat, idx) => (
-                        <div key={feat.id} className="relative w-full h-full shrink-0 flex items-center justify-center bg-black">
-                            <video
-                                ref={(el) => { videoRefs.current[idx] = el; }}
-                                src={hasIntersected ? feat.videoSrc : undefined}
-                                poster={`/preview/demo_${feat.title.toLowerCase()}.webp`}
-                                preload={!hasIntersected ? "none" : "auto"}
-                                className="w-full h-full object-contain pointer-events-none"
-                                autoPlay
-                                loop
-                                muted={isMuted}
-                                playsInline
-                            />
-                        </div>
-                    ))}
+                    {FEATURES_DATA.map((feat, idx) => {
+                        // Reels Preload Strategy: src는 ±1 범위로 유지(이전 복귀 시 캐시 재사용),
+                        // preload="auto"는 현재+다음만 — 다음 영상은 스와이프 한 번 앞서 로드 완료되어 즉각 재생
+                        const isNearby = Math.abs(idx - activeIndex) <= 1;
+                        const isActiveOrNext = idx === activeIndex || idx === activeIndex + 1;
+                        const shouldLoad = hasIntersected && isNearby;
+                        return (
+                            <div key={feat.id} className="relative w-full h-full shrink-0 flex items-center justify-center bg-black">
+                                <video
+                                    ref={(el) => { videoRefs.current[idx] = el; }}
+                                    src={shouldLoad ? feat.videoSrc : undefined}
+                                    poster={`/preview/demo_${feat.title.toLowerCase()}.webp`}
+                                    preload={hasIntersected && isActiveOrNext ? "auto" : "none"}
+                                    className="w-full h-full object-contain pointer-events-none"
+                                    autoPlay
+                                    loop
+                                    muted={isMuted}
+                                    playsInline
+                                />
+                            </div>
+                        );
+                    })}
                 </div>
 
                 {/* Top Category Badge (Elevated to z-30) */}
                 <div className="absolute top-4 inset-x-0 px-4 flex items-center justify-between z-30 pointer-events-none">
                     <div className="px-3.5 py-1.5 rounded-full bg-black/70 backdrop-blur-md border border-white/20 flex items-center gap-2 pointer-events-auto">
                         <Icon size={14} className="text-white" />
-                        <span className="text-xs font-black tracking-widest text-white uppercase">
+                        <span className="text-xs font-bold tracking-widest text-white uppercase">
                             {activeFeature.title} Engine
                         </span>
                     </div>
@@ -336,7 +353,7 @@ function FeaturesSectionMobile() {
                 <div className="absolute bottom-3 inset-x-0 px-4 z-30 space-y-2.5 pointer-events-none">
                     {/* Active Reel Caption with Integrated Right Mute Button */}
                     <div className="p-4 rounded-2xl bg-black/80 backdrop-blur-md border border-white/10 flex items-center justify-between gap-3 pointer-events-auto shadow-2xl">
-                        <h3 className="text-sm xs:text-base font-extrabold text-white leading-snug tracking-tight whitespace-pre-line min-w-0 flex-1">
+                        <h3 className="text-sm xs:text-base font-semibold text-white leading-snug tracking-tight whitespace-pre-line min-w-0 flex-1">
                             {activeFeature.description}
                         </h3>
 

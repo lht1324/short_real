@@ -9,7 +9,7 @@ function HowItWorksSectionMobile() {
             <div className="relative z-10 max-w-sm mx-auto">
                 {/* Header */}
                 <div className="mb-6 text-center">
-                    <h2 className="text-3xl font-black text-white tracking-tight mb-2 leading-tight">
+                    <h2 className="text-3xl font-bold text-white tracking-tight mb-2 leading-tight">
                         Don&#39;t Prompt.<br />
                         <span className="text-zinc-500">Just Write.</span>
                     </h2>
