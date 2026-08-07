@@ -80,7 +80,7 @@ function FeaturesSection() {
             ScrollTrigger.create({
                 trigger: sectionEl,
                 start: "top top",
-                end: "+=6000px",
+                end: "+=8000px",
                 pin: true,
                 pinSpacing: true,
                 anticipatePin: 1,

@@ -170,7 +170,7 @@ function HeroSection() {
                     {/* Mobile Headline - Sliced Blade Main Anchor */}
                     <h1 className="relative leading-[0.88] flex flex-col items-start select-none">
                         <span className="block text-[5.5rem] xs:text-[6.4rem] font-bold tracking-tighter text-white drop-shadow-2xl">
-                            F*ck
+                            F×ck
                         </span>
                         <div className="relative mt-1 inline-block">
                             <div className="relative overflow-visible">
