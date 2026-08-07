@@ -1,6 +1,6 @@
 import {memo, useCallback, useState, MouseEvent, useRef, useEffect} from "react";
 import {Volume2, VolumeX} from "lucide-react";
-import {Feature} from "@/components/page/landing/features-section/FeaturesSection";
+import {Feature} from "./FeaturesSection";
 import { useIntersectionObserver } from "@/hooks/useIntersectionObserver";
 
 function FeatureCard({ feature, index, className }: { feature: Feature, index: number, className?: string }) {

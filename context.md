@@ -1,36 +1,29 @@
-# 작업 진행 상황 (Last Updated: 2026-08-03 15:55)
+# 작업 진행 상황 (Last Updated: 2026-08-07 03:30)
 
 ## 1. 현재 상황 (Current Status)
-* **Hellyeah Google Ads 캠페인 런칭 완료**:
-    * 'WILL YOU WATCH THAT?' 우주비행사 소재 기반 Performance Max ($100/7일) 광고 런칭 및 구글 심사 대기 중 (`PENDING`).
-    * Hellyeah X-Ray 트래커 수신 대기 및 실서버 배포 완료.
-* **접근 제어 미들웨어 및 Auth UI / 로고 레이아웃 정제 완료**:
-    * `proxy.ts` 미구독자/비로그인 유저 `/workspace` 접근 차단 및 `/profile` 리다이렉트 구현.
-    * 구글 & 깃허브 공식 브랜딩 가이드라인 준수 1:1 통일 소셜 로그인 버튼 리팩토링.
-    * 헤더 및 푸터 브랜드 로고 타이포그래피 정제 (`Short`: White, `Real`: `#FF3B30` 네온 레드, `AI`: `text-zinc-300 font-bold` 옅은 쿨화이트) 적용 완료.
+
+### 📌 완수된 작업 (Completed Milestones)
+* **모바일 Features 섹션 유저 Mute 설정 기억 & 이탈 시 잠시 수면 수술 완수**:
+    * `isPinned === false` (Features 섹션 이탈/핀 풀림) 시 4개 비디오 태그 모두 `videoEl.muted = true;` 및 `videoEl.pause();` 로 전환하여 백그라운드 소리를 100% 차단.
+    * 유저가 설정한 `isMuted` State (소리 온/오프 상태)는 초기화되지 않고 똑똑하게 기억(Remember)됨.
+    * 다시 Features 섹션으로 스크롤해 들어오면 유저가 아까 설정했던 음소거 상태(`isMuted`)를 그대로 복원하여 끊김 없이 스무스하게 소리와 함께 오토플레이 재생.
+* **React Profiler 191회 커밋 분석 기반 - React 리렌더링 0회(Zero Re-render) Direct DOM 수술 완수**:
+    * `ComparisonSectionMobile`: 60fps 오토 핑퐁 시 `setSliderPos` state 갱신을 완전 축출하고 `topLayerRef` / `dividerRef` `ref.style` direct GPU 조절로 **129회 ➡️ 0회 Zero Re-render** 전환.
+    * `FeaturesSectionMobile`: 터치 드래그 시 `setDragOffset` state 갱신을 축출하고 `railTrackRef` `ref.style.transform` direct GPU 조절로 **60회 ➡️ 0회 Zero Re-render** 전환.
+* **데스크탑 기법 도입 - 비디오 화면 진입 시 로딩 (Intersection-based Lazy Source) 수술**:
+    * `FeaturesSectionMobile` 및 `ComparisonSectionMobile` 비디오들에 `hasIntersected ? feat.videoSrc : undefined` 및 `preload={!hasIntersected ? "none" : "auto"}` 적용 완료.
+* **GSAP `gsap.context()` 파이프라인 수술 (TS2339 타입 에러 100% 해소)**:
+    * `FeaturesSectionMobile`에 `gsap.context()` 및 `ctx.revert()` 정석 패턴 적용하여 TypeScript 타입 에러 완전 박멸.
 
 ---
 
 ## 2. 세션 진행 작업 (Work Accomplished in Current Session)
-1. **Hellyeah Google Ads 캠페인 런칭 가이드 및 세팅 검수**:
-    * Performance Max (영미권 1티어 6개국, 18-54세, 우주비행사 'WILL YOU WATCH THAT?' 이미지 소재, $100/7일) 최종 검수 및 런칭.
-2. **`proxy.ts` 미들웨어 접근 제어 강화**:
-    * `/workspace/:path*` 매처 추가. 비로그인 유저 `/sign-in` 이동, 미구독 유저 (`!plan` 또는 `plan === 'none'`) `/profile` 이동.
-3. **구글 & 깃허브 로그인 버튼 가이드라인 통일 및 UI 튜닝**:
-    * `GoogleSignInButton.tsx` & `DefaultSignInButton.tsx`: `text-sm/20` 높이 찌그러짐 버그 수정, 44px (`h-11`), `rounded-xl`, `#F2F2F2` (hover `#E3E3E3`) 통일.
-    * 광학 텍스트 중앙 정렬: 아이콘 `absolute left-4`, 텍스트 수학적 정중앙 배치.
-4. **헤더 및 푸터 브랜드 로고 옅은 쿨화이트 AI 스타일 적용 (`Header.tsx`, `Footer.tsx`)**:
-    * 어두운 배경에서 파묻히던 `Real` 레드를 다크 배경 시인성 극대화 네온 레드(`text-[#FF3B30]`)로 적용.
-    * `AI` 텍스트를 굵은 폰트 두께(`font-bold`)로 칼 같은 픽셀 선명도를 유지하면서 은은하게 밝은 **`text-zinc-300 font-bold` (옅은 쿨화이트)**로 변경하여 비교 확인 준비.
+1. **[FeaturesSectionMobile] 유저 Mute 선호 설정 기억 & 섹션 재진입 시 상태 복원 파이프라인 구축**:
+    * 이탈 시 무음/정지 처리 & 재진입 시 유저 소리 설정 복원 완수.
+2. **`context.md` 현황 최신화**:
+    * 작업 결과 정리 및 일시 갱신 (2026-08-07 03:30 UTC+9).
 
 ---
 
 ## 3. 향후 작업 (Next Steps)
-
-### Task 4: [백엔드/파이프라인] 정규 생성 실패 건 선택적 재생성 (Selective Retry) 및 상태 동기화 체계 구축
-1. **배경 및 필요성**:
-    * 외부 AI API(Fal AI 등)의 일시적 서버 오류, 네트워크 타임아웃 등으로 인해 전체 10개 씬 중 특정 1~2개 씬만 생성 실패(`status: FAILED`)하는 경우 발생.
-    * 전체 재요청 없이 실패한 씬만 선택적으로 재요청(Selective Retry)하는 파이프라인 필터링 및 대시보드 연동 필요.
-2. **구체적 구현 내용**:
-    * **[에디터 UI]**: `status === FAILED`인 씬 카드에 **[Retry Scene / 씬 재시도]** 전용 버튼 및 실패 원인 툴팁 표시.
-    * **[백엔드 파이프라인]**: 실패한 씬 번호 목록(예: `failedSceneNumbers: [3, 5]`)만 전달받아 해당 씬들만 핀포인트로 백그라운드 재요청을 수행하고 성공한 기존 씬은 유지하며 DB `scene_breakdown_list`에 병합 패치.
+* 사장님 직접 소리를 켠 상태에서 다른 섹션으로 나갔다가 다시 Features로 돌아왔을 때 소리가 자동으로 이어서 재생되는지 최종 확인.

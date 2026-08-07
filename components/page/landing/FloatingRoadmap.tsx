@@ -87,7 +87,7 @@ function FloatingRoadmap({
                             <p className="text-sm text-white/50 mt-1">Check back later for updates!</p>
                         </div>
                     ) : (
-                        roadmapItemList.sort((a, b) => {
+                        [...roadmapItemList].sort((a, b) => {
                             // 1차 정렬: 상태 우선순위
                             // (status 값이 낮을수록 우선순위가 높다고 가정하거나, 필요시 순서 조정)
                             // 여기서는 단순 값 비교

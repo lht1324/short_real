@@ -234,8 +234,27 @@ function CostStructureSection({ aiModelDataList }: CostStructureSectionProps) {
                                             <label className="text-sm text-gray-300">Total Video Duration</label>
                                             <span className="text-sm font-mono text-white bg-white/10 px-2 py-0.5 rounded">{videoDuration}s</span>
                                         </div>
+                                        <div className="flex gap-2 mb-1">
+                                            {[
+                                                { label: "Short (30s)", duration: 30, scenes: 6 },
+                                                { label: "Mid (60s)", duration: 60, scenes: 12 },
+                                                { label: "Long (120s)", duration: 120, scenes: 24 }
+                                            ].map((preset) => (
+                                                <button
+                                                    key={preset.label}
+                                                    type="button"
+                                                    onClick={() => {
+                                                        setVideoDuration(preset.duration);
+                                                        setSceneCount(preset.scenes);
+                                                    }}
+                                                    className="px-2.5 py-1 rounded-md bg-white/5 border border-white/10 text-[11px] font-semibold text-zinc-300 active:scale-95 transition-all hover:bg-white/10"
+                                                >
+                                                    {preset.label}
+                                                </button>
+                                            ))}
+                                        </div>
                                         <input
-                                            type="range" min="5" max="60" step="1"
+                                            type="range" min="5" max="120" step="1"
                                             value={videoDuration} onChange={onChangeVideoDuration}
                                             className="w-full accent-white"
                                         />
