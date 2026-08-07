@@ -3,7 +3,7 @@
 import { memo } from "react";
 import { Atom, Scan, Aperture, CloudFog, LucideProps } from "lucide-react";
 import { ForwardRefExoticComponent, RefAttributes } from "react";
-import FeatureCard from "@/components/page/landing/features-section/FeatureCard";
+import FeatureCard from "./FeatureCard";
 import { motion } from "framer-motion";
 
 export interface Feature {

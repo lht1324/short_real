@@ -2,7 +2,7 @@
 
 import {memo, MouseEvent} from "react";
 import {Play, Square} from "lucide-react";
-import {VoiceProfile} from "@/components/page/landing/how-it-works-section/HowItWorksSection";
+import {VoiceProfile} from "./HowItWorksSection";
 import {MotionDiv} from "@/components/public/framerMotion/Motion";
 
 interface VoiceSelectionItemProps {

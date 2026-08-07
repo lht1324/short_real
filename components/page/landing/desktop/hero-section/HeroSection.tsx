@@ -2,7 +2,7 @@
 
 import { memo, useCallback } from "react";
 import { ArrowRight, Zap } from "lucide-react";
-import VideoCard from "@/components/page/landing/hero-section/VideoCard";
+import VideoCard from "./VideoCard";
 import { useIsMobile } from "@/hooks/useIsMobile";
 
 function HeroSection() {
@@ -89,7 +89,6 @@ function HeroSection() {
                             <VideoCard
                                 src={`${process.env.NEXT_PUBLIC_DEMO_ASSETS_URL}/demo_main_left.mp4`}
                                 posterSrc="/preview/demo_main_left.webp"
-                                isLeftCard={true}
                                 lazyLoad={true}
                                 preload="none"
                                 threshold={0.5}

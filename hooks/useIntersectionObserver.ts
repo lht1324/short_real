@@ -29,6 +29,7 @@ export function useIntersectionObserver(
             if (currentTarget) {
                 observer.unobserve(currentTarget);
             }
+            observer.disconnect();
         };
     }, [threshold, rootMargin, root]);
 

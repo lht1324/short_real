@@ -2,8 +2,8 @@
 
 import {Loader2, Mic} from "lucide-react";
 import {memo, useCallback, MouseEvent, useState, useRef, useEffect} from "react";
-import {VoiceProfile} from "@/components/page/landing/how-it-works-section/HowItWorksSection";
-import VoiceSelectionItem from "@/components/page/landing/how-it-works-section/VoiceSelectionItem";
+import {VoiceProfile} from "./HowItWorksSection";
+import VoiceSelectionItem from "./VoiceSelectionItem";
 
 interface VoiceSelectionPanelProps {
     voiceDataList: VoiceProfile[];

@@ -4,9 +4,9 @@ import { memo, useState, useRef, useMemo, useCallback, useEffect } from "react";
 import { Sparkles, Clapperboard, Clock, Wand2, ArrowDown, Loader2 } from "lucide-react";
 import { Voice } from "@/lib/api/types/eleven-labs/Voice";
 import { voiceClientAPI } from "@/lib/api/client/voiceClientAPI";
-import CTAModal from "@/components/page/landing/how-it-works-section/CTAModal";
-import GenerateActionPanel from "@/components/page/landing/how-it-works-section/GenerateActionPanel";
-import VoiceSelectionPanel from "@/components/page/landing/how-it-works-section/VoiceSelectionPanel";
+import CTAModal from "./CTAModal";
+import GenerateActionPanel from "./GenerateActionPanel";
+import VoiceSelectionPanel from "./VoiceSelectionPanel";
 import {MotionDiv} from "@/components/public/framerMotion/Motion";
 import {AnimPresence} from "@/components/public/framerMotion/AnimPresence";
 
