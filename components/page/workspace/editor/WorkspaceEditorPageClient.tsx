@@ -24,6 +24,7 @@ import { AIModelData } from "@/lib/api/types/supabase/AIModelData";
 import { aiModelDataClientAPI } from "@/lib/api/client/aiModelDataClientAPI";
 import CaptionConfigPanel, {ColorPickerType} from "@/components/page/workspace/editor/CaptionConfigPanel";
 import VideoPlayerPanel, {VideoPlayerHandle} from "@/components/page/workspace/editor/VideoPlayerPanel";
+import {loadAllPreviewFonts} from "@/components/remotion/fonts";
 import MusicPanel from "@/components/page/workspace/editor/MusicPanel";
 // import MusicEditPanel from "@/components/page/workspace/editor/MusicEditPanel";
 import {musicClientAPI} from "@/lib/api/client/musicClientAPI";
@@ -60,6 +61,8 @@ export interface CaptionData {
     speedMultiplier?: number; // 2차 배속 설정
 }
 
+export type CaptionAnimation = 'pop' | 'swift' | 'bounce' | 'fadeSlide' | 'colorOnly' | 'highlightBar';
+
 export interface CaptionConfigState {
     // Font settings state
     fontFamilyName: string;
@@ -68,6 +71,8 @@ export interface CaptionConfigState {
 
     // Caption settings state
     captionPosition: number; // percentage from top (0-100)
+    captionChunkSize: 'auto' | 2 | 3 | 4;
+    captionAnimation: CaptionAnimation;
     captionHeight: number;
     showCaptionLine: boolean;
 
@@ -123,11 +128,13 @@ enum ConfigPanelType {
 const INITIAL_CAPTION_CONFIG_STATE: CaptionConfigState = {
     // Font settings state
     fontFamilyName: "Poppins",
-    fontSize: 48,
+    fontSize: 72,
     fontWeight: 900,
 
     // Caption settings state
     captionPosition: 80,
+    captionChunkSize: 'auto',
+    captionAnimation: 'pop',
     captionHeight: 0,
     showCaptionLine: true,
 
@@ -893,6 +900,9 @@ function WorkspaceEditorPageClient() {
                 });
                 setFontFamilyList(newFamilyList);
 
+                // 드롭다운 미리보기용 전체 폰트 @font-face 프리로드 (Remotion 공용 폰트 경로)
+                loadAllPreviewFonts();
+
                 // Task Data Initialization
                 const userId = user?.id || searchParams.get('userId') || "";
                 const [urlsResult, videoGenerationTask] = await Promise.all([
@@ -1010,6 +1020,29 @@ function WorkspaceEditorPageClient() {
             }
         }
     }, [router, taskId]);
+
+    // [서명 URL 자동 재발급]
+    // 씬 영상/음성 URL은 1시간 만료 서명 URL이다. 편집 세션이 1시간을 넘기면 모든 미디어가 만료되어
+    // Remotion <Video>에서 MediaPlaybackError가 발생하므로, 로드 완료 후 50분마다 새 서명 URL로 갱신한다.
+    useEffect(() => {
+        if (!videoData?.scenesUrlData || videoData.scenesUrlData.length === 0) return;
+        if (!taskId || !user?.id) return;
+
+        const refreshSignedUrls = async () => {
+            const urlsResult = await videoClientAPI.getVideoTaskUrls(taskId, user.id);
+            if (!urlsResult || !urlsResult.scenes || urlsResult.scenes.length === 0) return;
+            setVideoData((currentPrev) => {
+                if (!currentPrev) return currentPrev;
+                return {
+                    ...currentPrev,
+                    scenesUrlData: urlsResult.scenes,
+                };
+            });
+        };
+
+        const intervalId = window.setInterval(refreshSignedUrls, 50 * 60 * 1000);
+        return () => window.clearInterval(intervalId);
+    }, [taskId, user?.id, videoData?.scenesUrlData?.length]);
 
     useEffect(() => {
         if (headerRef.current) {
@@ -1212,12 +1245,11 @@ function WorkspaceEditorPageClient() {
                                 isCaptionEnabled={isCaptionEnabled}
                                 captionDataList={captionDataList}
                                 captionConfigState={captionConfigState}
+                                aspectRatio={aspectRatio}
                                 musicPlayConfig={musicPlayConfig}
-                                selectedFontFamilyFullShape={selectedFontFamilyFullShape}
                                 sceneSpeedList={sceneSpeedList}
                                 sceneRealStartTimes={sceneRealStartTimes}
                                 onChangeVideoPanelContainerHeight={onChangeVideoPanelContainerHeight}
-                                onChangeCaptionConfigState={onChangeCaptionConfigState}
                                 onChangeVideoPlayerUIData={onChangeVideoPlayerUIData}
                                 onChangeCurrentTime={onChangeVideoCurrentTime}
                                 onChangeSceneSpeed={onChangeSceneSpeed}

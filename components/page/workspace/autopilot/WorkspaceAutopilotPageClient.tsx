@@ -31,9 +31,11 @@ import { isAutopilotWindowClosed } from "@/lib/utils/cronUtils";
 
 const INITIAL_CAPTION_CONFIG_STATE: CaptionConfigState = {
     fontFamilyName: "Poppins",
-    fontSize: 48,
+    fontSize: 72,
     fontWeight: 900,
     captionPosition: 80,
+    captionChunkSize: 'auto',
+    captionAnimation: 'pop',
     captionHeight: 0,
     showCaptionLine: true,
     activeColor:'#FFFFFF',

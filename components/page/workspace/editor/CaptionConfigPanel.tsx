@@ -8,6 +8,22 @@ import {FontFamily} from "@/lib/FontFamilyList";
 
 export type ColorPickerType = 'activeColor' | 'inactiveColor' | 'activeOutlineColor' | 'inactiveOutlineColor';
 
+const CAPTION_CHUNK_SIZE_OPTIONS: { label: string; value: 'auto' | 2 | 3 | 4; }[] = [
+    { label: 'Auto (Hormozi)', value: 'auto' },
+    { label: '2 Words', value: 2 },
+    { label: '3 Words', value: 3 },
+    { label: '4 Words', value: 4 },
+];
+
+const CAPTION_ANIMATION_OPTIONS: { label: string; value: 'pop' | 'swift' | 'bounce' | 'fadeSlide' | 'colorOnly' | 'highlightBar'; }[] = [
+    { label: 'Pop', value: 'pop' },
+    { label: 'Swift', value: 'swift' },
+    { label: 'Fade + Slide', value: 'fadeSlide' },
+    { label: 'Bounce', value: 'bounce' },
+    { label: 'Color Only', value: 'colorOnly' },
+    { label: 'Highlight Bar', value: 'highlightBar' },
+];
+
 interface CaptionConfigPanelProps {
     isCaptionEnabled: boolean;
     captionConfigState: CaptionConfigState;
@@ -48,6 +64,12 @@ function CaptionConfigPanel({
     const fontSize = useMemo(() => {
         return captionConfigState.fontSize;
     }, [captionConfigState.fontSize]);
+
+    // 캔버스 세로 대비 폰트 비율 표기 (9:16 -> 1080x1920, 16:9 -> 1920x1080)
+    const fontSizeFrameHeightPct = useMemo(() => {
+        const frameHeight = aspectRatio === '16:9' ? 1080 : 1920;
+        return (captionConfigState.fontSize / frameHeight) * 100;
+    }, [aspectRatio, captionConfigState.fontSize]);
     const fontWeight = useMemo(() => {
         return captionConfigState.fontWeight;
     }, [captionConfigState.fontWeight]);
@@ -284,8 +306,8 @@ function CaptionConfigPanel({
                             <input
                                 ref={fontSizeInputRef}
                                 type="number"
-                                min="36"
-                                max="84"
+                                min="48"
+                                max="120"
                                 value={fontSize}
                                 onInput={(e) => {
                                     const input = e.target as HTMLInputElement;
@@ -298,34 +320,37 @@ function CaptionConfigPanel({
                                         input.value = inputValue;
                                     }
 
-                                    // Allow empty or 0 values, but limit max to 84
+                                    // Allow empty or 0 values, but limit max to 120
                                     if (inputValue === '') {
                                         onChangeFontSize(0);
                                     } else {
                                         const numValue = parseInt(inputValue) || 0;
-                                        onChangeFontSize(Math.min(84, numValue));
+                                        onChangeFontSize(Math.min(120, numValue));
                                     }
                                 }}
                                 onBlur={(e) => {
                                     const input = e.target as HTMLInputElement;
                                     const numValue = parseInt(input.value) || 0;
-                                    // 입력 완료 시 최소값 36 체크
-                                    if (numValue > 0 && numValue < 36) {
-                                        onChangeFontSize(36);
+                                    // 입력 완료 시 최소값 48 체크
+                                    if (numValue > 0 && numValue < 48) {
+                                        onChangeFontSize(48);
                                     }
                                 }}
                                 className="w-12 bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-white text-base focus:border-zinc-500 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                             />
-                            <span className="text-gray-400 text-base">px</span>
+                            <span className="text-gray-400 text-base">px @1080</span>
                         </div>
                         <input
                             type="range"
-                            min="36"
-                            max="84"
+                            min="48"
+                            max="120"
                             value={fontSize}
                             onChange={(e) => onChangeFontSize(parseInt(e.target.value))}
                             className="flex-1 accent-indigo-500"
                         />
+                    </div>
+                    <div className="text-gray-500 text-xs">
+                        ≈ {fontSizeFrameHeightPct.toFixed(1)}% of frame height
                     </div>
                 </div>
 
@@ -360,6 +385,60 @@ function CaptionConfigPanel({
                             onChange={(e) => onChangeFontWeight(parseInt(e.target.value))}
                             className="flex-1 accent-indigo-500"
                         />
+                    </div>
+                </div>
+
+                {/* Word Grouping */}
+                <div className="space-y-2">
+                    <label className="text-white text-base font-medium">Word Grouping</label>
+                    <div className="flex bg-black/40 border border-white/10 rounded-lg p-0.5">
+                        {CAPTION_CHUNK_SIZE_OPTIONS.map((option) => {
+                            const isSelected = captionConfigState.captionChunkSize === option.value;
+                            return (
+                                <button
+                                    key={String(option.value)}
+                                    type="button"
+                                    onClick={() => onChangeCaptionConfigState({
+                                        ...captionConfigState,
+                                        captionChunkSize: option.value,
+                                    })}
+                                    className={`flex-1 py-1.5 text-sm font-medium rounded-md transition-all focus:outline-none ${
+                                        isSelected
+                                            ? 'bg-zinc-800 text-white shadow-sm'
+                                            : 'text-zinc-400 hover:text-zinc-200'
+                                    }`}
+                                >
+                                    {option.label}
+                                </button>
+                            );
+                        })}
+                    </div>
+                </div>
+
+                {/* Word Animation */}
+                <div className="space-y-2">
+                    <label className="text-white text-base font-medium">Word Animation</label>
+                    <div className="flex flex-wrap bg-black/40 border border-white/10 rounded-lg p-0.5 gap-0.5">
+                        {CAPTION_ANIMATION_OPTIONS.map((option) => {
+                            const isSelected = captionConfigState.captionAnimation === option.value;
+                            return (
+                                <button
+                                    key={option.value}
+                                    type="button"
+                                    onClick={() => onChangeCaptionConfigState({
+                                        ...captionConfigState,
+                                        captionAnimation: option.value,
+                                    })}
+                                    className={`flex-1 py-1.5 text-sm font-medium rounded-md transition-all focus:outline-none min-w-[30%] ${
+                                        isSelected
+                                            ? 'bg-zinc-800 text-white shadow-sm'
+                                            : 'text-zinc-400 hover:text-zinc-200'
+                                    }`}
+                                >
+                                    {option.label}
+                                </button>
+                            );
+                        })}
                     </div>
                 </div>
 
