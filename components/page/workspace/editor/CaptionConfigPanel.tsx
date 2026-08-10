@@ -5,6 +5,7 @@ import {CaptionConfigState} from "@/components/page/workspace/editor/WorkspaceEd
 import {FontVariant} from "@/lib/api/types/google-fonts/GoogleFont";
 import {AccordionSection} from "@/components/public/Accordion";
 import {FontFamily} from "@/lib/FontFamilyList";
+import FontFamilyDropdown from "@/components/page/workspace/editor/FontFamilyDropdown";
 
 export type ColorPickerType = 'activeColor' | 'inactiveColor' | 'activeOutlineColor' | 'inactiveOutlineColor';
 
@@ -50,12 +51,6 @@ function CaptionConfigPanel({
     aspectRatio = '9:16',
 }: CaptionConfigPanelProps) {
     const fontSizeInputRef = useRef<HTMLInputElement>(null);
-
-    const fontFamilyNameList = useMemo(() => {
-        return fontFamilyList.map((fontFamily) => {
-            return fontFamily.name;
-        });
-    }, [fontFamilyList]);
 
     // Font settings state
     const fontFamilyName = useMemo(() => {
@@ -277,25 +272,13 @@ function CaptionConfigPanel({
                 {/* Font Family */}
                 <div className="space-y-2">
                     <label className="text-white text-base font-medium">Font Family</label>
-                    <select
+                    <FontFamilyDropdown
+                        fontFamilyList={fontFamilyList}
                         value={fontFamilyName}
-                        onChange={(e) => onChangeFontFamilyName(e.target.value)}
-                        style={{
-                            fontFamily: selectedFontFamilyFullShape,
-                            fontWeight: fontWeight,
-                        }}
-                        className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-white text-base focus:border-zinc-500 focus:outline-none cursor-pointer"
-                    >
-                        {fontFamilyNameList.map((fontFamilyName, index) => {
-                            return <option
-                                key={`${fontFamilyName}_${index}`}
-                                value={fontFamilyName}
-                                style={{ fontFamily: `${fontFamilyName}` }}
-                            >
-                                {fontFamilyName}
-                            </option>
-                        })}
-                    </select>
+                        triggerFontFullShape={selectedFontFamilyFullShape}
+                        triggerFontWeight={fontWeight}
+                        onChange={onChangeFontFamilyName}
+                    />
                 </div>
 
                 {/* Font Size */}

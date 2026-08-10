@@ -1,3 +1,4 @@
+import {loadFont as loadFont_AlfaSlabOne} from '@remotion/google-fonts/AlfaSlabOne';
 import {loadFont as loadFont_Anton} from '@remotion/google-fonts/Anton';
 import {loadFont as loadFont_Archivo} from '@remotion/google-fonts/Archivo';
 import {loadFont as loadFont_ArchivoBlack} from '@remotion/google-fonts/ArchivoBlack';
@@ -53,6 +54,7 @@ type FontLoader = (...args: any[]) => {
 };
 
 const FONT_LOADER_MAP: Record<string, FontLoader> = {
+    'Alfa Slab One': loadFont_AlfaSlabOne,
     'Anton': loadFont_Anton,
     'Archivo': loadFont_Archivo,
     'Archivo Black': loadFont_ArchivoBlack,
