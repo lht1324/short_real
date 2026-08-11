@@ -28,10 +28,13 @@ export interface RemotionCaptionSegment {
  */
 export interface RemotionSceneData {
     sceneNumber: number;
-    startSec: number; // 절대 시간 기준 씬 시작 시각 (캡션 절대 시간 -> 씬 로컬 시간 변환용)
+    startSec: number; // 원본 축(1차 배속 후 = 음성 타임스탬프) 기준 씬 시작 시각
+    endSec?: number; // 원본 축 기준 씬 종료 시각 (음성 트림/길이 계산용, 서버 렌더 전용)
     videoUrl: string | null;
     voiceUrl: string | null;
-    speedMultiplier: number;
+    speedMultiplier: number; // 2차 배속 (자막/음성/씬 길이 계산 기준)
+    videoPlaybackRate?: number; // 최종 영상 재생 배율 (raw 기준 1차×2차 합성 배율, 서버 렌더 전용)
+    videoTrimBeforeSec?: number; // raw 앞부분 트림(초). 기존 ffmpeg 파이프라인의 -ss 0.2에 대응
 }
 
 /**
@@ -76,7 +79,7 @@ export interface RemotionSceneInput {
 }
 
 /**
- * 전체 영상 컴포지션 Input (서버 렌더링 계약 초안)
+ * 전체 영상 컴포지션 Input (서버 렌더링 계약)
  * merge/final 이후의 모든 후처리(씬 스티칭/배속/보이스/BGM/자막)가 이 하나로 수렴된다.
  */
 export interface RemotionFullVideoInput {
@@ -85,7 +88,8 @@ export interface RemotionFullVideoInput {
     height: number;
     fps: number;
     scenes: RemotionSceneData[];
-    voiceUrl: string | null; // 씬별 트림은 컴포지션 내부에서 처리
+    voiceUrl: string | null; // voice_full.mp3 (씬별 트림은 컴포지션 내부에서 처리)
+    voiceDurationSec: number; // voice_full.mp3 전체 길이 (trimAfter 계산용)
     captions: {
         sceneNumber: number;
         segments: RemotionCaptionSegment[];
@@ -96,6 +100,7 @@ export interface RemotionFullVideoInput {
         startSec: number;
         endSec: number;
         volume: number; // 0-1
+        durationSec: number; // BGM 파일 전체 길이 (trimAfter 계산용)
     } | null;
 }
 

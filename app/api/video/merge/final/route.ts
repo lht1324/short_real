@@ -1,10 +1,11 @@
 import { NextRequest } from 'next/server';
+import { tasks } from "@trigger.dev/sdk/v3";
 import { videoGenerationTasksServerAPI } from "@/lib/api/server/videoGenerationTasksServerAPI";
 import { VideoGenerationTaskStatus } from "@/lib/api/types/supabase/VideoGenerationTasks";
 import { taskCheckAndCleanupIfCancelled } from "@/lib/utils/taskCheckAndCleanupIfCancelled";
 import { getNextBaseResponse } from "@/lib/utils/getNextBaseResponse";
 import { getIsValidRequestS2S } from "@/lib/utils/getIsValidRequest";
-import { internalFireAndForgetFetch } from "@/lib/utils/internalFetch";
+import { renderFinalVideo } from "@/trigger/render-final-video";
 
 export async function POST(
     request: NextRequest,
@@ -67,20 +68,21 @@ export async function POST(
             return checkingInitialResult;
         }
 
-        // Fire-and-Forget으로 백그라운드 프로세스 엔드포인트 비동기 호출
-        const baseUrl = process.env.BASE_URL || "";
-        const internalProcessUrl = `${baseUrl}/api/video/merge/final/process?taskId=${taskId}`;
+        // Trigger.dev 태스크 등록 (실행 대기 없이 즉시 응답)
+        const handle = await tasks.trigger<typeof renderFinalVideo>("render-final-video", {
+            taskId: taskId,
+        });
 
-        console.log(`[Merge Final Trigger] Fire-and-forget final video merge process for Task #${taskId}...`);
-        internalFireAndForgetFetch(
-            internalProcessUrl,
-            { method: "POST" }
-        );
+        console.log(`[Merge Final Trigger] Trigger.dev final video render queued for Task #${taskId} (handle: ${handle.id})`);
 
         return getNextBaseResponse({
             success: true,
             status: 200,
             message: "Final video merge process started successfully.",
+            data: {
+                handleId: handle.id,
+                taskId: taskId,
+            },
         });
     } catch (error) {
         console.error('[API Final Trigger] Error:', error);

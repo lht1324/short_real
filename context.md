@@ -1,10 +1,11 @@
-# 작업 진행 상황 (Last Updated: 2026-08-11 03:43)
+# 작업 진행 상황 (Last Updated: 2026-08-12 03:36)
 
 ## 1. 현재 상황 (Current Status)
 
 ### 🎯 현 단계 목표: 숏폼 영상 편집기의 Remotion 기반 마이그레이션
 * 클라이언트(에디터 미리보기/자막 렌더링)는 Remotion Player 기반 전환 **완료**.
-* 서버 final merge 파이프라인(ffmpeg 스티칭 + ASS 번인 + BGM 편집)을 Remotion 서버 렌더링(`renderMedia`)으로 교체하는 작업 **남음**.
+* 서버 final merge 파이프라인(ffmpeg 스티칭 + ASS 번인 + BGM 편집) → Remotion 서버 렌더링(`renderMedia`) 교체 **완료** (렌더 품질 문제까지 수정 완료).
+* 남은 작업: **구조 정리** — ① `components/remotion`에 `client` 폴더를 만들어 클라이언트 컴포넌트 이전, ② 기존 ffmpeg 로직(feature 잔재) 전수 조사 후 삭제. (내일 진행 예정)
 
 ---
 
@@ -52,19 +53,31 @@
 ### 2-7. 컨트롤 오버레이 네이티브 드래그 고스터 제거
 * 버튼/속도/프로그레스 바 클러스터가 드래그 시 브라우저 드래그 고스트로 떠다니는 현상 → 오버레이 루트에 `onDragStart` preventDefault + `select-none` 추가, 슬라이더들에 `touch-action: none`.
 
+### 2-8. Remotion 서버 렌더 파이프라인 구현 + 프레임 스터터 수정 (2026-08-12)
+* **서버 렌더 인프라 완성**: `components/remotion/server/` (`FullVideo.tsx` — 씬 스티칭 + 씬별 배속 + 음성 + BGM + 자막 올-인-원 컴포지션, `FullVideoRoot.tsx`, `index.ts`) + `trigger/render-final-video.ts` (Trigger.dev 태스크, `/api/video/merge/final/route.ts`가 등록). mediabunny로 음성 실측 길이 확인, 렌더 후 Supabase 업로드까지 1회로 수렴.
+* **렌더 스터터(드드득) 원인 규명/수정**: `<Video>`(브라우저 엘리먼트)가 renderMedia 중 seek 레이스로 **홀드-점프**(같은 프레임 2회 → 2프레임분 점프) 반복. 모션 밴드(자막 없는 y384~768) 비교 분석으로 확정 (Remotion 홀드 33 vs ffmpeg 23, 큰 점프 143 vs 46). 수정: **`<OffthreadVideo>`로 교체** + `concurrency: 2 → 1` + `colorSpace: 'bt709'` (기본값은 yuvj420p full-range/BT.470BG — color flag 미전달 문제, `@remotion/renderer/dist/ffmpeg-args.js`에서 확인). 사장님 재렌더 검증 **통과**.
+* 부수 발견: Remotion 결과물에 씬 경계 검은 프레임 2개(162, 294) 존재 — 스터터와 무관한 별개 이슈 (트림/반올림 경계 문제 잔재, 우선순위 낮음).
+* **아키텍처 결정: Remotion 올-인-원 채택** (ffmpeg/Remotion 하이브리드 폐기). 근거: 배속 품질은 프레임 선택 기반이라 양쪽 동일(minterpolate 미사용 시), 하이브리드는 배속 씬을 2회 처리(인코딩+캡처), 방금 겪은 버그 3종이 전부 "두 시스템 경계"에서 발생. 배속 씬도 사전 인코딩(`postProcessedVideo`) 없이 raw → `playbackRate`로 통일 예정.
+* **기존 ffmpeg 로직 위치 전수 파악 완료** (`merge/final/process/route.ts`에서 정방향 추적): `videoServerAPI.postFinalVideo`(:327, atempo+concat), `postVideoMergeCaption`(:173, ASS 번인), `postVideoMergeMusic`(:214, amix+afade), `musicServerAPI.postMusicModifying`(:157), `captionUtils.generateASSContent`, 웹훅 3개(`webhook/replicate/video/merge/caption`, `video/merge/music`, `music/modifying`). ⚠️ `merge/route.ts:53`도 `postFinalVideo`를 직접 호출 — 삭제 시 호출부 전수 확인 필요.
+
 ---
 
 ## 3. 향후 작업 (Next Steps)
 
-### 🔴 서버 Remotion 마이그레이션 (핵심 남은 작업)
-1. **서버 렌더 인프라**: Remotion 서버 사이드 렌더링(`renderMedia` + 번들, Chrome headless) 환경 구성.
-2. **FullVideo 컴포지션 작성**: `RemotionFullVideoInput`(remotionTypes.ts:82) 계약 기반 주 컴포지션 — 씬 스티칭 + 씬별 배속 + 음성 + BGM(startSec/endSec/volume) + 자막을 하나의 렌더로 (기존 씬 단위 SceneBlock 구조를 전체 타임라인으로 확장).
-3. **`/api/video/merge/final/process` 교체**: `postFinalVideo`(ffmpeg 스티칭) + `generateASSContent`/`postVideoMergeCaption`(ASS 번인) + `postMusicModifying`(BGM) 파이프라인 → `renderMedia` 1회로 수렴. 상태 전이/DB 갱신(`final_video_merge_data` 배속 타임라인 재계산)/업로드는 기존 로직 유지.
-4. ASS 기반 폴백은 당분간 유지 (롤백 안전망).
+### 🔴 components/remotion 폴더 구조 정리 (내일 진행)
+1. **`client` 폴더 신설**: `components/remotion/` 루트의 클라이언트 전용 컴포넌트(`SceneBlock.tsx`, `CaptionLayer.tsx`, `ShortRealRoot.tsx`, `fonts.ts` 등)를 `components/remotion/client/`로 이전. `server/`(서버 렌더용)와 구조 분리. import 경로 전파 주의(에디터 페이지 등).
+2. **기존 ffmpeg 로직 삭제** (2-8에 정리한 위치 전수 확인 후):
+    * `app/api/video/merge/final/process/route.ts` (구식 최종 병합 본체)
+    * `videoServerAPI.postFinalVideo` / `postVideoMergeCaption` / `postVideoMergeMusic` + `musicServerAPI.postMusicModifying`
+    * `captionUtils.generateASSContent` (Remotion 자막이 대체)
+    * 웹훅 3개: `webhook/replicate/video/merge/caption`, `video/merge/music`, `music/modifying`
+    * `app/api/video/merge/route.ts`, `merge/music/route.ts` (호출부 확인 후 — `merge/route.ts:53`이 postFinalVideo 호출)
+3. **배속 씬 올-인-원 전환**: `render-final-video.ts`에서 `postProcessedVideo` 분기 제거 → 전 씬 raw 영상을 `playbackRate`로 처리 (1차 가공본 `video_processed_N` 경로도 정리 대상).
 
-### 🟡 잔여 확인 항목 (사장님 프리뷰 필요)
-* 자막 Word Grouping/Word Animation 토글 실동작 확인 (특히 Highlight Bar 가독성).
-* 50분 URL 자동 재발급 실측 (검증 시 `50 * 60 * 1000`을 임시로 `10 * 1000`으로 단축 가능).
+### 🟡 잔여 확인/이슈
+* OffthreadVideo 안정성 확인 후 `concurrency: 2` 복귀 테스트 (렌더 시간 단축 여부).
+* 씬 경계 검은 프레임 2개(162, 294) — 트림/반올림 경계 이슈, 우선순위 낮음.
+* ESLint 설정 순환참조로 린트 불가 상태 (`next lint --file/--dir` 옵션 미지원, 직접 eslint는 circular reference 에러) — tsc --noEmit은 클린.
 * (이전 랜딩 페이지 잔여) Features 섹션 소리 복원 최종 확인.
 
 ---
@@ -72,4 +85,5 @@
 ## 4. 참고 (Reminders)
 * 공용: `getNextBaseResponse()` 사용 (엔드포인트 응답 규격), UI는 영어/한국어 구분 준수, 들여쓰기 공백 4칸.
 * Remotion 4.0.507 습성 메모: `component` prop 타입 추론 불가(Record 수용형 패턴), `PlayerProps`에 `onEnded` 없음(`ended` 이벤트 리스너 사용), `play()` 반환 void.
-* 서명 URL: `postVideoMergeCaption` 등 샌드박스 예약 작업은 `lht1324/ffmpeg-sandbox-2` (Replicate) 사용 중.
+* 서버 렌더: `<Video>` 대신 **`<OffthreadVideo>`** 사용 (seek 레이스 없음). `colorSpace: 'bt709'` 지정 필수 (기본값 yuvj420p full-range). 저사양 머신에서는 `concurrency: 1`.
+* 서명 URL: `postVideoMergeCaption` 등 샌드박스 예약 작업은 `lht1324/ffmpeg-sandbox-2` (Replicate) 사용 중. → 위 ffmpeg 로직 삭제 시 함께 제거 대상.
