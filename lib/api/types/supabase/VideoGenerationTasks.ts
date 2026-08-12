@@ -18,9 +18,6 @@ export interface VideoGenerationTask {
     final_video_merge_data?: FinalVideoMergeData;
     selected_style_id?: string; // varchar(100), nullable
     selected_voice_id?: string; // varchar(100), nullable
-    caption_completed?: boolean; // boolean, default false - 자막 번인 완료 여부
-    music_completed?: boolean; // boolean, default false - 음악 편집 완료 여부
-    merge_started?: boolean; // boolean, default false - 최종 병합 시작 여부
     is_user_cancelled_task?: boolean; // boolean, default false - 유저 도중 취소 여부 (status와 더불어 판단함)
     is_generation_failed?: boolean; // boolean, default false - 실패 여부 (Retry 시 기존 status 조회하기)
     export_status?: ExportStatus | null;
@@ -52,8 +49,6 @@ export enum VideoGenerationTaskStatus {
     // Replicate 취소
     // 영상 생성
     GENERATING_VIDEO = 'generating_video',
-    // 영상 병합 (영상 병합 + 음성 병합) -> GENERATING_VOICE로 수정? (성우의 음성 녹음)
-    STITCHING_VIDEOS = 'stitching_videos',
     // 작곡
     COMPOSING_MUSIC = 'composing_music',
 

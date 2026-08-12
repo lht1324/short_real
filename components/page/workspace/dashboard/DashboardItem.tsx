@@ -19,7 +19,6 @@ import {
     FileText,
     Palette,
     Video,
-    Mic,
     Music,
     MonitorPlay,
     Sparkles,
@@ -70,7 +69,6 @@ function DashboardItem({
             case VideoGenerationTaskStatus.GENERATING_IMAGE_PROMPT:
             case VideoGenerationTaskStatus.GENERATING_VIDEO_PROMPT:
             case VideoGenerationTaskStatus.GENERATING_VIDEO:
-            case VideoGenerationTaskStatus.STITCHING_VIDEOS:
             case VideoGenerationTaskStatus.COMPOSING_MUSIC:
             case VideoGenerationTaskStatus.FINALIZING:
                 return StatusGroup.PROCESSING;
@@ -125,12 +123,6 @@ function DashboardItem({
                     bgClass: 'bg-amber-500/10 border-amber-500/20',
                     description: `Shooting scenes (${processedSceneCount}/${sceneCount})`,
                     icon: <FileVideo size={14} />
-                };
-                case VideoGenerationTaskStatus.STITCHING_VIDEOS: return {
-                    colorClass: 'text-blue-400',
-                    bgClass: 'bg-blue-500/10 border-blue-500/20',
-                    description: 'Recording voiceover',
-                    icon: <Mic size={14} />
                 };
                 case VideoGenerationTaskStatus.COMPOSING_MUSIC: return {
                     colorClass: 'text-rose-400',

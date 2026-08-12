@@ -7,6 +7,9 @@ const isDocker = process.env.DOCKER === 'true';
 const nextConfig: NextConfig = {
     distDir: isDocker ? '.next-docker' : '.next',
 
+    // Remotion 패키지 트랜스파일 (Player/Studio/렌더러 공통)
+    transpilePackages: ['remotion', '@remotion/player', '@remotion/google-fonts'],
+
     // 외부 이미지 허용
     images: {
         remotePatterns: [
