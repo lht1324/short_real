@@ -28,4 +28,15 @@ export default defineConfig({
         },
     },
     dirs: ["./trigger"],
+    // Remotion 렌더러는 런타임에 네이티브 바이너리(compositor, ffmpeg 등)를 node_modules에서 로드하므로
+    // esbuild 번들에서 제외하고 배포 이미지의 node_modules에 그대로 유지해야 한다.
+    build: {
+        external: [
+            "@remotion/bundler",
+            "@remotion/renderer",
+            "@remotion/compositor-linux-x64-gnu",
+            "@remotion/media-parser",
+            "mediabunny",
+        ],
+    },
 });

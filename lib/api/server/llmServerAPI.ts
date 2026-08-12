@@ -1276,7 +1276,7 @@ Instruction: Analyze the narration (Track 0) and the candidate music tracks (Tra
             const audioBase64List = [voiceBase64, ...musicAudioBase64List];
 
             const generatedContent = await client.createCompletion({
-                model: OpenRouterModel.GEMINI_3_1_FLASH_LITE_PREVIEW,
+                model: OpenRouterModel.MIMO_V2_5,
                 systemMessage: systemMessage,
                 userMessage: userMessage,
                 audioBase64List: audioBase64List,

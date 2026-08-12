@@ -154,56 +154,6 @@ export const musicServerAPI = {
         }
     },
 
-    async postMusicModifying(
-        audioUrl: string,
-        cuttingAreaStartSec: number,
-        cuttingAreaEndSec: number,
-        volumePercentage: number,
-        taskId: string,
-        mixingGainDb?: number,
-    ) {
-        const replicate = new Replicate({
-            auth: process.env.REPLICATE_API_TOKEN,
-        });
-
-        // 웹훅 URL 생성
-        const baseUrl = process.env.BASE_URL;
-        if (!baseUrl) {
-            throw new Error('BASE_URL is not set');
-        }
-
-        const webhookUrl = `${baseUrl}/webhook/replicate/music/modifying?taskId=${taskId}`;
-
-        try {
-            const duration = cuttingAreaEndSec - cuttingAreaStartSec;
-            console.log(`[TEST LOG][Music Modifying] cutting start: ${cuttingAreaStartSec.toFixed(4)}s, end: ${cuttingAreaEndSec.toFixed(4)}s, totalDuration: ${duration.toFixed(4)}s, volume: ${volumePercentage}%, gainDb: ${mixingGainDb}`);
-
-            const prediction = await replicate.predictions.create({
-                version: "lht1324/ffmpeg-audio-modifier:8706bda5af3fa52e103a0d441e3d6cb981d1aef7a23f22248ff1de6f557a0763",
-                input: {
-                    audio_url: audioUrl,
-                    cutting_area_start_sec: cuttingAreaStartSec,
-                    cutting_area_end_sec: cuttingAreaEndSec,
-                    volume_percentage: volumePercentage,
-                    mixing_gain_db: mixingGainDb,
-                },
-                webhook: webhookUrl,
-                webhook_events_filter: ["completed"],
-            });
-
-            if (prediction.error || prediction.status === "failed") {
-                throw new Error(`Subtitle burn-in failed: ${prediction.error}`);
-            }
-
-            console.log(`[Subtitle Burn-in] Prediction ID: ${prediction.id}`);
-            return prediction.id;
-
-        } catch (error) {
-            console.error("[Subtitle Burn-in] Error:", error);
-            throw error;
-        }
-    },
-
     async getMusicSignedUrl(filePath: string, expiresIn: number = 60 * 60 * 24) {
         const supabase = createSupabaseServiceRoleClient();
 

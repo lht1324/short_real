@@ -279,7 +279,6 @@ function WorkspaceDashboardPageClient() {
             VideoGenerationTaskStatus.GENERATING_IMAGE_PROMPT,
             VideoGenerationTaskStatus.GENERATING_VIDEO_PROMPT,
             VideoGenerationTaskStatus.GENERATING_VIDEO,
-            VideoGenerationTaskStatus.STITCHING_VIDEOS,
             VideoGenerationTaskStatus.COMPOSING_MUSIC,
             VideoGenerationTaskStatus.EDITOR,
             VideoGenerationTaskStatus.FINALIZING,
@@ -303,8 +302,7 @@ function WorkspaceDashboardPageClient() {
 
         // (현재 단계 인덱스 + 1) / 전체 단계 수 * 100
         return {
-            // progress: Math.round(((currentStepIndex + 1) / processingSteps.length) * 100),
-            progress: parseFloat((((currentStepIndex + 1) / processingSteps.length) * 100).toFixed(1)),
+            progress: parseFloat((((currentStepIndex + 1) / processingSteps.length) * 100).toFixed(2)),
             currentStep: currentStepIndex + 1,
             totalStep: processingSteps.length
         };

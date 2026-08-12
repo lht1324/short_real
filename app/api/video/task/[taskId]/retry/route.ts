@@ -91,13 +91,6 @@ export async function POST(
                         body: undefined,
                     };
                 }
-                case VideoGenerationTaskStatus.STITCHING_VIDEOS: {
-                    return {
-                        path: `/api/video/merge`,
-                        restType: 'POST',
-                        body: undefined,
-                    };
-                }
                 case VideoGenerationTaskStatus.COMPOSING_MUSIC: {
                     return {
                         path: `/api/music`,
@@ -135,13 +128,6 @@ export async function POST(
 
         // is_generation_failed를 false로 업데이트
         await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, {
-            // FINALIZING
-            ...(taskStatus === VideoGenerationTaskStatus.FINALIZING && {
-                caption_completed: false,
-                music_completed: false,
-                merge_started: false,
-            }),
-
             is_generation_failed: false
         });
 

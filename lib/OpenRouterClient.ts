@@ -7,7 +7,8 @@ export enum OpenRouterModel {
     GEMINI_3_1_FLASH_LITE_PREVIEW = "google/gemini-3.1-flash-lite-preview",
     GROK_4_1_FAST = "x-ai/grok-4.1-fast", // agentic/tool calling 강함, reasoning 지원
     GROK_4_3 = "x-ai/grok-4.3", // agentic/tool calling 강함, reasoning 지원
-    GEMINI_1_5_FLASH_EXP = "google/gemini-1.5-flash-exp", // 빠른 멀티모달, 오디오 강함 (후보)
+    GPT_5_6_LUNA = "openai/gpt-5.6-luna",
+    MIMO_V2_5 = "xiaomi/mimo-v2.5",
 }
 
 export interface CompletionBaseInput {
