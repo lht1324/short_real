@@ -2,7 +2,7 @@
 
 이 프로젝트의 AI 에이전트 스킬은 `npx skills` CLI(Anthropic skills)로 설치·관리합니다.
 
-> **설치 원칙**: 스킬은 node_modules와 동일하게 **PC별로 각자 설치**합니다. `.agents/skills/`와 `skills-lock.json`은 Git 추적 대상이 아닙니다. 새 PC에서는 아래 명령으로 필요한 스킬을 직접 설치하십시오.
+> **설치 원칙**: 스킬은 **반드시 전역(`~/.agents/skills/`)으로 설치**합니다. `npx skills add` 실행 시 `-g` 플래그를 붙이지 않으면 프로젝트 로컬(`.agents/skills/`)에 설치되므로 주의하십시오. 프로젝트 로컬 설치는 피하며, `.agents/skills/`와 `skills-lock.json`은 Git 추적 대상이 아닙니다. 새 PC에서는 아래 명령으로 필요한 스킬을 직접 설치하십시오.
 
 ## 스킬 목록 (카테고리별)
 
@@ -38,6 +38,7 @@
 | full-output-enforcement | Leonxlnx/taste-skill | 코드 생성 잘림 방지 |
 | customize-opencode | built-in | opencode 자체 설정 관리 |
 | ponytail | (글로벌) | 최소한의 해법 (YAGNI) |
+| ponytail-audit / review / gain / debt / help | dietrichgebert/ponytail | ponytail 부가 도구 (코드 감사·리뷰·이득/부채 분석) |
 | find-skills | (글로벌) | 스킬 탐색/설치 안내 |
 
 ### SEO / 마케팅 / 애널리틱스
@@ -59,22 +60,22 @@
 스킬은 PC별로 설치하므로, Git pull 후 아래 명령으로 필요한 스킬을 직접 설치합니다.
 
 ```bash
-npx skills add shadcn/ui -y                       # shadcn 컴포넌트
-npx skills add pbakaus/impeccable -y              # 디자인 전반
-npx skills add https://github.com/nextlevelbuilder/ui-ux-pro-max-skill -y   # UI/UX 인텔리전스
-npx skills list                                   # 설치 확인
+npx skills add shadcn/ui -g -y                       # shadcn 컴포넌트 (전역)
+npx skills add pbakaus/impeccable -g -y              # 디자인 전반 (전역)
+npx skills add https://github.com/nextlevelbuilder/ui-ux-pro-max-skill -g -y   # UI/UX 인텔리전스 (전역)
+npx skills list -g                                   # 설치 확인
 ```
 
 ## 스킬 추가/제거/업데이트
 
 ```bash
-npx skills add <repo> -y            # 설치 (예: npx skills add shadcn/ui)
-npx skills update                   # 전부 최신화
-npx skills remove <이름>             # 제거
-npx skills list                     # 목록 확인
+npx skills add <repo> -g -y            # 전역 설치 (예: npx skills add shadcn/ui -g -y)
+npx skills update -g                   # 전역 스킬 최신화
+npx skills remove <이름> -g -y          # 전역 스킬 제거
+npx skills list -g                     # 전역 목록 확인
 ```
 
-⚠️ 스킬을 설치/제거했을 때는 `/SKILLS.md`의 목록도 함께 갱신하십시오.
+⚠️ 스킬을 설치/제거했을 때는 `/SKILLS.md`의 목록도 함께 갱신하십시오. ⚠️ 전역 설치 시 `-g` 플래그 필수 — 잊으면 프로젝트 로컬에 설치됩니다.
 
 ## 참고
 

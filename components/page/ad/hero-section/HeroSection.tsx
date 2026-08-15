@@ -14,9 +14,9 @@ export default function HeroSection() {
             />
             <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-canvas to-transparent" />
             <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-canvas to-transparent" />
-            <div className="relative mx-auto min-h-[520px] max-w-6xl md:min-h-[620px]">
+            <div className="relative mx-auto flex min-h-[520px] max-w-[1440px] md:min-h-[620px]">
                 <HeroWall />
-                <div className="relative z-10 max-w-xl rounded-2xl border border-hairline bg-canvas/60 p-7 backdrop-blur-md md:p-9">
+                <div className="relative z-10 mx-auto my-auto max-w-2xl rounded-2xl border border-hairline bg-canvas/85 p-7 md:p-9">
                     <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-accent">
                         AI Ad Creative Studio
                     </p>

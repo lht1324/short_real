@@ -6,6 +6,7 @@ import Reveal from "@/components/page/ad/Reveal";
 interface Plan {
     name: string;
     price: number;
+    originalPrice?: number;
     images: string;
     perImage: string;
     highlighted?: boolean;
@@ -31,9 +32,10 @@ const PLANS: Plan[] = [
     },
     {
         name: 'Growth',
-        price: 49,
+        price: 39,
+        originalPrice: 49,
         images: '500 images / month',
-        perImage: '$0.098 / image',
+        perImage: '$0.078 / image',
         className: '-rotate-[0.5deg] md:translate-y-10',
         features: [
             'Everything in Starter',
@@ -43,9 +45,10 @@ const PLANS: Plan[] = [
     },
     {
         name: 'Pro',
-        price: 99,
+        price: 69,
+        originalPrice: 99,
         images: '1,000 images / month',
-        perImage: '$0.099 / image',
+        perImage: '$0.069 / image',
         className: 'rotate-[0.5deg] md:translate-y-8',
         features: [
             'Everything in Growth',
@@ -74,10 +77,15 @@ function PricingCard({ plan }: { plan: Plan }) {
                 {plan.name}
             </h3>
             <div className={`mt-6 flex items-baseline gap-1.5 ${dark ? 'text-canvas' : 'text-text1'}`}>
+                {plan.originalPrice && (
+                    <span className={`text-5xl font-medium tracking-tight line-through ${dark ? 'text-canvas/50' : 'text-text2/60'}`}>
+                        ${plan.originalPrice}
+                    </span>
+                )}
                 <span className="text-5xl font-bold tracking-tight">
                     ${plan.price}
                 </span>
-                <span className={`text-[15px] font-medium ${dark ? 'text-canvas/75' : 'text-text2'}`}>/ month</span>
+                <span className={`text-[15px] font-medium ${dark ? 'text-canvas/75' : 'text-text2'}`}>/ mo</span>
             </div>
             <p className={`mt-4 font-mono text-[11px] uppercase tracking-[0.18em] ${dark ? 'text-canvas/75' : 'text-text2'}`}>
                 {plan.images}
