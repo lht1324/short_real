@@ -1,0 +1,177 @@
+import { getFetch, postFetch } from "@/lib/api/client/baseFetch";
+
+/*
+ * ShortReal Ad — 임시 타입 및 클라이언트 API.
+ * UI/플로우가 완결된 뒤 lib/api/types/ad/ 로 스키마를 이관할 것 (타입은 여기서만 정의).
+ */
+
+// ---- 임시 타입 ----
+
+export type AdAspectRatio = '1:1' | '4:5' | '9:16';
+
+export interface AdUploadedComponent {
+    id: string;
+    fileName: string;
+    previewUrl: string;
+    /**
+     * 업로드 파일의 원본 픽셀 크기 — 로드 시점에 측정해 저장.
+     * 배경 업로드 모드에서는 이 비율이 생성 비율(원본 보존)이 된다.
+     */
+    width?: number;
+    height?: number;
+    /**
+     * 사용자가 이미지에 덧붙인 선택적 설명.
+     * 원칙: 프롬프트에 직접 주입 금지 — 설계 생성 단계(해석 레이어)에서
+     * 이미지+첨언+템플릿을 결합해 구조적 지시문으로 변환한 뒤 사용할 것.
+     */
+    note?: string;
+}
+
+export interface AdGenerateRequest {
+    backgroundPrompt: string | null;
+    backgroundImage: AdUploadedComponent | null;
+    product: AdUploadedComponent | null;
+    person: AdUploadedComponent | null;
+    aspectRatio: AdAspectRatio;
+    candidateCount: number;
+    ctaEnabled: boolean;
+}
+
+export type AdTaskStatus = 'queued' | 'generating' | 'designing' | 'rendering' | 'completed' | 'failed';
+
+export interface AdHeadlineSpec {
+    text: string;
+    x: number;
+    y: number;
+    maxWidth: number;
+    align: 'left' | 'center' | 'right';
+    fontSizePct: number;
+}
+
+export interface AdCtaSpec {
+    text: string;
+    x: number;
+    y: number;
+    widthPct: number;
+    fontSizePct: number;
+}
+
+export interface AdLogoSpec {
+    brand: string;
+    x: number;
+    y: number;
+    widthPct: number;
+    fontSizePct: number;
+}
+
+export interface AdDesignLayout {
+    headline: AdHeadlineSpec | null;
+    cta: AdCtaSpec | null;
+    logo: AdLogoSpec | null;
+    scrim: boolean;
+}
+
+export interface AdCandidate {
+    id: string;
+    url: string;
+    score: number | null;
+    design: AdDesignLayout;
+}
+
+export interface AdTask {
+    id: string;
+    status: AdTaskStatus;
+    request: AdGenerateRequest;
+    candidates: AdCandidate[];
+    error: string | null;
+    createdAt: string;
+}
+
+export interface AdSizePreset {
+    id: string;
+    label: string;
+    width: number;
+    height: number;
+}
+
+export interface AdDerivedImage {
+    id: string;
+    taskId: string;
+    candidateId: string;
+    presetId: string;
+    label: string;
+    url: string;
+    width: number;
+    height: number;
+}
+
+export const AD_ASPECT_RATIOS: AdAspectRatio[] = ['1:1', '4:5', '9:16'];
+
+export const AD_SIZE_PRESETS: AdSizePreset[] = [
+    { id: '1:1', label: 'Square', width: 1080, height: 1080 },
+    { id: '4:5', label: 'Portrait', width: 1080, height: 1350 },
+    { id: '9:16', label: 'Story', width: 1080, height: 1920 },
+    { id: '1.91:1', label: 'Banner', width: 1200, height: 628 },
+];
+
+export const AD_CANDIDATE_OPTIONS = [1, 2, 4, 10] as const;
+
+export const AD_CTA_PRESETS = ['Shop now', 'Buy now', 'Get yours', 'Learn more'] as const;
+
+// ---- API ----
+
+export const adClientAPI = {
+    // POST - 생성 태스크 생성 (1회 생성 시도 = 후보 n장 일괄 차감)
+    async postGenerateTask(request: AdGenerateRequest): Promise<AdTask> {
+        try {
+            const response = await postFetch('/api/ad/tasks', request);
+            const result = await response.json();
+
+            if (!result.success || !result.data) {
+                throw new Error(result.error ?? 'Failed to create ad generation task');
+            }
+
+            return result.data.task;
+        } catch (error) {
+            console.error('Error creating ad generation task:', error);
+            throw error;
+        }
+    },
+
+    // GET - 태스크 상태/결과 조회 (폴링)
+    async getTask(taskId: string): Promise<AdTask> {
+        try {
+            const response = await getFetch(`/api/ad/tasks/${taskId}`);
+            const result = await response.json();
+
+            if (!result.success || !result.data) {
+                throw new Error(result.error ?? 'Failed to fetch ad generation task');
+            }
+
+            return result.data.task;
+        } catch (error) {
+            console.error('Error fetching ad generation task:', error);
+            throw error;
+        }
+    },
+
+    // POST - 사이즈 파생 (결정론적 크롭, 무제한 무료)
+    async postDerivedSize(taskId: string, candidateId: string, presetId: string): Promise<AdDerivedImage> {
+        try {
+            const response = await postFetch(`/api/ad/tasks/${taskId}/derived`, {
+                candidateId,
+                presetId,
+            });
+            const result = await response.json();
+
+            if (!result.success || !result.data) {
+                throw new Error(result.error ?? 'Failed to derive ad size');
+            }
+
+            return result.data.derived;
+        } catch (error) {
+            console.error('Error deriving ad size:', error);
+            throw error;
+        }
+    },
+};
