@@ -1,12 +1,10 @@
 import {
     AdTask,
     AdCandidate,
+    AdAspectRatio,
     AdGenerateRequest,
-    AdDerivedImage,
-    AdSizePreset,
     AdTaskStatus,
 } from "@/lib/api/client/ad/adClientAPI";
-import { AD_SIZE_PRESETS } from "@/lib/api/client/ad/adClientAPI";
 
 /*
  * ShortReal Ad — 서버 API (현재 mock).
@@ -71,7 +69,14 @@ function mulberry32(seed: number): () => number {
 
 function pickShuffled<T>(pool: T[], count: number, rand: () => number): T[] {
     const shuffled = [...pool].sort(() => rand() - 0.5);
-    return shuffled.slice(0, Math.min(count, shuffled.length));
+    if (count <= shuffled.length) {
+        return shuffled.slice(0, count);
+    }
+    const result: T[] = [];
+    while (result.length < count) {
+        result.push(shuffled[result.length % shuffled.length]);
+    }
+    return result;
 }
 
 function pickByRatio(pool: string[], rand: () => number): string {
@@ -90,7 +95,7 @@ function getStatusByElapsed(elapsedMs: number): AdTaskStatus {
 // 모듈 레벨 메모리 저장소 (mock 전용. 실 구현 시 DB로 대체)
 const taskStore = new Map<string, AdTask>();
 
-function buildCandidate(id: string, rand: () => number, ctaEnabled: boolean): AdCandidate {
+function buildCandidate(id: string, ratio: AdAspectRatio, rand: () => number, ctaEnabled: boolean): AdCandidate {
     const headlineX = 7 + rand() * 3;
     const headlineY = 58 + rand() * 12;
 
@@ -100,7 +105,7 @@ function buildCandidate(id: string, rand: () => number, ctaEnabled: boolean): Ad
             x: headlineX,
             y: headlineY,
             maxWidth: 78 + rand() * 8,
-            align: rand() > 0.5 ? ('left' as const) : ('left' as const),
+            align: 'left' as const,
             fontSizePct: 6.5 + rand() * 2,
         },
         cta: ctaEnabled
@@ -125,6 +130,7 @@ function buildCandidate(id: string, rand: () => number, ctaEnabled: boolean): Ad
     return {
         id,
         url: pickByRatio(MOCK_IMAGE_POOL, rand),
+        ratio,
         score: null,
         design,
     };
@@ -159,15 +165,23 @@ export const adServerAPI = {
         if (status === 'completed' && task.candidates.length === 0) {
             const rand = mulberry32(hashString(taskId));
             const count = task.request.candidateCount;
-            const urls = pickShuffled(MOCK_IMAGE_POOL, count, rand);
+            const ratios = task.request.aspectRatios;
 
-            const candidates: AdCandidate[] = urls.map((url, index) => {
-                const candidate = buildCandidate(`${taskId}-candidate-${index + 1}`, rand, task.request.ctaEnabled);
-                candidate.url = url;
-                if (count > 1) {
-                    candidate.score = Math.round((6.2 + rand() * 2.9) * 10) / 10;
-                }
-                return candidate;
+            const candidates: AdCandidate[] = ratios.flatMap((ratio) => {
+                const urls = pickShuffled(MOCK_IMAGE_POOL, count, rand);
+                return urls.map((url, index) => {
+                    const candidate = buildCandidate(
+                        `${taskId}-${ratio}-candidate-${index + 1}`,
+                        ratio,
+                        rand,
+                        task.request.ctaEnabled,
+                    );
+                    candidate.url = url;
+                    if (count > 1) {
+                        candidate.score = Math.round((6.2 + rand() * 2.9) * 10) / 10;
+                    }
+                    return candidate;
+                });
             });
 
             candidates.sort((a, b) => (b.score ?? -1) - (a.score ?? -1));
@@ -181,38 +195,5 @@ export const adServerAPI = {
         }
 
         return task;
-    },
-
-    // POST - 사이즈 파생 (결정론적 크롭 mock: 같은 url + 프리셋 메타 반환)
-    async postDerivedSize(
-        taskId: string,
-        candidateId: string,
-        presetId: string,
-    ): Promise<AdDerivedImage | null> {
-        const task = taskStore.get(taskId);
-        if (!task) {
-            return null;
-        }
-
-        const candidate = task.candidates.find((item) => item.id === candidateId);
-        if (!candidate) {
-            return null;
-        }
-
-        const preset = AD_SIZE_PRESETS.find((item: AdSizePreset) => item.id === presetId);
-        if (!preset) {
-            return null;
-        }
-
-        return {
-            id: `${candidateId}-${presetId}`,
-            taskId,
-            candidateId,
-            presetId,
-            label: preset.label,
-            url: candidate.url,
-            width: preset.width,
-            height: preset.height,
-        };
     },
 };

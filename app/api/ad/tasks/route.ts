@@ -37,11 +37,14 @@ export async function POST(request: NextRequest) {
             });
         }
 
-        if (!AD_ASPECT_RATIOS.includes(body.aspectRatio)) {
+        const hasValidRatios = Array.isArray(body.aspectRatios) && body.aspectRatios.length > 0
+            && body.aspectRatios.every((ratio) => AD_ASPECT_RATIOS.includes(ratio));
+
+        if (!hasValidRatios) {
             return getNextBaseResponse({
                 success: false,
                 status: 400,
-                error: "Invalid aspect ratio"
+                error: "At least one valid aspect ratio is required"
             });
         }
 

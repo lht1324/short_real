@@ -6,6 +6,7 @@ import AppHeader from "@/components/page/ad/app-header/AppHeader";
 import CandidateCard from "@/components/page/ad/results/components/CandidateCard";
 import DetailPanel from "@/components/page/ad/results/components/DetailPanel";
 import {
+    AdAspectRatio,
     AdCandidate,
     AdTask,
     AdTaskStatus,
@@ -87,14 +88,21 @@ function mulberry32(seed: number): () => number {
 
 function pickShuffled<T>(pool: T[], count: number, rand: () => number): T[] {
     const shuffled = [...pool].sort(() => rand() - 0.5);
-    return shuffled.slice(0, Math.min(count, shuffled.length));
+    if (count <= shuffled.length) {
+        return shuffled.slice(0, count);
+    }
+    const result: T[] = [];
+    while (result.length < count) {
+        result.push(shuffled[result.length % shuffled.length]);
+    }
+    return result;
 }
 
 function pickByRatio<T>(pool: T[], rand: () => number): T {
     return pool[Math.floor(rand() * pool.length)];
 }
 
-function buildCandidate(id: string, rand: () => number, ctaEnabled: boolean): AdCandidate {
+function buildCandidate(id: string, ratio: AdAspectRatio, rand: () => number, ctaEnabled: boolean): AdCandidate {
     const headlineX = 7 + rand() * 3;
     const headlineY = 58 + rand() * 12;
 
@@ -129,6 +137,7 @@ function buildCandidate(id: string, rand: () => number, ctaEnabled: boolean): Ad
     return {
         id,
         url: pickByRatio(MOCK_IMAGE_POOL, rand),
+        ratio,
         score: null,
         design,
     };
@@ -147,18 +156,23 @@ function mockGetTask(taskId: string): AdTask | null {
     if (status === 'completed' && task.candidates.length === 0) {
         const rand = mulberry32(hashString(taskId));
         const count = task.request.candidateCount;
-        const urls = pickShuffled(MOCK_IMAGE_POOL, count, rand);
 
-        const candidates: AdCandidate[] = urls.map((url, index) => {
-            const candidate = buildCandidate(`${taskId}-candidate-${index + 1}`, rand, task.request.ctaEnabled);
-            candidate.url = url;
-            if (count > 1) {
-                candidate.score = Math.round((6.2 + rand() * 2.9) * 10) / 10;
-            }
-            return candidate;
+        const candidates: AdCandidate[] = task.request.aspectRatios.flatMap((ratio) => {
+            const urls = pickShuffled(MOCK_IMAGE_POOL, count, rand);
+            return urls.map((url, index) => {
+                const candidate = buildCandidate(
+                    `${taskId}-${ratio}-candidate-${index + 1}`,
+                    ratio,
+                    rand,
+                    task.request.ctaEnabled,
+                );
+                candidate.url = url;
+                if (count > 1) {
+                    candidate.score = Math.round((6.2 + rand() * 2.9) * 10) / 10;
+                }
+                return candidate;
+            });
         });
-
-        candidates.sort((a, b) => (b.score ?? -1) - (a.score ?? -1));
 
         window.__adMockTasks = { ...tasks, [taskId]: { ...task, status: 'completed', candidates } };
         return window.__adMockTasks[taskId];
@@ -173,6 +187,11 @@ function mockGetTask(taskId: string): AdTask | null {
 
 interface ResultsPageClientProps {
     taskId: string | null;
+}
+
+interface RatioGroup {
+    ratio: AdAspectRatio;
+    candidates: AdCandidate[];
 }
 
 export default function ResultsPageClient({ taskId }: ResultsPageClientProps) {
@@ -207,7 +226,7 @@ export default function ResultsPageClient({ taskId }: ResultsPageClientProps) {
             }
             setTask(loaded);
 
-                if (loaded.status === 'completed') {
+            if (loaded.status === 'completed') {
                 setIsLoading(false);
                 if (interval) {
                     clearInterval(interval);
@@ -236,6 +255,19 @@ export default function ResultsPageClient({ taskId }: ResultsPageClientProps) {
         };
     }, [taskId]);
 
+    // 비율별 그룹 (그룹 내 점수 내림차순)
+    const ratioGroups = useMemo<RatioGroup[]>(() => {
+        if (!task) {
+            return [];
+        }
+        return task.request.aspectRatios.map((ratio) => ({
+            ratio,
+            candidates: task.candidates
+                .filter((candidate) => candidate.ratio === ratio)
+                .sort((a, b) => (b.score ?? -1) - (a.score ?? -1)),
+        }));
+    }, [task]);
+
     const selectedIndex = useMemo(() => {
         if (!task || !selectedCandidateId) {
             return -1;
@@ -249,11 +281,22 @@ export default function ResultsPageClient({ taskId }: ResultsPageClientProps) {
 
     const selectedCandidate = selectedIndex >= 0 && task ? task.candidates[selectedIndex] : null;
 
+    const totalCount = task?.candidates.length ?? 0;
+    const headerMeta = useMemo(() => {
+        if (!task) {
+            return '';
+        }
+        const formatCount = task.request.aspectRatios.length;
+        return `${totalCount} image${totalCount > 1 ? 's' : ''} · ${formatCount} format${formatCount > 1 ? 's' : ''}${
+            task.request.ctaEnabled ? ' · CTA on' : ''
+        } · downloads unlimited`;
+    }, [task, totalCount]);
+
     return (
         <>
             <AppHeader />
 
-            <main className="mx-auto max-w-6xl px-6 pb-24 pt-32">
+            <main className="mx-auto max-w-[1600px] px-8 pb-24 pt-32">
                 <header className="mb-10 flex flex-wrap items-end justify-between gap-6">
                     <div>
                         <span className="font-mono text-[11px] uppercase tracking-[0.18em] text-accent">
@@ -264,9 +307,7 @@ export default function ResultsPageClient({ taskId }: ResultsPageClientProps) {
                         </h1>
                         {task && (
                             <p className="mt-3 font-mono text-[11px] uppercase tracking-[0.18em] text-text2">
-                                {task.candidates.length} candidate{task.candidates.length > 1 ? 's' : ''} ·{' '}
-                                {task.request.aspectRatio}
-                                {task.request.ctaEnabled ? ' · CTA on' : ''} · downloads unlimited
+                                {headerMeta}
                             </p>
                         )}
                     </div>
@@ -280,8 +321,8 @@ export default function ResultsPageClient({ taskId }: ResultsPageClientProps) {
                 </header>
 
                 {isLoading && (
-                    <div className="grid gap-6 lg:grid-cols-[1fr_340px]">
-                        <div className="grid gap-6 sm:grid-cols-[repeat(auto-fill,minmax(280px,1fr))]">
+                    <div className="grid gap-8 xl:grid-cols-[1fr_360px]">
+                        <div className="grid gap-5 sm:grid-cols-[repeat(auto-fill,minmax(200px,1fr))]">
                             {[0, 1, 2, 3].map((index) => (
                                 <div
                                     key={index}
@@ -308,21 +349,35 @@ export default function ResultsPageClient({ taskId }: ResultsPageClientProps) {
                 )}
 
                 {!isLoading && !error && task && (
-                    <div className="grid gap-10 lg:grid-cols-[1fr_340px] lg:items-start">
-                        <div className="grid gap-6 sm:grid-cols-[repeat(auto-fill,minmax(280px,1fr))]">
-                            {task.candidates.map((candidate, index) => (
-                                <CandidateCard
-                                    key={candidate.id}
-                                    candidate={candidate}
-                                    index={index}
-                                    aspectRatio={task.request.aspectRatio}
-                                    selected={candidate.id === selectedCandidateId}
-                                    onSelect={() => onClickCandidate(candidate.id)}
-                                />
+                    <div className="grid gap-10 xl:grid-cols-[1fr_360px] xl:items-start">
+                        <div className="space-y-10">
+                            {ratioGroups.map((group) => (
+                                <section key={group.ratio}>
+                                    <div className="mb-4 flex items-baseline justify-between gap-4">
+                                        <h2 className="text-lg font-bold tracking-tight text-text1">
+                                            {group.ratio}
+                                        </h2>
+                                        <span className="font-mono text-[11px] uppercase tracking-[0.18em] text-text2">
+                                            {group.candidates.length} candidate
+                                            {group.candidates.length > 1 ? 's' : ''}
+                                        </span>
+                                    </div>
+                                    <div className="grid gap-5 sm:grid-cols-[repeat(auto-fill,minmax(200px,1fr))]">
+                                        {group.candidates.map((candidate, index) => (
+                                            <CandidateCard
+                                                key={candidate.id}
+                                                candidate={candidate}
+                                                index={index}
+                                                selected={candidate.id === selectedCandidateId}
+                                                onSelect={() => onClickCandidate(candidate.id)}
+                                            />
+                                        ))}
+                                    </div>
+                                </section>
                             ))}
                         </div>
 
-                        <div className="lg:sticky lg:top-28">
+                        <div className="xl:sticky xl:top-28">
                             <DetailPanel
                                 task={task}
                                 candidate={selectedCandidate}

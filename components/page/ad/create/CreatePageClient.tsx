@@ -89,7 +89,8 @@ export default function CreatePageClient() {
     const [person, setPerson] = useState<AdUploadedComponent | null>(null);
 
     // 스텝 2 — 생성 옵션
-    const [aspectRatio, setAspectRatio] = useState<AdAspectRatio>('1:1');
+    const [aspectRatios, setAspectRatios] = useState<AdAspectRatio[]>(['1:1']);
+    const [previewRatio, setPreviewRatio] = useState<AdAspectRatio>('1:1');
     const [candidateCount, setCandidateCount] = useState(4);
     const [ctaEnabled, setCtaEnabled] = useState(false);
 
@@ -97,6 +98,15 @@ export default function CreatePageClient() {
     const [task, setTask] = useState<AdTask | null>(null);
     const [status, setStatus] = useState<AdTaskStatus | null>(null);
     const [error, setError] = useState<string | null>(null);
+
+    // 선택 비율 변경 시 미리보기 비율을 첫 번째 선택으로 동기화
+    useEffect(() => {
+        if (aspectRatios.length > 0 && !aspectRatios.includes(previewRatio)) {
+            setPreviewRatio(aspectRatios[0]);
+        }
+    }, [aspectRatios, previewRatio]);
+
+    const totalImages = useMemo(() => aspectRatios.length * candidateCount, [aspectRatios, candidateCount]);
 
     const onClickGenerate = useCallback(() => {
         setError(null);
@@ -109,7 +119,7 @@ export default function CreatePageClient() {
             backgroundImage: backgroundMode === 'upload' ? backgroundImage : null,
             product,
             person,
-            aspectRatio,
+            aspectRatios,
             candidateCount,
             ctaEnabled,
         };
@@ -117,7 +127,7 @@ export default function CreatePageClient() {
         const newTask = mockCreateTask(request);
         setTask(newTask);
         setStatus(newTask.status);
-    }, [backgroundMode, backgroundPrompt, backgroundImage, product, person, aspectRatio, candidateCount, ctaEnabled]);
+    }, [backgroundMode, backgroundPrompt, backgroundImage, product, person, aspectRatios, candidateCount, ctaEnabled]);
 
     // 생성 진행 폴링
     useEffect(() => {
@@ -157,12 +167,17 @@ export default function CreatePageClient() {
 
     const stepTitle = useMemo(() => STEP_TITLES[step - 1], [step]);
 
+    const formatMeta = useMemo(() => {
+        const ratioCount = aspectRatios.length;
+        return `${ratioCount} format${ratioCount > 1 ? 's' : ''} · ${candidateCount} candidate${candidateCount > 1 ? 's' : ''} per format`;
+    }, [aspectRatios, candidateCount]);
+
     return (
         <>
             <AppHeader />
 
-            <main className="mx-auto max-w-6xl px-6 pb-24 pt-32">
-                <div className="grid gap-10 lg:grid-cols-[400px_1fr] lg:items-start">
+            <main className="mx-auto max-w-[1440px] px-8 pb-24 pt-32">
+                <div className="grid gap-10 lg:grid-cols-[380px_1fr] lg:items-start">
                     {/* 컨트롤 패널 */}
                     <aside className="rounded-[1.5rem] border border-hairline bg-surface p-6 lg:sticky lg:top-28">
                         <div className="mb-1 flex items-center justify-between">
@@ -206,7 +221,7 @@ export default function CreatePageClient() {
 
                         {step === 2 && (
                             <StepGenerate
-                                aspectRatio={aspectRatio}
+                                aspectRatios={aspectRatios}
                                 candidateCount={candidateCount}
                                 ctaEnabled={ctaEnabled}
                                 lockedRatio={
@@ -214,7 +229,7 @@ export default function CreatePageClient() {
                                         ? { width: backgroundImage.width, height: backgroundImage.height }
                                         : null
                                 }
-                                onAspectRatioChange={setAspectRatio}
+                                onAspectRatiosChange={setAspectRatios}
                                 onCandidateCountChange={setCandidateCount}
                                 onCtaEnabledChange={setCtaEnabled}
                                 onGenerate={onClickGenerate}
@@ -227,10 +242,11 @@ export default function CreatePageClient() {
                             <div className="space-y-4">
                                 <div className="rounded-xl border border-hairline bg-canvas px-4 py-3">
                                     <p className="text-[13px] font-medium text-text1">
-                                        {candidateCount} candidate{candidateCount > 1 ? 's' : ''} · {aspectRatio}
+                                        {totalImages} image{totalImages > 1 ? 's' : ''} · {aspectRatios.length}{' '}
+                                        format{aspectRatios.length > 1 ? 's' : ''}
                                     </p>
                                     <p className="mt-0.5 font-mono text-[10px] uppercase tracking-[0.14em] text-text2">
-                                        {candidateCount} image{candidateCount > 1 ? 's' : ''} deducted from your plan
+                                        {totalImages} image{totalImages > 1 ? 's' : ''} deducted from your plan
                                     </p>
                                 </div>
                                 <p className="text-[12px] leading-relaxed text-text2">
@@ -250,16 +266,34 @@ export default function CreatePageClient() {
                     {/* 캔버스 */}
                     <div className="flex flex-col items-center gap-4 pt-2">
                         <PreviewCanvas
-                            aspectRatio={aspectRatio}
+                            aspectRatio={previewRatio}
                             backgroundPrompt={backgroundMode === 'prompt' ? backgroundPrompt : null}
                             backgroundImage={backgroundMode === 'upload' ? backgroundImage : null}
                             product={product}
                             person={person}
                             status={status}
                         />
+                        {step < 3 && aspectRatios.length > 1 && (
+                            <div className="flex flex-wrap items-center justify-center gap-2">
+                                {aspectRatios.map((ratio) => (
+                                    <button
+                                        key={ratio}
+                                        type="button"
+                                        onClick={() => setPreviewRatio(ratio)}
+                                        className={`rounded-full border px-3.5 py-1.5 font-mono text-[10px] uppercase tracking-[0.14em] transition-colors ${
+                                            previewRatio === ratio
+                                                ? 'border-accent text-accent'
+                                                : 'border-hairline text-text2 hover:border-text2/50 hover:text-text1'
+                                        }`}
+                                    >
+                                        {ratio}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
                         {step < 3 && (
                             <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-text2">
-                                {aspectRatio} preview · layout rendered deterministically
+                                {previewRatio} preview · layout rendered deterministically
                             </p>
                         )}
                     </div>

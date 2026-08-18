@@ -32,7 +32,11 @@ export interface AdGenerateRequest {
     backgroundImage: AdUploadedComponent | null;
     product: AdUploadedComponent | null;
     person: AdUploadedComponent | null;
-    aspectRatio: AdAspectRatio;
+    /**
+     * 생성할 비율 목록 (멀티 선택). 총 생성 장수 = aspectRatios.length × candidateCount.
+     * 비율별 개별 생성 — 크롭/리프레임 등 후처리 변환을 하지 않는 것이 원칙.
+     */
+    aspectRatios: AdAspectRatio[];
     candidateCount: number;
     ctaEnabled: boolean;
 }
@@ -74,6 +78,8 @@ export interface AdDesignLayout {
 export interface AdCandidate {
     id: string;
     url: string;
+    /** 이 후보가 생성된 비율 — 그룹핑/카드 비율 표시에 사용 */
+    ratio: AdAspectRatio;
     score: number | null;
     design: AdDesignLayout;
 }
@@ -87,32 +93,7 @@ export interface AdTask {
     createdAt: string;
 }
 
-export interface AdSizePreset {
-    id: string;
-    label: string;
-    width: number;
-    height: number;
-}
-
-export interface AdDerivedImage {
-    id: string;
-    taskId: string;
-    candidateId: string;
-    presetId: string;
-    label: string;
-    url: string;
-    width: number;
-    height: number;
-}
-
 export const AD_ASPECT_RATIOS: AdAspectRatio[] = ['1:1', '4:5', '9:16'];
-
-export const AD_SIZE_PRESETS: AdSizePreset[] = [
-    { id: '1:1', label: 'Square', width: 1080, height: 1080 },
-    { id: '4:5', label: 'Portrait', width: 1080, height: 1350 },
-    { id: '9:16', label: 'Story', width: 1080, height: 1920 },
-    { id: '1.91:1', label: 'Banner', width: 1200, height: 628 },
-];
 
 export const AD_CANDIDATE_OPTIONS = [1, 2, 4, 10] as const;
 
@@ -151,26 +132,6 @@ export const adClientAPI = {
             return result.data.task;
         } catch (error) {
             console.error('Error fetching ad generation task:', error);
-            throw error;
-        }
-    },
-
-    // POST - 사이즈 파생 (결정론적 크롭, 무제한 무료)
-    async postDerivedSize(taskId: string, candidateId: string, presetId: string): Promise<AdDerivedImage> {
-        try {
-            const response = await postFetch(`/api/ad/tasks/${taskId}/derived`, {
-                candidateId,
-                presetId,
-            });
-            const result = await response.json();
-
-            if (!result.success || !result.data) {
-                throw new Error(result.error ?? 'Failed to derive ad size');
-            }
-
-            return result.data.derived;
-        } catch (error) {
-            console.error('Error deriving ad size:', error);
             throw error;
         }
     },

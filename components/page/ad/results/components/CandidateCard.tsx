@@ -13,12 +13,11 @@ const ASPECT_CLASS: Record<AdAspectRatio, string> = {
 interface CandidateCardProps {
     candidate: AdCandidate;
     index: number;
-    aspectRatio: AdAspectRatio;
     selected: boolean;
     onSelect: () => void;
 }
 
-function CandidateCard({ candidate, index, aspectRatio, selected, onSelect }: CandidateCardProps) {
+function CandidateCard({ candidate, index, selected, onSelect }: CandidateCardProps) {
     const onClickCard = useCallback(() => {
         onSelect();
     }, [onSelect]);
@@ -28,8 +27,10 @@ function CandidateCard({ candidate, index, aspectRatio, selected, onSelect }: Ca
             type="button"
             onClick={onClickCard}
             className={`group relative w-full overflow-hidden rounded-[1.5rem] border text-left transition-all duration-300 ${
-                selected ? 'border-accent' : 'border-hairline hover:border-text2/50'
-            } ${ASPECT_CLASS[aspectRatio]}`}
+                selected
+                    ? 'border-accent ring-1 ring-accent/30'
+                    : 'border-hairline hover:border-text2/50'
+            } ${ASPECT_CLASS[candidate.ratio]}`}
             aria-pressed={selected}
         >
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -42,7 +43,7 @@ function CandidateCard({ candidate, index, aspectRatio, selected, onSelect }: Ca
 
             {/* 라벨 */}
             <span className="absolute left-3 top-3 rounded-full bg-surface/85 px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.14em] text-text1 backdrop-blur-sm">
-                Candidate {String(index + 1).padStart(2, '0')}
+                {candidate.ratio}
             </span>
 
             {/* VLM 점수 */}
