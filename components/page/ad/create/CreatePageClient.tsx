@@ -4,8 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import AppHeader from "@/components/page/ad/app-header/AppHeader";
 import PreviewCanvas from "@/components/page/ad/create/components/PreviewCanvas";
-import StepCompose, { BackgroundMode } from "@/components/page/ad/create/step-components/StepCompose";
-import StepGenerate from "@/components/page/ad/create/step-components/StepGenerate";
+import CreateForm, { BackgroundMode } from "@/components/page/ad/create/components/CreateForm";
 import {
     AdAspectRatio,
     AdGenerateRequest,
@@ -13,8 +12,6 @@ import {
     AdTaskStatus,
     AdUploadedComponent,
 } from "@/lib/api/client/ad/adClientAPI";
-
-const STEP_TITLES = ['Compose your ad', 'Set generation options', 'Generating your candidates'];
 
 /*
  * 로컬 mock — 실 서버 구현 전까지 UI 플로우 검증용.
@@ -79,22 +76,22 @@ function mockGetTask(taskId: string): AdTask | null {
 export default function CreatePageClient() {
     const router = useRouter();
 
-    const [step, setStep] = useState<1 | 2 | 3>(1);
+    const [phase, setPhase] = useState<'form' | 'running'>('form');
 
-    // 스텝 1 — 구성 요소
+    // 구성 요소
     const [backgroundMode, setBackgroundMode] = useState<BackgroundMode>('prompt');
     const [backgroundPrompt, setBackgroundPrompt] = useState('');
     const [backgroundImage, setBackgroundImage] = useState<AdUploadedComponent | null>(null);
     const [product, setProduct] = useState<AdUploadedComponent | null>(null);
     const [person, setPerson] = useState<AdUploadedComponent | null>(null);
 
-    // 스텝 2 — 생성 옵션
+    // 생성 옵션
     const [aspectRatios, setAspectRatios] = useState<AdAspectRatio[]>(['1:1']);
     const [previewRatio, setPreviewRatio] = useState<AdAspectRatio>('1:1');
     const [candidateCount, setCandidateCount] = useState(4);
     const [ctaEnabled, setCtaEnabled] = useState(false);
 
-    // 스텝 3 — 생성 진행
+    // 생성 진행
     const [task, setTask] = useState<AdTask | null>(null);
     const [status, setStatus] = useState<AdTaskStatus | null>(null);
     const [error, setError] = useState<string | null>(null);
@@ -112,7 +109,7 @@ export default function CreatePageClient() {
         setError(null);
         setTask(null);
         setStatus(null);
-        setStep(3);
+        setPhase('running');
 
         const request: AdGenerateRequest = {
             backgroundPrompt: backgroundMode === 'prompt' ? backgroundPrompt.trim() || null : null,
@@ -131,7 +128,7 @@ export default function CreatePageClient() {
 
     // 생성 진행 폴링
     useEffect(() => {
-        if (step !== 3 || !task) {
+        if (phase !== 'running' || !task) {
             return;
         }
 
@@ -144,7 +141,7 @@ export default function CreatePageClient() {
             if (!updated) {
                 setError('Generation task not found. Please try again.');
                 clearInterval(interval);
-                setStep(2);
+                setPhase('form');
                 return;
             }
             setStatus(updated.status);
@@ -155,7 +152,7 @@ export default function CreatePageClient() {
             } else if (updated.status === 'failed') {
                 clearInterval(interval);
                 setError(updated.error ?? 'Generation failed. Please try again.');
-                setStep(2);
+                setPhase('form');
             }
         }, 700);
 
@@ -163,9 +160,7 @@ export default function CreatePageClient() {
             cancelled = true;
             clearInterval(interval);
         };
-    }, [step, task, router]);
-
-    const stepTitle = useMemo(() => STEP_TITLES[step - 1], [step]);
+    }, [phase, task, router]);
 
     const formatMeta = useMemo(() => {
         const ratioCount = aspectRatios.length;
@@ -177,33 +172,18 @@ export default function CreatePageClient() {
             <AppHeader />
 
             <main className="mx-auto max-w-[1440px] px-8 pb-24 pt-32">
-                <div className="grid gap-10 lg:grid-cols-[380px_1fr] lg:items-start">
+                <div className="grid gap-10 lg:grid-cols-[620px_1fr] lg:items-start">
                     {/* 컨트롤 패널 */}
-                    <aside className="rounded-[1.5rem] border border-hairline bg-surface p-6 lg:sticky lg:top-28">
+                    <aside className="rounded-[1.5rem] border border-hairline bg-surface p-6 lg:sticky lg:top-28 lg:max-h-[calc(100vh-8rem)] lg:overflow-y-auto">
                         <div className="mb-1 flex items-center justify-between">
                             <span className="font-mono text-[11px] uppercase tracking-[0.18em] text-accent">
                                 Create
                             </span>
-                            <span className="font-mono text-[11px] uppercase tracking-[0.18em] text-text2">
-                                Step {step === 3 ? 2 : step} of 2
-                            </span>
                         </div>
+                        <h2 className="mb-6 text-xl font-bold tracking-tight text-text1">Compose your ad</h2>
 
-                        <div className="mb-5 flex gap-1.5">
-                            {[1, 2].map((index) => (
-                                <div
-                                    key={index}
-                                    className={`h-[3px] flex-1 rounded-full transition-colors duration-300 ${
-                                        step > index || step === 3 ? 'bg-accent' : 'bg-hairline'
-                                    }`}
-                                />
-                            ))}
-                        </div>
-
-                        <h2 className="mb-6 text-xl font-bold tracking-tight text-text1">{stepTitle}</h2>
-
-                        {step === 1 && (
-                            <StepCompose
+                        {phase === 'form' && (
+                            <CreateForm
                                 backgroundMode={backgroundMode}
                                 backgroundPrompt={backgroundPrompt}
                                 backgroundImage={backgroundImage}
@@ -214,13 +194,6 @@ export default function CreatePageClient() {
                                 onBackgroundImageChange={setBackgroundImage}
                                 onProductChange={setProduct}
                                 onPersonChange={setPerson}
-                                onNext={() => setStep(2)}
-                                onBack={() => router.push('/ad')}
-                            />
-                        )}
-
-                        {step === 2 && (
-                            <StepGenerate
                                 aspectRatios={aspectRatios}
                                 candidateCount={candidateCount}
                                 ctaEnabled={ctaEnabled}
@@ -233,12 +206,11 @@ export default function CreatePageClient() {
                                 onCandidateCountChange={setCandidateCount}
                                 onCtaEnabledChange={setCtaEnabled}
                                 onGenerate={onClickGenerate}
-                                onBack={() => setStep(1)}
                                 isGenerating={false}
                             />
                         )}
 
-                        {step === 3 && (
+                        {phase === 'running' && (
                             <div className="space-y-4">
                                 <div className="rounded-xl border border-hairline bg-canvas px-4 py-3">
                                     <p className="text-[13px] font-medium text-text1">
@@ -273,7 +245,7 @@ export default function CreatePageClient() {
                             person={person}
                             status={status}
                         />
-                        {step < 3 && aspectRatios.length > 1 && (
+                        {phase === 'form' && aspectRatios.length > 1 && (
                             <div className="flex flex-wrap items-center justify-center gap-2">
                                 {aspectRatios.map((ratio) => (
                                     <button
@@ -291,7 +263,7 @@ export default function CreatePageClient() {
                                 ))}
                             </div>
                         )}
-                        {step < 3 && (
+                        {phase === 'form' && (
                             <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-text2">
                                 {previewRatio} preview · layout rendered deterministically
                             </p>

@@ -1,19 +1,19 @@
 'use client'
 
 import { memo, useRef, useState, useCallback } from 'react';
-import { ImagePlus, X, Check } from 'lucide-react';
+import { ImagePlus, Info, X, Check } from 'lucide-react';
 import { AdUploadedComponent } from "@/lib/api/client/ad/adClientAPI";
 
 interface UploadZoneProps {
     label: string;
-    hint?: string;
-    description?: string;
+    help?: string;
     notePlaceholder?: string;
+    tall?: boolean;
     file: AdUploadedComponent | null;
     onChange: (file: AdUploadedComponent | null) => void;
 }
 
-function UploadZone({ label, hint, description, notePlaceholder, file, onChange }: UploadZoneProps) {
+function UploadZone({ label, help, notePlaceholder, tall, file, onChange }: UploadZoneProps) {
     const inputRef = useRef<HTMLInputElement>(null);
     const [isDragging, setIsDragging] = useState(false);
 
@@ -53,9 +53,20 @@ function UploadZone({ label, hint, description, notePlaceholder, file, onChange 
     );
 
     return (
-        <div>
+        <div className="group relative">
             <div className="mb-2 flex items-center justify-between">
-                <span className="text-[13px] font-medium text-text1">{label}</span>
+                <div className="flex items-center gap-1.5">
+                    <span className="text-[13px] font-medium text-text1">{label}</span>
+                    {help && (
+                        <button
+                            type="button"
+                            aria-label={`About ${label}`}
+                            className="rounded-full p-0.5 text-text2/70 transition-colors hover:bg-surface hover:text-text1"
+                        >
+                            <Info className="h-3 w-3" strokeWidth={2} />
+                        </button>
+                    )}
+                </div>
                 {file && (
                     <span className="flex items-center gap-1 font-mono text-[10px] uppercase tracking-[0.14em] text-text2">
                         <Check className="h-3 w-3 text-accent" strokeWidth={2.4} />
@@ -64,9 +75,18 @@ function UploadZone({ label, hint, description, notePlaceholder, file, onChange 
                 )}
             </div>
 
+            {help && (
+                <div
+                    role="tooltip"
+                    className="pointer-events-none absolute left-0 top-full z-20 mt-2 w-60 rounded-xl border border-hairline bg-surface p-3 text-[12px] leading-relaxed text-text2 shadow-lg shadow-black/20 opacity-0 transition-opacity duration-150 group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100 invisible"
+                >
+                    {help}
+                </div>
+            )}
+
             {file ? (
-                <div className="flex items-center gap-3 rounded-xl border border-hairline bg-canvas p-2.5">
-                    <div className="h-12 w-12 shrink-0 overflow-hidden rounded-lg">
+                <div className="flex items-center gap-3 rounded-xl border border-hairline bg-canvas p-2">
+                    <div className="h-10 w-10 shrink-0 overflow-hidden rounded-lg">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img src={file.previewUrl} alt={file.fileName} className="h-full w-full object-cover" />
                     </div>
@@ -99,15 +119,21 @@ function UploadZone({ label, hint, description, notePlaceholder, file, onChange 
                         setIsDragging(false);
                         handleFiles(event.dataTransfer.files);
                     }}
-                    className={`group flex w-full flex-col items-center gap-2 rounded-xl border border-dashed px-4 py-6 transition-colors ${
+                    className={`flex w-full items-center justify-center gap-2.5 rounded-xl border border-dashed px-4 transition-colors ${
+                        tall ? 'min-h-0 flex-1 flex-col py-5' : 'py-2.5'
+                    } ${
                         isDragging ? 'border-accent bg-surface' : 'border-hairline hover:border-text2/50'
                     }`}
                 >
-                    <ImagePlus className="h-5 w-5 text-text2 transition-colors group-hover:text-text1" strokeWidth={1.8} />
-                    <span className="text-[13px] text-text2">
+                    <ImagePlus
+                        className={`shrink-0 text-text2 transition-colors ${
+                            tall ? 'h-5 w-5' : 'h-4 w-4'
+                        }`}
+                        strokeWidth={1.8}
+                    />
+                    <span className={`truncate text-[13px] text-text2 ${tall ? 'mt-1' : ''}`}>
                         Drop an image or <span className="text-text1 underline underline-offset-2">browse</span>
                     </span>
-                    {hint && <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-text2">{hint}</span>}
                 </button>
             )}
 
@@ -121,10 +147,6 @@ function UploadZone({ label, hint, description, notePlaceholder, file, onChange 
                     event.target.value = '';
                 }}
             />
-
-            {description && !file && (
-                <p className="mt-2 text-[12px] leading-relaxed text-text2">{description}</p>
-            )}
 
             {file && notePlaceholder && (
                 <input
