@@ -1,13 +1,14 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Plus } from 'lucide-react';
 import AppHeader from "@/components/page/ad/app-header/AppHeader";
 import CandidateCard from "@/components/page/ad/results/components/CandidateCard";
 import DetailPanel from "@/components/page/ad/results/components/DetailPanel";
+import PreviewModal from "@/components/page/ad/results/components/PreviewModal";
 import {
     AdAspectRatio,
     AdCandidate,
+    AdDesignLayout,
     AdTask,
     AdTaskStatus,
 } from "@/lib/api/client/ad/adClientAPI";
@@ -86,27 +87,15 @@ function mulberry32(seed: number): () => number {
     };
 }
 
-function pickShuffled<T>(pool: T[], count: number, rand: () => number): T[] {
-    const shuffled = [...pool].sort(() => rand() - 0.5);
-    if (count <= shuffled.length) {
-        return shuffled.slice(0, count);
-    }
-    const result: T[] = [];
-    while (result.length < count) {
-        result.push(shuffled[result.length % shuffled.length]);
-    }
-    return result;
-}
-
 function pickByRatio<T>(pool: T[], rand: () => number): T {
     return pool[Math.floor(rand() * pool.length)];
 }
 
-function buildCandidate(id: string, ratio: AdAspectRatio, rand: () => number, ctaEnabled: boolean): AdCandidate {
+function buildConceptDesign(rand: () => number, ctaEnabled: boolean): AdDesignLayout {
     const headlineX = 7 + rand() * 3;
     const headlineY = 58 + rand() * 12;
 
-    const design = {
+    return {
         headline: {
             text: pickByRatio(MOCK_HEADLINES, rand),
             x: headlineX,
@@ -133,14 +122,6 @@ function buildCandidate(id: string, ratio: AdAspectRatio, rand: () => number, ct
         },
         scrim: true,
     };
-
-    return {
-        id,
-        url: pickByRatio(MOCK_IMAGE_POOL, rand),
-        ratio,
-        score: null,
-        design,
-    };
 }
 
 function mockGetTask(taskId: string): AdTask | null {
@@ -155,24 +136,27 @@ function mockGetTask(taskId: string): AdTask | null {
 
     if (status === 'completed' && task.candidates.length === 0) {
         const rand = mulberry32(hashString(taskId));
-        const count = task.request.candidateCount;
+        const conceptCount = task.request.conceptCount;
+        const ratios = task.request.aspectRatios;
 
-        const candidates: AdCandidate[] = task.request.aspectRatios.flatMap((ratio) => {
-            const urls = pickShuffled(MOCK_IMAGE_POOL, count, rand);
-            return urls.map((url, index) => {
-                const candidate = buildCandidate(
-                    `${taskId}-${ratio}-candidate-${index + 1}`,
+        // 개념 우선 생성 — 개념별로 같은 이미지 + 같은 디자인(시드 고정 흉내), 비율만 파생.
+        const candidates: AdCandidate[] = [];
+        for (let concept = 0; concept < conceptCount; concept++) {
+            const url = pickByRatio(MOCK_IMAGE_POOL, rand);
+            const design = buildConceptDesign(rand, task.request.ctaEnabled);
+
+            ratios.forEach((ratio) => {
+                const score = conceptCount > 1 ? Math.round((6.2 + rand() * 2.9) * 10) / 10 : null;
+                candidates.push({
+                    id: `${taskId}-c${concept + 1}-${ratio}-candidate`,
+                    url,
+                    conceptIndex: concept,
                     ratio,
-                    rand,
-                    task.request.ctaEnabled,
-                );
-                candidate.url = url;
-                if (count > 1) {
-                    candidate.score = Math.round((6.2 + rand() * 2.9) * 10) / 10;
-                }
-                return candidate;
+                    score,
+                    design,
+                });
             });
-        });
+        }
 
         window.__adMockTasks = { ...tasks, [taskId]: { ...task, status: 'completed', candidates } };
         return window.__adMockTasks[taskId];
@@ -189,8 +173,8 @@ interface ResultsPageClientProps {
     taskId: string | null;
 }
 
-interface RatioGroup {
-    ratio: AdAspectRatio;
+interface ConceptGroup {
+    conceptIndex: number;
     candidates: AdCandidate[];
 }
 
@@ -255,31 +239,47 @@ export default function ResultsPageClient({ taskId }: ResultsPageClientProps) {
         };
     }, [taskId]);
 
-    // 비율별 그룹 (그룹 내 점수 내림차순)
-    const ratioGroups = useMemo<RatioGroup[]>(() => {
+    // 개념별 그룹 (그룹 내 비율 순, 그룹은 최고 점수 내림차순)
+    const conceptGroups = useMemo<ConceptGroup[]>(() => {
         if (!task) {
             return [];
         }
-        return task.request.aspectRatios.map((ratio) => ({
-            ratio,
-            candidates: task.candidates
-                .filter((candidate) => candidate.ratio === ratio)
-                .sort((a, b) => (b.score ?? -1) - (a.score ?? -1)),
-        }));
+        const groups = new Map<number, AdCandidate[]>();
+        task.candidates.forEach((candidate) => {
+            const list = groups.get(candidate.conceptIndex) ?? [];
+            list.push(candidate);
+            groups.set(candidate.conceptIndex, list);
+        });
+        return [...groups.entries()]
+            .map(([conceptIndex, candidates]) => ({
+                conceptIndex,
+                candidates: candidates.sort(
+                    (a, b) =>
+                        task.request.aspectRatios.indexOf(a.ratio) - task.request.aspectRatios.indexOf(b.ratio),
+                ),
+            }))
+            .sort((a, b) => {
+                const aBest = Math.max(...a.candidates.map((candidate) => candidate.score ?? -1));
+                const bBest = Math.max(...b.candidates.map((candidate) => candidate.score ?? -1));
+                return bBest - aBest || a.conceptIndex - b.conceptIndex;
+            });
     }, [task]);
-
-    const selectedIndex = useMemo(() => {
-        if (!task || !selectedCandidateId) {
-            return -1;
-        }
-        return task.candidates.findIndex((candidate) => candidate.id === selectedCandidateId);
-    }, [task, selectedCandidateId]);
 
     const onClickCandidate = useCallback((candidateId: string) => {
         setSelectedCandidateId(candidateId);
     }, []);
 
-    const selectedCandidate = selectedIndex >= 0 && task ? task.candidates[selectedIndex] : null;
+    const [previewOpen, setPreviewOpen] = useState(false);
+
+    const onClickOpenPreview = useCallback(() => {
+        setPreviewOpen(true);
+    }, []);
+
+    const onClickClosePreview = useCallback(() => {
+        setPreviewOpen(false);
+    }, []);
+
+    const selectedCandidate = task?.candidates.find((candidate) => candidate.id === selectedCandidateId) ?? null;
 
     const totalCount = task?.candidates.length ?? 0;
     const headerMeta = useMemo(() => {
@@ -287,9 +287,9 @@ export default function ResultsPageClient({ taskId }: ResultsPageClientProps) {
             return '';
         }
         const formatCount = task.request.aspectRatios.length;
-        return `${totalCount} image${totalCount > 1 ? 's' : ''} · ${formatCount} format${formatCount > 1 ? 's' : ''}${
-            task.request.ctaEnabled ? ' · CTA on' : ''
-        } · downloads unlimited`;
+        return `${totalCount} image${totalCount > 1 ? 's' : ''} · ${formatCount} format${
+            formatCount > 1 ? 's' : ''
+        }${task.request.ctaEnabled ? ' · CTA on' : ''} · downloads unlimited`;
     }, [task, totalCount]);
 
     return (
@@ -297,32 +297,10 @@ export default function ResultsPageClient({ taskId }: ResultsPageClientProps) {
             <AppHeader />
 
             <main className="mx-auto max-w-[1600px] px-8 pb-24 pt-32">
-                <header className="mb-10 flex flex-wrap items-end justify-between gap-6">
-                    <div>
-                        <span className="font-mono text-[11px] uppercase tracking-[0.18em] text-accent">
-                            Results
-                        </span>
-                        <h1 className="mt-2 max-w-[18ch] text-3xl font-bold tracking-tight text-text1">
-                            Your candidates are ready
-                        </h1>
-                        {task && (
-                            <p className="mt-3 font-mono text-[11px] uppercase tracking-[0.18em] text-text2">
-                                {headerMeta}
-                            </p>
-                        )}
-                    </div>
-                    <a
-                        href="/ad/create"
-                        className="flex items-center gap-2 rounded-full bg-text1 px-5 py-2.5 text-[13px] font-semibold text-canvas transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98]"
-                    >
-                        <Plus className="h-3.5 w-3.5" strokeWidth={2.2} />
-                        <span>New generation</span>
-                    </a>
-                </header>
 
                 {isLoading && (
-                    <div className="grid gap-8 xl:grid-cols-[1fr_360px]">
-                        <div className="grid gap-5 sm:grid-cols-[repeat(auto-fill,minmax(200px,1fr))]">
+                    <div className="grid gap-8 xl:grid-cols-[1fr_360px] 2xl:grid-cols-[1fr_360px]">
+                        <div className="grid gap-5 sm:grid-cols-[repeat(auto-fill,minmax(220px,1fr))]">
                             {[0, 1, 2, 3].map((index) => (
                                 <div
                                     key={index}
@@ -341,7 +319,7 @@ export default function ResultsPageClient({ taskId }: ResultsPageClientProps) {
                         <p className="text-[13px] leading-relaxed text-[#F87171]">{error}</p>
                         <a
                             href="/ad/create"
-                            className="rounded-full bg-text1 px-6 py-2.5 text-[13px] font-semibold text-canvas transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98]"
+                            className="rounded-full bg-text1 px-6 py-2.5 text-[13px] font-semibold text-canvas transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:scale-[1.02] active:scale-[0.98]"
                         >
                             Start a new generation
                         </a>
@@ -349,42 +327,65 @@ export default function ResultsPageClient({ taskId }: ResultsPageClientProps) {
                 )}
 
                 {!isLoading && !error && task && (
-                    <div className="grid gap-10 xl:grid-cols-[1fr_360px] xl:items-start">
+                    <div className="grid gap-10 xl:grid-cols-[1fr_360px] xl:items-start 2xl:grid-cols-[1fr_360px]">
                         <div className="space-y-10">
-                            {ratioGroups.map((group) => (
-                                <section key={group.ratio}>
-                                    <div className="mb-4 flex items-baseline justify-between gap-4">
-                                        <h2 className="text-lg font-bold tracking-tight text-text1">
-                                            {group.ratio}
-                                        </h2>
-                                        <span className="font-mono text-[11px] uppercase tracking-[0.18em] text-text2">
-                                            {group.candidates.length} candidate
-                                            {group.candidates.length > 1 ? 's' : ''}
-                                        </span>
-                                    </div>
-                                    <div className="grid gap-5 sm:grid-cols-[repeat(auto-fill,minmax(200px,1fr))]">
-                                        {group.candidates.map((candidate, index) => (
-                                            <CandidateCard
-                                                key={candidate.id}
-                                                candidate={candidate}
-                                                index={index}
-                                                selected={candidate.id === selectedCandidateId}
-                                                onSelect={() => onClickCandidate(candidate.id)}
-                                            />
-                                        ))}
-                                    </div>
-                                </section>
-                            ))}
+                            <div>
+                                <span className="font-mono text-[11px] uppercase tracking-[0.18em] text-accent">
+                                    Results
+                                </span>
+                                <h1 className="mt-2 max-w-[18ch] text-3xl font-bold tracking-tight text-text1 md:text-4xl">
+                                    Your candidates are ready
+                                </h1>
+                                <p className="mt-3 font-mono text-[11px] uppercase tracking-[0.18em] text-text2">
+                                    {headerMeta}
+                                </p>
+                            </div>
+                            {conceptGroups.map((group) => {
+                                const bestScore = Math.max(...group.candidates.map((c) => c.score ?? -1));
+                                return (
+                                    <section key={group.conceptIndex}>
+                                        <div className="mb-4 flex items-baseline justify-between gap-4">
+                                            <h2 className="text-lg font-bold tracking-tight text-text1">
+                                                Image {String(group.conceptIndex + 1).padStart(2, '0')}
+                                                {bestScore >= 0 && (
+                                                    <span className="ml-2.5 font-mono text-[11px] font-normal uppercase tracking-[0.14em] text-text2">
+                                                        best {bestScore.toFixed(1)}
+                                                    </span>
+                                                )}
+                                            </h2>
+                                            <span className="font-mono text-[11px] uppercase tracking-[0.18em] text-text2">
+                                                {group.candidates.length} format
+                                                {group.candidates.length > 1 ? 's' : ''}
+                                            </span>
+                                        </div>
+                                        <div className="grid gap-5 sm:grid-cols-[repeat(auto-fill,minmax(220px,1fr))]">
+                                            {group.candidates.map((candidate, index) => (
+                                                <CandidateCard
+                                                    key={candidate.id}
+                                                    candidate={candidate}
+                                                    index={index}
+                                                    selected={candidate.id === selectedCandidateId}
+                                                    onSelect={() => onClickCandidate(candidate.id)}
+                                                />
+                                            ))}
+                                        </div>
+                                    </section>
+                                );
+                            })}
                         </div>
 
-                        <div className="xl:sticky xl:top-28">
+                        <div className="xl:sticky xl:top-24">
                             <DetailPanel
                                 task={task}
                                 candidate={selectedCandidate}
-                                candidateIndex={selectedIndex}
+                                onOpenPreview={onClickOpenPreview}
                             />
                         </div>
                     </div>
+                )}
+
+                {previewOpen && selectedCandidate && (
+                    <PreviewModal candidate={selectedCandidate} onClose={onClickClosePreview} />
                 )}
             </main>
         </>

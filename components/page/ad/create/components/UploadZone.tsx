@@ -119,7 +119,7 @@ function UploadZone({ label, help, notePlaceholder, tall, file, onChange }: Uplo
                         setIsDragging(false);
                         handleFiles(event.dataTransfer.files);
                     }}
-                    className={`flex w-full items-center justify-center gap-2.5 rounded-xl border border-dashed px-4 transition-colors ${
+                    className={`flex w-full items-center justify-center gap-2.5 rounded-xl border border-dashed px-4 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
                         tall ? 'min-h-0 flex-1 flex-col py-5' : 'py-2.5'
                     } ${
                         isDragging ? 'border-accent bg-surface' : 'border-hairline hover:border-text2/50'

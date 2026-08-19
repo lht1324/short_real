@@ -3,7 +3,7 @@
 import { memo, useCallback, useMemo } from 'react';
 import { AlertTriangle, Check } from 'lucide-react';
 import { AdAspectRatio, AdUploadedComponent } from "@/lib/api/client/ad/adClientAPI";
-import { AD_ASPECT_RATIOS, AD_CANDIDATE_OPTIONS } from "@/lib/api/client/ad/adClientAPI";
+import { AD_ASPECT_RATIOS, AD_CONCEPT_OPTIONS } from "@/lib/api/client/ad/adClientAPI";
 import UploadZone from "@/components/page/ad/create/components/UploadZone";
 
 export type BackgroundMode = 'prompt' | 'upload';
@@ -12,6 +12,12 @@ const RATIO_LABELS: Record<AdAspectRatio, string> = {
     '1:1': 'Square',
     '4:5': 'Portrait',
     '9:16': 'Story',
+};
+
+const RATIO_MINI_CLASS: Record<AdAspectRatio, string> = {
+    '1:1': 'h-4 w-4',
+    '4:5': 'h-5 w-4',
+    '9:16': 'h-8 w-4',
 };
 
 interface CreateFormProps {
@@ -26,11 +32,11 @@ interface CreateFormProps {
     onProductChange: (file: AdUploadedComponent | null) => void;
     onPersonChange: (file: AdUploadedComponent | null) => void;
     aspectRatios: AdAspectRatio[];
-    candidateCount: number;
+    conceptCount: number;
     ctaEnabled: boolean;
     lockedRatio?: { width: number; height: number } | null;
     onAspectRatiosChange: (ratios: AdAspectRatio[]) => void;
-    onCandidateCountChange: (count: number) => void;
+    onConceptCountChange: (count: number) => void;
     onCtaEnabledChange: (enabled: boolean) => void;
     onGenerate: () => void;
     isGenerating: boolean;
@@ -48,11 +54,11 @@ function CreateForm({
     onProductChange,
     onPersonChange,
     aspectRatios,
-    candidateCount,
+    conceptCount,
     ctaEnabled,
     lockedRatio,
     onAspectRatiosChange,
-    onCandidateCountChange,
+    onConceptCountChange,
     onCtaEnabledChange,
     onGenerate,
     isGenerating,
@@ -63,7 +69,7 @@ function CreateForm({
     const hasSubject = product !== null || person !== null;
     const canGenerate = hasBackground && hasSubject && aspectRatios.length > 0;
 
-    const totalImages = useMemo(() => aspectRatios.length * candidateCount, [aspectRatios, candidateCount]);
+    const totalImages = useMemo(() => aspectRatios.length * conceptCount, [aspectRatios, conceptCount]);
 
     const onClickMode = useCallback((mode: BackgroundMode) => {
         onBackgroundModeChange(mode);
@@ -81,8 +87,8 @@ function CreateForm({
     );
 
     const onClickCount = useCallback((count: number) => {
-        onCandidateCountChange(count);
-    }, [onCandidateCountChange]);
+        onConceptCountChange(count);
+    }, [onConceptCountChange]);
 
     const onClickCta = useCallback((enabled: boolean) => {
         onCtaEnabledChange(enabled);
@@ -116,7 +122,7 @@ function CreateForm({
                         </div>
                     </div>
 
-                    <div className="flex min-h-[7em] flex-1 flex-col">
+                    <div className="flex min-h-[10em] flex-1 flex-col">
                         {backgroundMode === 'prompt' ? (
                             <div className="relative flex min-h-0 flex-1 flex-col">
                                 <textarea
@@ -141,48 +147,6 @@ function CreateForm({
                             />
                         )}
                     </div>
-                </section>
-
-                <section className="rounded-2xl border border-hairline p-5">
-                    <div className="mb-3 flex items-center justify-between">
-                        <h3 className="text-[15px] font-semibold text-text1">Candidates</h3>
-                        <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-text2">
-                            per format
-                        </span>
-                    </div>
-                    <div className="grid grid-cols-4 gap-2">
-                        {AD_CANDIDATE_OPTIONS.map((count) => (
-                            <button
-                                key={count}
-                                type="button"
-                                onClick={() => onClickCount(count)}
-                                className={`relative rounded-xl border px-2 py-3 text-center transition-all duration-200 ${
-                                    candidateCount === count
-                                        ? 'border-accent bg-surface'
-                                        : 'border-hairline hover:border-text2/50'
-                                }`}
-                            >
-                                <span
-                                    className={`block text-[15px] font-semibold ${
-                                        candidateCount === count ? 'text-text1' : 'text-text2'
-                                    }`}
-                                >
-                                    {count}
-                                </span>
-                                <span className="mt-0.5 block font-mono text-[9px] uppercase tracking-[0.12em] text-text2">
-                                    img
-                                </span>
-                                {count === 10 && (
-                                    <span className="absolute -top-2 right-2 rounded-full bg-accent px-1.5 py-0.5 font-mono text-[8px] font-semibold uppercase tracking-[0.1em] text-canvas">
-                                        Pro
-                                    </span>
-                                )}
-                            </button>
-                        ))}
-                    </div>
-                    <p className="mt-2.5 text-[11px] leading-snug text-text2">
-                        All candidates are shown to you — scored and sorted, your call on the winner.
-                    </p>
                 </section>
 
                 <section className="space-y-4 rounded-2xl border border-hairline p-5">
@@ -224,6 +188,48 @@ function CreateForm({
 
                 <section className="rounded-2xl border border-hairline p-5">
                     <div className="mb-3 flex items-center justify-between">
+                        <h3 className="text-[15px] font-semibold text-text1">Count</h3>
+                        <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-text2">
+                            images
+                        </span>
+                    </div>
+                    <div className="grid grid-cols-4 gap-2">
+                        {AD_CONCEPT_OPTIONS.map((count) => (
+                            <button
+                                key={count}
+                                type="button"
+                                onClick={() => onClickCount(count)}
+                                className={`relative rounded-xl border px-2 py-3 text-center transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] active:scale-[0.97] ${
+                                    conceptCount === count
+                                        ? 'border-accent bg-surface'
+                                        : 'border-hairline hover:border-text2/50'
+                                }`}
+                            >
+                                <span
+                                    className={`block text-[15px] font-semibold ${
+                                        conceptCount === count ? 'text-text1' : 'text-text2'
+                                    }`}
+                                >
+                                    {count}
+                                </span>
+                                <span className="mt-0.5 block font-mono text-[9px] uppercase tracking-[0.12em] text-text2">
+                                    images
+                                </span>
+                                {count === 10 && (
+                                    <span className="absolute -top-2 right-2 rounded-full bg-accent px-1.5 py-0.5 font-mono text-[8px] font-semibold uppercase tracking-[0.1em] text-canvas">
+                                        Pro
+                                    </span>
+                                )}
+                            </button>
+                        ))}
+                    </div>
+                    <p className="mt-2.5 text-[11px] leading-snug text-text2">
+                        Each image is generated in every format you select.
+                    </p>
+                </section>
+
+                <section className="rounded-2xl border border-hairline p-5">
+                    <div className="mb-3 flex items-center justify-between">
                         <h3 className="text-[15px] font-semibold text-text1">Formats</h3>
                         <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-text2">
                             {lockedRatio ? 'from uploaded background' : 'select one or more'}
@@ -252,7 +258,7 @@ function CreateForm({
                                         type="button"
                                         aria-pressed={selected}
                                         onClick={() => onClickRatio(ratio)}
-                                        className={`relative flex flex-col items-center gap-2 rounded-xl border px-2 py-3.5 transition-all duration-200 ${
+                                        className={`relative flex flex-col items-center gap-2 rounded-xl border px-2 py-3.5 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] active:scale-[0.97] ${
                                             selected
                                                 ? 'border-accent bg-surface'
                                                 : 'border-hairline hover:border-text2/50'
@@ -265,7 +271,7 @@ function CreateForm({
                                         )}
                                         <span className="flex h-9 items-end gap-1.5">
                                             <span
-                                                className={`h-full w-4 rounded-[4px] border ${
+                                                className={`rounded-[4px] border ${RATIO_MINI_CLASS[ratio]} ${
                                                     selected ? 'border-accent bg-canvas' : 'border-hairline bg-canvas'
                                                 }`}
                                             />
@@ -290,13 +296,13 @@ function CreateForm({
                         role="switch"
                         aria-checked={ctaEnabled}
                         onClick={() => onClickCta(!ctaEnabled)}
-                        className={`relative h-7 w-[52px] shrink-0 rounded-full transition-colors duration-200 ${
+                        className={`relative h-7 w-[52px] shrink-0 rounded-full transition-colors duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
                             ctaEnabled ? 'bg-accent' : 'bg-hairline'
                         }`}
                     >
                         <span
-                            className={`absolute top-1 h-5 w-5 rounded-full bg-white transition-[left] duration-200 ${
-                                ctaEnabled ? 'left-[28px]' : 'left-1'
+                            className={`absolute left-1 top-1 h-5 w-5 rounded-full bg-white shadow-sm shadow-black/20 transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+                                ctaEnabled ? 'translate-x-[24px]' : 'translate-x-0'
                             }`}
                         />
                     </button>
@@ -309,14 +315,14 @@ function CreateForm({
                     type="button"
                     onClick={onGenerate}
                     disabled={!canGenerate || isGenerating}
-                    className="w-full rounded-full bg-text1 px-6 py-3.5 text-[14px] font-semibold text-canvas transition-all duration-200 hover:scale-[1.01] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:scale-100"
+                    className="w-full rounded-full bg-text1 px-6 py-3.5 text-[14px] font-semibold text-canvas transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:scale-[1.01] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:scale-100"
                 >
                     Generate {totalImages} image{totalImages > 1 ? 's' : ''}
                 </button>
                 <p className="text-center font-mono text-[10px] uppercase tracking-[0.18em] text-text2">
-                    {aspectRatios.length} format{aspectRatios.length > 1 ? 's' : ''} × {candidateCount} candidate
-                    {candidateCount > 1 ? 's' : ''} = {totalImages} image{totalImages > 1 ? 's' : ''} deducted per
-                    attempt
+                    {conceptCount} image{conceptCount > 1 ? 's' : ''} × {aspectRatios.length} format
+                    {aspectRatios.length > 1 ? 's' : ''} = {totalImages} image{totalImages > 1 ? 's' : ''} deducted
+                    per attempt
                 </p>
                 {!hasBackground && (
                     <p className="text-center text-[12px] leading-relaxed text-text2">

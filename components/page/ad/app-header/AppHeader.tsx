@@ -29,7 +29,7 @@ function AppHeader() {
 
                 <a
                     href="/ad/create"
-                    className="flex items-center gap-2 rounded-full bg-text1 px-5 py-2.5 text-[13px] font-semibold text-canvas transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98]"
+                    className="flex items-center gap-2 rounded-full bg-text1 px-5 py-2.5 text-[13px] font-semibold text-canvas transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:scale-[1.02] active:scale-[0.98]"
                 >
                     <Plus className="h-3.5 w-3.5" strokeWidth={2.2} />
                     <span>New generation</span>

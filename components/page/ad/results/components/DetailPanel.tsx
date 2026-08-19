@@ -1,7 +1,8 @@
 'use client'
 
 import { memo, useCallback } from 'react';
-import { Download, Wand2 } from 'lucide-react';
+import { Download, Maximize2, Wand2 } from 'lucide-react';
+import AdOverlay from "@/components/page/ad/results/components/AdOverlay";
 import { AdAspectRatio, AdCandidate, AdTask } from "@/lib/api/client/ad/adClientAPI";
 
 const PRESET_ASPECT_CLASS: Record<AdAspectRatio, string> = {
@@ -13,10 +14,10 @@ const PRESET_ASPECT_CLASS: Record<AdAspectRatio, string> = {
 interface DetailPanelProps {
     task: AdTask;
     candidate: AdCandidate | null;
-    candidateIndex: number;
+    onOpenPreview: () => void;
 }
 
-function DetailPanel({ task, candidate, candidateIndex }: DetailPanelProps) {
+function DetailPanel({ task, candidate, onOpenPreview }: DetailPanelProps) {
     const onClickEditor = useCallback(() => {
         window.alert(
             'The layout editor arrives in the next phase. You will fine-tune typography, layers, and free crop there. Your layout will open with the current design as the default.'
@@ -45,7 +46,7 @@ function DetailPanel({ task, candidate, candidateIndex }: DetailPanelProps) {
             </div>
 
             <h2 className="mb-5 text-lg font-bold tracking-tight text-text1">
-                Candidate {String(candidateIndex + 1).padStart(2, '0')} · {candidate.ratio}
+                Image {String(candidate.conceptIndex + 1).padStart(2, '0')} · {candidate.ratio}
             </h2>
 
             {/* 후보 미리보기 */}
@@ -56,6 +57,15 @@ function DetailPanel({ task, candidate, candidateIndex }: DetailPanelProps) {
                     alt={`${candidate.ratio} preview`}
                     className="absolute inset-0 h-full w-full object-cover"
                 />
+                <AdOverlay design={candidate.design} />
+                <button
+                    type="button"
+                    onClick={onOpenPreview}
+                    aria-label="Expand preview"
+                    className="absolute right-2.5 top-2.5 flex h-8 w-8 items-center justify-center rounded-full bg-surface/85 text-text1 backdrop-blur-sm transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:scale-105 active:scale-95"
+                >
+                    <Maximize2 className="h-3.5 w-3.5" strokeWidth={2} />
+                </button>
             </div>
 
             {/* 다운로드 */}
@@ -63,7 +73,7 @@ function DetailPanel({ task, candidate, candidateIndex }: DetailPanelProps) {
                 <a
                     href={candidate.url}
                     download={`shortreal-ad-${candidate.ratio}-${candidate.id}.webp`}
-                    className="flex w-full items-center justify-center gap-2 rounded-full bg-text1 px-5 py-3 text-[13px] font-semibold text-canvas transition-transform duration-200 hover:scale-[1.01] active:scale-[0.99]"
+                    className="flex w-full items-center justify-center gap-2 rounded-full bg-text1 px-5 py-3 text-[13px] font-semibold text-canvas transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:scale-[1.01] active:scale-[0.99]"
                 >
                     <Download className="h-4 w-4" strokeWidth={2.2} />
                     <span>Download {candidate.ratio}</span>
@@ -75,7 +85,7 @@ function DetailPanel({ task, candidate, candidateIndex }: DetailPanelProps) {
                 <button
                     type="button"
                     onClick={onClickEditor}
-                    className="flex w-full items-center justify-center gap-2 rounded-full border border-hairline px-5 py-2.5 text-[13px] font-medium text-text1 transition-colors hover:border-text2/50"
+                    className="flex w-full items-center justify-center gap-2 rounded-full border border-hairline px-5 py-2.5 text-[13px] font-medium text-text1 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:border-text2/50 hover:bg-surface active:scale-[0.99]"
                 >
                     <Wand2 className="h-4 w-4" strokeWidth={1.8} />
                     <span>Open in editor</span>

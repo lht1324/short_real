@@ -33,11 +33,15 @@ export interface AdGenerateRequest {
     product: AdUploadedComponent | null;
     person: AdUploadedComponent | null;
     /**
-     * 생성할 비율 목록 (멀티 선택). 총 생성 장수 = aspectRatios.length × candidateCount.
+     * 생성할 비율 목록 (멀티 선택). 총 생성 장수 = aspectRatios.length × conceptCount.
      * 비율별 개별 생성 — 크롭/리프레임 등 후처리 변환을 하지 않는 것이 원칙.
      */
     aspectRatios: AdAspectRatio[];
-    candidateCount: number;
+    /**
+     * 생성할 개념(주제 변형) 수. 각 개념은 선택한 모든 비율로 파생 생성된다.
+     * 개념별로 서로 다른 시드를 사용하고, 같은 개념의 비율 버전들은 같은 시드를 공유한다.
+     */
+    conceptCount: number;
     ctaEnabled: boolean;
 }
 
@@ -78,6 +82,8 @@ export interface AdDesignLayout {
 export interface AdCandidate {
     id: string;
     url: string;
+    /** 이 후보가 속한 개념 인덱스 (0-based) — 같은 개념의 비율 버전들이 같은 값을 공유 */
+    conceptIndex: number;
     /** 이 후보가 생성된 비율 — 그룹핑/카드 비율 표시에 사용 */
     ratio: AdAspectRatio;
     score: number | null;
@@ -95,7 +101,7 @@ export interface AdTask {
 
 export const AD_ASPECT_RATIOS: AdAspectRatio[] = ['1:1', '4:5', '9:16'];
 
-export const AD_CANDIDATE_OPTIONS = [1, 2, 4, 10] as const;
+export const AD_CONCEPT_OPTIONS = [1, 2, 4, 10] as const;
 
 export const AD_CTA_PRESETS = ['Shop now', 'Buy now', 'Get yours', 'Learn more'] as const;
 

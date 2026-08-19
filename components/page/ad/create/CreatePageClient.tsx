@@ -88,7 +88,7 @@ export default function CreatePageClient() {
     // 생성 옵션
     const [aspectRatios, setAspectRatios] = useState<AdAspectRatio[]>(['1:1']);
     const [previewRatio, setPreviewRatio] = useState<AdAspectRatio>('1:1');
-    const [candidateCount, setCandidateCount] = useState(4);
+    const [conceptCount, setConceptCount] = useState(4);
     const [ctaEnabled, setCtaEnabled] = useState(false);
 
     // 생성 진행
@@ -103,7 +103,7 @@ export default function CreatePageClient() {
         }
     }, [aspectRatios, previewRatio]);
 
-    const totalImages = useMemo(() => aspectRatios.length * candidateCount, [aspectRatios, candidateCount]);
+    const totalImages = useMemo(() => aspectRatios.length * conceptCount, [aspectRatios, conceptCount]);
 
     const onClickGenerate = useCallback(() => {
         setError(null);
@@ -117,14 +117,14 @@ export default function CreatePageClient() {
             product,
             person,
             aspectRatios,
-            candidateCount,
+            conceptCount,
             ctaEnabled,
         };
 
         const newTask = mockCreateTask(request);
         setTask(newTask);
         setStatus(newTask.status);
-    }, [backgroundMode, backgroundPrompt, backgroundImage, product, person, aspectRatios, candidateCount, ctaEnabled]);
+    }, [backgroundMode, backgroundPrompt, backgroundImage, product, person, aspectRatios, conceptCount, ctaEnabled]);
 
     // 생성 진행 폴링
     useEffect(() => {
@@ -164,8 +164,10 @@ export default function CreatePageClient() {
 
     const formatMeta = useMemo(() => {
         const ratioCount = aspectRatios.length;
-        return `${ratioCount} format${ratioCount > 1 ? 's' : ''} · ${candidateCount} candidate${candidateCount > 1 ? 's' : ''} per format`;
-    }, [aspectRatios, candidateCount]);
+        return `${conceptCount} image${conceptCount > 1 ? 's' : ''} · ${ratioCount} format${
+            ratioCount > 1 ? 's' : ''
+        }`;
+    }, [aspectRatios, conceptCount]);
 
     return (
         <>
@@ -174,7 +176,7 @@ export default function CreatePageClient() {
             <main className="mx-auto max-w-[1440px] px-8 pb-24 pt-32">
                 <div className="grid gap-10 lg:grid-cols-[620px_1fr] lg:items-start">
                     {/* 컨트롤 패널 */}
-                    <aside className="rounded-[1.5rem] border border-hairline bg-surface p-6 lg:sticky lg:top-28 lg:max-h-[calc(100vh-8rem)] lg:overflow-y-auto">
+                    <aside className="rounded-[1.5rem] border border-hairline bg-surface p-6 lg:sticky lg:top-24 lg:max-h-[calc(100vh-6.5rem)] lg:overflow-y-auto">
                         <div className="mb-1 flex items-center justify-between">
                             <span className="font-mono text-[11px] uppercase tracking-[0.18em] text-accent">
                                 Create
@@ -195,7 +197,7 @@ export default function CreatePageClient() {
                                 onProductChange={setProduct}
                                 onPersonChange={setPerson}
                                 aspectRatios={aspectRatios}
-                                candidateCount={candidateCount}
+                                conceptCount={conceptCount}
                                 ctaEnabled={ctaEnabled}
                                 lockedRatio={
                                     backgroundMode === 'upload' && backgroundImage?.width && backgroundImage?.height
@@ -203,7 +205,7 @@ export default function CreatePageClient() {
                                         : null
                                 }
                                 onAspectRatiosChange={setAspectRatios}
-                                onCandidateCountChange={setCandidateCount}
+                                onConceptCountChange={setConceptCount}
                                 onCtaEnabledChange={setCtaEnabled}
                                 onGenerate={onClickGenerate}
                                 isGenerating={false}
@@ -214,8 +216,9 @@ export default function CreatePageClient() {
                             <div className="space-y-4">
                                 <div className="rounded-xl border border-hairline bg-canvas px-4 py-3">
                                     <p className="text-[13px] font-medium text-text1">
-                                        {totalImages} image{totalImages > 1 ? 's' : ''} · {aspectRatios.length}{' '}
-                                        format{aspectRatios.length > 1 ? 's' : ''}
+                                        {totalImages} image{totalImages > 1 ? 's' : ''} · {conceptCount} ×{' '}
+                                        {aspectRatios.length} format
+                                        {aspectRatios.length > 1 ? 's' : ''}
                                     </p>
                                     <p className="mt-0.5 font-mono text-[10px] uppercase tracking-[0.14em] text-text2">
                                         {totalImages} image{totalImages > 1 ? 's' : ''} deducted from your plan
@@ -252,7 +255,7 @@ export default function CreatePageClient() {
                                         key={ratio}
                                         type="button"
                                         onClick={() => setPreviewRatio(ratio)}
-                                        className={`rounded-full border px-3.5 py-1.5 font-mono text-[10px] uppercase tracking-[0.14em] transition-colors ${
+                                        className={`rounded-full border px-3.5 py-1.5 font-mono text-[10px] uppercase tracking-[0.14em] transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] active:scale-[0.97] ${
                                             previewRatio === ratio
                                                 ? 'border-accent text-accent'
                                                 : 'border-hairline text-text2 hover:border-text2/50 hover:text-text1'

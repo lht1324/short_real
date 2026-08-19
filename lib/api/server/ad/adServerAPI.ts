@@ -2,6 +2,7 @@ import {
     AdTask,
     AdCandidate,
     AdAspectRatio,
+    AdDesignLayout,
     AdGenerateRequest,
     AdTaskStatus,
 } from "@/lib/api/client/ad/adClientAPI";
@@ -67,39 +68,15 @@ function mulberry32(seed: number): () => number {
     };
 }
 
-function pickShuffled<T>(pool: T[], count: number, rand: () => number): T[] {
-    const shuffled = [...pool].sort(() => rand() - 0.5);
-    if (count <= shuffled.length) {
-        return shuffled.slice(0, count);
-    }
-    const result: T[] = [];
-    while (result.length < count) {
-        result.push(shuffled[result.length % shuffled.length]);
-    }
-    return result;
-}
-
 function pickByRatio(pool: string[], rand: () => number): string {
     return pool[Math.floor(rand() * pool.length)];
 }
 
-function getStatusByElapsed(elapsedMs: number): AdTaskStatus {
-    for (const stage of STAGE_TIMINGS) {
-        if (elapsedMs < stage.afterMs) {
-            return stage.status;
-        }
-    }
-    return 'completed';
-}
-
-// 모듈 레벨 메모리 저장소 (mock 전용. 실 구현 시 DB로 대체)
-const taskStore = new Map<string, AdTask>();
-
-function buildCandidate(id: string, ratio: AdAspectRatio, rand: () => number, ctaEnabled: boolean): AdCandidate {
+function buildConceptDesign(rand: () => number, ctaEnabled: boolean): AdDesignLayout {
     const headlineX = 7 + rand() * 3;
     const headlineY = 58 + rand() * 12;
 
-    const design = {
+    return {
         headline: {
             text: pickByRatio(MOCK_HEADLINES, rand),
             x: headlineX,
@@ -126,15 +103,19 @@ function buildCandidate(id: string, ratio: AdAspectRatio, rand: () => number, ct
         },
         scrim: true,
     };
-
-    return {
-        id,
-        url: pickByRatio(MOCK_IMAGE_POOL, rand),
-        ratio,
-        score: null,
-        design,
-    };
 }
+
+function getStatusByElapsed(elapsedMs: number): AdTaskStatus {
+    for (const stage of STAGE_TIMINGS) {
+        if (elapsedMs < stage.afterMs) {
+            return stage.status;
+        }
+    }
+    return 'completed';
+}
+
+// 모듈 레벨 메모리 저장소 (mock 전용. 실 구현 시 DB로 대체)
+const taskStore = new Map<string, AdTask>();
 
 export const adServerAPI = {
     // POST - 생성 태스크 생성
@@ -164,27 +145,27 @@ export const adServerAPI = {
 
         if (status === 'completed' && task.candidates.length === 0) {
             const rand = mulberry32(hashString(taskId));
-            const count = task.request.candidateCount;
+            const conceptCount = task.request.conceptCount;
             const ratios = task.request.aspectRatios;
 
-            const candidates: AdCandidate[] = ratios.flatMap((ratio) => {
-                const urls = pickShuffled(MOCK_IMAGE_POOL, count, rand);
-                return urls.map((url, index) => {
-                    const candidate = buildCandidate(
-                        `${taskId}-${ratio}-candidate-${index + 1}`,
-                        ratio,
-                        rand,
-                        task.request.ctaEnabled,
-                    );
-                    candidate.url = url;
-                    if (count > 1) {
-                        candidate.score = Math.round((6.2 + rand() * 2.9) * 10) / 10;
-                    }
-                    return candidate;
-                });
-            });
+            // 개념 우선 생성 — 개념별로 같은 이미지 + 같은 디자인(시드 고정 흉내), 비율만 파생. 점수는 비율별 개별 평가.
+            const candidates: AdCandidate[] = [];
+            for (let concept = 0; concept < conceptCount; concept++) {
+                const url = pickByRatio(MOCK_IMAGE_POOL, rand);
+                const design = buildConceptDesign(rand, task.request.ctaEnabled);
 
-            candidates.sort((a, b) => (b.score ?? -1) - (a.score ?? -1));
+                ratios.forEach((ratio) => {
+                    const score = conceptCount > 1 ? Math.round((6.2 + rand() * 2.9) * 10) / 10 : null;
+                    candidates.push({
+                        id: `${taskId}-c${concept + 1}-${ratio}-candidate`,
+                        url,
+                        conceptIndex: concept,
+                        ratio,
+                        score,
+                        design,
+                    });
+                });
+            }
 
             task.status = 'completed';
             task.candidates = candidates;

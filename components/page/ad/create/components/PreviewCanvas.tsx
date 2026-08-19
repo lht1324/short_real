@@ -40,7 +40,7 @@ function PreviewCanvas({
     const isGenerating = status !== null && status !== 'completed' && status !== 'failed';
 
     return (
-        <div className={`relative mx-auto w-full max-w-[640px] ${ASPECT_CLASS[aspectRatio]} overflow-hidden rounded-[1.5rem] border border-hairline bg-surface`}>
+        <div className={`relative mx-auto h-[min(72vh,700px)] overflow-hidden rounded-[1.5rem] border border-hairline bg-surface ${ASPECT_CLASS[aspectRatio]}`}>
             {/* 배경 레이어 */}
             {backgroundImage ? (
                 // eslint-disable-next-line @next/next/no-img-element

@@ -26,10 +26,10 @@ function CandidateCard({ candidate, index, selected, onSelect }: CandidateCardPr
         <button
             type="button"
             onClick={onClickCard}
-            className={`group relative w-full overflow-hidden rounded-[1.5rem] border text-left transition-all duration-300 ${
+            className={`group relative w-full overflow-hidden rounded-[1.5rem] border text-left transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
                 selected
                     ? 'border-accent ring-1 ring-accent/30'
-                    : 'border-hairline hover:border-text2/50'
+                    : 'border-hairline hover:border-text2/50 hover:shadow-xl hover:shadow-black/20'
             } ${ASPECT_CLASS[candidate.ratio]}`}
             aria-pressed={selected}
         >
@@ -37,18 +37,18 @@ function CandidateCard({ candidate, index, selected, onSelect }: CandidateCardPr
             <img
                 src={candidate.url}
                 alt={`Candidate ${index + 1}`}
-                className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.02]"
+                className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.02]"
             />
             <AdOverlay design={candidate.design} />
 
             {/* 라벨 */}
-            <span className="absolute left-3 top-3 rounded-full bg-surface/85 px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.14em] text-text1 backdrop-blur-sm">
+            <span className="absolute bottom-3 left-3 rounded-full bg-surface/85 px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.14em] text-text1 backdrop-blur-sm">
                 {candidate.ratio}
             </span>
 
             {/* VLM 점수 */}
             <span
-                className={`absolute right-3 top-3 rounded-full px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.14em] backdrop-blur-sm ${
+                className={`absolute bottom-3 right-3 rounded-full px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.14em] backdrop-blur-sm ${
                     candidate.score !== null
                         ? 'bg-surface/85 text-text1'
                         : 'bg-surface/60 text-text2'

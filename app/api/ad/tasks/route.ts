@@ -3,7 +3,7 @@ import { getNextBaseResponse } from "@/lib/utils/getNextBaseResponse";
 import { getIsValidRequestS2S } from "@/lib/utils/getIsValidRequest";
 import { adServerAPI } from "@/lib/api/server/ad/adServerAPI";
 import { AdGenerateRequest } from "@/lib/api/client/ad/adClientAPI";
-import { AD_ASPECT_RATIOS, AD_CANDIDATE_OPTIONS } from "@/lib/api/client/ad/adClientAPI";
+import { AD_ASPECT_RATIOS, AD_CONCEPT_OPTIONS } from "@/lib/api/client/ad/adClientAPI";
 
 export async function POST(request: NextRequest) {
     if (!getIsValidRequestS2S(request)) {
@@ -48,11 +48,11 @@ export async function POST(request: NextRequest) {
             });
         }
 
-        if (!AD_CANDIDATE_OPTIONS.includes(body.candidateCount as (typeof AD_CANDIDATE_OPTIONS)[number])) {
+        if (!AD_CONCEPT_OPTIONS.includes(body.conceptCount as (typeof AD_CONCEPT_OPTIONS)[number])) {
             return getNextBaseResponse({
                 success: false,
                 status: 400,
-                error: "Invalid candidate count"
+                error: "Invalid concept count"
             });
         }
 

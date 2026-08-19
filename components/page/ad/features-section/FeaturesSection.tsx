@@ -76,7 +76,7 @@ export default function FeaturesSection() {
                             title="Harnessed generation"
                             description={
                                 <>
-                                    Each concept is generated as a batch of candidates and passed through a quality gate. You see the best one or two — never the experiments. Sampling is on us, because a batch of images costs cents.
+                                    Each image is generated in every format you select and passed through a quality gate. You see the best one or two — never the experiments. Sampling is on us, because a batch of images costs cents.
                                 </>
                             }
                         />
