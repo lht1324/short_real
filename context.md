@@ -1,4 +1,4 @@
-# 작업 진행 상황 (Last Updated: 2026-08-20 05:31)
+# 작업 진행 상황 (Last Updated: 2026-08-21 03:26)
 
 ## 1. 현재 상황 (Current Status)
 
@@ -43,12 +43,27 @@
 4. **모델 선정 조건**: seed 지정 가능 + 비율별 해상도 지원 (1:1=1024², 4:5=832×1216, 9:16=768×1344 등).
 5. **검증 항목**: 같은 개념의 비율 3장이 "같은 배경/상품의 다른 비율 버전"으로 보이는가 (seed 동일 여부는 부수 확인). 실패 시 비율 우선으로 재논의.
 6. 스키마 이관: 임시 타입(`adClientAPI.ts`) → `lib/api/types/ad/` 분리.
-7. 파이프라인: Supabase 태스크 테이블 + I2I 1회(배경+상품/인물 합성) + Gemini 설계(첨언 해석 레이어 포함) + 결정론적 렌더.
+7. 파이프라인: Supabase 태스크 테이블 + I2I 1회(배경+상품/인물 합성) + Gemini 설계(첨언 해석 레이어 포함) + 결정론적 렌더. **Batch(생성 실행 1회)를 다루는 데이터 테이블명은 `ad_generation_batches`로 확정** — 생성 1회(batch)당 conceptCount × aspectRatios 장수, 이후 DB 작업 시 이 이름 사용.
 
 ### 🔴 Remotion 폴더 구조 정리 (미완료)
 1. `components/remotion/client/` 폴더 신설 — 클라이언트 컴포넌트(`SceneBlock`·`CaptionLayer`·`ShortRealRoot`·`fonts.ts`) 이전.
 2. 기존 ffmpeg 로직 삭제 (`app/api/video/merge/...`, `videoServerAPI.postFinalVideo` 등, 웹훅 3개).
 3. 배속 씬 올-인-원 전환 (`render-final-video.ts`의 `postProcessedVideo` 분기 제거).
+
+### 🟡 TODO — 사장 확인/피드백 대기 (2026-08-21 추가)
+* **결과 페이지 균일 타일 수정 피드백 대기** — CandidateCard aspect-square 균일 프레임 + 내부 contain 수정에 대한 사장 피드백("2번, 이따 하자"로 미룸). 여러 비율 선택 시 들쭉날쭉 문제 해결 여부 확인 필요.
+* CreateForm 섹션 재배치(Background→Subjects→Formats→Count|CTA) UI 확인 대기 — 사장 확인 전.
+
+### 🟡 TODO — 용어 교체 (2026-08-21 추가, 지금은 못 건드림)
+* **attempt → batch 전면 교체 (확정)**: 생성 실행 1회 = batch (포맷 × variations). 대상 파일: `CreateForm.tsx` 푸터("per attempt"→"per batch"), `CreatePageClient.tsx`, `FAQSection.tsx`, `PricingSection.tsx`, `HowItWorksSection.tsx`.
+* **Count 단위 "Images" → "Variations" 교체 (확정)**: 버튼 예 "10 variations". `per format` 접미사 병행. ⚠️ 단어 길이 증가로 **CreateForm 레이아웃 교체 가능성 있음** — Count 버튼 4열 그리드(1·2·4·10)에서 "variations"가 9px 모노 라벨로 넘칠 수 있으므로 폰트 크기/행 수/레이아웃 재검토 필요.
+* variant = 이미지 1장(개념×포맷 1쌍), variations = 포맷당 생성 버전 수, batch = 전체 실행 — 용어 3단계 정리.
+* 사장 확인 후 일괄 적용, `tsc --noEmit` 검증.
+
+### 🟡 TODO — 요금 표시 방식 (미결정, 2026-08-21 추가, 지금은 못 건드림)
+* 생성 배치 차감 문구를 **실제 달러 표시**로 할지, **잔여 생성 가능 장수** 표시로 할지 미결정.
+* 기준: Nano Banana 기본 모델 1회 실행 $0.039 (크레딧은 사용하지 않음).
+* 반영 후보 위치: CreateForm 푸터("X images deducted per batch"), CreatePageClient 차감 문구, AppHeader 사용량 게이지.
 
 ### 🟡 잔여 확인/이슈
 * 랜딩 CTA "Start creating"이 `/ad/create` 미연결 (`#pricing` 앵커).

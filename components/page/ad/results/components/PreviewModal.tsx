@@ -10,12 +10,16 @@ const ASPECT_CLASS: Record<AdAspectRatio, string> = {
     '1:1': 'aspect-square',
     '4:5': 'aspect-[4/5]',
     '9:16': 'aspect-[9/16]',
+    '16:9': 'aspect-[16/9]',
+    '2:3': 'aspect-[2/3]',
 };
 
 const RATIO_FACTOR: Record<AdAspectRatio, number> = {
     '1:1': 1,
     '4:5': 4 / 5,
     '9:16': 9 / 16,
+    '16:9': 16 / 9,
+    '2:3': 2 / 3,
 };
 
 interface PreviewModalProps {

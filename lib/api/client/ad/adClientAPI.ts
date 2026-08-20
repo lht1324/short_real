@@ -7,7 +7,7 @@ import { getFetch, postFetch } from "@/lib/api/client/baseFetch";
 
 // ---- 임시 타입 ----
 
-export type AdAspectRatio = '1:1' | '4:5' | '9:16';
+export type AdAspectRatio = '1:1' | '4:5' | '9:16' | '16:9' | '2:3';
 
 export interface AdUploadedComponent {
     id: string;
@@ -99,7 +99,18 @@ export interface AdTask {
     createdAt: string;
 }
 
-export const AD_ASPECT_RATIOS: AdAspectRatio[] = ['1:1', '4:5', '9:16'];
+export const AD_ASPECT_RATIOS: AdAspectRatio[] = ['1:1', '4:5', '9:16', '16:9', '2:3'];
+
+/**
+ * 비율별 사용자 노출 정보 — 어디서 쓰이는지(플랫폼)를 UI에서 함께 보여주기 위한 단일 소스.
+ */
+export const AD_ASPECT_RATIO_INFO: Record<AdAspectRatio, { label: string; usage: string }> = {
+    '1:1': { label: 'Square', usage: 'Feed · Display' },
+    '4:5': { label: 'Portrait', usage: 'Instagram & Facebook' },
+    '9:16': { label: 'Story', usage: 'Stories · Reels · TikTok' },
+    '16:9': { label: 'Landscape', usage: 'YouTube · Display' },
+    '2:3': { label: 'Pin', usage: 'Pinterest' },
+};
 
 export const AD_CONCEPT_OPTIONS = [1, 2, 4, 10] as const;
 

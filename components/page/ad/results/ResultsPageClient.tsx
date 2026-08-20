@@ -304,9 +304,7 @@ export default function ResultsPageClient({ taskId }: ResultsPageClientProps) {
                             {[0, 1, 2, 3].map((index) => (
                                 <div
                                     key={index}
-                                    className={`animate-pulse rounded-[1.5rem] border border-hairline bg-surface ${
-                                        index % 2 === 0 ? 'aspect-square' : 'aspect-[4/5]'
-                                    }`}
+                                    className="animate-pulse rounded-[1.5rem] border border-hairline bg-surface aspect-square"
                                 />
                             ))}
                         </div>
@@ -383,6 +381,11 @@ export default function ResultsPageClient({ taskId }: ResultsPageClientProps) {
                         </div>
                     </div>
                 )}
+                fal-ai/nano-banana/edit - 21:9, 16:9, 3:2, 4:3, 5:4, 1:1, 4:5, 3:4, 2:3, 9:16
+                google/nano-banana-lite/edit - 21:9, 16:9, 3:2, 4:3, 5:4, 1:1, 4:5, 3:4, 2:3, 9:16, 4:1, 1:4, 8:1, 1:8
+                fal-ai/nano-banana-pro/edit - 21:9, 16:9, 3:2, 4:3, 5:4, 1:1, 4:5, 3:4, 2:3, 9:16
+                fal-ai/nano-banana-2/edit - 21:9, 16:9, 3:2, 4:3, 5:4, 1:1, 4:5, 3:4, 2:3, 9:16, 4:1, 1:4, 8:1, 1:8
+                google/nano-banana-lite/edit - 21:9, 16:9, 3:2, 4:3, 5:4, 1:1, 4:5, 3:4, 2:3, 9:16, 4:1, 1:4, 8:1, 1:8
 
                 {previewOpen && selectedCandidate && (
                     <PreviewModal candidate={selectedCandidate} onClose={onClickClosePreview} />

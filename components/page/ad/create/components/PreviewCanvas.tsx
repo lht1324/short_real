@@ -7,6 +7,8 @@ const ASPECT_CLASS: Record<AdAspectRatio, string> = {
     '1:1': 'aspect-square',
     '4:5': 'aspect-[4/5]',
     '9:16': 'aspect-[9/16]',
+    '16:9': 'aspect-[16/9]',
+    '2:3': 'aspect-[2/3]',
 };
 
 const STAGE_LABELS: Record<AdTaskStatus, string> = {
@@ -40,7 +42,7 @@ function PreviewCanvas({
     const isGenerating = status !== null && status !== 'completed' && status !== 'failed';
 
     return (
-        <div className={`relative mx-auto h-[min(72vh,700px)] overflow-hidden rounded-[1.5rem] border border-hairline bg-surface ${ASPECT_CLASS[aspectRatio]}`}>
+        <div className={`relative mx-auto h-[min(72vh,700px)] max-w-full overflow-hidden rounded-[1.5rem] border border-hairline bg-surface ${ASPECT_CLASS[aspectRatio]}`}>
             {/* 배경 레이어 */}
             {backgroundImage ? (
                 // eslint-disable-next-line @next/next/no-img-element

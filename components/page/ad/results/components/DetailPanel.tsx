@@ -9,6 +9,8 @@ const PRESET_ASPECT_CLASS: Record<AdAspectRatio, string> = {
     '1:1': 'aspect-square',
     '4:5': 'aspect-[4/5]',
     '9:16': 'aspect-[9/16]',
+    '16:9': 'aspect-[16/9]',
+    '2:3': 'aspect-[2/3]',
 };
 
 interface DetailPanelProps {

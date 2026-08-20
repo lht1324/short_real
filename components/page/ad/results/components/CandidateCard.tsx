@@ -8,6 +8,8 @@ const ASPECT_CLASS: Record<AdAspectRatio, string> = {
     '1:1': 'aspect-square',
     '4:5': 'aspect-[4/5]',
     '9:16': 'aspect-[9/16]',
+    '16:9': 'aspect-[16/9]',
+    '2:3': 'aspect-[2/3]',
 };
 
 interface CandidateCardProps {
@@ -26,35 +28,40 @@ function CandidateCard({ candidate, index, selected, onSelect }: CandidateCardPr
         <button
             type="button"
             onClick={onClickCard}
-            className={`group relative w-full overflow-hidden rounded-[1.5rem] border text-left transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+            className={`group relative aspect-square w-full overflow-hidden rounded-[1.5rem] border text-left transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
                 selected
                     ? 'border-accent ring-1 ring-accent/30'
                     : 'border-hairline hover:border-text2/50 hover:shadow-xl hover:shadow-black/20'
-            } ${ASPECT_CLASS[candidate.ratio]}`}
+            }`}
             aria-pressed={selected}
         >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-                src={candidate.url}
-                alt={`Candidate ${index + 1}`}
-                className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.02]"
-            />
-            <AdOverlay design={candidate.design} />
+            {/* 균일 프레임 — 비율 보존 이미지를 중앙에 contain (들쑥날쑥한 그리드 방지) */}
+            <span className="absolute inset-0 flex items-center justify-center bg-canvas">
+                <span className={`relative block max-h-full max-w-full overflow-hidden ${ASPECT_CLASS[candidate.ratio]}`}>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                        src={candidate.url}
+                        alt={`Candidate ${index + 1}`}
+                        className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.02]"
+                    />
+                    <AdOverlay design={candidate.design} />
 
-            {/* 라벨 */}
-            <span className="absolute bottom-3 left-3 rounded-full bg-surface/85 px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.14em] text-text1 backdrop-blur-sm">
-                {candidate.ratio}
-            </span>
+                    {/* 라벨 */}
+                    <span className="absolute bottom-3 left-3 rounded-full bg-surface/85 px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.14em] text-text1 backdrop-blur-sm">
+                        {candidate.ratio}
+                    </span>
 
-            {/* VLM 점수 */}
-            <span
-                className={`absolute bottom-3 right-3 rounded-full px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.14em] backdrop-blur-sm ${
-                    candidate.score !== null
-                        ? 'bg-surface/85 text-text1'
-                        : 'bg-surface/60 text-text2'
-                }`}
-            >
-                {candidate.score !== null ? `${candidate.score.toFixed(1)} / 10` : 'score skipped'}
+                    {/* VLM 점수 */}
+                    <span
+                        className={`absolute bottom-3 right-3 rounded-full px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.14em] backdrop-blur-sm ${
+                            candidate.score !== null
+                                ? 'bg-surface/85 text-text1'
+                                : 'bg-surface/60 text-text2'
+                        }`}
+                    >
+                        {candidate.score !== null ? `${candidate.score.toFixed(1)} / 10` : 'score skipped'}
+                    </span>
+                </span>
             </span>
         </button>
     );

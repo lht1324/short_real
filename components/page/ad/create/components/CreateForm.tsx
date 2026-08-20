@@ -3,21 +3,17 @@
 import { memo, useCallback, useMemo } from 'react';
 import { AlertTriangle, Check } from 'lucide-react';
 import { AdAspectRatio, AdUploadedComponent } from "@/lib/api/client/ad/adClientAPI";
-import { AD_ASPECT_RATIOS, AD_CONCEPT_OPTIONS } from "@/lib/api/client/ad/adClientAPI";
+import { AD_ASPECT_RATIO_INFO, AD_ASPECT_RATIOS, AD_CONCEPT_OPTIONS } from "@/lib/api/client/ad/adClientAPI";
 import UploadZone from "@/components/page/ad/create/components/UploadZone";
 
 export type BackgroundMode = 'prompt' | 'upload';
-
-const RATIO_LABELS: Record<AdAspectRatio, string> = {
-    '1:1': 'Square',
-    '4:5': 'Portrait',
-    '9:16': 'Story',
-};
 
 const RATIO_MINI_CLASS: Record<AdAspectRatio, string> = {
     '1:1': 'h-4 w-4',
     '4:5': 'h-5 w-4',
     '9:16': 'h-8 w-4',
+    '16:9': 'h-4 w-7',
+    '2:3': 'h-6 w-4',
 };
 
 interface CreateFormProps {
@@ -186,11 +182,76 @@ function CreateForm({
                     )}
                 </section>
 
+                <section className="rounded-2xl border border-hairline p-5 md:col-span-2">
+                    <div className="mb-3 flex items-center justify-between">
+                        <h3 className="text-[15px] font-semibold text-text1">Formats</h3>
+                        <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-text2">
+                            {lockedRatio ? 'from uploaded background' : 'select one or more'}
+                        </span>
+                    </div>
+                    {lockedRatio ? (
+                        <div className="rounded-xl border border-hairline bg-surface px-4 py-3.5">
+                            <div className="flex items-center justify-between gap-3">
+                                <p className="text-[13px] font-medium text-text1">Locked to upload</p>
+                                <span className="font-mono text-[11px] text-text2">
+                                    {lockedRatio.width}×{lockedRatio.height}
+                                </span>
+                            </div>
+                            <p className="mt-1.5 text-[12px] leading-relaxed text-text2">
+                                Your background image&apos;s native ratio is preserved — run separate generations for
+                                other formats.
+                            </p>
+                        </div>
+                    ) : (
+                        <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
+                            {AD_ASPECT_RATIOS.map((ratio) => {
+                                const selected = aspectRatios.includes(ratio);
+                                return (
+                                    <button
+                                        key={ratio}
+                                        type="button"
+                                        aria-pressed={selected}
+                                        onClick={() => onClickRatio(ratio)}
+                                        className={`relative flex flex-col items-center gap-2 rounded-xl border px-2 py-3.5 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] active:scale-[0.97] ${
+                                            selected
+                                                ? 'border-accent bg-surface'
+                                                : 'border-hairline hover:border-text2/50'
+                                        }`}
+                                    >
+                                        {selected && (
+                                            <span className="absolute right-2 top-2 flex h-4 w-4 items-center justify-center rounded-full bg-accent">
+                                                <Check className="h-2.5 w-2.5 text-canvas" strokeWidth={3} />
+                                            </span>
+                                        )}
+                                        <span className="flex h-9 items-end gap-1.5">
+                                            <span
+                                                className={`rounded-[4px] border ${RATIO_MINI_CLASS[ratio]} ${
+                                                    selected ? 'border-accent bg-canvas' : 'border-hairline bg-canvas'
+                                                }`}
+                                            />
+                                            <span className="sr-only">{ratio}</span>
+                                        </span>
+                                        <span className="text-[12px] font-medium text-text1">
+                                            {AD_ASPECT_RATIO_INFO[ratio].label}
+                                        </span>
+                                        <span className="font-mono text-[9px] uppercase tracking-[0.12em] text-text2">
+                                            {ratio}
+                                        </span>
+                                        <span className="text-center font-mono text-[8px] leading-snug uppercase tracking-[0.1em] text-text2/80">
+                                            {AD_ASPECT_RATIO_INFO[ratio].usage}
+                                        </span>
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    )}
+                </section>
+
                 <section className="rounded-2xl border border-hairline p-5">
                     <div className="mb-3 flex items-center justify-between">
                         <h3 className="text-[15px] font-semibold text-text1">Count</h3>
                         <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-text2">
-                            images
+                            per attempt
                         </span>
                     </div>
                     <div className="grid grid-cols-4 gap-2">
@@ -228,65 +289,7 @@ function CreateForm({
                     </p>
                 </section>
 
-                <section className="rounded-2xl border border-hairline p-5">
-                    <div className="mb-3 flex items-center justify-between">
-                        <h3 className="text-[15px] font-semibold text-text1">Formats</h3>
-                        <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-text2">
-                            {lockedRatio ? 'from uploaded background' : 'select one or more'}
-                        </span>
-                    </div>
-                    {lockedRatio ? (
-                        <div className="rounded-xl border border-hairline bg-surface px-4 py-3.5">
-                            <div className="flex items-center justify-between gap-3">
-                                <p className="text-[13px] font-medium text-text1">Locked to upload</p>
-                                <span className="font-mono text-[11px] text-text2">
-                                    {lockedRatio.width}×{lockedRatio.height}
-                                </span>
-                            </div>
-                            <p className="mt-1.5 text-[12px] leading-relaxed text-text2">
-                                Your background image&apos;s native ratio is preserved — run separate generations for
-                                other formats.
-                            </p>
-                        </div>
-                    ) : (
-                        <div className="grid grid-cols-3 gap-2">
-                            {AD_ASPECT_RATIOS.map((ratio) => {
-                                const selected = aspectRatios.includes(ratio);
-                                return (
-                                    <button
-                                        key={ratio}
-                                        type="button"
-                                        aria-pressed={selected}
-                                        onClick={() => onClickRatio(ratio)}
-                                        className={`relative flex flex-col items-center gap-2 rounded-xl border px-2 py-3.5 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] active:scale-[0.97] ${
-                                            selected
-                                                ? 'border-accent bg-surface'
-                                                : 'border-hairline hover:border-text2/50'
-                                        }`}
-                                    >
-                                        {selected && (
-                                            <span className="absolute right-2 top-2 flex h-4 w-4 items-center justify-center rounded-full bg-accent">
-                                                <Check className="h-2.5 w-2.5 text-canvas" strokeWidth={3} />
-                                            </span>
-                                        )}
-                                        <span className="flex h-9 items-end gap-1.5">
-                                            <span
-                                                className={`rounded-[4px] border ${RATIO_MINI_CLASS[ratio]} ${
-                                                    selected ? 'border-accent bg-canvas' : 'border-hairline bg-canvas'
-                                                }`}
-                                            />
-                                            <span className="sr-only">{ratio}</span>
-                                        </span>
-                                        <span className="text-[12px] font-medium text-text1">{RATIO_LABELS[ratio]}</span>
-                                        <span className="font-mono text-[9px] uppercase tracking-[0.12em] text-text2">{ratio}</span>
-                                    </button>
-                                );
-                            })}
-                        </div>
-                    )}
-                </section>
-
-                <section className="flex items-center justify-between rounded-2xl border border-hairline p-5 md:col-span-2">
+                <section className="flex items-center justify-between rounded-2xl border border-hairline p-5">
                     <div>
                         <p className="text-[13px] font-medium text-text1">Round CTA button</p>
                         <p className="mt-0.5 text-[12px] text-text2">Add a “Shop now” style button to the layout.</p>
