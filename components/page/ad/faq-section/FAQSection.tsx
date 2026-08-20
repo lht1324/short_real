@@ -8,7 +8,7 @@ import Reveal from "@/components/page/ad/Reveal";
 const FAQ_ITEMS = [
     {
         question: 'How is billing calculated?',
-        answer: 'You pay for generation attempts — one attempt is one quality-gated batch of candidates. Downloads, size variants, and re-renders are free and unlimited. We never charge you per candidate image.',
+        answer: 'You pay for generation batches — one batch is one quality-gated set of candidates. Downloads, size variants, and re-renders are free and unlimited. We never charge you per candidate image.',
     },
     {
         question: 'Do unused images expire?',

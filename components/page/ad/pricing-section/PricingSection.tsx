@@ -131,7 +131,7 @@ export default function PricingSection() {
                             Simple pricing, honest costs.
                         </h2>
                         <p className="mt-5 text-[17px] leading-relaxed text-text2">
-                            You pay for generation attempts, not downloads. Every attempt is a quality-gated batch — the failures are on us.
+                            You pay for generation batches, not downloads. Every batch is quality-gated — the failures are on us.
                         </p>
                     </div>
                 </Reveal>

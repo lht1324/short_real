@@ -164,7 +164,7 @@ export default function CreatePageClient() {
 
     const formatMeta = useMemo(() => {
         const ratioCount = aspectRatios.length;
-        return `${conceptCount} image${conceptCount > 1 ? 's' : ''} · ${ratioCount} format${
+        return `${conceptCount} variation${conceptCount > 1 ? 's' : ''} · ${ratioCount} format${
             ratioCount > 1 ? 's' : ''
         }`;
     }, [aspectRatios, conceptCount]);
@@ -174,7 +174,7 @@ export default function CreatePageClient() {
             <AppHeader />
 
             <main className="mx-auto max-w-[1440px] px-8 pb-24 pt-32">
-                <div className="grid gap-10 lg:grid-cols-[620px_1fr] lg:items-start">
+                <div className="grid gap-10 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] lg:items-start">
                     {/* 컨트롤 패널 */}
                     <aside className="rounded-[1.5rem] border border-hairline bg-surface p-6 lg:sticky lg:top-24 lg:max-h-[calc(100vh-6.5rem)] lg:overflow-y-auto">
                         <div className="mb-1 flex items-center justify-between">
@@ -216,8 +216,8 @@ export default function CreatePageClient() {
                             <div className="space-y-4">
                                 <div className="rounded-xl border border-hairline bg-canvas px-4 py-3">
                                     <p className="text-[13px] font-medium text-text1">
-                                        {totalImages} image{totalImages > 1 ? 's' : ''} · {conceptCount} ×{' '}
-                                        {aspectRatios.length} format
+                                        {totalImages} image{totalImages > 1 ? 's' : ''} · {conceptCount} variation
+                                        {conceptCount > 1 ? 's' : ''} × {aspectRatios.length} format
                                         {aspectRatios.length > 1 ? 's' : ''}
                                     </p>
                                     <p className="mt-0.5 font-mono text-[10px] uppercase tracking-[0.14em] text-text2">

@@ -158,7 +158,7 @@ export default function FeaturesSection() {
                             title="Quality-gated batches"
                             description={
                                 <>
-                                    Every attempt is a batch of candidates filtered by our gate. The failures are on us — you only pay for what we'd approve.
+                                    Every batch is a set of candidates filtered by our gate. The failures are on us — you only pay for what we'd approve.
                                 </>
                             }
                             sticker={

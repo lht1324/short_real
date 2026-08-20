@@ -247,11 +247,11 @@ function CreateForm({
                     )}
                 </section>
 
-                <section className="rounded-2xl border border-hairline p-5">
+                <section className="rounded-2xl border border-hairline p-5 md:col-span-2">
                     <div className="mb-3 flex items-center justify-between">
                         <h3 className="text-[15px] font-semibold text-text1">Count</h3>
                         <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-text2">
-                            per attempt
+                            per batch
                         </span>
                     </div>
                     <div className="grid grid-cols-4 gap-2">
@@ -273,8 +273,8 @@ function CreateForm({
                                 >
                                     {count}
                                 </span>
-                                <span className="mt-0.5 block font-mono text-[9px] uppercase tracking-[0.12em] text-text2">
-                                    images
+                                <span className="mt-0.5 block whitespace-nowrap font-mono text-[9px] uppercase tracking-[0.12em] text-text2">
+                                    variations
                                 </span>
                                 {count === 10 && (
                                     <span className="absolute -top-2 right-2 rounded-full bg-accent px-1.5 py-0.5 font-mono text-[8px] font-semibold uppercase tracking-[0.1em] text-canvas">
@@ -285,11 +285,11 @@ function CreateForm({
                         ))}
                     </div>
                     <p className="mt-2.5 text-[11px] leading-snug text-text2">
-                        Each image is generated in every format you select.
+                        Each variation is generated in every format you select.
                     </p>
                 </section>
 
-                <section className="flex items-center justify-between rounded-2xl border border-hairline p-5">
+                <section className="flex items-center justify-between rounded-2xl border border-hairline p-5 md:col-span-2">
                     <div>
                         <p className="text-[13px] font-medium text-text1">Round CTA button</p>
                         <p className="mt-0.5 text-[12px] text-text2">Add a “Shop now” style button to the layout.</p>
@@ -323,9 +323,9 @@ function CreateForm({
                     Generate {totalImages} image{totalImages > 1 ? 's' : ''}
                 </button>
                 <p className="text-center font-mono text-[10px] uppercase tracking-[0.18em] text-text2">
-                    {conceptCount} image{conceptCount > 1 ? 's' : ''} × {aspectRatios.length} format
+                    {conceptCount} variation{conceptCount > 1 ? 's' : ''} × {aspectRatios.length} format
                     {aspectRatios.length > 1 ? 's' : ''} = {totalImages} image{totalImages > 1 ? 's' : ''} deducted
-                    per attempt
+                    per batch
                 </p>
                 {!hasBackground && (
                     <p className="text-center text-[12px] leading-relaxed text-text2">

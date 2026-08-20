@@ -68,11 +68,11 @@ const STEPS: Step[] = [
         number: '03',
         label: 'Composite',
         title: 'Composite your product',
-        description: 'Your product is painted into the scene with matching light and shadow. One attempt, one credit — failures cost you nothing extra.',
+        description: 'Your product is painted into the scene with matching light and shadow. One batch, one credit — failures cost you nothing extra.',
         className: 'md:col-span-6 rotate-[0.5deg]',
         sticker: (
             <span className="rotate-[2deg] rounded-full border border-hairline px-3 py-1 font-mono text-[10px] uppercase tracking-[0.18em] text-text2">
-                1 attempt = 1 credit
+                1 batch = 1 credit
             </span>
         ),
     },
