@@ -1,8 +1,15 @@
-# 작업 진행 상황 (Last Updated: 2026-08-22 03:15)
+# 작업 진행 상황 (Last Updated: 2026-08-22 05:44)
 
 ## 1. 현재 상황 (Current Status)
 
-### 🎯 현 단계: CreateForm UX 전면 재설계 완료 — 0스크롤 달성 (2026-08-22)
+### 🎯 현 단계: ad_generation_batches 스키마 설계 착수 — 임시 초안 (2026-08-22 05:44)
+* **변주(다름) 설계**: seed만으로는 10개 변주 불가능하므로 **이산 변주 스펙 벡터**(장면/구성/조명/팔레트/헤드라인/CTA)로 겹침 없이 배분 → Gemini 크리에이티브 디렉터가 생성, DB `concepts`에 저장. 상세: `ad_variation_study.md` (보완의 여지 있음).
+* **병렬 처리 구조 결정**: 이미지 단위로 (fal 생성 → Gemini 분석 → DB 기록)을 병렬 실행. 웹훅(fal queue) 또는 자체 큐 고민 중 — DB 부분 갱신 race 문제로 RPC(jsonb 부분 갱신) vs 후보 테이블 부활 결정 필요.
+* **배치 스키마 임시 초안**: `lib/api/types/supabase/ad/AdGenerationBatch.ts` — background_mode 제거(background_prompt null 여부로 모드 판별), 이미지 jsonb{path,width,height,note}, concepts[], results[] (design/score), error 없음. ⚠️ **미완** — 사장 확인 대기.
+* **파일 경로 규칙**: `{user_id}/{batch_id}/ad_generation_result_{c}_{ratio}.{ext}` — c 인덱스+비율만으로 서명 URL 재구성 → 이미지 목록 DB 저장 불필요.
+* 업로드 이미지 서버 반입 경로 현재 없음(blob URL만) — signed upload 등 결정 필요.
+
+### 🎯 이전: CreateForm UX 전면 재설계 완료 — 0스크롤 달성 (2026-08-22)
 * **방향 전환**: "개발자/SaaS형" → **"광고 바닥(성장 이커머스) 사용자형"** 으로 재설계. 사장 직관("지금은 개발자/SaaS에 익숙한 사람용") 수용.
 * **0스크롤 목표 달성**: 프리뷰 제거 → 폼 전폭 확보 → 5개 설정 + 실행 dock 한 화면(≈790px). "스크롤 자체를 없애고 싶다"는 사장 요구 반영.
 * **레이아웃**: `[Background | Subjects]` 2열 / `[Where will it run?(돌담) | How many options?+CTA]` 2열 / 하단 실행 dock.
@@ -79,8 +86,8 @@
 3. **Concept 우선 파이프라인**: conceptCount × aspectRatios 순회. 개념별 서로 다른 seed, 같은 개념 내 비율 = 같은 seed.
 4. **모델 선정 조건**: seed 지정 가능 + 비율별 해상도 지원 (1:1=1024², 4:5=832×1216, 9:16=768×1344 등).
 5. **검증 항목**: 같은 개념의 비율 3장이 "같은 배경/상품의 다른 비율 버전"으로 보이는가 (seed 동일 여부는 부수 확인). 실패 시 비율 우선으로 재논의.
-6. 스키마 이관: 임시 타입(`adClientAPI.ts`) → `lib/api/types/ad/` 분리.
-7. 파이프라인: Supabase 태스크 테이블 + I2I 1회(배경+상품/인물 합성) + Gemini 설계(첨언 해석 레이어 포함) + 결정론적 렌더. **Batch 테이블명 `ad_generation_batches` 확정**. 이미지 전달은 기존 `imageServerAPI.ts` 패턴(Supabase Storage .jpeg + signed URL → fal `image_urls`) 재사용 예정. 입력 포맷 JPG/PNG/WebP 자유(fal 강제 없음).
+6. **배치 스키마 임시 초안 작성됨**(`lib/api/types/supabase/ad/AdGenerationBatch.ts`, ⚠️ 미완) — 변주/병렬 구조는 `ad_variation_study.md` 참고, 사장 확인 대기.
+7. **병렬 처리**: 이미지 단위 (생성→분석→기록) 웹훅/큐 구조 검토 필요. RPC(jsonb 부분 갱신) vs 후보 테이블 결정해야 DB race 없음.
 
 ### 🔴 Remotion 폴더 구조 정리 (미완료)
 1. `components/remotion/client/` 폴더 신설 — 클라이언트 컴포넌트 이전.
@@ -116,5 +123,6 @@
 * 시드 규칙: 개념별 서로 다른 seed / 같은 개념 내 비율 = 같은 seed. I2I 1회 구조. 같은 seed+다른 비율 = 초기 노이즈 shape 상이 (비슷함 미보장, 공통 입력 이미지가 일관성 담당).
 * **fal 이미지 파이프라인**: `image_urls`는 URL만 받음(포맷 자유) — Supabase Storage에 .jpeg로 저장 → signed URL(24h) 전달. base64는 대용량 시 성능 저하. 투명 PNG의 I2I 동작은 실테스트 필요.
 * client-gateway는 `BASE_URL`(ngrok 백엔드)로 무조건 프록시 — 프론트 `app/api/*` 라우트는 실서버에 구현해야 함.
+* **ad DB/파이프라인 설계 노트**: `ad_variation_study.md` — 변주 스펙 벡터, 웹훅 병렬 구조, 임시 스키마. 보완의 여지 있음.
 * Remotion 4.0.507 습성: `component` prop 타입 추론 불가, `PlayerProps.onEnded` 없음, `play()` 반환 void.
 * 서버 렌더: `<Video>` 대신 **`<OffthreadVideo>`** + `colorSpace: 'bt709'` 필수, 저사양 머신은 `concurrency: 1`.
