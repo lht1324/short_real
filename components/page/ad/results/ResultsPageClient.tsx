@@ -287,7 +287,7 @@ export default function ResultsPageClient({ taskId }: ResultsPageClientProps) {
             return '';
         }
         const formatCount = task.request.aspectRatios.length;
-        return `${totalCount} image${totalCount > 1 ? 's' : ''} · ${formatCount} format${
+        return `${totalCount} asset${totalCount > 1 ? 's' : ''} · ${formatCount} format${
             formatCount > 1 ? 's' : ''
         }${task.request.ctaEnabled ? ' · CTA on' : ''} · downloads unlimited`;
     }, [task, totalCount]);
@@ -296,11 +296,11 @@ export default function ResultsPageClient({ taskId }: ResultsPageClientProps) {
         <>
             <AppHeader />
 
-            <main className="mx-auto max-w-[1600px] px-8 pb-24 pt-32">
+            <main className="mx-auto max-w-[100rem] px-8 pb-24 pt-32">
 
                 {isLoading && (
-                    <div className="grid gap-8 xl:grid-cols-[1fr_360px] 2xl:grid-cols-[1fr_360px]">
-                        <div className="grid gap-5 sm:grid-cols-[repeat(auto-fill,minmax(220px,1fr))]">
+                    <div className="grid gap-8 xl:grid-cols-[1fr_22.5rem] 2xl:grid-cols-[1fr_22.5rem]">
+                        <div className="grid gap-5 sm:grid-cols-[repeat(auto-fill,minmax(13.75rem,1fr))]">
                             {[0, 1, 2, 3].map((index) => (
                                 <div
                                     key={index}
@@ -325,7 +325,7 @@ export default function ResultsPageClient({ taskId }: ResultsPageClientProps) {
                 )}
 
                 {!isLoading && !error && task && (
-                    <div className="grid gap-10 xl:grid-cols-[1fr_360px] xl:items-start 2xl:grid-cols-[1fr_360px]">
+                    <div className="grid gap-10 xl:grid-cols-[1fr_22.5rem] xl:items-start 2xl:grid-cols-[1fr_22.5rem]">
                         <div className="space-y-10">
                             <div>
                                 <span className="font-mono text-[11px] uppercase tracking-[0.18em] text-accent">
@@ -356,7 +356,7 @@ export default function ResultsPageClient({ taskId }: ResultsPageClientProps) {
                                                 {group.candidates.length > 1 ? 's' : ''}
                                             </span>
                                         </div>
-                                        <div className="grid gap-5 sm:grid-cols-[repeat(auto-fill,minmax(220px,1fr))]">
+                                        <div className="grid gap-5 sm:grid-cols-[repeat(auto-fill,minmax(13.75rem,1fr))]">
                                             {group.candidates.map((candidate, index) => (
                                                 <CandidateCard
                                                     key={candidate.id}
@@ -381,11 +381,6 @@ export default function ResultsPageClient({ taskId }: ResultsPageClientProps) {
                         </div>
                     </div>
                 )}
-                fal-ai/nano-banana/edit - 21:9, 16:9, 3:2, 4:3, 5:4, 1:1, 4:5, 3:4, 2:3, 9:16
-                google/nano-banana-lite/edit - 21:9, 16:9, 3:2, 4:3, 5:4, 1:1, 4:5, 3:4, 2:3, 9:16, 4:1, 1:4, 8:1, 1:8
-                fal-ai/nano-banana-pro/edit - 21:9, 16:9, 3:2, 4:3, 5:4, 1:1, 4:5, 3:4, 2:3, 9:16
-                fal-ai/nano-banana-2/edit - 21:9, 16:9, 3:2, 4:3, 5:4, 1:1, 4:5, 3:4, 2:3, 9:16, 4:1, 1:4, 8:1, 1:8
-                google/nano-banana-lite/edit - 21:9, 16:9, 3:2, 4:3, 5:4, 1:1, 4:5, 3:4, 2:3, 9:16, 4:1, 1:4, 8:1, 1:8
 
                 {previewOpen && selectedCandidate && (
                     <PreviewModal candidate={selectedCandidate} onClose={onClickClosePreview} />

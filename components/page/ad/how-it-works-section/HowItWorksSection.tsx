@@ -48,7 +48,7 @@ const STEPS: Step[] = [
         className: 'md:col-span-7 rotate-[0.4deg]',
         sticker: (
             <span className="rotate-[3deg] rounded-[6px] border border-dashed border-hairline px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.18em] text-text2">
-                Drop: PNG · JPG · WEBP
+                Drop: JPG · PNG · WEBP
             </span>
         ),
     },

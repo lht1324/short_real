@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import AppHeader from "@/components/page/ad/app-header/AppHeader";
-import PreviewCanvas from "@/components/page/ad/create/components/PreviewCanvas";
 import CreateForm, { BackgroundMode } from "@/components/page/ad/create/components/CreateForm";
 import {
     AdAspectRatio,
@@ -87,7 +86,6 @@ export default function CreatePageClient() {
 
     // 생성 옵션
     const [aspectRatios, setAspectRatios] = useState<AdAspectRatio[]>(['1:1']);
-    const [previewRatio, setPreviewRatio] = useState<AdAspectRatio>('1:1');
     const [conceptCount, setConceptCount] = useState(4);
     const [ctaEnabled, setCtaEnabled] = useState(false);
 
@@ -96,12 +94,17 @@ export default function CreatePageClient() {
     const [status, setStatus] = useState<AdTaskStatus | null>(null);
     const [error, setError] = useState<string | null>(null);
 
-    // 선택 비율 변경 시 미리보기 비율을 첫 번째 선택으로 동기화
-    useEffect(() => {
-        if (aspectRatios.length > 0 && !aspectRatios.includes(previewRatio)) {
-            setPreviewRatio(aspectRatios[0]);
-        }
-    }, [aspectRatios, previewRatio]);
+    const hasBackground = useMemo(
+        () => (backgroundMode === 'prompt' ? backgroundPrompt.trim().length > 0 : backgroundImage !== null),
+        [backgroundMode, backgroundPrompt, backgroundImage],
+    );
+
+    const hasSubject = useMemo(() => product !== null || person !== null, [product, person]);
+
+    const canGenerate = useMemo(
+        () => hasBackground && hasSubject && aspectRatios.length > 0,
+        [hasBackground, hasSubject, aspectRatios],
+    );
 
     const totalImages = useMemo(() => aspectRatios.length * conceptCount, [aspectRatios, conceptCount]);
 
@@ -164,27 +167,37 @@ export default function CreatePageClient() {
 
     const formatMeta = useMemo(() => {
         const ratioCount = aspectRatios.length;
-        return `${conceptCount} variation${conceptCount > 1 ? 's' : ''} · ${ratioCount} format${
+        return `${conceptCount} creative${conceptCount > 1 ? 's' : ''} · ${ratioCount} format${
             ratioCount > 1 ? 's' : ''
         }`;
     }, [aspectRatios, conceptCount]);
+
+    const hintText = !hasBackground
+        ? 'Add a background to start.'
+        : !hasSubject
+          ? 'Add a product or person to start.'
+          : 'Ready — assets are credited to your plan per batch.';
+
+    const summaryText = useMemo(() => {
+        const ratioCount = aspectRatios.length;
+        return `${conceptCount} creative${conceptCount > 1 ? 's' : ''} in ${ratioCount} format${
+            ratioCount > 1 ? 's' : ''
+        } = ${totalImages} asset${totalImages > 1 ? 's' : ''}`;
+    }, [aspectRatios.length, conceptCount, totalImages]);
 
     return (
         <>
             <AppHeader />
 
-            <main className="mx-auto max-w-[1440px] px-8 pb-24 pt-32">
-                <div className="grid gap-10 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] lg:items-start">
-                    {/* 컨트롤 패널 */}
-                    <aside className="rounded-[1.5rem] border border-hairline bg-surface p-6 lg:sticky lg:top-24 lg:max-h-[calc(100vh-6.5rem)] lg:overflow-y-auto">
-                        <div className="mb-1 flex items-center justify-between">
-                            <span className="font-mono text-[11px] uppercase tracking-[0.18em] text-accent">
-                                Create
-                            </span>
-                        </div>
-                        <h2 className="mb-6 text-xl font-bold tracking-tight text-text1">Compose your ad</h2>
+            <main className="mx-auto flex min-h-[100dvh] w-full max-w-[90rem] flex-col px-8 pb-6 pt-32">
+                <h1 className="text-2xl font-bold tracking-tight text-text1">Create your ad</h1>
+                <p className="mt-1 text-[13px] text-text2">
+                    Upload your product, pick where it runs, and generate.
+                </p>
 
-                        {phase === 'form' && (
+                {phase === 'form' && (
+                    <>
+                        <div className="mt-6">
                             <CreateForm
                                 backgroundMode={backgroundMode}
                                 backgroundPrompt={backgroundPrompt}
@@ -207,72 +220,54 @@ export default function CreatePageClient() {
                                 onAspectRatiosChange={setAspectRatios}
                                 onConceptCountChange={setConceptCount}
                                 onCtaEnabledChange={setCtaEnabled}
-                                onGenerate={onClickGenerate}
-                                isGenerating={false}
                             />
-                        )}
+                        </div>
 
-                        {phase === 'running' && (
-                            <div className="space-y-4">
-                                <div className="rounded-xl border border-hairline bg-canvas px-4 py-3">
+                        {/* 실행 도크 — 페이지 배경과 분리된 툴바, 뷰포트 하단에 고정 */}
+                        <div className="mt-auto bg-surface">
+                            <div className="flex items-center justify-between gap-6 border-t border-hairline px-6 py-4 shadow-[0_-16px_32px_-24px_rgba(0,0,0,0.8)]">
+                                <div className="min-w-0">
                                     <p className="text-[13px] font-medium text-text1">
-                                        {totalImages} image{totalImages > 1 ? 's' : ''} · {conceptCount} variation
-                                        {conceptCount > 1 ? 's' : ''} × {aspectRatios.length} format
-                                        {aspectRatios.length > 1 ? 's' : ''}
+                                        {conceptCount} creative{conceptCount > 1 ? 's' : ''} × {aspectRatios.length}{' '}
+                                        format{aspectRatios.length > 1 ? 's' : ''} = {totalImages} asset
+                                        {totalImages > 1 ? 's' : ''} · credited per batch
                                     </p>
-                                    <p className="mt-0.5 font-mono text-[10px] uppercase tracking-[0.14em] text-text2">
-                                        {totalImages} image{totalImages > 1 ? 's' : ''} deducted from your plan
-                                    </p>
+                                    <p className="mt-0.5 text-[12px] leading-relaxed text-text2">{hintText}</p>
                                 </div>
-                                <p className="text-[12px] leading-relaxed text-text2">
-                                    Generation runs in the background. You can leave this page and come back to the
-                                    result.
-                                </p>
+                                <button
+                                    type="button"
+                                    onClick={onClickGenerate}
+                                    disabled={!canGenerate}
+                                    className="w-[240px] shrink-0 rounded-full bg-text1 px-6 py-3.5 text-[14px] font-semibold text-canvas transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:scale-[1.01] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:scale-100"
+                                >
+                                    Generate {totalImages} asset{totalImages > 1 ? 's' : ''}
+                                </button>
                             </div>
-                        )}
+                        </div>
+                    </>
+                )}
 
-                        {error && (
-                            <p className="mt-5 rounded-xl border border-hairline bg-canvas px-3.5 py-3 text-[12px] leading-relaxed text-[#F87171]">
-                                {error}
+                {phase === 'running' && (
+                    <div className="mt-6 space-y-4">
+                        <div className="rounded-xl border border-hairline bg-surface px-4 py-3">
+                            <p className="text-[13px] font-medium text-text1">
+                                {totalImages} asset{totalImages > 1 ? 's' : ''} · {formatMeta}
                             </p>
-                        )}
-                    </aside>
-
-                    {/* 캔버스 */}
-                    <div className="flex flex-col items-center gap-4 pt-2">
-                        <PreviewCanvas
-                            aspectRatio={previewRatio}
-                            backgroundPrompt={backgroundMode === 'prompt' ? backgroundPrompt : null}
-                            backgroundImage={backgroundMode === 'upload' ? backgroundImage : null}
-                            product={product}
-                            person={person}
-                            status={status}
-                        />
-                        {phase === 'form' && aspectRatios.length > 1 && (
-                            <div className="flex flex-wrap items-center justify-center gap-2">
-                                {aspectRatios.map((ratio) => (
-                                    <button
-                                        key={ratio}
-                                        type="button"
-                                        onClick={() => setPreviewRatio(ratio)}
-                                        className={`rounded-full border px-3.5 py-1.5 font-mono text-[10px] uppercase tracking-[0.14em] transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] active:scale-[0.97] ${
-                                            previewRatio === ratio
-                                                ? 'border-accent text-accent'
-                                                : 'border-hairline text-text2 hover:border-text2/50 hover:text-text1'
-                                        }`}
-                                    >
-                                        {ratio}
-                                    </button>
-                                ))}
-                            </div>
-                        )}
-                        {phase === 'form' && (
-                            <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-text2">
-                                {previewRatio} preview · layout rendered deterministically
+                            <p className="mt-0.5 text-[11px] text-text2">
+                                {totalImages} asset{totalImages > 1 ? 's' : ''} credited to your plan
                             </p>
-                        )}
+                        </div>
+                        <p className="text-[12px] leading-relaxed text-text2">
+                            Generation runs in the background. You can leave this page and come back to the result.
+                        </p>
                     </div>
-                </div>
+                )}
+
+                {error && (
+                    <p className="mt-5 rounded-xl border border-hairline bg-surface px-3.5 py-3 text-[12px] leading-relaxed text-[#F87171]">
+                        {error}
+                    </p>
+                )}
             </main>
         </>
     );

@@ -16,14 +16,14 @@ interface WallImageItem {
 // 우측: main_left right-[4%], main_right right-[-3%], camera right-[7%] bottom-[35%], main_center right-[6%] bottom-[3%].
 // 카드와 최소 45px 이격, 겹침은 24px 이하 미세 레이어만.
 const WALL_IMAGES: WallImageItem[] = [
-    { src: '/preview/demo_main_left.webp', pos: 'right-[4%] top-[0%] w-[215px] xl:w-[235px]', rot: '-rotate-2' },
-    { src: '/preview/demo_good_example.webp', pos: 'left-[2%] top-[6%] w-[115px] xl:w-[125px]', rot: 'rotate-[2.6deg]' },
-    { src: '/preview/demo_main_right.webp', pos: 'right-[-3%] top-[32%] w-[125px] xl:w-[135px]', rot: 'rotate-[1.8deg]' },
-    { src: '/preview/demo_atmosphere.webp', pos: 'left-[10%] bottom-[10%] w-[195px] xl:w-[215px]', rot: 'rotate-[2deg]' },
-    { src: '/preview/demo_camera.webp', pos: 'right-[7%] bottom-[35%] w-[120px] xl:w-[130px]', rot: 'rotate-[2.8deg]' },
-    { src: '/preview/demo_main_center.webp', pos: 'right-[6%] bottom-[3%] w-[160px] xl:w-[175px]', rot: '-rotate-[1.6deg]' },
-    { src: '/preview/demo_physics.webp', pos: 'left-[0%] bottom-[3%] w-[100px] xl:w-[110px]', rot: '-rotate-[2.6deg]' },
-    { src: '/preview/demo_framing.webp', pos: 'left-[11%] top-[30%] w-[105px] xl:w-[115px]', rot: '-rotate-[2.2deg]' },
+    { src: '/preview/demo_main_left.webp', pos: 'right-[4%] top-[0%] w-[13.4375rem] xl:w-[14.6875rem]', rot: '-rotate-2' },
+    { src: '/preview/demo_good_example.webp', pos: 'left-[2%] top-[6%] w-[7.1875rem] xl:w-[7.8125rem]', rot: 'rotate-[2.6deg]' },
+    { src: '/preview/demo_main_right.webp', pos: 'right-[-3%] top-[32%] w-[7.8125rem] xl:w-[8.4375rem]', rot: 'rotate-[1.8deg]' },
+    { src: '/preview/demo_atmosphere.webp', pos: 'left-[10%] bottom-[10%] w-[12.1875rem] xl:w-[13.4375rem]', rot: 'rotate-[2deg]' },
+    { src: '/preview/demo_camera.webp', pos: 'right-[7%] bottom-[35%] w-[7.5rem] xl:w-[8.125rem]', rot: 'rotate-[2.8deg]' },
+    { src: '/preview/demo_main_center.webp', pos: 'right-[6%] bottom-[3%] w-[10rem] xl:w-[10.9375rem]', rot: '-rotate-[1.6deg]' },
+    { src: '/preview/demo_physics.webp', pos: 'left-[0%] bottom-[3%] w-[6.25rem] xl:w-[6.875rem]', rot: '-rotate-[2.6deg]' },
+    { src: '/preview/demo_framing.webp', pos: 'left-[11%] top-[30%] w-[6.5625rem] xl:w-[7.1875rem]', rot: '-rotate-[2.2deg]' },
 ];
 
 function WallFrame({

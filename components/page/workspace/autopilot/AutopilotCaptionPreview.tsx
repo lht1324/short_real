@@ -114,7 +114,7 @@ function AutopilotCaptionPreview({
                 } : {
                     aspectRatio: '9 / 16',
                     height: '100%',
-                    maxHeight: previewMode === 'wide' ? '600px' : '480px',
+                    maxHeight: previewMode === 'wide' ? '37.5rem' : '30rem',
                     width: 'auto',
                 }}
             >

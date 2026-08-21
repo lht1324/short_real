@@ -1,7 +1,7 @@
 'use client'
 
 import { memo, useRef, useState, useCallback } from 'react';
-import { ImagePlus, Info, X, Check } from 'lucide-react';
+import { ImagePlus, Info, X, Check, ChevronDown } from 'lucide-react';
 import { AdUploadedComponent } from "@/lib/api/client/ad/adClientAPI";
 
 interface UploadZoneProps {
@@ -13,9 +13,14 @@ interface UploadZoneProps {
     onChange: (file: AdUploadedComponent | null) => void;
 }
 
+const ACCEPTED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
+
 function UploadZone({ label, help, notePlaceholder, tall, file, onChange }: UploadZoneProps) {
     const inputRef = useRef<HTMLInputElement>(null);
     const [isDragging, setIsDragging] = useState(false);
+    const [isNoteOpen, setIsNoteOpen] = useState(false);
+    const [uploadError, setUploadError] = useState<string | null>(null);
 
     const handleFiles = useCallback(
         (files: FileList | null) => {
@@ -23,9 +28,15 @@ function UploadZone({ label, help, notePlaceholder, tall, file, onChange }: Uplo
             if (!file) {
                 return;
             }
-            if (!file.type.startsWith('image/')) {
+            if (!ACCEPTED_TYPES.includes(file.type)) {
+                setUploadError('Please upload a JPG, PNG, or WebP image.');
                 return;
             }
+            if (file.size > MAX_FILE_SIZE) {
+                setUploadError('File is too large. Keep it under 10 MB.');
+                return;
+            }
+            setUploadError(null);
 
             const objectUrl = URL.createObjectURL(file);
             const image = new Image();
@@ -47,10 +58,18 @@ function UploadZone({ label, help, notePlaceholder, tall, file, onChange }: Uplo
         (event: React.MouseEvent) => {
             event.preventDefault();
             event.stopPropagation();
+            setUploadError(null);
             onChange(null);
         },
         [onChange],
     );
+
+    const hasNote = Boolean(file?.note?.trim());
+    const noteOpen = isNoteOpen || hasNote;
+
+    const onClickNoteToggle = useCallback(() => {
+        setIsNoteOpen((current) => !current);
+    }, []);
 
     return (
         <div className="group relative">
@@ -68,14 +87,14 @@ function UploadZone({ label, help, notePlaceholder, tall, file, onChange }: Uplo
                     )}
                 </div>
                 {file && (
-                    <span className="flex items-center gap-1 font-mono text-[10px] uppercase tracking-[0.14em] text-text2">
+                    <span className="flex items-center gap-1 text-[11px] text-text2">
                         <Check className="h-3 w-3 text-accent" strokeWidth={2.4} />
-                        attached
+                        ready
                     </span>
                 )}
             </div>
 
-            {help && (
+            {help && !file && (
                 <div
                     role="tooltip"
                     className="pointer-events-none absolute left-0 top-full z-20 mt-2 w-60 rounded-xl border border-hairline bg-surface p-3 text-[12px] leading-relaxed text-text2 shadow-lg shadow-black/20 opacity-0 transition-opacity duration-150 group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100 invisible"
@@ -92,7 +111,7 @@ function UploadZone({ label, help, notePlaceholder, tall, file, onChange }: Uplo
                     </div>
                     <div className="min-w-0 flex-1">
                         <p className="truncate text-[13px] text-text1">{file.fileName}</p>
-                        <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-text2">
+                        <p className="text-[11px] text-text2">
                             ready{file.width && file.height ? ` · ${file.width}×${file.height}` : ''}
                         </p>
                     </div>
@@ -140,7 +159,7 @@ function UploadZone({ label, help, notePlaceholder, tall, file, onChange }: Uplo
             <input
                 ref={inputRef}
                 type="file"
-                accept="image/*"
+                accept="image/jpeg,image/png,image/webp"
                 className="hidden"
                 onChange={(event) => {
                     handleFiles(event.target.files);
@@ -148,19 +167,48 @@ function UploadZone({ label, help, notePlaceholder, tall, file, onChange }: Uplo
                 }}
             />
 
+            {uploadError && !file && (
+                <p className="mt-2 text-[12px] leading-relaxed text-[#F87171]">{uploadError}</p>
+            )}
+
             {file && notePlaceholder && (
-                <input
-                    type="text"
-                    value={file.note ?? ''}
-                    onChange={(event) => {
-                        onChange({
-                            ...file,
-                            note: event.target.value.trim() ? event.target.value : undefined,
-                        });
-                    }}
-                    placeholder={notePlaceholder}
-                    className="mt-2 w-full rounded-lg border border-hairline bg-canvas px-3 py-2 text-[12px] text-text1 placeholder:text-text2/60 focus:border-text2/50 focus:outline-none"
-                />
+                <div className="mt-2">
+                    <button
+                        type="button"
+                        onClick={onClickNoteToggle}
+                        aria-expanded={noteOpen}
+                        className="flex w-full items-center justify-between rounded-lg border border-hairline bg-canvas px-3 py-2 text-[12px] text-text2 transition-colors hover:border-text2/50 hover:text-text1"
+                    >
+                        <span className="truncate">
+                            {hasNote ? (
+                                <span className="truncate text-text1">{file.note}</span>
+                            ) : (
+                                <span>Tell the AI what to change</span>
+                            )}
+                        </span>
+                        <ChevronDown
+                            className={`h-3.5 w-3.5 shrink-0 transition-transform duration-200 ${
+                                noteOpen ? 'rotate-180' : ''
+                            }`}
+                            strokeWidth={2}
+                        />
+                    </button>
+                    {noteOpen && (
+                        <input
+                            type="text"
+                            autoFocus={!hasNote}
+                            value={file.note ?? ''}
+                            onChange={(event) => {
+                                onChange({
+                                    ...file,
+                                    note: event.target.value.trim() ? event.target.value : undefined,
+                                });
+                            }}
+                            placeholder={notePlaceholder}
+                            className="mt-1.5 w-full rounded-lg border border-hairline bg-canvas px-3 py-2 text-[12px] text-text1 placeholder:text-text2/60 focus:border-text2/50 focus:outline-none"
+                        />
+                    )}
+                </div>
             )}
         </div>
     );

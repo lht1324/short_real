@@ -42,7 +42,7 @@ function PreviewCanvas({
     const isGenerating = status !== null && status !== 'completed' && status !== 'failed';
 
     return (
-        <div className={`relative mx-auto h-[min(72vh,700px)] max-w-full overflow-hidden rounded-[1.5rem] border border-hairline bg-surface ${ASPECT_CLASS[aspectRatio]}`}>
+        <div className={`relative mx-auto h-[72vh] max-w-full overflow-hidden rounded-[1.5rem] border border-hairline bg-surface ${ASPECT_CLASS[aspectRatio]}`}>
             {/* 배경 레이어 */}
             {backgroundImage ? (
                 // eslint-disable-next-line @next/next/no-img-element
@@ -71,7 +71,7 @@ function PreviewCanvas({
                         <div className="overflow-hidden rounded-xl border border-hairline bg-surface/80 p-1 backdrop-blur-sm transition-transform duration-300 origin-bottom-right hover:scale-[2.0]">
                             {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img src={product.previewUrl} alt="Product" className="h-32 w-32 rounded-lg object-cover" />
-                            <p className="mt-1 text-center font-mono text-[10px] uppercase tracking-[0.14em] text-text2">
+                            <p className="mt-1 text-center text-[11px] text-text2">
                                 Product
                             </p>
                         </div>
@@ -80,7 +80,7 @@ function PreviewCanvas({
                         <div className="overflow-hidden rounded-xl border border-hairline bg-surface/80 p-1 backdrop-blur-sm transition-transform duration-300 origin-bottom-right hover:scale-[2.0]">
                             {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img src={person.previewUrl} alt="Person" className="h-32 w-32 rounded-lg object-cover" />
-                            <p className="mt-1 text-center font-mono text-[10px] uppercase tracking-[0.14em] text-text2">
+                            <p className="mt-1 text-center text-[11px] text-text2">
                                 Person
                             </p>
                         </div>

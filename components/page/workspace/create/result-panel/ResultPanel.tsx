@@ -89,7 +89,7 @@ function ResultPanel({
     // if (!expectedAIModelUsage) return null;
 
     return (
-        <div className="flex-[3] max-w-[450px] min-w-[380px] w-full bg-transparent flex flex-col relative border-l border-white/5">
+        <div className="flex-[3] max-w-[28.125rem] min-w-[23.75rem] w-full bg-transparent flex flex-col relative border-l border-white/5">
             <div className="flex-1 flex p-8 items-center justify-center relative z-10 overflow-y-auto custom-scrollbar">
                 {(isStoryboardGenerated && videoTitle && videoDescription) ? (<div className="w-full max-w-2xl">
                     {/* Video Metadata Section */}
