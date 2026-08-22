@@ -1,11 +1,19 @@
-# 작업 진행 상황 (Last Updated: 2026-08-22 05:44)
+# 작업 진행 상황 (Last Updated: 2026-08-23 00:00)
 
 ## 1. 현재 상황 (Current Status)
 
-### 🎯 현 단계: ad_generation_batches 스키마 설계 착수 — 임시 초안 (2026-08-22 05:44)
-* **변주(다름) 설계**: seed만으로는 10개 변주 불가능하므로 **이산 변주 스펙 벡터**(장면/구성/조명/팔레트/헤드라인/CTA)로 겹침 없이 배분 → Gemini 크리에이티브 디렉터가 생성, DB `concepts`에 저장. 상세: `ad_variation_study.md` (보완의 여지 있음).
-* **병렬 처리 구조 결정**: 이미지 단위로 (fal 생성 → Gemini 분석 → DB 기록)을 병렬 실행. 웹훅(fal queue) 또는 자체 큐 고민 중 — DB 부분 갱신 race 문제로 RPC(jsonb 부분 갱신) vs 후보 테이블 부활 결정 필요.
-* **배치 스키마 임시 초안**: `lib/api/types/supabase/ad/AdGenerationBatch.ts` — background_mode 제거(background_prompt null 여부로 모드 판별), 이미지 jsonb{path,width,height,note}, concepts[], results[] (design/score), error 없음. ⚠️ **미완** — 사장 확인 대기.
+### 🎯 현 단계: 변주(다름) 설계 합의 완료 — 스키마/타입 확정 대기 (2026-08-22 오후)
+* **변주 설계 합의 내용** (상세: `ad_variation_study.md` 갱신됨):
+  * **핵심 전환**: "코드가 조합을 결정" → "LLM(DeepSeek CD)이 유저 입력을 보고 풀에서 조합 선택 + 어법 판단" — 코드는 풀 정의/결정성/캐시/히스토리만.
+  * **조합 → 캡션**: 키워드 나열 X → "조합을 주고 한 문장 광고 캡션 만들어라"를 LLM에 지시. **코드는 문장 조립 안 함**.
+  * **풀 확정 (33개)**: 카메라8 · 조명8 · 팔레트7 · 프레이밍5 · 레아웃톤5 = 11,200조합. Style 축 제거. **단일 라이트 유지**(mixed_light 제외). 어법 필터 시 실질 유효 ≈2,000~3,000 (추정).
+  * **LLM = DeepSeek V4 Flash 0731** (텍스트 전용): CD(조합+어법 판단)+I2I 프롬프트 작성. **이미지 분석(design/score)은 VLM으로 한정** (DeepSeek 불가).
+  * **캐시**: 유저입력+조합 → 캡션 매핑 (재현성). 캡션 1회 결정적 1안.
+  * **다양성 가드레일 3중**: 배치 내 중복 금지(코드) / 배치 간 재사용 추적(히스토리 → LLM 컨텍스트) / 최소 사용률 강제.
+  * **유저 프롬프트 다듬기**: raw 유저 입력 → Gemini가 재작성(캐시 포함) 후 nano-banana (스터디 §0 도식에 반영).
+* **병렬 처리 구조 결정**: 이미지 단위로 (fal 생성 → Vision 분석 → DB 기록)을 병렬 실행. 웹훅(fal queue) 또는 자체 큐 고민 중 — DB 부분 갱신 race 문제로 RPC(jsonb 부분 갱신) vs 후보 테이블 부활 결정 필요.
+* **배치 스키마 임시 초안**: `lib/api/types/supabase/ad/AdGenerationBatch.ts` — background_mode 제거(background_prompt null 여부로 모드 판별), 이미지 jsonb{path,width,height,note}, concepts[], results[] (design/score), error 없음. ⚠️ **미완 — 확인 대기**.
+* 🆕 **AdGenerationBatch.ts 구조는 프롬프트(풀) 논의 결과에 맞춰 갱신 필요**: concepts[] 형식을 확정된 5축 스펙 벡터로, results 저장 방식(RPC vs 후보 테이블) 결정 후 반영.
 * **파일 경로 규칙**: `{user_id}/{batch_id}/ad_generation_result_{c}_{ratio}.{ext}` — c 인덱스+비율만으로 서명 URL 재구성 → 이미지 목록 DB 저장 불필요.
 * 업로드 이미지 서버 반입 경로 현재 없음(blob URL만) — signed upload 등 결정 필요.
 
@@ -21,6 +29,15 @@
 ---
 
 ## 2. 완수된 작업 (Completed Milestones)
+
+### 2-9. 결과 화면 개선 — 비율 표시 + Creative 용어 + 정렬 (2026-08-22 오후)
+* **CandidateCard 실비율 표시**: 균일 정사각 프레임(contain) 제거 → 카드가 선택 비율 그대로 렌더. 중첩 span 구조 단순화 (이미지 + AdOverlay + 라벨만).
+* **"Image 01" → "Creative 01"**: 그룹 헤더, DetailPanel 타이틀, PreviewModal aria-label/alt 전부 교체.
+* **플랫폼 라벨 제거 → DetailPanel 정보 이동**: 이미지 위 좌상단 플랫폼 칩(싸보임) 제거. DetailPanel에 `<dl>` 정보 표기 추가 (FORMAT → "Story · 9:16", SHOWS UP IN → "Stories · Reels · TikTok").
+* **균등 높이 행(media-폭 파생) 도입**: auto-fill 그리드 → `flex flex-wrap items-start` + 카드 `height: min(21rem, 38vw)` 고정 + `aspect-ratio`로 폭 파생. 행 상하 정렬 + 폭이 매체(작은폰→큰모니터) 위계 전달.
+* **그룹 내 정렬: 캐노니컬 매체 순서 표준화** (`9:16 → 2:3 → 4:5 → 1:1 → 16:9`) — 이전 클릭 순서 그대로였음. 부분집합 무관 동일 순서.
+* **V1/V2/V3 비교 분기 + ComboShowcase(31조합) 철거**: 비교 실험 후 코드 정리. 최종 채택 = 균등 높이행 + 폭 파생 (=V1 체계).
+* `npx tsc --noEmit` 클린.
 
 ### 2-5. CreateForm UX 전면 재설계 + 광고 사용자형 전환 (2026-08-22)
 * **0스크롤**: 프리뷰(PreviewCanvas) Create 화면에서 제거 → 폼 전폭. 결과는 results 페이지에서 확인. (컴포넌트 파일은 유지)
@@ -87,6 +104,7 @@
 4. **모델 선정 조건**: seed 지정 가능 + 비율별 해상도 지원 (1:1=1024², 4:5=832×1216, 9:16=768×1344 등).
 5. **검증 항목**: 같은 개념의 비율 3장이 "같은 배경/상품의 다른 비율 버전"으로 보이는가 (seed 동일 여부는 부수 확인). 실패 시 비율 우선으로 재논의.
 6. **배치 스키마 임시 초안 작성됨**(`lib/api/types/supabase/ad/AdGenerationBatch.ts`, ⚠️ 미완) — 변주/병렬 구조는 `ad_variation_study.md` 참고, 사장 확인 대기.
+   * 🆕 **프롬프트(풀) 논의 결과에 맞춰 구조 갱신 필요**: `concepts[]` 형식을 확정된 5축 스펙 벡터(`{camera, lighting, palette, framing, layout_tone, headline, cta}`)로, `results` 저장 방식(RPC vs 후보 테이블) 결정 후 반영.
 7. **병렬 처리**: 이미지 단위 (생성→분석→기록) 웹훅/큐 구조 검토 필요. RPC(jsonb 부분 갱신) vs 후보 테이블 결정해야 DB race 없음.
 
 ### 🔴 Remotion 폴더 구조 정리 (미완료)
@@ -95,9 +113,8 @@
 3. 배속 씬 올-인-원 전환 (`render-final-video.ts`의 `postProcessedVideo` 분기 제거).
 
 ### 🟡 TODO — 사장 확인/피드백 대기
-* **결과 페이지 균일 타일 피드백 대기** — CandidateCard aspect-square 균일 프레임 + 내부 contain 수정("2번, 이따 하자"로 미룸). 여러 비율 선택 시 들쭉날쭉 문제 해결 여부 확인.
-* 결과 화면 그룹 내 카드 순서: 현재 비율 순 고정 (1:1→4:5→9:16). 사장 확인 필요.
-* 결과 화면 "Image 01" 그룹 헤더 — 이번 용어 교체(creatives/assets)와 일관성 있게 "Creative 01"로 바꿀지 미결정.
+* 결과 화면 그룹 내 카드 순서: 캐노니컬 매체 순서로 확정 (이번 세션) — 실사용 피드백 대기.
+* 결과 화면 균등 높이 행(media-폭 파생) 배치 실사용 확인 — 세션에서 채택했고 화면 확인 대기.
 
 ### 🟡 TODO — 요금 표시 방식 (미결정)
 * 생성 배치 차감 문구를 **실제 달러 표시**로 할지, **잔여 생성 가능 장수** 표시로 할지 미결정.

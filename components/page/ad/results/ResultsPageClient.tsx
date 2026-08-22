@@ -37,6 +37,9 @@ const MOCK_IMAGE_POOL = [
     '/preview/demo_bad_example.webp',
 ];
 
+// 캐노니컬 매체 순서 — 작은 화면 → 큰 화면 (부분집합 무관 동일 순서)
+const CANONICAL_RATIO_ORDER: AdAspectRatio[] = ['9:16', '2:3', '4:5', '1:1', '16:9'];
+
 const MOCK_HEADLINES = [
     'Meet your new favorite.',
     'The one you will actually use.',
@@ -255,7 +258,7 @@ export default function ResultsPageClient({ taskId }: ResultsPageClientProps) {
                 conceptIndex,
                 candidates: candidates.sort(
                     (a, b) =>
-                        task.request.aspectRatios.indexOf(a.ratio) - task.request.aspectRatios.indexOf(b.ratio),
+                        CANONICAL_RATIO_ORDER.indexOf(a.ratio) - CANONICAL_RATIO_ORDER.indexOf(b.ratio),
                 ),
             }))
             .sort((a, b) => {
@@ -344,7 +347,7 @@ export default function ResultsPageClient({ taskId }: ResultsPageClientProps) {
                                     <section key={group.conceptIndex}>
                                         <div className="mb-4 flex items-baseline justify-between gap-4">
                                             <h2 className="text-lg font-bold tracking-tight text-text1">
-                                                Image {String(group.conceptIndex + 1).padStart(2, '0')}
+                                                Creative {String(group.conceptIndex + 1).padStart(2, '0')}
                                                 {bestScore >= 0 && (
                                                     <span className="ml-2.5 font-mono text-[11px] font-normal uppercase tracking-[0.14em] text-text2">
                                                         best {bestScore.toFixed(1)}
@@ -356,12 +359,11 @@ export default function ResultsPageClient({ taskId }: ResultsPageClientProps) {
                                                 {group.candidates.length > 1 ? 's' : ''}
                                             </span>
                                         </div>
-                                        <div className="grid gap-5 sm:grid-cols-[repeat(auto-fill,minmax(13.75rem,1fr))]">
-                                            {group.candidates.map((candidate, index) => (
+                                        <div className="flex flex-wrap items-start gap-5">
+                                            {group.candidates.map((candidate) => (
                                                 <CandidateCard
                                                     key={candidate.id}
                                                     candidate={candidate}
-                                                    index={index}
                                                     selected={candidate.id === selectedCandidateId}
                                                     onSelect={() => onClickCandidate(candidate.id)}
                                                 />

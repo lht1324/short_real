@@ -52,7 +52,7 @@ function PreviewModal({ candidate, onClose }: PreviewModalProps) {
         <div
             role="dialog"
             aria-modal="true"
-            aria-label={`Image ${candidate.conceptIndex + 1} · ${candidate.ratio} preview`}
+            aria-label={`Creative ${candidate.conceptIndex + 1} · ${candidate.ratio} preview`}
             className="fixed inset-0 z-[100] p-6 md:p-10"
         >
             <button
@@ -77,7 +77,7 @@ function PreviewModal({ candidate, onClose }: PreviewModalProps) {
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
                             src={candidate.url}
-                            alt={`Image ${candidate.conceptIndex + 1} · ${candidate.ratio} preview`}
+                            alt={`Creative ${candidate.conceptIndex + 1} · ${candidate.ratio} preview`}
                             className="absolute inset-0 h-full w-full object-cover"
                         />
                         <AdOverlay design={candidate.design} />

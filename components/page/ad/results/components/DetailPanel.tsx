@@ -3,7 +3,7 @@
 import { memo, useCallback } from 'react';
 import { Download, Maximize2, Wand2 } from 'lucide-react';
 import AdOverlay from "@/components/page/ad/results/components/AdOverlay";
-import { AdAspectRatio, AdCandidate, AdTask } from "@/lib/api/client/ad/adClientAPI";
+import { AdAspectRatio, AdCandidate, AdTask, AD_ASPECT_RATIO_INFO } from "@/lib/api/client/ad/adClientAPI";
 
 const PRESET_ASPECT_CLASS: Record<AdAspectRatio, string> = {
     '1:1': 'aspect-square',
@@ -48,8 +48,24 @@ function DetailPanel({ task, candidate, onOpenPreview }: DetailPanelProps) {
             </div>
 
             <h2 className="mb-5 text-lg font-bold tracking-tight text-text1">
-                Image {String(candidate.conceptIndex + 1).padStart(2, '0')} · {candidate.ratio}
+                Creative {String(candidate.conceptIndex + 1).padStart(2, '0')} · {candidate.ratio}
             </h2>
+
+            {/* 매체/플랫폼 정보 */}
+            <dl className="mb-5 space-y-2.5 border-t border-hairline pt-4">
+                <div className="flex items-baseline justify-between gap-4">
+                    <dt className="font-mono text-[10px] uppercase tracking-[0.16em] text-text2">Format</dt>
+                    <dd className="text-[13px] font-medium text-text1">
+                        {AD_ASPECT_RATIO_INFO[candidate.ratio].label} · {candidate.ratio}
+                    </dd>
+                </div>
+                <div className="flex items-baseline justify-between gap-4">
+                    <dt className="font-mono text-[10px] uppercase tracking-[0.16em] text-text2">Shows up in</dt>
+                    <dd className="text-right text-[13px] text-text1">
+                        {AD_ASPECT_RATIO_INFO[candidate.ratio].usage}
+                    </dd>
+                </div>
+            </dl>
 
             {/* 후보 미리보기 */}
             <div className={`relative mb-5 w-full overflow-hidden rounded-xl border border-hairline ${PRESET_ASPECT_CLASS[candidate.ratio]}`}>
