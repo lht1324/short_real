@@ -1,19 +1,17 @@
-# 작업 진행 상황 (Last Updated: 2026-08-23 00:00)
+# 작업 진행 상황 (Last Updated: 2026-08-24 01:00)
 
 ## 1. 현재 상황 (Current Status)
 
-### 🎯 현 단계: 변주(다름) 설계 합의 완료 — 스키마/타입 확정 대기 (2026-08-22 오후)
-* **변주 설계 합의 내용** (상세: `ad_variation_study.md` 갱신됨):
-  * **핵심 전환**: "코드가 조합을 결정" → "LLM(DeepSeek CD)이 유저 입력을 보고 풀에서 조합 선택 + 어법 판단" — 코드는 풀 정의/결정성/캐시/히스토리만.
-  * **조합 → 캡션**: 키워드 나열 X → "조합을 주고 한 문장 광고 캡션 만들어라"를 LLM에 지시. **코드는 문장 조립 안 함**.
-  * **풀 확정 (33개)**: 카메라8 · 조명8 · 팔레트7 · 프레이밍5 · 레아웃톤5 = 11,200조합. Style 축 제거. **단일 라이트 유지**(mixed_light 제외). 어법 필터 시 실질 유효 ≈2,000~3,000 (추정).
-  * **LLM = DeepSeek V4 Flash 0731** (텍스트 전용): CD(조합+어법 판단)+I2I 프롬프트 작성. **이미지 분석(design/score)은 VLM으로 한정** (DeepSeek 불가).
-  * **캐시**: 유저입력+조합 → 캡션 매핑 (재현성). 캡션 1회 결정적 1안.
-  * **다양성 가드레일 3중**: 배치 내 중복 금지(코드) / 배치 간 재사용 추적(히스토리 → LLM 컨텍스트) / 최소 사용률 강제.
-  * **유저 프롬프트 다듬기**: raw 유저 입력 → Gemini가 재작성(캐시 포함) 후 nano-banana (스터디 §0 도식에 반영).
-* **병렬 처리 구조 결정**: 이미지 단위로 (fal 생성 → Vision 분석 → DB 기록)을 병렬 실행. 웹훅(fal queue) 또는 자체 큐 고민 중 — DB 부분 갱신 race 문제로 RPC(jsonb 부분 갱신) vs 후보 테이블 부활 결정 필요.
-* **배치 스키마 임시 초안**: `lib/api/types/supabase/ad/AdGenerationBatch.ts` — background_mode 제거(background_prompt null 여부로 모드 판별), 이미지 jsonb{path,width,height,note}, concepts[], results[] (design/score), error 없음. ⚠️ **미완 — 확인 대기**.
-* 🆕 **AdGenerationBatch.ts 구조는 프롬프트(풀) 논의 결과에 맞춰 갱신 필요**: concepts[] 형식을 확정된 5축 스펙 벡터로, results 저장 방식(RPC vs 후보 테이블) 결정 후 반영.
+### 🎯 현 단계: 변주(다름) 설계 합의 — `AdCreativeSpec` 확정, results 저장/병렬 구조 · 업로드 반입 미정
+* **변주 설계 합의 내용** (상세: `ad_variation_study.md` §2~3 반영):
+  * **다름의 단위 = Creative** (Batch > Creative > Image). 사는 건 "creative 10개"지 "이미지 50장"이 아님. 가드레일 = 전부 Creative 단위.
+  * **LLM 호출 단위 = Creative마다 1회** (≤10회): 조합 1개 + 선택 비율들 → 비율별 캡션 묶음 `imageSpecs` 반환. 이미지마다 50회 호출은 비용/지연/일관성/결정성 위해 X.
+  * **`concepts[]` → `ad_creative_specs[]`**: `AdCreativeSpec` = 5축(camera/lighting/palette/framing/layout_tone) + `imageSpecs: Record<AdRatioKey, string>` + `seed`. (⚠️ `AdConceptSpec`이었으나 사장 지시로 `AdCreativeSpec`·`ad_creative_specs`로 변경)
+  * **비율별 캡션을 따로** 두는 이유: 종횡비 파라미터만으로는 "여백을 어느 영역에 남길지"가 안 전달됨 (9:16 상·하단, 16:9 좌우, 1:1 중앙).
+  * **헤드라인/CTA = 오버레이 레이어로 분리** (Meta 텍스트 정책·왜곡·A/B 문구 교체 근거). `cta_enabled`는 오버레이 토글.
+  * 조합 배정은 코드가 결정적 보유 — 실 사용자가 우려한 "LLM이 50개 중복 없이 뽑는 불가능"에서 "코드=계획, LLM=표현"으로 전환.
+* **배치 스키마 타입**: `lib/api/types/supabase/ad/AdGenerationBatch.ts` — `AdRatioKey`(콜론→언더스코어), `AdCreativeSpec`, `ad_creative_specs[]` 반영 완료. ⚠️ **results 저장 방식은 미정 (RPC vs 후보 테이블)**.
+* **병렬 처리**: 이미지 단위로 (fal 생성 → Vision 분석 → DB 기록)을 갱신. 웹훅(fal queue) 또는 자체 큐 고민 중 — **DB 부분 갱신 race 문제로 RPC(jsonb 부분 갱신) vs 후보 테이블 결정 필요** (아직 미정).
 * **파일 경로 규칙**: `{user_id}/{batch_id}/ad_generation_result_{c}_{ratio}.{ext}` — c 인덱스+비율만으로 서명 URL 재구성 → 이미지 목록 DB 저장 불필요.
 * 업로드 이미지 서버 반입 경로 현재 없음(blob URL만) — signed upload 등 결정 필요.
 
@@ -88,6 +86,14 @@
 ### 2-3. 비율 멀티 선택 + 와이드 UI, 생성 위저드/결과 화면 (이전 세션)
 * 비율 멀티 선택, `aspectRatios` 배열 계약, 와이드 레이아웃, mock 전역 객체(`window.__adMockTasks`), 상태 머신 폴링.
 
+### 2-10. 변주 설계 합의 + `AdCreativeSpec` 반영 (2026-08-24)
+* **다름의 단위 = Creative 확정** — Batch > Creative > Image. 사는 건 "creative 10개"이지 "이미지 50장"이 아님. 가드레일(중복 금지·재사용 추적·최소 사용률) 전부 Creative 단위(≤10개)로만 동작.
+* **LLM 호출 단위 = Creative마다 1회** (≤10회): 크리에이티브 디렉터(DeepSeek V4 Flash 0731)가 조합 1개 + 선택 비율들을 받아 비율별 캡션 묶음(`imageSpecs`) 1회에 반환. 이미지마다 50회 호출은 비용·지연·일관성·결정성(캐시 재현)을 깨므로 X.
+* **비율별 캡션**: 같은 creative의 비율 파생마다 다른 캡션으로 저장 — 종횡비 파라미터만 넣는 것보다 "여백을 어느 영역에 남기지"가 전달된다 (9:16 상·하단, 16:9 좌우, 1:1 중앙). 생성 후 불변, DB 자체가 캐시.
+* **헤드라인/CTA 분리**: Meta 텍스트 정책·AI 글자 왜곡·A/B 문구 교체를 위해 이미지 생성 프롬프트에 판매 카피 굽지 않음. 오버레이 레이어(기존 `AdDesignLayout`)로 생성·저장. `cta_enabled`는 오버레이 토글.
+* **코드=계획, LLM=표현**: 풀 5축 배정·중복 금지·최소 사용률은 코드가 결정적으로 보유, LLM이 이해하는 것은 조합 1개+유저 입력→캡션뿐. 사장 우려("Flash가 50개 중복 없이 뽑을 수 있나") 해소.
+* `AdGenerationBatch.ts`: `AdRatioKey`(콜론을 `_`로 정규화, JSON 키/경로 안전), `AdCreativeSpec`, `ad_creative_specs[]` 반영. `npx tsc --noEmit` 클린.
+
 ---
 
 ## 3. 향후 작업 (Next Steps)
@@ -100,12 +106,11 @@
 ### 🔴 ad 실 서버 API 연동 (mock 교체)
 1. mock 교체 지점 **2곳**: CreatePageClient(mockCreateTask/mockGetTask) → `adClientAPI.postGenerateTask/getTask`, ResultsPageClient(mockGetTask) → `adClientAPI.getTask`.
 2. 실 백엔드는 별도 서버(ngrok BASE_URL)에 `/api/ad/*` 라우트 구현 — client-gateway가 프록시하므로 프론트 `app/api/ad/*` 라우트는 도달 불가(죽은 코드, 실 서버 이전 대상).
-3. **Concept 우선 파이프라인**: conceptCount × aspectRatios 순회. 개념별 서로 다른 seed, 같은 개념 내 비율 = 같은 seed.
-4. **모델 선정 조건**: seed 지정 가능 + 비율별 해상도 지원 (1:1=1024², 4:5=832×1216, 9:16=768×1344 등).
-5. **검증 항목**: 같은 개념의 비율 3장이 "같은 배경/상품의 다른 비율 버전"으로 보이는가 (seed 동일 여부는 부수 확인). 실패 시 비율 우선으로 재논의.
-6. **배치 스키마 임시 초안 작성됨**(`lib/api/types/supabase/ad/AdGenerationBatch.ts`, ⚠️ 미완) — 변주/병렬 구조는 `ad_variation_study.md` 참고, 사장 확인 대기.
-   * 🆕 **프롬프트(풀) 논의 결과에 맞춰 구조 갱신 필요**: `concepts[]` 형식을 확정된 5축 스펙 벡터(`{camera, lighting, palette, framing, layout_tone, headline, cta}`)로, `results` 저장 방식(RPC vs 후보 테이블) 결정 후 반영.
-7. **병렬 처리**: 이미지 단위 (생성→분석→기록) 웹훅/큐 구조 검토 필요. RPC(jsonb 부분 갱신) vs 후보 테이블 결정해야 DB race 없음.
+3. **Creative 우선 파이프라인**: conceptCount × aspectRatios 순회. creative별 서로 다른 seed, 같은 creative 내 비율 = 같은 seed.
+4. **모델 선정 기준**: seed 지정 가능 + 비율별 해상도 지원 (1:1=1024², 4:5=832×1216, 9:16=768×1344 등).
+5. **검증 항목**: 같은 creative의 비율 3장이 "같은 배경/상품의 다른 비율 버전"으로 보이는지 (seed 동일 여부는 부수 확인). 실패 시 비율 우선으로 재논의.
+6. **배치 스키마**: `lib/api/types/supabase/ad/AdGenerationBatch.ts` — `AdCreativeSpec`/`ad_creative_specs[]` 반영 완료. ⚠️ **미결: results 저장 방식 — RPC+jsonb 부분 갱신 vs 후보 테이블** (스터디 §5·7).
+7. **LLM → 이미지 파이프라인**: DeepSeek CD가 creative마다 1회 호출, 선택 비율들의 캡션 묶음 `imageSpecs` 생성 → DB 저장 후 fal로 제출. 프론트 단일 함수로 가능 (LLM 수초 + fal 제출은 비동기). DeepSeek는 텍스트 전용, 이미지 분석은 Vision(Gemini).
 
 ### 🔴 Remotion 폴더 구조 정리 (미완료)
 1. `components/remotion/client/` 폴더 신설 — 클라이언트 컴포넌트 이전.
@@ -135,11 +140,11 @@
 * ad 폰트는 `app/ad/layout.tsx`의 `font-satoshi`로 ad 하위 한정. globals.css `body`는 Arial 유지 (랜딩 폰트와 분리).
 * **사장 UI 원칙**: 사이즈가 정해진 이미지/비디오 아니면 **px 하드코딩 금지** — rem/vh/vw/%/fr만 사용. `text-[Npx]`·shadow·rounded는 장식값이라 허용.
 * **사장 설계 취향**: 광고 바닥(성장 이커머스, 디자이너 없음)이 "뭘 하는 건지 알아차릴" 언어. 개발자/SaaS 용어 지양. 0스크롤·0~1클릭 선호.
-* mock 구조: `window.__adMockTasks: Record<string, AdTask>` — CreatePageClient가 생성·상태 갱신, ResultsPageClient가 조회·후보 생성(개념 우선 flatMap). 실 구현 시 이 전역 객체와 `declare global` 블록 제거.
-* **용어 계약 (확정)**: `conceptCount`(creatives) × `aspectRatios`(formats) = 총 장수(assets). 사용자 노출: **creatives**(포맷당 생성 버전 수) / **formats**(비율) / **assets**(총 장수) / **batch**(생성 실행 1회). Google/Meta 용어 기준(creative=디자인 단위, asset=개별 파일).
-* 시드 규칙: 개념별 서로 다른 seed / 같은 개념 내 비율 = 같은 seed. I2I 1회 구조. 같은 seed+다른 비율 = 초기 노이즈 shape 상이 (비슷함 미보장, 공통 입력 이미지가 일관성 담당).
+* mock 구조: `window.__adMockTasks: Record<string, AdTask>` — CreatePageClient가 생성·상태 갱신, ResultsPageClient가 조회·후보 생성(creative 우선 flatMap). 실 구현 시 이 전역 객체와 `declare global` 블록 제거.
+* **용어 계약 (확정)**: `conceptCount`(creatives) × `aspectRatios`(formats) = 총 장수(assets). 사용자 노출: **creatives**(포맷당 생성 버전 수) / **formats**(비율) / **assets**(총 장수) / **batch**(생성 실행 1회). Google/Meta 용어 기준(creative=디자인 단위, asset=개별 파일). ↔ DB: `ad_creative_specs[]`.
+* 시드 규칙: creative별 서로 다른 seed / 같은 creative 내 비율 = 같은 seed. I2I 1회 구조. 같은 seed+다른 비율 = 초기 노이즈 shape 상이 (비슷함 미보장, 공통 입력 이미지가 일관성 담당).
 * **fal 이미지 파이프라인**: `image_urls`는 URL만 받음(포맷 자유) — Supabase Storage에 .jpeg로 저장 → signed URL(24h) 전달. base64는 대용량 시 성능 저하. 투명 PNG의 I2I 동작은 실테스트 필요.
 * client-gateway는 `BASE_URL`(ngrok 백엔드)로 무조건 프록시 — 프론트 `app/api/*` 라우트는 실서버에 구현해야 함.
-* **ad DB/파이프라인 설계 노트**: `ad_variation_study.md` — 변주 스펙 벡터, 웹훅 병렬 구조, 임시 스키마. 보완의 여지 있음.
+* **ad DB/파이프라인 설계 노트**: `ad_variation_study.md` — 변주 스펙 벡터(AdCreativeSpec), 웹훅 병렬 구조, 임시 스키마. 보완의 여지 있음.
 * Remotion 4.0.507 습성: `component` prop 타입 추론 불가, `PlayerProps.onEnded` 없음, `play()` 반환 void.
 * 서버 렌더: `<Video>` 대신 **`<OffthreadVideo>`** + `colorSpace: 'bt709'` 필수, 저사양 머신은 `concurrency: 1`.

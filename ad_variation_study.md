@@ -3,39 +3,39 @@
 ## 배경
 
 - CreateForm에서 사용자가 고르는 것: Background(텍스트 또는 업로드 이미지) + Product/Person(이미지, 선택 조합) + aspectRatios(비율 다중) + conceptCount(최대 10) + CTA 토글.
-- conceptCount(creatives)를 선택하면 그 수만큼 **전부 서로 달라야** 한다. 비율은 같은 개념의 파생이므로 "다름"은 개념 단위로 정의한다.
+- conceptCount(creatives)를 선택하면 그 수만큼 **전부 서로 달라야** 한다. 비율은 같은 creative의 파생이므로 "다름"은 creative 단위로 정의한다.
 - 입력(배경/제품/인물)은 고정된 상태에서 변주를 만들어야 한다.
 - **seed만으로는 불가능**: seed는 노이즈 시작점 차이일 뿐, 같은 입력+같은 프롬프트면 결과가 실질적으로 반복된다.
 - 변주를 만들어내는 지시문(스펙)이 DB에 저장되어야 재실행 시 같은 결과가 재현된다.
 
 ---
 
-## 0. 전체 흐름 (확정 구조)
+## 0. 전체 흐름
 
 ```
 [사용자 입력] 배경(텍스트/이미지) · 제품 · 인물 · aspectRatios · conceptCount · CTA
         ↓
-[DeepSeek V4 Flash 0731 — 크리에이티브 디렉터 (텍스트만)]
-    유저 입력 해석 + 카테고리/어법 판단
-    + 이미 사용된 조합 히스토리 확인
-    → 이산 축 조합 배정 (결정적 1안, 한 번만)
-    → 조합 → 한 문장 광고 캡션 (I2I 프롬프트)
+[코드] 이산 축 조합 배정 (결정적) — 중복 금지·최소 사용률 보장
         ↓
-[캐시] (유저 입력 + 조합 → 캡션 매핑, 재현성)
+[DeepSeek V4 Flash — 크리에이티브 디렉터 (텍스트 전용)]
+    코드가 준 조합 1개 + 유저 입력 해석
+    → 비율별 캡션 묶음 생성 (imageSpecs, 결정적 1안 · 1회)
+        ↓
+[캐시 저장 = ad_creative_specs[]]  (재현성)
         ↓
 [nano-banana /edit]  참조(제품·인물·배경) + 캡션 → 광고 이미지
         ↓
 [Vision 모델 (Gemini)]  생성 이미지 보고 design/score 평가 → DB
 ```
 
-- **"다름" = 이산 조합 + 유저 입력에 대한 해석** (LLM 난수 아님).
-- **DeepSeek = 텍스트 전용**: I2I 프롬프트 작성 담당. 이미지 이해/분석 불가 → 이후 단계 전부 Vision 모델로 한정.
+- **"다름" = 코드가 배정한 이산 축 조합 + 캡션** (LLM 난수 아님).
+- **DeepSeek = 텍스트 전용**: 비율별 캡션 작성 담당. 이미지 이해·분석 불가 → 평가 단계는 Vision 모델로 한정.
 
 ---
 
 ## 1. 변주의 축 — 풀 목록 (확정)
 
-Style 축 제거 (캡션에서 피사체·조합에 맞게 표현). **단일 라이트 유지** (복합광[mixed_light] 제외).
+Style 축 제거 (캡션에서 피사체·조합에 맞게 표현). **단일 조명 유지** (복합광[mixed_light] 제외).
 
 ### 카메라/구성 (8)
 ```
@@ -43,7 +43,7 @@ hero_shot / packshot / lifestyle_shot / detail_close
 flat_lay / overhead_angle / product_in_hand / environment_shot
 ```
 
-### 조명/시간 (8) — 단일 라이트만
+### 조명/시간 (8) — 단일 조명
 ```
 golden_hour / blue_hour / studio_soft / studio_hard
 high_key / low_key / overcast / night_low
@@ -66,106 +66,129 @@ minimal_modern / bold_impact
 ```
 
 - **합계: 33개 키워드 / 조합 공간 8×8×7×5×5 = 11,200**
-- **어법 필터 반영 시 실질 유효 조합 ≈ 2,000~3,000** (추정 — 실프로토 타입에서 측정 필요)
+- **어법 필터 반영 시 실질 유효 조합 ≈ 2,000~3,000** (추정 — 실 프로토타입에서 측정 필요)
 
 ---
 
 ## 2. "다름" 보장 장치 — 이산(discrete) 변주 스펙 벡터
 
 - 변주를 **유한한 옵션 풀(위 목록)** 에서 **겹치지 않게 배분**한다. (자유 프롬프트 재작성은 LLM이 비슷한 것 반복 위험 → 금지)
-- 개념 스펙 벡터:
+- **다름의 단위 = Creative (배치 > Creative > 이미지)**. 사는 건 "creative n개"이며, 비율 여러 개는 같은 creative의 매체 파생이므로 **이미지 단위로 달라지면 안 된다**. 가드레일(중복 금지·최소 사용률·재사용 이력)도 전부 **Creative 단위**로만 동작.
+- **조합 배분 = 코드가 결정적으로 / 표현 = LLM** : LLM은 코드가 확정한 조합 1개만 받아서 각 비율의 캡션 1문장씩 쓴다. 캡션에 키워드 나열 X, 광고 이미지로 그리는 문장.
+
+### 크리에이티브 스펙 벡터 (합의 완료)
 
 ```json
-concept = {
+ad_creative_spec = {
+  "creativeIndex": 0,
   "camera": "hero_shot",
   "lighting": "golden_hour",
   "palette": "warm",
   "framing": "centered",
   "layout_tone": "classic_product",
-  "headline": "Meet your new favorite.",
-  "cta": "Shop now"
+  "imageSpecs": {
+    "9_16": "vertical scene, product upper third, clean margin lower third",
+    "1_1":  "centered product with margin on all sides",
+    "16_9": "product at right, generous negative space left"
+  },
+  "seed": 123456789
 }
 ```
 
-- `concepts[]` 컬럼에 저장 → 재실행 재현. seed는 부수 요소.
+- 카메라·조명·팔레트·프레이밍·레이아웃 5축 = 크리에이티브 특성. 코드가 풀에서 결정적으로 할당하며, 축별 정보가 있어야 "서로 얼마나 다른지"(중복·빈도·재사용)를 판정할 수 있다.
+- `imageSpecs` = 이미지(비율) 단위별 최종 I2I 캡션. 같은 creative의 파생이어도 비율마다 다른 캡션을 보관 — 비율마다 컴포지션(여백/상품 배치)이 달라지므로 단일 캡션 재사용은 불충분.
+  - 단, **"비율마다 카피를 다르게 쓰는지"는 실측 후** 결정 (v1: 같은 카피 + 비율/구도 파라미터만 다르게).
+- **헤드라인·CTA는 스펙에 저장하지 않는다** — 오버레이 레이어(design 레이아웃)가 전담. 이미지 프롬프트에 글자 그리기를 요구하지 않는다(AI 글자 왜곡, A/B 카피 교체, Meta 텍스트 정책).
+- `seed`는 부수 신호 — 같은 creative의 비율들이 같은 seed를 공유한다.
+- `ad_creative_specs[]` 자체가 캐시 — 완성 후 재현 시 LLM 재호출 없이 저장된 캡션을 그대로 씀.
+
+## 3. LLM 호출 단위 — Creative마다 1회 (비용·일관성)
+
+- 호출 단위 = **Creative마다 1회** (최대 10회), 그 안에서 선택한 비율 전부의 캡션 묶음 반환.
+- 이미지마다 1회 호출(최대 50회)은 금지:
+  1. 비용·지연이 5배로 늘어남.
+  2. 같은 creative의 비율 캡션이 서로 다른 취향이 되면 "한 소재의 매체 변형"이 아니라 "다른 광고"가 됨 — 캠페인 정체성 유실.
+  3. 매 요청마다 새로 생성되므로 결정적 1안·캐시가 불가능.
+- 결정성: 후보 여러 개 안 뽑고 **1회 생성·저장**.
+
+> (미결정) 캡션 1안 vs 후보 3안: 현재는 결정성 우선이라 1안.
 
 ---
 
-## 3. 크리에이티브 디렉터 = DeepSeek V4 Flash 0731
+## 4. 다양성 가드레일 — 3중 (코드 소유)
 
-- **역할**: 유저 입력(배경 프롬프트, 상품 이미지 경로, 인물) → 어법 판단 + 조합 배정 + **I2I 프롬프트(캡션) 1문장** 생성.
-- **결정성**: 후보 여러 개 안 뽑고 **한 번에 1안** 반환 → 캐시로 재현.
-- **카테고리** (향수/스킨케어/패션/식품…)는 코드로 다루지 않는다 — 세계지식으로 LLM이 판단 (세상 모든 물건을 코드 테이블로 불가능하기 때문).
-- **"이 조합이 광고로 성립하는가"(어법)도 LLM이 판단** — 코드가 블랙리스트(하드 제약)를 두지 않음.
+1. **배치 내 중복 금지** — 코드가 조합을 중복 없이 배분 (결정적)
+2. **배치 간 재사용 추적** — "이 유저는 이미 이 조합 사용" 히스토리를 DeepSeek 컨텍스트로 주입 → 다음 배치에서 겹치는 것 회피
+3. **최소 사용률 강제** — 배치 내에서 축 키워드 편향 방지 (예: 카메라 8개 모두 hero_shot 금지)
 
-### 활용 시 주의
-- DeepSeek는 이미지를 볼 수 없음 → **유저 상품 이미지는 직접 판단 안 함** (경로/설명만). 이미지 퀄리티·어울림 판단이 필요한 지점이 있으면 **VLM(이미지 설명) → DeepSeek** 2단 구조.
-- **캡션 퀄리티 한계**: 뛰어난 캡션 대박은 아니고 "성립하는 캡션"을 목표. 뛰어난 캡션은 v2 (브랜드 보이스 학습 등).
+- 장기 사용자: 조합 소진 시 리셋 정책 필요 (추후 결정).
 
 ---
 
-## 4. 다양성 가드레일 (코드) — 반복 지연장치 3중
+## 5. 생성·평가 병렬 구조 (웹훅 기반) + DB race
 
-1. **배치 내 중복 금지** — 코드가 조합을 중복 없이 배정 (결정적)
-2. **배치 간 재사용 추적** — "이 유저는 이미 이 조합 씀" 히스토리를 DeepSeek 컨텍스트로 주입 → 다음 배치에서 겹치는 것 회피
-3. **최소 사용률 강제** — 배치 내 각 축 키워드 편향 방지 (예: 카메라 8개 모두 hero_shot 금지 등)
+### 병렬
 
-- 장기 사용자까지 고려: 유저가 조합을 계속 소진하면 재생성(리셋) 정책 필요 (추후 결정).
+- 목표: **이미지 1장 단위로 fal 생성 → Vision 평가 → DB 기록** 을 병렬 처리.
+- 구조 후보:
+   1. fal 웹훅 (`fal.queue.submit` + webhook) — 이미지 완성 때마다 콜백 수신 후 평가·기록
+   2. 자체 queue/워커 — 백엔드가 이미지 단위 task 감시
+- HTTP 장기 실행 한도 때문에 "요청 1개로 전부 완료" 대기를 피한다.
 
----
+### DB 동시성 (핵심)
 
-## 5. 생성·분석 병렬 처리 구조 (웹훅 기반)
-
-### 문제
-
-- 이미지 N장이 전부 완성될 때까지 기다렸다가 설계/분석하면 느림.
-- 목표: **이미지 단위로 (생성 → 분석 → 기록) 병렬 실행**.
-
-```
-이미지 1장 = fal 생성(수십 초) → Vision 분석(design/score, 수 초) → DB 업데이트
-```
-
-### 구조 후보
-
-- **Option A — fal 웹훅**: `fal.queue.submit` + webhook 콜백. 이미지 완성 시마다 백엔드가 콜백 받아 그 이미지에 대한 분석+DB 실행.
-- **Option B — 자체 큐/워커**: 백엔드가 이미지 단위 태스크 관리하며 각자 완료 감지.
-- HTTP 장기 실행 제한 때문에 "요청 하나에 전부 완료 대기" 피한다. 웹훅이 자연스럽다.
-
-### DB 업데이트 동시성 문제 (핵심)
-
-이미지 단위 완료 갱신이 동시에 여러 개 들어온다. `results`를 jsonb 배열로 두고 통째로 replace하면 race 발생.
-
-해결 후보:
-
-1. **RPC (postgres plpgsql) + jsonb 부분 갱신**: `update_batch_result(batch_id, concept_index, aspect_ratio, design, score)` — 원자적 부분 갱신. 테이블 1개 유지.
-2. **결과 테이블 부활**: `ad_generation_candidates` — batch_id + concept_index + ratio 행 단위 upsert. 병렬 쓰기에 안정하지만 사장이 제거 선호.
-
-미결: RPC vs 후보 테이블.
+- 이미지 단위 완료 갱신이 동시에 여럿 도착한다. `results` jsonb 배열을 통째로 replace하면 race.
+- 선택지:
+   1. **RPC(jsonb 부분 갱신)**: `update_batch_result(batch_id, creative_index, aspect_ratio, design, score)` — 원자적 부분 갱신, 테이블 1개.
+   2. **결과 테이블 부활** (`ad_generation_candidates`): batch×creative×ratio 행 단위 upsert — 병렬 안전하나 사장이 제거 선호.
+- 미결: RPC vs 후보 테이블.
 
 ---
 
-## 6. 임시 스키마 (미완)
+## 6. 임시 스키마 (적용 완료 — results 저장만 미정)
 
 ```
 ad_generation_batches
 ├─ id, user_id, status                     (queued|generating|designing|rendering|completed|failed)
-├─ background_prompt | background_image  (서로 배타 — null 여부로 모드 판별)
+├─ background_prompt | background_image  (서로 배타 — null 여부로 구분)
 ├─ product_image, person_image           ({path, width, height, note} | null)
 ├─ aspect_ratios[], concept_count, cta_enabled
-├─ concepts[]                             ★ 변주 스펙 벡터 (5축+카피) — 형식 확정
-├─ results[]                              (design/score) — 저장 방식 미정 (RPC vs 후보 테이블)
+├─ ad_creative_specs[]                    ★ 확정: AdCreativeSpec (5축 + imageSpecs + seed)
+├─ results[]                              (design/score) — 저장 미정 (RPC vs 후보 테이블)
 └─ created_at, updated_at
 ```
 
-파일 경로 규칙: `{user_id}/{batch_id}/ad_generation_result_{c}_{ratio}.{ext}` — c 인덱스와 비율만 알면 서명 URL로 재구성 가능 → 이미지 파일 목록 DB 저장 불필요.
+```ts
+// lib/api/types/supabase/ad/AdGenerationBatch.ts (적용됨)
+type AdRatioKey = '1_1' | '4_5' | '9_16' | '16_9' | '2_3';
+
+interface AdCreativeSpec {
+    creativeIndex: number;
+    camera: string; lighting: string; palette: string; framing: string;
+    layout_tone: string;
+    imageSpecs: Record<AdRatioKey, string>;
+    seed: number;
+}
+
+interface AdGenerationBatch {
+    ...
+    ad_creative_specs: AdCreativeSpec[];
+    ...
+}
+```
+
+- 헤드라인/CTA 없음 — 오버레이 레이어(AdOverlayLayout)가 전담.
+- 파일 경로 규칙: `{user_id}/{batch_id}/ad_generation_result_{c}_{ratio}.{ext}` — creative index·ratio만 알면 서명 URL을 다시 만들어 이미지 목록 DB 저장이 불필요.
 
 ---
 
 ## 7. 남은 결정 사항
 
+- [x] ~~LLM 호출 단위~~ → **Creative마다 1회**, 비율 캡션 묶음 반환 (합의 완료)
+- [x] ~~imageSpecs 저장 여부~~ → **ad_creative_specs[] = AdCreativeSpec** (5축 + imageSpecs + seed) — 비율별 캡션 저장 (합의 완료)
+- [x] ~~판매 카피를 이미지에 넣는지~~ → **오버레이 레이어로 분산** (AI 글자 왜곡·A/B 카피 교체·Meta 텍스트 정책, 합의 완료)
 - [ ] 업로드 모드 변주 폭: (a) UI 명시 vs (b) conceptCount 상한 축소
-- [ ] results 저장: RPC + jsonb 부분 갱신 vs 후보 테이블 부활
-- [ ] 크리에이티브 디렉터: 캡션 1회 vs 후보 3개 (현재: 1회 — 결정성)
-- [ ] 웹훅 인프라: fal 공식 웹훅 vs 자체 큐/워커
-- [ ] 업로드 이미지 서버 반입 경로: 클라이언트 직접 uupload(signed upload) 후 path 전달 vs 서버 multipart 수신
-- [ ] 캡션 품질 개선 (브랜드 보이스/샘플 학습) — v2 이후
+- [ ] results 저장: RPC+jsonb 부분 갱신 vs 후보 테이블 — 미결
+- [ ] 웹훅: fal 공식 웹훅 vs 자체 큐/워커
+- [ ] 업로드 이미지 서버 반입 경로: 클라이언트 직접 signed upload 후 path 전달 vs 서버 multipart 수신
+- [ ] 캡션 품질 향상 (브랜드 보이스/샘플 학습) — v2 이후
