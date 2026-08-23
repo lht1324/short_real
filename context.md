@@ -1,8 +1,8 @@
-# 작업 진행 상황 (Last Updated: 2026-08-24 01:00)
+# 작업 진행 상황 (Last Updated: 2026-08-24 05:31)
 
 ## 1. 현재 상황 (Current Status)
 
-### 🎯 현 단계: 변주(다름) 설계 합의 — `AdCreativeSpec` 확정, results 저장/병렬 구조 · 업로드 반입 미정
+### 🎯 현 단계: results 구조 확정(`AdCreativeResult[]`) — 남은 미결 = 결과 저장 방식(RPC vs 후보 테이블)·웹훅·업로드 반입
 * **변주 설계 합의 내용** (상세: `ad_variation_study.md` §2~3 반영):
   * **다름의 단위 = Creative** (Batch > Creative > Image). 사는 건 "creative 10개"지 "이미지 50장"이 아님. 가드레일 = 전부 Creative 단위.
   * **LLM 호출 단위 = Creative마다 1회** (≤10회): 조합 1개 + 선택 비율들 → 비율별 캡션 묶음 `imageSpecs` 반환. 이미지마다 50회 호출은 비용/지연/일관성/결정성 위해 X.
@@ -10,8 +10,11 @@
   * **비율별 캡션을 따로** 두는 이유: 종횡비 파라미터만으로는 "여백을 어느 영역에 남길지"가 안 전달됨 (9:16 상·하단, 16:9 좌우, 1:1 중앙).
   * **헤드라인/CTA = 오버레이 레이어로 분리** (Meta 텍스트 정책·왜곡·A/B 문구 교체 근거). `cta_enabled`는 오버레이 토글.
   * 조합 배정은 코드가 결정적 보유 — 실 사용자가 우려한 "LLM이 50개 중복 없이 뽑는 불가능"에서 "코드=계획, LLM=표현"으로 전환.
-* **배치 스키마 타입**: `lib/api/types/supabase/ad/AdGenerationBatch.ts` — `AdRatioKey`(콜론→언더스코어), `AdCreativeSpec`, `ad_creative_specs[]` 반영 완료. ⚠️ **results 저장 방식은 미정 (RPC vs 후보 테이블)**.
-* **병렬 처리**: 이미지 단위로 (fal 생성 → Vision 분석 → DB 기록)을 갱신. 웹훅(fal queue) 또는 자체 큐 고민 중 — **DB 부분 갱신 race 문제로 RPC(jsonb 부분 갱신) vs 후보 테이블 결정 필요** (아직 미정).
+* **results 구조 확정** (2026-08-24): `AdGenerationBatch.results` = `AdCreativeResult[]` — `ad_creative_specs[i]`와 i가 1:1 대응(같은 creative). 각 원소: `copy: AdCopySpec`(creative당 1) + `imageResults: Partial<Record<AdRatioKey, AdImageResult>>`(선택 비율만). (상세: `ad_variation_study.md` §6)
+* **copy·design 분담**: copy(헤드라인·CTA 문구)는 CD가 Specs 생성 단계에 작성하되 **저장은 results** — specs(이미지 지시문)와 분리, 단일 소스 유지, 수정 화면 default. design(오버레이 지오메트리)·score는 **이미지 생성 후** Gemini Vision이 비율별 확정 — 실제 배경·여백을 봐야 위치/scrim이 정해지므로. score는 0.0~10.0 실수, 평가 전 null.
+* undefinedable 증가 없음 — CD가 copy를 다 채우고, `imageResults`는 비율만 존재, 유일한 null 지점은 score.
+* **배치 스키마 타입**: `lib/api/types/supabase/ad/AdGenerationBatch.ts` — `AdRatioKey`(콜론→언더스코어), `AdCreativeSpec`, `ad_creative_specs[]` 반영 완료. ⚠️ **results 구조는 확정, 결과 저장 방식만 미정 (RPC vs 후보 테이블)**. RPC 선택 시 시그니처는 스터디 §5 기준 2종(`update_batch_copy` creative 단위 1회 + `update_batch_result` ratio 단위).
+* **병렬 처리**: 이미지 단위로 (fal 생성 → Vision 분석 → DB 기록)을 갱신. 웹훅(fal queue) 또는 자체 큐 고민 중 — **DB 부분 갱신 race는 RPC(jsonb 부분 갱신) vs 후보 테이블만 남음** (results 구조는 확정됨).
 * **파일 경로 규칙**: `{user_id}/{batch_id}/ad_generation_result_{c}_{ratio}.{ext}` — c 인덱스+비율만으로 서명 URL 재구성 → 이미지 목록 DB 저장 불필요.
 * 업로드 이미지 서버 반입 경로 현재 없음(blob URL만) — signed upload 등 결정 필요.
 
@@ -94,6 +97,12 @@
 * **코드=계획, LLM=표현**: 풀 5축 배정·중복 금지·최소 사용률은 코드가 결정적으로 보유, LLM이 이해하는 것은 조합 1개+유저 입력→캡션뿐. 사장 우려("Flash가 50개 중복 없이 뽑을 수 있나") 해소.
 * `AdGenerationBatch.ts`: `AdRatioKey`(콜론을 `_`로 정규화, JSON 키/경로 안전), `AdCreativeSpec`, `ad_creative_specs[]` 반영. `npx tsc --noEmit` 클린.
 
+### 2-11. results 구조 확립 + `AdCreativeResult[]` (2026-08-24)
+* **구조**: `AdGenerationBatch.results` = `AdCreativeResult[]` — `ad_creative_specs[i]`와 i가 1:1 대응. 각 원소 = `copy`(creative당 1) + `imageResults: Partial<Record<AdRatioKey, AdImageResult>>`(선택 비율만). specs처럼 "리스트 안에 Record" 미러 형태.
+* **copy·design 생성자 분리**: copy(헤드라인·CTA 문구)는 같은 CD 호출(Specs 단계, 이미지 무관)에서 생성되되 **저장은 results** — 스펙과 분리, 단일 소스. design(오버레이 지오메트리)·score(0.0~10.0)는 **이미지 생성 후** Gemini Vision이 비율별 확정 — 각 비율 실제 이미지의 여백·scrim을 봐야 배치를 정하므로.
+* **undefinedable 문제 없음**: copy는 CD가 생성 즉시 확정 (CTA off면 null), `imageResults`는 실제 생성된 비율만 존재, null 지점은 score 하나뿐.
+* 저장 메커니즘(RPC vs 후보 테이블)만 미결로 잔존 — RPC 선택 시 스터디 §5 시그니처 2종(`update_batch_copy` copy + `update_batch_result` design/score).
+
 ---
 
 ## 3. 향후 작업 (Next Steps)
@@ -109,8 +118,8 @@
 3. **Creative 우선 파이프라인**: conceptCount × aspectRatios 순회. creative별 서로 다른 seed, 같은 creative 내 비율 = 같은 seed.
 4. **모델 선정 기준**: seed 지정 가능 + 비율별 해상도 지원 (1:1=1024², 4:5=832×1216, 9:16=768×1344 등).
 5. **검증 항목**: 같은 creative의 비율 3장이 "같은 배경/상품의 다른 비율 버전"으로 보이는지 (seed 동일 여부는 부수 확인). 실패 시 비율 우선으로 재논의.
-6. **배치 스키마**: `lib/api/types/supabase/ad/AdGenerationBatch.ts` — `AdCreativeSpec`/`ad_creative_specs[]` 반영 완료. ⚠️ **미결: results 저장 방식 — RPC+jsonb 부분 갱신 vs 후보 테이블** (스터디 §5·7).
-7. **LLM → 이미지 파이프라인**: DeepSeek CD가 creative마다 1회 호출, 선택 비율들의 캡션 묶음 `imageSpecs` 생성 → DB 저장 후 fal로 제출. 프론트 단일 함수로 가능 (LLM 수초 + fal 제출은 비동기). DeepSeek는 텍스트 전용, 이미지 분석은 Vision(Gemini).
+6. **배치 스키마**: `lib/api/types/supabase/ad/AdGenerationBatch.ts` — `AdCreativeSpec`/`ad_creative_specs[]` 반영 완료. **results 구조(`AdCreativeResult[]`)도 확정**(스터디 §6). ⚠️ 미결은 **결과 저장 방식뿐: RPC(jsonb 부분 갱신, 시그니처 2종) vs 후보 테이블** (스터디 §5·7).
+7. **LLM → 이미지 파이프라인**: DeepSeek CD가 creative마다 1회 호출, 선택 비율들의 캡션 묶음 `imageSpecs` + **copy 텍스트(headline/CTA)** 생성 → `ad_creative_specs[i]` + `results[i].copy` 저장 후 fal로 제출. 프론트 단일 함수로 가능 (LLM 수초 + fal 제출은 비동기). DeepSeek는 텍스트 전용, 이미지 분석은 Vision(Gemini) — design·score 담당.
 
 ### 🔴 Remotion 폴더 구조 정리 (미완료)
 1. `components/remotion/client/` 폴더 신설 — 클라이언트 컴포넌트 이전.
@@ -146,5 +155,6 @@
 * **fal 이미지 파이프라인**: `image_urls`는 URL만 받음(포맷 자유) — Supabase Storage에 .jpeg로 저장 → signed URL(24h) 전달. base64는 대용량 시 성능 저하. 투명 PNG의 I2I 동작은 실테스트 필요.
 * client-gateway는 `BASE_URL`(ngrok 백엔드)로 무조건 프록시 — 프론트 `app/api/*` 라우트는 실서버에 구현해야 함.
 * **ad DB/파이프라인 설계 노트**: `ad_variation_study.md` — 변주 스펙 벡터(AdCreativeSpec), 웹훅 병렬 구조, 임시 스키마. 보완의 여지 있음.
+* **results 산출물 구조 (2026-08-24 확정)**: `results: AdCreativeResult[]` — creative_index가 `ad_creative_specs[i]`와 1:1. copy(headline/CTA)는 CD 생성·results 저장(단일 소스, 수정 화면 default), design·score는 이미지 생성 후 Gemini Vision이 비율(이미지)별 확정(score 0.0~10.0, 평가 전 null). 상세: `ad_variation_study.md` §6~7.
 * Remotion 4.0.507 습성: `component` prop 타입 추론 불가, `PlayerProps.onEnded` 없음, `play()` 반환 void.
 * 서버 렌더: `<Video>` 대신 **`<OffthreadVideo>`** + `colorSpace: 'bt709'` 필수, 저사양 머신은 `concurrency: 1`.
