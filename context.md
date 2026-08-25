@@ -1,163 +1,94 @@
-# 작업 진행 상황 (Last Updated: 2026-08-24 07:12)
+# 작업 진행 상황 (Last Updated: 2026-08-26 03:36)
 
 ## 1. 현재 상황 (Current Status)
 
-### 🎯 현 단계: 파이프라인 확정 — 플랫폼=Replicate · 결과 저장=RPC 1종 · 업로드 필드 단순화 (서버 설계 합의 완료)
-* **🔧 작업 진행 중 (2026-08-24 ~)**
-  * **CreateForm 업데이트 진행 중**: Background(업로드/텍스트) 제거 → Product/Person만 입력, 배경은 Creative마다 AI가 생성 (AdCreative 패턴). 이 실업계에만 CreateForm 0스크롤 레이아웃에서 Background 섹션 빼고, "각 creative가 서로 다른 배경" 문구 등 반영 예정.
-  * **lib/api/types/supabase/ad/AdGenerationBatch.ts 업데이트 진행 중**: `AdUploadedComponentRecord`에서 `path`/`width`/`height` 제거 → `imageFileExtension`/`note?` 추가. `ad_creative_results` 반영. (스키마 배경 제거 반영 중).
-  * **app/api/ad/image/route.ts 서버 플로우 직접 작성 중**: (앞으로 — 단계 주석은 이미 존재: image → creative/[index]/prompt → image/generation → webhook/replicate/image → image/process → creative/[index]/analysis)
-* **플랫폼 변경 (2026-08-24)**: 이미지 생성은 **fal → Replicate**. 근거 — fal의 계정 concurrency 하드캡(2~40)이 병렬 폭을 제한, 429는 잔액·동시 제한이 주범. Replicate는 계정 캡이 없고 **모델 단위 오토스케일(복제본)**이라 수요가 늘면 병렬이 자동 확대. (조사 결과: fal queue submit은 429 자동 재시도·drop 없음, Replicate는 600 RPM + 모델 복제 스케일)
-* **Background 제거 확정 (2026-08-24)**: CreateForm의 Background(텍스트/업로드)를 **제거**. 사용자는 Product/Person만 업로드. **배경은 Creative마다 AI가 생성** (AdCreative 패턴 — 상품 사진 하나로 다양한 배경을 입힘). 각 creative는 서로 다른 배경을 가짐 → "다름"의 원천에 배경이 포함됨.
-* **비율 생성 방식 확정 (2026-08-24)**: 기준 비율 **1:1 우선** 1장 생성 → 나머지 비율은 **"기준 이미지를 참조(reference)로 넣어 그 비율로 재생성"** (★ 늘리기/outpainting 아님 — Nano Banana는 비율 확장을 제어 못 함을 확인(공식 1:1 기본, outputDimensions 미완성, 실사례 1472×704 어긋남). 기준 자산(상품/분위기) 유지하며 각 비율 캔버스에 새로 그림.
-* **웹훅 창구 (확정)**: Replicate prediction 완료 → **내부 런타임(서버) → 200 즉시 응답** + 비동기(이미지 저장 → RPC → Vision). 웹훅은 "알림 창구" — 서명 검증·재전송 · 1차 보류 (**idempotent request_id로 중복 방어**), 우회 방어는 내부 IP 기반.
-* **RPC 확정 — 1종 + 이름**: `update_creative_image_by_ratio_generation_completed` — 이미지 웹훅 도착 시 **원자적 기록 + "마지막 조각" 판정 + 배치 complete 전이**를 한 번에. (기존 2종 `update_batch_copy` + `update_batch_result` 폐기; copy는 RPC 없이 LLM 단계 **단순 UPDATE** — 이미지 없음, atomic 불필요)
-* **Vision = creative 묶 단위 확정** (2026-08-24): 개별 이미지별 1회 호출(50회) 대신, **creative의 비율 전부 완료된 뒤 1회 묶음** — design/score 일관성 + 호출 수 10회로 절감. → RPC 리턴 `isLastCreative`만으로 Vision 트리거.
-* **CreateForm 업데이트 진행 중 (2026-08-24 ~)**: Background(업로드/텍스트) 제거 → Product/Person만 입력, 배경은 Creative마다 AI가 생성. CreateForm 0스크롤 레이아웃에서 Background 섹션 제거 + "각 creative가 서로 다른 배경" 안내 반영 예정.
-* **비율 선택 UX (확정)**:
-* **자체 큐 위치 정리**: 자체 큐는 **병렬 폭을 못 늘린다** (fal의 캡도, Replicate의 오토스케일도 고정). 유일한 가치 = **유저별 배분(공평)** — 병렬 폭은 플랫폼(계정/모델)이 결정. → 별도 큐 도입 없음 (플랫폼에 위임).
-* **파일 경로 규칙**: `{user_id}/{batch_id}/{creative}_{ratio}_image_{ext}` — c 인덱스+비율만으로 서명 URL 재구성 → 이미지 목록 DB 저장 불필요.
+### 🎯 현 단계: ad 서버 파이프라인 구현 진행 중 — LLM 경계까지 완료, Replicate 제출부 대기 (2026-08-26 ~)
 
-### 🎯 이전: CreateForm UX 전면 재설계 완료 — 0스크롤 달성 (2026-08-22)
-* **방향 전환**: "개발자/SaaS형" → **"광고 바닥(성장 이커머스) 사용자형"** 으로 재설계. 사장 직관("지금은 개발자/SaaS에 익숙한 사람용") 수용.
-* **0스크롤 목표 달성**: 프리뷰 제거 → 폼 전폭 확보 → 5개 설정 + 실행 dock 한 화면(≈790px). "스크롤 자체를 없애고 싶다"는 사장 요구 반영.
-* **레이아웃**: `[Background | Subjects]` 2열 / `[Where will it run?(돌담) | How many options?+CTA]` 2열 / 하단 실행 dock.
-* **돌담 masonry**: 3열(9:16 | 4:5+2:3 | 16:9+1:1), 열 폭 **99:64:113** = 열 높이 수학적으로 동일 → 빈틈 없는 직사각형. 각 블록은 `aspect-ratio` CSS로 실제 비율.
-* **실행 dock**: `mt-auto`로 뷰포트 하단 고정. 요약("4 creatives × 3 formats = 12 assets") + Generate 버튼 + 상태 힌트. `bg-surface`(페이지 canvas와 분리) + `border-t` + 상향 그림자.
-* **용어 교체**: Count 라벨 **variations→creatives**, 총 장수 **images→assets**. 결과 화면 헤더도 assets로. (광고 업계 표준: creative=디자인 단위, asset=개별 파일 — Google/Meta 용어 확인 완료)
-* `npx tsc --noEmit` 클린.
+* **이번 세션 설계 확정 (2026-08-26)**
+  * **용어: Creative 유지** — Edition(복제·판을 암시, 업계 어휘 아님)과 Concept(전략 계층 — "concept는 머리에서, creative는 파일로 나온다") 모두 검토 후 기각. 2026 DTC 어휘 조사 근거.
+  * **조합 배분 = 코드 샘플러 / 표현 = LLM 확정** — LLM은 빈도 편향 때문에 무중복 보장 불가 + 검증 코드가 어차피 필요. 어법 필터(하드 밴)는 **데이터 상수(`HARD_BANNED_AXIS_PAIRS`)+rejection 방식**, if문 흩뿌리지 않음. v1 밴 목록은 빈 배열로 시작(사장 위임).
+  * **플로우 뼈대 확정**: 진입은 `image/route.ts` 1곳(insert까지, 별도 task 생성 라우트 없음 — 나중에 필요해지면 분리). 프롬프트 단계에서 갈래 판정(**비율 1개 → ratios 직통 / 2개 이상 → base**). `generation/base|ratios` · `webhook/.../image/base|ratios` · `process/base|ratios` 전부 분리 — **webhook_url을 prediction마다 다르게 지정**해서 판별을 라우팅에 위임. `ratios` 라우트는 **중립 실행자**(aspect_ratios length로 직통/뒤따름 모드 판별, param 불필요 — 어차피 DB 조회 필수).
+  * **process 연쇄**: process/base → 저장+RPC → ratios 재호출 / process/ratios → 저장+RPC → `isLastCreative=true`면 analysis 호출.
+  * **병렬 오케스트레이션 확정 (사장)**: 프롬프트 단계부터 creative별 독립 주행 — 각자 캡션→베이스→파생(또는 1장)→분석까지 자동. UI도 전부 완료를 기다리지 않고 **완료된 creative부터 progressive 표시**하는 게 방향. 사장 지시: "DB 업데이트 타이밍 때문에 깨지지 않게만 신경 써라".
+  * **RPC 1종 → 3종으로 갱신** (위 병렬 결정의 귀결): 쓰는 주체가 3종이라 각자 전용 RPC. 원리 = 앱 코드 read-modify-write 금지, **단일 UPDATE 문 안에서 jsonb_set 수술(행 잠금 직렬화)**:
+    1. `update_creative_prompt_outputs(batch_id, creative_index, image_specs, copy)` — 프롬프트 산출물
+    2. `update_creative_image_by_ratio_generation_completed(batch_id, creative_index, ratio_key)` — 웹훅마다 완료 마커(멱등) + `{isLastCreative, batchCompleted}` 반환. ★기존 시그니처의 design/score 인자 폐기 — 웹훅 시점엔 Vision 전이라 값이 없음. 마커 존재 자체가 완료 신호. 전부 생성 시 status → `designing`
+    3. `update_creative_image_analysis(batch_id, creative_index, image_results)` — design/score 슬라이스 교체, score 전부 채워지면 → `completed`
+  * **상태 흐름 확정**: `queued ─specs→ generating ─전부 생성→ designing ─전부 분석→ completed`, 어느 단계든 실패 시 `failed`.
+  * **모델 라인업 확인**: Replicate google 계열 4종 = nano-banana(Gemini 2.5 Flash Image, aspect_ratio 미지원) / -pro(Gemini 3 Pro, 최대 4K) / -2(Gemini 3.1 Flash, 현재 주력급) / -2-lite(최저가·1K 한정). "lite 원본 세대", "2-pro"는 존재 안 함.
+* **구현 완료 (tsc 클린)**
+  * `lib/api/types/supabase/ad/AdGenerationBatch.ts`: background 필드 제거, `imageSpecs` → `Partial<Record>` (배분 시점엔 캡션 없음), `AdPipelineStartRequest`(진입 body 계약, camelCase) 추가
+  * `lib/api/server/ad/adGenerationBatchServerAPI.ts`: insert/get/patch/status 래퍼 신규
+  * `lib/api/server/ad/creativeCombinationSampler.ts`: 5축 풀 33키워드 + `HARD_BANNED_AXIS_PAIRS`(빈 상수) + `selectBaseRatio`(1:1 우선, 없으면 캐노니컬 첫째) + `assignCreativeCombinations`(무중복·축별 예산 ceil(n/pool)·rejection·단계적 완화로 배치 사망 방지)
+  * `app/api/ad/image/route.ts`: S2S→검증→비율 정규화('1:1'→'1_1')→insert→specs 체이닝. 스켈레톤 주석 유지
+  * `app/api/ad/creative/specs/route.ts`: 배분→results 골격 초기화→status generating→creative 수만큼 prompt fan-out (queued 가드로 이중 발화 방어)
+  * `app/api/ad/creative/[creative-index]/prompt/route.ts`: 스캐폴드 — CD 입력 재료 조립까지만 하고 `501` 반환. TODO 블록에 LLM 후 처리 순서 주석(RPC#1 저장 → 갈래 판정 → generation 호출)
+  * `lib/ReplicateClient.ts`: `postAdImageEditPrediction({model?, prompt, imageUrls, aspectRatio?, webhookUrl})` 비동기 제출(completed 필터 — 실패·취소 포함), `getAdImageEditPrediction` 폴링용, `ReplicateImageModelId` enum 4종. replicate@1.4.0 실제 타입 기준(auth 생성자·`webhook_events_filter` 스네이크)
+  * 빈 라우트 파일 생성됨(사장): generation/base·ratios, webhook/ad/replicate/image/base·ratios, process/base·ratios, analysis
+* **사장 작업 대기**: Supabase 대시보드에서 `supabase/ad_generation_batches.sql` 실행 — 테이블 + RPC 3종. ⚠️ `user_id text`로 작성됨, users.id가 uuid면 변경 필요.
 
 ---
 
 ## 2. 완수된 작업 (Completed Milestones)
 
-### 2-9. 결과 화면 개선 — 비율 표시 + Creative 용어 + 정렬 (2026-08-22 오후)
-* **CandidateCard 실비율 표시**: 균일 정사각 프레임(contain) 제거 → 카드가 선택 비율 그대로 렌더. 중첩 span 구조 단순화 (이미지 + AdOverlay + 라벨만).
-* **"Image 01" → "Creative 01"**: 그룹 헤더, DetailPanel 타이틀, PreviewModal aria-label/alt 전부 교체.
-* **플랫폼 라벨 제거 → DetailPanel 정보 이동**: 이미지 위 좌상단 플랫폼 칩(싸보임) 제거. DetailPanel에 `<dl>` 정보 표기 추가 (FORMAT → "Story · 9:16", SHOWS UP IN → "Stories · Reels · TikTok").
-* **균등 높이 행(media-폭 파생) 도입**: auto-fill 그리드 → `flex flex-wrap items-start` + 카드 `height: min(21rem, 38vw)` 고정 + `aspect-ratio`로 폭 파생. 행 상하 정렬 + 폭이 매체(작은폰→큰모니터) 위계 전달.
-* **그룹 내 정렬: 캐노니컬 매체 순서 표준화** (`9:16 → 2:3 → 4:5 → 1:1 → 16:9`) — 이전 클릭 순서 그대로였음. 부분집합 무관 동일 순서.
-* **V1/V2/V3 비교 분기 + ComboShowcase(31조합) 철거**: 비교 실험 후 코드 정리. 최종 채택 = 균등 높이행 + 폭 파생 (=V1 체계).
-* `npx tsc --noEmit` 클린.
+### 2-12. 서버 파이프라인 설계 확정 + LLM 경계까지 구현 (2026-08-26)
+* 위 "현재 상황" 전체가 이번 세션 산출물. 용어 논쟁(Edition/Concept) 종결, 배분 주체=코드 확정, 플로우 뼈대 확정, RPC 3종 갱신, ReplicateClient 작성.
 
-### 2-5. CreateForm UX 전면 재설계 + 광고 사용자형 전환 (2026-08-22)
-* **0스크롤**: 프리뷰(PreviewCanvas) Create 화면에서 제거 → 폼 전폭. 결과는 results 페이지에서 확인. (컴포넌트 파일은 유지)
-* **Formats → "Where will it run?"**: 비율 숫자가 아니라 **플레이스먼트**(Story/Reels·TikTok/9:16 등 `AD_ASPECT_RATIO_INFO`의 usage 활용) 중심 표기.
-* **돌담 masonry**: 3열 배치 99:64:113, `style={{ aspectRatio }}`로 각 블록 실제 비율. 사장이 그림(제미나이 번역)으로 요구한 "돌담처럼 지그재그로 맞물리는 불규칙 직사각형"을 3열로 구현. (제미나이 제안 2열+하단 풀폭은 9:16 타일 초고층 문제로 기각)
-* **Count → "How many options?"**: 1/2/4/10 선택, `count===1` 단수 "creative" 처리.
-* **상태 표시**: 스톤 블록 선택 시 `bg-accent/10`+`border-accent`+체크, Count도 `bg-accent/10` — 라이트/다크 모두 뚜렷.
-* **모노 키커/라벨 제거**: "CREATE" 등 eyebrow 제거(craft-floor 규칙), "at least one"/"per batch" 등 모노 소문자 → plain 텍스트. ratio 코드(1:1 등)는 데이터라 모노 유지.
-* **상하 여백**: `pt-32`(헤더 fixed top-4 고려), 메인 `min-h-[100dvh] flex flex-col` + dock `mt-auto` 하단 앵커. 흰 띠(그라디언트/여분 pt) 제거 — 사장 개발자도구로 검증.
-
-### 2-6. 고정 px → rem 일괄 교체 (2026-08-22)
-* 사장 원칙: "사이즈가 정해진 이미지/비디오가 아니면 n px 고정 수치 싫음. rem/vh/vw/%/fr/fr은 비율로 인정."
-* **ad/create**: `PreviewCanvas` `h-[min(72vh,700px)]`→`h-[72vh]`(700px cap 제거), `CreateForm` 토글 `w-[52px]`→`[3.25rem]`·`translate-x-[24px]`→`translate-x-6`, `CreatePageClient` `max-w-[1440px]`→`[90rem]`.
-* **ad/results**: `max-w-[1600px]`→`[100rem]`, 사이드바 `360px`→`22.5rem`, 그리드 `220px`→`13.75rem`.
-* **랜딩**: Hero `min-h-[520/620px]`→`[32.5/38.75rem]`·`max-w-[1440px]`→`[90rem]`, HeroWall 이미지 8개 전부 rem 변환, AppHeader/Footer `max-w-[1400px]`→`[87.5rem]`.
-* **workspace**: `h-[calc(100vh-73px)]`→`[4.5625rem]`, `w-[500px] h-[500px]`→`[31.25rem]`·`blur-[120px]`→`[7.5rem]`, `max-w-[1200px]`→`[75rem]`, `PlatformAccountCard h-[56px]`→`h-14`, `maxHeight '600px'`→`'37.5rem'` 등.
-* `text-[Npx]`, shadow/blur/rounded 등 장식값, Tailwind 빌트인(rem 기반)은 건드리지 않음. `npx tsc --noEmit` 클린.
-
-### 2-7. UploadZone 개선 (2026-08-22)
-* **note 입력 → 접이식**: 기본 "Tell the AI what to change" 버튼, 클릭 시 입력 확장(자동 포커스), note 값 있으면 자동 열림. `aria-expanded` 추가. placeholder는 업계 지시문 형식("e.g. Keep the storefront sign, remove people walking by").
-* **help 툴팁 조건**: `help && !file` — 업로드 후에는 도움말 미표시 (사장 지적).
-* **업로드 제한 추가**: 허용 포맷 `image/jpeg,image/png,image/webp` + 10MB. `accept` 명시, MIME/size 검증, 에러 표시("Please upload a JPG, PNG, or WebP image." / "File is too large. Keep it under 10 MB.").
-* **포맷 표기 통일**: 도움말 "PNG or JPG" → "JPG, PNG or WebP" (CreateForm 3곳 + HowItWorks "Drop:" 배지).
-
-### 2-8. fal.ai I2I 포맷 조사 (2026-08-22)
-* `fal-ai/nano-banana/edit`(I2I) 공식 스키마 확인: `image_urls: list<string>` — **URL(base64 가능)만 받고 포맷 강제 없음**. JPG/PNG/WebP 모두 전달 가능.
-* 주의: base64는 대용량 시 성능 저하 → **fal.storage.upload 후 URL 전달**이 권장. 투명 PNG의 I2I 동작은 실테스트 필요.
-* **기존 파이프라인(imageServerAPI.ts) 확인**: 참조 이미지를 Supabase Storage에 `.jpeg`로 저장 → signed URL(24h) → `image_urls`로 전달. 저장 포맷은 JPEG 고정, fal 스토리지 대신 Supabase signed URL 패턴. → AD도 이 패턴 재사용 예정.
-
-### 2-4. 용어 교체 + CreateForm 레이아웃 조정 (2026-08-21, 이전 세션)
-* **attempt → batch 전면 교체**: "per batch", FAQSection("one batch is one quality-gated set of candidates"), PricingSection, FeaturesSection, HowItWorksSection("One batch, one credit" / "1 batch = 1 credit").
-* **생성 단위 "images" → "variations"**: Count 버튼 라벨, "Each variation is generated in every format you select.", 푸터 "10 variations × 3 formats = 30 images deducted per batch", formatMeta·running 문구. Generate 버튼은 총 장수 표기 유지.
-* **Count/CTA 카드 `md:col-span-2` 확장** — "variations"(10자) 라벨이 4열 절반 폭에서 넘침 → 전체 폭 카드로 해결. `whitespace-nowrap` 추가.
-* **CreatePageClient 그리드 실험**: `620px_1fr` → `minmax(0,1fr)×2`(차이 없음) → `minmax(0,3fr)_minmax(0,2fr)` 적용. (이후 이번 세션에서 전면 재설계로 대체)
-
-### 2-1. 데스크탑 UI 최적화 (2026-08-20, 이전 세션)
-* body 폰트 Arial→Satoshi 시도했으나 전역 침투로 원복 — ad는 `app/ad/layout.tsx`의 `font-satoshi`로 한정 적용.
-* 트랜지션 통일 `cubic-bezier(0.16,1,0.3,1)`, 버튼 active 피드백.
-* CTA 토글 `transition-[left]`→`translate-x-[24px]`(GPU-safe), knob `shadow-sm`.
-* Background 카드 `min-h-[10em]`, PreviewCanvas 높이 `h-[min(72vh,700px)]`+aspect-ratio (이번 세션에서 cap 제거), Results 그리드·DetailPanel·CandidateCard 호버.
-
-### 2-2. 생성 구조 전환 — "Concept 우선 + 비율 파생" (2026-08-20, 이전 세션)
-* 비율 우선(주제 30개) → 개념 우선(주제 10개 × 3비율) 재구성.
-* API 계약: `candidateCount`→`conceptCount`, `AdCandidate.conceptIndex` 추가.
-* ResultsPageClient: 비율별 그룹 → 이미지별 그룹("Image 01 · best 8.2"), DetailPanel "Image 05 · 1:1".
-* mock: 개념 우선 생성. `npx tsc --noEmit` 클린.
-
-### 2-3. 비율 멀티 선택 + 와이드 UI, 생성 위저드/결과 화면 (이전 세션)
-* 비율 멀티 선택, `aspectRatios` 배열 계약, 와이드 레이아웃, mock 전역 객체(`window.__adMockTasks`), 상태 머신 폴링.
-
-### 2-10. 변주 설계 합의 + `AdCreativeSpec` 반영 (2026-08-24)
-* **다름의 단위 = Creative 확정** — Batch > Creative > Image. 사는 건 "creative 10개"이지 "이미지 50장"이 아님. 가드레일(중복 금지·재사용 추적·최소 사용률) 전부 Creative 단위(≤10개)로만 동작.
-* **LLM 호출 단위 = Creative마다 1회** (≤10회): 크리에이티브 디렉터(DeepSeek V4 Flash 0731)가 조합 1개 + 선택 비율들을 받아 비율별 캡션 묶음(`imageSpecs`) 1회에 반환. 이미지마다 50회 호출은 비용·지연·일관성·결정성(캐시 재현)을 깨므로 X.
-* **비율별 캡션**: 같은 creative의 비율 파생마다 다른 캡션으로 저장 — 종횡비 파라미터만 넣는 것보다 "여백을 어느 영역에 남기지"가 전달된다 (9:16 상·하단, 16:9 좌우, 1:1 중앙). 생성 후 불변, DB 자체가 캐시.
-* **헤드라인/CTA 분리**: Meta 텍스트 정책·AI 글자 왜곡·A/B 문구 교체를 위해 이미지 생성 프롬프트에 판매 카피 굽지 않음. 오버레이 레이어(기존 `AdDesignLayout`)로 생성·저장. `cta_enabled`는 오버레이 토글.
-* **코드=계획, LLM=표현**: 풀 5축 배정·중복 금지·최소 사용률은 코드가 결정적으로 보유, LLM이 이해하는 것은 조합 1개+유저 입력→캡션뿐. 사장 우려("Flash가 50개 중복 없이 뽑을 수 있나") 해소.
-* `AdGenerationBatch.ts`: `AdRatioKey`(콜론을 `_`로 정규화, JSON 키/경로 안전), `AdCreativeSpec`, `ad_creative_specs[]` 반영. `npx tsc --noEmit` 클린.
-
-### 2-11. results 구조 확립 + `AdCreativeResult[]` (2026-08-24)
-* **구조**: `AdGenerationBatch.results` = `AdCreativeResult[]` — `ad_creative_specs[i]`와 i가 1:1 대응. 각 원소 = `copy`(creative당 1) + `imageResults: Partial<Record<AdRatioKey, AdImageResult>>`(선택 비율만). specs처럼 "리스트 안에 Record" 미러 형태.
-* **copy·design 생성자 분리**: copy(헤드라인·CTA 문구)는 같은 CD 호출(Specs 단계, 이미지 무관)에서 생성되되 **저장은 results** — 스펙과 분리, 단일 소스. design(오버레이 지오메트리)·score(0.0~10.0)는 **이미지 생성 후** Gemini Vision이 비율별 확정 — 각 비율 실제 이미지의 여백·scrim을 봐야 배치를 정하므로.
-* **undefinedable 문제 없음**: copy는 CD가 생성 즉시 확정 (CTA off면 null), `imageResults`는 실제 생성된 비율만 존재, null 지점은 score 하나뿐.
-* 저장 메커니즘(RPC vs 후보 테이블)만 미결로 잔존 — RPC 선택 시 스터디 §5 시그니처 2종(`update_batch_copy` copy + `update_batch_result` design/score).
+### 이전 마일스톤 요약 (상세는 git 히스토리 참조)
+* **2-11 (08-24)**: results 구조 확정 — `AdCreativeResult[]`(copy+imageResults 미러)
+* **2-10 (08-24)**: 변주 설계 합의 — 다름의 단위=Creative, LLM=creative당 1회, 헤드라인/CTA 오버레이 분리
+* **2-9 (08-22)**: 결과 화면 — 실비율 카드, Creative 용어, 균등 높이 행, 캐노니컬 정렬
+* **2-5~2-8 (08-22)**: CreateForm 0스크롤 리디자인, px→rem 일괄 교체, UploadZone 개선, fal I2I 스키마 조사
+* **2-1~2-4 (08-20~21)**: 데스크탑 최적화, concept 우선 구조, batch 용어 교체
 
 ---
 
 ## 3. 향후 작업 (Next Steps)
 
-### 🔴 CreateForm 최종 UI 확인 (2026-08-22, 사장 확인 대기)
-1. **화면 확인 대기**: 0스크롤(5개 설정+도크 한 화면), 돌담 masonry 사각형, dock 하단 고정, 카드 흰색/페이지 회색 복원, 선택 상태(핑크) — 확인 후 디테일 조정.
-2. **반응형 확인**: lg 이하에서 2열→1열 전환 시 0스크롤 유지되는지. (현재 `min-h-[100dvh]`+`mt-auto`이라 모바일은 스크롤 불가피 — 판단 필요)
-3. **라이트/다크 모드 대비 재확인**: 스톤 블록 `bg-accent/10` 선택 상태가 양 모드에서 충분한지.
+### 🔴 ad 파이프라인 잔여 구현 (순서대로)
+1. **generation/base·ratios**: ReplicateClient로 prediction 제출. 웹훅 URL = `${BASE_URL}/webhook/ad/replicate/image/{base|ratios}?batch_id=&creative_index=` (ratio_key 식별은 query에 넣을지 웹훅 payload input에서 읽을지 미확정 — 구현 때 결정). ratios는 중립 실행자(length 판별+selectBaseRatio로 남은 비율 도출, 기준 이미지는 규칙 경로 signed URL 재조립).
+2. **webhook/base·ratios**: fal 웹훅 패턴 그대로 — 파싱·최소 검증 → internalFireAndForgetFetch로 process 전달 → **항상 200** (재시도 폭풍 방지). payload의 `request_id/id` 멱등 방어.
+3. **process/base·ratios**: 이미지 다운로드→Storage 저장(경로 `{user_id}/{batch_id}/ad_generation_result_{c}_{ratio}.{ext}`)→RPC#2. 실패 prediction 처리(failed 전이). base 성공 시 ratios 재호출.
+4. **analysis**: Gemini Vision이 creative 묶 평가(design/score) → RPC#3. 트리거는 RPC#2의 isLastCreative.
+5. **prompt LLM 연결**: OpenRouter DeepSeek V4 Flash 호출 → RPC#1로 specs[i].imageSpecs+results[i].copy 저장 → 비율 갯수 판정 → base 또는 ratios 호출.
 
-### 🔴 ad 실 서버 API 연동 (mock 교체) — 진행 중 (2026-08-24 ~)
-0. **사장이 `app/api/ad/image/route.ts`에 서버 플로우를 직접 작성 중** — 단계 구조 이미 정해짐(주석): image → creative/[index]/prompt → image/generation → webhook/replicate/image → image/process → creative/[index]/analysis
-1. mock 교체 지점 **2곳**: CreatePageClient(mockCreateTask/mockGetTask) → `adClientAPI.postGenerateTask/getTask`, ResultsPageClient(mockGetTask) → `adClientAPI.getTask`.
-2. 실 백엔드는 별도 서버(ngrok BASE_URL)에 `/api/ad/*` 라우트 구현 — client-gateway가 프록시하므로 프론트 `app/api/ad/*` 라우트는 도달 불가(죽은 코드, 실 서버 이전 대상).
-3. **Creative 우선 파이프라인**: conceptCount × aspectRatios 순회. creative별 서로 다른 seed, 같은 creative 내 비율 = 같은 seed.
-4. **모델 선정 기준**: seed 지정 가능 + 비율별 해상도 지원 (1:1=1024², 4:5=832×1216, 9:16=768×1344 등).
-5. **검증 항목**: 같은 creative의 비율 3장이 "같은 배경/상품의 다른 비율 버전"으로 보이는지 (seed 동일 여부는 부수 확인). 실패 시 비율 우선으로 재논의.
-6. **배치 스키마**: `lib/api/types/supabase/ad/AdGenerationBatch.ts` — `AdCreativeSpec`/`ad_creative_specs[]` + `ad_creative_results[]` 반영 완료. **결과 저장=RPC 확정** (RPC 1종 `update_creative_image_by_ratio_generation_completed` — 이미지 웹훅 도착 시 원자적 기록 + 마지막 조각 판정. copy는 단순 UPDATE). 상세: `ad_variation_study.md` §5·7.
-7. **LLM → 이미지 파이프라인**: DeepSeek CD가 creative마다 1회 호출, 선택 비율들의 캡션 묶음 `imageSpecs` + **copy 텍스트(headline/CTA)** 생성 → `ad_creative_specs[i]` + `results[i].copy` 저장 후 **Replicate로 제출** (prediction + webhook). 프론트 단일 함수로 가능 (LLM 수초 + Replicate 제출은 비동기). DeepSeek는 텍스트 전용, 이미지 분석은 Vision(Gemini) — design·score 담당.
-   - 사장님이 서버 플로우를 직접 작성 중이므로, 이 파이프라인의 실제 구현(route 순서·payload·웹훅)은 `app/api/ad/image/route.ts` 주석 기준으로 진행 중.
+### 🔴 사장: Supabase SQL 실행 (`supabase/ad_generation_batches.sql`)
+* user_id 타입(uuid 여부) 확인 후 실행. RPC 3종 포함됨.
 
-### 🔴 Remotion 폴더 구조 정리 (미완료)
-1. `components/remotion/client/` 폴더 신설 — 클라이언트 컴포넌트 이전.
-2. 기존 ffmpeg 로직 삭제 (`app/api/video/merge/...`, `videoServerAPI.postFinalVideo` 등, 웹훅 3개).
-3. 배속 씬 올-인-원 전환 (`render-final-video.ts`의 `postProcessedVideo` 분기 제거).
+### 🔴 Result 화면 Creative별 진행도 표시 (사장 요청)
+* 전부 완료를 기다리지 않고 **완료된 creative부터 순차 노출**. 데이터 구조가 이미 지원(results 부분 채움) — 폴링 중인 getTask 응답에서 채워진 조각만 골라 렌더. 생성 중/완료 상태를 creative 단위로 표시.
 
-### 🟡 TODO — 사장 확인/피드백 대기
-* 결과 화면 그룹 내 카드 순서: 캐노니컬 매체 순서로 확정 (이번 세션) — 실사용 피드백 대기.
-* 결과 화면 균등 높이 행(media-폭 파생) 배치 실사용 확인 — 세션에서 채택했고 화면 확인 대기.
+### 🟡 Product/Person 업로드 흐름 (의도적으로 미룸)
+* UploadZone은 현재 로컬 파일만 들고 있음. Storage 버킷명 결정 + 업로드 라우트(music/upload 패턴 검토) 필요. 서버 플로우가 선행이라 나중에.
 
-### 🟡 TODO — 요금 표시 방식 (미결정)
-* 생성 배치 차감 문구를 **실제 달러 표시**로 할지, **잔여 생성 가능 장수** 표시로 할지 미결정.
-* 기준: Nano Banana 기본 모델 1회 실행 $0.039 (크레딧은 사용하지 않음).
-* 반영 후보 위치: CreateForm/실행 dock 요약("assets credited per batch"), AppHeader 사용량 게이지.
+### 🟡 mock 교체 (2곳)
+* CreatePageClient(mockCreateTask/mockGetTask) → 실 API, ResultsPageClient(mockGetTask) → 실 API. `window.__adMockTasks`와 `declare global` 제거. adServerAPI(ad/mock)·`app/api/ad/tasks/*` 정리 포함.
 
-### 🟡 잔여 확인/이슈
-* 랜딩 CTA "Start creating"이 `/ad/create` 미연결 (`#pricing` 앵커).
-* 액센트 색 불일치: 코드 `#EF2B70`(마젠타) vs 기획서 11-2 `#E25E2C`(burnt orange).
-* ESLint 설정 순환참조로 린트 불가 — `tsc --noEmit`으로 대체 확인.
-* 대시보드 MVP 1차 범위 — 미결정.
-* 결과/확인 화면의 에디터 진입 버튼 (자리만 vs 숨김) — 미결정.
+### 🟡 CreateForm Background 제거 반영 (계속 대기)
+* 0스크롤 레이아웃에서 Background 섹션 제거 + "각 creative가 서로 다른 배경" 안내 문구.
+
+### 🟡 어법 필터(hard ban) 목록 확장
+* `HARD_BANNED_AXIS_PAIRS` 현재 빈 목록. 명백한 모순쌍(night_low×vivid, packshot×golden_hour 등)부터 도메인 판단으로 추가. 추가만 하면 rejection이 자동 처리.
+
+### 🟡 기존 TODO 유지
+* CreateForm 최종 UI 확인(0스크롤·반응형·라이트/다크) — 사장 확인 대기
+* 요금 표시 방식(달러 vs 잔여 장수) 미결정
+* Remotion 폴더 구조 정리 (미완료)
+* 랜딩 CTA `/ad/create` 미연결, 액센트 색 불일치(#EF2B70 vs #E25E2C), ESLint 순환참조(tsc 대체 운용), 결과 화면 에디터 진입 버튼
 
 ---
 
 ## 4. 참고 (Reminders)
-* 공용: `getNextBaseResponse()` 사용 (엔드포인트 응답 규격), UI는 영어 표기, 들여쓰기 공백 4칸.
-* ad 폰트는 `app/ad/layout.tsx`의 `font-satoshi`로 ad 하위 한정. globals.css `body`는 Arial 유지 (랜딩 폰트와 분리).
-* **사장 UI 원칙**: 사이즈가 정해진 이미지/비디오 아니면 **px 하드코딩 금지** — rem/vh/vw/%/fr만 사용. `text-[Npx]`·shadow·rounded는 장식값이라 허용.
-* **사장 설계 취향**: 광고 바닥(성장 이커머스, 디자이너 없음)이 "뭘 하는 건지 알아차릴" 언어. 개발자/SaaS 용어 지양. 0스크롤·0~1클릭 선호.
-* mock 구조: `window.__adMockTasks: Record<string, AdTask>` — CreatePageClient가 생성·상태 갱신, ResultsPageClient가 조회·후보 생성(creative 우선 flatMap). 실 구현 시 이 전역 객체와 `declare global` 블록 제거.
-* **용어 계약 (확정)**: `conceptCount`(creatives) × `aspectRatios`(formats) = 총 장수(assets). 사용자 노출: **creatives**(포맷당 생성 버전 수) / **formats**(비율) / **assets**(총 장수) / **batch**(생성 실행 1회). Google/Meta 용어 기준(creative=디자인 단위, asset=개별 파일). ↔ DB: `ad_creative_specs[]`.
-* 시드 규칙: creative별 서로 다른 seed / 같은 creative 내 비율 = 같은 seed. I2I 1회 구조. 같은 seed+다른 비율 = 초기 노이즈 shape 상이 (비슷함 미보장, 공통 입력 이미지가 일관성 담당).
-* **이미지 파이프라인 (Replicate)**: prediction 생성 → webhook 완료 → 내부 런타임 → RPC. 입력 참조 이미지는 Supabase Storage에 저장 → signed URL(24h) 전달. 투명 PNG의 I2I 동작은 실테스트 필요. (fal → Replicate 전환: 계정 캡 없음·모델 오토스케일)
-* **비율 파생 (확정)**: 기준 1:1 우선 1장 → 나머지 비율은 기준 이미지 참조 + 그 비율로 재생성 (늘리기 아님 — Nano Banana 비율 확장 제어 불가 확인). imageSpecs에 "비율별 캡션 + 배경(creative별 상이)" 반영.
-* client-gateway는 `BASE_URL`(ngrok 백엔드)로 무조건 프록시 — 프론트 `app/api/*` 라우트는 실서버에 구현해야 함.
-* **ad DB/파이프라인 설계 노트**: `ad_variation_study.md` — 변주 스펙 벡터(AdCreativeSpec), 웹훅 병렬 구조, 임시 스키마. 보완의 여지 있음.
-* **results 산출물 구조 (2026-08-24 확정)**: `ad_creative_results: AdCreativeResult[]` — creative_index가 `ad_creative_specs[i]`와 1:1. copy(headline/CTA)는 CD 생성·results 저장(단일 소스, 수정 화면 default), design·score는 이미지 생성 후 Gemini Vision이 **creative 묶 단위** 확정(score 0.0~10.0, 평가 전 null). 저장 = RPC 1종. 상세: `ad_variation_study.md` §6~7.
-* Remotion 4.0.507 습성: `component` prop 타입 추론 불가, `PlayerProps.onEnded` 없음, `play()` 반환 void.
-* 서버 렌더: `<Video>` 대신 **`<OffthreadVideo>`** + `colorSpace: 'bt709'` 필수, 저사양 머신은 `concurrency: 1`.
+
+* 공용: `getNextBaseResponse()` 사용, UI는 영어, 들여쓰기 4칸, 함수명 약어 금지. ESLint 불가 — `npx tsc --noEmit`으로 검증.
+* **요청 경로**: 클라이언트 `postFetch('/api/ad/image')` → baseFetch가 `/api/client-gateway?path=...`로 래핑 → gateway가 세션 인증(C2S)+`userId` 주입 → `${BASE_URL}`(ngrok)으로 `x-internal-secret`과 함께 전달 → 내부 라우트는 S2S 가드. 내부 체이닝은 `internalFireAndForgetFetch(BASE_URL + 경로)` (query로 식별자, body로 페이로드, waitUntil로 실행 보장).
+* **웹훅 관례**: `app/webhook/{provider}/` 위치, 절대 에러 상태로 응답하지 않음(200 유지). suno/fal 선례와 동일. Replicate는 terminal 웹훅 실패 시 exponential backoff 재시도(최종 ~1분) + 드물게 순서 뒤바뀜 — 핸들러 멱등 필수.
+* **RPC 3종 원리**: 같은 행 jsonb 배열에 병렬 쓰기 → 앱 코드 read-modify-write 금지, RPC 단일 UPDATE+jsonb_set(행 잠금)만 사용. RPC#2는 design/score 인자 없음(마커 방식), RPC#3이 analysis 값 채움.
+* **비율 파생 (확정)**: 기준 1:1 우선(없으면 캐노니컬 첫째 — `selectBaseRatio`) 1장 → 나머지는 기준 이미지 참조 재생성(outpainting 아님). ratios 라우트는 중립 실행자 — aspect_ratios length가 모드 판별.
+* **Replicate SDK**: `replicate@^1.4.0` 설치됨. `new Replicate({auth})`, `predictions.create({model: 'owner/name', input, webhook, webhook_events_filter:['completed']})`. output은 string|string[]|FileOutput — `collectOutputUrls`로 정규화. 모델 enum: NANO_BANANA(-PRO/-2/-2_LITE). pro·2는 aspect_ratio 입력 공식 지원(원본은 미지원 — 참조 재생성 방식 유지 근거).
+* **파일 경로 규칙**: 입력 `{user_id}/{batch_id}/{product|person}_image.{ext}`, 출력 `{user_id}/{batch_id}/ad_generation_result_{c}_{ratio}.{ext}` — c+ratio만으로 signed URL 재구성, 목록 DB 저장 불필요.
+* **용어 계약 (확정)**: creatives × formats = assets, 실행 1회 = batch. Concept은 전략 계층이라 현재 미사용 — 나중에 훅/스크립트 변주 생기면 그 상위 계층명으로 재등장 가능.
+* **시드 규칙**: creative별 서로 다른 seed / 같은 creative 내 비율 = 같은 seed. 재현은 저장된 specs(DB)가 담당 — 샘플러 시드는 매번 새로 뽑아도 됨.
+* **사장 UI 원칙**: px 하드코딩 금지(rem/vh/vw/%/fr), 광고 바닥 언어, 0스크롤 선호.
+* **ad_variation_study.md**: §0·§4·§5·§7까지 2026-08-26 결정 반영 완료. 향후 설계 변경 시 이 문서 갱신할 것.
+* Remotion 4.0.507: `<OffthreadVideo>` + `colorSpace: 'bt709'`, 저사양 `concurrency: 1`.

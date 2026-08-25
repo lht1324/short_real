@@ -24,12 +24,25 @@ export type AdBatchStatus = 'queued' | 'generating' | 'designing' | 'rendering' 
 export interface AdUploadedComponentRecord {
     /**
      * Supabase Storage 규칙 경로의 확장자 — 영단어 그대로 (예: "jpeg", "png", "webp").
-     * 경로는 규칙으로 조립: {user_id}/{batch_id}/{background|product|person}_image.{imageFileExtension}
+     * 경로는 규칙으로 조립: {user_id}/{batch_id}/{product|person}_image.{imageFileExtension}
      * (함수명은 절대 약어 금지 — 이 필드만으로 signed URL 재생성 가능해야 함)
      */
     imageFileExtension: string;
     /** 사용자가 이미지에 덧붙인 선택적 설명 */
     note?: string;
+}
+
+/**
+ * 파이프라인 진입(POST /api/ad/image) 요청 body — 클라이언트가 보내는 camelCase 계약.
+ * 배경 입력 없음 (2026-08-24 확정: 배경은 creative마다 AI가 생성).
+ * aspectRatios는 사용자 노출 표기('1:1') 그대로 받고, 진입 라우트가 AdRatioKey('1_1')로 정규화한다.
+ */
+export interface AdPipelineStartRequest {
+    productImage?: AdUploadedComponentRecord | null;
+    personImage?: AdUploadedComponentRecord | null;
+    aspectRatios: string[];
+    conceptCount: number;
+    ctaEnabled?: boolean;
 }
 
 export interface AdCreativeSpec {
@@ -44,8 +57,9 @@ export interface AdCreativeSpec {
     /**
      * 이미지(비율)별 최종 I2I 캡션. 같은 creative의 비율 파생마다 다른 캡션.
      * 비율마다 여백/강조가 달라야 하므로 키를 ratio로 구분 (생성 후 불변 → DB가 진실).
+     * 배분(specs) 시점엔 아직 미생성 — 프롬프트 단계(LLM)가 선택 비율만 채운다.
      */
-    imageSpecs: Record<AdRatioKey, string>;
+    imageSpecs: Partial<Record<AdRatioKey, string>>;
     /** creative 공통 시드 — 비율 파생들이 같은 seed를 공유해 "같은 개념"을 맞추는 신호 */
     seed: number;
 }
@@ -82,9 +96,6 @@ export interface AdGenerationBatch {
     id: string;
     user_id: string;
     status: AdBatchStatus;
-    /** null이면 upload 모드 (background_image 사용) */
-    background_prompt: string | null;
-    background_image: AdUploadedComponentRecord | null;
     product_image: AdUploadedComponentRecord | null;
     person_image: AdUploadedComponentRecord | null;
     aspect_ratios: AdRatioKey[];

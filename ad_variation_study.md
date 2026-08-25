@@ -32,10 +32,12 @@
         ↓
 [Replicate prediction + webhook]  (플랫폼 확정 — fal에서 전환, 계정 캡 없음·모델 오토스케일)
         ↓
-[RPC] update_creative_image_by_ratio_generation_completed (원자적 기록 + 마지막 조각 판정)
+[RPC ②] update_creative_image_by_ratio_generation_completed
+    (완료 마커 기록 + 마지막 조각 판정 — 전부 생성 시 status 'designing' 전이)
         ↓
 [Vision 모델 (Gemini)] creative 묶 단위로 생성 이미지 보고 오버레이 지오메트리(design) 배치 + score 평가
-    → results[i].imageResults[ratio].design / .score
+    → [RPC ③] update_creative_image_analysis로 results[i].imageResults[ratio].design / .score 저장
+      (전부 분석 시 status 'completed' 전이)
 ```
 
 - **"다름" = 코드가 배정한 이산 축 조합 + 캡션 + AI 생성 배경(creative별 상이)** (LLM 난수 아님).
@@ -78,7 +80,10 @@ minimal_modern / bold_impact
 ```
 
 - **합계: 33개 키워드 / 조합 공간 8×8×7×5×5 = 11,200**
-- **어법 필터 반영 시 실질 유효 조합 ≈ 2,000~3,000** (추정 — 실 프로토타입에서 측정 필요)
+- **어법 필터(하드 밴)**: 금지 축쌍(예: night_low×vivid)을 데이터 상수(`HARD_BANNED_AXIS_PAIRS`)로 관리하고,
+  걸린 조합은 폐기 후 재추출(rejection)하는 방식 — if/switch 조건문 흩뿌리지 않음.
+  **v1은 빈 목록으로 시작** (2026-08-26 확정, 목록 확장은 도메인 판단 대기).
+  ※ 구 추정치 ≈2,000~3,000은 규칙 미정 상태의 가치 없는 수치 — 목록 확정 후 전수 열거로 정확히 계산할 것.
 
 ---
 
@@ -128,13 +133,15 @@ ad_creative_spec = {
 
 ---
 
-## 4. 다양성 가드레일 — 3중 (코드 소유)
+## 4. 다양성 가드레일 — 코드 소유
 
-1. **배치 내 중복 금지** — 코드가 조합을 중복 없이 배분 (결정적)
-2. **배치 간 재사용 추적** — "이 유저는 이미 이 조합 사용" 히스토리를 DeepSeek 컨텍스트로 주입 → 다음 배치에서 겹치는 것 회피
-3. **최소 사용률 강제** — 배치 내에서 축 키워드 편향 방지 (예: 카메라 8개 모두 hero_shot 금지)
+1. **배치 내 중복 금지** — 샘플러가 조합을 중복 없이 배분 (rejection + usedComboKeys)
+2. **최소 사용률 강제** — 축별 값 예산(cap = ceil(conceptCount / 풀 크기))으로 편향 방지 (예: 카메라 8종인데 10개 중 한 값 3회 금지)
+3. **어법 필터(하드 밴)** — `HARD_BANNED_AXIS_PAIRS` 상수 + rejection (§1). 병목 시 완화 단계를 둬 배분 실패로 배치가 죽지 않게 함.
 
-- 장기 사용자: 조합 소진 시 리셋 정책 필요 (추후 결정).
+- **배치 간 재사용 추적**: "이 유저가 이미 쓴 조합"도 **코드가 후보군에서 제외**하는 방식으로 한다.
+  (구안의 "DeepSeek 컨텍스트에 히스토리 주입"은 배분이 코드 소유가 된 시점에서 무의미 — 잔재 정리, 2026-08-26.)
+  ★ v1 미구현 — 장기 사용자 소진·리셋 정책과 함께 추후.
 
 ---
 
@@ -151,15 +158,30 @@ ad_creative_spec = {
 - HTTP 장기 실행 한도 때문에 "요청 1개로 전부 완료" 대기를 피한다.
 - 웹훅은 "알림 창구" — 서명 검증/재전송은 1차 보류 (idempotent `request_id/id`로 중복 방어).
 
-### DB 동시성 (핵심) — RPC 확정 (1종)
+### DB 동시성 (핵심) — RPC 3종 확정 (2026-08-26 갱신)
 
-- 이미지 단위 완료 갱신이 동시에 여럿 도착한다. `results` jsonb 배열을 통째로 replace하면 race.
-- **선택지 1 (채택): RPC(jsonb 부분 갱신) — 1종 확정**:
-  - `update_creative_image_by_ratio_generation_completed(batch_id, creative_index, ratio_key, design, score)`
-    → 이미지 웹훅 도착마다 **원자적 기록 + "이 creative의 마지막 조각인가" 판정 + (전부 완료면) 배치 complete 전이**를 한 트랜잭션에서 수행.
-    → 반환: `{ isLastCreative, batchCompleted }` — `isLastCreative=true`일 때만 Vision(creative 묶) 트리거.
-  - copy(text)는 RPC 불필요 — LLM 생성 단계에서 **단순 UPDATE** (이미지 없음, atomic 불요).
-- ~~결과 테이블 부활~~ — **기각** (병렬 안전하나 사장 제거 선호 유지).
+- **병렬 오케스트레이션 확정**: 프롬프트 단계부터 creative별 독립 주행 — 각 creative는
+  캡션 → 베이스 → 파생(또는 1장) → 분석까지 자동으로 진행되고, UI는 완료된 creative부터 순차 노출.
+  이때 같은 행의 jsonb 배열(`ad_creative_specs`·`ad_creative_results`)을 쓰는 주체가 3종이라
+  앱 코드의 read-modify-write는 race를 만든다.
+- **원리**: RPC로 단일 UPDATE 문 안에서 `jsonb_set`으로 자기 조각만 수술 — 행 잠금이 직렬화하므로
+  동시 호출이 몰려도 서로 덮어쓰지 않는다. (SQL: `supabase/ad_generation_batches.sql`)
+  1. `update_creative_prompt_outputs(batch_id, creative_index, image_specs, copy)`
+     — 프롬프트 산출물: specs[i].imageSpecs + results[i].copy 저장
+  2. `update_creative_image_by_ratio_generation_completed(batch_id, creative_index, ratio_key)`
+     — 이미지 웹훅마다 **완료 마커 기록(멱등)** + `{isLastCreative, batchCompleted}` 반환.
+     ★ 구 시그니처의 design/score 인자 폐기 — 웹훅 시점엔 Vision 전이라 값이 없다.
+     마커 존재 자체가 완료 신호이며, analysis가 나중에 그 자리를 채운다.
+     전부 생성되면 status 'generating' → 'designing' 전이.
+  3. `update_creative_image_analysis(batch_id, creative_index, image_results)`
+     — Vision 결과(design/score) 슬라이스 교체. score가 전부 채워지면 status → 'completed' 전이.
+
+### 상태 흐름 (2026-08-26 확정)
+
+```
+queued ──specs 배분──→ generating ──전부 생성──→ designing ──전부 분석──→ completed
+                                    (어느 단계든 실패 시 failed)
+```
 
 ### Vision 호출 단위 — creative 묶 확정
 
@@ -176,7 +198,7 @@ ad_generation_batches
 │                                          ★ background_prompt/background_image 제거 (2026-08-24: 배경은 AI가 creative별 생성)
 ├─ aspect_ratios[], concept_count, cta_enabled
 ├─ ad_creative_specs[]                    ★ 확정: AdCreativeSpec (5축 + imageSpecs + seed)
-├─ ad_creative_results[]                  ★ 확정: AdCreativeResult[] (copy + ratio별 design/score) — RPC 1종으로 저장
+├─ ad_creative_results[]                  ★ 확정: AdCreativeResult[] (copy + ratio별 design/score) — RPC 3종으로 저장 (§5)
 └─ created_at, updated_at
 ```
 
@@ -225,22 +247,26 @@ interface AdGenerationBatch {
 ```
 
 - 스펙(imageSpecs)에 헤드라인/CTA 없음 — **copy(텍스트)는 CD가 생성해 results에**, **지오메트리(design)는 Gemini가 이미지 생성 후 결정**. 둘 다 오버레이 레이어(AdDesignLayout)로 최종 렌더된다.
-- 저장: copy → LLM 단계 단순 UPDATE, design/score → RPC `update_creative_image_by_ratio_generation_completed` (이미지 웹훅 도착마다 원자적 부분 갱신 + 마지막 조각 판정).
+- 저장 (RPC 3종, §5): 프롬프트 산출물 → `update_creative_prompt_outputs`, 이미지 웹훅 마커 → `update_creative_image_by_ratio_generation_completed`, 분석(design/score) → `update_creative_image_analysis`.
 - 파일 경로 규칙: `{user_id}/{batch_id}/ad_generation_result_{c}_{ratio}.{ext}` — creative index·ratio만 알면 서명 URL을 다시 만들어 이미지 목록 DB 저장이 불필요.
 
 ---
 
 ## 7. 남은 결정 사항
 
-- [x] ~~LLM 호출 단위~~ → **Creative마다 1회**, 비율 캡션 묶음(`imageSpecs`) + copy 텍스트 반환 (합의 완료)
-- [x] ~~imageSpecs 저장 여부~~ → **ad_creative_specs[] = AdCreativeSpec** (5축 + imageSpecs + seed) — 비율별 캡션 저장 (합의 완료)
-- [x] ~~판매 카피를 이미지에 넣는지~~ → **오버레이 레이어로 분산** (AI 글자 왜곡·A/B 카피 교체·Meta 텍스트 정책, 합의 완료)
-- [x] ~~results 항목 구조~~ → **AdCreativeResult[]** — copy는 creative당 1회(CD, 텍스트), design·score는 이미지 생성 후 Vision이 비율당 확정 (2026-08-24, §6)
-- [x] **전송: fal → Replicate** — Replicate `prediction`+webhook. (계정 concurrency 캡 2~40이 병렬 폭을 제한하므로, Replicate는 계정 캡이 없고 **모델 단위 오토스케일(복제본)**이라 수요 폭주 시 병렬 자동 확대. 2026-08-24 확정)
-- [x] ~~results 항목 구조~~ → **AdCreativeResult[]** — copy는 creative당 1회(CD, 텍스트), design·score는 이미지 생성 후 Vision이 비율당 확정 (2026-08-24, §6)
-- [x] **전송: fal → Replicate** — Replicate `prediction`+webhook. (계정 concurrency 캡 2~40이 병렬 폭을 제한하므로, Replicate는 계정 캡이 없고 **모델 단위 오토스케일(복제본)**이라 수요 폭주 시 병렬 자동 확대. 2026-08-24 확정)
-- [x] **결과 저장 방식**: RPC 1종(`update_creative_image_by_ratio_generation_completed`) 확정 — copy는 LLM 단계에서 단순 UPDATE. design·score는 이미지 웹훅 도착마다 원자적 부분 갱신+마지막 조각 판정.
-- [x] ~~후보 테이블~~ — **기각** (사장 제거 선호)
-- [x] **Background(업로드/텍스트) 제거** (2026-08-24) — Product/Person만 입력, 배경은 AI가 creative별로 생성 (각 creative는 다른 배경)
-- [x] **비율 파생 방식**: 기준 비율 1:1 우선 1장 생성 → 나머지는 "기준 이미지 참조(reference)" 로 그 비율로 **재생성** (확장/outpainting 아님). Nano Banana 비율 확장 제한 확인.
+- [x] **LLM 호출 단위** → Creative마다 1회, 비율 캡션 묶음(`imageSpecs`) + copy 텍스트 반환
+- [x] **imageSpecs 저장 여부** → ad_creative_specs[] = AdCreativeSpec (5축 + imageSpecs + seed)
+- [x] **판매 카피를 이미지에 넣는지** → 오버레이 레이어로 분산 (AI 글자 왜곡·A/B 교체·Meta 텍스트 정책)
+- [x] **results 항목 구조** → AdCreativeResult[] — copy는 creative당 1회(CD, 텍스트), design·score는 이미지 생성 후 Vision이 비율당 확정 (§6)
+- [x] **전송: fal → Replicate** — prediction+webhook. 계정 concurrency 캡 없음, 모델 단위 오토스케일 (2026-08-24 확정)
+- [x] **후보 테이블** — 기각 (jsonb 배열 유지)
+- [x] **Background(업로드/텍스트) 제거** (2026-08-24) — Product/Person만 입력, 배경은 AI가 creative별로 생성
+- [x] **비율 파생 방식**: 기준 비율 1:1 우선 1장 생성 → 나머지는 기준 이미지 참조 재생성 (outpainting 아님).
+  ※ Replicate의 nano-banana-pro/-2는 aspect_ratio 입력을 공식 지원 — 모델 상향 시 "참조+비율 파라미터" 병행 가능 (2026-08-26 확인)
+- [x] **조합 배분 주체 = 코드 샘플러** (2026-08-26) — LLM 빈도 편향으로 무중복 보장 불가 + 검증 코드가 어차피 필요.
+  어법 필터 = `HARD_BANNED_AXIS_PAIRS` 데이터 상수 + rejection, v1 빈 목록 (§1·4)
+- [x] **RPC 3종 갱신** (2026-08-26) — prompt_outputs / by_ratio_generation_completed(마커 방식, design·score 인자 폐기) / analysis (§5)
+- [x] **병렬 오케스트레이션** (2026-08-26) — 프롬프트부터 creative별 독립 주행, UI는 완료된 creative부터 순차 노출 (§5)
+- [ ] **하드 밴 목록 확장** — 명백한 모순쌍(night_low×vivid 등)부터 도메인 판단으로 추가
+- [ ] **배치 간 재사용 추적** — v1 미구현 (코드가 후보군에서 제외하는 방식, 장기 사용자 리셋 정책과 함께)
 - [ ] (보류) 캡션 품질 향상 (브랜드 보이스/샘플 학습) — v2 이후
