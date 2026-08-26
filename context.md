@@ -1,4 +1,4 @@
-# 작업 진행 상황 (Last Updated: 2026-08-27 03:24)
+# 작업 진행 상황 (Last Updated: 2026-08-27 14:00)
 
 ## 1. 현재 상황 (Current Status)
 
@@ -49,8 +49,13 @@
 ### 🔴 사장: Supabase 버킷 생성
 * `ad_image_storage` 버킷 생성 (imageServerAPI가 사용). `supabase/ad_generation_batches.sql` 파일은 이번 세션에서 수정 안 함(사장 직접 실행으로 대체).
 
+### 🔴 Creative 단위 fail-soft 전환 (2026-08-27 결정, 차후 작업)
+* **결정**: `specs` 단계만 배치 전체 `failed` 가능. 그 이후(prompt/generation/process/analysis) 실패는 **creative 단위로 격리** — 실패한 creative만 `ad_creative_results[i].error` 마킹, 나머지 creative는 계속 진행. 배치 최종 `completed`는 성공+실패 포함 조각 수로 판정 (`isLastCreative`는 성공/실패 합산).
+* **배경**: 광고 바닥(미디어바이어)은 10개 중 1개 실패해도 9개를 즉시 쓰는 걸 선호. Replicate `failed/canceled`가 일상이며, Meta Advantage+ 등도 `X/Y generated` 점진 노출+슬롯별 Retry. `process/base·ratios`의 `status !== succeeded → patchStatus('failed')`는 fail-soft 취지에 반하므로 제거 예정.
+* **구현 메모**: `AdCreativeResult`에 `error: {code,message}|null` 또는 `imageResults[ratio]`에 error 확장이 필요. RPC#2 마커는 `imageFileExtension: null + error` 형태로 확장 검토. UI는 실패 카드에 `Regenerate` (해당 creative만 prompt부터 재트리거), 빌링도 성공 에셋 단위 과금 검토.
+
 ### 🔴 Result 화면 Creative별 진행도 표시 (사장 요청)
-* 전부 완료를 기다리지 않고 **완료된 creative부터 순차 노출**. 데이터 구조가 이미 지원(results 부분 채움) — 폴링 중인 getTask 응답에서 채워진 조각만 골라 렌더. 생성 중/완료 상태를 creative 단위로 표시.
+* 전부 완료를 기다리지 않고 **완료된 creative부터 순차 노출**. 데이터 구조가 이미 지원(results 부분 채움) — 폴링 중인 getTask 응답에서 채워진 조각만 골라 렌더. 생성 중/완료 상태를 creative 단위로 표시. 위 fail-soft와 함께 실패 슬롯은 에러+재시도 UI로 표시.
 
 ### 🟡 Product/Person 업로드 흐름 (의도적으로 미룸)
 * UploadZone은 현재 로컬 파일만 들고 있음. Storage `ad_image_storage` 버킷 결정 완료(이번 세션) — 업로드 라우트(music/upload 패턴 검토) 필요. 서버 플로우가 선행이라 나중에.
