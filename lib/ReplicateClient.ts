@@ -15,7 +15,7 @@ import Replicate, { WebhookEventType } from "replicate";
  */
 
 export enum ReplicateImageModelId {
-    /** Gemini 2.5 Flash Image — 원본. aspect_ratio 미지원 */
+    /** Gemini 2.5 Flash Image — 원본. aspect_ratio 지원 */
     NANO_BANANA = "google/nano-banana",
     /** Gemini 3 Pro Image — SOTA. aspect_ratio·해상도(최대 4K) 지원 */
     NANO_BANANA_PRO = "google/nano-banana-pro",
@@ -47,10 +47,7 @@ export interface AdImageEditPredictionParams {
     prompt: string;
     /** 참조 이미지 URL 목록 — [원본 상품/인물] 또는 [기준 이미지 + 원본] */
     imageUrls: string[];
-    /**
-     * 출력 비율 ('9_16' → '9:16' 형태로 변환해서 전달).
-     * 원본 nano-banana는 미지원(무시됨), pro/2 계열은 지원 — 모델 교체 대비 선택적으로 받는다.
-     */
+    /** 출력 비율 ('9_16' → '9:16' 형태로 변환해서 전달) */
     aspectRatio?: string;
     /** 완료 웹훅 URL — batch_id·creative_index 등 식별자를 query로 붙여서 전달 */
     webhookUrl: string;
@@ -103,8 +100,11 @@ export const replicateClient = {
 
         const input: Record<string, unknown> = {
             prompt: params.prompt,
-            image_input: params.imageUrls,
         };
+
+        if (params.imageUrls.length > 0) {
+            input.image_input = params.imageUrls;
+        }
 
         if (params.aspectRatio) {
             input.aspect_ratio = params.aspectRatio.replace('_', ':');

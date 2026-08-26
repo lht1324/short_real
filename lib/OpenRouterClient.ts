@@ -9,6 +9,7 @@ export enum OpenRouterModel {
     GROK_4_3 = "x-ai/grok-4.3", // agentic/tool calling 강함, reasoning 지원
     GPT_5_6_LUNA = "openai/gpt-5.6-luna",
     MIMO_V2_5 = "xiaomi/mimo-v2.5",
+    QWEN_3_8_27B = "qwen/qwen3.8-27b",
 }
 
 export interface CompletionBaseInput {

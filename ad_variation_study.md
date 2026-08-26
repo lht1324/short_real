@@ -35,7 +35,7 @@
 [RPC ②] update_creative_image_by_ratio_generation_completed
     (완료 마커 기록 + 마지막 조각 판정 — 전부 생성 시 status 'designing' 전이)
         ↓
-[Vision 모델 (Gemini)] creative 묶 단위로 생성 이미지 보고 오버레이 지오메트리(design) 배치 + score 평가
+[Vision 모델 (Qwen 3.8-27B — 2026-08-27 선정: GLM-5.3-Flash/DeepSeek-Vision-Exp/Muse Spark/Gemini 3.7 비교 후, design 좌표 작업에 Vision2Web·ERQA·BabyVision w/CI 최강)] creative 묶 단위로 생성 이미지 보고 오버레이 지오메트리(design) 배치 + score 평가
     → [RPC ③] update_creative_image_analysis로 results[i].imageResults[ratio].design / .score 저장
       (전부 분석 시 status 'completed' 전이)
 ```
@@ -168,10 +168,10 @@ ad_creative_spec = {
   동시 호출이 몰려도 서로 덮어쓰지 않는다. (SQL: `supabase/ad_generation_batches.sql`)
   1. `update_creative_prompt_outputs(batch_id, creative_index, image_specs, copy)`
      — 프롬프트 산출물: specs[i].imageSpecs + results[i].copy 저장
-  2. `update_creative_image_by_ratio_generation_completed(batch_id, creative_index, ratio_key)`
-     — 이미지 웹훅마다 **완료 마커 기록(멱등)** + `{isLastCreative, batchCompleted}` 반환.
-     ★ 구 시그니처의 design/score 인자 폐기 — 웹훅 시점엔 Vision 전이라 값이 없다.
-     마커 존재 자체가 완료 신호이며, analysis가 나중에 그 자리를 채운다.
+   2. `update_creative_image_by_ratio_generation_completed(batch_id, creative_index, ratio_key, file_extension)` — (2026-08-27 갱신: `p_file_extension` 추가)
+      — 이미지 웹훅마다 **완료 마커(`design:null, score:null, imageFileExtension:file_extension`) 기록(멱등)** + `{isLastCreative, batchCompleted}` 반환.
+      ★ 구 시그니처의 design/score 인자 폐기 — 웹훅 시점엔 Vision 전이라 값이 없다.
+      마커 존재 자체가 완료 신호이며, analysis가 나중에 design/score를 채운다(확장자는 보존).
      전부 생성되면 status 'generating' → 'designing' 전이.
   3. `update_creative_image_analysis(batch_id, creative_index, image_results)`
      — Vision 결과(design/score) 슬라이스 교체. score가 전부 채워지면 status → 'completed' 전이.
@@ -228,8 +228,9 @@ interface AdCopySpec {
 }
 
 interface AdImageResult {
-    design: AdDesignLayout;             // 오버레이 지오메트리(위치·크기·scrim) — 이미지 생성 후 Gemini가 확정
+    design: AdDesignLayout;             // 오버레이 지오메트리(위치·크기·scrim) — 이미지 생성 후 Qwen이 확정 (2026-08-27 Gemini→Qwen)
     score: number | null;               // 0.0~10.0 실수, 평가 전 null
+    imageFileExtension: string | null;   // Storage 확장자 — process가 다운로드 시 확정해 RPC 마커로 기록 (2026-08-27 추가)
 }
 
 interface AdCreativeResult {
@@ -248,7 +249,7 @@ interface AdGenerationBatch {
 
 - 스펙(imageSpecs)에 헤드라인/CTA 없음 — **copy(텍스트)는 CD가 생성해 results에**, **지오메트리(design)는 Gemini가 이미지 생성 후 결정**. 둘 다 오버레이 레이어(AdDesignLayout)로 최종 렌더된다.
 - 저장 (RPC 3종, §5): 프롬프트 산출물 → `update_creative_prompt_outputs`, 이미지 웹훅 마커 → `update_creative_image_by_ratio_generation_completed`, 분석(design/score) → `update_creative_image_analysis`.
-- 파일 경로 규칙: `{user_id}/{batch_id}/ad_generation_result_{c}_{ratio}.{ext}` — creative index·ratio만 알면 서명 URL을 다시 만들어 이미지 목록 DB 저장이 불필요.
+- 파일 경로 규칙: `{user_id}/{batch_id}/ad_generation_result_{c}_{ratio}.{ext}` (버킷 `ad_image_storage`, 2026-08-27 결정) — creative index·ratio+imageFileExtension으로 signed URL 재구성, 목록 DB 저장 불필요.
 
 ---
 
@@ -262,7 +263,7 @@ interface AdGenerationBatch {
 - [x] **후보 테이블** — 기각 (jsonb 배열 유지)
 - [x] **Background(업로드/텍스트) 제거** (2026-08-24) — Product/Person만 입력, 배경은 AI가 creative별로 생성
 - [x] **비율 파생 방식**: 기준 비율 1:1 우선 1장 생성 → 나머지는 기준 이미지 참조 재생성 (outpainting 아님).
-  ※ Replicate의 nano-banana-pro/-2는 aspect_ratio 입력을 공식 지원 — 모델 상향 시 "참조+비율 파라미터" 병행 가능 (2026-08-26 확인)
+  ※ Replicate의 nano-banana 계열은 aspect_ratio 입력을 공식 지원 (사장 페이지 직접 확인: 2026-08-27 NANO_BANANA도 지원으로 정정) — 모델 상향 시 "참조+비율 파라미터" 병행 가능
 - [x] **조합 배분 주체 = 코드 샘플러** (2026-08-26) — LLM 빈도 편향으로 무중복 보장 불가 + 검증 코드가 어차피 필요.
   어법 필터 = `HARD_BANNED_AXIS_PAIRS` 데이터 상수 + rejection, v1 빈 목록 (§1·4)
 - [x] **RPC 3종 갱신** (2026-08-26) — prompt_outputs / by_ratio_generation_completed(마커 방식, design·score 인자 폐기) / analysis (§5)

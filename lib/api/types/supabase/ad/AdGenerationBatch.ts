@@ -81,6 +81,8 @@ export interface AdImageResult {
     design: AdDesignLayout;
     /** 0.0~10.0 실수, 평가 전 null */
     score: number | null;
+    /** Storage 규칙 경로의 확장자 — process가 다운로드 시 확정해 RPC 마커로 기록 */
+    imageFileExtension: string | null;
 }
 
 /** creative 1개의 결과 — ad_creative_specs[i]와 creativeIndex로 1:1 대응 */

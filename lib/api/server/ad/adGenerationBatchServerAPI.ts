@@ -75,4 +75,35 @@ export const adGenerationBatchServerAPI = {
     async patchAdGenerationBatchStatus(batchId: string, status: AdBatchStatus): Promise<AdGenerationBatch> {
         return adGenerationBatchServerAPI.patchAdGenerationBatch(batchId, { status });
     },
+
+    // RPC - 이미지 생성 완료 마커 기록 (멱등, 행 잠금)
+    async updateCreativeImageByRatioGenerationCompleted(
+        batchId: string,
+        creativeIndex: number,
+        ratioKey: string,
+        fileExtension: string,
+    ): Promise<{ isLastCreative: boolean; batchCompleted: boolean }> {
+        const supabase = createSupabaseServiceRoleClient();
+
+        const { data, error } = await supabase.rpc(
+            'update_creative_image_by_ratio_generation_completed',
+            {
+                p_batch_id: batchId,
+                p_creative_index: creativeIndex,
+                p_ratio_key: ratioKey,
+                p_file_extension: fileExtension,
+            },
+        );
+
+        if (error) {
+            throw new Error(`Failed to update creative image completion: ${error.message}`);
+        }
+
+        const result = data as { isLastCreative?: boolean; batchCompleted?: boolean } | null;
+
+        return {
+            isLastCreative: result?.isLastCreative ?? false,
+            batchCompleted: result?.batchCompleted ?? false,
+        };
+    },
 };
