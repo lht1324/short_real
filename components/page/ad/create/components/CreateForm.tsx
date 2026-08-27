@@ -1,13 +1,12 @@
 'use client'
 
-import { memo, useCallback } from 'react';
+import { memo, useCallback, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { AlertTriangle, Check } from 'lucide-react';
+import { AlertTriangle, Check, Palette, Plus, X } from 'lucide-react';
+import { HexColorPicker } from 'react-colorful';
 import { AdAspectRatio, AdUploadedComponent } from "@/lib/api/client/ad/adClientAPI";
 import { AD_ASPECT_RATIO_INFO, AD_CONCEPT_OPTIONS } from "@/lib/api/client/ad/adClientAPI";
 import UploadZone from "@/components/page/ad/create/components/UploadZone";
-
-export type BackgroundMode = 'prompt' | 'upload';
 
 /*
  * 돌담 masonry — 3열 배치:
@@ -30,48 +29,34 @@ const RATIO_ASPECT: Record<AdAspectRatio, string> = {
 };
 
 interface CreateFormProps {
-    backgroundMode: BackgroundMode;
-    backgroundPrompt: string;
-    backgroundImage: AdUploadedComponent | null;
     product: AdUploadedComponent | null;
     person: AdUploadedComponent | null;
-    onBackgroundModeChange: (mode: BackgroundMode) => void;
-    onBackgroundPromptChange: (prompt: string) => void;
-    onBackgroundImageChange: (file: AdUploadedComponent | null) => void;
     onProductChange: (file: AdUploadedComponent | null) => void;
     onPersonChange: (file: AdUploadedComponent | null) => void;
     aspectRatios: AdAspectRatio[];
     conceptCount: number;
     ctaEnabled: boolean;
-    lockedRatio?: { width: number; height: number } | null;
+    brandPalette: string[] | null;
     onAspectRatiosChange: (ratios: AdAspectRatio[]) => void;
     onConceptCountChange: (count: number) => void;
     onCtaEnabledChange: (enabled: boolean) => void;
+    onBrandPaletteChange: (palette: string[] | null) => void;
 }
 
 function CreateForm({
-    backgroundMode,
-    backgroundPrompt,
-    backgroundImage,
     product,
     person,
-    onBackgroundModeChange,
-    onBackgroundPromptChange,
-    onBackgroundImageChange,
     onProductChange,
     onPersonChange,
     aspectRatios,
     conceptCount,
     ctaEnabled,
-    lockedRatio,
+    brandPalette,
     onAspectRatiosChange,
     onConceptCountChange,
     onCtaEnabledChange,
+    onBrandPaletteChange,
 }: CreateFormProps) {
-    const onClickMode = useCallback((mode: BackgroundMode) => {
-        onBackgroundModeChange(mode);
-    }, [onBackgroundModeChange]);
-
     const onClickRatio = useCallback(
         (ratio: AdAspectRatio) => {
             const selected = aspectRatios.includes(ratio);
@@ -91,191 +76,224 @@ function CreateForm({
         onCtaEnabledChange(enabled);
     }, [onCtaEnabledChange]);
 
+    const [pickerColor, setPickerColor] = useState('#111111');
+    const [activePickerIndex, setActivePickerIndex] = useState<number | null>(null);
+
+    const onAddColor = useCallback(() => {
+        const current = brandPalette ?? [];
+        if (current.length >= 5) return;
+        const next = [...current, pickerColor.toUpperCase()];
+        onBrandPaletteChange(next);
+        setActivePickerIndex(null);
+    }, [brandPalette, pickerColor, onBrandPaletteChange]);
+
+    const onRemoveColor = useCallback((index: number) => {
+        const current = brandPalette ?? [];
+        const next = current.filter((_, i) => i !== index);
+        onBrandPaletteChange(next.length === 0 ? null : next);
+        setActivePickerIndex(null);
+    }, [brandPalette, onBrandPaletteChange]);
+
+    const onChangeColor = useCallback((index: number, color: string) => {
+        const current = brandPalette ?? [];
+        const next = current.map((c, i) => (i === index ? color.toUpperCase() : c));
+        onBrandPaletteChange(next);
+    }, [brandPalette, onBrandPaletteChange]);
+
     return (
-        <div>
-            {/* 콘텐츠 입력 */}
-            <div className="grid gap-5 lg:grid-cols-2">
-                <section className="flex flex-col rounded-2xl border border-hairline bg-surface p-5">
-                    <div className="mb-3 flex items-center justify-between">
-                        <h3 className="text-[15px] font-semibold text-text1">Background</h3>
-                        <div className="flex rounded-full border border-hairline p-0.5">
-                            <button
-                                type="button"
-                                onClick={() => onClickMode('prompt')}
-                                className={`rounded-full px-3.5 py-1.5 text-[12px] font-medium transition-colors ${
-                                    backgroundMode === 'prompt' ? 'bg-text1 text-canvas' : 'text-text2 hover:text-text1'
-                                }`}
-                            >
-                                Generate
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => onClickMode('upload')}
-                                className={`rounded-full px-3.5 py-1.5 text-[12px] font-medium transition-colors ${
-                                    backgroundMode === 'upload' ? 'bg-text1 text-canvas' : 'text-text2 hover:text-text1'
-                                }`}
-                            >
-                                Upload
-                            </button>
-                        </div>
+        <div className="space-y-5">
+            {/* Subjects — product/person only, background is AI-generated per creative */}
+            <section className="rounded-[1.5rem] border border-hairline bg-surface p-5 sm:p-6">
+                <div className="mb-4 flex items-start justify-between gap-4">
+                    <div>
+                        <h3 className="text-[16px] font-semibold tracking-tight text-text1">Subjects</h3>
+                        <p className="mt-1 text-[13px] leading-relaxed text-text2">
+                            Upload your product or person — the AI paints a different background for each creative.
+                        </p>
                     </div>
+                    <span className="shrink-0 rounded-full border border-hairline bg-canvas px-3 py-1 text-[11px] font-medium text-text2">
+                        at least one
+                    </span>
+                </div>
 
-                    <div className="flex min-h-[9rem] flex-1 flex-col">
-                        <AnimatePresence mode="wait">
-                            {backgroundMode === 'prompt' ? (
-                                <motion.div
-                                    key="prompt"
-                                    initial={{ opacity: 0, y: 8 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    exit={{ opacity: 0, y: -8 }}
-                                    transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
-                                    className="relative flex min-h-0 flex-1 flex-col"
-                                >
-                                    <textarea
-                                        value={backgroundPrompt}
-                                        onChange={(event) => onBackgroundPromptChange(event.target.value)}
-                                        rows={3}
-                                        placeholder="Describe the scene — e.g. Bright studio corner, soft morning light, minimal shelf with ceramic details, calm neutral palette."
-                                        className="w-full flex-1 resize-none rounded-xl border border-hairline bg-canvas px-4 py-3 text-[13px] leading-relaxed text-text1 placeholder:text-text2/70 focus:border-text2/50 focus:outline-none"
-                                        aria-label="Background description"
-                                    />
-                                    <span className="mt-1.5 block text-right text-[11px] text-text2">
-                                        {backgroundPrompt.length} chars
-                                    </span>
-                                </motion.div>
-                            ) : (
-                                <motion.div
-                                    key="upload"
-                                    initial={{ opacity: 0, y: 8 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    exit={{ opacity: 0, y: -8 }}
-                                    transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
-                                    className="flex flex-1 flex-col"
-                                >
-                                    <UploadZone
-                                        label="Background image"
-                                        tall
-                                        help="Your storefront, cafe interior, or workspace — a real place text prompts can't recreate. A clean, wide shot without people works best. JPG, PNG or WebP, up to 10 MB."
-                                        notePlaceholder="e.g. Keep the storefront sign, remove people walking by"
-                                        file={backgroundImage}
-                                        onChange={onBackgroundImageChange}
-                                    />
-                                </motion.div>
-                            )}
-                        </AnimatePresence>
-                    </div>
-                </section>
-
-                <section className="space-y-4 rounded-2xl border border-hairline bg-surface p-5">
-                    <div className="flex items-center justify-between">
-                        <h3 className="text-[15px] font-semibold text-text1">Subjects</h3>
-                        <span className="text-[12px] text-text2">at least one</span>
-                    </div>
-
-                    <div className="space-y-4">
+                <div className="grid gap-4 sm:grid-cols-2 sm:items-stretch">
+                    <div className="flex flex-col">
                         <UploadZone
                             label="Product"
-                            help="A clear product photo on a simple background. The AI keeps your product looking identical in every scene. JPG, PNG or WebP, up to 10 MB."
+                            tall
+                            help="A clear product photo on a simple background. The AI keeps your product identical in every scene. JPG, PNG or WebP, up to 10 MB."
                             notePlaceholder="e.g. Show only the product, drop the background"
                             file={product}
                             onChange={onProductChange}
                         />
+                    </div>
 
+                    <div className="flex flex-col">
                         <UploadZone
                             label="Person"
+                            tall
                             help="Optional — a well-lit portrait with the face clearly visible. JPG, PNG or WebP, up to 10 MB."
                             notePlaceholder="e.g. Keep the natural expression"
                             file={person}
                             onChange={onPersonChange}
                         />
                     </div>
+                </div>
 
-                    {product && person && (
-                        <div className="flex items-start gap-2.5 rounded-xl border border-hairline bg-surface px-3.5 py-3">
-                            <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-accent" strokeWidth={2} />
-                            <p className="text-[12px] leading-relaxed text-text2">
-                                Combining a product and a person in one scene can reduce composite quality. Consider
-                                running them as separate generations.
-                            </p>
-                        </div>
-                    )}
-                </section>
-            </div>
+                {/* Brand palette — optional 3-5 hex, 상시 노출하되 한 줄로 압축해 0스크롤 유지 */}
+                <div className="mt-4 flex items-center gap-3 rounded-full border border-hairline bg-canvas px-3 py-2">
+                    <div className="flex shrink-0 items-center gap-2">
+                        <Palette className="h-3.5 w-3.5 text-text2" strokeWidth={1.8} />
+                        <h4 className="text-[13px] font-medium text-text1">Brand colors</h4>
+                        <span className="rounded-full bg-surface px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-text2">optional</span>
+                    </div>
+                    <span className="hidden text-[11px] text-text2 sm:inline">3–5 hex · AI weaves into materials</span>
+                    <div className="ml-auto flex flex-wrap items-center gap-1.5">
+                        {(brandPalette ?? []).map((hex, index) => (
+                            <div key={`${hex}-${index}`} className="group relative flex items-center gap-2 rounded-full border border-hairline bg-surface pl-1 pr-2 py-1">
+                                <button
+                                    type="button"
+                                    onClick={() => setActivePickerIndex(activePickerIndex === index ? null : index)}
+                                    className="h-6 w-6 shrink-0 rounded-full border border-black/10 shadow-sm"
+                                    style={{ backgroundColor: hex }}
+                                    aria-label={`Edit color ${hex}`}
+                                />
+                                <span className="font-mono text-[11px] font-medium text-text1">{hex}</span>
+                                <button
+                                    type="button"
+                                    onClick={() => onRemoveColor(index)}
+                                    className="rounded-full p-0.5 text-text2 hover:bg-canvas hover:text-text1"
+                                    aria-label={`Remove ${hex}`}
+                                >
+                                    <X className="h-3 w-3" strokeWidth={2} />
+                                </button>
+                                {activePickerIndex === index && (
+                                    <div className="absolute left-0 top-full z-20 mt-2 rounded-xl border border-hairline bg-surface p-3 shadow-xl">
+                                        <HexColorPicker color={hex} onChange={(c) => onChangeColor(index, c)} />
+                                        <div className="mt-2 flex items-center justify-between gap-2">
+                                            <span className="font-mono text-[11px] text-text2">{hex}</span>
+                                            <button type="button" onClick={() => setActivePickerIndex(null)} className="rounded-full bg-text1 px-3 py-1 text-[11px] font-medium text-canvas">Done</button>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        ))}
+
+                        {(brandPalette?.length ?? 0) < 5 && (
+                            <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-2 rounded-full border border-dashed border-hairline bg-surface px-2 py-1">
+                                    <button
+                                        type="button"
+                                        onClick={() => setActivePickerIndex(activePickerIndex === -1 ? null : -1)}
+                                        className="h-6 w-6 rounded-full border border-black/10 shadow-sm"
+                                        style={{ backgroundColor: pickerColor }}
+                                        aria-label="Pick new color"
+                                    />
+                                    <input
+                                        value={pickerColor}
+                                        onChange={(e) => setPickerColor(e.target.value.toUpperCase())}
+                                        placeholder="#111111"
+                                        className="w-[5.5rem] bg-transparent font-mono text-[11px] font-medium text-text1 placeholder:text-text2/60 focus:outline-none"
+                                    />
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={onAddColor}
+                                    disabled={(brandPalette?.length ?? 0) >= 5}
+                                    className="inline-flex items-center gap-1 rounded-full bg-text1 px-3 py-1.5 text-[11px] font-medium text-canvas transition-colors hover:bg-text1/90 disabled:opacity-40"
+                                >
+                                    <Plus className="h-3 w-3" strokeWidth={2} />
+                                    Add
+                                </button>
+                                {activePickerIndex === -1 && (
+                                    <div className="absolute z-20 mt-2 rounded-xl border border-hairline bg-surface p-3 shadow-xl">
+                                        <HexColorPicker color={pickerColor} onChange={(c) => setPickerColor(c.toUpperCase())} />
+                                        <div className="mt-2 flex justify-end">
+                                            <button type="button" onClick={() => setActivePickerIndex(null)} className="rounded-full bg-text1 px-3 py-1 text-[11px] font-medium text-canvas">Done</button>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </div>
+                </div>
+                {(brandPalette?.length ?? 0) > 0 && (brandPalette!.length < 3 || brandPalette!.length > 5) && (
+                    <p className="mt-2 text-[11px] text-amber-600 dark:text-amber-500">Add 3 to 5 colors for best results.</p>
+                )}
+
+                {product && person && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+                        className="mt-4 flex items-start gap-2.5 rounded-xl border border-amber-200 bg-amber-50 px-3.5 py-3 dark:border-amber-900/30 dark:bg-amber-950/20"
+                    >
+                        <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-600 dark:text-amber-500" strokeWidth={2} />
+                        <p className="text-[12px] leading-relaxed text-amber-800 dark:text-amber-200/90">
+                            Combining a product and a person in one scene can reduce composite quality. Consider
+                            running them as separate generations.
+                        </p>
+                    </motion.div>
+                )}
+            </section>
 
             {/* 출력 설정 */}
-            <div className="mt-5 grid gap-5 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] lg:items-start">
-                <section className="rounded-2xl border border-hairline bg-surface p-5">
+            <div className="grid gap-5 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] lg:items-start">
+                <section className="rounded-[1.5rem] border border-hairline bg-surface p-5 sm:p-6">
                     <div className="mb-4 flex items-center justify-between">
-                        <h3 className="text-[15px] font-semibold text-text1">Where will it run?</h3>
-                        <span className="text-[12px] text-text2">
-                            {lockedRatio ? 'from uploaded background' : 'pick one or more'}
-                        </span>
+                        <h3 className="text-[15px] font-semibold tracking-tight text-text1">Where will it run?</h3>
+                        <span className="text-[12px] text-text2">pick one or more</span>
                     </div>
-                    {lockedRatio ? (
-                        <div className="rounded-xl border border-hairline bg-surface px-4 py-3.5">
-                            <div className="flex items-center justify-between gap-3">
-                                <p className="text-[13px] font-medium text-text1">Locked to upload</p>
-                                <span className="font-mono text-[11px] text-text2">
-                                    {lockedRatio.width}×{lockedRatio.height}
-                                </span>
-                            </div>
-                            <p className="mt-1.5 text-[12px] leading-relaxed text-text2">
-                                Your background image&apos;s native ratio is preserved — run separate generations for
-                                other formats.
-                            </p>
+                    <div className="flex justify-center">
+                        <div className="flex w-full max-w-[32rem] gap-3">
+                            {STONE_COLUMNS.map((column) => (
+                                <div
+                                    key={column.grow}
+                                    className="flex flex-col gap-3"
+                                    style={{ flexGrow: column.grow, flexBasis: 0 }}
+                                >
+                                    {column.ratios.map((ratio) => {
+                                        const selected = aspectRatios.includes(ratio);
+                                        return (
+                                            <button
+                                                key={ratio}
+                                                type="button"
+                                                aria-pressed={selected}
+                                                onClick={() => onClickRatio(ratio)}
+                                                className={`relative flex w-full flex-col items-center justify-center gap-1 rounded-xl border transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] active:scale-[0.98] ${
+                                                    selected
+                                                        ? 'border-accent bg-accent/10 shadow-[0_0_0_1px_rgba(var(--accent),0.2)]'
+                                                        : 'border-hairline bg-canvas hover:border-text2/40 hover:bg-surface'
+                                                }`}
+                                                style={{ aspectRatio: RATIO_ASPECT[ratio] }}
+                                            >
+                                                {selected && (
+                                                    <span className="absolute right-2 top-2 flex h-5 w-5 items-center justify-center rounded-full bg-accent shadow-sm">
+                                                        <Check className="h-3 w-3 text-white" strokeWidth={3} />
+                                                    </span>
+                                                )}
+                                                <span className={`text-[12px] font-semibold leading-tight ${selected ? 'text-text1' : 'text-text2'}`}>
+                                                    {AD_ASPECT_RATIO_INFO[ratio].label}
+                                                </span>
+                                                <span className={`px-2 text-center text-[10px] leading-tight ${selected ? 'text-text2' : 'text-text2/80'}`}>
+                                                    {AD_ASPECT_RATIO_INFO[ratio].usage}
+                                                </span>
+                                                <span className={`font-mono text-[10px] uppercase tracking-[0.12em] ${selected ? 'text-accent' : 'text-text2/80'}`}>
+                                                    {ratio}
+                                                </span>
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            ))}
                         </div>
-                    ) : (
-                        <div className="flex justify-center">
-                            <div className="flex w-full max-w-[32rem] gap-3">
-                                {STONE_COLUMNS.map((column) => (
-                                    <div
-                                        key={column.grow}
-                                        className="flex flex-col gap-3"
-                                        style={{ flexGrow: column.grow, flexBasis: 0 }}
-                                    >
-                                        {column.ratios.map((ratio) => {
-                                            const selected = aspectRatios.includes(ratio);
-                                            return (
-                                                <button
-                                                    key={ratio}
-                                                    type="button"
-                                                    aria-pressed={selected}
-                                                    onClick={() => onClickRatio(ratio)}
-                                                    className={`relative flex w-full flex-col items-center justify-center gap-1 rounded-xl border transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] active:scale-[0.98] ${
-                                                        selected
-                                                            ? 'border-accent bg-accent/10'
-                                                            : 'border-hairline bg-canvas hover:border-text2/50'
-                                                    }`}
-                                                    style={{ aspectRatio: RATIO_ASPECT[ratio] }}
-                                                >
-                                                    {selected && (
-                                                        <span className="absolute right-2 top-2 flex h-5 w-5 items-center justify-center rounded-full bg-accent shadow-sm">
-                                                            <Check className="h-3 w-3 text-canvas" strokeWidth={3} />
-                                                        </span>
-                                                    )}
-                                                    <span className={`text-[12px] font-semibold leading-tight ${selected ? 'text-text1' : 'text-text2'}`}>
-                                                        {AD_ASPECT_RATIO_INFO[ratio].label}
-                                                    </span>
-                                                    <span className={`px-2 text-center text-[10px] leading-tight ${selected ? 'text-text2' : 'text-text2/80'}`}>
-                                                        {AD_ASPECT_RATIO_INFO[ratio].usage}
-                                                    </span>
-                                                    <span className={`font-mono text-[10px] uppercase tracking-[0.12em] ${selected ? 'text-accent' : 'text-text2/80'}`}>
-                                                        {ratio}
-                                                    </span>
-                                                </button>
-                                            );
-                                        })}
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    )}
+                    </div>
                 </section>
 
                 <div className="flex flex-col gap-5">
-                    <section className="rounded-2xl border border-hairline bg-surface p-5">
+                    <section className="rounded-[1.5rem] border border-hairline bg-surface p-5 sm:p-6">
                         <div className="mb-3 flex items-center justify-between">
-                            <h3 className="text-[15px] font-semibold text-text1">How many options?</h3>
+                            <h3 className="text-[15px] font-semibold tracking-tight text-text1">How many options?</h3>
                             <span className="text-[12px] text-text2">per batch</span>
                         </div>
                         <div className="flex gap-2">
@@ -287,7 +305,7 @@ function CreateForm({
                                     className={`relative flex-1 rounded-xl border px-2 py-3 text-center transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] active:scale-[0.97] ${
                                         conceptCount === count
                                             ? 'border-accent bg-accent/10'
-                                            : 'border-hairline bg-surface hover:border-text2/50'
+                                            : 'border-hairline bg-surface hover:border-text2/40'
                                     }`}
                                 >
                                     <span
@@ -301,7 +319,7 @@ function CreateForm({
                                         {count === 1 ? 'creative' : 'creatives'}
                                     </span>
                                     {count === 10 && (
-                                        <span className="absolute -top-2 right-2 rounded-full bg-accent px-2 py-0.5 text-[10px] font-semibold text-canvas">
+                                        <span className="absolute -top-2 right-2 rounded-full bg-accent px-2 py-0.5 text-[10px] font-semibold text-white">
                                             Pro
                                         </span>
                                     )}
@@ -309,14 +327,14 @@ function CreateForm({
                             ))}
                         </div>
                         <p className="mt-2.5 text-[12px] leading-snug text-text2">
-                            Each creative is generated in every format you select.
+                            Each creative is generated in every format you select — backgrounds vary per creative.
                         </p>
                     </section>
 
-                    <section className="flex items-center justify-between rounded-2xl border border-hairline bg-surface p-5">
+                    <section className="flex items-center justify-between rounded-[1.5rem] border border-hairline bg-surface p-5 sm:p-6">
                         <div>
-                            <p className="text-[13px] font-medium text-text1">Round CTA button</p>
-                            <p className="mt-0.5 text-[12px] text-text2">Add a &ldquo;Shop now&rdquo; style button to the layout.</p>
+                            <p className="text-[13px] font-medium tracking-tight text-text1">Round CTA button</p>
+                            <p className="mt-0.5 text-[12px] leading-relaxed text-text2">Add a &ldquo;Shop now&rdquo; style button to the layout.</p>
                         </div>
                         <button
                             type="button"

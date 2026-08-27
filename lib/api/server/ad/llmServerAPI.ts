@@ -12,7 +12,7 @@ import { POST_AD_IMAGE_ANALYSIS_PROMPT } from "@/lib/llm-prompts/ad/POST_AD_IMAG
 export const llmServerAPI = {
     /**
      * Creative 디렉터 — 코드가 배정한 5축 조합 + 유저 입력을 받아
-     * 비율별 캡션 묶음(imageSpecs) + 판매 카피(copy)를 1회 생성한다.
+     * 비율별 캡션 레코드(imagePromptRecord) + 판매 카피(copy)를 1회 생성한다.
      * 호출 단위 = creative마다 1회 (ad_variation_study.md §3).
      */
     async postAdCreativePrompt(params: {
@@ -22,12 +22,14 @@ export const llmServerAPI = {
         productNote: string | null;
         personNote: string | null;
         ctaEnabled: boolean;
-        conceptCount: number;
+        brandPalette: string[] | null;
         seed: number;
     }): Promise<{
         success: boolean;
-        imageSpecs?: Partial<Record<AdRatioKey, string>>;
+        imagePromptRecord?: Partial<Record<AdRatioKey, string>>;
         copy?: AdCopySpec;
+        reasoning?: string;
+        ratioReasonings?: Partial<Record<AdRatioKey, string>>;
         error?: { message: string; code: string };
     }> {
         try {
@@ -38,13 +40,12 @@ export const llmServerAPI = {
                 productNote,
                 personNote,
                 ctaEnabled,
-                conceptCount,
+                brandPalette,
                 seed,
             } = params;
 
             const userMessage = `
 <input_data>
-  <creative_index>${creativeIndex}</creative_index>
   <creative_spec>
     <camera>${creativeSpec.camera}</camera>
     <lighting>${creativeSpec.lighting}</lighting>
@@ -57,7 +58,7 @@ export const llmServerAPI = {
   <product_note>${productNote ?? ""}</product_note>
   <person_note>${personNote ?? ""}</person_note>
   <cta_enabled>${ctaEnabled}</cta_enabled>
-  <concept_count>${conceptCount}</concept_count>
+  <brand_palette>${brandPalette && brandPalette.length > 0 ? JSON.stringify(brandPalette) : "null"}</brand_palette>
 </input_data>
 
 Instruction: Generate ratio-specific I2I captions and ad copy according to the system prompt.
@@ -70,7 +71,7 @@ Instruction: Generate ratio-specific I2I captions and ad copy according to the s
                     model: OpenRouterModel.DEEPSEEK_V_4_FLASH,
                     systemMessage: POST_AD_CREATIVE_PROMPT,
                     userMessage,
-                    maxCompletionTokens: 2048,
+                    maxCompletionTokens: 4096,
                     temperature: 0.8,
                     reasoning: true,
                 },
@@ -86,14 +87,26 @@ Instruction: Generate ratio-specific I2I captions and ad copy according to the s
 
             try {
                 const parsed: {
-                    image_specs: Partial<Record<AdRatioKey, string>>;
+                    reasoning: string;
+                    ratio_reasonings: Partial<Record<AdRatioKey, string>>;
+                    image_prompt_record: Partial<Record<AdRatioKey, string>>;
                     copy: AdCopySpec;
                 } = cleanAndParseJSON(generatedContent);
 
+                // 디버깅용 reasoning은 로그로만 사용, DB에는 저장하지 않음
+                if (parsed.reasoning) {
+                    console.log(`[ad/creative/${creativeIndex}] reasoning: ${parsed.reasoning}`);
+                }
+                if (parsed.ratio_reasonings) {
+                    console.log(`[ad/creative/${creativeIndex}] ratio_reasonings:`, parsed.ratio_reasonings);
+                }
+
                 return {
                     success: true,
-                    imageSpecs: parsed.image_specs,
+                    imagePromptRecord: parsed.image_prompt_record,
                     copy: parsed.copy,
+                    reasoning: parsed.reasoning,
+                    ratioReasonings: parsed.ratio_reasonings,
                 };
             } catch (parseError) {
                 return {
@@ -125,6 +138,7 @@ Instruction: Generate ratio-specific I2I captions and ad copy according to the s
         aspectRatios: AdRatioKey[];
         creativeSpec: AdCreativeSpec;
         copy: AdCopySpec;
+        brandPalette: string[] | null;
         imageInputs: Array<{ ratioKey: AdRatioKey; imageBase64: string }>;
     }): Promise<{
         success: boolean;
@@ -132,7 +146,7 @@ Instruction: Generate ratio-specific I2I captions and ad copy according to the s
         error?: { message: string; code: string };
     }> {
         try {
-            const { creativeIndex, aspectRatios, creativeSpec, copy, imageInputs } = params;
+            const { creativeIndex, aspectRatios, creativeSpec, copy, brandPalette, imageInputs } = params;
 
             const imageBase64List = imageInputs.map((item) => item.imageBase64);
 
@@ -151,6 +165,7 @@ Instruction: Generate ratio-specific I2I captions and ad copy according to the s
   <aspect_ratios>${JSON.stringify(aspectRatios)}</aspect_ratios>
   <ratio_order>${ratioOrder}</ratio_order>
   <copy>${JSON.stringify(copy, null, 2)}</copy>
+  <brand_palette>${brandPalette && brandPalette.length > 0 ? JSON.stringify(brandPalette) : "null"}</brand_palette>
 </input_data>
 
 Instruction: Analyze the attached ${imageInputs.length} image(s) in ratio order [${ratioOrder}] and return design/score per ratio.
@@ -181,8 +196,17 @@ Each image corresponds to the ratio at the same index in ratio_order.
 
             try {
                 const parsed: {
+                    reasoning: string;
+                    ratio_reasonings: Partial<Record<AdRatioKey, string>>;
                     image_results: Partial<Record<AdRatioKey, { design: AdDesignLayout; score: number }>>;
                 } = cleanAndParseJSON(generatedContent);
+
+                if (parsed.reasoning) {
+                    console.log(`[ad/creative/${creativeIndex}] analysis reasoning: ${parsed.reasoning}`);
+                }
+                if (parsed.ratio_reasonings) {
+                    console.log(`[ad/creative/${creativeIndex}] ratio_reasonings:`, parsed.ratio_reasonings);
+                }
 
                 const imageResults: Partial<Record<AdRatioKey, AdImageResult>> = {};
 

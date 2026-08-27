@@ -82,10 +82,18 @@ const AXIS_NAMES = Object.keys(AXIS_POOLS) as CreativeAxisName[];
 /**
  * 금지 쌍(hard ban) 목록 — [축A, 값A, 축B, 값B].
  * 이 쌍이 한 조합에 동시 출현하면 사진적으로 성립하지 않으므로 폐기한다.
- * v1은 빈 목록으로 시작 — 도메인 판단이 정해지면 여기에 추가만 하면 된다.
- * 예시: ['lighting', 'night_low', 'palette', 'vivid'] 는 야간 저조도에 비비드 팔레트가 붙는 모순쌍.
+ * Rejection 방식으로 걸리면 재추첨하므로, 추가만 하면 반영된다.
  */
-const HARD_BANNED_AXIS_PAIRS: ReadonlyArray<readonly [CreativeAxisName, string, CreativeAxisName, string]> = [];
+const HARD_BANNED_AXIS_PAIRS: ReadonlyArray<readonly [CreativeAxisName, string, CreativeAxisName, string]> = [
+    ['lighting', 'night_low', 'palette', 'vivid'],
+    ['lighting', 'low_key', 'palette', 'vivid'],
+    ['camera', 'packshot', 'lighting', 'golden_hour'],
+    ['camera', 'packshot', 'lighting', 'blue_hour'],
+    ['camera', 'detail_close', 'framing', 'negative_space'],
+    ['camera', 'flat_lay', 'framing', 'tight_crop'],
+    ['camera', 'environment_shot', 'framing', 'tight_crop'],
+    ['framing', 'tight_crop', 'layout_tone', 'minimal_modern'],
+];
 
 /** 결과 화면 캐노니컬 매체 순서 — 기준 비율 선정 및 정렬의 단일 소스 */
 export const CANONICAL_RATIO_ORDER: AdRatioKey[] = ['9_16', '2_3', '4_5', '1_1', '16_9'];
@@ -174,7 +182,7 @@ export function assignCreativeCombinations(conceptCount: number, seed?: number):
             palette: combo.palette,
             framing: combo.framing,
             layout_tone: combo.layout_tone,
-            imageSpecs: {}, // 캡션은 프롬프트 단계(LLM)가 선택 비율만 채운다
+            imagePromptRecord: {}, // 캡션 레코드는 프롬프트 단계(LLM)가 선택 비율만 채운다
             seed: Math.floor(random() * 0x7fffffff),
         });
     }

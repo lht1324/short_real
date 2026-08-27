@@ -10,6 +10,8 @@ import {
 import { createSupabaseServiceRoleClient } from "@/lib/supabase/supabaseServiceRole";
 import { AdRatioKey } from "@/lib/api/types/supabase/ad/AdGenerationBatch";
 
+const MAX_SAME_RATIO_ATTEMPTS = 2; // 1회 재시도 → 총 2회 시도
+
 /**
  * 파생(ratios) 이미지 후처리 단계 — 웹훅 배달부(webhook/.../ratios)에서 전달받아 실행.
  * payload 검사 → 이미지 다운로드·Supabase 저장 → RPC#2(완료 마커·마지막 조각 판정).
@@ -56,12 +58,48 @@ export async function POST(request: NextRequest) {
         }
 
         if (replicatePayload.status !== 'succeeded') {
-            console.error(`[process/ratios] prediction failed (batch=${batchId}, creative=${creativeIndex}, status=${replicatePayload.status}, error=${replicatePayload.error ?? 'unknown'})`);
-            await adGenerationBatchServerAPI.patchAdGenerationBatchStatus(batchId, 'failed').catch(() => {});
+            const errorMessage = replicatePayload.error ?? `Replicate status ${replicatePayload.status}`;
+            const attempt = Number.parseInt(searchParams.get('attempt') ?? '1', 10) || 1;
+            let effectiveRatioKeyForError = ratioKeyParam;
+            if (!effectiveRatioKeyForError && replicatePayload.input?.aspect_ratio && typeof replicatePayload.input.aspect_ratio === 'string') {
+                effectiveRatioKeyForError = (replicatePayload.input.aspect_ratio as string).replace(':', '_');
+            }
+            console.error(`[process/ratios] prediction failed (batch=${batchId}, creative=${creativeIndex}, ratio=${effectiveRatioKeyForError}, attempt=${attempt}, status=${replicatePayload.status}, error=${errorMessage})`);
+
+            if (effectiveRatioKeyForError && attempt < MAX_SAME_RATIO_ATTEMPTS) {
+                console.log(`[process/ratios] retry same ratio ${effectiveRatioKeyForError} attempt ${attempt + 1}/${MAX_SAME_RATIO_ATTEMPTS}`);
+                internalFireAndForgetFetch(
+                    `${process.env.BASE_URL}/api/ad/image/generation/ratios?batchId=${encodeURIComponent(batchId)}&creativeIndex=${encodeURIComponent(String(creativeIndex))}&ratioKey=${encodeURIComponent(effectiveRatioKeyForError)}&attempt=${encodeURIComponent(String(attempt + 1))}`,
+                    { method: "POST" },
+                );
+                return getNextBaseResponse({
+                    success: true,
+                    status: 200,
+                    message: `Ratio ${effectiveRatioKeyForError} attempt ${attempt} failed, retrying attempt ${attempt + 1} (n=1).`,
+                });
+            }
+
+            if (effectiveRatioKeyForError) {
+                const { isLastCreative } = await adGenerationBatchServerAPI.updateCreativeImageByRatioGenerationCompleted(
+                    batchId,
+                    creativeIndex,
+                    effectiveRatioKeyForError,
+                    null,
+                    { code: 'REPLICATE_' + replicatePayload.status.toUpperCase(), message: errorMessage },
+                ).catch(() => ({ isLastCreative: false, batchCompleted: false })) as { isLastCreative: boolean; batchCompleted: boolean };
+
+                if (isLastCreative) {
+                    internalFireAndForgetFetch(
+                        `${process.env.BASE_URL}/api/ad/creative/${creativeIndex}/analysis?batchId=${encodeURIComponent(batchId)}`,
+                        { method: "POST" },
+                    );
+                }
+            }
+
             return getNextBaseResponse({
                 success: true,
                 status: 200,
-                message: `Ratio prediction did not succeed (status=${replicatePayload.status}). Batch marked as failed.`,
+                message: `Ratio prediction did not succeed (status=${replicatePayload.status}). Creative ${creativeIndex} ratio ${effectiveRatioKeyForError ?? 'unknown'} marked as error after n=1 retries (fail-soft).`,
             });
         }
 
@@ -141,8 +179,7 @@ export async function POST(request: NextRequest) {
     } catch (error) {
         console.error(`Error in POST /api/ad/image/process/ratios (batch=${batchId}, creative=${creativeIndex}):`, error);
 
-        await adGenerationBatchServerAPI.patchAdGenerationBatchStatus(batchId, 'failed').catch(() => {});
-
+        // fail-soft: process 예외도 배치 전체 failed로 전이하지 않음
         return getNextBaseResponse({
             success: false,
             status: 500,

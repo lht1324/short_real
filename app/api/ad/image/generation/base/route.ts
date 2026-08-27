@@ -8,12 +8,14 @@ import {
     ReplicateImageModelId,
     replicateClient,
 } from "@/lib/ReplicateClient";
+import { AdRatioKey } from "@/lib/api/types/supabase/ad/AdGenerationBatch";
 
 /**
  * 기준(base) 이미지 제출 단계 — 복수 비율 배치의 creative당 최초 1회 호출.
  * selectBaseRatio(1:1 우선, 없으면 캐노니컬 첫째)로 기준 비율을 정해
  * Replicate prediction을 제출하고 즉시 반환한다 (동기 대기 없음).
  * 완료는 웹훅(webhook/ad/replicate/image/base)으로 도착하며, 이 라우트가 다음 단계를 직접 부르지 않는다.
+ * n=2 재시도: 같은 비율 2회(총 2회 시도) 실패 시 차순위 base로 폴백 — process/base가 attempt를 들고 재호출한다.
  */
 export async function POST(request: NextRequest) {
     if (!getIsValidRequestS2S(request)) {
@@ -27,6 +29,8 @@ export async function POST(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams;
     const batchId = searchParams.get('batchId');
     const creativeIndexParam = searchParams.get('creativeIndex');
+    const baseRatioParam = searchParams.get('baseRatio') as AdRatioKey | null;
+    const attemptParam = searchParams.get('attempt');
 
     if (!batchId || creativeIndexParam === null) {
         return getNextBaseResponse({
@@ -45,6 +49,8 @@ export async function POST(request: NextRequest) {
             error: "Invalid creativeIndex query param.",
         });
     }
+
+    const attempt = attemptParam ? Number.parseInt(attemptParam, 10) : 1;
 
     try {
         const batch = await adGenerationBatchServerAPI.getAdGenerationBatchById(batchId);
@@ -67,9 +73,12 @@ export async function POST(request: NextRequest) {
             });
         }
 
-        const baseRatio = selectBaseRatio(batch.aspect_ratios);
+        // baseRatio가 명시되면 그걸 우선 (process/base의 차순위 폴백), 없으면 기존 우선순위
+        const baseRatio = baseRatioParam && (batch.aspect_ratios as string[]).includes(baseRatioParam)
+            ? baseRatioParam
+            : selectBaseRatio(batch.aspect_ratios as AdRatioKey[]);
 
-        const caption = creativeSpec.imageSpecs[baseRatio];
+        const caption = creativeSpec.imagePromptRecord[baseRatio];
 
         if (!caption || typeof caption !== 'string' || caption.trim().length === 0) {
             return getNextBaseResponse({
@@ -87,7 +96,7 @@ export async function POST(request: NextRequest) {
             throw new Error("BASE_URL is not configured.");
         }
 
-        const webhookUrl = `${baseUrl}/webhook/ad/replicate/image/base?batchId=${encodeURIComponent(batchId)}&creativeIndex=${encodeURIComponent(String(creativeIndex))}&ratioKey=${encodeURIComponent(baseRatio)}`;
+        const webhookUrl = `${baseUrl}/webhook/ad/replicate/image/base?batchId=${encodeURIComponent(batchId)}&creativeIndex=${encodeURIComponent(String(creativeIndex))}&ratioKey=${encodeURIComponent(baseRatio)}&attempt=${encodeURIComponent(String(attempt))}`;
 
         await replicateClient.postAdImageEditPrediction({
             model: ReplicateImageModelId.NANO_BANANA,
@@ -105,8 +114,7 @@ export async function POST(request: NextRequest) {
     } catch (error) {
         console.error(`Error in POST /api/ad/image/generation/base (batch=${batchId}, creative=${creativeIndex}):`, error);
 
-        await adGenerationBatchServerAPI.patchAdGenerationBatchStatus(batchId, 'failed').catch(() => {});
-
+        // fail-soft: base 제출 실패도 배치 전체 failed로 전이하지 않음
         return getNextBaseResponse({
             success: false,
             status: 500,

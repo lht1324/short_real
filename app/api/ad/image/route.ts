@@ -99,6 +99,29 @@ export async function POST(request: NextRequest) {
             }
         }
 
+        // brandPalette 검증 — nullable, 3-5 hex
+        let brandPalette: string[] | null = null;
+        if (body.brandPalette != null) {
+            if (!Array.isArray(body.brandPalette) || body.brandPalette.length < 3 || body.brandPalette.length > 5) {
+                return getNextBaseResponse({
+                    success: false,
+                    status: 400,
+                    error: "brandPalette must be null or an array of 3-5 hex colors."
+                });
+            }
+            const hexRegex = /^#([0-9A-Fa-f]{6})$/;
+            for (const hex of body.brandPalette) {
+                if (typeof hex !== 'string' || !hexRegex.test(hex)) {
+                    return getNextBaseResponse({
+                        success: false,
+                        status: 400,
+                        error: `Invalid brandPalette hex: ${hex}`
+                    });
+                }
+            }
+            brandPalette = body.brandPalette.map((h) => h.toUpperCase());
+        }
+
         // 배치 생성 — specs·results는 각 단계가 채운다
         const createdBatch = await adGenerationBatchServerAPI.postAdGenerationBatch({
             user_id: userId,
@@ -108,6 +131,7 @@ export async function POST(request: NextRequest) {
             aspect_ratios: aspectRatioKeys,
             concept_count: conceptCount,
             cta_enabled: body.ctaEnabled ?? false,
+            brand_palette: brandPalette,
             ad_creative_specs: [],
             ad_creative_results: [],
         });

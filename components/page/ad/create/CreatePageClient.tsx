@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import AppHeader from "@/components/page/ad/app-header/AppHeader";
-import CreateForm, { BackgroundMode } from "@/components/page/ad/create/components/CreateForm";
+import CreateForm from "@/components/page/ad/create/components/CreateForm";
 import {
     AdAspectRatio,
     AdGenerateRequest,
@@ -77,10 +77,7 @@ export default function CreatePageClient() {
 
     const [phase, setPhase] = useState<'form' | 'running'>('form');
 
-    // 구성 요소
-    const [backgroundMode, setBackgroundMode] = useState<BackgroundMode>('prompt');
-    const [backgroundPrompt, setBackgroundPrompt] = useState('');
-    const [backgroundImage, setBackgroundImage] = useState<AdUploadedComponent | null>(null);
+    // 구성 요소 — background는 AI가 creative마다 생성
     const [product, setProduct] = useState<AdUploadedComponent | null>(null);
     const [person, setPerson] = useState<AdUploadedComponent | null>(null);
 
@@ -88,22 +85,18 @@ export default function CreatePageClient() {
     const [aspectRatios, setAspectRatios] = useState<AdAspectRatio[]>(['1:1']);
     const [conceptCount, setConceptCount] = useState(4);
     const [ctaEnabled, setCtaEnabled] = useState(false);
+    const [brandPalette, setBrandPalette] = useState<string[] | null>(null);
 
     // 생성 진행
     const [task, setTask] = useState<AdTask | null>(null);
     const [status, setStatus] = useState<AdTaskStatus | null>(null);
     const [error, setError] = useState<string | null>(null);
 
-    const hasBackground = useMemo(
-        () => (backgroundMode === 'prompt' ? backgroundPrompt.trim().length > 0 : backgroundImage !== null),
-        [backgroundMode, backgroundPrompt, backgroundImage],
-    );
-
     const hasSubject = useMemo(() => product !== null || person !== null, [product, person]);
 
     const canGenerate = useMemo(
-        () => hasBackground && hasSubject && aspectRatios.length > 0,
-        [hasBackground, hasSubject, aspectRatios],
+        () => hasSubject && aspectRatios.length > 0,
+        [hasSubject, aspectRatios],
     );
 
     const totalImages = useMemo(() => aspectRatios.length * conceptCount, [aspectRatios, conceptCount]);
@@ -114,20 +107,22 @@ export default function CreatePageClient() {
         setStatus(null);
         setPhase('running');
 
+        const validPalette = brandPalette && brandPalette.length >= 3 && brandPalette.length <= 5 ? brandPalette : null;
         const request: AdGenerateRequest = {
-            backgroundPrompt: backgroundMode === 'prompt' ? backgroundPrompt.trim() || null : null,
-            backgroundImage: backgroundMode === 'upload' ? backgroundImage : null,
+            backgroundPrompt: null,
+            backgroundImage: null,
             product,
             person,
             aspectRatios,
             conceptCount,
             ctaEnabled,
+            brandPalette: validPalette,
         };
 
         const newTask = mockCreateTask(request);
         setTask(newTask);
         setStatus(newTask.status);
-    }, [backgroundMode, backgroundPrompt, backgroundImage, product, person, aspectRatios, conceptCount, ctaEnabled]);
+    }, [product, person, aspectRatios, conceptCount, ctaEnabled, brandPalette]);
 
     // 생성 진행 폴링
     useEffect(() => {
@@ -172,11 +167,9 @@ export default function CreatePageClient() {
         }`;
     }, [aspectRatios, conceptCount]);
 
-    const hintText = !hasBackground
-        ? 'Add a background to start.'
-        : !hasSubject
-          ? 'Add a product or person to start.'
-          : 'Ready — assets are credited to your plan per batch.';
+    const hintText = !hasSubject
+        ? 'Add a product or person to start — the AI paints a different background for each creative.'
+        : 'Ready — each creative gets its own AI background. Success assets only are credited.';
 
     const summaryText = useMemo(() => {
         const ratioCount = aspectRatios.length;
@@ -199,27 +192,18 @@ export default function CreatePageClient() {
                     <>
                         <div className="mt-6">
                             <CreateForm
-                                backgroundMode={backgroundMode}
-                                backgroundPrompt={backgroundPrompt}
-                                backgroundImage={backgroundImage}
                                 product={product}
                                 person={person}
-                                onBackgroundModeChange={setBackgroundMode}
-                                onBackgroundPromptChange={setBackgroundPrompt}
-                                onBackgroundImageChange={setBackgroundImage}
                                 onProductChange={setProduct}
                                 onPersonChange={setPerson}
                                 aspectRatios={aspectRatios}
                                 conceptCount={conceptCount}
                                 ctaEnabled={ctaEnabled}
-                                lockedRatio={
-                                    backgroundMode === 'upload' && backgroundImage?.width && backgroundImage?.height
-                                        ? { width: backgroundImage.width, height: backgroundImage.height }
-                                        : null
-                                }
+                                brandPalette={brandPalette}
                                 onAspectRatiosChange={setAspectRatios}
                                 onConceptCountChange={setConceptCount}
                                 onCtaEnabledChange={setCtaEnabled}
+                                onBrandPaletteChange={setBrandPalette}
                             />
                         </div>
 
@@ -230,7 +214,7 @@ export default function CreatePageClient() {
                                     <p className="text-[13px] font-medium text-text1">
                                         {conceptCount} creative{conceptCount > 1 ? 's' : ''} × {aspectRatios.length}{' '}
                                         format{aspectRatios.length > 1 ? 's' : ''} = {totalImages} asset
-                                        {totalImages > 1 ? 's' : ''} · credited per batch
+                                        {totalImages > 1 ? 's' : ''} · success only credited
                                     </p>
                                     <p className="mt-0.5 text-[12px] leading-relaxed text-text2">{hintText}</p>
                                 </div>

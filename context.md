@@ -1,35 +1,38 @@
-# 작업 진행 상황 (Last Updated: 2026-08-27 14:00)
+# 작업 진행 상황 (Last Updated: 2026-08-28 03:00)
 
 ## 1. 현재 상황 (Current Status)
 
-### 🎯 현 단계: ad 서버 파이프라인 구현 진행 중 — generation/webhook/process 완료, LLM 스켈레톤 완료, prompt/analysis 연결 대기 (2026-08-27)
+### 🎯 현 단계: ad 파이프라인 전 구간 배선 완료 + fail-soft/재시도/팔레트/UI 리뉴얼 (2026-08-28)
 
-* **이번 세션 구현 완료 (2026-08-27, tsc 클린)**
-  * **타입**: `AdGenerationBatch.ts:79` — `AdImageResult`에 `imageFileExtension: string | null` 추가 (process가 다운로드 시 확정해 RPC 마커로 기록, ratios/Result 화면 경로 재조립에 사용)
-  * **헬퍼**: `lib/api/server/ad/imageServerAPI.ts` 신규 — `AD_IMAGE_STORAGE_BUCKET="ad_image_storage"` + `getAdOriginalImageSignedUrls`/`getAdResultImageSignedUrl` + `extractFirstOutputUrl`/`inferFileExtension` + 경로 규칙 헬퍼 (`getAdInputImagePath`/`getAdResultImagePath`). process/Result 공용
-  * **RPC 래퍼**: `adGenerationBatchServerAPI.ts:80` — `updateCreativeImageByRatioGenerationCompleted(batchId, creativeIndex, ratioKey, fileExtension)` 추가. SQL은 사장이 직접 실행한 `update_creative_image_by_ratio_generation_completed(p_batch_id uuid, p_creative_index int, p_ratio_key text, p_file_extension text)` 새 시그니처(`jsonb_build_object`에 `imageFileExtension` 포함)에 대응 — `supabase/ad_generation_batches.sql` 파일은 미수정(사장 복붙 실행)
-  * **generation/base** (`app/api/ad/image/generation/base/route.ts:36`) — 배치 조회·`selectBaseRatio` 기준 비율·`imageSpecs[baseRatio]` 캡션 검증·원본 signed URL·`replicateClient.postAdImageEditPrediction` (model `NANO_BANANA`, webhookUrl `&ratioKey=` 포함, `aspectRatio` 전달)
-  * **generation/ratios** (`app/api/ad/image/generation/ratios/route.ts:48`) — 중립 실행자. `length===1` 직통(원본만 1장) / `length>=2` 뒤따름(`imageResults[baseRatio].imageFileExtension`으로 기준 signed URL 재조립 후 `base+원본` 참조, 남은 비율 반복 제출) + 불변성 가드(409)
-  * **webhook** (`app/webhook/ad/replicate/image/{base,ratios}/route.ts:29`) — `payload.id/status` 최소 검증(없으면 200 종료), `ratioKey`는 query 1순위·없으면 `payload.input.aspect_ratio` fallback, 멱등은 `process` RPC `coalesce`로 커버. `ratios`의 TODO(미정) 코멘트 정리 + `base`에 `ratioKey` 전달 추가
-  * **process/base·ratios** (`app/api/ad/image/process/{base,ratios}/route.ts:36`) — `replicatePayload.status !== 'succeeded'`면 `failed` 전이, `ratioKey` 확정→`output` 추출→다운로드→`Content-Type`/URL 기반 확장자 판별→`ad_image_storage`에 `ad_generation_result_{c}_{ratio}.{ext}` 업로드(upsert)→RPC#2. `base`는 항상 `generation/ratios` fire-and-forget, `ratios`는 `isLastCreative=true`면 `analysis` 호출
-  * **ReplicateClient** (`lib/ReplicateClient.ts:18,50,104`) — `NANO_BANANA` `aspect_ratio` 지원으로 코멘트 수정(사장 페이지 직접 확인 2026-08-27), `image_input` 빈 배열 시 생략
-  * **LLM 스켈레톤**: `lib/OpenRouterClient.ts:12` `QWEN_3_8_27B` 추가, `lib/api/server/ad/llmServerAPI.ts` 신규 `llmServerAPI.postAdCreativePrompt`(DeepSeek V4 Flash)/`postAdImageAnalysis`(QWEN_3_8_27B, `imageBase64List` 전달) — `llmServerAPI` 이름으로 export, `cleanAndParseJSON` 파싱 스켈레톤, output_schema는 TODO. `lib/llm-prompts/ad/POST_AD_CREATIVE_PROMPT.ts`/`POST_AD_IMAGE_ANALYSIS_PROMPT.ts` 백틱 프롬프트 스켈레톤 신규, 빈 파일 `POST_CREATIVE_IMAGE_BY_RATIO_PROMPT.ts` 삭제
-  * **Vision 분석 모델 후보 비교(사장 요청)**: GLM-5.3-Flash / DeepSeek V4-Flash-Vision-Exp / Muse Spark 1.2 (+ Qwen3.8-27B / Gemini 3.7 Flash 추가 조사) — 문서/차트는 Qwen·GLM 강세, 세밀 공간은 Qwen w/CI·Muse Spark 강세, DeepSeek는 800px 제한·experimental로 제외. ad `design` 좌표 작업에는 Qwen3.8-27B w/CI가 가장 적합으로 판단, `llmServerAPI.ts`에 반영
+* **이번 세션 구현 완료 (2026-08-28, tsc 클린, supabase 파일 삭제)**
+  * **타입 개명**: `AdGenerationBatch.ts:50` `AdCreativeSpec.imageSpecs` → `imagePromptRecord` (B안, `imagePromptRecord: Partial<Record<AdRatioKey,string>>`), `AdImageResult:76`에 `error?: {code,message}|null` 추가 (비율 1장 단위 fail-soft). `AdPipelineStartRequest:40`/`AdGenerationBatch:100`에 `brandPalette`/`brand_palette: string[]|null` nullable 추가 (3-5 hex, 조건부)
+  * **샘플러**: `lib/api/server/ad/creativeCombinationSampler.ts:88` `HARD_BANNED_AXIS_PAIRS` 0→8개 — `night_low×vivid`, `low_key×vivid`, `packshot×golden_hour`, `packshot×blue_hour`, `detail_close×negative_space`, `flat_lay×tight_crop`, `environment_shot×tight_crop`, `tight_crop×minimal_modern`
+  * **프롬프트 전면 재작성 (MASTER/IMAGE_GEN 수준)**: `lib/llm-prompts/ad/POST_AD_CREATIVE_PROMPT.ts:1` 46→259줄, `POST_AD_IMAGE_ANALYSIS_PROMPT.ts:1` 46→~320줄. `POST_AD_CREATIVE_PROMPT`는 4 Unit (Axis Decoding, Ratio-Aware Caption, Copy 1.7초 전쟁, Seed/Quality Gate) + `brand_palette` 조건부(입력 null이면 7종 키워드만, 값 있으면 nearest 키워드 매핑 + hex를 재질로 체화, 캡션엔 hex 직접 박지 않음) + `imagePromptRecord` 개명 + headline 항상 생성(렌더 토글) + `->`→`→` + 줄바꿈 정리. `POST_AD_IMAGE_ANALYSIS`는 Qwen 3.8-27B 멀티이미지 전제, 4 Unit (Forensic/Geometry/Scoring/Consistency), **Product-only/Person-only/Both 3분기**, 정수%(`0-100` 정수, Remotion용), `brand_palette` 조건부, `ratio_order` 순서 보장
+  * **LLM 서버**: `lib/api/server/ad/llmServerAPI.ts:18,136` `postAdCreativePrompt`에 `brandPalette` 추가, `image_prompt_record` 파싱, `reasoning/ratio_reasonings` 로그; `postAdImageAnalysis`에 `brandPalette` 추가, `imageInputs` 필터링, `reasoning` 로그. `maxCompletionTokens 2048→4096`
+  * **RPC/서버**: `lib/api/server/ad/adGenerationBatchServerAPI.ts:79,100,119` `updateCreativePromptOutputs` B안 단일화(폴백 제거), `updateCreativeImageAnalysis` 신규, `updateCreativeImageByRatioGenerationCompleted`에 `imageError`→`p_error` 전달. SQL은 파일 삭제 — 사장이 직접 실행 (`update_creative_prompt_outputs` B안, `update_creative_image_by_ratio_generation_completed` `p_file_extension`+`p_error`, `update_creative_image_analysis` error도 완료로 카운트)
+  * **진입**: `app/api/ad/image/route.ts:103` `brandPalette` 3-5 hex 검증 후 `brand_palette` 저장
+  * **프롬프트 라우트 배선**: `app/api/ad/creative/[creative-index]/prompt/route.ts:11` `postAdCreativePrompt` 호출 → `updateCreativePromptOutputs` → `aspect_ratios.length===1`이면 `generation/ratios` 직통, 아니면 `generation/base` fire-and-forget. `creativeIndex/conceptCount`는 LLM에 미전달(격리)
+  * **분석 라우트 배선**: `app/api/ad/creative/[creative-index]/analysis/route.ts:1` signed URL→base64 수집 (error 비율 스킵, 전부 실패 시 Vision 스킵 후 RPC로 바로 완료), `postAdImageAnalysis` 호출(성공 비율만), `imageFileExtension` 보존 병합 → `updateCreativeImageAnalysis`
+  * **생성**: `app/api/ad/image/generation/{base:18,ratios:21}/route.ts` `imagePromptRecord` 개명, `base`에 `baseRatio`·`attempt` 쿼리 추가 (차순위 폴백용), `ratios`에 `retryRatioKey`·`attempt` 단일 재시도 분기 + base 실패 시 원본만 폴백. `lib/ReplicateClient.ts:46` 주석 `imagePromptRecord`로 갱신
+  * **Fail-soft + n=1 재시도** (2026-08-28 결정): `app/api/ad/image/process/{base:58,ratios:58}/route.ts` `patchStatus('failed')` 제거. Replicate `failed/canceled` 시 `updateCreativeImageByRatioGenerationCompleted(..., null, {code,message})`로 해당 비율만 error 마킹. `process/base`는 같은 비율 1회 재시도(총 2회) 후 차순위 `selectBaseRatio(남은것)`로 `generation/base?baseRatio=..` 재호출, `process/ratios`는 같은 비율 1회 재시도 후 error 마킹. `generation/ratios`는 `409` 대신 원본 폴백, `analysis`는 error 비율 스킵. 배치 최종 `completed`는 error 포함 카운트 (`supabase` RPC3 `where score or error`)
+  * **UI**: `components/page/ad/create/components/CreateForm.tsx:1` Background 섹션 제거 (AI가 creative마다 배경 생성), `Sparkles` 배지 제거, `UploadZone`에 `tall` 적용(`py-2.5`→`py-5` + `sm:items-stretch`로 체감 40% 확대) + 한 화면 0스크롤 유지 위해 팔레트를 한 줄 pill로 압축. `Brand colors optional·3-5` 섹션 신규 — `react-colorful` `HexColorPicker`, swatch, `Add`/`X`, `Done` 팝오버, 기본색 `#111111` (off-black), 대문자 고정(`toUpperCase`), 5개 제한, 3개 미만 경고. `components/page/ad/create/CreatePageClient.tsx:75` Background 3 state 제거, `brandPalette` state 추가, `AdGenerateRequest.brandPalette` 추가, `hasBackground` 제거→`hasSubject`만으로 `canGenerate`, `hintText`/`credited per batch`→`success only`로 변경, `validPalette` 3-5일 때만 Batch에 포함
 
-* **사장 작업 완료**: Supabase에 `update_creative_image_by_ratio_generation_completed` 새 시그니처(`p_file_extension` 포함) 복붙 실행 완료. 버킷 `ad_image_storage` 생성은 잔여.
+* **사장 작업 완료**: `update_creative_prompt_outputs` B안, `update_creative_image_by_ratio_generation_completed` `p_file_extension`+`p_error`, `update_creative_image_analysis` error 카운트까지 직접 실행. `supabase/ad_generation_batches.sql` 파일은 삭제 (직접 SQL 전달로 전환). 버킷 `ad_image_storage`는 생성 완료.
 
-* **이전 세션 설계(2026-08-26) — 유효**
-  * 용어 Creative 유지, 조합 배분=코드 샘플러 / 표현=LLM, 플로우 뼈대(generation/webhook/process 분리, webhook_url 라우팅 위임, ratios 중립 실행자), process 연쇄, 병렬 오케스트레이션, RPC 3종 원리, 상태 흐름 `queued→generating→designing→completed(어느 단계든 failed)`, Replicate google 4종 라인업 확인은 그대로 유지 — 단 `NANO_BANANA`는 aspect_ratio 지원으로 정정.
+* **이전 세션 설계(2026-08-27) — 유효**: Creative 단위 배분/표현 분리, 플로우 뼈대, 병렬 오케스트레이션, RPC 3종 원리, 상태 흐름은 그대로 유지. `imageSpecs`는 `imagePromptRecord`로 전면 개명.
 
 ---
 
 ## 2. 완수된 작업 (Completed Milestones)
 
+### 2-14. 프롬프트 엘리트화 + 전 구간 배선 + fail-soft/팔레트/UI (2026-08-28)
+* 위 "이번 세션 구현 완료" 전체. B안 개명·brand_palette·HARD_BANNED 8개·프롬프트 2개 전면 재작성·prompt/analysis 배선·생성/프로세스 fail-soft n=1 재시도·UI Background 제거/팔레트/높이 조정.
+
 ### 2-13. generation/webhook/process + LLM 스켈레톤 구현 (2026-08-27)
-* 위 "이번 세션 구현 완료" 전체. AdImageResult 확장자·RPC 새 시그니처·imageServerAPI 버킷 헬퍼·generation 2종·webhook 검증·process 2종·ReplicateClient 정리·QWEN 모델 조사 및 llmServerAPI/프롬프트 스켈레톤.
+* AdImageResult 확장자·RPC 새 시그니처·imageServerAPI 버킷 헬퍼·generation 2종·webhook 검증·process 2종·ReplicateClient 정리·QWEN 모델 조사 및 llmServerAPI/프롬프트 스켈레톤.
 
 ### 2-12. 서버 파이프라인 설계 확정 + LLM 경계까지 구현 (2026-08-26)
-* 용어 논쟁(Edition/Concept) 종결, 배분 주체=코드 확정, 플로우 뼈대 확정, RPC 3종 갱신, ReplicateClient 작성, `adGenerationBatchServerAPI`·`creativeCombinationSampler`·`image/route.ts`·`creative/specs/route.ts`·`prompt` 스캐폴드.
+* 용어 논쟁 종결, 배분 주체=코드 확정, 플로우 뼈대 확정, RPC 3종 갱신, ReplicateClient 작성, `adGenerationBatchServerAPI`·`creativeCombinationSampler`·`image/route.ts`·`creative/specs/route.ts`·`prompt` 스캐폴드.
 
 ### 이전 마일스톤 요약 (상세는 git 히스토리 참조)
 * **2-11 (08-24)**: results 구조 확정 — `AdCreativeResult[]`(copy+imageResults 미러)
@@ -42,34 +45,18 @@
 
 ## 3. 향후 작업 (Next Steps)
 
-### 🔴 ad 파이프라인 잔여 구현 (순서대로)
-1. **prompt LLM 연결** (`app/api/ad/creative/[creative-index]/prompt/route.ts:82`) — `llmServerAPI.postAdCreativePrompt` 호출 → RPC `update_creative_prompt_outputs`로 `ad_creative_specs[creativeIndex].imageSpecs` + `ad_creative_results[creativeIndex].copy` 저장 → 비율 갯수 판정 → `generation/base` 또는 `generation/ratios` 호출. 출력 스키마는 프롬프트 파일 TODO.
-2. **analysis 연결** (`app/api/ad/creative/[creative-index]/analysis/route.ts`) — 스캐폴드 상태. `imageServerAPI`로 creative 묶음 이미지 base64 수집 → `llmServerAPI.postAdImageAnalysis`(QWEN_3_8_27B) → `imageFileExtension` 보존해 RPC `update_creative_image_analysis`로 `imageResults` 교체 → `completed` 전이.
+### 🔴 ad 파이프라인 잔여 (UI 전)
+* **HARD_BANNED 추가 완료** — 8개로 확장 완료, 더 필요 시 `creativeCombinationSampler.ts:88`에 추가만 하면 됨.
+* **Background 제거 완료** — CreateForm/CreatePageClient에서 제거 및 문구 교체 완료.
 
-### 🔴 사장: Supabase 버킷 생성
-* `ad_image_storage` 버킷 생성 (imageServerAPI가 사용). `supabase/ad_generation_batches.sql` 파일은 이번 세션에서 수정 안 함(사장 직접 실행으로 대체).
+### 🔴 다음 (UI)
+1. **mock 교체** — `CreatePageClient.tsx:43` `mockCreateTask/mockGetTask` → 실 `POST /api/ad/image` + 폴링. `window.__adMockTasks` 제거. 업로드 실 저장(`ad_image_storage`에 `{userId}/{batchId}/product_image.{ext}`) 라우트 필요 — 서버 플로우가 선행이라 다음.
+2. **Result 화면 Creative별 진행도 표시** — 완료된 creative부터 순차 노출, 실패 슬롯은 `AdImageResult.error`로 `Regenerate` (해당 creative만 prompt부터 재트리거).
+3. **과금 확정** — `success only`로 문구 교체 완료, 실제 Polar 차감은 성공 에셋 수 기준으로 이전 필요 (현재 `totalImages` 선차감).
 
-### 🔴 Creative 단위 fail-soft 전환 (2026-08-27 결정, 차후 작업)
-* **결정**: `specs` 단계만 배치 전체 `failed` 가능. 그 이후(prompt/generation/process/analysis) 실패는 **creative 단위로 격리** — 실패한 creative만 `ad_creative_results[i].error` 마킹, 나머지 creative는 계속 진행. 배치 최종 `completed`는 성공+실패 포함 조각 수로 판정 (`isLastCreative`는 성공/실패 합산).
-* **배경**: 광고 바닥(미디어바이어)은 10개 중 1개 실패해도 9개를 즉시 쓰는 걸 선호. Replicate `failed/canceled`가 일상이며, Meta Advantage+ 등도 `X/Y generated` 점진 노출+슬롯별 Retry. `process/base·ratios`의 `status !== succeeded → patchStatus('failed')`는 fail-soft 취지에 반하므로 제거 예정.
-* **구현 메모**: `AdCreativeResult`에 `error: {code,message}|null` 또는 `imageResults[ratio]`에 error 확장이 필요. RPC#2 마커는 `imageFileExtension: null + error` 형태로 확장 검토. UI는 실패 카드에 `Regenerate` (해당 creative만 prompt부터 재트리거), 빌링도 성공 에셋 단위 과금 검토.
-
-### 🔴 Result 화면 Creative별 진행도 표시 (사장 요청)
-* 전부 완료를 기다리지 않고 **완료된 creative부터 순차 노출**. 데이터 구조가 이미 지원(results 부분 채움) — 폴링 중인 getTask 응답에서 채워진 조각만 골라 렌더. 생성 중/완료 상태를 creative 단위로 표시. 위 fail-soft와 함께 실패 슬롯은 에러+재시도 UI로 표시.
-
-### 🟡 Product/Person 업로드 흐름 (의도적으로 미룸)
-* UploadZone은 현재 로컬 파일만 들고 있음. Storage `ad_image_storage` 버킷 결정 완료(이번 세션) — 업로드 라우트(music/upload 패턴 검토) 필요. 서버 플로우가 선행이라 나중에.
-
-### 🟡 mock 교체 (2곳)
-* CreatePageClient(mockCreateTask/mockGetTask) → 실 API, ResultsPageClient(mockGetTask) → 실 API. `window.__adMockTasks`와 `declare global` 제거. adServerAPI(ad/mock)·`app/api/ad/tasks/*` 정리 포함.
-
-### 🟡 CreateForm Background 제거 반영 (계속 대기)
-* 0스크롤 레이아웃에서 Background 섹션 제거 + "각 creative가 서로 다른 배경" 안내 문구.
-
-### 🟡 어법 필터(hard ban) 목록 확장
-* `HARD_BANNED_AXIS_PAIRS` 현재 빈 목록. 명백한 모순쌍(night_low×vivid, packshot×golden_hour 등)부터 도메인 판단으로 추가. 추가만 하면 rejection이 자동 처리.
-
-### 🟡 기존 TODO 유지
+### 🟡 대기
+* Product/Person 업로드 흐름 (Storage `ad_image_storage` 버킷 결정 완료 — 업로드 라우트 필요)
+* 어법 필터 목록 추가 확장은 완료, 배치 간 재사용 추적은 v1 미구현
 * CreateForm 최종 UI 확인(0스크롤·반응형·라이트/다크) — 사장 확인 대기
 * 요금 표시 방식(달러 vs 잔여 장수) 미결정
 * Remotion 폴더 구조 정리 (미완료)
@@ -81,15 +68,17 @@
 
 * 공용: `getNextBaseResponse()` 사용, UI는 영어, 들여쓰기 4칸, 함수명 약어 금지. ESLint 불가 — `npx tsc --noEmit`으로 검증.
 * **요청 경로**: 클라이언트 `postFetch('/api/ad/image')` → baseFetch가 `/api/client-gateway?path=...`로 래핑 → gateway가 세션 인증(C2S)+`userId` 주입 → `${BASE_URL}`(ngrok)으로 `x-internal-secret`과 함께 전달 → 내부 라우트는 S2S 가드. 내부 체이닝은 `internalFireAndForgetFetch(BASE_URL + 경로)` (query로 식별자, body로 페이로드, waitUntil로 실행 보장).
-* **웹훅 관례**: `app/webhook/{provider}/` 위치, 절대 에러 상태로 응답하지 않음(200 유지). suno/fal 선례와 동일. Replicate는 terminal 웹훅 실패 시 exponential backoff 재시도(최종 ~1분) + 드물게 순서 뒤바뀜 — 핸들러 멱등 필수. 이번 세션 webhook 2곳은 `payload.id/status` 최소 검증 + `ratioKey` query/`input.aspect_ratio` fallback 추가, 멱등은 process RPC `coalesce`로 커버.
-* **RPC 3종 원리**: 같은 행 jsonb 배열에 병렬 쓰기 → 앱 코드 read-modify-write 금지, RPC 단일 UPDATE+jsonb_set(행 잠금)만 사용. RPC#2는 `p_file_extension` 추가(2026-08-27) — design/score 인자 없음(마커 방식), 마커에 `imageFileExtension` 포함. RPC#3이 analysis 값 채움(확장자 보존).
-* **비율 파생 (확정)**: 기준 1:1 우선(없으면 캐노니컬 첫째 — `selectBaseRatio`) 1장 → 나머지는 기준 이미지 참조 재생성(outpainting 아님). ratios 라우트는 중립 실행자 — aspect_ratios length가 모드 판별.
-* **Replicate SDK**: `replicate@^1.4.0` 설치됨. `new Replicate({auth})`, `predictions.create({model: 'owner/name', input, webhook, webhook_events_filter:['completed']})`. output은 string|string[]|FileOutput — `adImageServerAPI.extractFirstOutputUrl`로 정규화. 모델 enum: NANO_BANANA(-PRO/-2/-2_LITE). **NANO_BANANA도 aspect_ratio 공식 지원(사장 페이지 직접 확인 2026-08-27)** — 이전 "미지원" 정정.
-* **파일 경로 규칙**: 입력 `{user_id}/{batch_id}/{product|person}_image.{ext}`, 출력 `{user_id}/{batch_id}/ad_generation_result_{c}_{ratio}.{ext}` — c+ratio+imageFileExtension으로 signed URL 재구성, 목록 DB 저장 불필요. 버킷 `ad_image_storage` (imageServerAPI).
-* **AdImageResult**: `design: AdDesignLayout, score: number | null, imageFileExtension: string | null` (2026-08-27 추가) — process가 다운로드 시 `inferFileExtension(Content-Type|URL)`로 확정.
-* **LLM**: Creative 디렉터 `DEEPSEEK_V_4_FLASH`(텍스트), Vision 분석 `QWEN_3_8_27B`(멀티모달, 262K→1M, Apache 2.0) — GLM-5.3-Flash/DeepSeek-V4-Vision-Exp/Muse Spark 1.2/Gemini 3.7 Flash 비교 후 분석에 Qwen 선정(2026-08-27). `lib/api/server/ad/llmServerAPI.ts` `llmServerAPI.postAdCreativePrompt`/`postAdImageAnalysis`, 프롬프트는 `lib/llm-prompts/ad/POST_AD_{CREATIVE,IMAGE_ANALYSIS}_PROMPT.ts` 백틱(TODO output_schema).
-* **용어 계약 (확정)**: creatives × formats = assets, 실행 1회 = batch. Concept은 전략 계층이라 현재 미사용 — 나중에 훅/스크립트 변주 생기면 그 상위 계층명으로 재등장 가능.
-* **시드 규칙**: creative별 서로 다른 seed / 같은 creative 내 비율 = 같은 seed. 재현은 저장된 specs(DB)가 담당 — 샘플러 시드는 매번 새로 뽑아도 됨.
-* **사장 UI 원칙**: px 하드코딩 금지(rem/vh/vw/%/fr), 광고 바닥 언어, 0스크롤 선호.
-* **ad_variation_study.md**: §0·§4·§5·§7까지 2026-08-26 결정 반영 완료. 향후 설계 변경 시 이 문서 갱신할 것. (이번 세션: AdImageResult 확장자·RPC#2 시그니처·NANO_BANANA aspect_ratio 지원·Qwen Vision 선정 반영 예정)
+* **웹훅 관례**: `app/webhook/{provider}/` 위치, 절대 에러 상태로 응답하지 않음(200 유지). Replicate는 terminal 웹훅 실패 시 exponential backoff 재시도(최종 ~1분) + 드물게 순서 뒤바뀜 — 핸들러 멱등 필수. `ratioKey`는 query 1순위·없으면 `input.aspect_ratio` fallback, `attempt`는 재시도 횟수 추적.
+* **RPC 3종 원리**: 같은 행 jsonb 배열에 병렬 쓰기 → 앱 코드 read-modify-write 금지, RPC 단일 UPDATE+jsonb_set(행 잠금)만 사용. RPC#1은 `imagePromptRecord` 단일(B안), RPC#2는 `p_file_extension`+`p_error` 포함 마커, RPC#3은 error도 완료로 카운트.
+* **비율 파생 (확정)**: 기준 1:1 우선(없으면 캐노니컬 첫째 — `selectBaseRatio`) 1장 → 나머지는 기준 이미지 참조 재생성. `n=1` 재시도: 같은 비율 1회 재시도(총 2회) 후 차순위 base로 폴백, ratios도 1회 재시도. base 없으면 원본만 폴백.
+* **Replicate SDK**: `replicate@^1.4.0` 설치됨. `new Replicate({auth})`, `predictions.create({model: 'owner/name', input, webhook, webhook_events_filter:['completed']})`. output은 string|string[]|FileOutput — `adImageServerAPI.extractFirstOutputUrl`로 정규화. 모델 enum: NANO_BANANA(-PRO/-2/-2_LITE).
+* **파일 경로 규칙**: 입력 `{user_id}/{batch_id}/{product|person}_image.{ext}`, 출력 `{user_id}/{batch_id}/ad_generation_result_{c}_{ratio}.{ext}` — c+ratio+imageFileExtension으로 signed URL 재구성. 버킷 `ad_image_storage` (imageServerAPI).
+* **AdImageResult**: `design: AdDesignLayout, score: number | null, imageFileExtension: string | null, error?: {code,message}|null` — process가 다운로드 시 `inferFileExtension`으로 확정, 실패 시 `error`로 격리.
+* **AdCreativeSpec**: `imagePromptRecord: Partial<Record<AdRatioKey,string>>` (B안), `seed: number` — 프롬프트 단계가 채움. `brand_palette`는 배치 생성 시 3-5 hex or null.
+* **LLM**: Creative 디렉터 `DEEPSEEK_V_4_FLASH`(텍스트, `imagePromptRecord`+`copy`+`reasoning`), Vision 분석 `QWEN_3_8_27B`(멀티모달, 정수% 0-100, 3분기 Product/Person/Both, `brand_palette` 조건부) — `lib/api/server/ad/llmServerAPI.ts` `postAdCreativePrompt`/`postAdImageAnalysis`, 프롬프트는 `lib/llm-prompts/ad/POST_AD_{CREATIVE,IMAGE_ANALYSIS}_PROMPT.ts` 엘리트 250-320줄.
+* **용어 계약 (확정)**: creatives × formats = assets, 실행 1회 = batch.
+* **시드 규칙**: creative별 서로 다른 seed / 같은 creative 내 비율 = 같은 seed. 재현은 저장된 specs(DB)가 담당.
+* **사장 UI 원칙**: px 하드코딩 금지(rem/vh/vw/%/fr), 광고 바닥 언어, 0스크롤 선호. 팔레트는 상시 노출이되 한 줄 pill로 압축해 0스크롤 유지, `optional` 배지로 즉시 인지.
+* **ad_variation_study.md**: §1·§2·§6 업데이트 필요 — `imageSpecs`→`imagePromptRecord`, `brand_palette` 조건부, HARD_BANNED 8개, fail-soft per-image + n=1 재시도 반영 예정.
+* **supabase 파일**: `supabase/ad_generation_batches.sql` 삭제 — SQL은 직접 전달. `brand_palette` 컬럼, B안, `p_file_extension`+`p_error`는 사장이 직접 실행 완료.
 * Remotion 4.0.507: `<OffthreadVideo>` + `colorSpace: 'bt709'`, 저사양 `concurrency: 1`.

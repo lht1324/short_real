@@ -43,6 +43,8 @@ export interface AdPipelineStartRequest {
     aspectRatios: string[];
     conceptCount: number;
     ctaEnabled?: boolean;
+    /** 브랜드 팔레트 3-5 hex — nullable, 조건부 입력. 비어 있으면 7종 랜덤 분배 유지 */
+    brandPalette?: string[] | null;
 }
 
 export interface AdCreativeSpec {
@@ -54,12 +56,8 @@ export interface AdCreativeSpec {
     palette: string;
     framing: string;
     layout_tone: string;
-    /**
-     * 이미지(비율)별 최종 I2I 캡션. 같은 creative의 비율 파생마다 다른 캡션.
-     * 비율마다 여백/강조가 달라야 하므로 키를 ratio로 구분 (생성 후 불변 → DB가 진실).
-     * 배분(specs) 시점엔 아직 미생성 — 프롬프트 단계(LLM)가 선택 비율만 채운다.
-     */
-    imageSpecs: Partial<Record<AdRatioKey, string>>;
+    /** 이미지(비율)별 최종 I2I 캡션 레코드. 같은 creative의 비율 파생마다 다른 캡션. */
+    imagePromptRecord: Partial<Record<AdRatioKey, string>>;
     /** creative 공통 시드 — 비율 파생들이 같은 seed를 공유해 "같은 개념"을 맞추는 신호 */
     seed: number;
 }
@@ -75,7 +73,7 @@ export interface AdCopySpec {
     cta: string | null;
 }
 
-/** 비율(이미지) 1장의 산출물 — 이미지 생성 후 Gemini Vision이 확정 */
+/** 비율(이미지) 1장의 산출물 — 이미지 생성 후 Qwen Vision이 확정. fail-soft: error가 있으면 해당 비율만 실패로 격리 */
 export interface AdImageResult {
     /** 오버레이 지오메트리(헤드라인/CTA/로고 위치 + scrim) — 실제 이미지를 보고 결정 */
     design: AdDesignLayout;
@@ -83,6 +81,8 @@ export interface AdImageResult {
     score: number | null;
     /** Storage 규칙 경로의 확장자 — process가 다운로드 시 확정해 RPC 마커로 기록 */
     imageFileExtension: string | null;
+    /** fail-soft — 해당 비율 생성/저장 실패 시에만 존재. 성공 시 null */
+    error?: { code: string; message: string } | null;
 }
 
 /** creative 1개의 결과 — ad_creative_specs[i]와 creativeIndex로 1:1 대응 */
@@ -103,7 +103,9 @@ export interface AdGenerationBatch {
     aspect_ratios: AdRatioKey[];
     concept_count: number;
     cta_enabled: boolean;
-    /** ★ 변주 스펙 벡터(지시문) — creative별 (5축+이미지 캡션+seed) */
+    /** 브랜드 팔레트 3-5 hex — nullable, 조건부. 비어 있으면 7종 랜덤 분배 */
+    brand_palette: string[] | null;
+    /** ★ 변주 스펙 벡터(지시문) — creative별 (5축+이미지 캡션 레코드+seed) */
     ad_creative_specs: AdCreativeSpec[];
     /**
      * ★ 2026-08-24 확정 — 결과 저장은 RPC(jsonb 부분 갱신):

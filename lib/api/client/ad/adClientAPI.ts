@@ -43,6 +43,7 @@ export interface AdGenerateRequest {
      */
     conceptCount: number;
     ctaEnabled: boolean;
+    brandPalette?: string[] | null;
 }
 
 export type AdTaskStatus = 'queued' | 'generating' | 'designing' | 'rendering' | 'completed' | 'failed';

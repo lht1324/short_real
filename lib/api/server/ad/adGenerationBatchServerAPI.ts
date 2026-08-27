@@ -76,27 +76,69 @@ export const adGenerationBatchServerAPI = {
         return adGenerationBatchServerAPI.patchAdGenerationBatch(batchId, { status });
     },
 
-    // RPC - 이미지 생성 완료 마커 기록 (멱등, 행 잠금)
+    // RPC - 프롬프트 산출물 저장 (imagePromptRecord + copy) — creative당 1회, 행 잠금
+    async updateCreativePromptOutputs(
+        batchId: string,
+        creativeIndex: number,
+        imagePromptRecord: Record<string, string>,
+        copy: { headline: string | null; cta: string | null },
+    ): Promise<void> {
+        const supabase = createSupabaseServiceRoleClient();
+
+        const { error } = await supabase.rpc('update_creative_prompt_outputs', {
+            p_batch_id: batchId,
+            p_creative_index: creativeIndex,
+            p_image_prompt_record: imagePromptRecord,
+            p_copy: copy,
+        });
+
+        if (error) {
+            throw new Error(`Failed to update creative prompt outputs: ${error.message}`);
+        }
+    },
+
+    // RPC - 분석 결과 저장 (design/score 슬라이스 교체, completed 전이)
+    async updateCreativeImageAnalysis(
+        batchId: string,
+        creativeIndex: number,
+        imageResults: Record<string, unknown>,
+    ): Promise<void> {
+        const supabase = createSupabaseServiceRoleClient();
+
+        const { error } = await supabase.rpc('update_creative_image_analysis', {
+            p_batch_id: batchId,
+            p_creative_index: creativeIndex,
+            p_image_results: imageResults,
+        });
+
+        if (error) {
+            throw new Error(`Failed to update creative image analysis: ${error.message}`);
+        }
+    },
+
+    // RPC - 이미지 생성 완료 마커 기록 (멱등, 행 잠금) — fail-soft: error 시에도 마커로 카운트
     async updateCreativeImageByRatioGenerationCompleted(
         batchId: string,
         creativeIndex: number,
         ratioKey: string,
-        fileExtension: string,
+        fileExtension: string | null,
+        imageError?: { code: string; message: string } | null,
     ): Promise<{ isLastCreative: boolean; batchCompleted: boolean }> {
         const supabase = createSupabaseServiceRoleClient();
 
-        const { data, error } = await supabase.rpc(
+        const { data, error: rpcError } = await supabase.rpc(
             'update_creative_image_by_ratio_generation_completed',
             {
                 p_batch_id: batchId,
                 p_creative_index: creativeIndex,
                 p_ratio_key: ratioKey,
                 p_file_extension: fileExtension,
+                p_error: imageError ?? null,
             },
         );
 
-        if (error) {
-            throw new Error(`Failed to update creative image completion: ${error.message}`);
+        if (rpcError) {
+            throw new Error(`Failed to update creative image completion: ${rpcError.message}`);
         }
 
         const result = data as { isLastCreative?: boolean; batchCompleted?: boolean } | null;

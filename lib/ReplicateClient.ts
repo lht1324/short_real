@@ -43,7 +43,7 @@ function createReplicateInstance(): Replicate {
 export interface AdImageEditPredictionParams {
     /** 사용 모델 — 미지정 시 원본 nano-banana */
     model?: ReplicateImageModelId;
-    /** I2I 지시문 — creative의 캡션(imageSpecs) */
+    /** I2I 지시문 — creative의 캡션(imagePromptRecord) */
     prompt: string;
     /** 참조 이미지 URL 목록 — [원본 상품/인물] 또는 [기준 이미지 + 원본] */
     imageUrls: string[];
