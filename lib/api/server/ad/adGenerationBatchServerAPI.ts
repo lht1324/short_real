@@ -71,6 +71,50 @@ export const adGenerationBatchServerAPI = {
         return data;
     },
 
+    // GET - 유저별 배치 리스트 (최신순, 페이지네이션)
+    async listAdGenerationBatchesByUserId(
+        userId: string,
+        options?: { limit?: number; offset?: number },
+    ): Promise<AdGenerationBatch[]> {
+        const supabase = createSupabaseServiceRoleClient();
+        const limit = Math.min(Math.max(options?.limit ?? 20, 1), 50);
+        const offset = Math.max(options?.offset ?? 0, 0);
+
+        const { data, error } = await supabase
+            .from('ad_generation_batches')
+            .select('*')
+            .eq('user_id', userId)
+            .order('created_at', { ascending: false })
+            .range(offset, offset + limit - 1);
+
+        if (error) {
+            throw new Error(`Failed to list ad generation batches: ${error.message}`);
+        }
+
+        return (data ?? []) as AdGenerationBatch[];
+    },
+
+    // GET - 유저 소유 검증 포함 단일 조회
+    async getAdGenerationBatchByIdForUser(batchId: string, userId: string): Promise<AdGenerationBatch | null> {
+        const supabase = createSupabaseServiceRoleClient();
+
+        const { data, error } = await supabase
+            .from('ad_generation_batches')
+            .select('*')
+            .eq('id', batchId)
+            .eq('user_id', userId)
+            .single();
+
+        if (error) {
+            if (error.code === 'PGRST116') {
+                return null;
+            }
+            throw new Error(`Failed to get ad generation batch: ${error.message}`);
+        }
+
+        return data;
+    },
+
     // PATCH - 상태만 업데이트
     async patchAdGenerationBatchStatus(batchId: string, status: AdBatchStatus): Promise<AdGenerationBatch> {
         return adGenerationBatchServerAPI.patchAdGenerationBatch(batchId, { status });

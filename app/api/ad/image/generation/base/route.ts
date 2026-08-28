@@ -88,7 +88,14 @@ export async function POST(request: NextRequest) {
             });
         }
 
-        const originalImageUrls = await adImageServerAPI.getAdOriginalImageSignedUrls(batch);
+        // 원본 업로드가 아직이면 text-only로 폴백 — 파이프라인 전체를 블로킹하지 않음
+        let originalImageUrls: string[] = [];
+        try {
+            originalImageUrls = await adImageServerAPI.getAdOriginalImageSignedUrls(batch);
+        } catch (signedUrlError) {
+            console.warn(`[generation/base] signedUrl fallback to empty (batch=${batchId}):`, signedUrlError);
+            originalImageUrls = [];
+        }
 
         const baseUrl = process.env.BASE_URL;
 

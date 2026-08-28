@@ -18,7 +18,13 @@ function AppHeader() {
                     </span>
                 </a>
 
-                <div className="hidden items-center gap-6 md:flex">
+                <div className="hidden items-center gap-3 md:flex">
+                    <a
+                        href="/ad/projects"
+                        className="rounded-full px-3 py-1.5 font-mono text-[11px] uppercase tracking-[0.14em] text-text2 transition-colors hover:bg-canvas hover:text-text1"
+                    >
+                        Projects
+                    </a>
                     <span className="font-mono text-[11px] uppercase tracking-[0.18em] text-text2">
                         {MOCK_USAGE.used.toLocaleString()} / {MOCK_USAGE.total.toLocaleString()} images
                     </span>

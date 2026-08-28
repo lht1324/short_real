@@ -110,7 +110,12 @@ export async function POST(request: NextRequest) {
             const baseFileExtensionForRetry = baseImageResultForRetry?.imageFileExtension;
             const baseHasErrorForRetry = !!(baseImageResultForRetry as { error?: unknown } | undefined)?.error;
             let referenceUrlsForRetry: string[];
-            const originalUrlsForRetry = await adImageServerAPI.getAdOriginalImageSignedUrls(batch);
+            let originalUrlsForRetry: string[] = [];
+            try {
+                originalUrlsForRetry = await adImageServerAPI.getAdOriginalImageSignedUrls(batch);
+            } catch {
+                originalUrlsForRetry = [];
+            }
             if (!baseFileExtensionForRetry || typeof baseFileExtensionForRetry !== 'string' || baseFileExtensionForRetry.trim().length === 0 || baseHasErrorForRetry || baseRatioForRetry === retryRatioKey) {
                 referenceUrlsForRetry = [...originalUrlsForRetry];
             } else {
@@ -145,7 +150,12 @@ export async function POST(request: NextRequest) {
                 });
             }
 
-            const originalImageUrls = await adImageServerAPI.getAdOriginalImageSignedUrls(batch);
+            let originalImageUrls: string[] = [];
+            try {
+                originalImageUrls = await adImageServerAPI.getAdOriginalImageSignedUrls(batch);
+            } catch {
+                originalImageUrls = [];
+            }
             const webhookUrl = `${baseUrl}/webhook/ad/replicate/image/ratios?batchId=${encodeURIComponent(batchId)}&creativeIndex=${encodeURIComponent(String(creativeIndex))}&ratioKey=${encodeURIComponent(singleRatio)}&attempt=${encodeURIComponent(String(attempt))}`;
 
             await replicateClient.postAdImageEditPrediction({
@@ -172,7 +182,12 @@ export async function POST(request: NextRequest) {
         const baseHasError = !!(baseImageResult as { error?: unknown } | undefined)?.error;
 
         let referenceUrlsWithBase: string[];
-        const originalImageUrls = await adImageServerAPI.getAdOriginalImageSignedUrls(batch);
+        let originalImageUrls: string[] = [];
+        try {
+            originalImageUrls = await adImageServerAPI.getAdOriginalImageSignedUrls(batch);
+        } catch {
+            originalImageUrls = [];
+        }
 
         if (!baseFileExtension || typeof baseFileExtension !== 'string' || baseFileExtension.trim().length === 0 || baseHasError) {
             console.warn(`[generation/ratios] base ${baseRatio} not ready or errored for creative ${creativeIndex}, falling back to originals only (fail-soft)`);

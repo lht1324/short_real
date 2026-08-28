@@ -64,6 +64,30 @@ export async function postFetch(route: string, body?: unknown) {
     return response;
 }
 
+export async function postFormFetch(route: string, formData: FormData) {
+    const rootPath = getRootPath(route);
+    const gatewayRoute = getGatewayRoute(route);
+    console.log(`[${route}][form]: ${rootPath}${gatewayRoute}`);
+    const response = await fetch(`${rootPath}${gatewayRoute}`, {
+        method: 'POST',
+        // multipart/form-data는 브라우저가 boundary를 자동 생성하므로 Content-Type을 수동 설정하지 않음
+        headers: {
+            ...(isProd ? { } : {
+                'ngrok-skip-browser-warning': '69420'
+            }),
+        },
+        body: formData,
+        credentials: 'include',
+    });
+
+    if (!response.ok) {
+        console.error('HTTP error:', response.status, response.statusText);
+        throw Error(`[${response.status}] ${response.statusText}`);
+    }
+
+    return response;
+}
+
 export async function patchFetch(route: string, body?: unknown) {
     const rootPath = getRootPath(route);
     const gatewayRoute = getGatewayRoute(route);

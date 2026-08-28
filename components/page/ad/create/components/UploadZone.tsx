@@ -47,6 +47,7 @@ function UploadZone({ label, help, notePlaceholder, tall, file, onChange }: Uplo
                     previewUrl: objectUrl,
                     width: image.naturalWidth,
                     height: image.naturalHeight,
+                    file,
                 });
             };
             image.src = objectUrl;

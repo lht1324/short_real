@@ -25,6 +25,8 @@ export interface AdUploadedComponent {
      * 이미지+첨언+템플릿을 결합해 구조적 지시문으로 변환한 뒤 사용할 것.
      */
     note?: string;
+    /** 원본 File — 클라이언트 메모리 전용, 전송 시 FormData로 함께 업로드 */
+    file?: File;
 }
 
 export interface AdGenerateRequest {

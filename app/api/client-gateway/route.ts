@@ -58,14 +58,21 @@ async function handleGatewayRequest(request: NextRequest) {
 
     console.log(`[client-gateway] Proxying request to: ${internalApiUrl}`);
 
+    const isFormData = request.headers.get('content-type')?.includes('multipart/form-data');
+
     try {
         const fetchOptions: RequestInit = {
             method: method,
             headers: {
-                "Content-Type": "application/json",
+                // FormData는 boundary가 필요하므로 Content-Type을 직접 설정하지 않음
+                ...(isFormData ? {} : { "Content-Type": "application/json" }),
                 "x-internal-secret": process.env.INTERNAL_FIRE_AND_FORGET_API_SECRET!,
             },
-            body: method !== 'GET' ? JSON.stringify(await request.json().catch(() => ({}))) : undefined,
+            body: method !== 'GET'
+                ? isFormData
+                    ? await request.formData()
+                    : JSON.stringify(await request.json().catch(() => ({})))
+                : undefined,
         };
 
         // 5. Proxy the request and return the response directly
