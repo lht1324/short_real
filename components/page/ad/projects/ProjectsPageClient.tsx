@@ -7,6 +7,7 @@ import AppHeader from "@/components/page/ad/app-header/AppHeader";
 import ProjectCard from "@/components/page/ad/projects/components/ProjectCard";
 import { adProjectClientAPI } from "@/lib/api/client/ad/adProjectClientAPI";
 import { AdGenerationBatch } from "@/lib/api/types/supabase/ad/AdGenerationBatch";
+import { supabase } from "@/lib/supabase/supabaseClient";
 
 type FilterKey = 'all' | 'running' | 'completed';
 
@@ -49,17 +50,37 @@ export default function ProjectsPageClient() {
         fetchProjects();
     }, [fetchProjects]);
 
-    // running이 하나라도 있으면 4초 폴링
+    // Realtime 구독 — running 여부에 관계없이 변경 시 리스트를 패치 (폴링 제거, 끊기면 Refresh 버튼으로 수동 갱신)
+    // StrictMode 이중 마운트로 인한 "cannot add postgres_changes after subscribe" 방지: 채널명에 랜덤 suffix
     useEffect(() => {
-        const hasRunning = projects.some((p) => isRunningStatus(p.status));
-        if (!hasRunning || isLoading) return;
+        let channel: ReturnType<typeof supabase.channel> | null = null;
 
-        const interval = setInterval(() => {
-            fetchProjects(true);
-        }, 4000);
+        (async () => {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) return;
 
-        return () => clearInterval(interval);
-    }, [projects, isLoading, fetchProjects]);
+            channel = supabase
+                .channel(`ad-batches-list-${user.id}-${Math.random().toString(36).slice(2, 6)}`)
+                .on(
+                    'postgres_changes',
+                    { event: '*', schema: 'public', table: 'ad_generation_batches', filter: `user_id=eq.${user.id}` },
+                    (payload) => {
+                        if (payload.eventType === 'INSERT') {
+                            setProjects((prev) => [payload.new as AdGenerationBatch, ...prev]);
+                        } else if (payload.eventType === 'UPDATE') {
+                            setProjects((prev) => prev.map((p) => p.id === (payload.new as AdGenerationBatch).id ? (payload.new as AdGenerationBatch) : p));
+                        } else if (payload.eventType === 'DELETE') {
+                            setProjects((prev) => prev.filter((p) => p.id !== (payload.old as AdGenerationBatch).id));
+                        }
+                    },
+                )
+                .subscribe();
+        })();
+
+        return () => {
+            if (channel) supabase.removeChannel(channel);
+        };
+    }, []);
 
     const onClickRefresh = useCallback(() => {
         fetchProjects(true);

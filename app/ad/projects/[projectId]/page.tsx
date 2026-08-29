@@ -1,5 +1,5 @@
 import { Metadata } from "next";
-import ProjectDetailClient from "@/components/page/ad/projects/[projectId]/~ProjectDetailClient";
+import ProjectDetailClient from "@/components/page/ad/projects/[projectId]/ProjectDetailClient";
 
 export const metadata: Metadata = {
     title: "Project — ShortReal Ad",

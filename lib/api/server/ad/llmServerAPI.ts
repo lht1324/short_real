@@ -68,7 +68,7 @@ Instruction: Generate ratio-specific I2I captions and ad copy according to the s
 
             const generatedContent = await client.createCompletion(
                 {
-                    model: OpenRouterModel.DEEPSEEK_V_4_FLASH,
+                    model: OpenRouterModel.DEEPSEEK_V_4_FLASH_0731,
                     systemMessage: POST_AD_CREATIVE_PROMPT,
                     userMessage,
                     maxCompletionTokens: 4096,
@@ -84,6 +84,8 @@ Instruction: Generate ratio-specific I2I captions and ad copy according to the s
                     error: { message: "No content from LLM", code: "EMPTY_RESPONSE" },
                 };
             }
+
+            console.log(`[ad/creative/${creativeIndex}] raw LLM output (first 4000 chars):`, generatedContent.slice(0, 4000));
 
             try {
                 const parsed: {
@@ -109,6 +111,7 @@ Instruction: Generate ratio-specific I2I captions and ad copy according to the s
                     ratioReasonings: parsed.ratio_reasonings,
                 };
             } catch (parseError) {
+                console.error(`[ad/creative/${creativeIndex}] raw LLM output on PARSE_ERROR:`, generatedContent.slice(0, 4000));
                 return {
                     success: false,
                     error: {
@@ -194,6 +197,8 @@ Each image corresponds to the ratio at the same index in ratio_order.
                 };
             }
 
+            console.log(`[ad/creative/${creativeIndex}] raw Vision output (first 4000 chars):`, generatedContent.slice(0, 4000));
+
             try {
                 const parsed: {
                     reasoning: string;
@@ -225,6 +230,7 @@ Each image corresponds to the ratio at the same index in ratio_order.
                     imageResults,
                 };
             } catch (parseError) {
+                console.error(`[ad/creative/${creativeIndex}] raw Vision output on PARSE_ERROR:`, generatedContent.slice(0, 4000));
                 return {
                     success: false,
                     error: {

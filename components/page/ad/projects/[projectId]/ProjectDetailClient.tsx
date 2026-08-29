@@ -8,6 +8,7 @@ import AppHeader from "@/components/page/ad/app-header/AppHeader";
 import CreativeRow from "@/components/page/ad/projects/[projectId]/components/CreativeRow";
 import { adProjectClientAPI, getProjectProgress } from "@/lib/api/client/ad/adProjectClientAPI";
 import { AdGenerationBatch, AdRatioKey } from "@/lib/api/types/supabase/ad/AdGenerationBatch";
+import { supabase } from "@/lib/supabase/supabaseClient";
 
 type DetailStatus = 'loading' | 'ready' | 'error';
 
@@ -46,12 +47,27 @@ export default function ProjectDetailClient({ projectId }: { projectId: string }
         return project.status !== 'completed' && project.status !== 'failed';
     }, [project]);
 
-    // running이면 3초 폴링
+    // Realtime 구독 — 해당 batch의 변경 시 즉시 갱신 (폴링 제거, 끊기면 Refresh 버튼으로 수동 갱신)
+    // StrictMode 이중 마운트 충돌 방지: 채널명 랜덤 suffix
     useEffect(() => {
-        if (!isRunning || status !== 'ready') return;
-        const interval = setInterval(() => fetchProject(true), 3000);
-        return () => clearInterval(interval);
-    }, [isRunning, status, fetchProject]);
+        if (status !== 'ready') return;
+
+        const channel = supabase
+            .channel(`ad-batch-${projectId}-${Math.random().toString(36).slice(2, 6)}`)
+            .on(
+                'postgres_changes',
+                { event: '*', schema: 'public', table: 'ad_generation_batches', filter: `id=eq.${projectId}` },
+                () => {
+                    // payload.new에는 메타만 있고 signedUrls는 서버에서 재계산해야 하므로 전체 fetch
+                    fetchProject(true);
+                },
+            )
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(channel);
+        };
+    }, [projectId, status, fetchProject]);
 
     const progress = useMemo(() => {
         if (!project) return null;

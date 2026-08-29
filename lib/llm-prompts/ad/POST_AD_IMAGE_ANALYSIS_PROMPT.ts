@@ -228,6 +228,7 @@ export const POST_AD_IMAGE_ANALYSIS_PROMPT = `
 
   <constraint>
     - Return valid JSON only. No prose, no markdown, no code fences, no commentary outside JSON.
+    - Language: ALL output text MUST be English only. This includes reasoning, ratio_reasonings, and any explanatory text. Design text fields (headline/cta) are verbatim copies of the provided copy (already English) — do NOT translate. Korean, Chinese, or any non-English reasoning is strictly forbidden.
     - Keys MUST be exactly: reasoning, ratio_reasonings, image_results. No extra top-level keys. No snake_case variance ("imageResults" wrong, "image_results" correct).
     - ratio_reasonings and image_results MUST have identical key sets, both exactly equal to ratio_order (no missing, no hallucinated ratios). Order does not matter but keys must match.
     - Every image_results[ratio].design.headline.text MUST equal copy.headline verbatim (case, punctuation). Every design.cta.text MUST equal copy.cta verbatim or be null. Do NOT rephrase, translate, or truncate.
