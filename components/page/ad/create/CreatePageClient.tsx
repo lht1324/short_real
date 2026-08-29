@@ -106,58 +106,63 @@ export default function CreatePageClient() {
         <>
             <AppHeader />
 
-            <main className="mx-auto flex min-h-[100dvh] w-full max-w-[90rem] flex-col px-6 pb-4 pt-24 sm:px-8">
-                <h1 className="text-2xl font-bold tracking-tight text-text1">Create your ad</h1>
-                <p className="mt-1 text-[12px] text-text2">
-                    Upload your product, pick where it runs, and generate.
-                </p>
+            {/* 헤더(top-4) / 바(bottom-4) 고정, 사이는 flex-1로 꽉 채움 */}
+            <main className="mx-auto flex min-h-[100dvh] w-full max-w-[90rem] flex-col px-6 pb-28 pt-28 sm:px-8">
+                <div className="flex flex-1 flex-col justify-between gap-4 py-2">
+                    <div>
+                        <h1 className="text-2xl font-bold tracking-tight text-text1">Create your ad</h1>
+                        <p className="mt-1 text-[12px] text-text2">
+                            Upload your product, pick where it runs, and generate.
+                        </p>
 
-                <div className="mt-4">
-                    <CreateForm
-                        product={product}
-                        person={person}
-                        onProductChange={setProduct}
-                        onPersonChange={setPerson}
-                        aspectRatios={aspectRatios}
-                        conceptCount={conceptCount}
-                        ctaEnabled={ctaEnabled}
-                        brandPalette={brandPalette}
-                        onAspectRatiosChange={setAspectRatios}
-                        onConceptCountChange={setConceptCount}
-                        onCtaEnabledChange={setCtaEnabled}
-                        onBrandPaletteChange={setBrandPalette}
-                    />
-                </div>
-
-                {/* 실행 도크 — 페이지 배경과 분리된 툴바, 뷰포트 하단에 고정 */}
-                <div className="mt-4 bg-surface">
-                    <div className="flex items-center justify-between gap-6 border-t border-hairline px-5 py-3 shadow-[0_-16px_32px_-24px_rgba(0,0,0,0.8)]">
-                        <div className="min-w-0">
-                            <p className="text-[13px] font-medium text-text1">
-                                {conceptCount} creative{conceptCount > 1 ? 's' : ''} × {aspectRatios.length}{' '}
-                                format{aspectRatios.length > 1 ? 's' : ''} = {totalImages} asset
-                                {totalImages > 1 ? 's' : ''} · success only credited
-                            </p>
-                            <p className="mt-0.5 text-[12px] leading-relaxed text-text2">{hintText}</p>
+                        <div className="mt-4">
+                            <CreateForm
+                                product={product}
+                                person={person}
+                                onProductChange={setProduct}
+                                onPersonChange={setPerson}
+                                aspectRatios={aspectRatios}
+                                conceptCount={conceptCount}
+                                ctaEnabled={ctaEnabled}
+                                brandPalette={brandPalette}
+                                onAspectRatiosChange={setAspectRatios}
+                                onConceptCountChange={setConceptCount}
+                                onCtaEnabledChange={setCtaEnabled}
+                                onBrandPaletteChange={setBrandPalette}
+                            />
                         </div>
-                        <button
-                            type="button"
-                            onClick={onClickGenerate}
-                            disabled={!canGenerate}
-                            className="w-[240px] shrink-0 inline-flex items-center justify-center gap-2 rounded-full bg-text1 px-6 py-3.5 text-[14px] font-semibold text-canvas transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:scale-[1.01] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:scale-100"
-                        >
-                            {isGenerating && <Loader2 className="h-4 w-4 animate-spin" strokeWidth={2} />}
-                            Generate {totalImages} asset{totalImages > 1 ? 's' : ''}
-                        </button>
+
+                        {error && (
+                            <p className="mt-4 rounded-xl border border-hairline bg-surface px-3.5 py-3 text-[12px] leading-relaxed text-[#F87171]">
+                                {error}
+                            </p>
+                        )}
                     </div>
                 </div>
-
-                {error && (
-                    <p className="mt-5 rounded-xl border border-hairline bg-surface px-3.5 py-3 text-[12px] leading-relaxed text-[#F87171]">
-                        {error}
-                    </p>
-                )}
             </main>
+
+            {/* 하단 바 — fixed bottom-4, 헤더와 대칭 */}
+            <div className="fixed inset-x-0 bottom-4 z-30 px-6 sm:px-8">
+                <div className="mx-auto flex max-w-[90rem] items-center justify-between gap-6 rounded-2xl border border-hairline bg-surface px-5 py-3 shadow-xl shadow-black/10">
+                    <div className="min-w-0">
+                        <p className="text-[13px] font-medium text-text1">
+                            {conceptCount} creative{conceptCount > 1 ? 's' : ''} × {aspectRatios.length}{' '}
+                            format{aspectRatios.length > 1 ? 's' : ''} = {totalImages} asset
+                            {totalImages > 1 ? 's' : ''} · success only credited
+                        </p>
+                        <p className="mt-0.5 text-[12px] leading-relaxed text-text2">{hintText}</p>
+                    </div>
+                    <button
+                        type="button"
+                        onClick={onClickGenerate}
+                        disabled={!canGenerate}
+                        className="w-[240px] shrink-0 inline-flex items-center justify-center gap-2 rounded-full bg-text1 px-6 py-3.5 text-[14px] font-semibold text-canvas transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:scale-[1.01] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:scale-100"
+                    >
+                        {isGenerating && <Loader2 className="h-4 w-4 animate-spin" strokeWidth={2} />}
+                        Generate {totalImages} asset{totalImages > 1 ? 's' : ''}
+                    </button>
+                </div>
+            </div>
         </>
     );
 }
