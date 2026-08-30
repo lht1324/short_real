@@ -83,6 +83,19 @@ function CreateForm({
     const [pickerColor, setPickerColor] = useState('#111111');
     const [activePickerIndex, setActivePickerIndex] = useState<number | null>(null);
 
+    useEffect(() => {
+        if (activePickerIndex === null) return;
+        const onDown = (e: MouseEvent) => {
+            const target = e.target as HTMLElement;
+            // 드래그 중에는 팝오버 내부에서 mousedown이 일어나도 닫지 않음
+            if (target.closest('[data-picker-popover]') || target.closest('[data-picker-trigger]')) return;
+            setActivePickerIndex(null);
+        };
+        // mousedown 대신 click으로 닫아야 드래그(mousedown→mousemove→mouseup)가 끊기지 않음
+        document.addEventListener('click', onDown);
+        return () => document.removeEventListener('click', onDown);
+    }, [activePickerIndex]);
+
     const onAddColor = useCallback(() => {
         const current = brandPalette ?? [];
         if (current.length >= 5) return;
@@ -183,31 +196,31 @@ function CreateForm({
                 </section>
 
                 {/* How many — 우상 */}
-                <section className="rounded-[1.5rem] border border-hairline bg-surface p-4 sm:p-5 flex flex-1 flex-col min-h-0">
+                <section className="rounded-[1.5rem] border border-hairline bg-surface p-4 sm:p-5 flex flex-col">
                     <div className="mb-3 flex items-center justify-between shrink-0">
                         <h3 className="text-[14px] font-semibold tracking-tight text-text1">How many options?</h3>
                         <span className="text-[11px] text-text2">per batch</span>
                     </div>
-                    <div className="grid flex-1 grid-cols-2 grid-rows-2 gap-2 content-stretch">
+                    <div className="grid grid-cols-2 gap-2">
                         {AD_CONCEPT_OPTIONS.map((count) => (
                             <button
                                 key={count}
                                 type="button"
                                 onClick={() => onClickCount(count)}
-                                className={`relative rounded-xl border px-2 py-3 text-center transition-all duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] active:scale-[0.97] ${
+                                className={`relative rounded-xl border px-2 py-5 text-center transition-all duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] active:scale-[0.97] ${
                                     conceptCount === count
                                         ? 'border-accent bg-accent/10'
                                         : 'border-hairline bg-surface hover:border-text2/40'
                                 }`}
                             >
                                 <span
-                                    className={`block text-[14px] font-semibold ${
+                                    className={`block text-[18px] font-semibold leading-none ${
                                         conceptCount === count ? 'text-text1' : 'text-text2'
                                     }`}
                                 >
                                     {count}
                                 </span>
-                                <span className="mt-0.5 block whitespace-nowrap text-[10px] text-text2">
+                                <span className="mt-1 block text-[11px] leading-none text-text2">
                                     {count === 1 ? 'creative' : 'creatives'}
                                 </span>
                                 {count === 10 && (
@@ -286,44 +299,48 @@ function CreateForm({
                         {/* 컬러 팔레트 그리드 — 5칸 꽉 채움 */}
                         <div className="grid flex-1 grid-cols-5 gap-2">
                             {(brandPalette ?? []).map((hex, index) => (
-                                <div key={`${hex}-${index}`} className="group relative flex flex-col overflow-hidden rounded-xl border border-hairline bg-canvas">
+                                <div
+                                    key={`brand-${index}`}
+                                    data-picker-trigger
+                                    role="button"
+                                    tabIndex={0}
+                                    onClick={() => setActivePickerIndex(activePickerIndex === index ? null : index)}
+                                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setActivePickerIndex(activePickerIndex === index ? null : index); } }}
+                                    className="group relative flex cursor-pointer flex-col rounded-xl border border-hairline bg-canvas hover:border-text2/30"
+                                >
                                     <button
                                         type="button"
-                                        onClick={() => onRemoveColor(index)}
+                                        onClick={(e) => { e.stopPropagation(); onRemoveColor(index); }}
                                         className="absolute right-1 top-1 z-10 hidden h-6 w-6 items-center justify-center rounded-full bg-black/60 text-white backdrop-blur-sm group-hover:flex hover:bg-black/80"
                                         aria-label={`Remove ${hex}`}
                                     >
                                         <X className="h-3 w-3" strokeWidth={2} />
                                     </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => setActivePickerIndex(activePickerIndex === index ? null : index)}
-                                        className="flex-1 w-full"
-                                        style={{ backgroundColor: hex }}
-                                        aria-label={`Edit color ${hex}`}
-                                    />
-                                    <div className="bg-surface px-2 py-1.5 text-center">
+                                    <div className="flex-1 w-full overflow-hidden rounded-t-xl" style={{ backgroundColor: hex }} aria-hidden />
+                                    <div className="bg-surface px-2 py-1.5 text-center group-hover:bg-canvas rounded-b-xl">
                                         <span className="font-mono text-[10px] font-medium text-text1">{hex}</span>
                                     </div>
                                     {activePickerIndex === index && (() => {
                                         const rgb = hexToRgb(hex) ?? { r: 17, g: 17, b: 17 };
                                         return (
-                                            <div className="absolute left-0 top-full z-[60] mt-2 w-[19rem] rounded-xl border border-hairline bg-surface p-3 shadow-xl">
+                                            <div data-picker-popover onClick={(e) => e.stopPropagation()} className="absolute right-full top-1/2 z-[60] mr-3 w-[19rem] -translate-y-1/2 rounded-xl border border-hairline bg-surface p-3 shadow-xl">
                                                 <HexColorPicker color={hex} onChange={(c) => onChangeColor(index, c)} style={{ width: '100%' }} />
                                                 <div className="mt-3 flex flex-col gap-2">
                                                     <label className="flex flex-col gap-1">
                                                         <span className="text-[10px] font-medium uppercase tracking-[0.06em] text-text2">HEX</span>
                                                         <input
-                                                            value={hex}
+                                                            key={`${hex}-${index}`}
+                                                            defaultValue={hex}
                                                             onChange={(e) => {
                                                                 const raw = e.target.value.trim();
                                                                 const withHash = raw.startsWith('#') ? raw : `#${raw}`;
-                                                                if (/^#[0-9A-Fa-f]{0,6}$/.test(withHash) && withHash.length === 7) onChangeColor(index, withHash.toUpperCase());
+                                                                if (/^#[0-9A-Fa-f]{6}$/.test(withHash)) onChangeColor(index, withHash.toUpperCase());
                                                             }}
                                                             onBlur={(e) => {
                                                                 const v = e.target.value.trim();
                                                                 const withHash = v.startsWith('#') ? v : `#${v}`;
                                                                 if (/^#[0-9A-Fa-f]{6}$/.test(withHash)) onChangeColor(index, withHash.toUpperCase());
+                                                                else e.target.value = hex;
                                                             }}
                                                             placeholder="#RRGGBB"
                                                             className="rounded-lg border border-hairline bg-canvas px-2 py-1.5 font-mono text-[11px] text-text1 placeholder:text-text2/50 focus:border-text2/40 focus:outline-none"
@@ -364,44 +381,40 @@ function CreateForm({
                                 return (
                                     <div
                                         key={`empty-${idx}`}
-                                        className={`relative flex flex-col items-center justify-center gap-2 rounded-xl border border-dashed bg-canvas p-2 ${isFirstEmpty ? 'border-hairline' : 'border-hairline/50 opacity-60'}`}
+                                        className={`relative flex min-h-[4.2rem] flex-col rounded-xl border border-dashed bg-canvas p-2 ${isFirstEmpty ? 'border-hairline' : 'border-hairline/50 opacity-60'}`}
                                     >
                                         {isFirstEmpty ? (
                                             <>
                                                 <button
                                                     type="button"
+                                                    data-picker-trigger
                                                     onClick={() => setActivePickerIndex(activePickerIndex === -1 ? null : -1)}
-                                                    className="h-8 w-8 rounded-full border border-black/10 shadow-sm"
-                                                    style={{ backgroundColor: pickerColor }}
-                                                    aria-label="Pick new color"
-                                                />
-                                                <span className="font-mono text-[10px] text-text2">{pickerColor}</span>
-                                                <button
-                                                    type="button"
-                                                    onClick={onAddColor}
-                                                    className="rounded-full bg-text1 px-3 py-1 text-[11px] font-medium text-canvas hover:bg-text1/90 disabled:opacity-40"
+                                                    className="flex flex-1 w-full items-center justify-center rounded-[10px] bg-surface text-text2 transition-colors hover:border-accent/30 hover:bg-accent/10 hover:text-accent"
+                                                    aria-label="Add color"
                                                 >
-                                                    Add
+                                                    <Plus className="h-5 w-5" strokeWidth={1.8} />
                                                 </button>
                                                 {activePickerIndex === -1 && (() => {
                                                     const rgb = hexToRgb(pickerColor) ?? { r: 17, g: 17, b: 17 };
                                                     return (
-                                                        <div className="absolute left-1/2 z-[60] mt-2 w-[19rem] -translate-x-1/2 rounded-xl border border-hairline bg-surface p-3 shadow-xl top-full">
+                                                        <div data-picker-popover onClick={(e) => e.stopPropagation()} className="absolute right-full top-1/2 z-[60] mr-3 w-[19rem] -translate-y-1/2 rounded-xl border border-hairline bg-surface p-3 shadow-xl">
                                                             <HexColorPicker color={pickerColor} onChange={(c) => setPickerColor(c.toUpperCase())} style={{ width: '100%' }} />
                                                             <div className="mt-3 flex flex-col gap-2">
                                                                 <label className="flex flex-col gap-1">
                                                                     <span className="text-[10px] font-medium uppercase tracking-[0.06em] text-text2">HEX</span>
                                                                     <input
-                                                                        value={pickerColor}
+                                                                        key={pickerColor}
+                                                                        defaultValue={pickerColor}
                                                                         onChange={(e) => {
                                                                             const raw = e.target.value.trim();
                                                                             const withHash = raw.startsWith('#') ? raw : `#${raw}`;
-                                                                            if (/^#[0-9A-Fa-f]{0,6}$/.test(withHash) && withHash.length === 7) setPickerColor(withHash.toUpperCase());
+                                                                            if (/^#[0-9A-Fa-f]{6}$/.test(withHash)) setPickerColor(withHash.toUpperCase());
                                                                         }}
                                                                         onBlur={(e) => {
                                                                             const v = e.target.value.trim();
                                                                             const withHash = v.startsWith('#') ? v : `#${v}`;
                                                                             if (/^#[0-9A-Fa-f]{6}$/.test(withHash)) setPickerColor(withHash.toUpperCase());
+                                                                            else e.target.value = pickerColor;
                                                                         }}
                                                                         placeholder="#RRGGBB"
                                                                         className="rounded-lg border border-hairline bg-canvas px-2 py-1.5 font-mono text-[11px] text-text1 placeholder:text-text2/50 focus:border-text2/40 focus:outline-none"
@@ -427,12 +440,9 @@ function CreateForm({
                                                                     ))}
                                                                 </div>
                                                             </div>
-                                                            <div className="mt-3 flex items-center justify-between gap-2">
-                                                                <span className="font-mono text-[11px] text-text2">{pickerColor}</span>
-                                                                <div className="flex gap-2">
-                                                                    <button type="button" onClick={() => setActivePickerIndex(null)} className="rounded-full px-3 py-1.5 text-[11px] text-text2 hover:bg-canvas">Cancel</button>
-                                                                    <button type="button" onClick={() => { onAddColor(); }} className="rounded-full bg-text1 px-4 py-1.5 text-[11px] font-medium text-canvas">Add</button>
-                                                                </div>
+                                                            <div className="mt-3 flex justify-end gap-2">
+                                                                <button type="button" onClick={() => setActivePickerIndex(null)} className="rounded-full px-3 py-1.5 text-[11px] text-text2 hover:bg-canvas">Cancel</button>
+                                                                <button type="button" onClick={() => { onAddColor(); }} className="rounded-full bg-text1 px-4 py-1.5 text-[11px] font-medium text-canvas">Add</button>
                                                             </div>
                                                         </div>
                                                     );
@@ -446,12 +456,12 @@ function CreateForm({
                             })}
                         </div>
                         <div className="min-h-[16px]">
-                            {(brandPalette?.length ?? 0) > 0 && (brandPalette!.length < 3 || brandPalette!.length > 5) ? (
-                                <p className="text-[11px] text-amber-600 dark:text-amber-500">Add 3 to 5 colors for best results.</p>
-                            ) : (brandPalette?.length ?? 0) === 0 ? (
+                            {(brandPalette?.length ?? 0) === 0 ? (
                                 <p className="text-[11px] text-text2">Leave empty to let AI vary freely.</p>
+                            ) : (brandPalette!.length < 3) ? (
+                                <p className="text-[11px] text-amber-600 dark:text-amber-500">Add 3 to 5 colors for best results. — {brandPalette!.length}/5</p>
                             ) : (
-                                <span className="block text-[11px] text-transparent select-none" aria-hidden>placeholder</span>
+                                <p className="text-[11px] text-emerald-600 dark:text-emerald-400">✓ {brandPalette!.length} colors — palette ready</p>
                             )}
                         </div>
                     </section>
