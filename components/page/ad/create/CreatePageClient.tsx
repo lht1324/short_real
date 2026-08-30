@@ -106,38 +106,38 @@ export default function CreatePageClient() {
         <>
             <AppHeader />
 
-            {/* 헤더(top-4) / 바(bottom-4) 고정, 사이는 flex-1로 꽉 채움 */}
+            {/* 헤더(top-4) / 바(bottom-4) 고정, 사이는 남은 높이를 fr로 나눠 꽉 채움 */}
             <main className="mx-auto flex min-h-[100dvh] w-full max-w-[90rem] flex-col px-6 pb-28 pt-28 sm:px-8">
-                <div className="flex flex-1 flex-col justify-between gap-4 py-2">
-                    <div>
+                <div className="flex flex-1 flex-col gap-4 py-2 min-h-0">
+                    <div className="shrink-0">
                         <h1 className="text-2xl font-bold tracking-tight text-text1">Create your ad</h1>
                         <p className="mt-1 text-[12px] text-text2">
                             Upload your product, pick where it runs, and generate.
                         </p>
-
-                        <div className="mt-4">
-                            <CreateForm
-                                product={product}
-                                person={person}
-                                onProductChange={setProduct}
-                                onPersonChange={setPerson}
-                                aspectRatios={aspectRatios}
-                                conceptCount={conceptCount}
-                                ctaEnabled={ctaEnabled}
-                                brandPalette={brandPalette}
-                                onAspectRatiosChange={setAspectRatios}
-                                onConceptCountChange={setConceptCount}
-                                onCtaEnabledChange={setCtaEnabled}
-                                onBrandPaletteChange={setBrandPalette}
-                            />
-                        </div>
-
-                        {error && (
-                            <p className="mt-4 rounded-xl border border-hairline bg-surface px-3.5 py-3 text-[12px] leading-relaxed text-[#F87171]">
-                                {error}
-                            </p>
-                        )}
                     </div>
+
+                    <div className="flex flex-1 flex-col min-h-0">
+                        <CreateForm
+                            product={product}
+                            person={person}
+                            onProductChange={setProduct}
+                            onPersonChange={setPerson}
+                            aspectRatios={aspectRatios}
+                            conceptCount={conceptCount}
+                            ctaEnabled={ctaEnabled}
+                            brandPalette={brandPalette}
+                            onAspectRatiosChange={setAspectRatios}
+                            onConceptCountChange={setConceptCount}
+                            onCtaEnabledChange={setCtaEnabled}
+                            onBrandPaletteChange={setBrandPalette}
+                        />
+                    </div>
+
+                    {error && (
+                        <p className="shrink-0 rounded-xl border border-hairline bg-surface px-3.5 py-3 text-[12px] leading-relaxed text-[#F87171]">
+                            {error}
+                        </p>
+                    )}
                 </div>
             </main>
 

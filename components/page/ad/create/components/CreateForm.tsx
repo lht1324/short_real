@@ -1,6 +1,6 @@
 'use client'
 
-import { memo, useCallback, useState } from 'react';
+import { memo, useCallback, useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AlertTriangle, Check, Palette, Plus, X } from 'lucide-react';
 import { HexColorPicker } from 'react-colorful';
@@ -18,6 +18,19 @@ const RATIO_FACTOR: Record<AdAspectRatio, number> = {
 };
 
 const RATIO_ORDER: AdAspectRatio[] = ['1:1', '4:5', '9:16', '16:9', '2:3'];
+
+function hexToRgb(hex: string): { r: number; g: number; b: number } | null {
+    const m = /^#([0-9A-Fa-f]{6})$/.exec(hex.trim());
+    if (!m) return null;
+    const n = parseInt(m[1], 16);
+    return { r: (n >> 16) & 255, g: (n >> 8) & 255, b: n & 255 };
+}
+
+function rgbToHex(r: number, g: number, b: number): string {
+    const clamp = (v: number) => Math.max(0, Math.min(255, Math.round(v)));
+    const toHex = (v: number) => clamp(v).toString(16).padStart(2, '0').toUpperCase();
+    return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+}
 
 interface CreateFormProps {
     product: AdUploadedComponent | null;
@@ -91,12 +104,32 @@ function CreateForm({
         onBrandPaletteChange(next);
     }, [brandPalette, onBrandPaletteChange]);
 
+    // Where 한 줄이 가로로 벗어나지 않는 최대 높이 — (W - gaps) / sumFactors
+    const whereRef = useRef<HTMLDivElement>(null);
+    const [whereH, setWhereH] = useState(96);
+    useEffect(() => {
+        const el = whereRef.current;
+        if (!el) return;
+        const ro = new ResizeObserver((entries) => {
+            for (const entry of entries) {
+                const w = entry.contentRect.width;
+                const maxFitH = Math.max(56, (w - 32) / 4.806);
+                setWhereH((prev) => {
+                    const next = Math.round(maxFitH);
+                    return Math.abs(next - prev) < 1 ? prev : next;
+                });
+            }
+        });
+        ro.observe(el);
+        return () => ro.disconnect();
+    }, []);
+
     return (
-        <div className="space-y-4">
-            {/* 2×2 bento — Subjects|How many / Where|Brand+CTA */}
-            <div className="grid gap-4 lg:grid-cols-[1.7fr_1fr] lg:items-stretch">
+        <div className="flex flex-1 flex-col gap-4 min-h-0">
+            {/* 2×2 bento — 남은 높이를 fr로 나눠 꽉 채움 */}
+            <div className="grid flex-1 gap-4 lg:grid-cols-[1.7fr_1fr] lg:grid-rows-[1.15fr_1fr] min-h-0">
                 {/* Subjects — 좌상 */}
-                <section className="rounded-[1.5rem] border border-hairline bg-surface p-4 sm:p-5 flex flex-col">
+                <section className="rounded-[1.5rem] border border-hairline bg-surface p-4 sm:p-5 flex flex-col min-h-0">
                     <div className="mb-3 flex items-start justify-between gap-4">
                         <div>
                             <h3 className="text-[15px] font-semibold tracking-tight text-text1">Subjects</h3>
@@ -109,8 +142,8 @@ function CreateForm({
                         </span>
                     </div>
 
-                    <div className="grid flex-1 gap-3 sm:grid-cols-2 sm:items-stretch">
-                        <div className="flex flex-col">
+                    <div className="grid flex-1 gap-3 sm:grid-cols-2 sm:items-stretch min-h-0">
+                        <div className="flex flex-col flex-1 min-h-0">
                             <UploadZone
                                 label="Product"
                                 tall
@@ -121,7 +154,7 @@ function CreateForm({
                             />
                         </div>
 
-                        <div className="flex flex-col">
+                        <div className="flex flex-col flex-1 min-h-0">
                             <UploadZone
                                 label="Person"
                                 tall
@@ -150,18 +183,18 @@ function CreateForm({
                 </section>
 
                 {/* How many — 우상 */}
-                <section className="rounded-[1.5rem] border border-hairline bg-surface p-4 sm:p-5 flex flex-col justify-center">
-                    <div className="mb-3 flex items-center justify-between">
+                <section className="rounded-[1.5rem] border border-hairline bg-surface p-4 sm:p-5 flex flex-1 flex-col min-h-0">
+                    <div className="mb-3 flex items-center justify-between shrink-0">
                         <h3 className="text-[14px] font-semibold tracking-tight text-text1">How many options?</h3>
                         <span className="text-[11px] text-text2">per batch</span>
                     </div>
-                    <div className="flex gap-2">
+                    <div className="grid flex-1 grid-cols-2 grid-rows-2 gap-2 content-stretch">
                         {AD_CONCEPT_OPTIONS.map((count) => (
                             <button
                                 key={count}
                                 type="button"
                                 onClick={() => onClickCount(count)}
-                                className={`relative flex-1 rounded-xl border px-2 py-2.5 text-center transition-all duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] active:scale-[0.97] ${
+                                className={`relative rounded-xl border px-2 py-3 text-center transition-all duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] active:scale-[0.97] ${
                                     conceptCount === count
                                         ? 'border-accent bg-accent/10'
                                         : 'border-hairline bg-surface hover:border-text2/40'
@@ -190,15 +223,15 @@ function CreateForm({
                     </p>
                 </section>
 
-                {/* Where — 좌하, 높이 = Brand + gap + CTA */}
-                <section className="rounded-[1.5rem] border border-hairline bg-surface p-4 sm:p-5 flex flex-col">
-                    <div className="mb-3 flex items-center justify-between">
+                {/* Where — 좌하, 높이 = Brand + gap + CTA (grid가 fr로 맞춤) */}
+                <section className="rounded-[1.5rem] border border-hairline bg-surface px-4 sm:px-5 py-3 sm:py-4 flex flex-col min-h-0">
+                    <div className="mb-2 flex items-center justify-between">
                         <h3 className="text-[14px] font-semibold tracking-tight text-text1">Where will it run?</h3>
                         <span className="text-[11px] text-text2">pick one or more</span>
                     </div>
-                    {/* 한 줄 비율 박스 — 높이 고정, 너비는 비율로 자동 계산, 비율 명칭+비율만 노출 */}
-                    <div className="flex flex-1 items-center justify-center">
-                        <div className="flex items-stretch justify-center gap-2" style={{ height: '6.25rem' }}>
+                    {/* 한 줄 비율 박스 — 가로 넘지 않는 최대 높이로 자동 */}
+                    <div ref={whereRef} className="flex flex-1 items-center justify-center min-h-0">
+                        <div className="flex items-stretch justify-center gap-2" style={{ height: whereH }}>
                             {RATIO_ORDER.map((ratio) => {
                                 const selected = aspectRatios.includes(ratio);
                                 const info = AD_ASPECT_RATIO_INFO[ratio];
@@ -209,7 +242,7 @@ function CreateForm({
                                         type="button"
                                         aria-pressed={selected}
                                         onClick={() => onClickRatio(ratio)}
-                                        style={{ width: `${factor * 6.25}rem`, minWidth: 0 }}
+                                        style={{ aspectRatio: `${factor}`, height: '100%', width: 'auto' } as React.CSSProperties}
                                         className={`relative flex shrink-0 flex-col items-center justify-center gap-0.5 rounded-xl border px-2 py-2 text-center transition-all duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] active:scale-[0.98] ${
                                             selected
                                                 ? 'border-accent bg-accent/10 shadow-[0_0_0_1px_rgba(var(--accent),0.15)]'
@@ -232,96 +265,198 @@ function CreateForm({
                             })}
                         </div>
                     </div>
-                    <p className="mt-3 text-[11px] leading-snug text-text2">
+                    <p className="mt-2 text-[11px] leading-snug text-text2">
                         Each creative is generated in every format you select — no cropping, native rendering per size.
                     </p>
                 </section>
 
-                {/* 우하 스택 — Brand + CTA, 합쳐서 Where 높이와 동일 */}
-                <div className="flex flex-col gap-4">
-                    <section className="rounded-[1.5rem] border border-hairline bg-surface p-3">
-                        <div className="flex items-center gap-3 rounded-full border border-hairline bg-canvas px-3 py-2">
-                            <div className="flex shrink-0 items-center gap-2">
+                {/* 우하 스택 — Brand + CTA, 합쳐서 Where 높이와 동일 (grid fr로 자동 나눔) */}
+                <div className="flex flex-col gap-4 h-full min-h-0">
+                    <section className="rounded-[1.5rem] border border-hairline bg-surface p-4 flex-1 min-h-[7rem] flex flex-col gap-3">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
                                 <Palette className="h-3.5 w-3.5 text-text2" strokeWidth={1.8} />
                                 <h4 className="text-[13px] font-medium text-text1">Brand colors</h4>
-                                <span className="rounded-full bg-surface px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-text2">optional</span>
+                                <span className="rounded-full bg-surface border border-hairline px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-text2">optional</span>
+                                <span className="hidden sm:inline text-[11px] text-text2">· 3–5 hex · palette</span>
                             </div>
-                            <span className="hidden text-[11px] text-text2 sm:inline">3–5 hex · AI weaves into materials</span>
-                            <div className="ml-auto flex flex-wrap items-center gap-1.5">
-                                {(brandPalette ?? []).map((hex, index) => (
-                                    <div key={`${hex}-${index}`} className="group relative flex items-center gap-2 rounded-full border border-hairline bg-surface pl-1 pr-2 py-1">
-                                        <button
-                                            type="button"
-                                            onClick={() => setActivePickerIndex(activePickerIndex === index ? null : index)}
-                                            className="h-6 w-6 shrink-0 rounded-full border border-black/10 shadow-sm"
-                                            style={{ backgroundColor: hex }}
-                                            aria-label={`Edit color ${hex}`}
-                                        />
-                                        <span className="font-mono text-[11px] font-medium text-text1">{hex}</span>
-                                        <button
-                                            type="button"
-                                            onClick={() => onRemoveColor(index)}
-                                            className="rounded-full p-0.5 text-text2 hover:bg-canvas hover:text-text1"
-                                            aria-label={`Remove ${hex}`}
-                                        >
-                                            <X className="h-3 w-3" strokeWidth={2} />
-                                        </button>
-                                        {activePickerIndex === index && (
-                                            <div className="absolute left-0 top-full z-20 mt-2 rounded-xl border border-hairline bg-surface p-3 shadow-xl">
-                                                <HexColorPicker color={hex} onChange={(c) => onChangeColor(index, c)} />
-                                                <div className="mt-2 flex items-center justify-between gap-2">
-                                                    <span className="font-mono text-[11px] text-text2">{hex}</span>
-                                                    <button type="button" onClick={() => setActivePickerIndex(null)} className="rounded-full bg-text1 px-3 py-1 text-[11px] font-medium text-canvas">Done</button>
-                                                </div>
-                                            </div>
-                                        )}
-                                    </div>
-                                ))}
-
-                                {(brandPalette?.length ?? 0) < 5 && (
-                                    <div className="flex items-center gap-2">
-                                        <div className="flex items-center gap-2 rounded-full border border-dashed border-hairline bg-surface px-2 py-1">
-                                            <button
-                                                type="button"
-                                                onClick={() => setActivePickerIndex(activePickerIndex === -1 ? null : -1)}
-                                                className="h-6 w-6 rounded-full border border-black/10 shadow-sm"
-                                                style={{ backgroundColor: pickerColor }}
-                                                aria-label="Pick new color"
-                                            />
-                                            <input
-                                                value={pickerColor}
-                                                onChange={(e) => setPickerColor(e.target.value.toUpperCase())}
-                                                placeholder="#111111"
-                                                className="w-[5.5rem] bg-transparent font-mono text-[11px] font-medium text-text1 placeholder:text-text2/60 focus:outline-none"
-                                            />
-                                        </div>
-                                        <button
-                                            type="button"
-                                            onClick={onAddColor}
-                                            disabled={(brandPalette?.length ?? 0) >= 5}
-                                            className="inline-flex items-center gap-1 rounded-full bg-text1 px-3 py-1.5 text-[11px] font-medium text-canvas transition-colors hover:bg-text1/90 disabled:opacity-40"
-                                        >
-                                            <Plus className="h-3 w-3" strokeWidth={2} />
-                                            Add
-                                        </button>
-                                        {activePickerIndex === -1 && (
-                                            <div className="absolute z-20 mt-2 rounded-xl border border-hairline bg-surface p-3 shadow-xl">
-                                                <HexColorPicker color={pickerColor} onChange={(c) => setPickerColor(c.toUpperCase())} />
-                                                <div className="mt-2 flex justify-end">
-                                                    <button type="button" onClick={() => setActivePickerIndex(null)} className="rounded-full bg-text1 px-3 py-1 text-[11px] font-medium text-canvas">Done</button>
-                                                </div>
-                                            </div>
-                                        )}
-                                    </div>
-                                )}
-                            </div>
+                            <span className="text-[11px] text-text2">{(brandPalette?.length ?? 0)}/5</span>
                         </div>
-                        {(brandPalette?.length ?? 0) > 0 && (brandPalette!.length < 3 || brandPalette!.length > 5) && (
-                            <p className="mt-2 text-[11px] text-amber-600 dark:text-amber-500">Add 3 to 5 colors for best results.</p>
-                        )}
+
+                        {/* 컬러 팔레트 그리드 — 5칸 꽉 채움 */}
+                        <div className="grid flex-1 grid-cols-5 gap-2">
+                            {(brandPalette ?? []).map((hex, index) => (
+                                <div key={`${hex}-${index}`} className="group relative flex flex-col overflow-hidden rounded-xl border border-hairline bg-canvas">
+                                    <button
+                                        type="button"
+                                        onClick={() => onRemoveColor(index)}
+                                        className="absolute right-1 top-1 z-10 hidden h-6 w-6 items-center justify-center rounded-full bg-black/60 text-white backdrop-blur-sm group-hover:flex hover:bg-black/80"
+                                        aria-label={`Remove ${hex}`}
+                                    >
+                                        <X className="h-3 w-3" strokeWidth={2} />
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setActivePickerIndex(activePickerIndex === index ? null : index)}
+                                        className="flex-1 w-full"
+                                        style={{ backgroundColor: hex }}
+                                        aria-label={`Edit color ${hex}`}
+                                    />
+                                    <div className="bg-surface px-2 py-1.5 text-center">
+                                        <span className="font-mono text-[10px] font-medium text-text1">{hex}</span>
+                                    </div>
+                                    {activePickerIndex === index && (() => {
+                                        const rgb = hexToRgb(hex) ?? { r: 17, g: 17, b: 17 };
+                                        return (
+                                            <div className="absolute left-0 top-full z-[60] mt-2 w-[19rem] rounded-xl border border-hairline bg-surface p-3 shadow-xl">
+                                                <HexColorPicker color={hex} onChange={(c) => onChangeColor(index, c)} style={{ width: '100%' }} />
+                                                <div className="mt-3 flex flex-col gap-2">
+                                                    <label className="flex flex-col gap-1">
+                                                        <span className="text-[10px] font-medium uppercase tracking-[0.06em] text-text2">HEX</span>
+                                                        <input
+                                                            value={hex}
+                                                            onChange={(e) => {
+                                                                const raw = e.target.value.trim();
+                                                                const withHash = raw.startsWith('#') ? raw : `#${raw}`;
+                                                                if (/^#[0-9A-Fa-f]{0,6}$/.test(withHash) && withHash.length === 7) onChangeColor(index, withHash.toUpperCase());
+                                                            }}
+                                                            onBlur={(e) => {
+                                                                const v = e.target.value.trim();
+                                                                const withHash = v.startsWith('#') ? v : `#${v}`;
+                                                                if (/^#[0-9A-Fa-f]{6}$/.test(withHash)) onChangeColor(index, withHash.toUpperCase());
+                                                            }}
+                                                            placeholder="#RRGGBB"
+                                                            className="rounded-lg border border-hairline bg-canvas px-2 py-1.5 font-mono text-[11px] text-text1 placeholder:text-text2/50 focus:border-text2/40 focus:outline-none"
+                                                        />
+                                                    </label>
+                                                    <div className="grid grid-cols-3 gap-2">
+                                                        {(['r', 'g', 'b'] as const).map((k) => (
+                                                            <label key={k} className="flex flex-col gap-1">
+                                                                <span className="text-[10px] font-medium uppercase tracking-[0.06em] text-text2">{k.toUpperCase()}</span>
+                                                                <input
+                                                                    type="number"
+                                                                    min={0}
+                                                                    max={255}
+                                                                    value={rgb[k]}
+                                                                    onChange={(e) => {
+                                                                        const n = Math.max(0, Math.min(255, parseInt(e.target.value || '0', 10) || 0));
+                                                                        const next = { ...rgb, [k]: n };
+                                                                        onChangeColor(index, rgbToHex(next.r, next.g, next.b));
+                                                                    }}
+                                                                    className="rounded-lg border border-hairline bg-canvas px-2 py-1.5 text-center text-[11px] text-text1 focus:border-text2/40 focus:outline-none"
+                                                                />
+                                                            </label>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                                <div className="mt-3 flex justify-end">
+                                                    <button type="button" onClick={() => setActivePickerIndex(null)} className="rounded-full bg-text1 px-4 py-1.5 text-[11px] font-medium text-canvas">Done</button>
+                                                </div>
+                                            </div>
+                                        );
+                                    })()}
+                                </div>
+                            ))}
+
+                            {/* 빈 슬롯 — Add */}
+                            {Array.from({ length: Math.max(0, 5 - (brandPalette?.length ?? 0)) }).map((_, idx) => {
+                                const isFirstEmpty = idx === 0;
+                                return (
+                                    <div
+                                        key={`empty-${idx}`}
+                                        className={`relative flex flex-col items-center justify-center gap-2 rounded-xl border border-dashed bg-canvas p-2 ${isFirstEmpty ? 'border-hairline' : 'border-hairline/50 opacity-60'}`}
+                                    >
+                                        {isFirstEmpty ? (
+                                            <>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setActivePickerIndex(activePickerIndex === -1 ? null : -1)}
+                                                    className="h-8 w-8 rounded-full border border-black/10 shadow-sm"
+                                                    style={{ backgroundColor: pickerColor }}
+                                                    aria-label="Pick new color"
+                                                />
+                                                <span className="font-mono text-[10px] text-text2">{pickerColor}</span>
+                                                <button
+                                                    type="button"
+                                                    onClick={onAddColor}
+                                                    className="rounded-full bg-text1 px-3 py-1 text-[11px] font-medium text-canvas hover:bg-text1/90 disabled:opacity-40"
+                                                >
+                                                    Add
+                                                </button>
+                                                {activePickerIndex === -1 && (() => {
+                                                    const rgb = hexToRgb(pickerColor) ?? { r: 17, g: 17, b: 17 };
+                                                    return (
+                                                        <div className="absolute left-1/2 z-[60] mt-2 w-[19rem] -translate-x-1/2 rounded-xl border border-hairline bg-surface p-3 shadow-xl top-full">
+                                                            <HexColorPicker color={pickerColor} onChange={(c) => setPickerColor(c.toUpperCase())} style={{ width: '100%' }} />
+                                                            <div className="mt-3 flex flex-col gap-2">
+                                                                <label className="flex flex-col gap-1">
+                                                                    <span className="text-[10px] font-medium uppercase tracking-[0.06em] text-text2">HEX</span>
+                                                                    <input
+                                                                        value={pickerColor}
+                                                                        onChange={(e) => {
+                                                                            const raw = e.target.value.trim();
+                                                                            const withHash = raw.startsWith('#') ? raw : `#${raw}`;
+                                                                            if (/^#[0-9A-Fa-f]{0,6}$/.test(withHash) && withHash.length === 7) setPickerColor(withHash.toUpperCase());
+                                                                        }}
+                                                                        onBlur={(e) => {
+                                                                            const v = e.target.value.trim();
+                                                                            const withHash = v.startsWith('#') ? v : `#${v}`;
+                                                                            if (/^#[0-9A-Fa-f]{6}$/.test(withHash)) setPickerColor(withHash.toUpperCase());
+                                                                        }}
+                                                                        placeholder="#RRGGBB"
+                                                                        className="rounded-lg border border-hairline bg-canvas px-2 py-1.5 font-mono text-[11px] text-text1 placeholder:text-text2/50 focus:border-text2/40 focus:outline-none"
+                                                                    />
+                                                                </label>
+                                                                <div className="grid grid-cols-3 gap-2">
+                                                                    {(['r', 'g', 'b'] as const).map((k) => (
+                                                                        <label key={k} className="flex flex-col gap-1">
+                                                                            <span className="text-[10px] font-medium uppercase tracking-[0.06em] text-text2">{k.toUpperCase()}</span>
+                                                                            <input
+                                                                                type="number"
+                                                                                min={0}
+                                                                                max={255}
+                                                                                value={rgb[k]}
+                                                                                onChange={(e) => {
+                                                                                    const n = Math.max(0, Math.min(255, parseInt(e.target.value || '0', 10) || 0));
+                                                                                    const next = { ...rgb, [k]: n };
+                                                                                    setPickerColor(rgbToHex(next.r, next.g, next.b));
+                                                                                }}
+                                                                                className="rounded-lg border border-hairline bg-canvas px-2 py-1.5 text-center text-[11px] text-text1 focus:border-text2/40 focus:outline-none"
+                                                                            />
+                                                                        </label>
+                                                                    ))}
+                                                                </div>
+                                                            </div>
+                                                            <div className="mt-3 flex items-center justify-between gap-2">
+                                                                <span className="font-mono text-[11px] text-text2">{pickerColor}</span>
+                                                                <div className="flex gap-2">
+                                                                    <button type="button" onClick={() => setActivePickerIndex(null)} className="rounded-full px-3 py-1.5 text-[11px] text-text2 hover:bg-canvas">Cancel</button>
+                                                                    <button type="button" onClick={() => { onAddColor(); }} className="rounded-full bg-text1 px-4 py-1.5 text-[11px] font-medium text-canvas">Add</button>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                })()}
+                                            </>
+                                        ) : (
+                                            <span className="text-[11px] text-text2/40">—</span>
+                                        )}
+                                    </div>
+                                );
+                            })}
+                        </div>
+                        <div className="min-h-[16px]">
+                            {(brandPalette?.length ?? 0) > 0 && (brandPalette!.length < 3 || brandPalette!.length > 5) ? (
+                                <p className="text-[11px] text-amber-600 dark:text-amber-500">Add 3 to 5 colors for best results.</p>
+                            ) : (brandPalette?.length ?? 0) === 0 ? (
+                                <p className="text-[11px] text-text2">Leave empty to let AI vary freely.</p>
+                            ) : (
+                                <span className="block text-[11px] text-transparent select-none" aria-hidden>placeholder</span>
+                            )}
+                        </div>
                     </section>
 
-                    <section className="flex flex-1 items-center justify-between rounded-[1.5rem] border border-hairline bg-surface p-4 sm:p-5">
+                    <section className="flex shrink-0 items-center justify-between rounded-[1.5rem] border border-hairline bg-surface p-4 sm:p-5">
                         <div>
                             <p className="text-[13px] font-medium tracking-tight text-text1">Round CTA button</p>
                             <p className="mt-0.5 text-[11px] leading-relaxed text-text2">Add a &ldquo;Shop now&rdquo; style button to the layout.</p>

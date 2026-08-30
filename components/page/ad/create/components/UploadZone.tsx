@@ -1,7 +1,7 @@
 'use client'
 
 import { memo, useRef, useState, useCallback } from 'react';
-import { ImagePlus, Info, X, Check, ChevronDown } from 'lucide-react';
+import { ImagePlus, Info, X, Check, ChevronDown, Plus } from 'lucide-react';
 import { AdUploadedComponent } from "@/lib/api/client/ad/adClientAPI";
 
 interface UploadZoneProps {
@@ -15,6 +15,8 @@ interface UploadZoneProps {
 
 const ACCEPTED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
+
+const NOTE_CHIPS = ['Remove background', 'Keep natural light', 'Soft shadow'];
 
 function UploadZone({ label, help, notePlaceholder, tall, file, onChange }: UploadZoneProps) {
     const inputRef = useRef<HTMLInputElement>(null);
@@ -66,15 +68,21 @@ function UploadZone({ label, help, notePlaceholder, tall, file, onChange }: Uplo
     );
 
     const hasNote = Boolean(file?.note?.trim());
-    const noteOpen = isNoteOpen || hasNote;
 
     const onClickNoteToggle = useCallback(() => {
         setIsNoteOpen((current) => !current);
     }, []);
 
+    const onClickChip = useCallback((chip: string) => {
+        if (!file) return;
+        const current = file.note?.trim() ? `${file.note.trim()} ` : '';
+        const next = `${current}${chip}`;
+        onChange({ ...file, note: next });
+    }, [file, onChange]);
+
     return (
-        <div className="group relative">
-            <div className="mb-2 flex items-center justify-between">
+        <div className="group relative flex flex-1 flex-col min-h-0">
+            <div className="mb-2 flex items-center justify-between shrink-0">
                 <div className="flex items-center gap-1.5">
                     <span className="text-[13px] font-medium text-text1">{label}</span>
                     {help && (
@@ -105,14 +113,14 @@ function UploadZone({ label, help, notePlaceholder, tall, file, onChange }: Uplo
             )}
 
             {file ? (
-                <div className="flex items-center gap-3 rounded-xl border border-hairline bg-canvas p-2">
-                    <div className="h-10 w-10 shrink-0 overflow-hidden rounded-lg">
+                <div className="flex flex-1 min-h-[10rem] items-center gap-3 rounded-xl border border-hairline bg-canvas p-4">
+                    <div className="h-16 w-16 shrink-0 overflow-hidden rounded-lg">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img src={file.previewUrl} alt={file.fileName} className="h-full w-full object-cover" />
                     </div>
                     <div className="min-w-0 flex-1">
-                        <p className="truncate text-[13px] text-text1">{file.fileName}</p>
-                        <p className="text-[11px] text-text2">
+                        <p className="truncate text-[13px] font-medium text-text1">{file.fileName}</p>
+                        <p className="mt-0.5 text-[11px] text-text2">
                             ready{file.width && file.height ? ` · ${file.width}×${file.height}` : ''}
                         </p>
                     </div>
@@ -140,7 +148,7 @@ function UploadZone({ label, help, notePlaceholder, tall, file, onChange }: Uplo
                         handleFiles(event.dataTransfer.files);
                     }}
                     className={`flex w-full items-center justify-center gap-2.5 rounded-xl border border-dashed px-4 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
-                        tall ? 'min-h-[10rem] flex-1 flex-col py-8 sm:py-10' : 'py-2.5'
+                        tall ? 'flex-1 min-h-[10rem] flex-col py-8 sm:py-10' : 'py-2.5'
                     } ${
                         isDragging ? 'border-accent bg-surface' : 'border-hairline hover:border-text2/50'
                     }`}
@@ -173,41 +181,82 @@ function UploadZone({ label, help, notePlaceholder, tall, file, onChange }: Uplo
             )}
 
             {file && notePlaceholder && (
-                <div className="mt-2">
+                <div className="relative mt-2">
                     <button
                         type="button"
                         onClick={onClickNoteToggle}
-                        aria-expanded={noteOpen}
-                        className="flex w-full items-center justify-between rounded-lg border border-hairline bg-canvas px-3 py-2 text-[12px] text-text2 transition-colors hover:border-text2/50 hover:text-text1"
+                        aria-expanded={isNoteOpen}
+                        className="flex w-full items-center justify-between gap-2 rounded-full border border-hairline bg-canvas px-3 py-2 text-[12px] transition-colors hover:border-text2/30"
                     >
-                        <span className="truncate">
+                        <span className="flex min-w-0 flex-1 items-center gap-2 truncate">
                             {hasNote ? (
-                                <span className="truncate text-text1">{file.note}</span>
+                                <>
+                                    <span className="truncate text-text1">{file.note}</span>
+                                    <span className="shrink-0 rounded-full bg-accent/10 px-1.5 py-0.5 text-[10px] font-medium text-accent">note</span>
+                                </>
                             ) : (
-                                <span>Tell the AI what to change</span>
+                                <>
+                                    <Plus className="h-3 w-3 shrink-0 text-text2" strokeWidth={2} />
+                                    <span className="truncate text-text2">Add note</span>
+                                    <span className="shrink-0 rounded-full border border-hairline bg-surface px-1.5 py-0.5 text-[10px] font-medium text-text2">optional</span>
+                                    <span className="hidden sm:inline shrink-0 text-[11px] text-text2/60">· leave empty to skip</span>
+                                </>
                             )}
                         </span>
                         <ChevronDown
-                            className={`h-3.5 w-3.5 shrink-0 transition-transform duration-200 ${
-                                noteOpen ? 'rotate-180' : ''
+                            className={`h-3.5 w-3.5 shrink-0 text-text2 transition-transform duration-200 ${
+                                isNoteOpen ? 'rotate-180' : ''
                             }`}
                             strokeWidth={2}
                         />
                     </button>
-                    {noteOpen && (
-                        <input
-                            type="text"
-                            autoFocus={!hasNote}
-                            value={file.note ?? ''}
-                            onChange={(event) => {
-                                onChange({
-                                    ...file,
-                                    note: event.target.value.trim() ? event.target.value : undefined,
-                                });
-                            }}
-                            placeholder={notePlaceholder}
-                            className="mt-1.5 w-full rounded-lg border border-hairline bg-canvas px-3 py-2 text-[12px] text-text1 placeholder:text-text2/60 focus:border-text2/50 focus:outline-none"
-                        />
+                    {isNoteOpen && (
+                        <div className="absolute left-0 right-0 top-full z-20 mt-2 rounded-xl border border-hairline bg-surface p-3 shadow-xl">
+                            <textarea
+                                autoFocus={!hasNote}
+                                value={file.note ?? ''}
+                                onChange={(event) => {
+                                    onChange({
+                                        ...file,
+                                        note: event.target.value ? event.target.value : undefined,
+                                    });
+                                }}
+                                placeholder={notePlaceholder}
+                                rows={2}
+                                className="w-full min-h-[4.5rem] max-h-[7rem] resize-none rounded-lg border border-hairline bg-canvas px-3 py-2 text-[12px] leading-relaxed text-text1 placeholder:text-text2/60 focus:border-text2/40 focus:outline-none"
+                            />
+                            <div className="mt-2 flex flex-wrap gap-1.5">
+                                {NOTE_CHIPS.map((chip) => (
+                                    <button
+                                        key={chip}
+                                        type="button"
+                                        onClick={() => onClickChip(chip)}
+                                        className="rounded-full border border-hairline bg-canvas px-2.5 py-1 text-[11px] text-text2 hover:border-text2/30 hover:text-text1"
+                                    >
+                                        + {chip}
+                                    </button>
+                                ))}
+                            </div>
+                            <div className="mt-3 flex justify-end gap-2">
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        onChange({ ...file, note: undefined });
+                                        setIsNoteOpen(false);
+                                    }}
+                                    className="rounded-full px-3 py-1.5 text-[11px] text-text2 hover:bg-canvas"
+                                >
+                                    Clear
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setIsNoteOpen(false)}
+                                    className="rounded-full bg-text1 px-4 py-1.5 text-[11px] font-medium text-canvas"
+                                >
+                                    Done
+                                </button>
+                            </div>
+                        </div>
                     )}
                 </div>
             )}
