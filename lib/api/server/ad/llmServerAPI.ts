@@ -68,10 +68,10 @@ Instruction: Generate ratio-specific I2I captions and ad copy according to the s
 
             const generatedContent = await client.createCompletion(
                 {
-                    model: OpenRouterModel.DEEPSEEK_V_4_FLASH_0731,
+                    model: OpenRouterModel.DEEPSEEK_V4_FLASH_0731,
                     systemMessage: POST_AD_CREATIVE_PROMPT,
                     userMessage,
-                    maxCompletionTokens: 4096,
+                    maxCompletionTokens: 10240,
                     temperature: 0.8,
                     reasoning: true,
                 },
@@ -184,7 +184,7 @@ Each image corresponds to the ratio at the same index in ratio_order.
                     userMessage,
                     imageBase64List,
                     imageDetail: "high",
-                    maxCompletionTokens: 4096,
+                    maxCompletionTokens: 20480,
                     reasoning: true,
                 },
                 `ad/creative/${creativeIndex}/postAdImageAnalysis()`,

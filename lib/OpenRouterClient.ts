@@ -1,7 +1,7 @@
 import OpenAI from "openai";
 
 export enum OpenRouterModel {
-    DEEPSEEK_V_4_FLASH_0731 = "deepseek/deepseek-v4-flash-0731",
+    DEEPSEEK_V4_FLASH_0731 = "deepseek/deepseek-v4-flash-0731",
     GEMINI_3_5_FLASH_LITE = "google/gemini-3.5-flash-lite",
     GLM_5_3_FLASH = "z-ai/glm-5.3-flash",
 }
@@ -128,6 +128,11 @@ export class OpenRouterClient {
             }
         });
 
-        return completion.choices[0]?.message?.content;
+        if (completion.choices[0]?.message?.content) {
+            return completion.choices[0]?.message?.content;
+        } else {
+            console.log(`Raw completion: ${JSON.stringify(completion)}`);
+            return ''
+        }
     }
 }

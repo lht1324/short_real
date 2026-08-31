@@ -46,7 +46,7 @@ Instruction: Process the input data and generate the next viral topic based on t
 
             const client = new OpenRouterClient();
             const generatedContent = await client.createCompletion({
-                model: OpenRouterModel.DEEPSEEK_V_4_FLASH_0731,
+                model: OpenRouterModel.DEEPSEEK_V4_FLASH_0731,
                 systemMessage: POST_AUTOPILOT_NICHE_TOPIC_PROMPT,
                 userMessage: userMessage,
                 maxCompletionTokens: 2048,
@@ -79,7 +79,7 @@ Instruction: Process the input data and generate the next viral topic based on t
             const client = new OpenRouterClient();
 
             const generatedContent = await client.createCompletion({
-                model: OpenRouterModel.DEEPSEEK_V_4_FLASH_0731,
+                model: OpenRouterModel.DEEPSEEK_V4_FLASH_0731,
                 systemMessage: POST_SCRIPT_PROMPT,
                 userMessage: userPrompt,
 
@@ -188,7 +188,7 @@ Instruction: Process the input data and return the JSON output according to the 
             const client = new OpenRouterClient();
 
             const generatedContent = await client.createCompletion({
-                model: OpenRouterModel.DEEPSEEK_V_4_FLASH_0731,
+                model: OpenRouterModel.DEEPSEEK_V4_FLASH_0731,
                 systemMessage: systemMessage,
                 userMessage: userMessage,
                 reasoning: true,
@@ -271,7 +271,7 @@ Instruction: Analyze <video_metadata>, <target_aspect_ratio>, <style_guidelines>
             const client = new OpenRouterClient();
 
             const generatedContent = await client.createCompletion({
-                model: OpenRouterModel.DEEPSEEK_V_4_FLASH_0731,
+                model: OpenRouterModel.DEEPSEEK_V4_FLASH_0731,
                 systemMessage: systemMessage,
                 userMessage: userMessage,
                 reasoning: true,
@@ -460,7 +460,7 @@ Instruction: Analyze <video_metadata>, <target_aspect_ratio>, <style_guidelines>
             const client = new OpenRouterClient();
 
             const generatedContent = await client.createCompletion({
-                model: OpenRouterModel.DEEPSEEK_V_4_FLASH_0731,
+                model: OpenRouterModel.DEEPSEEK_V4_FLASH_0731,
                 systemMessage: systemMessage,
                 userMessage: userMessage,
                 reasoning: true,
@@ -573,7 +573,7 @@ Instruction: For each entity in <entity_manifest_list>, generate a front-view fu
             const client = new OpenRouterClient();
 
             const generatedContent = await client.createCompletion({
-                model: OpenRouterModel.DEEPSEEK_V_4_FLASH_0731,
+                model: OpenRouterModel.DEEPSEEK_V4_FLASH_0731,
                 systemMessage: systemMessage,
                 userMessage: userMessage,
                 reasoning: true,
@@ -705,7 +705,7 @@ Instruction: Analyze <video_metadata>, <target_aspect_ratio>, <style_guidelines>
             const client = new OpenRouterClient();
 
             const generatedContent = await client.createCompletion({
-                model: OpenRouterModel.DEEPSEEK_V_4_FLASH_0731,
+                model: OpenRouterModel.DEEPSEEK_V4_FLASH_0731,
                 systemMessage: systemMessage,
                 userMessage: userMessage,
                 reasoning: true,
@@ -841,7 +841,7 @@ Instruction: Generate the scene instruction JSON.
             const client = new OpenRouterClient();
 
             const generatedContent = await client.createCompletion({
-                model: OpenRouterModel.DEEPSEEK_V_4_FLASH_0731,
+                model: OpenRouterModel.DEEPSEEK_V4_FLASH_0731,
                 systemMessage: systemMessage,
                 userMessage: userMessage,
                 reasoning: true,
@@ -1069,7 +1069,7 @@ Proceed with the prompt generation.
             const client = new OpenRouterClient();
 
             const generatedContent = await client.createCompletion({
-                model: OpenRouterModel.DEEPSEEK_V_4_FLASH_0731,
+                model: OpenRouterModel.DEEPSEEK_V4_FLASH_0731,
                 systemMessage: systemMessage,
                 userMessage: userMessage,
                 maxCompletionTokens: 8192,
@@ -1371,7 +1371,7 @@ Instruction: Process the models in <input_data> and extract the per-image price 
 
             const client = new OpenRouterClient();
             const generatedContent = await client.createCompletion({
-                model: OpenRouterModel.DEEPSEEK_V_4_FLASH_0731,
+                model: OpenRouterModel.DEEPSEEK_V4_FLASH_0731,
                 systemMessage: systemMessage,
                 userMessage: userMessage,
                 reasoning: true,
@@ -1485,7 +1485,7 @@ Instruction: Process the models in <input_data> and extract the price per second
 
             const client = new OpenRouterClient();
             const generatedContent = await client.createCompletion({
-                model: OpenRouterModel.DEEPSEEK_V_4_FLASH_0731,
+                model: OpenRouterModel.DEEPSEEK_V4_FLASH_0731,
                 systemMessage: systemMessage,
                 userMessage: userMessage,
                 reasoning: true,
