@@ -195,43 +195,44 @@ function CreateForm({
                     )}
                 </section>
 
-                {/* How many — 우상 */}
-                <section className="rounded-[1.5rem] border border-hairline bg-surface p-4 sm:p-5 flex flex-col">
+                {/* How many — 우상, 1열 4행 세로형 — 남은 높이를 fr로 균등 분할 */}
+                <section className="rounded-[1.5rem] border border-hairline bg-surface p-4 sm:p-5 flex flex-1 flex-col min-h-0">
                     <div className="mb-3 flex items-center justify-between shrink-0">
                         <h3 className="text-[14px] font-semibold tracking-tight text-text1">How many options?</h3>
                         <span className="text-[11px] text-text2">per batch</span>
                     </div>
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="grid flex-1 grid-cols-1 grid-rows-4 gap-2 min-h-0">
                         {AD_CONCEPT_OPTIONS.map((count) => (
                             <button
                                 key={count}
                                 type="button"
                                 onClick={() => onClickCount(count)}
-                                className={`relative rounded-xl border px-2 py-5 text-center transition-all duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] active:scale-[0.97] ${
+                                className={`relative flex items-center justify-between rounded-xl border px-4 py-2 text-left transition-all duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] active:scale-[0.98] ${
                                     conceptCount === count
-                                        ? 'border-accent bg-accent/10'
-                                        : 'border-hairline bg-surface hover:border-text2/40'
+                                        ? 'border-accent bg-accent/10 shadow-[0_0_0_1px_rgba(var(--accent),0.12)]'
+                                        : 'border-hairline bg-canvas hover:border-text2/30 hover:bg-surface'
                                 }`}
                             >
-                                <span
-                                    className={`block text-[18px] font-semibold leading-none ${
-                                        conceptCount === count ? 'text-text1' : 'text-text2'
-                                    }`}
-                                >
-                                    {count}
-                                </span>
-                                <span className="mt-1 block text-[11px] leading-none text-text2">
-                                    {count === 1 ? 'creative' : 'creatives'}
-                                </span>
-                                {count === 10 && (
-                                    <span className="absolute -top-2 right-2 rounded-full bg-accent px-2 py-0.5 text-[10px] font-semibold text-white">
-                                        Pro
+                                <div className="flex items-center gap-2">
+                                    <span className={`text-[18px] font-bold leading-none tracking-tight ${conceptCount === count ? 'text-text1' : 'text-text2'}`}>
+                                        {count}
                                     </span>
-                                )}
+                                    <span className="text-[12px] text-text2">{count === 1 ? 'creative' : 'creatives'}</span>
+                                    {count === 10 && (
+                                        <span className="rounded-full bg-accent px-2 py-0.5 text-[10px] font-semibold text-white">
+                                            Pro
+                                        </span>
+                                    )}
+                                </div>
+                                {conceptCount === count ? (
+                                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-accent border border-accent text-white">
+                                        <Check className="h-3.5 w-3.5" strokeWidth={3} />
+                                    </span>
+                                ) : null}
                             </button>
                         ))}
                     </div>
-                    <p className="mt-3 text-[11px] leading-snug text-text2">
+                    <p className="mt-3 shrink-0 text-[11px] leading-snug text-text2">
                         Each creative is generated in every format you select — backgrounds vary per creative.
                     </p>
                 </section>

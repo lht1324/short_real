@@ -1,7 +1,7 @@
 'use client'
 
 import { memo, useCallback } from 'react';
-import { AlertTriangle, Download, Loader2, RefreshCw, Sparkles } from 'lucide-react';
+import { AlertTriangle, Download, Loader2, Maximize2, RefreshCw, Sparkles } from 'lucide-react';
 import AdOverlay from "@/components/page/ad/results/components/AdOverlay";
 import { AdDesignLayout } from "@/lib/api/client/ad/adClientAPI";
 import { AdRatioKey, AdImageResult } from "@/lib/api/types/supabase/ad/AdGenerationBatch";
@@ -29,10 +29,11 @@ interface FormatTileProps {
     isProjectRunning: boolean;
     creativeIndex: number;
     onSelect?: () => void;
+    onExpand?: () => void;
     selected?: boolean;
 }
 
-function FormatTile({ ratioKey, imageResult, signedUrl, isProjectRunning, creativeIndex, onSelect, selected }: FormatTileProps) {
+function FormatTile({ ratioKey, imageResult, signedUrl, isProjectRunning, creativeIndex, onSelect, onExpand, selected }: FormatTileProps) {
     const ratioLabel = RATIO_LABEL[ratioKey] ?? ratioKey;
     const factor = RATIO_FACTOR[ratioKey] ?? 1;
 
@@ -147,9 +148,22 @@ function FormatTile({ ratioKey, imageResult, signedUrl, isProjectRunning, creati
             </span>
 
             {isCompleted && (
-                <span className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-surface/85 text-text1 opacity-0 backdrop-blur-sm transition-opacity group-hover:opacity-100">
-                    <Download className="h-3.5 w-3.5" strokeWidth={1.8} />
-                </span>
+                <>
+                    <span className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-surface/85 text-text1 opacity-0 backdrop-blur-sm transition-opacity group-hover:opacity-100">
+                        <Download className="h-3.5 w-3.5" strokeWidth={1.8} />
+                    </span>
+                    <button
+                        type="button"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            onExpand?.();
+                        }}
+                        aria-label="Expand image"
+                        className="absolute left-1/2 top-1/2 flex h-8 w-8 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-surface/90 text-text1 opacity-0 shadow-lg backdrop-blur-sm transition-all group-hover:opacity-100 hover:scale-105"
+                    >
+                        <Maximize2 className="h-4 w-4" strokeWidth={1.8} />
+                    </button>
+                </>
             )}
         </button>
     );

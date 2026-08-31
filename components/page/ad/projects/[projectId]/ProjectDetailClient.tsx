@@ -6,8 +6,10 @@ import { useRouter } from 'next/navigation';
 import { ArrowLeft, AlertTriangle, CheckCircle2, Clock, Download, Layers, Loader2, Palette, RefreshCw } from 'lucide-react';
 import AppHeader from "@/components/page/ad/app-header/AppHeader";
 import CreativeRow from "@/components/page/ad/projects/[projectId]/components/CreativeRow";
+import AdLightboxModal from "@/components/page/ad/projects/[projectId]/components/AdLightboxModal";
 import { adProjectClientAPI, getProjectProgress } from "@/lib/api/client/ad/adProjectClientAPI";
 import { AdGenerationBatch, AdRatioKey } from "@/lib/api/types/supabase/ad/AdGenerationBatch";
+import { AdDesignLayout } from "@/lib/api/client/ad/adClientAPI";
 import { supabase } from "@/lib/supabase/supabaseClient";
 
 type DetailStatus = 'loading' | 'ready' | 'error';
@@ -20,6 +22,7 @@ export default function ProjectDetailClient({ projectId }: { projectId: string }
     const [error, setError] = useState<string | null>(null);
     const [isPolling, setIsPolling] = useState(false);
     const [selectedKey, setSelectedKey] = useState<string | null>(null);
+    const [lightboxKey, setLightboxKey] = useState<string | null>(null);
 
     const fetchProject = useCallback(async (showPolling = false) => {
         if (showPolling) setIsPolling(true);
@@ -113,6 +116,15 @@ export default function ProjectDetailClient({ projectId }: { projectId: string }
 
     const onSelectTile = useCallback((key: string) => {
         setSelectedKey(key);
+    }, []);
+
+    const onExpandTile = useCallback((key: string) => {
+        setLightboxKey(key);
+        setSelectedKey(key);
+    }, []);
+
+    const onCloseLightbox = useCallback(() => {
+        setLightboxKey(null);
     }, []);
 
     const totalAssets = project ? project.concept_count * project.aspect_ratios.length : 0;
@@ -278,6 +290,7 @@ export default function ProjectDetailClient({ projectId }: { projectId: string }
                             isProjectRunning={isRunning}
                             selectedKey={selectedKey}
                             onSelectTile={onSelectTile}
+                            onExpandTile={onExpandTile}
                         />
                     ))}
                 </div>
@@ -304,6 +317,28 @@ export default function ProjectDetailClient({ projectId }: { projectId: string }
                                 Download {ratioLabel}
                             </a>
                         </div>
+                    );
+                })()}
+
+                {/* 라이트박스 — WorkspaceEditor와 동일 패턴 */}
+                {lightboxKey && (() => {
+                    const url = signedUrls[lightboxKey];
+                    if (!url) return null;
+                    const [cIdxStr, ratioKey] = lightboxKey.split('_');
+                    const cIdx = parseInt(cIdxStr, 10);
+                    const ratioLabel = (ratioKey as string).replace('_', ':');
+                    const creative = sortedCreatives.find((c) => c.creativeIndex === cIdx);
+                    const ir = creative?.result?.imageResults?.[ratioKey as AdRatioKey] as { design?: import("@/lib/api/types/supabase/ad/AdGenerationBatch").AdImageResult['design']; score?: number | null } | undefined;
+                    return (
+                        <AdLightboxModal
+                            imageUrl={url}
+                            ratioLabel={ratioLabel}
+                            creativeIndex={cIdx}
+                            design={(ir?.design as AdDesignLayout) ?? null}
+                            score={ir?.score ?? null}
+                            headline={creative?.result?.copy?.headline ?? null}
+                            onClose={onCloseLightbox}
+                        />
                     );
                 })()}
             </main>

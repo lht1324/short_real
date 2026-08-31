@@ -179,7 +179,7 @@ Each image corresponds to the ratio at the same index in ratio_order.
 
             const generatedContent = await client.createCompletion(
                 {
-                    model: OpenRouterModel.QWEN_3_8_27B,
+                    model: OpenRouterModel.GLM_5_3_FLASH,
                     systemMessage: POST_AD_IMAGE_ANALYSIS_PROMPT,
                     userMessage,
                     imageBase64List,

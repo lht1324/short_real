@@ -1,16 +1,9 @@
 import OpenAI from "openai";
 
 export enum OpenRouterModel {
-    DEEPSEEK_V_3_2 = "deepseek/deepseek-v3.2",
-    DEEPSEEK_V_4_FLASH = "deepseek/deepseek-v4-flash",
     DEEPSEEK_V_4_FLASH_0731 = "deepseek/deepseek-v4-flash-0731",
-    GEMINI_3_0_FLASH_PREVIEW = "google/gemini-3-flash-preview", // 3.0 Flash 출시 안 됨
-    GEMINI_3_1_FLASH_LITE_PREVIEW = "google/gemini-3.1-flash-lite-preview",
-    GROK_4_1_FAST = "x-ai/grok-4.1-fast", // agentic/tool calling 강함, reasoning 지원
-    GROK_4_3 = "x-ai/grok-4.3", // agentic/tool calling 강함, reasoning 지원
-    GPT_5_6_LUNA = "openai/gpt-5.6-luna",
-    MIMO_V2_5 = "xiaomi/mimo-v2.5",
-    QWEN_3_8_27B = "qwen/qwen3.8-27b",
+    GEMINI_3_5_FLASH_LITE = "google/gemini-3.5-flash-lite",
+    GLM_5_3_FLASH = "z-ai/glm-5.3-flash",
 }
 
 export interface CompletionBaseInput {

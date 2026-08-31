@@ -1,25 +1,24 @@
-# 작업 진행 상황 (Last Updated: 2026-08-31 03:30)
+# 작업 진행 상황 (Last Updated: 2026-09-01 02:50)
 
 ## 1. 현재 상황 (Current Status)
 
-### 🎯 현 단계: Create 한 화면 Bento + Projects Realtime + Brand Color 미해결 (2026-08-31)
-* **이번 세션 추가 구현 (2026-08-30~31, tsc 클린)**
-  * **Create 한 화면 Bento + 고정 바**: `CreatePageClient.tsx:109` `pt-28 pb-28` + `flex-1` bento, 헤더 `fixed top-4` ↔ 바 `fixed bottom-4` 대칭. `CreateForm.tsx:95` `Subjects|How many / Where|Brand+CTA` 2×2 bento (`grid-cols-[1.7fr_1fr] grid-rows-[1.15fr_1fr]`), `Where`는 `whereRef+ResizeObserver`로 `H=(W-32)/4.806` 한 줄 5개 돌담, `Subjects` 드롭존 `min-h-[10rem] flex-1`, `How many` 2×2 그리드로 세로 빈 공간 해소. `UploadZone.tsx:75` `Add note` 팝오버(1줄 버튼 + `textarea` 2줄 + 칩) + 업로드 파일 표시 `p-3.5 h-14→h-16` 확대 후 `flex-1 min-h-[10rem]`으로 드랍존과 동일 높이로 꽉 차게 수정. 영문화 `leave empty to skip` 포함.
-  * **Brand Color 팔레트 그리드 시도 (미해결)**: `Brand`를 가로 pill → `grid-cols-5` 팔레트 그리드로 교체, `flex-1 min-h-[7rem]`로 세로 확보, `HexColorPicker` + `HEX/RGB` 동시 입력(`hexToRgb`/`rgbToHex` 양방향) + `z-[60] w-[19rem] width:100%` 팝오버로 바 가림 해소 시도. 그러나 3가지 미해결:
-    1. 팔레트 아이템 아래 RGB 텍스트 잘림 → 삭제 버튼을 아이템 우상단 오버레이로 빼는 방안 필요
-    2. 피커 길이가 팝오버에 꽉 안 참 → `HexColorPicker` `width:100%` 미적용, `#RRGGBB`와 `R/G/B`를 한 줄 4칸 대신 두 줄(HEX 1줄, RGB 3칸)로 분리 필요
-    3. `색 선택 → Add` 2단계 어색함 → 빈 슬롯 클릭 시 바로 피커 열고 `Done`이 즉시 `Add`가 되는 1단계 흐름으로 변경 필요
-    * 높이 덜컥임(`Add 3 to 5` vs `Leave empty` 16px 점프)은 `min-h-[16px]` 래퍼로 임시 고정했으나, 상기 3가지와 함께 재작업 필요. 현재 `Where` 높이를 `7rem`으로 올려 `Brand+CTA`와 맞추는 시도는 했으나 가로 넘침 방지를 위해 `whereH` 동적 계산으로 되돌림.
-  * **Realtime 유지**: 이전 세션 `ProjectsPageClient`/`ProjectDetailClient` Realtime 채널 + RLS + RPC `::text` 캐스팅 + 프롬프트 영어 고정 + raw 로그는 그대로 유지.
-  * **빌드 안정화**: `rm -rf .next`로 인한 `dev` 캐시 깨짐(`build-manifest.json` ENOENT) 발생 → `npx tsc --noEmit`만으로 검증, dev 재시작으로 복구. `ad-generation-batch` 빈 폴더 삭제 상태 유지, `ad-generation-batches` 정석 경로 유지.
+### 🎯 현 단계: Create Bento 고도화 + ProjectDetail 확대(버그) + Brand 일부 수정 (2026-08-31)
+* **이번 세션 추가 구현 (2026-08-31, tsc 클린)**
+  * **Create Bento 고도화**: `CreateForm.tsx:95` `grid-[1.7fr_1fr] grid-rows-[1.15fr_1fr]` bento에서 `Subjects`/`How many` 1행, `Where`/`Brand+CTA` 2행을 `flex-1`로 남은 높이를 `fr`로 나눠 꽉 채우도록 변경. `Where`는 `whereRef+ResizeObserver`로 `H=(W-32)/4.806` 동적 높이, `Where` 높이를 `6.25rem→7rem`으로 상향 후 가로 넘침 방지를 위해 동적 계산으로 되돌림. `How many`는 `2×2 → 1열 4행` 세로형으로 변경해 남은 높이를 `grid-rows-4`로 균등 분할 — 상단 텍스트 제외 남은 영역을 `flex-1`로 꽉 채움. `Pro` 배지를 `absolute -top-2 → top-2 → inline`으로 `10` 옆에 붙여 체크와 겹침 해소, `선택 시 체크만` 표시(빈 원 제거).
+  * **Brand Color 일부 수정 (잔여)**: `Brand`를 `p-4 flex-1 min-h-[7rem]`로 키우고 `grid-cols-5` 팔레트 그리드로 교체, `HexColorPicker`에 `HEX` 1줄 + `R/G/B` 3칸을 두 줄로 분리(`hexToRgb`/`rgbToHex` 양방향) + `z-[60] w-[19rem] width:100%`로 바 가림 해소 시도. 팔레트 아이템 `X`를 우상단 오버레이로 이동해 아래 텍스트 잘림 해소, 팝오버 `w-[19rem] + width:100%`로 피커 길이 꽉 차게 수정, 높이 점프는 `min-h-[16px]`로 고정. 그러나 `Add` 높이·텍스트 높이 변화는 체감이 없고, 피커 길이가 여전히 팝오버에 맞지 않는다는 피드백으로 재수정 필요 상태.
+  * **UploadZone 동일 높이**: `UploadZone.tsx:75` `min-h-[10rem] flex-1`로 드랍존과 업로드 표시 높이를 동일하게 꽉 차게 수정, 영문화 유지. `Subjects` 그리드도 `flex-1 min-h-0`으로 세로 빈 공간 해소.
+  * **ProjectDetail 확대 기능 (버그)**: `ProjectDetailClient.tsx:8` `WorkspaceEditor`의 `SceneImageLightboxModal` 패턴을 차용해 `FormatTile.tsx:호버 확대 버튼(Maximize2)` + `AdLightboxModal.tsx` 신규( `fixed inset-0 bg-black/80`, `Esc/배경 클릭` 닫기, `AdOverlay` 포함 `object-contain`) 추가. `CreativeRow`에 `onExpandTile` 전달, `ProjectDetailClient`에 `lightboxKey` 상태로 모달 관리. **확대 기능에 문제 발생 중 — 해결 필요**.
 
-* **사장 작업 완료 (이번 세션)**: 없음 — Brand Color 재작업 대기.
+* **사장 작업 완료 (이번 세션)**: 없음 — Create 세부 조정 및 Brand/확대 버그 해결 대기.
 
-* **이전 세션 (2026-08-29 17:00) — 유효**: Projects 정석 분리(`ad-generation-batches` + `adProjectClientAPI` 래핑), gateway `postFormFetch`, `.../[batchId]/images` 업로드, `Projects` 리스트/상세 상황실, Create 텍스트 pill 한 줄 압축은 그대로 유지.
+* **이전 세션 (2026-08-30 00:40) — 유효**: Realtime 전환, RPC `::text` 캐스팅, 버킷 진단, 프롬프트 영어 고정, gateway `postFormFetch` 등은 그대로 유지.
 
 ---
 
 ## 2. 완수된 작업 (Completed Milestones)
+
+### 2-18. Create Bento 세부 + Brand 일부 + 확대 기능 추가 (2026-08-31, 일부 미완)
+* Bento `fr` 나눔, Where 동적 높이, How many 1×4 세로형 균등 분할, Pro 배지 인라인, 빈 원 제거, UploadZone 동일 높이, Brand 팔레트 X 우상단·HEX/RGB 두 줄·피커 전체폭 시도. 단 Brand 높이 체감 없음·피커 길이 미적용 등 잔여, 확대 기능은 구현했으나 버그로 동작 불량.
 
 ### 2-17. Create Bento 한 화면 + 업로드 팝오버 + Brand 그리드 시도 (2026-08-31, 일부 미해결)
 * 한 화면 Bento 구조 확정, 드롭존/업로드 표시 동일 높이, Where 한 줄 돌담 동적 높이, How many 2×2, Brand를 pill→팔레트 그리드로 교체 시도. 단 Brand 3가지(잘림/피커 길이/Add 2단계/높이 덜컥임)는 미해결로 남음.
@@ -50,18 +49,18 @@
 
 ## 3. 향후 작업 (Next Steps)
 
+### 🔴 확대 기능 버그 (우선)
+* `ProjectDetailClient.tsx` + `AdLightboxModal.tsx` + `FormatTile.tsx` 확대 버튼·모달이 정상 동작하지 않음 — 원인 진단 및 수정 필요 (Hydration 또는 상태 전달 문제 추정).
+
 ### 🔴 Brand Color 미해결 (우선)
-1. 팔레트 아이템 X를 우상단 오버레이로 이동해 아래 RGB/hex 잘림 해소
-2. `HexColorPicker`가 팝오버 전체 너비를 채우도록 `width:100%` 고정 및 HEX 1줄 + RGB 3칸을 두 줄로 분리
-3. 빈 슬롯 `Add` 2단계 제거 — 빈 스와치 클릭 시 바로 피커 열고 `Done`이 즉시 `Add` 되도록 1단계 흐름으로 변경
-4. `Add 3 to 5`/`Leave empty` 높이 점프 제거는 `min-h-[16px]`로 임시 고정했으나, 상기와 함께 최종 확정 필요
+* 팔레트 아이템 X 우상단, HEX/RGB 두 줄, 피커 전체폭은 시도했으나 체감 없음·여전히 Add 2단계 어색함 등 잔여. 높이 덜컥임은 `min-h-[16px]`로 임시 고정.
 
 ### 🔴 ad 파이프라인 잔여 (UI 전)
 * **버킷 생성 확인** — `ad_image_storage` (private) 대시보드 또는 `insert into storage.buckets` 로 생성 후 `docker compose restart short-real-server` 로 PostgREST 리프레시. 이후 `product/person` 업로드 `Bucket not found` 해소 후 `prompt → generation → analysis` 종단 테스트 재시도.
 * **구 결과 페이지 정리** — `app/ad/create/results`는 비교용으로 유지 중, 신 `app/ad/projects/[projectId]`와 비교 완료 후 리다이렉트 처리.
 
 ### 🔴 다음 (UI)
-1. **Create 한 화면 숨 틔우기** — `Where` 높이 동적(`H=(W-32)/4.806`) + `How many` 2×2 + 드롭존 동일 높이로 한 화면 달성. Brand 높이 조정은 상기 미해결과 함께 마무리.
+1. **Create 한 화면 미세 조정** — Where 동적 높이 + How many 1×4 균등 분할 + Brand 팔레트 높이 조정은 적용, 추가 미세 조정 대기.
 2. **과금 확정** — `success only` 문구 교체 완료, 실제 Polar 차감은 성공 에셋 수 기준으로 이전 필요 (현재 `totalImages` 선차감).
 3. **Projects 리스트 썸네일 고도화** — 현재 카드가 상태 시각화만, 실제 결과 1장 썸네일은 상세에서만 보임. 리스트 API에 썸네일 1장 signed URL을 포함하는 최적화는 v2.
 
@@ -87,10 +86,10 @@
 * **파일 경로 규칙**: 입력 `{user_id}/{batch_id}/{product|person}_image.{ext}`, 출력 `{user_id}/{batch_id}/ad_generation_result_{c}_{ratio}.{ext}` — c+ratio+imageFileExtension으로 signed URL 재구성. 버킷 `ad_image_storage` (imageServerAPI, private). 업로드 엔드포인트 `POST /api/ad/ad-generation-batches/[batchId]/images` (multipart, upsert:true).
 * **AdImageResult**: `design: AdDesignLayout, score: number | null, imageFileExtension: string | null, error?: {code,message}|null` — process가 다운로드 시 `inferFileExtension`으로 확정, 실패 시 `error`로 격리.
 * **AdCreativeSpec**: `imagePromptRecord: Partial<Record<AdRatioKey,string>>` (B안), `seed: number` — 프롬프트 단계가 채움. `brand_palette`는 배치 생성 시 3-5 hex or null.
-* **LLM**: Creative 디렉터 `DEEPSEEK_V_4_FLASH`(텍스트, `imagePromptRecord`+`copy`+`reasoning`, 영어 고정), Vision 분석 `QWEN_3_8_27B`(멀티모달, 정수% 0-100, 3분기 Product/Person/Both, `brand_palette` 조건부, 영어 고정) — `llmServerAPI.ts` `postAdCreativePrompt`/`postAdImageAnalysis` + 원문 4000자 로그(`raw LLM output`/`raw Vision output`), 프롬프트는 `POST_AD_{CREATIVE,IMAGE_ANALYSIS}_PROMPT.ts` 엘리트 250-320줄, `constraint`에 `ALL output text MUST be English only` 명시.
+* **LLM**: Creative 디렉터 `DEEPSEEK_V_4_FLASH_0731`(텍스트, `imagePromptRecord`+`copy`+`reasoning`, 영어 고정), Vision 분석 `GLM_5_3_FLASH`(멀티모달, 정수% 0-100, 3분기 Product/Person/Both, `brand_palette` 조건부, 영어 고정) — `llmServerAPI.ts` `postAdCreativePrompt`/`postAdImageAnalysis` + 원문 4000자 로그(`raw LLM output`/`raw Vision output`), 프롬프트는 `POST_AD_{CREATIVE,IMAGE_ANALYSIS}_PROMPT.ts` 엘리트 250-320줄, `constraint`에 `ALL output text MUST be English only` 명시.
 * **용어 계약 (확정)**: creatives × formats = assets, 실행 1회 = batch. 유저 노출은 Project(페이지/URL/텍스트), 서버/DB/내부 코드는 batch.
 * **시드 규칙**: creative별 서로 다른 seed / 같은 creative 내 비율 = 같은 seed. 재현은 저장된 specs(DB)가 담당.
-* **사장 UI 원칙**: px 하드코딩 금지(rem/vh/vw/%/fr), 광고 바닥 언어, 0스크롤 선호. Bento 12col (`Subjects 8 | How many+CTA 4 / Where 8 | Brand 4`), `Where` 돌담은 `ResizeObserver`로 `H=(W-32)/4.806` 실측 5개 1행·가로 중앙, 섹션 높이는 내용 높이대로. `optional` 배지로 즉시 인지. 현재 Brand는 가로 pill → 5칸 팔레트 그리드로 교체 시도 중이나, 잘림/피커 길이/Add 2단계/높이 점프 3가지 미해결.
+* **사장 UI 원칙**: px 하드코딩 금지(rem/vh/vw/%/fr), 광고 바닥 언어, 0스크롤 선호. Bento 12col (`Subjects 8 | How many+CTA 4 / Where 8 | Brand 4`), `Where` 돌담은 `ResizeObserver`로 `H=(W-32)/4.806` 실측 5개 1행·가로 중앙, 섹션 높이는 내용 높이대로. `optional` 배지로 즉시 인지. 현재 Brand는 5칸 팔레트 그리드로 교체 시도 중이나, 피커 길이/Add 2단계 등 미해결.
 * **ad_variation_study.md**: §1·§2·§6 이미 최신(`imagePromptRecord`, `brand_palette`, HARD_BANNED 8개, fail-soft, n=1 재시도) — 이번 세션 추가 갱신 불필요.
 * **supabase 파일**: `supabase/ad_generation_batches.sql` 삭제 — SQL은 직접 전달. `brand_palette` 컬럼, B안, `p_file_extension`+`p_error`는 사장이 직접 실행 완료. 버킷 `ad_image_storage` 생성 대기, `.next` 캐시로 인한 Vercel TS2306은 빈 `ad-generation-batch` 폴더 삭제로 해소.
 * Remotion 4.0.507: `<OffthreadVideo>` + `colorSpace: 'bt709'`, 저사양 `concurrency: 1`.

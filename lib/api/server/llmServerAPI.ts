@@ -947,7 +947,7 @@ Proceed with the prompt generation.
             const client = new OpenRouterClient();
 
             const generatedContent = await client.createCompletion({
-                model: OpenRouterModel.GROK_4_3,
+                model: OpenRouterModel.GLM_5_3_FLASH,
                 systemMessage: systemMessage,
                 userMessage: userMessage,
                 imageBase64List: [imageBase64],
@@ -1175,7 +1175,7 @@ Instruction: Analyze the attached audio tracks based on the provided video conte
 
             // 3. OpenRouter API 호출 (Gemini 3.1 Flash Lite)
             const generatedContent = await client.createCompletion({
-                model: OpenRouterModel.GEMINI_3_1_FLASH_LITE_PREVIEW,
+                model: OpenRouterModel.GEMINI_3_5_FLASH_LITE,
                 systemMessage: systemMessage,
                 userMessage: userMessage,
                 audioBase64List: audioBase64List,
@@ -1276,7 +1276,7 @@ Instruction: Analyze the narration (Track 0) and the candidate music tracks (Tra
             const audioBase64List = [voiceBase64, ...musicAudioBase64List];
 
             const generatedContent = await client.createCompletion({
-                model: OpenRouterModel.MIMO_V2_5,
+                model: OpenRouterModel.GEMINI_3_5_FLASH_LITE,
                 systemMessage: systemMessage,
                 userMessage: userMessage,
                 audioBase64List: audioBase64List,

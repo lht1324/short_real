@@ -5,6 +5,13 @@ import { ChevronDown, Eye, Layers, Sparkles, Target, Wand2 } from 'lucide-react'
 import FormatTile from "@/components/page/ad/projects/[projectId]/components/FormatTile";
 import { AdCreativeSpec, AdCreativeResult, AdGenerationBatch, AdRatioKey } from "@/lib/api/types/supabase/ad/AdGenerationBatch";
 
+function formatAxisLabel(value: string): string {
+    return value
+        .split('_')
+        .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+        .join(' ');
+}
+
 interface CreativeRowProps {
     creativeIndex: number;
     spec?: AdCreativeSpec | null;
@@ -14,9 +21,10 @@ interface CreativeRowProps {
     isProjectRunning: boolean;
     selectedKey: string | null;
     onSelectTile: (key: string) => void;
+    onExpandTile?: (key: string) => void;
 }
 
-function CreativeRow({ creativeIndex, spec, result, batch, signedUrls, isProjectRunning, selectedKey, onSelectTile }: CreativeRowProps) {
+function CreativeRow({ creativeIndex, spec, result, batch, signedUrls, isProjectRunning, selectedKey, onSelectTile, onExpandTile }: CreativeRowProps) {
     const [expanded, setExpanded] = useState(true);
 
     const copy = result?.copy;
@@ -102,7 +110,9 @@ function CreativeRow({ creativeIndex, spec, result, batch, signedUrls, isProject
                     {copy?.headline ? (
                         <p className="mt-1 line-clamp-1 text-[13px] leading-snug text-text1">“{copy.headline}”</p>
                     ) : spec ? (
-                        <p className="mt-1 line-clamp-1 text-[12px] text-text2">Seed {spec.seed} · {spec.camera} · {spec.lighting} · {spec.palette}</p>
+                        <p className="mt-1 line-clamp-1 text-[12px] text-text2">
+                            {formatAxisLabel(spec.camera)} · {formatAxisLabel(spec.lighting)} · {formatAxisLabel(spec.palette)}
+                        </p>
                     ) : (
                         <p className="mt-1 text-[12px] text-text2">Preparing concept — axis assignment running…</p>
                     )}
@@ -120,18 +130,18 @@ function CreativeRow({ creativeIndex, spec, result, batch, signedUrls, isProject
                         <div className="flex flex-wrap gap-1.5 border-b border-hairline bg-canvas/40 px-5 py-3">
                             <span className="inline-flex items-center gap-1 rounded-full bg-surface border border-hairline px-2.5 py-1 text-[11px] text-text1">
                                 <Eye className="h-3 w-3 text-text2" strokeWidth={1.8} />
-                                {spec.camera}
+                                {formatAxisLabel(spec.camera)}
                             </span>
                             <span className="inline-flex items-center gap-1 rounded-full bg-surface border border-hairline px-2.5 py-1 text-[11px] text-text1">
                                 <Sparkles className="h-3 w-3 text-text2" strokeWidth={1.8} />
-                                {spec.lighting}
+                                {formatAxisLabel(spec.lighting)}
                             </span>
-                            <span className="rounded-full bg-surface border border-hairline px-2.5 py-1 text-[11px] text-text1">{spec.palette}</span>
+                            <span className="rounded-full bg-surface border border-hairline px-2.5 py-1 text-[11px] text-text1">{formatAxisLabel(spec.palette)}</span>
                             <span className="inline-flex items-center gap-1 rounded-full bg-surface border border-hairline px-2.5 py-1 text-[11px] text-text1">
                                 <Layers className="h-3 w-3 text-text2" strokeWidth={1.8} />
-                                {spec.framing}
+                                {formatAxisLabel(spec.framing)}
                             </span>
-                            <span className="rounded-full bg-surface border border-hairline px-2.5 py-1 text-[11px] text-text1">{spec.layout_tone}</span>
+                            <span className="rounded-full bg-surface border border-hairline px-2.5 py-1 text-[11px] text-text1">{formatAxisLabel(spec.layout_tone)}</span>
                             {copy?.cta != null && (
                                 <span className="inline-flex items-center gap-1 rounded-full bg-accent/10 border border-accent/20 px-2.5 py-1 text-[11px] font-medium text-accent">
                                     <Target className="h-3 w-3" strokeWidth={1.8} />
@@ -165,23 +175,19 @@ function CreativeRow({ creativeIndex, spec, result, batch, signedUrls, isProject
                                             creativeIndex={creativeIndex}
                                             selected={selectedKey === tileKey}
                                             onSelect={() => onSelectTile(tileKey)}
+                                            onExpand={() => onExpandTile?.(tileKey)}
                                         />
                                     );
                                 })}
                             </div>
                         )}
 
-                        {/* 카피/시드 푸터 */}
-                        {(copy?.headline || spec) && (
+                        {/* 카피 푸터 */}
+                        {copy?.headline && (
                             <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-hairline pt-3">
-                                {copy?.headline && (
-                                    <span className="text-[12px] text-text2">
-                                        Headline: <span className="font-medium text-text1">“{copy.headline}”</span>
-                                    </span>
-                                )}
-                                {spec && (
-                                    <span className="ml-auto font-mono text-[10px] uppercase tracking-[0.08em] text-text2">seed {spec.seed}</span>
-                                )}
+                                <span className="text-[12px] text-text2">
+                                    Headline: <span className="font-medium text-text1">“{copy.headline}”</span>
+                                </span>
                             </div>
                         )}
                     </div>
