@@ -1,21 +1,21 @@
-# 작업 진행 상황 (Last Updated: 2026-09-01 02:50)
+# 작업 진행 상황 (Last Updated: 2026-09-01 03:10)
 
 ## 1. 현재 상황 (Current Status)
 
-### 🎯 현 단계: Create Bento 고도화 + ProjectDetail 확대(버그) + Brand 일부 수정 (2026-08-31)
-* **이번 세션 추가 구현 (2026-08-31, tsc 클린)**
-  * **Create Bento 고도화**: `CreateForm.tsx:95` `grid-[1.7fr_1fr] grid-rows-[1.15fr_1fr]` bento에서 `Subjects`/`How many` 1행, `Where`/`Brand+CTA` 2행을 `flex-1`로 남은 높이를 `fr`로 나눠 꽉 채우도록 변경. `Where`는 `whereRef+ResizeObserver`로 `H=(W-32)/4.806` 동적 높이, `Where` 높이를 `6.25rem→7rem`으로 상향 후 가로 넘침 방지를 위해 동적 계산으로 되돌림. `How many`는 `2×2 → 1열 4행` 세로형으로 변경해 남은 높이를 `grid-rows-4`로 균등 분할 — 상단 텍스트 제외 남은 영역을 `flex-1`로 꽉 채움. `Pro` 배지를 `absolute -top-2 → top-2 → inline`으로 `10` 옆에 붙여 체크와 겹침 해소, `선택 시 체크만` 표시(빈 원 제거).
-  * **Brand Color 일부 수정 (잔여)**: `Brand`를 `p-4 flex-1 min-h-[7rem]`로 키우고 `grid-cols-5` 팔레트 그리드로 교체, `HexColorPicker`에 `HEX` 1줄 + `R/G/B` 3칸을 두 줄로 분리(`hexToRgb`/`rgbToHex` 양방향) + `z-[60] w-[19rem] width:100%`로 바 가림 해소 시도. 팔레트 아이템 `X`를 우상단 오버레이로 이동해 아래 텍스트 잘림 해소, 팝오버 `w-[19rem] + width:100%`로 피커 길이 꽉 차게 수정, 높이 점프는 `min-h-[16px]`로 고정. 그러나 `Add` 높이·텍스트 높이 변화는 체감이 없고, 피커 길이가 여전히 팝오버에 맞지 않는다는 피드백으로 재수정 필요 상태.
-  * **UploadZone 동일 높이**: `UploadZone.tsx:75` `min-h-[10rem] flex-1`로 드랍존과 업로드 표시 높이를 동일하게 꽉 차게 수정, 영문화 유지. `Subjects` 그리드도 `flex-1 min-h-0`으로 세로 빈 공간 해소.
-  * **ProjectDetail 확대 기능 (버그)**: `ProjectDetailClient.tsx:8` `WorkspaceEditor`의 `SceneImageLightboxModal` 패턴을 차용해 `FormatTile.tsx:호버 확대 버튼(Maximize2)` + `AdLightboxModal.tsx` 신규( `fixed inset-0 bg-black/80`, `Esc/배경 클릭` 닫기, `AdOverlay` 포함 `object-contain`) 추가. `CreativeRow`에 `onExpandTile` 전달, `ProjectDetailClient`에 `lightboxKey` 상태로 모달 관리. **확대 기능에 문제 발생 중 — 해결 필요**.
-
-* **사장 작업 완료 (이번 세션)**: 없음 — Create 세부 조정 및 Brand/확대 버그 해결 대기.
-
-* **이전 세션 (2026-08-30 00:40) — 유효**: Realtime 전환, RPC `::text` 캐스팅, 버킷 진단, 프롬프트 영어 고정, gateway `postFormFetch` 등은 그대로 유지.
+### 🎯 현 단계: Create Bento 고도화 + ProjectDetail 확대(버그) + Brand 일부 수정 + 이미지 이해/색상 통일 프롬프트 수정 (2026-09-01)
+* **이번 세션 추가 구현 (2026-09-01, tsc 클린)**
+  * **이미지 이해 추가 (GLM Vision)**: `lib/OpenRouterClient.ts:6` `GLM_5_3_FLASH`로 `lib/api/server/ad/llmServerAPI.ts:18` `postAdCreativePrompt()`를 `DeepSeek → GLM`으로 교체, `productImageBase64/personImageBase64`를 받아 `imageBase64List`로 전달. `app/api/ad/creative/[creative-index]/prompt/route.ts:67`에서 `adImageServerAPI.getAdOriginalImageSignedUrls` → `fetch → base64`로 원본을 읽어 전달. 노트 없이도 제품 사진을 보고 카피를 뽑도록 함 (랑콤 크림 범용 카피 → 크림 맥락 카피로 개선).
+  * **노트/이미지 분류 로직 프롬프트 반영**: `POST_AD_CREATIVE_PROMPT.ts:28` `product_note/person_note`를 `절대 무시하지 말고, 상품 설명이면 이미지 이해·보완에, 광고 느낌(모던+전통, Vivid+Chill)이면 프롬프트 작성 시 dominant 5% accent로 최대한 반영`하는 6줄로 교체. `target_model_profile`도 `DeepSeek → GLM 5.3 Flash vision+reasoning`으로 변경.
+  * **색상 통일 프롬프트 수정**: `POST_AD_CREATIVE_PROMPT.ts:122,260` `Hard Constraints`와 `constraint`에 `Color unification: All ratios of the same creative MUST share the same dominant hue` 2곳 추가. `Creative 02(vivid)`처럼 비율마다 다른 hue가 흩어지는 것을 방지, `1:1`이 Red면 5개 전부 Red 계열로 통일하도록 강제.
+  * **유사성 문제 발견**: 동일 Creative 내에서 배경색/구도 배치가 미묘하게 달라지는 현상 확인. `Where` 돌담처럼 비율별 캡션이 달라 배경이 달라지는 것은 의도(같은 영혼, 다른 몸)이나, 색상까지 달라지면 캠페인 일관성이 깨진다는 피드백. 해결은 색상 통일이 1차, 이후 유사성 추가 검토 필요.
+* **이전 세션 (2026-08-31) — 유효**: Bento `fr` 나눔, Where 동적 높이, How many 1×4 세로형 균등 분할, Brand 팔레트 `grid-cols-5` 시도 등은 그대로 유지. Realtime 전환, RPC `::text` 캐스팅, 버킷 진단, 프롬프트 영어 고정, gateway `postFormFetch` 등도 유지.
 
 ---
 
 ## 2. 완수된 작업 (Completed Milestones)
+
+### 2-19. 이미지 이해(Vision) + 색상 통일 + 노트 분류 프롬프트 수정 (2026-09-01)
+* GLM Vision으로 원본 이미지 직접 전달, 노트 분류(상품 설명 vs 광고 느낌) 6줄 추가, 색상 통일 2곳 추가. `ad_creative_specs` 5개 비율 캡션이 동일 hue로 통일되도록 프롬프트 수정.
 
 ### 2-18. Create Bento 세부 + Brand 일부 + 확대 기능 추가 (2026-08-31, 일부 미완)
 * Bento `fr` 나눔, Where 동적 높이, How many 1×4 세로형 균등 분할, Pro 배지 인라인, 빈 원 제거, UploadZone 동일 높이, Brand 팔레트 X 우상단·HEX/RGB 두 줄·피커 전체폭 시도. 단 Brand 높이 체감 없음·피커 길이 미적용 등 잔여, 확대 기능은 구현했으나 버그로 동작 불량.
@@ -48,6 +48,9 @@
 ---
 
 ## 3. 향후 작업 (Next Steps)
+
+### 🔴 유사성 문제 해결 (신규)
+* 동일 Creative 내 5개 비율의 배경색/구도 배치가 미묘하게 달라지는 현상 — 색상은 이번에 프롬프트 `Color unification`으로 통일했으나, **유사성(배경 톤/질감/조명 일관성)이 충분한지 추가 검증 필요**. 필요 시 `seed` 고정 강화, `imagePromptRecord`의 배경 서술을 더 엄격히 통일하거나, `vision` 분석 단계에서 유사도 체크 추가 검토.
 
 ### 🔴 확대 기능 버그 (우선)
 * `ProjectDetailClient.tsx` + `AdLightboxModal.tsx` + `FormatTile.tsx` 확대 버튼·모달이 정상 동작하지 않음 — 원인 진단 및 수정 필요 (Hydration 또는 상태 전달 문제 추정).
@@ -86,10 +89,10 @@
 * **파일 경로 규칙**: 입력 `{user_id}/{batch_id}/{product|person}_image.{ext}`, 출력 `{user_id}/{batch_id}/ad_generation_result_{c}_{ratio}.{ext}` — c+ratio+imageFileExtension으로 signed URL 재구성. 버킷 `ad_image_storage` (imageServerAPI, private). 업로드 엔드포인트 `POST /api/ad/ad-generation-batches/[batchId]/images` (multipart, upsert:true).
 * **AdImageResult**: `design: AdDesignLayout, score: number | null, imageFileExtension: string | null, error?: {code,message}|null` — process가 다운로드 시 `inferFileExtension`으로 확정, 실패 시 `error`로 격리.
 * **AdCreativeSpec**: `imagePromptRecord: Partial<Record<AdRatioKey,string>>` (B안), `seed: number` — 프롬프트 단계가 채움. `brand_palette`는 배치 생성 시 3-5 hex or null.
-* **LLM**: Creative 디렉터 `DEEPSEEK_V4_FLASH_0731`(텍스트, `imagePromptRecord`+`copy`+`reasoning`, 영어 고정), Vision 분석 `GLM_5_3_FLASH`(멀티모달, 정수% 0-100, 3분기 Product/Person/Both, `brand_palette` 조건부, 영어 고정) — `llmServerAPI.ts` `postAdCreativePrompt`/`postAdImageAnalysis` + 원문 4000자 로그(`raw LLM output`/`raw Vision output`), 프롬프트는 `POST_AD_{CREATIVE,IMAGE_ANALYSIS}_PROMPT.ts` 엘리트 250-320줄, `constraint`에 `ALL output text MUST be English only` 명시.
+* **LLM**: Creative 디렉터 `GLM_5_3_FLASH`(vision, `imagePromptRecord`+`copy`+`reasoning`, 영어 고정, 이미지 우선) + 노트 분류(상품 설명은 이미지 보완, 광고 느낌은 캡션에 반영) + 색상 통일(동일 hue), Vision 분석 `GLM_5_3_FLASH`(멀티모달, 정수% 0-100, 3분기 Product/Person/Both, `brand_palette` 조건부, 영어 고정) — `llmServerAPI.ts` `postAdCreativePrompt`/`postAdImageAnalysis` + 원문 로그, 프롬프트는 `POST_AD_{CREATIVE,IMAGE_ANALYSIS}_PROMPT.ts` 엘리트 250-320줄, `constraint`에 `ALL output text MUST be English only` 명시.
 * **용어 계약 (확정)**: creatives × formats = assets, 실행 1회 = batch. 유저 노출은 Project(페이지/URL/텍스트), 서버/DB/내부 코드는 batch.
 * **시드 규칙**: creative별 서로 다른 seed / 같은 creative 내 비율 = 같은 seed. 재현은 저장된 specs(DB)가 담당.
-* **사장 UI 원칙**: px 하드코딩 금지(rem/vh/vw/%/fr), 광고 바닥 언어, 0스크롤 선호. Bento 12col (`Subjects 8 | How many+CTA 4 / Where 8 | Brand 4`), `Where` 돌담은 `ResizeObserver`로 `H=(W-32)/4.806` 실측 5개 1행·가로 중앙, 섹션 높이는 내용 높이대로. `optional` 배지로 즉시 인지. 현재 Brand는 5칸 팔레트 그리드로 교체 시도 중이나, 피커 길이/Add 2단계 등 미해결.
-* **ad_variation_study.md**: §1·§2·§6 이미 최신(`imagePromptRecord`, `brand_palette`, HARD_BANNED 8개, fail-soft, n=1 재시도) — 이번 세션 추가 갱신 불필요.
+* **사장 UI 원칙**: px 하드코딩 금지(rem/vh/vw/%/fr), 광고 바닥 언어, 0스크롤 선호. Bento 12col (`Subjects 8 | How many+CTA 4 / Where 8 | Brand 4`), `Where` 돌담은 `ResizeObserver`로 `H=(W-32)/4.806` 실측 5개 1행·가로 중앙, 섹션 높이는 내용 높이대로. `optional` 배지로 즉시 인지. 현재 Brand는 5칸 팔레트 그리드로 교체 시도 중이며, 유사성(색상 통일) 프롬프트 수정 완료.
+* **ad_variation_study.md**: §1·§2·§6 이미 최신(`imagePromptRecord`, `brand_palette`, HARD_BANNED 8개, fail-soft, n=1 재시도) — 색상 통일 추가 갱신 완료, 유사성 추가 검토 필요.
 * **supabase 파일**: `supabase/ad_generation_batches.sql` 삭제 — SQL은 직접 전달. `brand_palette` 컬럼, B안, `p_file_extension`+`p_error`는 사장이 직접 실행 완료. 버킷 `ad_image_storage` 생성 대기, `.next` 캐시로 인한 Vercel TS2306은 빈 `ad-generation-batch` 폴더 삭제로 해소.
 * Remotion 4.0.507: `<OffthreadVideo>` + `colorSpace: 'bt709'`, 저사양 `concurrency: 1`.

@@ -3,6 +3,7 @@ import { getNextBaseResponse } from "@/lib/utils/getNextBaseResponse";
 import { getIsValidRequestS2S } from "@/lib/utils/getIsValidRequest";
 import { internalFireAndForgetFetch } from "@/lib/utils/internalFetch";
 import { adGenerationBatchServerAPI } from "@/lib/api/server/ad/adGenerationBatchServerAPI";
+import { adImageServerAPI } from "@/lib/api/server/ad/imageServerAPI";
 import { llmServerAPI } from "@/lib/api/server/ad/llmServerAPI";
 
 /**
@@ -64,7 +65,31 @@ export async function POST(
             });
         }
 
-        // 1) DeepSeek V4 Flash 호출 — 5축 + aspect_ratios + notes + cta + brandPalette + seed
+        // 0) 원본 이미지 수집 — 있으면 base64로 변환해 GLM Vision에 전달 (이미지가 1차 진실, note는 보조)
+        let productImageBase64: string | null = null;
+        let personImageBase64: string | null = null;
+        try {
+            const originalUrls = await adImageServerAPI.getAdOriginalImageSignedUrls(batch);
+            let urlIdx = 0;
+            const fetchBase64 = async (url: string) => {
+                const res = await fetch(url);
+                if (!res.ok) return null;
+                const buf = await res.arrayBuffer();
+                return Buffer.from(buf).toString('base64');
+            };
+            if (batch.product_image) {
+                const url = originalUrls[urlIdx++];
+                if (url) productImageBase64 = await fetchBase64(url);
+            }
+            if (batch.person_image) {
+                const url = originalUrls[urlIdx++];
+                if (url) personImageBase64 = await fetchBase64(url);
+            }
+        } catch (e) {
+            console.warn(`[prompt] failed to fetch original images for batch ${batchId} creative ${creativeIndex}:`, e);
+        }
+
+        // 1) GLM 5.3 Flash 호출 — 5축 + aspect_ratios + notes + cta + brandPalette + seed + images
         const llmResult = await llmServerAPI.postAdCreativePrompt({
             creativeIndex,
             creativeSpec,
@@ -74,6 +99,8 @@ export async function POST(
             ctaEnabled: batch.cta_enabled,
             brandPalette: batch.brand_palette ?? null,
             seed: creativeSpec.seed,
+            productImageBase64,
+            personImageBase64,
         });
 
         if (!llmResult.success || !llmResult.imagePromptRecord || !llmResult.copy) {

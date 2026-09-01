@@ -24,6 +24,8 @@ export const llmServerAPI = {
         ctaEnabled: boolean;
         brandPalette: string[] | null;
         seed: number;
+        productImageBase64?: string | null;
+        personImageBase64?: string | null;
     }): Promise<{
         success: boolean;
         imagePromptRecord?: Partial<Record<AdRatioKey, string>>;
@@ -42,7 +44,16 @@ export const llmServerAPI = {
                 ctaEnabled,
                 brandPalette,
                 seed,
+                productImageBase64,
+                personImageBase64,
             } = params;
+
+            const imageBase64List: string[] = [];
+            if (productImageBase64) imageBase64List.push(productImageBase64);
+            if (personImageBase64) imageBase64List.push(personImageBase64);
+            const attachedInfo = imageBase64List.length > 0
+                ? `Attached images: ${imageBase64List.length} image(s) in order [${[productImageBase64 ? 'product' : null, personImageBase64 ? 'person' : null].filter(Boolean).join(', ')}] — primary ground truth.`
+                : `Attached images: none — use notes and axes only.`;
 
             const userMessage = `
 <input_data>
@@ -61,6 +72,8 @@ export const llmServerAPI = {
   <brand_palette>${brandPalette && brandPalette.length > 0 ? JSON.stringify(brandPalette) : "null"}</brand_palette>
 </input_data>
 
+${attachedInfo}
+
 Instruction: Generate ratio-specific I2I captions and ad copy according to the system prompt.
 `;
 
@@ -68,10 +81,12 @@ Instruction: Generate ratio-specific I2I captions and ad copy according to the s
 
             const generatedContent = await client.createCompletion(
                 {
-                    model: OpenRouterModel.DEEPSEEK_V4_FLASH_0731,
+                    model: OpenRouterModel.GLM_5_3_FLASH,
                     systemMessage: POST_AD_CREATIVE_PROMPT,
                     userMessage,
-                    maxCompletionTokens: 10240,
+                    imageBase64List: imageBase64List.length > 0 ? imageBase64List : undefined,
+                    imageDetail: "high",
+                    maxCompletionTokens: 40960,
                     temperature: 0.8,
                     reasoning: true,
                 },
@@ -184,7 +199,7 @@ Each image corresponds to the ratio at the same index in ratio_order.
                     userMessage,
                     imageBase64List,
                     imageDetail: "high",
-                    maxCompletionTokens: 20480,
+                    maxCompletionTokens: 40960,
                     reasoning: true,
                 },
                 `ad/creative/${creativeIndex}/postAdImageAnalysis()`,
