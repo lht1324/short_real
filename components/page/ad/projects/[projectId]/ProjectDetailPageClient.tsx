@@ -297,7 +297,9 @@ export default function ProjectDetailPageClient({ projectId }: { projectId: stri
 
                 {/* 선택된 타일 디테일 — 간단 다운로드 바 */}
                 {selectedKey && (() => {
-                    const [cIdxStr, ratioKey] = selectedKey.split('_');
+                    const sep = selectedKey.indexOf('_');
+                    const cIdxStr = sep === -1 ? selectedKey : selectedKey.slice(0, sep);
+                    const ratioKey = sep === -1 ? '' : selectedKey.slice(sep + 1);
                     const cIdx = parseInt(cIdxStr, 10);
                     const url = signedUrls[selectedKey];
                     if (!url) return null;
@@ -324,7 +326,9 @@ export default function ProjectDetailPageClient({ projectId }: { projectId: stri
                 {lightboxKey && (() => {
                     const url = signedUrls[lightboxKey];
                     if (!url) return null;
-                    const [cIdxStr, ratioKey] = lightboxKey.split('_');
+                    const sep2 = lightboxKey.indexOf('_');
+                    const cIdxStr = sep2 === -1 ? lightboxKey : lightboxKey.slice(0, sep2);
+                    const ratioKey = sep2 === -1 ? '' : lightboxKey.slice(sep2 + 1);
                     const cIdx = parseInt(cIdxStr, 10);
                     const ratioLabel = (ratioKey as string).replace('_', ':');
                     const creative = sortedCreatives.find((c) => c.creativeIndex === cIdx);

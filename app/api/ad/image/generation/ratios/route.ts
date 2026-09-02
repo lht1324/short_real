@@ -123,9 +123,10 @@ export async function POST(request: NextRequest) {
                 referenceUrlsForRetry = [baseSignedUrlForRetry, ...originalUrlsForRetry];
             }
             const webhookUrl = `${baseUrl}/webhook/ad/replicate/image/ratios?batchId=${encodeURIComponent(batchId)}&creativeIndex=${encodeURIComponent(String(creativeIndex))}&ratioKey=${encodeURIComponent(retryRatioKey)}&attempt=${encodeURIComponent(String(attempt))}`;
+            const wrappedCaptionForRetry = `INSTRUCTION: Use the input image ONLY to preserve the product/person identity (shape, color, material, lace, perforations, stitching). Do NOT copy its background, floor, shadows or wall — recreate the product with pixel-perfect edges on the new scene described below.\n\nSCENE: ${caption}`;
             await replicateClient.postAdImageEditPrediction({
                 model: ReplicateImageModelId.NANO_BANANA,
-                prompt: caption,
+                prompt: wrappedCaptionForRetry,
                 imageUrls: referenceUrlsForRetry,
                 aspectRatio: retryRatioKey,
                 webhookUrl,
@@ -157,10 +158,10 @@ export async function POST(request: NextRequest) {
                 originalImageUrls = [];
             }
             const webhookUrl = `${baseUrl}/webhook/ad/replicate/image/ratios?batchId=${encodeURIComponent(batchId)}&creativeIndex=${encodeURIComponent(String(creativeIndex))}&ratioKey=${encodeURIComponent(singleRatio)}&attempt=${encodeURIComponent(String(attempt))}`;
-
+            const wrappedCaptionForSingle = `INSTRUCTION: Use the input image ONLY to preserve the product/person identity (shape, color, material, lace, perforations, stitching). Do NOT copy its background, floor, shadows or wall — recreate the product with pixel-perfect edges on the new scene described below.\n\nSCENE: ${caption}`;
             await replicateClient.postAdImageEditPrediction({
                 model: ReplicateImageModelId.NANO_BANANA,
-                prompt: caption,
+                prompt: wrappedCaptionForSingle,
                 imageUrls: originalImageUrls,
                 aspectRatio: singleRatio,
                 webhookUrl,
@@ -224,10 +225,10 @@ export async function POST(request: NextRequest) {
             }
 
             const webhookUrl = `${baseUrl}/webhook/ad/replicate/image/ratios?batchId=${encodeURIComponent(batchId)}&creativeIndex=${encodeURIComponent(String(creativeIndex))}&ratioKey=${encodeURIComponent(ratioKey)}&attempt=${encodeURIComponent(String(attempt))}`;
-
+            const wrappedCaptionForRatio = `INSTRUCTION: Use the input image ONLY to preserve the product/person identity (shape, color, material, lace, perforations, stitching). Do NOT copy its background, floor, shadows or wall — recreate the product with pixel-perfect edges on the new scene described below.\n\nSCENE: ${caption}`;
             await replicateClient.postAdImageEditPrediction({
                 model: ReplicateImageModelId.NANO_BANANA,
-                prompt: caption,
+                prompt: wrappedCaptionForRatio,
                 imageUrls: referenceUrlsWithBase,
                 aspectRatio: ratioKey,
                 webhookUrl,

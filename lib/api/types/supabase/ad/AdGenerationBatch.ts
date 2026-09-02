@@ -66,11 +66,13 @@ export interface AdCreativeSpec {
  * ★ 2026-08-24 확정 — results 산출물 구조 (specs 미러: 배열의 i = 같은 creative, 비율은 Record)
  */
 
-/** 판매 카피(텍스트) — CD가 Specs 생성 단계에 작성. 이미지 생성과 무관한 creative당 1회 산출물 */
+/** 판매 카피(텍스트) + 폰트 — CD가 Specs 생성 단계에 작성. 이미지 생성과 무관한 creative당 1회 산출물 */
 export interface AdCopySpec {
     headline: string | null;
     /** cta_enabled=false면 null */
     cta: string | null;
+    /** 헤드라인용 폰트 — available_fonts 중 하나, verbatim (예: "Barlow Condensed") */
+    fontFamily?: string | null;
 }
 
 /** 비율(이미지) 1장의 산출물 — 이미지 생성 후 Qwen Vision이 확정. fail-soft: error가 있으면 해당 비율만 실패로 격리 */

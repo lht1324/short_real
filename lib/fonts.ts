@@ -13,7 +13,17 @@ import {
     Merriweather,
     Playfair_Display,
     Crimson_Text,
-    Fira_Sans
+    Fira_Sans,
+    Barlow,
+    Barlow_Condensed,
+    Fjalla_One,
+    Pathway_Gothic_One,
+    PT_Sans,
+    PT_Sans_Narrow,
+    Titillium_Web,
+    League_Gothic,
+    League_Spartan,
+    Russo_One
 } from 'next/font/google'
 
 export const inter = Inter({
@@ -121,22 +131,102 @@ export const firaSans = Fira_Sans({
     display: 'swap',
 })
 
-// 폰트 매핑 객체
+export const barlow = Barlow({
+    subsets: ['latin'],
+    weight: ['100', '200', '300', '400', '500', '600', '700', '800', '900'],
+    style: ['normal', 'italic'],
+    display: 'swap',
+})
+
+export const barlowCondensed = Barlow_Condensed({
+    subsets: ['latin'],
+    weight: ['100', '200', '300', '400', '500', '600', '700', '800', '900'],
+    style: ['normal', 'italic'],
+    display: 'swap',
+})
+
+export const fjallaOne = Fjalla_One({
+    subsets: ['latin'],
+    weight: ['400'],
+    style: ['normal'],
+    display: 'swap',
+})
+
+export const pathwayGothicOne = Pathway_Gothic_One({
+    subsets: ['latin'],
+    weight: ['400'],
+    style: ['normal'],
+    display: 'swap',
+})
+
+export const ptSans = PT_Sans({
+    subsets: ['latin'],
+    weight: ['400', '700'],
+    style: ['normal', 'italic'],
+    display: 'swap',
+})
+
+export const ptSansNarrow = PT_Sans_Narrow({
+    subsets: ['latin'],
+    weight: ['400', '700'],
+    style: ['normal'],
+    display: 'swap',
+})
+
+export const titilliumWeb = Titillium_Web({
+    subsets: ['latin'],
+    weight: ['200', '300', '400', '600', '700', '900'],
+    style: ['normal', 'italic'],
+    display: 'swap',
+})
+
+export const leagueGothic = League_Gothic({
+    subsets: ['latin'],
+    weight: ['400'],
+    style: ['normal'],
+    display: 'swap',
+})
+
+export const leagueSpartan = League_Spartan({
+    subsets: ['latin'],
+    weight: ['100', '200', '300', '400', '500', '600', '700', '800', '900'],
+    style: ['normal'],
+    display: 'swap',
+})
+
+export const russoOne = Russo_One({
+    subsets: ['latin'],
+    weight: ['400'],
+    style: ['normal'],
+    display: 'swap',
+})
+
+// 폰트 매핑 객체 — 광고 헤드라인용 30~40개 큐레이션 (Barlow 계열, Fjalla One 등 추가)
 export const fontMap = {
+    'Barlow': barlow,
+    'Barlow Condensed': barlowCondensed,
     'Crimson Text': crimsonText,
     'Fira Sans': firaSans,
+    'Fjalla One': fjallaOne,
     'Inter': inter,
     'Lato': lato,
+    'League Gothic': leagueGothic,
+    'League Spartan': leagueSpartan,
     'Merriweather': merriweather,
     'Montserrat': montserrat,
     'Nunito': nunito,
     'Open Sans': openSans,
     'Oswald': oswald,
+    'Pathway Gothic One': pathwayGothicOne,
     'Playfair Display': playfairDisplay,
     'Poppins': poppins,
+    'PT Sans': ptSans,
+    'PT Sans Narrow': ptSansNarrow,
     'Raleway': raleway,
     'Roboto': roboto,
+    'Russo One': russoOne,
     'Source Sans 3': sourceSans3,
+    'Titillium Web': titilliumWeb,
     'Work Sans': workSans,
 } as const
 

@@ -4,6 +4,7 @@ import { cleanAndParseJSON } from "@/lib/utils/jsonUtils";
 import { OpenRouterClient, OpenRouterModel } from "@/lib/OpenRouterClient";
 import { POST_AD_CREATIVE_PROMPT } from "@/lib/llm-prompts/ad/POST_AD_CREATIVE_PROMPT";
 import { POST_AD_IMAGE_ANALYSIS_PROMPT } from "@/lib/llm-prompts/ad/POST_AD_IMAGE_ANALYSIS_PROMPT";
+import { fontMap } from "@/lib/fonts";
 
 /**
  * ad 도메인 전용 LLM 서버 API — creative 디렉터(텍스트) / Vision 분석(이미지) 분리.
@@ -70,6 +71,7 @@ export const llmServerAPI = {
   <person_note>${personNote ?? ""}</person_note>
   <cta_enabled>${ctaEnabled}</cta_enabled>
   <brand_palette>${brandPalette && brandPalette.length > 0 ? JSON.stringify(brandPalette) : "null"}</brand_palette>
+  <available_fonts>${Object.keys(fontMap).join(', ')}</available_fonts>
 </input_data>
 
 ${attachedInfo}

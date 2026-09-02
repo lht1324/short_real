@@ -1,6 +1,7 @@
 'use client'
 
 import { memo, useCallback } from 'react';
+import Image from 'next/image';
 import { AlertTriangle, Download, Loader2, Maximize2, RefreshCw, Sparkles } from 'lucide-react';
 import AdOverlay from "@/components/page/ad/results/components/AdOverlay";
 import { AdDesignLayout } from "@/lib/api/client/ad/adClientAPI";
@@ -120,22 +121,25 @@ function FormatTile({ ratioKey, imageResult, signedUrl, isProjectRunning, creati
     const score = imageResult.score;
 
     return (
-        <button
-            type="button"
+        <div
+            role="button"
+            tabIndex={0}
             onClick={onClickTile}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClickTile(); } }}
             style={{ aspectRatio: factor, height: 'min(18rem, 34vw)' }}
-            className={`group relative shrink-0 overflow-hidden rounded-[1.25rem] border text-left transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+            className={`group relative shrink-0 cursor-pointer overflow-hidden rounded-[1.25rem] border text-left transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
                 selected
                     ? 'border-accent ring-1 ring-accent/30'
                     : 'border-hairline hover:border-text2/30 hover:shadow-lg hover:shadow-black/5'
             }`}
             aria-pressed={selected}
         >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
+            <Image
                 src={signedUrl ?? ''}
                 alt={`Creative ${creativeIndex + 1} · ${ratioLabel}`}
-                className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.02]"
+                fill
+                sizes="(max-width: 768px) 100vw, 33vw"
+                className="object-cover transition-transform duration-500 group-hover:scale-[1.02]"
             />
             <AdOverlay design={design} />
 
@@ -165,7 +169,7 @@ function FormatTile({ ratioKey, imageResult, signedUrl, isProjectRunning, creati
                     </button>
                 </>
             )}
-        </button>
+        </div>
     );
 }
 

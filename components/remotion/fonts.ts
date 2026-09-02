@@ -46,6 +46,16 @@ import {loadFont as loadFont_Unbounded} from '@remotion/google-fonts/Unbounded';
 import {loadFont as loadFont_Urbanist} from '@remotion/google-fonts/Urbanist';
 import {loadFont as loadFont_WorkSans} from '@remotion/google-fonts/WorkSans';
 import {loadFont as loadFont_ZillaSlab} from '@remotion/google-fonts/ZillaSlab';
+import {loadFont as loadFont_Barlow} from '@remotion/google-fonts/Barlow';
+import {loadFont as loadFont_BarlowCondensed} from '@remotion/google-fonts/BarlowCondensed';
+import {loadFont as loadFont_FjallaOne} from '@remotion/google-fonts/FjallaOne';
+import {loadFont as loadFont_PathwayGothicOne} from '@remotion/google-fonts/PathwayGothicOne';
+import {loadFont as loadFont_PTSans} from '@remotion/google-fonts/PTSans';
+import {loadFont as loadFont_PTSansNarrow} from '@remotion/google-fonts/PTSansNarrow';
+import {loadFont as loadFont_TitilliumWeb} from '@remotion/google-fonts/TitilliumWeb';
+import {loadFont as loadFont_LeagueGothic} from '@remotion/google-fonts/LeagueGothic';
+import {loadFont as loadFont_LeagueSpartan} from '@remotion/google-fonts/LeagueSpartan';
+import {loadFont as loadFont_RussoOne} from '@remotion/google-fonts/RussoOne';
 import FONT_FAMILY_LIST from '@/lib/FontFamilyList';
 
 type FontLoader = (...args: any[]) => {
@@ -102,6 +112,16 @@ const FONT_LOADER_MAP: Record<string, FontLoader> = {
     'Urbanist': loadFont_Urbanist,
     'Work Sans': loadFont_WorkSans,
     'Zilla Slab': loadFont_ZillaSlab,
+    'Barlow': loadFont_Barlow,
+    'Barlow Condensed': loadFont_BarlowCondensed,
+    'Fjalla One': loadFont_FjallaOne,
+    'Pathway Gothic One': loadFont_PathwayGothicOne,
+    'PT Sans': loadFont_PTSans,
+    'PT Sans Narrow': loadFont_PTSansNarrow,
+    'Titillium Web': loadFont_TitilliumWeb,
+    'League Gothic': loadFont_LeagueGothic,
+    'League Spartan': loadFont_LeagueSpartan,
+    'Russo One': loadFont_RussoOne,
 };
 
 // (fontName, weight) -> fontFamily 캐시. 동일 폰트 동일 웨이트의 중복 @font-face 주입 방지
