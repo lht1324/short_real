@@ -1,5 +1,5 @@
 import { Metadata } from "next";
-import ProjectDetailClient from "@/components/page/ad/projects/[projectId]/ProjectDetailClient";
+import ProjectDetailPageClient from "@/components/page/ad/projects/[projectId]/ProjectDetailPageClient";
 
 export const metadata: Metadata = {
     title: "Project — ShortReal Ad",
@@ -12,5 +12,5 @@ export default async function AdProjectDetailPage({
     params: Promise<{ projectId: string }>;
 }) {
     const { projectId } = await params;
-    return <ProjectDetailClient projectId={projectId} />;
+    return <ProjectDetailPageClient projectId={projectId} />;
 }

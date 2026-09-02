@@ -14,7 +14,7 @@ import { supabase } from "@/lib/supabase/supabaseClient";
 
 type DetailStatus = 'loading' | 'ready' | 'error';
 
-export default function ProjectDetailClient({ projectId }: { projectId: string }) {
+export default function ProjectDetailPageClient({ projectId }: { projectId: string }) {
     const router = useRouter();
     const [project, setProject] = useState<AdGenerationBatch | null>(null);
     const [signedUrls, setSignedUrls] = useState<Record<string, string>>({});
