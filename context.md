@@ -1,76 +1,72 @@
-# 작업 진행 상황 (Last Updated: 2026-09-01 14:40)
+# 작업 진행 상황 (Last Updated: 2026-09-04 04:10)
 
 ## 1. 현재 상황 (Current Status)
 
-### 🎯 현 단계: 폰트/I2I 지시 반영 완료 — 헤드라인 배치 재논의 가능 (2026-09-01)
-* **직전 추가 구현 (2026-09-01, tsc 클린)**
-  * **이미지 이해 추가 (GLM Vision)**: `lib/OpenRouterClient.ts:6` `GLM_5_3_FLASH`로 `lib/api/server/ad/llmServerAPI.ts:18` `postAdCreativePrompt()`를 `DeepSeek → GLM`으로 교체, `productImageBase64/personImageBase64`를 받아 `imageBase64List`로 전달. `app/api/ad/creative/[creative-index]/prompt/route.ts:67`에서 `adImageServerAPI.getAdOriginalImageSignedUrls` → `fetch → base64`로 원본을 읽어 전달. 노트 없이도 제품 사진을 보고 카피를 뽑도록 함 (랑콤 크림 범용 카피 → 크림 맥락 카피로 개선).
-  * **노트/이미지 분류 로직 프롬프트 반영**: `POST_AD_CREATIVE_PROMPT.ts:28` `product_note/person_note`를 `절대 무시하지 말고, 상품 설명이면 이미지 이해·보완에, 광고 느낌(모던+전통, Vivid+Chill)이면 프롬프트 작성 시 dominant 5% accent로 최대한 반영`하는 6줄로 교체. `target_model_profile`도 `DeepSeek → GLM 5.3 Flash vision+reasoning`으로 변경.
-  * **색상 통일 프롬프트 수정**: `POST_AD_CREATIVE_PROMPT.ts:122,260` `Hard Constraints`와 `constraint`에 `Color unification: All ratios of the same creative MUST share the same dominant hue` 2곳 추가. `Creative 02(vivid)`처럼 비율마다 다른 hue가 흩어지는 것을 방지, `1:1`이 Red면 5개 전부 Red 계열로 통일하도록 강제.
-  * **유사성 문제 발견**: 동일 Creative 내에서 배경색/구도 배치가 미묘하게 달라지는 현상 확인. `Where` 돌담처럼 비율별 캡션이 달라 배경이 달라지는 것은 의도(같은 영혼, 다른 몸)이나, 색상까지 달라지면 캠페인 일관성이 깨진다는 피드백. 해결은 색상 통일이 1차, 이후 유사성 추가 검토 필요.
-* **이전 세션 (2026-08-31) — 유효**: Bento `fr` 나눔, Where 동적 높이, How many 1×4 세로형 균등 분할, Brand 팔레트 `grid-cols-5` 시도 등은 그대로 유지. Realtime 전환, RPC `::text` 캐스팅, 버킷 진단, 프롬프트 영어 고정, gateway `postFormFetch` 등도 유지.
+### 🎯 현 단계: 폰트·유사성·썸네일·채널·Creative 상태 정리 완료 — 대기 상태 (2026-09-04)
+* **직전 구현 (2026-09-03~04, tsc 클린)**
+  * **Realtime 채널 수정**: `ProjectDetailPageClient.tsx:54` 세션 없이 구독하던 `Detail`을 `supabase.auth.getUser()` 후 구독 + `Math.random` suffix로 수정, 끊김 대비 4초 폴링 안전망 추가. `ProjectsPageClient.tsx:60`도 `UPDATE` 시 썸네일 최고점 갱신을 위해 `fetchProjects(true)`로 재조회.
+  * **폰트 3축 검증·확장**: `FontFamilyList.ts:69` 전체 69개 vs `lib/fonts.ts:205` `fontMap` 25개 불일치 확인 → `fontMap` 34개로 확장(Anton/Archivo Black/Bebas Neue/Staatliches/Teko/Paytone One/Syne/Unbounded/Fredoka 추가). `llmServerAPI.ts:55` `available_fonts`를 `sans:22 | serif:3 | display:9` 그룹 문자열로 교체. `POST_AD_CREATIVE_PROMPT.ts:30` 카테고리 시맨틱 및 `Font Selection Protocol`에 `fontWeight/headlineColor` 규칙 추가, `prompt/route.ts:118` `fontFamily/fontWeight/headlineColor` 3종 fallback(`Inter/400/white`) 추가. 렌더는 `CreativeRow.tsx:34` 헤더·푸터에 `fontFamily/Weight` 인라인 + `FormatTile.tsx:125` `AdOverlay.tsx:32`에 `white/black` 2택 색·`fontFamily/Weight` 전달.
+  * **유사성(배경) 통일**: `POST_AD_CREATIVE_PROMPT.ts:109` Sentence Architecture를 2단으로 고정 — `Product anchor(동일 포즈)` + `Background+Lighting(5장 동일 문구)` + `Composition(비율별만 다름)`. `Hard Constraints`에 `Background+Lighting unification` 및 `Product pose identical` 2줄 추가, `constraint`·`Quality Gate`에도 동일성 체크 추가. `seed`는 동일 creative 공통이라 원인 아니고 프롬프트 분절이 원인이었음.
+  * **썸네일 v2**: `app/api/ad/ad-generation-batches/route.ts:38` 리스트에서 `score` 최고 1장(`score` 없으면 첫 완료 1장)을 골라 `thumbnailSignedUrls`+`thumbnailRatioKeys` 2맵 발급. `ProjectCard.tsx:60` 커버를 `object-cover` 유지하되 `thumbnailRatio` 세로(9_16/4_5/2_3)는 `object-position: top center`로 제품 보존. `ProjectsPageClient.tsx:27`에서 맵 병합, `UPDATE` 시 재조회로 최고점 갱신 시 커버 교체. 없을 땐 기존 스켈레톤 유지.
+  * **Creative 상태 세분화**: `CreativeRow.tsx:50` `designing` 카운트 추가 — `imageFileExtension` 있음 + `score null`이면 `Designing`. `statusLabel`에 `Designing` 분기, `getBatchProgress:104`도 `score != null`만 `completed`로 카운트해 Batch `Designing`과 일치. 이미지는 떴지만 `analysis` 전엔 `Designing`으로 같이 돔.
+  * **파이프라인 잔여 정리**: `ad_image_storage` 버킷 생성 확인됨(업로드·signedUrl 정상). `app/ad/create/results/page.tsx` 폴더 삭제(리다이렉트 불필요).
+* **이전 세션 (2026-09-01) — 유효**: GLM Vision 이미지 이해, 노트 분류 6줄, 색상 통일 2곳, Bento `fr` 나눔, Where 돌담, How many 1×4, Brand 팔레트, RPC `::text` 캐스팅, 영어 고정, gateway 등은 유지.
 
 ---
 
 ## 2. 완수된 작업 (Completed Milestones)
 
+### 2-23. 썸네일 v2 + Creative Designing 단계 (2026-09-04)
+* 리스트 썸네일: 최고점 1장 커버 + 비율별 `top center` 크롭, 실시간 갱신. Creative `Designing` 추가로 Batch `Designing`과 어긋남 해소, `getBatchProgress`도 `score` 기준으로 통일.
+
+### 2-22. 유사성 배경 고정 + 폰트 렌더 연결 (2026-09-04)
+* 배경·조명 5장 동일 문구 강제, 구도만 비율별, 포즈 동일. 폰트 34개·weight·white/black 검증 및 `CreativeRow/FormatTile/AdOverlay/AdLightbox`에 내려온 대로 반영.
+
+### 2-21. 폰트 검증 및 채널 수정 (2026-09-03)
+* `fontMap` 34개 확장, `available_fonts` 그룹화, `Font Selection Protocol` 강화, `Detail` 채널 `getUser()` 후 구독 + 4초 폴링.
+
 ### 2-20. 폰트/I2I 지시 선행 반영 완료 (2026-09-01)
-* `FONT_FAMILY_LIST`/`lib/fonts.ts`에 광고용 Google Fonts 30~40개 추가 및 `fontMap` 등록, `POST_AD_CREATIVE_PROMPT`에 `available_fonts` 목록과 `fontFamily MUST be one of available_fonts` 제약 추가, Remotion 프리로드 확인. 원본 중시 문제는 `imagePromptRecord`에 `원본은 컷아웃으로 간주, 배경 100% 무시` 2줄 + `generation` 라우트에서 `INSTRUCTION: Use input ONLY as identity... SCENE: caption` 2단 래핑으로 해결. Bria 없이 프롬프트만으로 70% 해결, 잔여는 로컬 `rembg` 폴백으로 처리.
+* `FONT_FAMILY_LIST`/`lib/fonts.ts` 30~40개 및 `fontMap` 등록, `POST_AD_CREATIVE_PROMPT` `available_fonts` 제약, Remotion 프리로드, 원본 컷아웃 2단 래핑.
 
 ### 2-19. 이미지 이해(Vision) + 색상 통일 + 노트 분류 프롬프트 수정 (2026-09-01)
-* GLM Vision으로 원본 이미지 직접 전달, 노트 분류(상품 설명 vs 광고 느낌) 6줄 추가, 색상 통일 2곳 추가. `ad_creative_specs` 5개 비율 캡션이 동일 hue로 통일되도록 프롬프트 수정.
+* GLM Vision 원본 전달, 노트 분류 6줄, 색상 통일 2곳 추가.
 
 ### 2-18. Create Bento 세부 + Brand 일부 + 확대 기능 추가 (2026-08-31, 일부 미완)
-* Bento `fr` 나눔, Where 동적 높이, How many 1×4 세로형 균등 분할, Pro 배지 인라인, 빈 원 제거, UploadZone 동일 높이, Brand 팔레트 X 우상단·HEX/RGB 두 줄·피커 전체폭 시도. 단 Brand 높이 체감 없음·피커 길이 미적용 등 잔여, 확대 기능은 ponytail 단순화로 해결 완료.
+* Bento `fr` 나눔, Where 동적 높이, How many 1×4, Pro 배지, Brand 팔레트 시도, 확대 ponytail.
 
 ### 2-17. Create Bento 한 화면 + 업로드 팝오버 + Brand 그리드 시도 (2026-08-31, 일부 미해결)
-* 한 화면 Bento 구조 확정, 드롭존/업로드 표시 동일 높이, Where 한 줄 돌담 동적 높이, How many 2×2, Brand를 pill→팔레트 그리드로 교체 시도. 단 Brand 3가지(잘림/피커 길이/Add 2단계/높이 덜컥임)는 미해결로 남음.
+* 한 화면 Bento 확정, 드롭존 동일 높이, Where 돌담, Brand pill→팔레트.
 
 ### 2-16. Realtime 채널 전환 + RPC 캐스팅 수정 + 프롬프트 영어 고정 + 로그 (2026-08-29)
-* 폴링 제거→Realtime, StrictMode 채널 충돌 수정, RLS publication/정책, RPC `::text` 캐스팅, 버킷 진단, 영어 고정, raw 로그.
+* 폴링→Realtime, StrictMode 충돌 수정, RLS publication/정책, RPC `::text`, 영어 고정, raw 로그.
 
 ### 2-15. Projects 정석 분리 + 업로드 + 텍스트 pill 한 화면 (2026-08-29)
-* 서버 `ad-generation-batches` 정석 경로 + ByUserId 리스트/상세 + gateway FormData + 업로드 엔드포인트 + Projects 리스트/상세 상황실 + Create mock 제거 및 업로드 연동 + 텍스트 pill 압축 + 한 화면 조정.
+* `ad-generation-batches` 정석 경로 + ByUserId + gateway FormData + Projects 상황실 + Create 업로드 연동.
 
 ### 2-14. 프롬프트 엘리트화 + 전 구간 배선 + fail-soft/팔레트/UI (2026-08-28)
-* B안 개명·brand_palette·HARD_BANNED 8개·프롬프트 2개 전면 재작성·prompt/analysis 배선·생성/프로세스 fail-soft n=1 재시도·UI Background 제거/팔레트/높이 조정.
+* B안 개명·brand_palette·HARD_BANNED 8개·프롬프트 재작성·prompt/analysis 배선·fail-soft n=1·UI 정리.
 
 ### 2-13. generation/webhook/process + LLM 스켈레톤 구현 (2026-08-27)
-* AdImageResult 확장자·RPC 새 시그니처·imageServerAPI 버킷 헬퍼·generation 2종·webhook 검증·process 2종·ReplicateClient 정리·QWEN 모델 조사 및 llmServerAPI/프롬프트 스켈레톤.
+* AdImageResult 확장자·RPC·imageServerAPI·generation/webhook/process·ReplicateClient.
 
 ### 2-12. 서버 파이프라인 설계 확정 + LLM 경계까지 구현 (2026-08-26)
-* 용어 논쟁 종결, 배분 주체=코드 확정, 플로우 뼈대 확정, RPC 3종 갱신, ReplicateClient 작성, `adGenerationBatchServerAPI`·`creativeCombinationSampler`·`image/route.ts`·`creative/specs/route.ts`·`prompt` 스캐폴드.
+* 용어 확정, 배분 주체=코드, RPC 3종, ReplicateClient, 스캐폴드.
 
 ### 이전 마일스톤 요약 (상세는 git 히스토리 참조)
-* **2-11 (08-24)**: results 구조 확정 — `AdCreativeResult[]`(copy+imageResults 미러)
-* **2-10 (08-24)**: 변주 설계 합의 — 다름의 단위=Creative, LLM=creative당 1회, 헤드라인/CTA 오버레이 분리
-* **2-9 (08-22)**: 결과 화면 — 실비율 카드, Creative 용어, 균등 높이 행, 캐노니컬 정렬
-* **2-5~2-8 (08-22)**: CreateForm 0스크롤 리디자인, px→rem 일괄 교체, UploadZone 개선, fal I2I 스키마 조사
-* **2-1~2-4 (08-20~21)**: 데스크탑 최적화, concept 우선 구조, batch 용어 교체
+* **2-11 (08-24)**: results 구조 확정 — `AdCreativeResult[]`
+* **2-10 (08-24)**: 변주 설계 합의 — Creative 단위, LLM creative당 1회
+* **2-9 (08-22)**: 결과 화면 — 실비율 카드, Creative 용어
+* **2-5~2-8 (08-22)**: CreateForm 0스크롤 리디자인, px→rem, UploadZone
+* **2-1~2-4 (08-20~21)**: 데스크탑 최적화, concept 우선 구조
 
 ---
 
 ## 3. 향후 작업 (Next Steps)
 
-### 🔴 신규 1. 저장 시 Creative 비율 이미지 즉시 업데이트 — 가능 여부 확인 필요
-* **요청**: 이미지가 저장될 경우 저장된 Creative의 비율 이미지를 바로 업데이트해주기 (예: 에디터에서 저장 시 해당 Creative의 특정 ratio 이미지를 즉시 갱신).
-* **가능 여부**: **가능**. `ad_creative_results[creativeIndex].imageResults[ratio].imageFileExtension` + Storage `ad_generation_result_{c}_{ratio}.{ext}`를 덮어쓰고 `update_creative_image_by_ratio_generation_completed` RPC(또는 `update_creative_image_analysis` 유사 RPC)로 `ad_creative_results`를 원자적으로 갱신하면, Realtime 채널(`ad-batch-${batchId}`)을 통해 `ProjectDetailPageClient`에 즉시 반영됨. `POST /api/ad/ad-generation-batches/[batchId]/creative/[creativeIndex]/image/[ratio]` 형태의 새 S2S 엔드포인트 + `multipart` 업로드 + `signedUrl` 재발급으로 구현. 낙관적 업데이트(Optimistic UI)도 가능. **구현 시 `p_error: null`로 성공 마킹 및 `updated_at` 갱신 필요.**
-
-### 🔴 신규 2. 폰트 추천 현황 확인
-* **요청**: `available_fonts` 30~40개 추가 후 LLM이 폰트 추천을 어떻게 하고 있는지 확인하기.
-* **확인 방법**: `POST_AD_CREATIVE_PROMPT`에 `available_fonts` 목록과 `fontFamily MUST be one of available_fonts` 제약을 넣은 뒤, 실제 배치 생성 로그(`POST_AD_CREATIVE_PROMPT`의 `reasoning`/`ratio_reasonings` + `llmServerAPI`의 `raw LLM output` 4000자 로그)에서 `copy.fontFamily`가 목록 내에서 적절히 선택되는지, `sans/serif/display` 카테고리 가이드대로 Headline 톤에 맞는 폰트를 고르는지 검증. 필요 시 `fontMap` 미등록 폰트가 나오면 fallback(`Inter`)으로 교정.
-
-### 🔴 유사성 문제 해결
-* 동일 Creative 내 5개 비율의 배경색/구도 배치가 미묘하게 달라지는 현상 — 색상은 프롬프트 `Color unification`으로 통일했으나, **유사성(배경 톤/질감/조명 일관성)이 충분한지 추가 검증 필요**. 필요 시 `seed` 고정 강화, `imagePromptRecord`의 배경 서술을 더 엄격히 통일하거나, `vision` 분석 단계에서 유사도 체크 추가 검토.
-
-### 🔴 ad 파이프라인 잔여 (UI 전)
-* **버킷 생성 확인** — `ad_image_storage` (private) 대시보드 또는 `insert into storage.buckets` 로 생성 후 `docker compose restart short-real-server` 로 PostgREST 리프레시. 이후 `product/person` 업로드 `Bucket not found` 해소 후 `prompt → generation → analysis` 종단 테스트 재시도.
-* **구 결과 페이지 정리** — `app/ad/create/results`는 비교용으로 유지 중, 신 `app/ad/projects/[projectId]`와 비교 완료 후 리다이렉트 처리.
-
 ### 🔴 다음 (UI)
-1. **Create 한 화면 미세 조정** — Where 동적 높이 + How many 1×4 균등 분할 + Brand 팔레트 높이 조정은 적용, 추가 미세 조정 대기.
-2. **과금 확정** — `success only` 문구 교체 완료, 실제 Polar 차감은 성공 에셋 수 기준으로 이전 필요 (현재 `totalImages` 선차감).
-3. **Projects 리스트 썸네일 고도화** — 현재 카드가 상태 시각화만, 실제 결과 1장 썸네일은 상세에서만 보임. 리스트 API에 썸네일 1장 signed URL을 포함하는 최적화는 v2.
+1. **Create 한 화면 미세 조정** — 완료 처리(이미 함).
+2. **과금 확정** — 대기 (`success only` 문구 교체 완료, 실제 Polar 차감은 성공 에셋 수 기준으로 이전 필요 — 현재 `totalImages` 선차감).
+3. **Projects 리스트 썸네일 고도화** — 완료 (최고점 1장 커버 + `top center` 크롭, 실시간 갱신).
 
 ### 🟡 대기
 * CreateForm 최종 UI 확인(0스크롤·반응형·라이트/다크) — 사장 확인 대기
@@ -86,18 +82,21 @@
 * 공용: `getNextBaseResponse()` 사용, UI는 영어, 들여쓰기 4칸, 함수명 약어 금지. ESLint 불가 — `npx tsc --noEmit`으로 검증.
 * **요청 경로**: 클라이언트 `postFetch('/api/ad/image')` / `postFormFetch('/api/ad/ad-generation-batches/${batchId}/images', fd)` → baseFetch가 `/api/client-gateway?path=...`로 래핑 → gateway가 세션 인증(C2S)+`userId` 주입(멀티파트면 `formData`, 아니면 `json`) → `${BASE_URL}`(ngrok)으로 `x-internal-secret`과 함께 전달 → 내부 라우트는 S2S 가드. 내부 체이닝은 `internalFireAndForgetFetch(BASE_URL + 경로)` (query로 식별자, body로 페이로드, waitUntil로 실행 보장).
 * **API 경로 정석**: DB `ad_generation_batches` ↔ 서버 `app/api/ad/ad-generation-batches` + `[batchId]` (kebab-case 복수, ByUserId). 페이지는 UX 별칭 `app/ad/projects` + `[projectId]` 유지. 클라는 `adGenerationBatchClientAPI`가 정석 경로로 호출하고 `adProjectClientAPI`가 `projects/project` 별칭으로 래핑. 내부 타입/변수는 `batch`, 화면 텍스트/URL만 `Project`.
-* **Realtime**: `alter publication supabase_realtime add table public.ad_generation_batches;` + RLS `user_id = auth.uid()::text` 4개 정책. 리스트는 `channel('ad-batches-list-${user.id}-${rand}').on('postgres_changes', filter: user_id=eq.userId)`, 상세는 `channel('ad-batch-${projectId}-${rand}').on('postgres_changes', filter: id=eq.projectId)` 로 폴링 대체. `supabase.removeChannel`로 정리, StrictMode 이중 마운트 방지 위해 채널명 랜덤 suffix. 끊기면 Refresh 버튼으로 수동 갱신 (폴링 fallback 없음).
-* **웹훅 관례**: `app/webhook/{provider}/` 위치, 절대 에러 상태로 응답하지 않음(200 유지). Replicate는 terminal 웹훅 실패 시 exponential backoff 재시도(최종 ~1분) + 드물게 순서 뒤바뀜 — 핸들러 멱등 필수. `ratioKey`는 query 1순위·없으면 `input.aspect_ratio` fallback, `attempt`는 재시도 횟수 추적.
-* **RPC 3종 원리**: 같은 행 jsonb 배열에 병렬 쓰기 → 앱 코드 read-modify-write 금지, RPC 단일 UPDATE+jsonb_set(행 잠금)만 사용. `jsonb_set` 경로는 `text[]`라 `array[p_creative_index::text, '...']`로 캐스팅 필수 (`int`+`text` 혼합 시 `invalid input syntax for type integer` 발생). RPC#1은 `imagePromptRecord` 단일(B안, 키 `imagePromptRecord`), RPC#2는 `p_file_extension text default null, p_error jsonb default null` 포함 마커(3·4·5개 인자 호환), RPC#3은 `p_image_results` + error도 완료로 카운트. PostgREST 스키마 캐시는 `docker compose restart short-real-server`로 갱신.
-* **비율 파생 (확정)**: 기준 1:1 우선(없으면 캐노니컬 첫째 — `selectBaseRatio`) 1장 → 나머지는 기준 이미지 참조 재생성. `n=1` 재시도: 같은 비율 1회 재시도(총 2회) 후 차순위 base로 폴백, ratios도 1회 재시도. base 없으면 원본만 폴백. 원본 업로드 전이면 text-only 폴백.
+* **Realtime**: `alter publication supabase_realtime add table public.ad_generation_batches;` + RLS `user_id = auth.uid()::text` 4개 정책. 리스트는 `channel('ad-batches-list-${user.id}-${rand}').on('postgres_changes', filter: user_id=eq.userId)` — `UPDATE` 시 `fetchProjects(true)`로 썸네일 갱신, 상세는 `channel('ad-batch-${projectId}-${rand}').on('postgres_changes', filter: id=eq.projectId)` — 세션 확보 후 구독, `supabase.removeChannel`로 정리, StrictMode 랜덤 suffix. 상세는 끊김 대비 4초 폴링 안전망 추가( `isRunning`일 때만).
+* **웹훅 관례**: `app/webhook/{provider}/` 위치, 절대 에러 상태로 응답하지 않음(200 유지). Replicate는 terminal 웹훅 실패 시 exponential backoff 재시도(최종 ~1분) + 순서 뒤바뀜 — 핸들러 멱등 필수. `ratioKey`는 query 1순위·없으면 `input.aspect_ratio` fallback, `attempt`는 재시도 횟수 추적.
+* **RPC 3종 원리**: 같은 행 jsonb 배열에 병렬 쓰기 → 앱 코드 read-modify-write 금지, RPC 단일 UPDATE+jsonb_set(행 잠금)만 사용. `jsonb_set` 경로는 `text[]`라 `array[p_creative_index::text, '...']`로 캐스팅 필수. RPC#1은 `imagePromptRecord` 단일(B안), RPC#2는 `p_file_extension text default null, p_error jsonb default null` 포함 마커, RPC#3은 `p_image_results` + error도 완료로 카운트. PostgREST 스키마 캐시는 `docker compose restart short-real-server`로 갱신.
+* **비율 파생 (확정)**: 기준 1:1 우선(없으면 캐노니컬 첫째) 1장 → 나머지는 기준 이미지 참조 재생성. `n=1` 재시도: 같은 비율 1회 재시도(총 2회) 후 차순위 base로 폴백, ratios도 1회 재시도. base 없으면 원본만 폴백. 원본 업로드 전이면 text-only 폴백.
 * **Replicate SDK**: `replicate@^1.4.0` 설치됨. `new Replicate({auth})`, `predictions.create({model: 'owner/name', input, webhook, webhook_events_filter:['completed']})`. output은 string|string[]|FileOutput — `adImageServerAPI.extractFirstOutputUrl`로 정규화. 모델 enum: NANO_BANANA(-PRO/-2/-2_LITE).
-* **파일 경로 규칙**: 입력 `{user_id}/{batch_id}/{product|person}_image.{ext}`, 출력 `{user_id}/{batch_id}/ad_generation_result_{c}_{ratio}.{ext}` — c+ratio+imageFileExtension으로 signed URL 재구성. 버킷 `ad_image_storage` (imageServerAPI, private). 업로드 엔드포인트 `POST /api/ad/ad-generation-batches/[batchId]/images` (multipart, upsert:true).
+* **파일 경로 규칙**: 입력 `{user_id}/{batch_id}/{product|person}_image.{ext}`, 출력 `{user_id}/{batch_id}/ad_generation_result_{c}_{ratio}.{ext}` — c+ratio+imageFileExtension으로 signed URL 재구성. 버킷 `ad_image_storage` (imageServerAPI, private, 생성 확인됨). 업로드 엔드포인트 `POST /api/ad/ad-generation-batches/[batchId]/images` (multipart, upsert:true).
 * **AdImageResult**: `design: AdDesignLayout, score: number | null, imageFileExtension: string | null, error?: {code,message}|null` — process가 다운로드 시 `inferFileExtension`으로 확정, 실패 시 `error`로 격리.
 * **AdCreativeSpec**: `imagePromptRecord: Partial<Record<AdRatioKey,string>>` (B안), `seed: number` — 프롬프트 단계가 채움. `brand_palette`는 배치 생성 시 3-5 hex or null.
-* **LLM**: Creative 디렉터 `GLM_5_3_FLASH`(vision, `imagePromptRecord`+`copy`+`reasoning`, 영어 고정, 이미지 우선) + 노트 분류(상품 설명은 이미지 보완, 광고 느낌은 캡션에 반영) + 색상 통일(동일 hue), Vision 분석 `GLM_5_3_FLASH`(멀티모달, 정수% 0-100, 3분기 Product/Person/Both, `brand_palette` 조건부, 영어 고정) — `llmServerAPI.ts` `postAdCreativePrompt`/`postAdImageAnalysis` + 원문 로그, 프롬프트는 `POST_AD_{CREATIVE,IMAGE_ANALYSIS}_PROMPT.ts` 엘리트 250-320줄, `constraint`에 `ALL output text MUST be English only` 명시.
+* **AdCopySpec**: `headline: string | null, cta: string | null, fontFamily?: string | null (34개 중 하나), fontWeight?: number | null (해당 폰트 weightList 내), headlineColor?: 'white'|'black' | null` — prompt 단계가 채우고 `fontMap` 미등록 시 `Inter/400/white`로 교정.
+* **AdCreativeResult**: `creativeIndex: number, copy: AdCopySpec, imageResults: Partial<Record<AdRatioKey, AdImageResult>>` — Creative 단위 1:1 대응. Creative 상태는 `imageFileExtension`만 있으면 `Designing`, `score`까지 있어야 `Completed`.
+* **LLM**: Creative 디렉터 `GLM_5_3_FLASH`(vision, `imagePromptRecord`+`copy`+`reasoning`, 영어 고정, 이미지 우선) + 노트 분류 + 색상 통일(동일 hue) + 배경·조명 통일(5장 동일 문구, 구도만 비율별) + 폰트 34개 그룹화(`sans:22|serif:3|display:9`) 및 `fontWeight/headlineColor` 제약, Vision 분석 `GLM_5_3_FLASH`(멀티모달, 정수% 0-100, `brand_palette` 조건부, 영어 고정) — `llmServerAPI.ts` `postAdCreativePrompt`/`postAdImageAnalysis` + 원문 로그, 프롬프트는 `POST_AD_{CREATIVE,IMAGE_ANALYSIS}_PROMPT.ts` 엘리트 250-320줄, `constraint`에 `ALL output text MUST be English only` 명시.
+* **썸네일**: 리스트 `GET /api/ad/ad-generation-batches`에서 `score` 최고 1장(없으면 첫 완료 1장)의 `thumbnailSignedUrls[batchId]` + `thumbnailRatioKeys[batchId]`를 발급, 카드 `4:3`에 `object-cover` + 세로 비율은 `object-position: top center`로 제품 보존. 없을 땐 스켈레톤.
 * **용어 계약 (확정)**: creatives × formats = assets, 실행 1회 = batch. 유저 노출은 Project(페이지/URL/텍스트), 서버/DB/내부 코드는 batch.
 * **시드 규칙**: creative별 서로 다른 seed / 같은 creative 내 비율 = 같은 seed. 재현은 저장된 specs(DB)가 담당.
 * **사장 UI 원칙**: px 하드코딩 금지(rem/vh/vw/%/fr), 광고 바닥 언어, 0스크롤 선호. Bento 12col (`Subjects 8 | How many+CTA 4 / Where 8 | Brand 4`), `Where` 돌담은 `ResizeObserver`로 `H=(W-32)/4.806` 실측 5개 1행·가로 중앙, 섹션 높이는 내용 높이대로. `optional` 배지로 즉시 인지.
-* **ad_variation_study.md**: §1·§2·§6 이미 최신(`imagePromptRecord`, `brand_palette`, HARD_BANNED 8개, fail-soft, n=1 재시도) — 색상 통일 추가 갱신 완료, 유사성 추가 검토 필요.
-* **supabase 파일**: `supabase/ad_generation_batches.sql` 삭제 — SQL은 직접 전달. `brand_palette` 컬럼, B안, `p_file_extension`+`p_error`는 사장이 직접 실행 완료. 버킷 `ad_image_storage` 생성 대기, `.next` 캐시로 인한 Vercel TS2306은 빈 `ad-generation-batch` 폴더 삭제로 해소.
+* **ad_variation_study.md**: §1·§2·§6 이미 최신(`imagePromptRecord`, `brand_palette`, HARD_BANNED 8개, fail-soft, n=1 재시도) — 색상 통일·배경 통일 추가 갱신 완료.
+* **supabase 파일**: `supabase/ad_generation_batches.sql` 삭제 — SQL은 직접 전달. `brand_palette` 컬럼, B안, `p_file_extension`+`p_error`는 사장 직접 실행 완료. 버킷 `ad_image_storage` 생성 확인됨, `app/ad/create/results` 폴더 삭제.
 * Remotion 4.0.507: `<OffthreadVideo>` + `colorSpace: 'bt709'`, 저사양 `concurrency: 1`.

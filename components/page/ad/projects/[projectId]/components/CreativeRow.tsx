@@ -4,6 +4,7 @@ import { memo, useMemo, useState } from 'react';
 import { ChevronDown, Eye, Layers, Sparkles, Target, Wand2 } from 'lucide-react';
 import FormatTile from "@/components/page/ad/projects/[projectId]/components/FormatTile";
 import { AdCreativeSpec, AdCreativeResult, AdGenerationBatch, AdRatioKey } from "@/lib/api/types/supabase/ad/AdGenerationBatch";
+import { fontMap } from "@/lib/fonts";
 
 function formatAxisLabel(value: string): string {
     return value
@@ -30,21 +31,40 @@ function CreativeRow({ creativeIndex, spec, result, batch, signedUrls, isProject
     const copy = result?.copy;
     const imageResults = result?.imageResults as Partial<Record<AdRatioKey, unknown>> | undefined;
 
+    const headlineFontFamily = useMemo(() => {
+        const name = copy?.fontFamily as string | undefined;
+        if (name && (fontMap as Record<string, { style: { fontFamily: string } }>)[name]) {
+            return (fontMap as Record<string, { style: { fontFamily: string } }>)[name].style.fontFamily;
+        }
+        return undefined;
+    }, [copy?.fontFamily]);
+    const headlineFontWeight = useMemo(() => {
+        const w = copy?.fontWeight as number | undefined;
+        return typeof w === 'number' ? w : undefined;
+    }, [copy?.fontWeight]);
+    const headlineColor = useMemo(() => {
+        const c = copy?.headlineColor as 'white' | 'black' | undefined;
+        return c === 'white' || c === 'black' ? c : null;
+    }, [copy?.headlineColor]);
+
     const stats = useMemo(() => {
         let completed = 0;
         let failed = 0;
         let generating = 0;
+        let designing = 0;
         for (const ratioKey of batch.aspect_ratios) {
-            const ir = imageResults?.[ratioKey] as { error?: unknown; imageFileExtension?: string | null } | undefined;
+            const ir = imageResults?.[ratioKey] as { error?: unknown; imageFileExtension?: string | null; score?: number | null } | undefined;
             if (!ir) {
                 if (isProjectRunning) generating += 1;
                 continue;
             }
             if ((ir as { error?: unknown }).error) failed += 1;
-            else if ((ir as { imageFileExtension?: string | null }).imageFileExtension) completed += 1;
-            else if (isProjectRunning) generating += 1;
+            else if ((ir as { imageFileExtension?: string | null }).imageFileExtension) {
+                if ((ir as { score?: number | null }).score != null) completed += 1;
+                else designing += 1;
+            } else if (isProjectRunning) generating += 1;
         }
-        return { completed, failed, generating, total: batch.aspect_ratios.length };
+        return { completed, failed, generating, designing, total: batch.aspect_ratios.length };
     }, [imageResults, batch.aspect_ratios, isProjectRunning]);
 
     const bestScore = useMemo(() => {
@@ -68,16 +88,18 @@ function CreativeRow({ creativeIndex, spec, result, batch, signedUrls, isProject
                 ? 'Failed'
                 : stats.generating > 0
                     ? 'Generating'
-                    : stats.completed === stats.total
-                        ? 'Completed'
-                        : 'Pending';
+                    : stats.designing > 0
+                        ? 'Designing'
+                        : stats.completed === stats.total
+                            ? 'Completed'
+                            : 'Pending';
 
     const statusTone =
         statusLabel === 'Completed'
             ? 'bg-emerald-500/10 text-emerald-700 border-emerald-500/20 dark:text-emerald-400'
             : statusLabel === 'Partial' || statusLabel === 'Failed'
                 ? 'bg-amber-500/10 text-amber-700 border-amber-500/20 dark:text-amber-300'
-                : statusLabel === 'Generating' || statusLabel === 'Preparing'
+                : statusLabel === 'Generating' || statusLabel === 'Preparing' || statusLabel === 'Designing'
                     ? 'bg-sky-500/10 text-sky-600 border-sky-500/20 dark:text-sky-400'
                     : 'bg-surface text-text2 border-hairline';
 
@@ -104,11 +126,11 @@ function CreativeRow({ creativeIndex, spec, result, batch, signedUrls, isProject
                         {bestScore != null && (
                             <span className="font-mono text-[11px] text-text2">best {bestScore.toFixed(1)} / 10</span>
                         )}
-                        <span className="font-mono text-[11px] text-text2">· {stats.completed}/{stats.total} ready{stats.failed ? ` · ${stats.failed} failed` : ''}{stats.generating ? ` · ${stats.generating} generating` : ''}</span>
+                        <span className="font-mono text-[11px] text-text2">· {stats.completed}/{stats.total} ready{stats.failed ? ` · ${stats.failed} failed` : ''}{stats.designing ? ` · ${stats.designing} designing` : ''}{stats.generating ? ` · ${stats.generating} generating` : ''}</span>
                     </div>
 
                     {copy?.headline ? (
-                        <p className="mt-1 line-clamp-1 text-[13px] leading-snug text-text1">“{copy.headline}”</p>
+                        <p className="mt-1 line-clamp-1 text-[13px] leading-snug text-text1" style={{ fontFamily: headlineFontFamily, fontWeight: headlineFontWeight }}>“{copy.headline}”</p>
                     ) : spec ? (
                         <p className="mt-1 line-clamp-1 text-[12px] text-text2">
                             {formatAxisLabel(spec.camera)} · {formatAxisLabel(spec.lighting)} · {formatAxisLabel(spec.palette)}
@@ -176,6 +198,9 @@ function CreativeRow({ creativeIndex, spec, result, batch, signedUrls, isProject
                                             selected={selectedKey === tileKey}
                                             onSelect={() => onSelectTile(tileKey)}
                                             onExpand={() => onExpandTile?.(tileKey)}
+                                            headlineFontFamily={headlineFontFamily ?? null}
+                                            headlineFontWeight={headlineFontWeight ?? null}
+                                            headlineColor={headlineColor}
                                         />
                                     );
                                 })}
@@ -186,7 +211,8 @@ function CreativeRow({ creativeIndex, spec, result, batch, signedUrls, isProject
                         {copy?.headline && (
                             <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-hairline pt-3">
                                 <span className="text-[12px] text-text2">
-                                    Headline: <span className="font-medium text-text1">“{copy.headline}”</span>
+                                    Headline: <span className="font-medium text-text1" style={{ fontFamily: headlineFontFamily, fontWeight: headlineFontWeight }}>“{copy.headline}”</span>
+                                    {copy?.fontFamily ? <span className="ml-2 font-mono text-[10px] text-text2">{copy.fontFamily} {copy.fontWeight ?? ''} · {copy.headlineColor ?? ''}</span> : null}
                                 </span>
                             </div>
                         )}

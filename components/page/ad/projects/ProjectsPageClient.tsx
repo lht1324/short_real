@@ -6,7 +6,7 @@ import { FolderOpen, Plus, RefreshCw } from 'lucide-react';
 import AppHeader from "@/components/page/ad/app-header/AppHeader";
 import ProjectCard from "@/components/page/ad/projects/components/ProjectCard";
 import { adProjectClientAPI } from "@/lib/api/client/ad/adProjectClientAPI";
-import { AdGenerationBatch } from "@/lib/api/types/supabase/ad/AdGenerationBatch";
+import { AdGenerationBatch, AdRatioKey } from "@/lib/api/types/supabase/ad/AdGenerationBatch";
 import { supabase } from "@/lib/supabase/supabaseClient";
 
 type FilterKey = 'all' | 'running' | 'completed';
@@ -24,6 +24,8 @@ function isRunningStatus(status: string): boolean {
 export default function ProjectsPageClient() {
     const router = useRouter();
     const [projects, setProjects] = useState<AdGenerationBatch[]>([]);
+    const [thumbnailSignedUrls, setThumbnailSignedUrls] = useState<Record<string, string>>({});
+    const [thumbnailRatioKeys, setThumbnailRatioKeys] = useState<Record<string, AdRatioKey>>({});
     const [isLoading, setIsLoading] = useState(true);
     const [isRefreshing, setIsRefreshing] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -37,6 +39,8 @@ export default function ProjectsPageClient() {
         try {
             const data = await adProjectClientAPI.listProjects({ limit: 20, offset: 0 });
             setProjects(data.projects);
+            setThumbnailSignedUrls((data as unknown as { thumbnailSignedUrls?: Record<string, string> }).thumbnailSignedUrls ?? {});
+            setThumbnailRatioKeys((data as unknown as { thumbnailRatioKeys?: Record<string, AdRatioKey> }).thumbnailRatioKeys ?? {});
             setHasMore(data.pagination.count === 20);
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Failed to load projects');
@@ -52,6 +56,7 @@ export default function ProjectsPageClient() {
 
     // Realtime 구독 — running 여부에 관계없이 변경 시 리스트를 패치 (폴링 제거, 끊기면 Refresh 버튼으로 수동 갱신)
     // StrictMode 이중 마운트로 인한 "cannot add postgres_changes after subscribe" 방지: 채널명에 랜덤 suffix
+    // 썸네일은 최고점 1장의 signedUrl이라 UPDATE 시 재조회로 갱신 필요
     useEffect(() => {
         let channel: ReturnType<typeof supabase.channel> | null = null;
 
@@ -68,9 +73,20 @@ export default function ProjectsPageClient() {
                         if (payload.eventType === 'INSERT') {
                             setProjects((prev) => [payload.new as AdGenerationBatch, ...prev]);
                         } else if (payload.eventType === 'UPDATE') {
-                            setProjects((prev) => prev.map((p) => p.id === (payload.new as AdGenerationBatch).id ? (payload.new as AdGenerationBatch) : p));
+                            // 최고점 썸네일이 바뀔 수 있어 전체 재조회로 signedUrl 갱신
+                            fetchProjects(true);
                         } else if (payload.eventType === 'DELETE') {
                             setProjects((prev) => prev.filter((p) => p.id !== (payload.old as AdGenerationBatch).id));
+                            setThumbnailSignedUrls((prev) => {
+                                const next = { ...prev };
+                                delete next[(payload.old as AdGenerationBatch).id];
+                                return next;
+                            });
+                            setThumbnailRatioKeys((prev) => {
+                                const next = { ...prev };
+                                delete next[(payload.old as AdGenerationBatch).id];
+                                return next;
+                            });
                         }
                     },
                 )
@@ -80,7 +96,7 @@ export default function ProjectsPageClient() {
         return () => {
             if (channel) supabase.removeChannel(channel);
         };
-    }, []);
+    }, [fetchProjects]);
 
     const onClickRefresh = useCallback(() => {
         fetchProjects(true);
@@ -100,6 +116,10 @@ export default function ProjectsPageClient() {
         try {
             const data = await adProjectClientAPI.listProjects({ limit: 20, offset: projects.length });
             setProjects((prev) => [...prev, ...data.projects]);
+            const moreThumbs = (data as unknown as { thumbnailSignedUrls?: Record<string, string> }).thumbnailSignedUrls ?? {};
+            const moreRatios = (data as unknown as { thumbnailRatioKeys?: Record<string, AdRatioKey> }).thumbnailRatioKeys ?? {};
+            setThumbnailSignedUrls((prev) => ({ ...prev, ...moreThumbs }));
+            setThumbnailRatioKeys((prev) => ({ ...prev, ...moreRatios }));
             setHasMore(data.pagination.count === 20);
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Failed to load more');
@@ -229,6 +249,8 @@ export default function ProjectsPageClient() {
                                 <ProjectCard
                                     key={project.id}
                                     project={project}
+                                    thumbnailUrl={thumbnailSignedUrls[project.id] ?? null}
+                                    thumbnailRatio={thumbnailRatioKeys[project.id] ?? null}
                                     onClick={() => onClickProject(project.id)}
                                 />
                             ))}

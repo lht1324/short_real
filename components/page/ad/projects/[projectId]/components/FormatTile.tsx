@@ -32,9 +32,12 @@ interface FormatTileProps {
     onSelect?: () => void;
     onExpand?: () => void;
     selected?: boolean;
+    headlineFontFamily?: string | null;
+    headlineFontWeight?: number | null;
+    headlineColor?: 'white' | 'black' | null;
 }
 
-function FormatTile({ ratioKey, imageResult, signedUrl, isProjectRunning, creativeIndex, onSelect, onExpand, selected }: FormatTileProps) {
+function FormatTile({ ratioKey, imageResult, signedUrl, isProjectRunning, creativeIndex, onSelect, onExpand, selected, headlineFontFamily, headlineFontWeight, headlineColor }: FormatTileProps) {
     const ratioLabel = RATIO_LABEL[ratioKey] ?? ratioKey;
     const factor = RATIO_FACTOR[ratioKey] ?? 1;
 
@@ -119,6 +122,7 @@ function FormatTile({ ratioKey, imageResult, signedUrl, isProjectRunning, creati
     // 완료 타일 — 이미지 + 오버레이
     const design: AdDesignLayout = (imageResult.design as AdDesignLayout) ?? { headline: null, cta: null, logo: null, scrim: false };
     const score = imageResult.score;
+    const overlayHeadlineColor = (design.headline as unknown as { color?: string })?.color === 'black' || (design.headline as unknown as { color?: string })?.color === 'white' ? (design.headline as unknown as { color: 'white' | 'black' }).color : headlineColor ?? 'white';
 
     return (
         <div
@@ -141,7 +145,7 @@ function FormatTile({ ratioKey, imageResult, signedUrl, isProjectRunning, creati
                 sizes="(max-width: 768px) 100vw, 33vw"
                 className="object-cover transition-transform duration-500 group-hover:scale-[1.02]"
             />
-            <AdOverlay design={design} />
+            <AdOverlay design={design} headlineFontFamily={headlineFontFamily ?? null} headlineFontWeight={headlineFontWeight ?? null} headlineColor={overlayHeadlineColor} />
 
             <span className="absolute bottom-2.5 left-2.5 rounded-full bg-surface/85 px-2 py-1 font-mono text-[10px] uppercase tracking-[0.08em] text-text1 backdrop-blur-sm">
                 {ratioLabel}

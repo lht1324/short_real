@@ -57,6 +57,8 @@ export interface AdHeadlineSpec {
     maxWidth: number;
     align: 'left' | 'center' | 'right';
     fontSizePct: number;
+    /** 헤드라인 색 — white/black 2택, Vision이 비율별 최종 결정 (AdCopySpec.headlineColor 제안 기반) */
+    color?: 'white' | 'black' | null;
 }
 
 export interface AdCtaSpec {

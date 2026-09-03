@@ -56,6 +56,11 @@ export const llmServerAPI = {
                 ? `Attached images: ${imageBase64List.length} image(s) in order [${[productImageBase64 ? 'product' : null, personImageBase64 ? 'person' : null].filter(Boolean).join(', ')}] — primary ground truth.`
                 : `Attached images: none — use notes and axes only.`;
 
+            const serifFonts = ['Crimson Text', 'Merriweather', 'Playfair Display'];
+            const sansFonts = ['Barlow', 'Barlow Condensed', 'Fira Sans', 'Fjalla One', 'Inter', 'Lato', 'League Gothic', 'League Spartan', 'Montserrat', 'Nunito', 'Open Sans', 'Oswald', 'Pathway Gothic One', 'Poppins', 'PT Sans', 'PT Sans Narrow', 'Raleway', 'Roboto', 'Russo One', 'Source Sans 3', 'Titillium Web', 'Work Sans'];
+            const displayFonts = ['Anton', 'Archivo Black', 'Bebas Neue', 'Fredoka', 'Paytone One', 'Staatliches', 'Syne', 'Teko', 'Unbounded'];
+            const availableFontsGrouped = `sans: ${sansFonts.join(', ')} | serif: ${serifFonts.join(', ')} | display: ${displayFonts.join(', ')}`;
+
             const userMessage = `
 <input_data>
   <creative_spec>
@@ -71,7 +76,8 @@ export const llmServerAPI = {
   <person_note>${personNote ?? ""}</person_note>
   <cta_enabled>${ctaEnabled}</cta_enabled>
   <brand_palette>${brandPalette && brandPalette.length > 0 ? JSON.stringify(brandPalette) : "null"}</brand_palette>
-  <available_fonts>${Object.keys(fontMap).join(', ')}</available_fonts>
+  <available_fonts>${availableFontsGrouped}</available_fonts>
+  <available_fonts_count>${Object.keys(fontMap).length}</available_fonts_count>
 </input_data>
 
 ${attachedInfo}

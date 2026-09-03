@@ -12,6 +12,8 @@ export interface AdGenerationBatchListResponse {
         offset: number;
         count: number;
     };
+    thumbnailSignedUrls: Record<string, string>;
+    thumbnailRatioKeys: Record<string, AdRatioKey>;
 }
 
 export interface AdGenerationBatchDetailResponse {
@@ -49,6 +51,8 @@ export const adGenerationBatchClientAPI = {
         return {
             batches,
             pagination: data.pagination as AdGenerationBatchListResponse['pagination'],
+            thumbnailSignedUrls: (data.thumbnailSignedUrls as Record<string, string>) ?? {},
+            thumbnailRatioKeys: (data.thumbnailRatioKeys as Record<string, AdRatioKey>) ?? {},
         };
     },
 
@@ -84,6 +88,7 @@ export const adProjectClientAPI = {
             projects: data.batches,
             batches: data.batches,
             pagination: data.pagination,
+            thumbnailSignedUrls: data.thumbnailSignedUrls,
         } as AdProjectListResponse;
     },
     async getProject(projectId: string): Promise<AdProjectDetailResponse> {
@@ -114,12 +119,15 @@ export function getBatchProgress(batch: AdGenerationBatch): {
 
     for (const cr of batch.ad_creative_results ?? []) {
         for (const ratioKey of batch.aspect_ratios) {
-            const ir = (cr.imageResults as Partial<Record<AdRatioKey, { error?: unknown; score?: unknown }>>)[ratioKey];
+            const ir = (cr.imageResults as Partial<Record<AdRatioKey, { error?: unknown; score?: unknown; imageFileExtension?: unknown }>>)[ratioKey];
             if (!ir) continue;
             if ((ir as { error?: unknown }).error) {
                 failed += 1;
-            } else if ((ir as { score?: unknown }).score != null || (ir as { imageFileExtension?: unknown }).imageFileExtension != null) {
+            } else if ((ir as { score?: unknown }).score != null) {
                 completed += 1;
+            } else if ((ir as { imageFileExtension?: unknown }).imageFileExtension != null) {
+                // 이미지 생성 완료됐지만 analysis(design/score) 대기 — pending으로 카운트
+                continue;
             }
         }
     }

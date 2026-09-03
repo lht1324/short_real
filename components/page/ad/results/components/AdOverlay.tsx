@@ -5,9 +5,12 @@ import { AdDesignLayout } from "@/lib/api/client/ad/adClientAPI";
 
 interface AdOverlayProps {
     design: AdDesignLayout;
+    headlineFontFamily?: string | null;
+    headlineFontWeight?: number | null;
+    headlineColor?: 'white' | 'black' | null;
 }
 
-function AdOverlay({ design }: AdOverlayProps) {
+function AdOverlay({ design, headlineFontFamily, headlineFontWeight, headlineColor }: AdOverlayProps) {
     const ref = useRef<HTMLDivElement>(null);
     const [width, setWidth] = useState(0);
 
@@ -26,10 +29,13 @@ function AdOverlay({ design }: AdOverlayProps) {
 
     const { headline, cta, logo, scrim } = design;
 
+    const headlineTextColor = headlineColor === 'black' ? '#0A0A0A' : '#FFFFFF';
+    const headlineScrimClass = headlineColor === 'black' ? 'from-white/70 via-white/20 to-transparent' : 'from-black/65 via-black/25 to-transparent';
+
     return (
         <div ref={ref} className="pointer-events-none absolute inset-0 select-none">
             {scrim && (
-                <div className="absolute inset-x-0 bottom-0 h-[68%] bg-gradient-to-t from-black/65 via-black/25 to-transparent" />
+                <div className={`absolute inset-x-0 bottom-0 h-[68%] bg-gradient-to-t ${headlineScrimClass}`} />
             )}
 
             {logo && (
@@ -61,8 +67,13 @@ function AdOverlay({ design }: AdOverlayProps) {
                     }}
                 >
                     <h3
-                        className="font-bold leading-[1.05] tracking-[-0.02em] text-white"
-                        style={{ fontSize: width > 0 ? (width * headline.fontSizePct) / 100 : 24 }}
+                        className="font-bold leading-[1.05] tracking-[-0.02em]"
+                        style={{
+                            fontSize: width > 0 ? (width * headline.fontSizePct) / 100 : 24,
+                            color: headlineTextColor,
+                            fontFamily: headlineFontFamily ?? undefined,
+                            fontWeight: headlineFontWeight ?? undefined,
+                        }}
                     >
                         {headline.text}
                     </h3>

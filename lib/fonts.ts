@@ -23,7 +23,16 @@ import {
     Titillium_Web,
     League_Gothic,
     League_Spartan,
-    Russo_One
+    Russo_One,
+    Anton,
+    Archivo_Black,
+    Bebas_Neue,
+    Staatliches,
+    Teko,
+    Paytone_One,
+    Syne,
+    Unbounded,
+    Fredoka
 } from 'next/font/google'
 
 export const inter = Inter({
@@ -201,13 +210,80 @@ export const russoOne = Russo_One({
     display: 'swap',
 })
 
-// 폰트 매핑 객체 — 광고 헤드라인용 30~40개 큐레이션 (Barlow 계열, Fjalla One 등 추가)
+export const anton = Anton({
+    subsets: ['latin'],
+    weight: ['400'],
+    style: ['normal'],
+    display: 'swap',
+})
+
+export const archivoBlack = Archivo_Black({
+    subsets: ['latin'],
+    weight: ['400'],
+    style: ['normal'],
+    display: 'swap',
+})
+
+export const bebasNeue = Bebas_Neue({
+    subsets: ['latin'],
+    weight: ['400'],
+    style: ['normal'],
+    display: 'swap',
+})
+
+export const staatliches = Staatliches({
+    subsets: ['latin'],
+    weight: ['400'],
+    style: ['normal'],
+    display: 'swap',
+})
+
+export const teko = Teko({
+    subsets: ['latin'],
+    weight: ['300', '400', '500', '600', '700'],
+    style: ['normal'],
+    display: 'swap',
+})
+
+export const paytoneOne = Paytone_One({
+    subsets: ['latin'],
+    weight: ['400'],
+    style: ['normal'],
+    display: 'swap',
+})
+
+export const syne = Syne({
+    subsets: ['latin'],
+    weight: ['400', '500', '600', '700', '800'],
+    style: ['normal'],
+    display: 'swap',
+})
+
+export const unbounded = Unbounded({
+    subsets: ['latin'],
+    weight: ['200', '300', '400', '500', '600', '700', '800', '900'],
+    style: ['normal'],
+    display: 'swap',
+})
+
+export const fredoka = Fredoka({
+    subsets: ['latin'],
+    weight: ['300', '400', '500', '600', '700'],
+    style: ['normal'],
+    display: 'swap',
+})
+
+// 폰트 매핑 객체 — 광고 헤드라인용 34개 큐레이션 (영상용 제외, 광고 헤드라인 특화)
 export const fontMap = {
+    'Anton': anton,
+    'Archivo Black': archivoBlack,
     'Barlow': barlow,
     'Barlow Condensed': barlowCondensed,
+    'Bebas Neue': bebasNeue,
     'Crimson Text': crimsonText,
     'Fira Sans': firaSans,
     'Fjalla One': fjallaOne,
+    'Fredoka': fredoka,
     'Inter': inter,
     'Lato': lato,
     'League Gothic': leagueGothic,
@@ -218,6 +294,7 @@ export const fontMap = {
     'Open Sans': openSans,
     'Oswald': oswald,
     'Pathway Gothic One': pathwayGothicOne,
+    'Paytone One': paytoneOne,
     'Playfair Display': playfairDisplay,
     'Poppins': poppins,
     'PT Sans': ptSans,
@@ -226,7 +303,11 @@ export const fontMap = {
     'Roboto': roboto,
     'Russo One': russoOne,
     'Source Sans 3': sourceSans3,
+    'Staatliches': staatliches,
+    'Syne': syne,
+    'Teko': teko,
     'Titillium Web': titilliumWeb,
+    'Unbounded': unbounded,
     'Work Sans': workSans,
 } as const
 

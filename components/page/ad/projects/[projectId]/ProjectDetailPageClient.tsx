@@ -51,26 +51,42 @@ export default function ProjectDetailPageClient({ projectId }: { projectId: stri
     }, [project]);
 
     // Realtime 구독 — 해당 batch의 변경 시 즉시 갱신 (폴링 제거, 끊기면 Refresh 버튼으로 수동 갱신)
-    // StrictMode 이중 마운트 충돌 방지: 채널명 랜덤 suffix
+    // StrictMode 이중 마운트 충돌 방지: 채널명 랜덤 suffix, 세션 확보 후 구독(RLS)
     useEffect(() => {
         if (status !== 'ready') return;
 
-        const channel = supabase
-            .channel(`ad-batch-${projectId}-${Math.random().toString(36).slice(2, 6)}`)
-            .on(
-                'postgres_changes',
-                { event: '*', schema: 'public', table: 'ad_generation_batches', filter: `id=eq.${projectId}` },
-                () => {
-                    // payload.new에는 메타만 있고 signedUrls는 서버에서 재계산해야 하므로 전체 fetch
-                    fetchProject(true);
-                },
-            )
-            .subscribe();
+        let channel: ReturnType<typeof supabase.channel> | null = null;
+
+        (async () => {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) return;
+
+            channel = supabase
+                .channel(`ad-batch-${projectId}-${Math.random().toString(36).slice(2, 6)}`)
+                .on(
+                    'postgres_changes',
+                    { event: '*', schema: 'public', table: 'ad_generation_batches', filter: `id=eq.${projectId}` },
+                    () => {
+                        // payload.new에는 메타만 있고 signedUrls는 서버에서 재계산해야 하므로 전체 fetch
+                        fetchProject(true);
+                    },
+                )
+                .subscribe();
+        })();
 
         return () => {
-            supabase.removeChannel(channel);
+            if (channel) supabase.removeChannel(channel);
         };
     }, [projectId, status, fetchProject]);
+
+    // Realtime 끊김 대비 폴링 안전망 — running일 때만 4초 간격
+    useEffect(() => {
+        if (!isRunning || status !== 'ready') return;
+        const intervalId = window.setInterval(() => {
+            fetchProject(true);
+        }, 4000);
+        return () => window.clearInterval(intervalId);
+    }, [isRunning, status, fetchProject]);
 
     const progress = useMemo(() => {
         if (!project) return null;
@@ -333,6 +349,7 @@ export default function ProjectDetailPageClient({ projectId }: { projectId: stri
                     const ratioLabel = (ratioKey as string).replace('_', ':');
                     const creative = sortedCreatives.find((c) => c.creativeIndex === cIdx);
                     const ir = creative?.result?.imageResults?.[ratioKey as AdRatioKey] as { design?: import("@/lib/api/types/supabase/ad/AdGenerationBatch").AdImageResult['design']; score?: number | null } | undefined;
+                    const copyForLightbox = creative?.result?.copy as unknown as { fontFamily?: string | null; fontWeight?: number | null; headlineColor?: 'white' | 'black' | null } | undefined;
                     return (
                         <AdLightboxModal
                             imageUrl={url}
@@ -341,6 +358,9 @@ export default function ProjectDetailPageClient({ projectId }: { projectId: stri
                             design={(ir?.design as AdDesignLayout) ?? null}
                             score={ir?.score ?? null}
                             headline={creative?.result?.copy?.headline ?? null}
+                            headlineFontFamily={copyForLightbox?.fontFamily ?? null}
+                            headlineFontWeight={copyForLightbox?.fontWeight ?? null}
+                            headlineColor={copyForLightbox?.headlineColor ?? 'white'}
                             onClose={onCloseLightbox}
                         />
                     );

@@ -5,6 +5,8 @@ import { internalFireAndForgetFetch } from "@/lib/utils/internalFetch";
 import { adGenerationBatchServerAPI } from "@/lib/api/server/ad/adGenerationBatchServerAPI";
 import { adImageServerAPI } from "@/lib/api/server/ad/imageServerAPI";
 import { llmServerAPI } from "@/lib/api/server/ad/llmServerAPI";
+import { fontMap } from "@/lib/fonts";
+import FONT_FAMILY_LIST from "@/lib/FontFamilyList";
 
 /**
  * Creative별 프롬프트(LLM) 단계 — Creative마다 1회 호출 (ad_variation_study.md §3).
@@ -112,6 +114,34 @@ export async function POST(
                 status: 500,
                 error: llmResult.error?.message ?? "LLM creative prompt failed",
             });
+        }
+
+        // fontFamily 검증 — 목록 외 반환 시 Inter로 교정
+        const rawFont = llmResult.copy.fontFamily;
+        const allowedFonts = new Set(Object.keys(fontMap));
+        if (rawFont && !allowedFonts.has(rawFont)) {
+            console.warn(`[prompt] fontFamily "${rawFont}" not in available_fonts, fallback to Inter (creative ${creativeIndex} batch ${batchId})`);
+            llmResult.copy.fontFamily = 'Inter';
+        } else if (!rawFont) {
+            llmResult.copy.fontFamily = 'Inter';
+        }
+
+        // fontWeight 검증 — 해당 폰트의 weightList 중 하나여야 함
+        const finalFont = llmResult.copy.fontFamily as string;
+        const fontEntry = FONT_FAMILY_LIST.find((f) => f.name === finalFont);
+        const supportedWeights = fontEntry ? fontEntry.weightList.map((v) => v.weight) : [400];
+        let rawWeight = llmResult.copy.fontWeight as number | null | undefined;
+        if (typeof rawWeight !== 'number' || !supportedWeights.includes(rawWeight)) {
+            const fallbackWeight = supportedWeights.includes(400) ? 400 : supportedWeights.includes(600) ? 600 : supportedWeights[0] ?? 400;
+            console.warn(`[prompt] fontWeight "${rawWeight}" not supported for "${finalFont}" (supported: ${supportedWeights.join(',')}), fallback to ${fallbackWeight}`);
+            llmResult.copy.fontWeight = fallbackWeight;
+        }
+
+        // headlineColor 검증 — white/black 2택
+        const rawColor = llmResult.copy.headlineColor as string | null | undefined;
+        if (rawColor !== 'white' && rawColor !== 'black') {
+            console.warn(`[prompt] headlineColor "${rawColor}" invalid, fallback to white (creative ${creativeIndex} batch ${batchId})`);
+            llmResult.copy.headlineColor = 'white';
         }
 
         // 2) RPC로 저장 — imagePromptRecord + copy (headline nullable, cta nullable)
