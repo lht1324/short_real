@@ -1,24 +1,27 @@
-# 작업 진행 상황 (Last Updated: 2026-09-01 13:20)
+# 작업 진행 상황 (Last Updated: 2026-09-01 14:40)
 
 ## 1. 현재 상황 (Current Status)
 
-### 🎯 현 단계: 폰트/I2I 지시 선행 — 헤드라인 배치 논의 보류 (2026-09-01)
+### 🎯 현 단계: 폰트/I2I 지시 반영 완료 — 헤드라인 배치 재논의 가능 (2026-09-01)
 * **직전 추가 구현 (2026-09-01, tsc 클린)**
   * **이미지 이해 추가 (GLM Vision)**: `lib/OpenRouterClient.ts:6` `GLM_5_3_FLASH`로 `lib/api/server/ad/llmServerAPI.ts:18` `postAdCreativePrompt()`를 `DeepSeek → GLM`으로 교체, `productImageBase64/personImageBase64`를 받아 `imageBase64List`로 전달. `app/api/ad/creative/[creative-index]/prompt/route.ts:67`에서 `adImageServerAPI.getAdOriginalImageSignedUrls` → `fetch → base64`로 원본을 읽어 전달. 노트 없이도 제품 사진을 보고 카피를 뽑도록 함 (랑콤 크림 범용 카피 → 크림 맥락 카피로 개선).
   * **노트/이미지 분류 로직 프롬프트 반영**: `POST_AD_CREATIVE_PROMPT.ts:28` `product_note/person_note`를 `절대 무시하지 말고, 상품 설명이면 이미지 이해·보완에, 광고 느낌(모던+전통, Vivid+Chill)이면 프롬프트 작성 시 dominant 5% accent로 최대한 반영`하는 6줄로 교체. `target_model_profile`도 `DeepSeek → GLM 5.3 Flash vision+reasoning`으로 변경.
   * **색상 통일 프롬프트 수정**: `POST_AD_CREATIVE_PROMPT.ts:122,260` `Hard Constraints`와 `constraint`에 `Color unification: All ratios of the same creative MUST share the same dominant hue` 2곳 추가. `Creative 02(vivid)`처럼 비율마다 다른 hue가 흩어지는 것을 방지, `1:1`이 Red면 5개 전부 Red 계열로 통일하도록 강제.
-  * **유사성 문제 발견**: 동일 Creative 내에서 배경색/구도 배치가 미묘하게 달라지는 현상 확인. `Where` 돌담처럼 비율별 캡션이 달라 배경이 달라지는 것은 의도(같은 영혼, 다른 몸)이나, 색상까지 달라지면 캠페인 일관성이 깨진다는 피드백. 해결은 색상 통일이 1차, 이후 유사성 추가 검토 필요. **헤드라인 배치는 이 두 선행 이슈 해결 후 논의하기로 보류.**
-* **이전 세션 (2026-08-31) — 유효**: Bento `fr` 나눔, Where 동적 높이, How many 1×4 세로형 균등 분할, Brand 팔레트 `grid-cols-5` 시도 등은 그대로 유지. Realtime 전환, RPC `::text` 캐스팅, 버킷 진단, 프롬프트 영어 고정, gateway `postFormFetch` 등도 유지. `Brand Color` 3가지(잘림/피커 길이/Add 2단계)는 미해결, `ProjectDetail` 확대 기능은 구현했으나 버그로 동작 불량 상태.
+  * **유사성 문제 발견**: 동일 Creative 내에서 배경색/구도 배치가 미묘하게 달라지는 현상 확인. `Where` 돌담처럼 비율별 캡션이 달라 배경이 달라지는 것은 의도(같은 영혼, 다른 몸)이나, 색상까지 달라지면 캠페인 일관성이 깨진다는 피드백. 해결은 색상 통일이 1차, 이후 유사성 추가 검토 필요.
+* **이전 세션 (2026-08-31) — 유효**: Bento `fr` 나눔, Where 동적 높이, How many 1×4 세로형 균등 분할, Brand 팔레트 `grid-cols-5` 시도 등은 그대로 유지. Realtime 전환, RPC `::text` 캐스팅, 버킷 진단, 프롬프트 영어 고정, gateway `postFormFetch` 등도 유지.
 
 ---
 
 ## 2. 완수된 작업 (Completed Milestones)
 
+### 2-20. 폰트/I2I 지시 선행 반영 완료 (2026-09-01)
+* `FONT_FAMILY_LIST`/`lib/fonts.ts`에 광고용 Google Fonts 30~40개 추가 및 `fontMap` 등록, `POST_AD_CREATIVE_PROMPT`에 `available_fonts` 목록과 `fontFamily MUST be one of available_fonts` 제약 추가, Remotion 프리로드 확인. 원본 중시 문제는 `imagePromptRecord`에 `원본은 컷아웃으로 간주, 배경 100% 무시` 2줄 + `generation` 라우트에서 `INSTRUCTION: Use input ONLY as identity... SCENE: caption` 2단 래핑으로 해결. Bria 없이 프롬프트만으로 70% 해결, 잔여는 로컬 `rembg` 폴백으로 처리.
+
 ### 2-19. 이미지 이해(Vision) + 색상 통일 + 노트 분류 프롬프트 수정 (2026-09-01)
 * GLM Vision으로 원본 이미지 직접 전달, 노트 분류(상품 설명 vs 광고 느낌) 6줄 추가, 색상 통일 2곳 추가. `ad_creative_specs` 5개 비율 캡션이 동일 hue로 통일되도록 프롬프트 수정.
 
 ### 2-18. Create Bento 세부 + Brand 일부 + 확대 기능 추가 (2026-08-31, 일부 미완)
-* Bento `fr` 나눔, Where 동적 높이, How many 1×4 세로형 균등 분할, Pro 배지 인라인, 빈 원 제거, UploadZone 동일 높이, Brand 팔레트 X 우상단·HEX/RGB 두 줄·피커 전체폭 시도. 단 Brand 높이 체감 없음·피커 길이 미적용 등 잔여, 확대 기능은 구현했으나 버그로 동작 불량.
+* Bento `fr` 나눔, Where 동적 높이, How many 1×4 세로형 균등 분할, Pro 배지 인라인, 빈 원 제거, UploadZone 동일 높이, Brand 팔레트 X 우상단·HEX/RGB 두 줄·피커 전체폭 시도. 단 Brand 높이 체감 없음·피커 길이 미적용 등 잔여, 확대 기능은 ponytail 단순화로 해결 완료.
 
 ### 2-17. Create Bento 한 화면 + 업로드 팝오버 + Brand 그리드 시도 (2026-08-31, 일부 미해결)
 * 한 화면 Bento 구조 확정, 드롭존/업로드 표시 동일 높이, Where 한 줄 돌담 동적 높이, How many 2×2, Brand를 pill→팔레트 그리드로 교체 시도. 단 Brand 3가지(잘림/피커 길이/Add 2단계/높이 덜컥임)는 미해결로 남음.
@@ -49,31 +52,16 @@
 
 ## 3. 향후 작업 (Next Steps)
 
-### 🔴 선행 1. 폰트 시스템 고도화 (헤드라인 논의 전, 우선)
-* **목표**: Remotion에서 쓸 수 있는 폰트 목록을 주고 LLM이 적절한 걸 고르게 하며, 뱉는 값은 코드에서 바로 `fontMap[fontName]`으로 끌어올 수 있게 함.
-* **상세**:
-  1. `FONT_FAMILY_LIST.ts:9`가 현 서비스 지원 폰트 목록임. 비디오 특화라 광고 헤드라인용이 부족하므로, 웹 검색으로 광고에서 많이 쓰이는 Google Fonts를 30~40개로 큐레이션해 추가. 후보: `Barlow/Barlow Condensed/Fjalla One/Pathway Gothic One/PT Sans/Titillium Web/League Gothic` 등 + 기존 `Bebas Neue/Anton/Oswald` 유지. 100개는 과하고 30~40개가 빌드·LLM 선택 정확도 균형상 적절.
-  2. `lib/fonts.ts:1`에 `next/font/google`로 추가 폰트들을 `Inter`처럼 `weight`·`display:swap`으로 import하고 `fontMap`에 등록. `fontMap` 키는 LLM이 뱉을 정확한 문자열(예: `"Barlow Condensed"`)이어야 함.
-  3. `POST_AD_CREATIVE_PROMPT.ts`의 `input_data`에 `<available_fonts category="sans: Barlow, Barlow Condensed ... | serif: ... | display: ...">`를 넣고, `constraint`에 `fontFamily MUST be one of available_fonts, verbatim, case-sensitive`를 추가. LLM이 `available_fonts` 중 하나를 `copy`나 `design`과 함께 반환하면, 프론트/Remotion 모두 `fontMap[fontFamily].style.fontFamily`로 그대로 사용.
-  4. `POST_AD_IMAGE_ANALYSIS_PROMPT.ts`에서 Vision이 정하는 `design.headline.fontSizePct/align/maxWidth`와 함께 `fontFamily`도 함께 정하도록 스키마 확장 검토 (또는 Creative 단계에서 한 번에 정하고 Vision은 위치만 정하도록 유지 — 둘 중 결정 필요).
-  5. Remotion 프리로드 `loadAllPreviewFonts()`에 추가 폰트 포함 확인.
+### 🔴 신규 1. 저장 시 Creative 비율 이미지 즉시 업데이트 — 가능 여부 확인 필요
+* **요청**: 이미지가 저장될 경우 저장된 Creative의 비율 이미지를 바로 업데이트해주기 (예: 에디터에서 저장 시 해당 Creative의 특정 ratio 이미지를 즉시 갱신).
+* **가능 여부**: **가능**. `ad_creative_results[creativeIndex].imageResults[ratio].imageFileExtension` + Storage `ad_generation_result_{c}_{ratio}.{ext}`를 덮어쓰고 `update_creative_image_by_ratio_generation_completed` RPC(또는 `update_creative_image_analysis` 유사 RPC)로 `ad_creative_results`를 원자적으로 갱신하면, Realtime 채널(`ad-batch-${batchId}`)을 통해 `ProjectDetailPageClient`에 즉시 반영됨. `POST /api/ad/ad-generation-batches/[batchId]/creative/[creativeIndex]/image/[ratio]` 형태의 새 S2S 엔드포인트 + `multipart` 업로드 + `signedUrl` 재발급으로 구현. 낙관적 업데이트(Optimistic UI)도 가능. **구현 시 `p_error: null`로 성공 마킹 및 `updated_at` 갱신 필요.**
 
-### 🔴 선행 2. 원본 중시(I2I 지시) 해결 — 배경 있는 Product/Person을 그대로 I2I에 넣을 때, 최종 묘사만 뽑는 게 아니라 지시를 어떻게 넣을지 (우선, 비용 0)
-* **목표**: 배경이 있는 Product/Person 이미지를 그대로 I2I에 넣되, 최종 출력 이미지의 묘사(`imagePromptRecord`)만 뽑는 게 아니라 `배경은 무시하고 상품만 살려 새 배경을 깐다`는 지시가 함께 들어가도록 함. 섞인 이미지(예: 아이보리 신발 + 밝은 돌 바닥)처럼 저대비 최악 케이스에서도 상품이 물려받지 않게 함.
-* **상세 (프롬프트 조정으로 해결, 모델 추가 없이)**:
-  1. `POST_AD_CREATIVE_PROMPT.ts`에 `Hard Constraint`로 `원본 이미지는 투명 배경의 컷아웃 에셋으로 간주, 원본의 콘크리트·그림자·바닥·벽은 100% 무시, 새 배경은 imagePromptRecord가 새로 쓴 것만 그린다. 원본 배경 단어를 캡션에 재언급 금지. 제품 경계는 색이 아니라 형태·재질(끈·에어홀·솔기)로 판별, 아이보리/밝은 돌처럼 색이 비슷해도 경계를 뭉개지 말 것` 2줄 추가 — Nano Banana $0.039에 Bria $0.018(46% 인상)을 붙이지 않고 프롬프트만으로 70% 해결.
-  2. `app/api/ad/image/generation/{base:101,ratios:113}/route.ts`에서 `replicateClient.postAdImageEditPrediction({prompt: caption})` 호출 직전에 고정 프리픽스를 래핑: `prompt = "INSTRUCTION: Use the input image ONLY as a product/person identity reference. Completely ignore and remove its original background, floor, shadows and wall. Do NOT mention or preserve them. Recreate the product with pixel-perfect edges.\n\nSCENE: " + caption`. 지시는 코드에서 고정, 묘사는 LLM이 뽑은 `imagePromptRecord` 그대로. 이렇게 하면 원본이 배경 있는 채로 들어가도 지시가 덮어써 새 배경만 그림.
-  3. **비용 판단**: Bria는 Vercel Pro 5분 전제라도 함수 용량·콜드스타트·저대비 품질이 프롬프트보다 불리함. 최악(아이보리+밝은 돌) 비교 시 `rembg 컷아웃 → I2I`는 마스크가 잘리면 하드 오류(복구 불가), `원본+프롬프트 I2I`는 시맨틱으로 버텨 소프트 오류라 프롬프트가 유리. 따라서 `rembg`는 프롬프트로도 돌이 남는 5%에서만 로컬 `rembg`(`pip rembg` + `onnxruntime`, 과금 0, Vercel에선 Fly.io 컨테이너로 분리)로 폴백하는 2단계로 둠. Vercel Serverless에서 직접 `rembg`를 돌리는 건 5분이라도 모델 80MB로 비추.
-  4. 프롬프트 2줄 추가 후, 사장이 준 흰 신발 섞인 이미지로 C01/C02 재생성 테스트해 배경 물림이 사라졌는지 확인. 헤드라인 배치는 이 두 선행이 정리된 뒤에 논의.
+### 🔴 신규 2. 폰트 추천 현황 확인
+* **요청**: `available_fonts` 30~40개 추가 후 LLM이 폰트 추천을 어떻게 하고 있는지 확인하기.
+* **확인 방법**: `POST_AD_CREATIVE_PROMPT`에 `available_fonts` 목록과 `fontFamily MUST be one of available_fonts` 제약을 넣은 뒤, 실제 배치 생성 로그(`POST_AD_CREATIVE_PROMPT`의 `reasoning`/`ratio_reasonings` + `llmServerAPI`의 `raw LLM output` 4000자 로그)에서 `copy.fontFamily`가 목록 내에서 적절히 선택되는지, `sans/serif/display` 카테고리 가이드대로 Headline 톤에 맞는 폰트를 고르는지 검증. 필요 시 `fontMap` 미등록 폰트가 나오면 fallback(`Inter`)으로 교정.
 
-### 🔴 유사성 문제 해결 (신규)
-* 동일 Creative 내 5개 비율의 배경색/구도 배치가 미묘하게 달라지는 현상 — 색상은 이번에 프롬프트 `Color unification`으로 통일했으나, **유사성(배경 톤/질감/조명 일관성)이 충분한지 추가 검증 필요**. 필요 시 `seed` 고정 강화, `imagePromptRecord`의 배경 서술을 더 엄격히 통일하거나, `vision` 분석 단계에서 유사도 체크 추가 검토.
-
-### 🔴 확대 기능 버그 (우선)
-* `ProjectDetailPageClient.tsx` + `AdLightboxModal.tsx` + `FormatTile.tsx` 확대 버튼·모달이 정상 동작하지 않음 — 원인 진단 및 수정 필요 (Hydration 또는 상태 전달 문제 추정).
-
-### 🔴 Brand Color 미해결 (우선)
-* 팔레트 아이템 X 우상단, HEX/RGB 두 줄, 피커 전체폭은 시도했으나 체감 없음·여전히 Add 2단계 어색함 등 잔여. 높이 덜컥임은 `min-h-[16px]`로 임시 고정.
+### 🔴 유사성 문제 해결
+* 동일 Creative 내 5개 비율의 배경색/구도 배치가 미묘하게 달라지는 현상 — 색상은 프롬프트 `Color unification`으로 통일했으나, **유사성(배경 톤/질감/조명 일관성)이 충분한지 추가 검증 필요**. 필요 시 `seed` 고정 강화, `imagePromptRecord`의 배경 서술을 더 엄격히 통일하거나, `vision` 분석 단계에서 유사도 체크 추가 검토.
 
 ### 🔴 ad 파이프라인 잔여 (UI 전)
 * **버킷 생성 확인** — `ad_image_storage` (private) 대시보드 또는 `insert into storage.buckets` 로 생성 후 `docker compose restart short-real-server` 로 PostgREST 리프레시. 이후 `product/person` 업로드 `Bucket not found` 해소 후 `prompt → generation → analysis` 종단 테스트 재시도.
@@ -85,7 +73,7 @@
 3. **Projects 리스트 썸네일 고도화** — 현재 카드가 상태 시각화만, 실제 결과 1장 썸네일은 상세에서만 보임. 리스트 API에 썸네일 1장 signed URL을 포함하는 최적화는 v2.
 
 ### 🟡 대기
-* CreateForm 최종 UI 확인(0스크롤·반응형·라이트/다크) — 사장 확인 대기 (Brand 팔레트 재작업 후 재확인 필요)
+* CreateForm 최종 UI 확인(0스크롤·반응형·라이트/다크) — 사장 확인 대기
 * 요금 표시 방식(달러 vs 잔여 장수) 미결정
 * Remotion 폴더 구조 정리 (미완료)
 * 랜딩 CTA `/ad/create` 미연결, 액센트 색 불일치(#EF2B70 vs #E25E2C), ESLint 순환참조(tsc 대체 운용), 결과 화면 에디터 진입 버튼
@@ -109,7 +97,7 @@
 * **LLM**: Creative 디렉터 `GLM_5_3_FLASH`(vision, `imagePromptRecord`+`copy`+`reasoning`, 영어 고정, 이미지 우선) + 노트 분류(상품 설명은 이미지 보완, 광고 느낌은 캡션에 반영) + 색상 통일(동일 hue), Vision 분석 `GLM_5_3_FLASH`(멀티모달, 정수% 0-100, 3분기 Product/Person/Both, `brand_palette` 조건부, 영어 고정) — `llmServerAPI.ts` `postAdCreativePrompt`/`postAdImageAnalysis` + 원문 로그, 프롬프트는 `POST_AD_{CREATIVE,IMAGE_ANALYSIS}_PROMPT.ts` 엘리트 250-320줄, `constraint`에 `ALL output text MUST be English only` 명시.
 * **용어 계약 (확정)**: creatives × formats = assets, 실행 1회 = batch. 유저 노출은 Project(페이지/URL/텍스트), 서버/DB/내부 코드는 batch.
 * **시드 규칙**: creative별 서로 다른 seed / 같은 creative 내 비율 = 같은 seed. 재현은 저장된 specs(DB)가 담당.
-* **사장 UI 원칙**: px 하드코딩 금지(rem/vh/vw/%/fr), 광고 바닥 언어, 0스크롤 선호. Bento 12col (`Subjects 8 | How many+CTA 4 / Where 8 | Brand 4`), `Where` 돌담은 `ResizeObserver`로 `H=(W-32)/4.806` 실측 5개 1행·가로 중앙, 섹션 높이는 내용 높이대로. `optional` 배지로 즉시 인지. 현재 Brand는 5칸 팔레트 그리드로 교체 시도 중이며, 유사성(색상 통일) 프롬프트 수정 완료.
+* **사장 UI 원칙**: px 하드코딩 금지(rem/vh/vw/%/fr), 광고 바닥 언어, 0스크롤 선호. Bento 12col (`Subjects 8 | How many+CTA 4 / Where 8 | Brand 4`), `Where` 돌담은 `ResizeObserver`로 `H=(W-32)/4.806` 실측 5개 1행·가로 중앙, 섹션 높이는 내용 높이대로. `optional` 배지로 즉시 인지.
 * **ad_variation_study.md**: §1·§2·§6 이미 최신(`imagePromptRecord`, `brand_palette`, HARD_BANNED 8개, fail-soft, n=1 재시도) — 색상 통일 추가 갱신 완료, 유사성 추가 검토 필요.
 * **supabase 파일**: `supabase/ad_generation_batches.sql` 삭제 — SQL은 직접 전달. `brand_palette` 컬럼, B안, `p_file_extension`+`p_error`는 사장이 직접 실행 완료. 버킷 `ad_image_storage` 생성 대기, `.next` 캐시로 인한 Vercel TS2306은 빈 `ad-generation-batch` 폴더 삭제로 해소.
 * Remotion 4.0.507: `<OffthreadVideo>` + `colorSpace: 'bt709'`, 저사양 `concurrency: 1`.

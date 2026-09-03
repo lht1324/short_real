@@ -1,6 +1,6 @@
 'use client'
 
-import { memo, useCallback, useEffect, useRef, useState } from 'react';
+import { memo, useCallback, useEffect } from 'react';
 import Image from 'next/image';
 import { X, Download } from 'lucide-react';
 import AdOverlay from "@/components/page/ad/results/components/AdOverlay";
@@ -17,24 +17,6 @@ interface AdLightboxModalProps {
 }
 
 function AdLightboxModal({ imageUrl, ratioLabel, creativeIndex, design, score, headline, onClose }: AdLightboxModalProps) {
-    const headerRef = useRef<HTMLDivElement>(null);
-    const [headerHeight, setHeaderHeight] = useState(0);
-    const screenHeight = window.screen.height;
-
-    useEffect(() => {
-        const el = headerRef.current;
-        if (!el) return;
-        const ro = new ResizeObserver(() => setHeaderHeight(Math.round(el.getBoundingClientRect().height)));
-        ro.observe(el);
-        setHeaderHeight(Math.round(el.getBoundingClientRect().height));
-        return () => ro.disconnect();
-    }, []);
-
-    // 디버그용: 콘솔에 헤더 높이 출력 (사장님이 직접 보실 수 있게)
-    useEffect(() => {
-        if (headerHeight) console.log(`[AdLightboxModal] header height: ${headerHeight}px`);
-    }, [headerHeight]);
-
     const onClickBackdrop = useCallback((e: React.MouseEvent) => {
         if (e.target === e.currentTarget) onClose();
     }, [onClose]);
@@ -54,9 +36,9 @@ function AdLightboxModal({ imageUrl, ratioLabel, creativeIndex, design, score, h
             role="dialog"
             aria-modal="true"
         >
-            <div className="flex max-h-[90vh] w-full max-w-[90vh] flex-col overflow-hidden rounded-2xl bg-surface shadow-2xl">
-                <div ref={headerRef} className="flex items-center justify-between gap-4 border-b border-hairline px-5 py-3">
-                    <div>
+            <div className="flex max-h-[90vh] w-fit max-w-[90vw] flex-col overflow-hidden rounded-2xl bg-surface shadow-2xl">
+                <div className="flex shrink-0 items-center justify-between gap-4 border-b border-hairline px-5 py-3">
+                    <div className="min-w-0">
                         <p className="text-[13px] font-semibold text-text1">
                             Creative {String(creativeIndex + 1).padStart(2, '0')} · {ratioLabel}
                         </p>
@@ -68,7 +50,7 @@ function AdLightboxModal({ imageUrl, ratioLabel, creativeIndex, design, score, h
                             </p>
                         )}
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex shrink-0 items-center gap-2">
                         <a
                             href={imageUrl}
                             download={`shortreal-creative-${creativeIndex + 1}-${ratioLabel}.png`}
@@ -88,44 +70,19 @@ function AdLightboxModal({ imageUrl, ratioLabel, creativeIndex, design, score, h
                     </div>
                 </div>
 
-                <div className="flex flex-1 items-center justify-center overflow-auto bg-canvas p-4">
-                    {(() => {
-                        const [w, h] = ratioLabel.split(':').map(Number);
-                        const isVertical = w <= h;
-                        const maxWidth = screenHeight * 0.9 - 16; // 'calc(90vh - 16px)';
-                        const maxHeight = screenHeight * 0.9 - headerHeight - 16; // `calc(90vh - ${headerHeight}px - 16px)`;
-                        const width = isVertical ? maxHeight / h * w : maxWidth;
-                        const height = isVertical ? maxHeight : maxWidth / w * h;
-
-                        return (
-                            <div
-                                className="relative overflow-hidden rounded-xl shadow-2xl"
-                                style={{
-                                    aspectRatio: `${w} / ${h}`,
-                                    // width: `min(90vw, calc(85vh * ${w} / ${h}))`,
-                                    // height: `min(85vh, calc(90vw * ${h} / ${w}))`,
-                                    // width: isVertical ? maxHeight / h * w : maxWidth,
-                                    // height: isVertical ? maxHeight : maxWidth / w * h,
-                                    // maxWidth: maxWidth,
-                                    // maxHeight: maxHeight,
-                                    width: `${width}px`,
-                                    height: `${height}px`,
-                                    maxWidth: `${maxWidth}px`,
-                                    maxHeight: `${maxHeight}px`,
-                                } as React.CSSProperties}
-                            >
-                                <Image
-                                    src={imageUrl}
-                                    alt={`Creative ${creativeIndex + 1} · ${ratioLabel}`}
-                                    className={`object-cover max-w-[${maxWidth}px] max-h-[${maxHeight}px]`}
-                                    width={width}
-                                    height={height}
-                                    unoptimized={false}
-                                />
-                                {design && <AdOverlay design={design} />}
-                            </div>
-                        );
-                    })()}
+                <div className="flex flex-1 items-center justify-center overflow-hidden bg-canvas p-4 min-h-0">
+                    <div className="relative w-fit max-w-full">
+                        <Image
+                            src={imageUrl}
+                            alt={`Creative ${creativeIndex + 1} · ${ratioLabel}`}
+                            width={1200}
+                            height={1200}
+                            unoptimized
+                            className="h-auto max-h-[75vh] w-auto max-w-[90vw] rounded-xl object-contain sm:max-w-[80vw]"
+                            style={{ width: 'auto', height: 'auto' }}
+                        />
+                        {design && <AdOverlay design={design} />}
+                    </div>
                 </div>
             </div>
         </div>

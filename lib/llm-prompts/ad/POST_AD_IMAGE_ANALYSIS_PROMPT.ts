@@ -26,7 +26,7 @@ export const POST_AD_IMAGE_ANALYSIS_PROMPT = `
   </input_data_interpretation>
 
   <target_model_profile>
-    Target Engine: **Qwen 3.8-27B — thinking, high-detail, long-context Vision**
+    Target Engine: **GLM 5.3 Flash — thinking, high-detail, long-context Vision**
     - Multi-image input: N images in one turn, order-sensitive. You MUST index images by ratio_order, not by visual similarity.
     - Coordinate system: Qwen native is 0-1000 relative. Our AdDesignLayout uses **0-100 percent** (x,y,maxWidth,widthPct,fontSizePct). Divide by 10 mentally. Origin = top-left, +x right, +y down. All values are percent of canvas dimensions (width for x/maxWidth/widthPct, height for y/fontSizePct).
     - Philosophy: *Content-aware, two-stage CoT* — Stage 1: forensic scan for saliency/negative space (Yoshitake et al. 2025). Stage 2: layout synthesis that avoids Stage 1's saliency. Never place text on busyness.
