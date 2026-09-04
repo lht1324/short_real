@@ -1,15 +1,21 @@
-# 작업 진행 상황 (Last Updated: 2026-09-04 04:10)
+# 작업 진행 상황 (Last Updated: 2026-09-05 00:15)
 
 ## 1. 현재 상황 (Current Status)
 
-### 🎯 현 단계: 폰트·유사성·썸네일·채널·Creative 상태 정리 완료 — 대기 상태 (2026-09-04)
-* **직전 구현 (2026-09-03~04, tsc 클린)**
-  * **Realtime 채널 수정**: `ProjectDetailPageClient.tsx:54` 세션 없이 구독하던 `Detail`을 `supabase.auth.getUser()` 후 구독 + `Math.random` suffix로 수정, 끊김 대비 4초 폴링 안전망 추가. `ProjectsPageClient.tsx:60`도 `UPDATE` 시 썸네일 최고점 갱신을 위해 `fetchProjects(true)`로 재조회.
-  * **폰트 3축 검증·확장**: `FontFamilyList.ts:69` 전체 69개 vs `lib/fonts.ts:205` `fontMap` 25개 불일치 확인 → `fontMap` 34개로 확장(Anton/Archivo Black/Bebas Neue/Staatliches/Teko/Paytone One/Syne/Unbounded/Fredoka 추가). `llmServerAPI.ts:55` `available_fonts`를 `sans:22 | serif:3 | display:9` 그룹 문자열로 교체. `POST_AD_CREATIVE_PROMPT.ts:30` 카테고리 시맨틱 및 `Font Selection Protocol`에 `fontWeight/headlineColor` 규칙 추가, `prompt/route.ts:118` `fontFamily/fontWeight/headlineColor` 3종 fallback(`Inter/400/white`) 추가. 렌더는 `CreativeRow.tsx:34` 헤더·푸터에 `fontFamily/Weight` 인라인 + `FormatTile.tsx:125` `AdOverlay.tsx:32`에 `white/black` 2택 색·`fontFamily/Weight` 전달.
-  * **유사성(배경) 통일**: `POST_AD_CREATIVE_PROMPT.ts:109` Sentence Architecture를 2단으로 고정 — `Product anchor(동일 포즈)` + `Background+Lighting(5장 동일 문구)` + `Composition(비율별만 다름)`. `Hard Constraints`에 `Background+Lighting unification` 및 `Product pose identical` 2줄 추가, `constraint`·`Quality Gate`에도 동일성 체크 추가. `seed`는 동일 creative 공통이라 원인 아니고 프롬프트 분절이 원인이었음.
-  * **썸네일 v2**: `app/api/ad/ad-generation-batches/route.ts:38` 리스트에서 `score` 최고 1장(`score` 없으면 첫 완료 1장)을 골라 `thumbnailSignedUrls`+`thumbnailRatioKeys` 2맵 발급. `ProjectCard.tsx:60` 커버를 `object-cover` 유지하되 `thumbnailRatio` 세로(9_16/4_5/2_3)는 `object-position: top center`로 제품 보존. `ProjectsPageClient.tsx:27`에서 맵 병합, `UPDATE` 시 재조회로 최고점 갱신 시 커버 교체. 없을 땐 기존 스켈레톤 유지.
-  * **Creative 상태 세분화**: `CreativeRow.tsx:50` `designing` 카운트 추가 — `imageFileExtension` 있음 + `score null`이면 `Designing`. `statusLabel`에 `Designing` 분기, `getBatchProgress:104`도 `score != null`만 `completed`로 카운트해 Batch `Designing`과 일치. 이미지는 떴지만 `analysis` 전엔 `Designing`으로 같이 돔.
-  * **파이프라인 잔여 정리**: `ad_image_storage` 버킷 생성 확인됨(업로드·signedUrl 정상). `app/ad/create/results/page.tsx` 폴더 삭제(리다이렉트 불필요).
+### 🎯 현 단계: 확대 모달 폰트 비율 불일치 원인 규명 완료 — 다른 PC에서 텍스트만 수정 예정 (2026-09-05)
+* **직전 논의 (2026-09-05, 수정 전 — 다른 PC에서 진행하기로 결정, 이미지 박스는 건드리지 않음)**
+  * **증상**: `ProjectDetailPageClient.tsx` 타일(FormatTile)에서 보는 헤드라인과 `AdLightboxModal.tsx` 확대 모달에서 보는 헤드라인의 **이미지 대비 글자 비율**이 다름. 단순 확대 스케일이 아니라 비율 자체가 다름. 사장 캡처: `Creative 02 · 9:16 · "White Never Looked This Loud"` — 타일에선 상단 60~80% 폭을 쓰며 크게 보이는데, 모달에선 같은 디자인이 40~50% 폭으로 확연히 작게 보임.
+  * **스키마 확인**: `lib/api/types/supabase/ad/AdGenerationBatch.ts:70` `AdCopySpec{headline,cta,fontFamily?,fontWeight?,headlineColor?}` (prompt가 채움, 34개 중 verbatim, weightList 내, white/black 2택) vs `lib/api/client/ad/adClientAPI.ts:80` `AdDesignLayout{headline:{text,x,y,maxWidth,align,fontSizePct,color?},cta:{text,x,y,widthPct,fontSizePct},logo,scrim}` (analysis가 채움, `x/y/maxWidth/widthPct/fontSizePct` 정수 0~100%, `fontSizePct` 2~6). 크기는 `fontSizePct`, 위치는 `x/y/maxWidth/align`, 색/두께는 `copy.headlineColor/fontWeight` (+ `design.headline.color`는 구형 중복). `weight/color` 추가는 전 작업 `2-21/2-22` 맞음.
+  * **원인 규명**: `AdOverlay.tsx:13` `fontSize = width * fontSizePct /100` (`offsetWidth`를 ResizeObserver로 재서) — Vision 스펙 `POST_AD_IMAGE_ANALYSIS_PROMPT.ts:73`은 `fontSizePct = percent of canvas HEIGHT`라 지시하는데 렌더는 `width`로 계산. `9:16` `h1920 w1080`에서 `pct4`면 의도 `76px` vs 실제 `43px`로 44% 작게 찍히는 식으로 비율마다 오차 다름. 타일 `FormatTile.tsx:133` `height: min(18rem,34vw) + aspectRatio:factor` `Image fill object-cover` (이미지=컨테이너) vs 모달 `AdLightboxModal.tsx:76` `w-fit + Image width={1200} height={1200} w-auto h-auto max-h-[75vh] max-w-[90vw] object-contain` (정방 placeholder에 9:16 소스를 contain → `w-fit` 박스가 이미지보다 크게 잡히고 `absolute inset-0` 오버레이가 박스 전체를 덮음)라 `W_tile`과 `W_modal`이 다른 값으로 잡혀 같은 `pct`여도 이미지 대비 비율이 어긋남. 추가로 `FormatTile.tsx:125`는 `design.headline.color ?? copy.headlineColor`인데 `ProjectDetailPageClient.tsx:363` 모달은 무조건 `copy.headlineColor`라 색 대비 착시도 있음.
+  * **글씨 결정 주체 질문**: 현재는 **나눠져 있고 그게 맞음** — prompt(CD)가 `fontFamily/문구` (캠페인 정체성, 5개 비율 동일해야 함, `layout_tone`→`serif/sans/display` + `seed%N`), analysis(Vision)가 `x/y/maxWidth/align/fontSizePct/scrim` (이미지 보고 난 뒤 배치, 비율별 달라야 함). 어긋난 경계는 `headlineColor/fontWeight` — prompt가 creative당 1회 박는데 Vision이 배경 휘도 보고 비율별로 바꿔야 함. 권장 분담: prompt=`fontFamily+문구`, analysis=`fontSizePct/x/y/maxWidth/align/scrim/headlineColor(비율별)/fontWeight(비율별 오버라이드)`. `AdCopySpec`은 fallback으로만.
+  * **ponytail 텍스트만 수정안 (이미지 박스 untouched)**: `ponytail:full` — 이미지 박스 고치지 않고 `AdOverlay.tsx`에서 `height`도 같이 재서 `fontSize = (h || width) * pct /100`으로 바꾸면 `H`가 타일(`min(18rem,34vw)`)과 모달(`max-h-[75vh]`) 모두 정확히 잡혀 타일=모달 비율이 일치 (예: 타일 `H288*0.04=11.5px`, 모달 `H600*0.04=24px` → 둘 다 높이 대비 4%). 색도 `ProjectDetailPageClient.tsx:363`을 `design.headline.color ?? copy.headlineColor`로 한 줄. `skipped: 이미지 박스를 aspectRatio로 고정하는 구조 수정, add when 텍스트만으로 미세 오차가 남을 때`. 사장 결정: 다른 PC에서 진행.
+* **이전 직전 구현 (2026-09-03~04, tsc 클린)**
+  * **Realtime 채널 수정**: `ProjectDetailPageClient.tsx:54` `supabase.auth.getUser()` 후 구독 + `Math.random` suffix, 4초 폴링 안전망. `ProjectsPageClient.tsx:60` `UPDATE` 시 `fetchProjects(true)`로 썸네일 최고점 갱신.
+  * **폰트 3축 검증·확장**: `FontFamilyList.ts:69` 69개 vs `lib/fonts.ts:205` 25개 불일치 → `fontMap` 34개로 확장(Anton/Archivo Black/Bebas Neue/Staatliches/Teko/Paytone One/Syne/Unbounded/Fredoka 추가). `llmServerAPI.ts:55` `available_fonts` `sans:22|serif:3|display:9` 그룹 문자열. `POST_AD_CREATIVE_PROMPT.ts:30` 카테고리 시맨틱 및 `Font Selection Protocol`에 `fontWeight/headlineColor` 규칙, `prompt/route.ts:118` 3종 fallback(`Inter/400/white`). 렌더 `CreativeRow.tsx:34` 헤더·푸터 `fontFamily/Weight` 인라인 + `FormatTile.tsx:125` `AdOverlay.tsx:32` `white/black` 2택.
+  * **유사성(배경) 통일**: `POST_AD_CREATIVE_PROMPT.ts:109` Sentence Architecture 2단 고정 — `Product anchor(동일 포즈)` + `Background+Lighting(5장 동일 문구)` + `Composition(비율별만 다름)`. `Hard Constraints`에 `Background+Lighting unification` 및 `Product pose identical` 2줄, `constraint`·`Quality Gate`에도 동일성 체크. `seed` 동일 creative 공통이라 원인 아님.
+  * **썸네일 v2**: `app/api/ad/ad-generation-batches/route.ts:38` `score` 최고 1장(`score` 없으면 첫 완료 1장) `thumbnailSignedUrls`+`thumbnailRatioKeys` 2맵 발급. `ProjectCard.tsx:60` `object-cover` + 세로(9_16/4_5/2_3) `object-position: top center`. `ProjectsPageClient.tsx:27` 맵 병합, `UPDATE` 시 재조회.
+  * **Creative 상태 세분화**: `CreativeRow.tsx:50` `designing` 카운트 — `imageFileExtension` 있음 + `score null`이면 `Designing`. `getBatchProgress:104`도 `score != null`만 `completed`.
+  * **파이프라인 잔여 정리**: `ad_image_storage` 버킷 생성 확인됨. `app/ad/create/results/page.tsx` 폴더 삭제.
 * **이전 세션 (2026-09-01) — 유효**: GLM Vision 이미지 이해, 노트 분류 6줄, 색상 통일 2곳, Bento `fr` 나눔, Where 돌담, How many 1×4, Brand 팔레트, RPC `::text` 캐스팅, 영어 고정, gateway 등은 유지.
 
 ---
@@ -63,6 +69,17 @@
 
 ## 3. 향후 작업 (Next Steps)
 
+### 🔴 확대 모달 폰트 비율 불일치 — 텍스트만 수정 (다른 PC에서 진행, 이미지 박스 untouched) — ponytail
+* **증상**: `Creative 02 · 9:16 · "White Never Looked This Loud"` 타일 vs 모달 캡처에서 모달 글씨가 확연히 작음. 같은 `design`인데 이미지 대비 비율이 다름.
+* **원인**: `AdOverlay.tsx:13` `width` 단일 기준 + 모달 `AdLightboxModal.tsx:76` `w-fit + width={1200} height={1200} object-contain` 박스가 타일 `FormatTile.tsx:133` `aspectRatio:factor` 고정 박스와 다른 `W`로 잡힘. + 모달 색이 `copy.headlineColor`만 써서 `design.headline.color`와 불일치.
+* **ponytail 수정안 (이미지 박스 안 건드림)**:
+  1. `AdOverlay.tsx:12` `const [h,setH]=useState(0)` 추가, `ResizeObserver`에서 `setH(el.offsetHeight)` 같이 잼, `fontSize: (h||width)*pct/100`로 변경 — Vision 스펙 `HEIGHT` 기준대로 타일=모달 모두 높이 대비 동일 비율로 복구.
+  2. `ProjectDetailPageClient.tsx:363` 모달 호출부를 `design.headline.color ?? copy.headlineColor`로 한 줄 수정 (FormatTile과 동일).
+* **미룸**: 이미지 박스를 `aspectRatio:factor`로 고정하는 구조 수정은 `skipped, add when 텍스트만으로 미세 오차가 남을 때`.
+
+### 🔴 폰트 결정 주체 이관 (2단계)
+* prompt=`fontFamily+문구` (정체성, 5개 비율 동일), analysis=`fontSizePct/x/y/maxWidth/align/scrim/headlineColor(비율별)/fontWeight(비율별)` (배치, 비율별). `POST_AD_IMAGE_ANALYSIS_PROMPT.ts:171` 출력에 `color` 추가, 렌더 우선순위 `design.headline.color ?? copy.headlineColor`로 이관. 1번 수정 후 별도 진행.
+
 ### 🔴 다음 (UI)
 1. **Create 한 화면 미세 조정** — 완료 처리(이미 함).
 2. **과금 확정** — 대기 (`success only` 문구 교체 완료, 실제 Polar 차감은 성공 에셋 수 기준으로 이전 필요 — 현재 `totalImages` 선차감).
@@ -92,6 +109,7 @@
 * **AdCreativeSpec**: `imagePromptRecord: Partial<Record<AdRatioKey,string>>` (B안), `seed: number` — 프롬프트 단계가 채움. `brand_palette`는 배치 생성 시 3-5 hex or null.
 * **AdCopySpec**: `headline: string | null, cta: string | null, fontFamily?: string | null (34개 중 하나), fontWeight?: number | null (해당 폰트 weightList 내), headlineColor?: 'white'|'black' | null` — prompt 단계가 채우고 `fontMap` 미등록 시 `Inter/400/white`로 교정.
 * **AdCreativeResult**: `creativeIndex: number, copy: AdCopySpec, imageResults: Partial<Record<AdRatioKey, AdImageResult>>` — Creative 단위 1:1 대응. Creative 상태는 `imageFileExtension`만 있으면 `Designing`, `score`까지 있어야 `Completed`.
+* **AdDesignLayout**: `headline:{text,x,y,maxWidth,align,fontSizePct,color?} | null, cta:{text,x,y,widthPct,fontSizePct}|null, logo:{brand,x,y,widthPct,fontSizePct}|null, scrim:boolean` — `x/y/maxWidth/widthPct/fontSizePct` 정수 0~100%, `fontSizePct` 2~6은 Vision 스펙상 `HEIGHT` 기준이나 현 렌더는 `width`로 계산 중 → 모달/타일 불일치 원인. `headline.color`는 analysis가 비율별로 정해야 하나 현 모달은 `copy.headlineColor`만 사용 중.
 * **LLM**: Creative 디렉터 `GLM_5_3_FLASH`(vision, `imagePromptRecord`+`copy`+`reasoning`, 영어 고정, 이미지 우선) + 노트 분류 + 색상 통일(동일 hue) + 배경·조명 통일(5장 동일 문구, 구도만 비율별) + 폰트 34개 그룹화(`sans:22|serif:3|display:9`) 및 `fontWeight/headlineColor` 제약, Vision 분석 `GLM_5_3_FLASH`(멀티모달, 정수% 0-100, `brand_palette` 조건부, 영어 고정) — `llmServerAPI.ts` `postAdCreativePrompt`/`postAdImageAnalysis` + 원문 로그, 프롬프트는 `POST_AD_{CREATIVE,IMAGE_ANALYSIS}_PROMPT.ts` 엘리트 250-320줄, `constraint`에 `ALL output text MUST be English only` 명시.
 * **썸네일**: 리스트 `GET /api/ad/ad-generation-batches`에서 `score` 최고 1장(없으면 첫 완료 1장)의 `thumbnailSignedUrls[batchId]` + `thumbnailRatioKeys[batchId]`를 발급, 카드 `4:3`에 `object-cover` + 세로 비율은 `object-position: top center`로 제품 보존. 없을 땐 스켈레톤.
 * **용어 계약 (확정)**: creatives × formats = assets, 실행 1회 = batch. 유저 노출은 Project(페이지/URL/텍스트), 서버/DB/내부 코드는 batch.
