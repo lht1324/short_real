@@ -20,9 +20,10 @@ export const POST_AD_IMAGE_ANALYSIS_PROMPT = `
     - <creative_spec>: {camera, lighting, palette, framing, layout_tone} — the same 5 axes used to brief the generator (POST_AD_CREATIVE_PROMPT Unit 1). Use them to infer INTENT: e.g. minimal_modern demands 55%+ negative space to be honored, bold_impact tolerates 15% margins, left_of_frame already reserved right 60% for copy.
     - <aspect_ratios>: AdRatioKey[] — the set requested
     - <ratio_order>: AdRatioKey[] — exact order matching attached images. Image[0] = ratio_order[0], Image[1] = ratio_order[1], etc. MISMATCH = SHIP FAILURE.
-    - <copy>: {headline, cta} — overlay text to place. Text IS NEVER INSIDE THE IMAGE. You are placing its ghost. headline may be 3-8 words, cta may be null (cta_enabled=false). If cta is null, cta geometry MUST be null.
-    - <brand_palette>: string[] | null — 3-5 hex or null. Nullable, conditional. If present, palette adherence in scoring (Unit 3) must check against these hex, not just the 7-way keyword.
-    The images are the generated ad backgrounds with product/person already composited via I2I (NANO_BANANA). Input is ONE of three subject grammars — Product-only, Person-only, or Product+Person both — and you must branch your forensic scan accordingly (see Unit 1). Your job is NOT to judge the prompt — it is to judge the RENDER.
+     - <copy>: {headline, cta} — overlay text to place. Text IS NEVER INSIDE THE IMAGE. You are placing its ghost. headline may be 3-8 words, cta may be null (cta_enabled=false). If cta is null, cta geometry MUST be null.
+     - <brand_palette>: string[] | null — 3-5 hex or null. Nullable, conditional. If present, palette adherence in scoring (Unit 3) must check against these hex, not just the 7-way keyword.
+     - <brand_logo>: boolean — true if brand logo image is attached as last Base64 after the N ratio images. If true, you must place logo (Unit 2) — do not leave null unless no clean corner exists. If false, logo MUST be null.
+     The images are the generated ad backgrounds with product/person already composited via I2I (NANO_BANANA). Input is ONE of three subject grammars — Product-only, Person-only, or Product+Person both — and you must branch your forensic scan accordingly (see Unit 1). The last image (if brand_logo==true) is the brand logo reference (transparent PNG) — use it only to judge light/dark contrast for placement, do not score it. Your job is NOT to judge the prompt — it is to judge the RENDER.
   </input_data_interpretation>
 
   <target_model_profile>
@@ -78,7 +79,7 @@ export const POST_AD_IMAGE_ANALYSIS_PROMPT = `
         * null iff copy.cta is null. If cta exists, widthPct 18-32 (pill button), fontSizePct 2-3, y must be ≥ headline y + 8 (vertical rhythm), x aligned to headline's align edge. All integers.
         * NEVER invent CTA text — echo copy.cta exactly.
       - logo: {brand: string ("ShortReal" placeholder), x: integer, y: integer, widthPct: integer, fontSizePct: integer} | null
-        * Always null in v1 — we do not infer brand logos. Set null unless image clearly has a logo zone that demands it (corner 5 with 10 width, 2 from edge). Prefer null.
+        * If brand_logo==false → MUST be null. If brand_logo==true → place logo at a clean corner (prefer 4,4 or 84,4 or 4,88) with widthPct 10-14, fontSizePct 2, never overlap forbiddenZone >5%, ensure luminance contrast ≥4.5:1 against that corner's background (dark logo on light void, light logo on dark void). If no clean corner exists, keep null and note in ratio_reasonings why, dock score -0.3.
       - scrim: boolean — true if ANY text zone's busyScore >=6 or luminance contrast <4.5:1 or candidateRect overlaps luminance variance >25. Scrim = 12-18 black gradient behind text (rendered by frontend Remotion, you just flag). If scrim false but text sits on mid-tone, score -1.5.
 
       Placement Logic (per image):

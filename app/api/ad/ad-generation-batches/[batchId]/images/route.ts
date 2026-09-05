@@ -65,6 +65,7 @@ export async function POST(
         const formData = await request.formData();
         const productFile = formData.get("product") as File | null;
         const personFile = formData.get("person") as File | null;
+        const brandLogoFile = formData.get("brand_logo") as File | null;
 
         if (!productFile && !personFile) {
             return getNextBaseResponse({
@@ -80,6 +81,7 @@ export async function POST(
         for (const [key, file] of [
             ["product", productFile],
             ["person", personFile],
+            ["brand_logo", brandLogoFile],
         ] as const) {
             if (!file || !(file instanceof File) || file.size === 0) continue;
 

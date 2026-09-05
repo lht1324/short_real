@@ -35,8 +35,10 @@ function rgbToHex(r: number, g: number, b: number): string {
 interface CreateFormProps {
     product: AdUploadedComponent | null;
     person: AdUploadedComponent | null;
+    brandLogo: AdUploadedComponent | null;
     onProductChange: (file: AdUploadedComponent | null) => void;
     onPersonChange: (file: AdUploadedComponent | null) => void;
+    onBrandLogoChange: (file: AdUploadedComponent | null) => void;
     aspectRatios: AdAspectRatio[];
     conceptCount: number;
     ctaEnabled: boolean;
@@ -50,8 +52,10 @@ interface CreateFormProps {
 function CreateForm({
     product,
     person,
+    brandLogo,
     onProductChange,
     onPersonChange,
+    onBrandLogoChange,
     aspectRatios,
     conceptCount,
     ctaEnabled,
@@ -155,7 +159,7 @@ function CreateForm({
                         </span>
                     </div>
 
-                    <div className="grid flex-1 gap-3 sm:grid-cols-2 sm:items-stretch min-h-0">
+                    <div className="grid flex-1 gap-3 sm:grid-cols-3 sm:items-stretch min-h-0">
                         <div className="flex flex-col flex-1 min-h-0">
                             <UploadZone
                                 label="Product"
@@ -175,6 +179,16 @@ function CreateForm({
                                 notePlaceholder="e.g. Keep the natural expression"
                                 file={person}
                                 onChange={onPersonChange}
+                            />
+                        </div>
+
+                        <div className="flex flex-col flex-1 min-h-0">
+                            <UploadZone
+                                label="Brand logo"
+                                tall
+                                help="Optional — transparent PNG recommended. Placed as overlay, not painted into the background."
+                                file={brandLogo}
+                                onChange={onBrandLogoChange}
                             />
                         </div>
                     </div>
@@ -465,6 +479,7 @@ function CreateForm({
                                 <p className="text-[11px] text-emerald-600 dark:text-emerald-400">✓ {brandPalette!.length} colors — palette ready</p>
                             )}
                         </div>
+
                     </section>
 
                     <section className="flex shrink-0 items-center justify-between rounded-[1.5rem] border border-hairline bg-surface p-4 sm:p-5">

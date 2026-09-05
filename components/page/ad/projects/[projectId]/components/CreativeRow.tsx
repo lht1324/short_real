@@ -19,13 +19,14 @@ interface CreativeRowProps {
     result?: AdCreativeResult | null;
     batch: AdGenerationBatch;
     signedUrls: Record<string, string>;
+    brandLogoUrl?: string | null;
     isProjectRunning: boolean;
     selectedKey: string | null;
     onSelectTile: (key: string) => void;
     onExpandTile?: (key: string) => void;
 }
 
-function CreativeRow({ creativeIndex, spec, result, batch, signedUrls, isProjectRunning, selectedKey, onSelectTile, onExpandTile }: CreativeRowProps) {
+function CreativeRow({ creativeIndex, spec, result, batch, signedUrls, brandLogoUrl, isProjectRunning, selectedKey, onSelectTile, onExpandTile }: CreativeRowProps) {
     const [expanded, setExpanded] = useState(true);
 
     const copy = result?.copy;
@@ -193,6 +194,7 @@ function CreativeRow({ creativeIndex, spec, result, batch, signedUrls, isProject
                                             ratioKey={ratioKey}
                                             imageResult={ir ?? null}
                                             signedUrl={signedUrl}
+                                            brandLogoUrl={brandLogoUrl ?? null}
                                             isProjectRunning={isProjectRunning}
                                             creativeIndex={creativeIndex}
                                             selected={selectedKey === tileKey}

@@ -150,6 +150,22 @@ export async function POST(
             });
         }
 
+        // 1b) 브랜드 로고 수집 — 있으면 base64로 추가 컨텍스트 전달
+        let brandLogoBase64: string | null = null;
+        if ((batch as unknown as { brand_logo?: { imageFileExtension?: string } | null }).brand_logo) {
+            const brandLogoRecord = (batch as unknown as { brand_logo: { imageFileExtension: string } }).brand_logo;
+            try {
+                const brandLogoUrl = await adImageServerAPI.getBatchBrandLogoSignedUrl(batch.user_id, batch.id, brandLogoRecord.imageFileExtension);
+                const res = await fetch(brandLogoUrl);
+                if (res.ok) {
+                    const buf = await res.arrayBuffer();
+                    brandLogoBase64 = Buffer.from(buf).toString('base64');
+                }
+            } catch (e) {
+                console.warn(`[analysis] failed to fetch brand logo for batch ${batchId} creative ${creativeIndex}:`, e);
+            }
+        }
+
         // 2) Qwen Vision 묶음 평가 — 성공한 비율만 (fail-soft)
         const successfulRatios = imageInputs.map((i) => i.ratioKey);
         const llmResult = await llmServerAPI.postAdImageAnalysis({
@@ -159,6 +175,7 @@ export async function POST(
             copy: creativeResult.copy,
             brandPalette: batch.brand_palette ?? null,
             imageInputs,
+            brandLogoBase64,
         });
 
         if (!llmResult.success || !llmResult.imageResults) {

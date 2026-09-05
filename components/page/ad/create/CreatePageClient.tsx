@@ -25,6 +25,7 @@ export default function CreatePageClient() {
     // 구성 요소 — background는 AI가 creative마다 생성
     const [product, setProduct] = useState<AdUploadedComponent | null>(null);
     const [person, setPerson] = useState<AdUploadedComponent | null>(null);
+    const [brandLogo, setBrandLogo] = useState<AdUploadedComponent | null>(null);
 
     // 생성 옵션
     const [aspectRatios, setAspectRatios] = useState<AdAspectRatio[]>(['1:1']);
@@ -68,9 +69,16 @@ export default function CreatePageClient() {
                   }
                 : null;
 
+            const brandLogoImage = brandLogo
+                ? {
+                      imageFileExtension: inferFileExtension(brandLogo.fileName),
+                  }
+                : null;
+
             const { batchId } = await adProjectClientAPI.createProject({
                 productImage,
                 personImage,
+                brandLogo: brandLogoImage,
                 aspectRatios,
                 conceptCount,
                 ctaEnabled,
@@ -79,12 +87,13 @@ export default function CreatePageClient() {
 
             // 원본 이미지 업로드 — batch 생성 직후 FormData로 전송 (gateway multipart 지원)
             // 업로드는 실패해도 batch 생성 자체는 유효하므로 폴백 진행
-            const hasUpload = Boolean(product?.file || person?.file);
+            const hasUpload = Boolean(product?.file || person?.file || brandLogo?.file);
             if (hasUpload) {
                 try {
                     const formData = new FormData();
                     if (product?.file) formData.append('product', product.file);
                     if (person?.file) formData.append('person', person.file);
+                    if (brandLogo?.file) formData.append('brand_logo', brandLogo.file);
                     await postFormFetch(`/api/ad/ad-generation-batches/${batchId}/images`, formData);
                 } catch (uploadError) {
                     console.warn('[Create] original image upload failed, fallback to text-only:', uploadError);
@@ -96,7 +105,7 @@ export default function CreatePageClient() {
             setError(err instanceof Error ? err.message : 'Failed to start generation. Please try again.');
             setIsGenerating(false);
         }
-    }, [hasSubject, isGenerating, product, person, aspectRatios, conceptCount, ctaEnabled, brandPalette, router]);
+    }, [hasSubject, isGenerating, product, person, brandLogo, aspectRatios, conceptCount, ctaEnabled, brandPalette, router]);
 
     const hintText = !hasSubject
         ? 'Add a product or person to start — the AI paints a different background for each creative.'
@@ -120,8 +129,10 @@ export default function CreatePageClient() {
                         <CreateForm
                             product={product}
                             person={person}
+                            brandLogo={brandLogo}
                             onProductChange={setProduct}
                             onPersonChange={setPerson}
+                            onBrandLogoChange={setBrandLogo}
                             aspectRatios={aspectRatios}
                             conceptCount={conceptCount}
                             ctaEnabled={ctaEnabled}

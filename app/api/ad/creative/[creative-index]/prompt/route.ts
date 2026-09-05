@@ -70,6 +70,7 @@ export async function POST(
         // 0) 원본 이미지 수집 — 있으면 base64로 변환해 GLM Vision에 전달 (이미지가 1차 진실, note는 보조)
         let productImageBase64: string | null = null;
         let personImageBase64: string | null = null;
+        let brandLogoBase64: string | null = null;
         try {
             const originalUrls = await adImageServerAPI.getAdOriginalImageSignedUrls(batch);
             let urlIdx = 0;
@@ -87,11 +88,20 @@ export async function POST(
                 const url = originalUrls[urlIdx++];
                 if (url) personImageBase64 = await fetchBase64(url);
             }
+            if ((batch as unknown as { brand_logo?: { imageFileExtension?: string } | null }).brand_logo) {
+                const brandLogoRecord = (batch as unknown as { brand_logo: { imageFileExtension: string } }).brand_logo;
+                try {
+                    const brandLogoUrl = await adImageServerAPI.getBatchBrandLogoSignedUrl(batch.user_id, batch.id, brandLogoRecord.imageFileExtension);
+                    brandLogoBase64 = await fetchBase64(brandLogoUrl);
+                } catch (e) {
+                    console.warn(`[prompt] failed to fetch brand logo for batch ${batchId}:`, e);
+                }
+            }
         } catch (e) {
             console.warn(`[prompt] failed to fetch original images for batch ${batchId} creative ${creativeIndex}:`, e);
         }
 
-        // 1) GLM 5.3 Flash 호출 — 5축 + aspect_ratios + notes + cta + brandPalette + seed + images
+        // 1) GLM 5.3 Flash 호출 — 5축 + aspect_ratios + notes + cta + brandPalette + brandLogo + seed + images
         const llmResult = await llmServerAPI.postAdCreativePrompt({
             creativeIndex,
             creativeSpec,
@@ -103,6 +113,7 @@ export async function POST(
             seed: creativeSpec.seed,
             productImageBase64,
             personImageBase64,
+            brandLogoBase64,
         });
 
         if (!llmResult.success || !llmResult.imagePromptRecord || !llmResult.copy) {

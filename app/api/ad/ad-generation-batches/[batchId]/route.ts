@@ -78,12 +78,28 @@ export async function GET(
             }
         }
 
+        // 브랜드 로고 signed URL — 배치 로고 있으면 1개, 없으면 null
+        let brandLogoSignedUrl: string | null = null;
+        const brandLogo = (batch as unknown as { brand_logo?: { imageFileExtension?: string | null } | null }).brand_logo;
+        if (brandLogo?.imageFileExtension) {
+            try {
+                brandLogoSignedUrl = await adImageServerAPI.getBatchBrandLogoSignedUrl(
+                    batch.user_id,
+                    batch.id,
+                    brandLogo.imageFileExtension,
+                );
+            } catch {
+                brandLogoSignedUrl = null;
+            }
+        }
+
         return getNextBaseResponse({
             success: true,
             status: 200,
             data: {
                 batch,
                 signedUrls,
+                brandLogoSignedUrl,
             },
         });
     } catch (error) {

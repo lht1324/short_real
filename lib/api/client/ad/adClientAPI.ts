@@ -29,6 +29,8 @@ export interface AdUploadedComponent {
     file?: File;
 }
 
+export type AdBrandLogoComponent = AdUploadedComponent;
+
 export interface AdGenerateRequest {
     backgroundPrompt: string | null;
     backgroundImage: AdUploadedComponent | null;

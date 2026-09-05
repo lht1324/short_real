@@ -16,10 +16,11 @@ interface AdLightboxModalProps {
     headlineFontFamily?: string | null;
     headlineFontWeight?: number | null;
     headlineColor?: 'white' | 'black' | null;
+    brandLogoUrl?: string | null;
     onClose: () => void;
 }
 
-function AdLightboxModal({ imageUrl, ratioLabel, creativeIndex, design, score, headline, headlineFontFamily, headlineFontWeight, headlineColor, onClose }: AdLightboxModalProps) {
+function AdLightboxModal({ imageUrl, ratioLabel, creativeIndex, design, score, headline, headlineFontFamily, headlineFontWeight, headlineColor, brandLogoUrl, onClose }: AdLightboxModalProps) {
     const onClickBackdrop = useCallback((e: React.MouseEvent) => {
         if (e.target === e.currentTarget) onClose();
     }, [onClose]);
@@ -84,7 +85,7 @@ function AdLightboxModal({ imageUrl, ratioLabel, creativeIndex, design, score, h
                             className="h-auto max-h-[75vh] w-auto max-w-[90vw] rounded-xl object-contain sm:max-w-[80vw]"
                             style={{ width: 'auto', height: 'auto' }}
                         />
-                        {design && <AdOverlay design={design} headlineFontFamily={headlineFontFamily ?? null} headlineFontWeight={headlineFontWeight ?? null} headlineColor={headlineColor ?? 'white'} />}
+                        {design && <AdOverlay design={design} headlineFontFamily={headlineFontFamily ?? null} headlineFontWeight={headlineFontWeight ?? null} headlineColor={headlineColor ?? 'white'} brandLogoUrl={brandLogoUrl ?? null} />}
                     </div>
                 </div>
             </div>

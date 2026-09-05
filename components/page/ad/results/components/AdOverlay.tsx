@@ -8,9 +8,10 @@ interface AdOverlayProps {
     headlineFontFamily?: string | null;
     headlineFontWeight?: number | null;
     headlineColor?: 'white' | 'black' | null;
+    brandLogoUrl?: string | null;
 }
 
-function AdOverlay({ design, headlineFontFamily, headlineFontWeight, headlineColor }: AdOverlayProps) {
+function AdOverlay({ design, headlineFontFamily, headlineFontWeight, headlineColor, brandLogoUrl }: AdOverlayProps) {
     const ref = useRef<HTMLDivElement>(null);
     const [width, setWidth] = useState(0);
 
@@ -43,16 +44,23 @@ function AdOverlay({ design, headlineFontFamily, headlineFontWeight, headlineCol
                     className="absolute flex items-center gap-[0.45em]"
                     style={{ left: `${logo.x}%`, top: `${logo.y}%`, width: `${logo.widthPct}%` }}
                 >
-                    <span
-                        className="h-[0.5em] w-[0.5em] shrink-0 rounded-full bg-accent"
-                        style={{ fontSize: width > 0 ? (width * logo.fontSizePct) / 100 : 14 }}
-                    />
-                    <span
-                        className="font-bold uppercase tracking-[0.08em] text-white"
-                        style={{ fontSize: width > 0 ? (width * logo.fontSizePct) / 100 : 14 }}
-                    >
-                        {logo.brand}
-                    </span>
+                    {brandLogoUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={brandLogoUrl} alt={logo.brand} className="h-auto w-full object-contain" style={{ maxHeight: `${logo.fontSizePct * 6}cqh` }} />
+                    ) : (
+                        <>
+                            <span
+                                className="h-[0.5em] w-[0.5em] shrink-0 rounded-full bg-accent"
+                                style={{ fontSize: `${logo.fontSizePct}cqh` }}
+                            />
+                            <span
+                                className="font-bold uppercase tracking-[0.08em] text-white"
+                                style={{ fontSize: `${logo.fontSizePct}cqh` }}
+                            >
+                                {logo.brand}
+                            </span>
+                        </>
+                    )}
                 </div>
             )}
 

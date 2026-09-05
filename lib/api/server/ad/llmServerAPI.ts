@@ -27,6 +27,7 @@ export const llmServerAPI = {
         seed: number;
         productImageBase64?: string | null;
         personImageBase64?: string | null;
+        brandLogoBase64?: string | null;
     }): Promise<{
         success: boolean;
         imagePromptRecord?: Partial<Record<AdRatioKey, string>>;
@@ -47,13 +48,16 @@ export const llmServerAPI = {
                 seed,
                 productImageBase64,
                 personImageBase64,
+                brandLogoBase64,
             } = params;
 
             const imageBase64List: string[] = [];
             if (productImageBase64) imageBase64List.push(productImageBase64);
             if (personImageBase64) imageBase64List.push(personImageBase64);
+            if (brandLogoBase64) imageBase64List.push(brandLogoBase64);
+            const attachedOrder = [productImageBase64 ? 'product' : null, personImageBase64 ? 'person' : null, brandLogoBase64 ? 'brand_logo' : null].filter(Boolean).join(', ');
             const attachedInfo = imageBase64List.length > 0
-                ? `Attached images: ${imageBase64List.length} image(s) in order [${[productImageBase64 ? 'product' : null, personImageBase64 ? 'person' : null].filter(Boolean).join(', ')}] — primary ground truth.`
+                ? `Attached images: ${imageBase64List.length} image(s) in order [${attachedOrder}] — primary ground truth.`
                 : `Attached images: none — use notes and axes only.`;
 
             const serifFonts = ['Crimson Text', 'Merriweather', 'Playfair Display'];
@@ -76,6 +80,7 @@ export const llmServerAPI = {
   <person_note>${personNote ?? ""}</person_note>
   <cta_enabled>${ctaEnabled}</cta_enabled>
   <brand_palette>${brandPalette && brandPalette.length > 0 ? JSON.stringify(brandPalette) : "null"}</brand_palette>
+  <brand_logo>${brandLogoBase64 ? 'true' : 'false'}</brand_logo>
   <available_fonts>${availableFontsGrouped}</available_fonts>
   <available_fonts_count>${Object.keys(fontMap).length}</available_fonts_count>
 </input_data>
@@ -166,15 +171,17 @@ Instruction: Generate ratio-specific I2I captions and ad copy according to the s
         copy: AdCopySpec;
         brandPalette: string[] | null;
         imageInputs: Array<{ ratioKey: AdRatioKey; imageBase64: string }>;
+        brandLogoBase64?: string | null;
     }): Promise<{
         success: boolean;
         imageResults?: Partial<Record<AdRatioKey, AdImageResult>>;
         error?: { message: string; code: string };
     }> {
         try {
-            const { creativeIndex, aspectRatios, creativeSpec, copy, brandPalette, imageInputs } = params;
+            const { creativeIndex, aspectRatios, creativeSpec, copy, brandPalette, imageInputs, brandLogoBase64 } = params;
 
             const imageBase64List = imageInputs.map((item) => item.imageBase64);
+            if (brandLogoBase64) imageBase64List.push(brandLogoBase64);
 
             const ratioOrder = imageInputs.map((item) => item.ratioKey).join(", ");
 
@@ -192,10 +199,11 @@ Instruction: Generate ratio-specific I2I captions and ad copy according to the s
   <ratio_order>${ratioOrder}</ratio_order>
   <copy>${JSON.stringify(copy, null, 2)}</copy>
   <brand_palette>${brandPalette && brandPalette.length > 0 ? JSON.stringify(brandPalette) : "null"}</brand_palette>
+  <brand_logo>${brandLogoBase64 ? 'true' : 'false'}</brand_logo>
 </input_data>
 
-Instruction: Analyze the attached ${imageInputs.length} image(s) in ratio order [${ratioOrder}] and return design/score per ratio.
-Each image corresponds to the ratio at the same index in ratio_order.
+Instruction: Analyze the attached ${brandLogoBase64 ? imageInputs.length + 1 : imageInputs.length} image(s) — first ${imageInputs.length} in ratio order [${ratioOrder}] for design/score, ${brandLogoBase64 ? 'last 1 is brand logo reference for contrast/placement only' : 'no brand logo'} — and return design/score per ratio.
+Each of the first ${imageInputs.length} images corresponds to the ratio at the same index in ratio_order.
 `;
 
             const client = new OpenRouterClient();

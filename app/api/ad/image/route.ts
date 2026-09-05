@@ -89,7 +89,7 @@ export async function POST(request: NextRequest) {
         }
 
         // 업로드 컴포넌트 검증 — 존재하면 확장자 필수
-        for (const component of [body.productImage, body.personImage]) {
+        for (const component of [body.productImage, body.personImage, body.brandLogo]) {
             if (component && !component.imageFileExtension) {
                 return getNextBaseResponse({
                     success: false,
@@ -128,6 +128,7 @@ export async function POST(request: NextRequest) {
             status: 'queued',
             product_image: body.productImage ?? null,
             person_image: body.personImage ?? null,
+            brand_logo: body.brandLogo ?? null,
             aspect_ratios: aspectRatioKeys,
             concept_count: conceptCount,
             cta_enabled: body.ctaEnabled ?? false,

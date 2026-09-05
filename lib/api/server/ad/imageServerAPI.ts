@@ -5,11 +5,12 @@ import {
 } from "@/lib/api/types/supabase/ad/AdGenerationBatch";
 
 /**
- * ad 이미지 Storage 헬퍼 — 원본(product/person) 및 결과 이미지의
+ * ad 이미지 Storage 헬퍼 — 원본(product/person/brand_logo) 및 결과 이미지의
  * 규칙 경로 조립과 signed URL 발급을 담당한다.
  *
  * 경로 규칙 (DB 저장 없이 규칙으로 재조립):
- *  - 입력:  {user_id}/{batch_id}/{product|person}_image.{imageFileExtension}
+ *  - 입력:  {user_id}/{batch_id}/{product|person|brand_logo}_image.{imageFileExtension}
+ *  - 프로필 기본 로고: {user_id}/profile/brand_logo.{imageFileExtension}
  *  - 출력:  {user_id}/{batch_id}/ad_generation_result_{creativeIndex}_{ratioKey}.{imageFileExtension}
  */
 
@@ -18,7 +19,7 @@ export const AD_IMAGE_STORAGE_BUCKET = "ad_image_storage";
 function getAdInputImagePath(
     userId: string,
     batchId: string,
-    componentName: "product" | "person",
+    componentName: "product" | "person" | "brand_logo",
     imageFileExtension: string,
 ): string {
     return `${userId}/${batchId}/${componentName}_image.${imageFileExtension}`;
@@ -32,6 +33,21 @@ function getAdResultImagePath(
     imageFileExtension: string,
 ): string {
     return `${userId}/${batchId}/ad_generation_result_${creativeIndex}_${ratioKey}.${imageFileExtension}`;
+}
+
+function getProfileBrandLogoPath(
+    userId: string,
+    imageFileExtension: string,
+): string {
+    return `${userId}/profile/brand_logo.${imageFileExtension}`;
+}
+
+function getBatchBrandLogoPath(
+    userId: string,
+    batchId: string,
+    imageFileExtension: string,
+): string {
+    return getAdInputImagePath(userId, batchId, "brand_logo", imageFileExtension);
 }
 
 export const adImageServerAPI = {
@@ -105,6 +121,45 @@ export const adImageServerAPI = {
     /** 규칙 경로 노출 (테스트·디버깅용) */
     getAdInputImagePath,
     getAdResultImagePath,
+    getProfileBrandLogoPath,
+    getBatchBrandLogoPath,
+
+    /**
+     * 프로필 기본 로고 signed URL — {user_id}/profile/brand_logo.{ext}
+     */
+    async getProfileBrandLogoSignedUrl(
+        userId: string,
+        imageFileExtension: string,
+    ): Promise<string> {
+        const supabase = createSupabaseServiceRoleClient();
+        const filePath = getProfileBrandLogoPath(userId, imageFileExtension);
+        const { data, error } = await supabase.storage
+            .from(AD_IMAGE_STORAGE_BUCKET)
+            .createSignedUrl(filePath, 60 * 60 * 24);
+        if (error || !data?.signedUrl) {
+            throw new Error(`Failed to create signed URL for profile brand logo (${filePath}): ${error?.message ?? "no signedUrl"}`);
+        }
+        return data.signedUrl;
+    },
+
+    /**
+     * 배치 로고 signed URL — {user_id}/{batch_id}/brand_logo_image.{ext}
+     */
+    async getBatchBrandLogoSignedUrl(
+        userId: string,
+        batchId: string,
+        imageFileExtension: string,
+    ): Promise<string> {
+        const supabase = createSupabaseServiceRoleClient();
+        const filePath = getBatchBrandLogoPath(userId, batchId, imageFileExtension);
+        const { data, error } = await supabase.storage
+            .from(AD_IMAGE_STORAGE_BUCKET)
+            .createSignedUrl(filePath, 60 * 60 * 24);
+        if (error || !data?.signedUrl) {
+            throw new Error(`Failed to create signed URL for batch brand logo (${filePath}): ${error?.message ?? "no signedUrl"}`);
+        }
+        return data.signedUrl;
+    },
 
     /**
      * Replicate prediction output에서 첫 번째 이미지 URL 추출.

@@ -40,6 +40,7 @@ export interface AdUploadedComponentRecord {
 export interface AdPipelineStartRequest {
     productImage?: AdUploadedComponentRecord | null;
     personImage?: AdUploadedComponentRecord | null;
+    brandLogo?: AdUploadedComponentRecord | null;
     aspectRatios: string[];
     conceptCount: number;
     ctaEnabled?: boolean;
@@ -106,6 +107,7 @@ export interface AdGenerationBatch {
     status: AdBatchStatus;
     product_image: AdUploadedComponentRecord | null;
     person_image: AdUploadedComponentRecord | null;
+    brand_logo: AdUploadedComponentRecord | null;
     aspect_ratios: AdRatioKey[];
     concept_count: number;
     cta_enabled: boolean;

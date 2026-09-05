@@ -19,6 +19,7 @@ export interface AdGenerationBatchListResponse {
 export interface AdGenerationBatchDetailResponse {
     batch: AdGenerationBatch;
     signedUrls: Record<string, string>; // key: `${creativeIndex}_${ratioKey}`
+    brandLogoSignedUrl: string | null;
 }
 
 // 하위 호환 별칭 — UI 레이어는 Project로 쓰되 내부 타입은 batch 그대로
@@ -28,6 +29,7 @@ export type AdProjectDetailResponse = { project: AdGenerationBatch } & Omit<AdGe
 export type AdPipelineStartClientRequest = {
     productImage?: { imageFileExtension: string; note?: string } | null;
     personImage?: { imageFileExtension: string; note?: string } | null;
+    brandLogo?: { imageFileExtension: string } | null;
     aspectRatios: string[]; // '1:1' 형태, 서버가 AdRatioKey로 정규화
     conceptCount: number;
     ctaEnabled?: boolean;
@@ -67,6 +69,7 @@ export const adGenerationBatchClientAPI = {
         return {
             batch,
             signedUrls: data.signedUrls as Record<string, string>,
+            brandLogoSignedUrl: (data.brandLogoSignedUrl as string | null) ?? null,
         };
     },
 
@@ -89,7 +92,8 @@ export const adProjectClientAPI = {
             batches: data.batches,
             pagination: data.pagination,
             thumbnailSignedUrls: data.thumbnailSignedUrls,
-        } as AdProjectListResponse;
+            thumbnailRatioKeys: data.thumbnailRatioKeys,
+        } as unknown as AdProjectListResponse;
     },
     async getProject(projectId: string): Promise<AdProjectDetailResponse> {
         const data = await adGenerationBatchClientAPI.getBatch(projectId);
@@ -97,6 +101,7 @@ export const adProjectClientAPI = {
             project: data.batch,
             batch: data.batch,
             signedUrls: data.signedUrls,
+            brandLogoSignedUrl: data.brandLogoSignedUrl,
         } as AdProjectDetailResponse;
     },
     async createProject(request: AdPipelineStartClientRequest): Promise<{ batchId: string }> {

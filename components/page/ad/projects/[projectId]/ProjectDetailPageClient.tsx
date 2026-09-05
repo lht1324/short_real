@@ -18,6 +18,7 @@ export default function ProjectDetailPageClient({ projectId }: { projectId: stri
     const router = useRouter();
     const [project, setProject] = useState<AdGenerationBatch | null>(null);
     const [signedUrls, setSignedUrls] = useState<Record<string, string>>({});
+    const [brandLogoSignedUrl, setBrandLogoSignedUrl] = useState<string | null>(null);
     const [status, setStatus] = useState<DetailStatus>('loading');
     const [error, setError] = useState<string | null>(null);
     const [isPolling, setIsPolling] = useState(false);
@@ -30,6 +31,7 @@ export default function ProjectDetailPageClient({ projectId }: { projectId: stri
             const data = await adProjectClientAPI.getProject(projectId);
             setProject(data.project);
             setSignedUrls(data.signedUrls);
+            setBrandLogoSignedUrl((data as unknown as { brandLogoSignedUrl?: string | null }).brandLogoSignedUrl ?? null);
             setStatus('ready');
             setError(null);
         } catch (err) {
@@ -303,6 +305,7 @@ export default function ProjectDetailPageClient({ projectId }: { projectId: stri
                             result={result}
                             batch={project}
                             signedUrls={signedUrls}
+                            brandLogoUrl={brandLogoSignedUrl}
                             isProjectRunning={isRunning}
                             selectedKey={selectedKey}
                             onSelectTile={onSelectTile}
@@ -350,6 +353,7 @@ export default function ProjectDetailPageClient({ projectId }: { projectId: stri
                     const creative = sortedCreatives.find((c) => c.creativeIndex === cIdx);
                     const ir = creative?.result?.imageResults?.[ratioKey as AdRatioKey] as { design?: import("@/lib/api/types/supabase/ad/AdGenerationBatch").AdImageResult['design']; score?: number | null } | undefined;
                     const copyForLightbox = creative?.result?.copy as unknown as { fontFamily?: string | null; fontWeight?: number | null; headlineColor?: 'white' | 'black' | null } | undefined;
+                    const designHeadlineColor = (ir as unknown as { design?: { headline?: { color?: string | null } } })?.design?.headline?.color as 'white' | 'black' | null | undefined;
                     return (
                         <AdLightboxModal
                             imageUrl={url}
@@ -360,7 +364,8 @@ export default function ProjectDetailPageClient({ projectId }: { projectId: stri
                             headline={creative?.result?.copy?.headline ?? null}
                             headlineFontFamily={copyForLightbox?.fontFamily ?? null}
                             headlineFontWeight={copyForLightbox?.fontWeight ?? null}
-                            headlineColor={copyForLightbox?.headlineColor ?? 'white'}
+                            headlineColor={designHeadlineColor ?? copyForLightbox?.headlineColor ?? 'white'}
+                            brandLogoUrl={brandLogoSignedUrl}
                             onClose={onCloseLightbox}
                         />
                     );
