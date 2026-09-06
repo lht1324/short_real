@@ -186,7 +186,7 @@ function CreateForm({
                             <UploadZone
                                 label="Brand logo"
                                 tall
-                                help="Optional — transparent PNG recommended. Placed as overlay, not painted into the background."
+                                help="IMPORTANT — Transparent PNG only. Opaque white/black backgrounds will appear as a box on the ad and break contrast. This logo is placed as an overlay at the Vision-picked corner, not painted into the scene. Leave empty to skip logo (position recommendation will be skipped)."
                                 file={brandLogo}
                                 onChange={onBrandLogoChange}
                             />

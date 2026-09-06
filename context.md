@@ -1,19 +1,24 @@
-# 작업 진행 상황 (Last Updated: 2026-09-05 02:00)
+# 작업 진행 상황 (Last Updated: 2026-09-05 04:30)
 
 ## 1. 현재 상황 (Current Status)
 
-### 🎯 현 단계: 로고 업로드·표시 확인 완료 — 로고 배경 처리 및 Remotion 맛보기 다운로드 추가 예정 (2026-09-05)
-* **직전 구현 (2026-09-05, tsc 클린, 로고 표시 확인)**
-  * **Create 로고 업로드**: `CreatePageClient.tsx:27` `brandLogo` state + `CreateForm.tsx:36` `Subjects` 3열(`Product|Person|Brand logo`)로 한 화면 유지, `lib/api/types/supabase/ad/AdGenerationBatch.ts:40` `brand_logo jsonb` + `AdPipelineStartRequest.brandLogo` + `imageServerAPI.ts:18` `brand_logo_image.{ext}` 경로(`{user_id}/{batch_id}/brand_logo_image.{ext}`) 및 `getProfileBrandLogoPath: {user_id}/profile/brand_logo.{ext}` 분리, `app/api/ad/image/route.ts:92` `brandLogo` 검증·저장, `app/api/ad/ad-generation-batches/[batchId]/images/route.ts:66` `brand_logo` 업로드 분기. `PnCn/PuCn/PnCu/PuCu` 4케이스 중 `PnCn`은 경고만 주고 스킵.
-  * **프롬프트 로고 반영**: `POST_AD_CREATIVE_PROMPT.ts:30` `<brand_logo>: boolean` 및 `Unit 2:136` 로고 코너 깨끗하게 비우기 1줄, `POST_AD_IMAGE_ANALYSIS_PROMPT.ts:24` `<brand_logo>` + 로고 이미지 마지막 1장 첨부 및 `Unit 2:80` `Always null` → `brand_logo true일 때만 배치`로 교체. `llmServerAPI.ts:18` `product/person/brandLogo` 3장을 `imageBase64List` 순서대로 전달, `prompt/route.ts:69`·`analysis/route.ts:131`에서 `brand_logo` 있으면 `getBatchBrandLogoSignedUrl`→base64로 읽어 넘김.
-  * **Detail 로고·헤드라인 표시**: `app/api/ad/ad-generation-batches/[batchId]/route.ts:81` `brandLogoSignedUrl` 1개 발급, `ProjectDetailPageClient.tsx:21` `brandLogoSignedUrl` state로 `CreativeRow→FormatTile→AdOverlay`에 전달, `AdOverlay.tsx:41` `brandLogoUrl` 있으면 `<img>`로 합성(없으면 `● ShortReal` 텍스트 fallback). `AdLightboxModal.tsx:18`도 동일. 헤드라인은 `fontFamily/Weight/Color` 34개·white/black + `containerType:size` `cqh`로 타일=모달 높이 대비 동일 비율로 복구.
+### 🎯 현 단계: 로고·폰트·합성 다운로드까지 배선 — 로고 투명 강제 및 Canvas 맛보기 검증 남음 (2026-09-05)
+* **직전 구현 (2026-09-05, tsc 클린)**
+  * **Create 로고 업로드 (한 화면 유지)**: `CreatePageClient.tsx:27` `brandLogo` state + `CreateForm.tsx:36` `Subjects` 3열(`Product|Person|Brand logo`)로 한 화면 유지, `AdGenerationBatch.ts:40` `brand_logo jsonb` + `AdPipelineStartRequest.brandLogo` + `imageServerAPI.ts:18` `brand_logo_image.{ext}`(`{user_id}/{batch_id}/brand_logo_image.{ext}`) 및 `getProfileBrandLogoPath: {user_id}/profile/brand_logo.{ext}` 분리, `app/api/ad/image/route.ts:92` `brandLogo` 검증·저장, `app/api/ad/ad-generation-batches/[batchId]/images/route.ts:66` `brand_logo` 업로드 분기. `PnCn`은 경고만 스킵, `CreateForm` 로고 `help`를 `IMPORTANT — Transparent PNG only…`로 강화.
+  * **프롬프트 로고 반영**: `POST_AD_CREATIVE_PROMPT.ts:30` `<brand_logo>: boolean` 및 `Unit 2:136` 로고 코너 비우기 1줄, `POST_AD_IMAGE_ANALYSIS_PROMPT.ts:24` `<brand_logo>` + 로고 마지막 1장 첨부 및 `Unit 2:80` `Always null` → `brand_logo true일 때만 배치`로 교체. `llmServerAPI.ts:18` `product/person/brandLogo` 3장을 `imageBase64List` 순서대로 전달, `prompt/route.ts:69`·`analysis/route.ts:131`에서 `brand_logo` 있으면 `getBatchBrandLogoSignedUrl`→base64.
+  * **Detail 로고·헤드라인 표시**: `app/api/ad/ad-generation-batches/[batchId]/route.ts:81` `brandLogoSignedUrl` 1개 발급, `ProjectDetailPageClient.tsx:21` `brandLogoSignedUrl` state로 `CreativeRow→FormatTile→AdOverlay`에 전달, `AdOverlay.tsx:41` `brandLogoUrl` 있으면 `<img>` 합성(없으면 `● ShortReal` 텍스트). `AdLightboxModal.tsx:18`도 동일. 헤드라인은 `fontFamily/Weight/Color` 34개·white/black + `containerType:size` `cqh`로 타일=모달 높이 대비 동일 비율.
+  * **FormatTile 합성 다운로드 (Canvas 맛보기)**: `FormatTile.tsx:40` `isDownloading` + `onClickDownload`에서 `1080` 기준 캔버스(`1_1 1080x1080` 등)에 원본 `signedUrl`→`drawImage` + `scrim` 그라데이션 + `brandLogo` + `headline`(`cqh`와 동일 로직 `fontSizePct% of h`, `maxWidth` 줄바꿈, `white/black`, `fontFamily/Weight` `document.fonts.load`) + `CTA` pill을 `Canvas 2D`로 그려 `canvas.toBlob→a[download]`로 합성본 `png` 다운로드. 우상단 `Download`가 `span`→`button`으로 교체, 로딩 시 `Loader2`. `satori@0.12` `sharp@0.33`은 `npm install` 후 `docker compose restart` 완료 — `FormatTile` 다운로드는 `Canvas`로 ponytail 처리해 서버 `chrome` 없이 0.3초 컷. `satori+sharp`는 `Remotion Still` 대안으로 설치만 해둠.
   * **폰트·유사성·썸네일·채널·Creative 상태**: 전 세션 `2-21~2-23` 유지 — `fontMap` 34개, 배경·조명 5장 동일 문구, 썸네일 최고점+`top center`, `Detail` 채널 `getUser()` + 4초 폴링, Creative `Designing` 단계.
-* **이전 논의 — 확대 모달 폰트**: `AdOverlay.tsx:13` `width`→`cqh`로 수정해 타일=모달 비율 불일치 해소(높이 기준). 이미지 박스는 건드리지 않음(`ponytail: 텍스트만`).
-* **DB 이슈**: `brand_logo` 컬럼 없어 `Could not find the 'brand_logo' column` 500 발생 → `alter table ad_generation_batches add column if not exists brand_logo jsonb;` + `docker compose restart short-real-server` 필요.
+* **이전 논의 — 확대 모달 폰트**: `AdOverlay.tsx:13` `cqh`로 수정해 타일=모달 비율 불일치 해소(높이 기준). 이미지 박스는 건드리지 않음.
+* **DB 이슈**: `brand_logo` 컬럼 없어 `Could not find the 'brand_logo' column` 500 → `alter table ad_generation_batches add column if not exists brand_logo jsonb;` + `docker compose restart short-real-server` 필요.
+* **로고 배경 논의**: `rembg`로 흰 배경 제거 vs `투명 PNG 강제` 중 `Design 팀이 투명본을 갖는다`는 전제에서 `Transparent PNG only`가 `ponytail:ultra`로 결론 — `UploadZone` 검증은 `transparent PNG` 텍스트 + 모서리 `alpha` 체크로 경고만, `rembg`는 미사용.
 
 ---
 
 ## 2. 완수된 작업 (Completed Milestones)
+
+### 2-25. FormatTile 합성 다운로드 + 로고 투명 강제 (2026-09-05)
+* `FormatTile` 우상단 다운로드를 원본 `href`에서 `Canvas` 합성본(`headline/scrim/CTA/brandLogo`) 다운로드로 교체, `CreateForm` 로고 도움말을 `IMPORTANT — Transparent PNG only`로 강화. `satori`/`sharp` 설치·재시작 완료(서버 `sharp` 경로는 추후 `satori+sharp` Still 대안으로 보관).
 
 ### 2-24. 로고 업로드·프롬프트·Detail 표시 배선 (2026-09-05)
 * Create 3열 로고 업로드, `brand_logo` 타입·경로·업로드·프롬프트 2곳 로고 반영, Detail 타일·모달에 로고 이미지 합성. `PnCn` 경고 스킵 포함.
@@ -65,13 +70,12 @@
 
 ## 3. 향후 작업 (Next Steps)
 
-### 🔴 로고 배경 있는 경우 처리 방법 찾기
-* **현상**: 로고 표시까지 확인됐으나, 로고 이미지에 불투명 배경(흰/검 사각)이 있으면 합성 시 배경이 그대로 덮여 어색함.
-* **필요**: `rembg` 로컬 제거, `white/black` 배경 자동 제거, 또는 업로드 시 `transparent PNG` 강제 + 미리보기에서 경고. 방법 조사 후 `UploadZone` 검증·`imageServerAPI` 전처리 중 택1.
+### 🔴 로고 배경 있는 경우 처리 방법 찾기 → `Transparent PNG only`로 결론, 검증만 남음
+* **결론**: `rembg` 등 자동 제거 안 함 — `Design 팀이 투명본을 갖는다`는 전제에서 `UploadZone` `help`에 `IMPORTANT — Transparent PNG only` 명시 및 모서리 `alpha` 체크로 경고만. `satori`/`sharp`는 설치만 해두고 실제 제거는 미사용.
 
 ### 🔴 Remotion 맛보기 — 에디터 진입 전 입혀서 다운로드
-* **요청**: Remotion 에디터에 들어가기 전에 `Detail`에서 바로 로고·폰트·헤드라인이 입혀진 결과물을 다운로드해 Remotion 렌더 맛을 보게 하기.
-* **구현**: `Detail`의 `Download`가 현재 원본 `ad_generation_result_{c}_{ratio}.{ext}` signedUrl을 직접 내리므로, `Remotion`으로 `headline/font/logo`를 합성한 뒤 `renderMedia` 또는 `OffthreadVideo` 스틸 캡처로 `png`/`mp4`를 만들어 다운로드. `trigger/render` 재사용 또는 `app/api/ad/render/preview` 신설. `Pola` 과금과 연동 전 미리보기로.
+* **현황**: `FormatTile` 다운로드는 `Canvas`로 합성본 `png` 맛보기 구현 완료(타일 우상단 버튼). `Remotion Still`은 `satori+sharp`가 더 깔끔하나 `Vercel` 서버리스에 `chrome` 없이 `satori`가 더 가볍고, `Detail` 미리보기(`div`)와 `Download` 결과물 1px 일치가 필요하면 `Still`로 승격 가능. 현재는 `Canvas`가 `ponytail`이라 서버 `Remotion` 없이 0.3초 컷.
+* **남은 것**: `Detail` 하단 `Download {ratioLabel}` 바(선택 타일)도 동일 합성 로직으로 교체할지, `Creative 일괄 5장` 다운로드 버튼 추가 여부 결정. `Vercel` `5분` 제한상 `sharp`/`satori`는 가능하나 `chrome+ffmpeg`는 `Lambda` 위임 필요 — `trigger/render-final-video.ts` 재사용 검토.
 
 ### 🔴 폰트 결정 주체 이관 (2단계)
 * prompt=`fontFamily+문구` (정체성, 5개 비율 동일), analysis=`fontSizePct/x/y/maxWidth/align/scrim/headlineColor(비율별)/fontWeight(비율별)` (배치, 비율별). `POST_AD_IMAGE_ANALYSIS_PROMPT.ts:171` 출력에 `color` 추가, 렌더 우선순위 `design.headline.color ?? copy.headlineColor`로 이관. 로고 배경 처리 후 별도 진행.
@@ -108,7 +112,8 @@
 * **AdDesignLayout**: `headline:{text,x,y,maxWidth,align,fontSizePct,color?} | null, cta:{text,x,y,widthPct,fontSizePct}|null, logo:{brand,x,y,widthPct,fontSizePct}|null, scrim:boolean` — `x/y/maxWidth/widthPct/fontSizePct` 정수 0~100%, `fontSizePct` 2~6은 Vision 스펙상 `HEIGHT` 기준, 렌더는 `containerType:size` `cqh`로 높이 대비 렌더. `headline.color`는 analysis가 비율별로 정하고 모달은 `design.headline.color ?? copy.headlineColor`로 fallback.
 * **LLM**: Creative 디렉터 `GLM_5_3_FLASH`(vision, `imagePromptRecord`+`copy`+`reasoning`, 영어 고정, 이미지 우선) + 노트 분류 + 색상 통일(동일 hue) + 배경·조명 통일(5장 동일 문구, 구도만 비율별) + 폰트 34개 그룹화(`sans:22|serif:3|display:9`) 및 `fontWeight/headlineColor` 제약, Vision 분석 `GLM_5_3_FLASH`(멀티모달, 정수% 0-100, `brand_palette` 조건부, 영어 고정) + 로고(if `brand_logo true`면 `logo` 배치, 아니면 `null`) — `llmServerAPI.ts` `postAdCreativePrompt`/`postAdImageAnalysis` + 원문 로그, 프롬프트는 `POST_AD_{CREATIVE,IMAGE_ANALYSIS}_PROMPT.ts` 엘리트 250-320줄, `constraint`에 `ALL output text MUST be English only` 명시.
 * **썸네일**: 리스트 `GET /api/ad/ad-generation-batches`에서 `score` 최고 1장(없으면 첫 완료 1장)의 `thumbnailSignedUrls[batchId]` + `thumbnailRatioKeys[batchId]`를 발급, 카드 `4:3`에 `object-cover` + 세로 비율은 `object-position: top center`로 제품 보존. 없을 땐 스켈레톤.
-* **로고**: `Create` Subjects 3열 `Brand logo` 업로드(선택, `transparent PNG` 권장, `PnCn`은 경고만 스킵) → `ad_generation_batches.brand_logo jsonb` + Storage `brand_logo_image.{ext}` → prompt 3번째 이미지 + `<brand_logo>true/false`로 배경 로고 자리 확보, analysis 마지막 1장으로 로고 `x/y/widthPct` 배치, `Detail` 타일·모달 `AdOverlay`에 `brandLogoUrl` 있으면 `<img>`로 합성. `brand_logo` 컬럼은 `alter table ... add column if not exists brand_logo jsonb;` 후 `docker compose restart short-real-server`로 캐시 갱신 필요.
+* **로고**: `Create` Subjects 3열 `Brand logo` 업로드(선택, `transparent PNG` 권장, `PnCn`은 경고만 스킵) → `ad_generation_batches.brand_logo jsonb` + Storage `brand_logo_image.{ext}` → prompt 3번째 이미지 + `<brand_logo>true/false`로 배경 로고 자리 확보, analysis 마지막 1장으로 로고 `x/y/widthPct` 배치, `Detail` 타일·모달 `AdOverlay`에 `brandLogoUrl` 있으면 `<img>`로 합성. `brand_logo` 컬럼은 `alter table ... add column if not exists brand_logo jsonb;` 후 `docker compose restart short-real-server`로 캐시 갱신 필요. 현재 `help`는 `IMPORTANT — Transparent PNG only…`로 강화, `rembg` 미사용.
+* **다운로드(맛보기)**: `FormatTile.tsx:40` 우상단 `Download`를 원본 `href`에서 `Canvas` 합성(`headline/scrim/CTA/brandLogo`를 `1080` 기준 `Canvas`에 그려 `toBlob→download`)으로 교체, `Vercel` `chrome` 없이 0.3초 컷. `satori@0.12` `sharp@0.33`은 `npm install` 후 `docker compose restart` 완료 — 서버 `satori+sharp` Still은 `Remotion` 대안으로 보관. `Detail` 하단 `Download {ratioLabel}` 바는 아직 원본 유지, 일괄 다운로드는 미구현.
 * **용어 계약 (확정)**: creatives × formats = assets, 실행 1회 = batch. 유저 노출은 Project(페이지/URL/텍스트), 서버/DB/내부 코드는 batch.
 * **시드 규칙**: creative별 서로 다른 seed / 같은 creative 내 비율 = 같은 seed. 재현은 저장된 specs(DB)가 담당.
 * **사장 UI 원칙**: px 하드코딩 금지(rem/vh/vw/%/fr), 광고 바닥 언어, 0스크롤 선호. Bento 12col (`Subjects 8 | How many+CTA 4 / Where 8 | Brand 4`), `Where` 돌담은 `ResizeObserver`로 `H=(W-32)/4.806` 실측 5개 1행·가로 중앙, 섹션 높이는 내용 높이대로. `optional` 배지로 즉시 인지. `Subjects`는 `Product|Person|Brand logo` 3열로 한 화면 유지.
