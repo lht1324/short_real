@@ -1,9 +1,11 @@
 import {logger, schedules} from "@trigger.dev/sdk/v3";
-import {createSupabaseServiceRoleClient} from "@/lib/supabase/supabaseServiceRole";
 import {videoServerAPI} from "@/lib/api/server/videoServerAPI";
 import {AutopilotData} from "@/lib/api/types/supabase/AutopilotData";
 import {internalFireAndForgetFetch} from "@/lib/utils/internalFetch";
 import {ExportPrivacySetting} from "@/components/page/workspace/dashboard/export-settings-modal/ExportPrivacySetting";
+import {getNeonDb} from "@/lib/db/neon";
+import {autopilotData} from "@/lib/db/schema";
+import {eq} from "drizzle-orm";
 
 /**
  * Autopilot Orchestrator Task
@@ -24,21 +26,21 @@ export const autopilotUploadOrchestrator = schedules.task({
             return;
         }
 
-        // 1. Fetch Autopilot Data from Supabase
-        const supabase = createSupabaseServiceRoleClient();
-        const { data: series, error: fetchError } = await supabase
-            .from('autopilot_data')
-            .select('*')
-            .eq('id', seriesId)
-            .single();
+        // 1. Fetch Autopilot Data from Neon
+        const db = getNeonDb();
+        const [series] = await db
+            .select()
+            .from(autopilotData)
+            .where(eq(autopilotData.id, seriesId))
+            .limit(1);
 
-        if (fetchError || !series) {
-            logger.error(`[Autopilot] Failed to fetch autopilot data for series: ${seriesId}`, { fetchError });
+        if (!series) {
+            logger.error(`[Autopilot] Failed to fetch autopilot data for series: ${seriesId}`);
             return { success: false, error: "Series not found" };
         }
 
-        const autopilotData = series as AutopilotData & { current_generating_task_id?: string };
-        const taskId = autopilotData.current_generating_task_id;
+        const seriesData = series as unknown as AutopilotData & { current_generating_task_id?: string };
+        const taskId = seriesData.current_generating_task_id;
 
         if (!taskId) {
             logger.info(`[Autopilot] No current_generating_task_id found for series: ${seriesId}. Skipping.`);
@@ -47,7 +49,7 @@ export const autopilotUploadOrchestrator = schedules.task({
 
         // 2. Check if the video file exists in storage
         try {
-            const finalFilePath = `${autopilotData.user_id}/${taskId}/${taskId}_final.mp4`;
+            const finalFilePath = `${seriesData.user_id}/${taskId}/${taskId}_final.mp4`;
             // This will throw or return an error if the file doesn't exist
             const videoUrl = await videoServerAPI.getVideoSignedUrl(finalFilePath, 3600);
             
@@ -58,10 +60,10 @@ export const autopilotUploadOrchestrator = schedules.task({
             let triggeredCount = 0;
 
             // YouTube Upload
-            if (autopilotData.platforms?.youtube) {
+            if (seriesData.platforms?.youtube) {
                 // 기존 수동 파이프라인에선 선택한 뒤 param으로 바로 보내고 잊는 거라 저장이 없음
                 // UI에 선택창 추가하고 AutopilotData에 optional string으로 넣어야 하나?
-                const privacySetting = autopilotData.youtube_privacy || ExportPrivacySetting.UNLISTED;
+                const privacySetting = seriesData.youtube_privacy || ExportPrivacySetting.UNLISTED;
                 const youtubeUrl = `${baseUrl}/api/video/export/youtube/upload?taskId=${taskId}&privacySetting=${privacySetting}`;
                 
                 logger.info(`[Autopilot] Triggering YouTube upload for taskId: ${taskId}`);
@@ -70,11 +72,11 @@ export const autopilotUploadOrchestrator = schedules.task({
             }
 
             // TikTok Upload
-            if (autopilotData.platforms?.tiktok) {
+            if (seriesData.platforms?.tiktok) {
                 const tiktokUrl = `${baseUrl}/api/video/export/tiktok/upload?taskId=${taskId}`;
                 
                 logger.info(`[Autopilot] Triggering TikTok upload for taskId: ${taskId}`);
-                internalFireAndForgetFetch(tiktokUrl, { method: 'POST' }, { userId: autopilotData.user_id });
+                internalFireAndForgetFetch(tiktokUrl, { method: 'POST' }, { userId: seriesData.user_id });
                 triggeredCount++;
             }
 
@@ -85,7 +87,10 @@ export const autopilotUploadOrchestrator = schedules.task({
                 logger.info(`[Autopilot] No platforms enabled for auto-upload for series: ${seriesId}.`);
             }
 
-            await supabase.from('autopilot_data').update({ current_generating_task_id: null }).eq('id', seriesId);
+            await db
+                .update(autopilotData)
+                .set({ current_generating_task_id: null })
+                .where(eq(autopilotData.id, seriesId));
         } catch (error) {
             logger.warn(`[Autopilot] Video file not found or generation not finished for taskId: ${taskId}. Skipping.`, { error });
             return { success: true, action: "skipped-video-not-found" };

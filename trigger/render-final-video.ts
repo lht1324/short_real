@@ -10,7 +10,7 @@ import {videoGenerationTasksServerAPI} from "@/lib/api/server/videoGenerationTas
 import {musicServerAPI} from "@/lib/api/server/musicServerAPI";
 import {voiceServerAPI} from "@/lib/api/server/voiceServerAPI";
 import {videoServerAPI} from "@/lib/api/server/videoServerAPI";
-import {createSupabaseServiceRoleClient} from "@/lib/supabase/supabaseServiceRole";
+import {r2ServerAPI} from "@/lib/r2";
 import {taskCheckAndCleanupIfCancelled} from "@/lib/utils/taskCheckAndCleanupIfCancelled";
 import {FinalVideoMergeData, VideoGenerationTaskStatus} from "@/lib/api/types/supabase/VideoGenerationTasks";
 import {RemotionCaptionStyleConfig, RemotionFullVideoInput, RemotionSceneData} from "@/components/remotion/remotionTypes";
@@ -250,22 +250,12 @@ export const renderFinalVideo = task({
             });
 
             // ----------------------------------------------------------------
-            // 7. 최종 영상 업로드 (기존 웹훅과 동일 경로/이름)
+            // 7. 최종 영상 업로드 (R2 — 기존 웹훅과 동일 경로/이름)
             // ----------------------------------------------------------------
             const videoBuffer = await readFile(outputLocation);
             const finalFilePath = `${userId}/${taskId}/${taskId}_final.mp4`;
 
-            const supabase = createSupabaseServiceRoleClient();
-            const {error: uploadError} = await supabase.storage
-                .from(FINAL_VIDEO_BUCKET)
-                .upload(finalFilePath, videoBuffer, {
-                    contentType: "video/mp4",
-                    upsert: true,
-                });
-
-            if (uploadError) {
-                throw new Error(`Failed to upload to Supabase Storage: ${uploadError.message}`);
-            }
+            await r2ServerAPI.putObject(`${FINAL_VIDEO_BUCKET}/${finalFilePath}`, videoBuffer, "video/mp4");
 
             await rm(outputLocation, {force: true});
 

@@ -1,8 +1,10 @@
 import { logger, schedules } from "@trigger.dev/sdk/v3";
 import { internalFireAndForgetFetch } from "@/lib/utils/internalFetch";
-import { createSupabaseServiceRoleClient } from "@/lib/supabase/supabaseServiceRole";
 import { AutopilotData } from "@/lib/api/types/supabase/AutopilotData";
 import { getIntendedUploadTime, isSameDayInTimezone } from "@/lib/utils/dateUtils";
+import { getNeonDb } from "@/lib/db/neon";
+import { autopilotData } from "@/lib/db/schema";
+import { eq } from "drizzle-orm";
 
 /**
  * Autopilot Orchestrator Task
@@ -24,23 +26,23 @@ export const autopilotGenerationOrchestrator = schedules.task({
             return;
         }
 
-        // 1. Fetch Autopilot Data from Supabase
-        const supabase = createSupabaseServiceRoleClient();
-        const { data: series, error: fetchError } = await supabase
-            .from('autopilot_data')
-            .select('*')
-            .eq('id', seriesId)
-            .single();
+        // 1. Fetch Autopilot Data from Neon
+        const db = getNeonDb();
+        const [series] = await db
+            .select()
+            .from(autopilotData)
+            .where(eq(autopilotData.id, seriesId))
+            .limit(1);
 
-        if (fetchError || !series) {
-            logger.error(`[Autopilot] Failed to fetch autopilot data for series: ${seriesId}`, { fetchError });
+        if (!series) {
+            logger.error(`[Autopilot] Failed to fetch autopilot data for series: ${seriesId}`);
             return { success: false, error: "Series not found" };
         }
 
-        const autopilotData = series as AutopilotData;
+        const seriesData = series as unknown as AutopilotData;
 
         // 2. Activation Check
-        if (!autopilotData.is_active) {
+        if (!seriesData.is_active) {
             logger.info(`[Autopilot] Skipping generation: Series is not active`, { seriesId });
             return {
                 success: true,
@@ -52,16 +54,16 @@ export const autopilotGenerationOrchestrator = schedules.task({
         // 3. Idempotency Check (Only run once per target upload day)
         // Note: payload.timestamp is the scheduled trigger time (generation start)
         const targetUploadTime = getIntendedUploadTime(payload.timestamp, 2);
-        const userTimezone = autopilotData.user_timezone || 'UTC';
+        const userTimezone = seriesData.user_timezone || 'UTC';
 
-        if (process.env.NODE_ENV === "production" && autopilotData.last_run_at) {
-            const lastRunAt = new Date(autopilotData.last_run_at);
+        if (process.env.NODE_ENV === "production" && seriesData.last_run_at) {
+            const lastRunAt = new Date(seriesData.last_run_at);
             const isSameDay = isSameDayInTimezone(lastRunAt, targetUploadTime, userTimezone);
 
             if (isSameDay) {
                 logger.info(`[Autopilot] Skipping generation: Already run today for target upload date`, {
                     seriesId,
-                    lastRunAt: autopilotData.last_run_at,
+                    lastRunAt: seriesData.last_run_at,
                     targetUploadTime: targetUploadTime.toISOString(),
                     userTimezone
                 });
@@ -75,12 +77,12 @@ export const autopilotGenerationOrchestrator = schedules.task({
 
         // 3. Update last_run_at (Mark as started for this target upload time)
         // We save the 'targetUploadTime' (not execution time) to represent the business day.
-        const { error: updateError } = await supabase
-            .from('autopilot_data')
-            .update({ last_run_at: targetUploadTime.toISOString() })
-            .eq('id', seriesId);
-
-        if (updateError) {
+        try {
+            await db
+                .update(autopilotData)
+                .set({ last_run_at: targetUploadTime.toISOString() })
+                .where(eq(autopilotData.id, seriesId));
+        } catch (updateError) {
             logger.warn(`[Autopilot] Failed to update last_run_at for series: ${seriesId}`, { updateError });
             // We continue anyway, but log the warning.
         }
