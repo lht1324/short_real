@@ -17,7 +17,7 @@ import {useAuth} from "@/context/AuthContext";
 import {useRouter, useSearchParams} from "next/navigation";
 import DashboardItem from "@/components/page/workspace/dashboard/DashboardItem";
 import DefaultModal from "@/components/public/DefaultModal";
-import {createBrowserClient} from "@supabase/ssr";
+import {useTaskEvents} from "@/components/public/useTaskEvents";
 import TaskDeleteLoadingModal from "@/components/page/workspace/dashboard/TaskDeleteLoadingModal";
 import {Polar} from "@polar-sh/sdk";
 import {polarClientAPI} from "@/lib/api/client/polarClientAPI";
@@ -360,6 +360,54 @@ function WorkspaceDashboardPageClient() {
         setYoutubePrivacySetting(privacySetting);
     }, []);
 
+    // 서버에서 task 목록을 다시 받아와 상태에 반영 — SSE 이벤트 수신 시와 초기 로드 양쪽에서 사용
+    const applyTaskList = useCallback((videoGenerationTaskList: VideoGenerationTask[]) => {
+        const taskList = videoGenerationTaskList.filter((videoGenerationTask) => {
+            return !(videoGenerationTask.is_user_cancelled_task);
+        }).map((videoGenerationTask) => {
+            return convertToTaskData(videoGenerationTask);
+        }).filter((taskData) => {
+            return taskData !== null;
+        });
+
+        setTaskDataList(taskList as TaskData[]);
+        setIsExportingVideo(videoGenerationTaskList.some((videoGenerationTask) => {
+            const {
+                export_status: exportStatus,
+                export_platform: exportPlatform,
+            } = videoGenerationTask;
+
+            return exportStatus === ExportStatus.UPLOADING && exportPlatform !== ExportPlatform.YOUTUBE;
+        }));
+
+        const pendingExportResults: ExportResult[] = videoGenerationTaskList
+            .filter((task) => !!task.export_status && task.export_status !== ExportStatus.UPLOADING)
+            .map((task) => ({
+                taskId: task.id,
+                title: task.video_title,
+                platform: task.export_platform as ExportPlatform,
+                status: task.export_status as (ExportStatus.SUCCESS | ExportStatus.FAILED),
+            }));
+
+        if (pendingExportResults.length > 0) {
+            setExportResults(pendingExportResults);
+        }
+    }, [convertToTaskData]);
+
+    // SSE 이벤트 수신 — 변화 신호가 오면 목록을 재조회 (INSERT/UPDATE/DELETE 모두 재조회로 반영)
+    const refetchTaskList = useCallback(() => {
+        if (!user?.id) return;
+        videoClientAPI.getVideoTasksByUserId(user.id).then((videoGenerationTaskList) => {
+            if (videoGenerationTaskList) applyTaskList(videoGenerationTaskList);
+        }).catch((error) => console.error('Task list refetch failed:', error));
+    }, [user?.id, applyTaskList]);
+
+    useTaskEvents({
+        userId: user?.id,
+        enabled: !!user?.id,
+        onEvent: refetchTaskList,
+    });
+
     useEffect(() => {
         if (user?.id) {
             // 타임아웃 설정
@@ -369,6 +417,7 @@ function WorkspaceDashboardPageClient() {
 
             // 초기 데이터 로드
             const loadData = async () => {
+
                 try {
                     const [videoGenerationTaskList, fetchedAIModelDataList] = await Promise.all([
                         videoClientAPI.getVideoTasksByUserId(user?.id),
@@ -381,36 +430,7 @@ function WorkspaceDashboardPageClient() {
                         throw new Error("Cannot read videoGenerationTaskList. Try again.");
                     }
 
-                    const taskList = videoGenerationTaskList.filter((videoGenerationTask) => {
-                        return !(videoGenerationTask.is_user_cancelled_task);
-                    }).map((videoGenerationTask) => {
-                        return convertToTaskData(videoGenerationTask);
-                    }).filter((taskData) => {
-                        return taskData !== null;
-                    });
-
-                    setTaskDataList(taskList);
-                    setIsExportingVideo(videoGenerationTaskList.some((videoGenerationTask) => {
-                        const {
-                            export_status: exportStatus,
-                            export_platform: exportPlatform,
-                        } = videoGenerationTask;
-
-                        return exportStatus === ExportStatus.UPLOADING && exportPlatform !== ExportPlatform.YOUTUBE;
-                    }));
-
-                    const pendingExportResults: ExportResult[] = videoGenerationTaskList
-                        .filter((task) => !!task.export_status && task.export_status !== ExportStatus.UPLOADING)
-                        .map((task) => ({
-                            taskId: task.id,
-                            title: task.video_title,
-                            platform: task.export_platform as ExportPlatform,
-                            status: task.export_status as (ExportStatus.SUCCESS | ExportStatus.FAILED),
-                        }));
-
-                    if (pendingExportResults.length > 0) {
-                        setExportResults(pendingExportResults);
-                    }
+                    applyTaskList(videoGenerationTaskList);
                 } catch (error) {
                     console.error("WorkspaceDashboardPage: ", error);
                     setIsLoading(false);
@@ -422,96 +442,11 @@ function WorkspaceDashboardPageClient() {
                 setIsLoading(false);
             });
 
-            // Supabase Realtime 구독 설정
-            const supabase = createBrowserClient(
-                process.env.NEXT_PUBLIC_SUPABASE_URL!,
-                process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-            );
-
-            const channel = supabase
-                .channel('video_generation_tasks_changes')
-                .on(
-                    'postgres_changes',
-                    {
-                        event: '*', // INSERT, UPDATE, DELETE 모두 수신
-                        schema: 'public',
-                        table: 'video_generation_tasks',
-                        filter: `user_id=eq.${user.id}` // 현재 사용자의 task만 필터링
-                    },
-                    (payload) => {
-                        switch (payload.eventType) {
-                            case 'INSERT': {
-                                // 새로운 task 추가
-                                const newTask = payload.new as VideoGenerationTask;
-                                const newTaskData = convertToTaskData(newTask);
-                                if (newTaskData) {
-                                    setTaskDataList((prevTaskDataList) => {
-                                        return [newTaskData, ...prevTaskDataList]
-                                    });
-                                }
-                                return;
-                            }
-                            case 'UPDATE': {
-                                // 기존 task 업데이트
-                                const updatedTask = payload.new as VideoGenerationTask;
-
-                                setIsExportingVideo(updatedTask.export_status === ExportStatus.UPLOADING && updatedTask.export_platform !== ExportPlatform.YOUTUBE);
-
-                                if (!!updatedTask.export_status && updatedTask.export_status !== ExportStatus.UPLOADING) {
-                                    setExportResults((prev) => {
-                                        // 같은 taskId가 이미 있으면 덮어쓰기, 없으면 추가
-                                        const exists = prev.some((r) => r.taskId === updatedTask.id);
-                                        const next = {
-                                            taskId: updatedTask.id,
-                                            title: updatedTask.video_title,
-                                            platform: updatedTask.export_platform as ExportPlatform,
-                                            status: updatedTask.export_status as ExportStatus.SUCCESS | ExportStatus.FAILED,
-                                        };
-                                        return exists
-                                            ? prev.map((r) => r.taskId === updatedTask.id ? next : r)
-                                            : [...prev, next];
-                                    });
-                                }
-                                
-                                const newTaskData = convertToTaskData(updatedTask);
-                                if (newTaskData) {
-                                    setTaskDataList((prevTaskDataList) =>
-                                        prevTaskDataList.filter((prevTaskData) => {
-                                            return prevTaskData.id !== newTaskData.id
-                                                || (prevTaskData.id === newTaskData.id && !updatedTask.is_user_cancelled_task);
-                                        }).map((prevTaskData) => {
-                                            return prevTaskData.id === newTaskData.id
-                                                ? newTaskData
-                                                : prevTaskData;
-                                        })
-                                    );
-                                }
-                                return;
-                            }
-                            case 'DELETE': {
-                                // task 삭제
-                                const deletedTask = payload.old as VideoGenerationTask;
-                                if (deletedTask.id) {
-                                    setTaskDataList((prevTaskDataList) =>
-                                        prevTaskDataList.filter((prevTaskData) => {
-                                            return prevTaskData.id !== deletedTask.id;
-                                        })
-                                    );
-                                }
-                                return;
-                            }
-                        }
-                    }
-                )
-                .subscribe((status) => {
-                });
-
             return () => {
                 clearTimeout(timeout);
-                channel.unsubscribe();
             };
         }
-    }, [router, user?.id, convertToTaskData]);
+    }, [router, user?.id, applyTaskList]);
 
     useEffect(() => {
         if (customerSessionToken) {

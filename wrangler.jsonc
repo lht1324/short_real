@@ -1,0 +1,26 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "short-real",
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2026-09-01",
+  "compatibility_flags": ["nodejs_compat"],
+  // 비밀이 아닌 값만 여기에 둠 (git 추적됨). 키·토큰류는 대시보드 Secrets 전용 — deploy가 Secrets는 건드리지 않음.
+  // 주의: 로컬 deploy가 대시보드 plain Variables를 이 값으로 덮어씀. 대시보드 수정 후 여기에도 반영할 것.
+  // NEXT_PUBLIC_BASE_URL은 prod 단일 오리진 — baseFetch가 prod 분기에서 동일 오리진 사용.
+  "vars": {
+    "BASE_URL": "https://shortreal.ai",
+    "NEXT_PUBLIC_BASE_URL": "https://shortreal.ai"
+  },
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  "observability": {
+    "logs": {
+      "enabled": true,
+      "head_sampling_rate": 1,
+      "invocation_logs": true,
+      "persist": true
+    }
+  }
+}

@@ -60,8 +60,9 @@ const nextConfig: NextConfig = {
     async rewrites() {
         return [
             {
+                // 데모 영상: R2 버킷 short-real-demo (커스텀 도메인 바인딩)
                 source: '/assets/demo/:path*',
-                destination: 'https://sqwqmyhniwn4m1bu.public.blob.vercel-storage.com/:path*'
+                destination: 'https://assets.shortreal.ai/:path*'
             }
         ]
     }

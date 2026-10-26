@@ -1,9 +1,13 @@
 const isProd = process.env.NODE_ENV === 'production';
 
 function getRootPath(route: string) {
+    // 분리 개발 토폴로지 — 클라(3000, 호스트)와 서버(3001, Docker)가 같은 DB·Redis를 공유한다.
+    // dev에서는 클라 fetch를 서버(3001)로 보내야 라우트가 실제로 실행된다.
+    // NEXT_PUBLIC_BASE_URL은 빌드타임 주입이라 dev 서버 재시작 필요. 누락 시 동일 오리진 폴백.
+    // prod(단일 오리진)와 절대 URL(http/https)은 그대로 통과.
     return isProd || route.includes("http") || route.includes("https")
         ? ""
-        : `${process.env.NEXT_PUBLIC_BASE_URL!}`
+        : `${process.env.NEXT_PUBLIC_BASE_URL || ""}`
 }
 
 /**
