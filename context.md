@@ -1,122 +1,74 @@
-# 작업 진행 상황 (Last Updated: 2026-09-05 04:30)
+# 작업 진행 상황 (Last Updated: 2026-10-26 21:59)
 
 ## 1. 현재 상황 (Current Status)
 
-### 🎯 현 단계: 로고·폰트·합성 다운로드까지 배선 — 로고 투명 강제 및 Canvas 맛보기 검증 남음 (2026-09-05)
-* **직전 구현 (2026-09-05, tsc 클린)**
-  * **Create 로고 업로드 (한 화면 유지)**: `CreatePageClient.tsx:27` `brandLogo` state + `CreateForm.tsx:36` `Subjects` 3열(`Product|Person|Brand logo`)로 한 화면 유지, `AdGenerationBatch.ts:40` `brand_logo jsonb` + `AdPipelineStartRequest.brandLogo` + `imageServerAPI.ts:18` `brand_logo_image.{ext}`(`{user_id}/{batch_id}/brand_logo_image.{ext}`) 및 `getProfileBrandLogoPath: {user_id}/profile/brand_logo.{ext}` 분리, `app/api/ad/image/route.ts:92` `brandLogo` 검증·저장, `app/api/ad/ad-generation-batches/[batchId]/images/route.ts:66` `brand_logo` 업로드 분기. `PnCn`은 경고만 스킵, `CreateForm` 로고 `help`를 `IMPORTANT — Transparent PNG only…`로 강화.
-  * **프롬프트 로고 반영**: `POST_AD_CREATIVE_PROMPT.ts:30` `<brand_logo>: boolean` 및 `Unit 2:136` 로고 코너 비우기 1줄, `POST_AD_IMAGE_ANALYSIS_PROMPT.ts:24` `<brand_logo>` + 로고 마지막 1장 첨부 및 `Unit 2:80` `Always null` → `brand_logo true일 때만 배치`로 교체. `llmServerAPI.ts:18` `product/person/brandLogo` 3장을 `imageBase64List` 순서대로 전달, `prompt/route.ts:69`·`analysis/route.ts:131`에서 `brand_logo` 있으면 `getBatchBrandLogoSignedUrl`→base64.
-  * **Detail 로고·헤드라인 표시**: `app/api/ad/ad-generation-batches/[batchId]/route.ts:81` `brandLogoSignedUrl` 1개 발급, `ProjectDetailPageClient.tsx:21` `brandLogoSignedUrl` state로 `CreativeRow→FormatTile→AdOverlay`에 전달, `AdOverlay.tsx:41` `brandLogoUrl` 있으면 `<img>` 합성(없으면 `● ShortReal` 텍스트). `AdLightboxModal.tsx:18`도 동일. 헤드라인은 `fontFamily/Weight/Color` 34개·white/black + `containerType:size` `cqh`로 타일=모달 높이 대비 동일 비율.
-  * **FormatTile 합성 다운로드 (Canvas 맛보기)**: `FormatTile.tsx:40` `isDownloading` + `onClickDownload`에서 `1080` 기준 캔버스(`1_1 1080x1080` 등)에 원본 `signedUrl`→`drawImage` + `scrim` 그라데이션 + `brandLogo` + `headline`(`cqh`와 동일 로직 `fontSizePct% of h`, `maxWidth` 줄바꿈, `white/black`, `fontFamily/Weight` `document.fonts.load`) + `CTA` pill을 `Canvas 2D`로 그려 `canvas.toBlob→a[download]`로 합성본 `png` 다운로드. 우상단 `Download`가 `span`→`button`으로 교체, 로딩 시 `Loader2`. `satori@0.12` `sharp@0.33`은 `npm install` 후 `docker compose restart` 완료 — `FormatTile` 다운로드는 `Canvas`로 ponytail 처리해 서버 `chrome` 없이 0.3초 컷. `satori+sharp`는 `Remotion Still` 대안으로 설치만 해둠.
-  * **폰트·유사성·썸네일·채널·Creative 상태**: 전 세션 `2-21~2-23` 유지 — `fontMap` 34개, 배경·조명 5장 동일 문구, 썸네일 최고점+`top center`, `Detail` 채널 `getUser()` + 4초 폴링, Creative `Designing` 단계.
-* **이전 논의 — 확대 모달 폰트**: `AdOverlay.tsx:13` `cqh`로 수정해 타일=모달 비율 불일치 해소(높이 기준). 이미지 박스는 건드리지 않음.
-* **DB 이슈**: `brand_logo` 컬럼 없어 `Could not find the 'brand_logo' column` 500 → `alter table ad_generation_batches add column if not exists brand_logo jsonb;` + `docker compose restart short-real-server` 필요.
-* **로고 배경 논의**: `rembg`로 흰 배경 제거 vs `투명 PNG 강제` 중 `Design 팀이 투명본을 갖는다`는 전제에서 `Transparent PNG only`가 `ponytail:ultra`로 결론 — `UploadZone` 검증은 `transparent PNG` 텍스트 + 모서리 `alpha` 체크로 경고만, `rembg`는 미사용.
+### 🎯 현 단계: Supabase → Neon + Cloudflare 마이그레이션 — **코드 교체 전부 완료, Supabase 의존 0 달성** (2026-10-26)
+* **이번 세션 완성물 (2026-10-24~26)**
+  * **DB**: Drizzle `lib/db/schema.ts`(10테이블 1:1 미러) + `lib/db/neon.ts`(싱글톤) + serverAPI·route 25파일 교체. RPC 3종(`increment_user_credit`, `update_scene_request_id`, 누락 복구한 `increment_and_get_scene_count`)을 `db.execute(sql...)`로 호출. Supabase `.single()`/`.maybeSingle()` 계약 = `limit(1)+[0]??null`. 검증: 카운트 전수 일치·FK 고아 0·RPC 스모크 통과.
+  * **Storage → R2**: `lib/r2.ts`(put/presign/get/list/delete/copy, Blob 지원, ResponseContentDisposition=다운로드 강제). serverAPI 4종+route 6종+trigger 1종 교체. 키 규칙 = 구 버킷명이 폴더 접두(`processed_video_storage/{user}/{task}/...`). 스모크: `short-real-dev` 184파일 정확 일치.
+  * **Realtime → Upstash Streams + SSE**: `lib/taskEvents.ts`(XADD+MAXLEN 100, fail-soft) + `app/api/events/route.ts`(5초 틱·100초 후 커서 재연결·taskId 소유권 검증) + `components/public/useTaskEvents.ts`(커서 보존 재연결·백그라운드 탭 정지). 발행은 `videoGenerationTasksServerAPI` post/patch×3/delete에 훅 — **모든 mutation 경로가 이 파일을 지나므로 파이프라인 전체 이벤트가 흐름**. 스모크: XADD/XRANGE 왕복 정상.
+  * **Auth → Neon Auth (Managed Better Auth)**: `lib/auth/{client,server}.ts` + `/api/auth/[...path]` 프록시 + `/callback/session`(verifier 클라 교환 페이지) + `callback/auth`(email find-or-create — 기존 행 승계) + `getIsValidRequestC2S`(세션→email→행, 안전망 생성) + `proxy.ts` 가드. **사장님 로컬 OAuth 로그인 성공 확인 (2026-10-26)**. env: `NEON_AUTH_BASE_URL`·`NEON_AUTH_COOKIE_SECRET` (JWKS_URL 불필요 — JWT 직접 검증 코드 0).
+  * **client-gateway in-process 개조 (Workers 이관 하드 블로커 해소)**: fetch 프록시(외부 도메인 재발사) → **라우트 테이블 매칭 + 모듈 lazy import + 핸들러 직접 호출**. 테이블 33파일/46 엔트리 = **브라우저(baseFetch) C2S 경유만**. 전수 대조(테이블↔실제 라우트 파일)로 누락 0 기계 검증. **운영 규칙: 새 클라 API 라우트 추가 시 ROUTE_ENTRIES 1줄 필수(누락 시 404).**
+  * **Supabase 의존 0**: `lib/supabase/` 4종 삭제 + `@supabase/ssr`·`@supabase/supabase-js` 제거. `lib/api/types/supabase/` 폴더명은 레거시 명칭으로 유지(타입 경로일 뿐 의존 없음). `@upstash/ratelimit`도 제거(Redis는 Streams 전용 — fal은 동시실행수 모델이라 사전 스로틀 불필요, fal 공식 문서 확인).
+  * **개발 환경 정비**: ngrok 은퇴 → **CF Tunnel**(`dev.shortreal.ai`→localhost:3001, 4프로젝트 동시 상주). 포트 배치 확정: **short_real 3000(클라)/3001(서버)**, tailored-ad 3002/3003, LocalAgentsLink 3004/3005, jaeholee.xyz 3006/3007. Docker Desktop 설치 시도 후 제거(자체 VM이 systemd dockerd와 소켓·락 충돌 실측) → **systemd dockerd + CLI만**. 디스크 27.6GB 정리(죽은 볼륨 71개 19.67GB+이미지 7.95GB), `.dockerignore`에 node_modules·.next·env 추가.
+* **직전 구현 (2026-09-05, tsc 클린) — 유효**: 로고 업로드·프롬프트·Detail 표시·FormatTile Canvas 합성 다운로드·로고 투명 강제 등은 그대로 유지.
 
 ---
 
 ## 2. 완수된 작업 (Completed Milestones)
 
-### 2-25. FormatTile 합성 다운로드 + 로고 투명 강제 (2026-09-05)
-* `FormatTile` 우상단 다운로드를 원본 `href`에서 `Canvas` 합성본(`headline/scrim/CTA/brandLogo`) 다운로드로 교체, `CreateForm` 로고 도움말을 `IMPORTANT — Transparent PNG only`로 강화. `satori`/`sharp` 설치·재시작 완료(서버 `sharp` 경로는 추후 `satori+sharp` Still 대안으로 보관).
+### 2-27. Neon 마이그레이션 코드 교체 전체 완료 (2026-10-24~26)
+* DB(25파일)·Storage(R2 11파일)·Realtime(Upstash SSE 4파일)·Auth(Neon Auth 12파일)·client-gateway in-process 개조. Supabase 의존 0. 상세는 `MIGRATION_SUPABASE_TO_NEON.md` §진행 상태(2026-10-26 갱신) + §개발 토폴로지 + §Workers 호출 모델.
+* **스토리지 찌꺼기 정리 (2026-10-24)**: 규칙 확정("현행 명명 규격 파일 0개" ‖ "DB에 id 없음" → 폐기) 후 Supabase 4버킷 정리 — 폐기 5 task(90파일/382MB+music·scene)+d0cc01df(32파일)+슬림화 948파일/3.4GB+레거시 잔여 → 최종 184파일/656MB, 로컬 덤프와 1:1 일치, DB 23→6 rows. 백업 zip 재생성(`~/다운로드/shortreal-supabase-storage.zip`).
+* **DB 데이터 이전 (2026-10-24)**: Supabase REST JSON 덤프(136 rows) → Neon development INSERT. numeric[]/text[] 배열 리터럴 변환. FK 고아 0.
 
-### 2-24. 로고 업로드·프롬프트·Detail 표시 배선 (2026-09-05)
-* Create 3열 로고 업로드, `brand_logo` 타입·경로·업로드·프롬프트 2곳 로고 반영, Detail 타일·모달에 로고 이미지 합성. `PnCn` 경고 스킵 포함.
+### 2-26. Neon 마이그레이션 Phase 0/1 (2026-10-23)
+* Neon 프로젝트+브랜치+스키마+RPC+R2 버킷+계획서 (상세 git 히스토리).
 
-### 2-23. 썸네일 v2 + Creative Designing 단계 (2026-09-04)
-* 리스트 썸네일: 최고점 1장 커버 + 비율별 `top center` 크롭, 실시간 갱신. Creative `Designing` 추가로 Batch `Designing`과 어긋남 해소.
-
-### 2-22. 유사성 배경 고정 + 폰트 렌더 연결 (2026-09-04)
-* 배경·조명 5장 동일 문구 강제, 구도만 비율별, 포즈 동일. 폰트 34개·weight·white/black 검증 및 `CreativeRow/FormatTile/AdOverlay/AdLightbox`에 내려온 대로 반영.
-
-### 2-21. 폰트 검증 및 채널 수정 (2026-09-03)
-* `fontMap` 34개 확장, `available_fonts` 그룹화, `Font Selection Protocol` 강화, `Detail` 채널 `getUser()` 후 구독 + 4초 폴링.
-
-### 2-20. 폰트/I2I 지시 선행 반영 완료 (2026-09-01)
-* `FONT_FAMILY_LIST`/`lib/fonts.ts` 30~40개 및 `fontMap` 등록, `POST_AD_CREATIVE_PROMPT` `available_fonts` 제약, Remotion 프리로드, 원본 컷아웃 2단 래핑.
-
-### 2-19. 이미지 이해(Vision) + 색상 통일 + 노트 분류 프롬프트 수정 (2026-09-01)
-* GLM Vision 원본 전달, 노트 분류 6줄, 색상 통일 2곳 추가.
-
-### 2-18. Create Bento 세부 + Brand 일부 + 확대 기능 추가 (2026-08-31, 일부 미완)
-* Bento `fr` 나눔, Where 동적 높이, How many 1×4, Pro 배지, Brand 팔레트 시도, 확대 ponytail.
-
-### 2-17. Create Bento 한 화면 + 업로드 팝오버 + Brand 그리드 시도 (2026-08-31, 일부 미해결)
-* 한 화면 Bento 확정, 드롭존 동일 높이, Where 돌담, Brand pill→팔레트.
-
-### 2-16. Realtime 채널 전환 + RPC 캐스팅 수정 + 프롬프트 영어 고정 + 로그 (2026-08-29)
-* 폴링→Realtime, StrictMode 충돌 수정, RLS publication/정책, RPC `::text`, 영어 고정, raw 로그.
-
-### 2-15. Projects 정석 분리 + 업로드 + 텍스트 pill 한 화면 (2026-08-29)
-* `ad-generation-batches` 정석 경로 + ByUserId + gateway FormData + Projects 상황실 + Create 업로드 연동.
-
-### 2-14. 프롬프트 엘리트화 + 전 구간 배선 + fail-soft/팔레트/UI (2026-08-28)
-* B안 개명·brand_palette·HARD_BANNED 8개·프롬프트 재작성·prompt/analysis 배선·fail-soft n=1·UI 정리.
-
-### 2-13. generation/webhook/process + LLM 스켈레톤 구현 (2026-08-27)
-* AdImageResult 확장자·RPC·imageServerAPI·generation/webhook/process·ReplicateClient.
-
-### 2-12. 서버 파이프라인 설계 확정 + LLM 경계까지 구현 (2026-08-26)
-* 용어 확정, 배분 주체=코드, RPC 3종, ReplicateClient, 스캐폴드.
-
-### 이전 마일스톤 요약 (상세는 git 히스토리 참조)
-* **2-11 (08-24)**: results 구조 확정 — `AdCreativeResult[]`
-* **2-10 (08-24)**: 변주 설계 합의 — Creative 단위, LLM creative당 1회
-* **2-9 (08-22)**: 결과 화면 — 실비율 카드, Creative 용어
-* **2-5~2-8 (08-22)**: CreateForm 0스크롤 리디자인, px→rem, UploadZone
-* **2-1~2-4 (08-20~21)**: 데스크탑 최적화, concept 우선 구조
+### 2-25 이전 (2026-09-05 ~)
+* FormatTile 합성 다운로드, 로고 업로드·배선, 썸네일 v2, 폰트 34개 등 (상세 git 히스토리).
 
 ---
 
 ## 3. 향후 작업 (Next Steps)
 
-### 🔴 로고 배경 있는 경우 처리 방법 찾기 → `Transparent PNG only`로 결론, 검증만 남음
-* **결론**: `rembg` 등 자동 제거 안 함 — `Design 팀이 투명본을 갖는다`는 전제에서 `UploadZone` `help`에 `IMPORTANT — Transparent PNG only` 명시 및 모서리 `alpha` 체크로 경고만. `satori`/`sharp`는 설치만 해두고 실제 제거는 미사용.
+### 🔴 Workers 이관 (마지막 단계) — 선행 블로커 있음
+1. **internalFireAndForgetFetch의 in-process 전환** ⚠️ 하드 블로커 — 자기 API를 향한 FnF(~20곳)를 함수 호출+`ctx.waitUntil`로. TailoredAd `internalFetch.ts` 패턴(로컬 폴백 포함). gateway 디스패처를 공유하는 형태가 깔끔.
+2. **Cloudflare Workers 배포 세팅** — `@opennextjs/cloudflare` + `wrangler.jsonc`(TailoredAd 패턴), GitHub 연동(Workers Builds). **Paid $5 결제 완료(30s CPU)**. env는 Build Variables + Secrets(`process.env`는 Workers에서 빌드타임 값 — 런타임 Secrets은 serverEnv 패턴 필요, 이때 getNeonDb·getR2·getAuth가 async 전환 필요할 수 있음 — 호출부 await 여부 점검).
+3. **웹훅 리포인트 3곳** — fal·suno·polar → prod 도메인 (지금은 CF Tunnel `dev.shortreal.ai`로 실측 완료된 상태).
+4. **컷오버 E2E** — 가입→결제→생성→Export 풀사이클, 크레딧 증감 신/구 diff 0, SSE 진행 표시, Supabase 프로젝트 폐기.
 
-### 🔴 Remotion 맛보기 — 에디터 진입 전 입혀서 다운로드
-* **현황**: `FormatTile` 다운로드는 `Canvas`로 합성본 `png` 맛보기 구현 완료(타일 우상단 버튼). `Remotion Still`은 `satori+sharp`가 더 깔끔하나 `Vercel` 서버리스에 `chrome` 없이 `satori`가 더 가볍고, `Detail` 미리보기(`div`)와 `Download` 결과물 1px 일치가 필요하면 `Still`로 승격 가능. 현재는 `Canvas`가 `ponytail`이라 서버 `Remotion` 없이 0.3초 컷.
-* **남은 것**: `Detail` 하단 `Download {ratioLabel}` 바(선택 타일)도 동일 합성 로직으로 교체할지, `Creative 일괄 5장` 다운로드 버튼 추가 여부 결정. `Vercel` `5분` 제한상 `sharp`/`satori`는 가능하나 `chrome+ffmpeg`는 `Lambda` 위임 필요 — `trigger/render-final-video.ts` 재사용 검토.
+### 🟡 짧은 잔여
+* **dev 브랜치 Neon Auth 활성화** — production만 켜짐. dev에서 로그인 재현되면 콘솔 토글 (현재는 prod 경유 동작 확인됨).
+* **`lib/api/types/supabase/` 폴더 개명** — 레거시 명칭 정리 (기능 무관, 여유 시).
+* **`.env.local`의 `SUPABASE_*` 5개 제거** — 의존 제거됐으니 env 정리 (사장님 몫).
+* **dev 세션 401 이슈 관찰** — A/B 재시작 사이클에서 세션 쿠키 무효화(클라는 이메일 보유, 서버는 세션 없음) 재현되면 auth 쿠키 오리진 점검. 재로그인으로 해결되는 상태.
 
-### 🔴 폰트 결정 주체 이관 (2단계)
-* prompt=`fontFamily+문구` (정체성, 5개 비율 동일), analysis=`fontSizePct/x/y/maxWidth/align/scrim/headlineColor(비율별)/fontWeight(비율별)` (배치, 비율별). `POST_AD_IMAGE_ANALYSIS_PROMPT.ts:171` 출력에 `color` 추가, 렌더 우선순위 `design.headline.color ?? copy.headlineColor`로 이관. 로고 배경 처리 후 별도 진행.
-
-### 🔴 다음 (UI)
-1. **Create 한 화면 미세 조정** — 완료 처리(이미 함, Subjects 3열로 재구성).
-2. **과금 확정** — 대기 (`success only` 문구 교체 완료, 실제 Polar 차감은 성공 에셋 수 기준으로 이전 필요 — 현재 `totalImages` 선차감).
-3. **Projects 리스트 썸네일 고도화** — 완료 (최고점 1장 커버 + `top center` 크롭, 실시간 갱신).
-
-### 🟡 대기
+### 🟢 ShortReal 기존 대기 (마이그레이션과 병행 가능)
 * CreateForm 최종 UI 확인(0스크롤·반응형·라이트/다크) — 사장 확인 대기
-* 요금 표시 방식(달러 vs 잔여 장수) 미결정
-* Remotion 폴더 구조 정리 (미완료)
-* 랜딩 CTA `/ad/create` 미연결, 액센트 색 불일치(#EF2B70 vs #E25E2C), ESLint 순환참조(tsc 대체 운용), 결과 화면 에디터 진입 버튼
-* 배치 간 재사용 추적 v1 미구현
+* 과금 확정 — `success only` 이전 (Polar 차감 기준)
+* Remotion 폴더 구조 정리, 액센트 색 불일치, ESLint 순환참조
+* 폰트 결정 주체 이관 (2단계) — prompt=패밀리+문구, analysis=배치+색/두께
 
 ---
 
 ## 4. 참고 (Reminders)
 
 * 공용: `getNextBaseResponse()` 사용, UI는 영어, 들여쓰기 4칸, 함수명 약어 금지. ESLint 불가 — `npx tsc --noEmit`으로 검증.
-* **요청 경로**: 클라이언트 `postFetch('/api/ad/image')` / `postFormFetch('/api/ad/ad-generation-batches/${batchId}/images', fd)` → baseFetch가 `/api/client-gateway?path=...`로 래핑 → gateway가 세션 인증(C2S)+`userId` 주입(멀티파트면 `formData`, 아니면 `json`) → `${BASE_URL}`(ngrok)으로 `x-internal-secret`과 함께 전달 → 내부 라우트는 S2S 가드. 내부 체이닝은 `internalFireAndForgetFetch(BASE_URL + 경로)` (query로 식별자, body로 페이로드, waitUntil로 실행 보장).
-* **API 경로 정석**: DB `ad_generation_batches` ↔ 서버 `app/api/ad/ad-generation-batches` + `[batchId]` (kebab-case 복수, ByUserId). 페이지는 UX 별칭 `app/ad/projects` + `[projectId]` 유지. 클라는 `adGenerationBatchClientAPI`가 정석 경로로 호출하고 `adProjectClientAPI`가 `projects/project` 별칭으로 래핑. 내부 타입/변수는 `batch`, 화면 텍스트/URL만 `Project`.
-* **Realtime**: `alter publication supabase_realtime add table public.ad_generation_batches;` + RLS `user_id = auth.uid()::text` 4개 정책. 리스트는 `channel('ad-batches-list-${user.id}-${rand}').on('postgres_changes', filter: user_id=eq.userId)` — `UPDATE` 시 `fetchProjects(true)`로 썸네일 갱신, 상세는 `channel('ad-batch-${projectId}-${rand}').on('postgres_changes', filter: id=eq.projectId)` — 세션 확보 후 구독, `supabase.removeChannel`로 정리, StrictMode 랜덤 suffix. 상세는 끊김 대비 4초 폴링 안전망 추가( `isRunning`일 때만).
-* **웹훅 관례**: `app/webhook/{provider}/` 위치, 절대 에러 상태로 응답하지 않음(200 유지). Replicate는 terminal 웹훅 실패 시 exponential backoff 재시도(최종 ~1분) + 순서 뒤바뀜 — 핸들러 멱등 필수. `ratioKey`는 query 1순위·없으면 `input.aspect_ratio` fallback, `attempt`는 재시도 횟수 추적.
-* **RPC 3종 원리**: 같은 행 jsonb 배열에 병렬 쓰기 → 앱 코드 read-modify-write 금지, RPC 단일 UPDATE+jsonb_set(행 잠금)만 사용. `jsonb_set` 경로는 `text[]`라 `array[p_creative_index::text, '...']`로 캐스팅 필수. RPC#1은 `imagePromptRecord` 단일(B안), RPC#2는 `p_file_extension text default null, p_error jsonb default null` 포함 마커, RPC#3은 `p_image_results` + error도 완료로 카운트. PostgREST 스키마 캐시는 `docker compose restart short-real-server`로 갱신.
-* **비율 파생 (확정)**: 기준 1:1 우선(없으면 캐노니컬 첫째) 1장 → 나머지는 기준 이미지 참조 재생성. `n=1` 재시도: 같은 비율 1회 재시도(총 2회) 후 차순위 base로 폴백, ratios도 1회 재시도. base 없으면 원본만 폴백. 원본 업로드 전이면 text-only 폴백.
-* **Replicate SDK**: `replicate@^1.4.0` 설치됨. `new Replicate({auth})`, `predictions.create({model: 'owner/name', input, webhook, webhook_events_filter:['completed']})`. output은 string|string[]|FileOutput — `adImageServerAPI.extractFirstOutputUrl`로 정규화. 모델 enum: NANO_BANANA(-PRO/-2/-2_LITE).
-* **파일 경로 규칙**: 입력 `{user_id}/{batch_id}/{product|person}_image.{ext}`, 로고 `{user_id}/{batch_id}/brand_logo_image.{ext}` 및 프로필 `{user_id}/profile/brand_logo.{ext}`, 출력 `{user_id}/{batch_id}/ad_generation_result_{c}_{ratio}.{ext}` — c+ratio+imageFileExtension으로 signed URL 재구성. 버킷 `ad_image_storage` (imageServerAPI, private, 생성 확인됨). 업로드 엔드포인트 `POST /api/ad/ad-generation-batches/[batchId]/images` (multipart, upsert:true, `product`/`person`/`brand_logo` 3종).
-* **AdImageResult**: `design: AdDesignLayout, score: number | null, imageFileExtension: string | null, error?: {code,message}|null` — process가 다운로드 시 `inferFileExtension`으로 확정, 실패 시 `error`로 격리.
-* **AdCreativeSpec**: `imagePromptRecord: Partial<Record<AdRatioKey,string>>` (B안), `seed: number` — 프롬프트 단계가 채움. `brand_palette`는 배치 생성 시 3-5 hex or null.
-* **AdCopySpec**: `headline: string | null, cta: string | null, fontFamily?: string | null (34개 중 하나), fontWeight?: number | null (해당 폰트 weightList 내), headlineColor?: 'white'|'black' | null` — prompt 단계가 채우고 `fontMap` 미등록 시 `Inter/400/white`로 교정.
-* **AdCreativeResult**: `creativeIndex: number, copy: AdCopySpec, imageResults: Partial<Record<AdRatioKey, AdImageResult>>` — Creative 단위 1:1 대응. Creative 상태는 `imageFileExtension`만 있으면 `Designing`, `score`까지 있어야 `Completed`.
-* **AdDesignLayout**: `headline:{text,x,y,maxWidth,align,fontSizePct,color?} | null, cta:{text,x,y,widthPct,fontSizePct}|null, logo:{brand,x,y,widthPct,fontSizePct}|null, scrim:boolean` — `x/y/maxWidth/widthPct/fontSizePct` 정수 0~100%, `fontSizePct` 2~6은 Vision 스펙상 `HEIGHT` 기준, 렌더는 `containerType:size` `cqh`로 높이 대비 렌더. `headline.color`는 analysis가 비율별로 정하고 모달은 `design.headline.color ?? copy.headlineColor`로 fallback.
-* **LLM**: Creative 디렉터 `GLM_5_3_FLASH`(vision, `imagePromptRecord`+`copy`+`reasoning`, 영어 고정, 이미지 우선) + 노트 분류 + 색상 통일(동일 hue) + 배경·조명 통일(5장 동일 문구, 구도만 비율별) + 폰트 34개 그룹화(`sans:22|serif:3|display:9`) 및 `fontWeight/headlineColor` 제약, Vision 분석 `GLM_5_3_FLASH`(멀티모달, 정수% 0-100, `brand_palette` 조건부, 영어 고정) + 로고(if `brand_logo true`면 `logo` 배치, 아니면 `null`) — `llmServerAPI.ts` `postAdCreativePrompt`/`postAdImageAnalysis` + 원문 로그, 프롬프트는 `POST_AD_{CREATIVE,IMAGE_ANALYSIS}_PROMPT.ts` 엘리트 250-320줄, `constraint`에 `ALL output text MUST be English only` 명시.
-* **썸네일**: 리스트 `GET /api/ad/ad-generation-batches`에서 `score` 최고 1장(없으면 첫 완료 1장)의 `thumbnailSignedUrls[batchId]` + `thumbnailRatioKeys[batchId]`를 발급, 카드 `4:3`에 `object-cover` + 세로 비율은 `object-position: top center`로 제품 보존. 없을 땐 스켈레톤.
-* **로고**: `Create` Subjects 3열 `Brand logo` 업로드(선택, `transparent PNG` 권장, `PnCn`은 경고만 스킵) → `ad_generation_batches.brand_logo jsonb` + Storage `brand_logo_image.{ext}` → prompt 3번째 이미지 + `<brand_logo>true/false`로 배경 로고 자리 확보, analysis 마지막 1장으로 로고 `x/y/widthPct` 배치, `Detail` 타일·모달 `AdOverlay`에 `brandLogoUrl` 있으면 `<img>`로 합성. `brand_logo` 컬럼은 `alter table ... add column if not exists brand_logo jsonb;` 후 `docker compose restart short-real-server`로 캐시 갱신 필요. 현재 `help`는 `IMPORTANT — Transparent PNG only…`로 강화, `rembg` 미사용.
-* **다운로드(맛보기)**: `FormatTile.tsx:40` 우상단 `Download`를 원본 `href`에서 `Canvas` 합성(`headline/scrim/CTA/brandLogo`를 `1080` 기준 `Canvas`에 그려 `toBlob→download`)으로 교체, `Vercel` `chrome` 없이 0.3초 컷. `satori@0.12` `sharp@0.33`은 `npm install` 후 `docker compose restart` 완료 — 서버 `satori+sharp` Still은 `Remotion` 대안으로 보관. `Detail` 하단 `Download {ratioLabel}` 바는 아직 원본 유지, 일괄 다운로드는 미구현.
-* **용어 계약 (확정)**: creatives × formats = assets, 실행 1회 = batch. 유저 노출은 Project(페이지/URL/텍스트), 서버/DB/내부 코드는 batch.
-* **시드 규칙**: creative별 서로 다른 seed / 같은 creative 내 비율 = 같은 seed. 재현은 저장된 specs(DB)가 담당.
-* **사장 UI 원칙**: px 하드코딩 금지(rem/vh/vw/%/fr), 광고 바닥 언어, 0스크롤 선호. Bento 12col (`Subjects 8 | How many+CTA 4 / Where 8 | Brand 4`), `Where` 돌담은 `ResizeObserver`로 `H=(W-32)/4.806` 실측 5개 1행·가로 중앙, 섹션 높이는 내용 높이대로. `optional` 배지로 즉시 인지. `Subjects`는 `Product|Person|Brand logo` 3열로 한 화면 유지.
-* **ad_variation_study.md**: §1·§2·§6 이미 최신(`imagePromptRecord`, `brand_palette`, HARD_BANNED 8개, fail-soft, n=1 재시도) — 색상 통일·배경 통일 추가 갱신 완료.
-* **supabase 파일**: `supabase/ad_generation_batches.sql` 삭제 — SQL은 직접 전달. `brand_palette` 컬럼, B안, `p_file_extension`+`p_error`는 사장 직접 실행 완료. 버킷 `ad_image_storage` 생성 확인됨, `app/ad/create/results` 폴더 삭제.
+* **개발 토폴로지 (2026-10-26 확정)**:
+  ```
+  외부 웹훅 (fal·suno·polar) → CF Tunnel(dev.shortreal.ai) → localhost:3001 (서버 B, Docker)
+  브라우저 → localhost:3000 (클라 A, 호스트) → baseFetch(NEXT_PUBLIC_BASE_URL=3001) → gateway → in-process 디스패치(라우트는 B에서 실행)
+  ```
+  * gateway 우선순위 = `BASE_URL(터널) || NEXT_PUBLIC_BASE_URL` — 어느 인스턴스에서 실행되든 터널(=서버 3001)로 종착하는 단일 진실. ⚠️ `NEXT_PUBLIC 우선`으로 바꾸면 컨테이너에서 `localhost:3001`이 존재하지 않는 포트라 ECONNREFUSED (실측 함정).
+  * **localhost는 실행 주체 좌표계** — 컨테이너에서 localhost = 컨테이너 자신. 크로스 홉 주소 지정 시 "어느 프로세스가 이 코드를 실행하는가"를 먼저 물어라.
+  * CF Tunnel은 외부 진입 전용 — 터널이 흔들려도(QUIC 단절 자동복구 실측) 로컬 API는 영향 없어야 정상.
+  * **Docker Desktop 사용 금지 확정** — 자체 VM이 systemd dockerd와 소켓·락 충돌. CLI + lazydocker(TUI)만.
+* **Workers 호출 모델 (이관 시)**: 요청 1 = isolate 1 = 페이지·API 전부 같은 실행 컨텍스트. **자기 zone fetch 금지**(inner invocation — TailoredAd 실측 사망) → 라우트 간 호출은 함수 직접 호출(라우트 테이블). FnF = in-process 호출 + `ctx.waitUntil`. **제한은 CPU 시간만**(Paid 30s 기본 — wall-clock 무제한, I/O 대기 불산출). 무거운 연산은 trigger.dev가 담당하는 기존 구조 유지.
+* **Neon 프로젝트**: `short-real` (id `green-dawn-44947241`), Singapore, PG17. 브랜치: `production`(br-holy-art-b3f7doa0) + `development`(br-damp-unit-b38v2xhi). DB `neondb`. 데이터는 development만(136 rows).
+* **R2**: 버킷 `short-real`(운영)/`short-real-dev`(개발·184파일)/`short-real-demo`(public·`assets.shortreal.ai`). 코드는 `CLOUDFLARE_R2_BUCKET=short-real` base명만 받고 dev에서 `-dev` 접미 자동. R2 토큰 스코프: `short-real`+`short-real-dev` (demo는 public이라 불필요).
+* **Upstash**: `short-real-redis` Singapore, PayG($0.2/10만 커맨드)+Max budget $20. Streams 전용(prefix `short-real:user/{id}`·`short-real:task/{id}`).
+* **Neon Auth**: production 브랜치 활성화, Google+GitHub. env `NEON_AUTH_BASE_URL`·`NEON_AUTH_COOKIE_SECRET`. Better Auth ID는 UUID가 아님 → **email 브릿지**(find-or-create) 필수 패턴.
+* **배포**: Cloudflare Workers Builds (GitHub 연동) — Build command `npx @opennextjs/cloudflare build`, Deploy `npx @opennextjs/cloudflare deploy`. `NEXT_PUBLIC_*`는 Build Variables 인라인.
+* **요청 경로 / RPC / 파일 경로 / LLM / 썸네일 / 다운로드 / 용어 계약 / 시드 규칙 / 사장 UI 원칙 / Remotion** 등 ShortReal 파이프라인 상세는 이전 세션 기록 및 `SHORTREAL-AD.md` 참조.
 * Remotion 4.0.507: `<OffthreadVideo>` + `colorSpace: 'bt709'`, 저사양 `concurrency: 1`.
