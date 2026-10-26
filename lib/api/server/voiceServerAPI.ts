@@ -1,4 +1,4 @@
-import {elevenLabsClient} from '@/lib/elevenLabsClient';
+import {getElevenLabsClient} from '@/lib/elevenLabsClient';
 import {Voice as VoiceOrigin} from "@elevenlabs/elevenlabs-js/api";
 import {
     Voice,
@@ -17,7 +17,7 @@ const VOICE_PREFIX = 'narration_voice_storage';
 export const voiceServerAPI = {
     // GET /voices - 사용 가능한 음성 목록 조회
     async getVoices(): Promise<Voice[]> {
-        const response = await elevenLabsClient.voices.getAll({
+        const response = await getElevenLabsClient().voices.getAll({
             showLegacy: false,
         });
 
@@ -58,7 +58,7 @@ export const voiceServerAPI = {
     ): Promise<VoiceGenerationResult> {
         try {
             // ElevenLabs API 호출
-            const audioConvertResponse = await elevenLabsClient.textToSpeech.convertWithTimestamps(voiceId, {
+            const audioConvertResponse = await getElevenLabsClient().textToSpeech.convertWithTimestamps(voiceId, {
                 text: text,
                 modelId: voiceModelId,
                 outputFormat: voiceOutputFormat,
