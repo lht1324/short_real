@@ -1,10 +1,12 @@
 // app/api/video/export/tiktok/upload/route.ts
 
 import { NextRequest } from 'next/server';
-import { createSupabaseServiceRoleClient } from '@/lib/supabase/supabaseServiceRole';
 import { getNextBaseResponse } from '@/lib/utils/getNextBaseResponse';
-import { DownloadResult } from '@supabase/storage-js';
+import { and, eq } from "drizzle-orm";
 import { videoGenerationTasksServerAPI } from '@/lib/api/server/videoGenerationTasksServerAPI';
+import { getNeonDb } from "@/lib/db/neon";
+import { autopilotData, userTiktokTokens } from "@/lib/db/schema";
+import { r2ServerAPI } from "@/lib/r2";
 import {getIsValidRequestS2S} from "@/lib/utils/getIsValidRequest";
 import {ExportPlatform, ExportStatus} from "@/lib/api/types/supabase/VideoGenerationTasks";
 import JSONbig from 'json-bigint';
@@ -22,8 +24,6 @@ export async function POST(request: NextRequest) {
         });
     }
 
-    const supabase = createSupabaseServiceRoleClient();
-
     const { searchParams } = new URL(request.url);
     const taskId = searchParams.get('taskId');
     const tokenIdRaw = searchParams.get('tokenId');
@@ -36,6 +36,8 @@ export async function POST(request: NextRequest) {
             error: 'Missing required query param: taskId',
         });
     }
+
+    const db = getNeonDb();
 
     try {
         const videoGenerationTask = await videoGenerationTasksServerAPI.getVideoGenerationTaskById(taskId);
@@ -79,30 +81,30 @@ export async function POST(request: NextRequest) {
         let targetTokenIdToQuery: string | null = decryptedTokenId;
 
         if (!targetTokenIdToQuery && videoGenerationTask.series_id) {
-            const { data: autopilot } = await supabase
-                .from('autopilot_data')
-                .select('tiktok_token_id')
-                .eq('id', videoGenerationTask.series_id)
-                .single();
-            if (autopilot?.tiktok_token_id) {
-                targetTokenIdToQuery = autopilot.tiktok_token_id;
+            const autopilotRows = await db
+                .select({ tiktok_token_id: autopilotData.tiktok_token_id })
+                .from(autopilotData)
+                .where(eq(autopilotData.id, videoGenerationTask.series_id))
+                .limit(1);
+            if (autopilotRows[0]?.tiktok_token_id) {
+                targetTokenIdToQuery = autopilotRows[0].tiktok_token_id;
             }
         }
 
-        let tokenQuery = supabase
-             .from('user_tiktok_tokens')
-             .select('*')
-             .eq('user_id', userId);
-
+        const tokenConditions = [eq(userTiktokTokens.user_id, userId)];
         if (targetTokenIdToQuery) {
-            tokenQuery = tokenQuery.eq('id', targetTokenIdToQuery);
+            tokenConditions.push(eq(userTiktokTokens.id, targetTokenIdToQuery));
         }
 
-        const { data: tokenData, error: tokenError } = await tokenQuery
-             .maybeSingle();
+        const tokenRows = await db
+            .select()
+            .from(userTiktokTokens)
+            .where(and(...tokenConditions))
+            .limit(1);
+        const tokenData = tokenRows[0] ?? null;
 
-        if (tokenError || !tokenData) {
-            console.error('[TikTok Upload] Token not found:', tokenError);
+        if (!tokenData) {
+            console.error('[TikTok Upload] Token not found');
             await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, {
                 export_status: ExportStatus.FAILED,
                 export_platform: ExportPlatform.TIKTOK,
@@ -115,8 +117,9 @@ export async function POST(request: NextRequest) {
             });
         }
 
-        // 2. refresh_token 만료 확인
-        if (Date.now() >= new Date(tokenData.refresh_expires_at).getTime()) {
+        // 2. refresh_token 만료 확인 (null이면 epoch 취급 → 만료 — 기존 계약 동일)
+        const refreshExpiresAt = tokenData.refresh_expires_at;
+        if (!refreshExpiresAt || Date.now() >= new Date(refreshExpiresAt).getTime()) {
             console.error('[TikTok Upload] Refresh token expired');
             await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, {
                 export_status: ExportStatus.FAILED,
@@ -164,26 +167,26 @@ export async function POST(request: NextRequest) {
             const newTokens = await refreshResponse.json();
             accessToken = newTokens.access_token;
 
-            await supabase
-                .from('user_tiktok_tokens')
-                .update({
+            await db
+                .update(userTiktokTokens)
+                .set({
                     access_token: newTokens.access_token,
                     expires_at: new Date(Date.now() + newTokens.expires_in * 1000).toISOString(),
                     updated_at: new Date().toISOString(),
                     last_used_at: new Date().toISOString(),
                 })
-                .eq('id', tokenData.id);
+                .where(eq(userTiktokTokens.id, tokenData.id));
 
             console.log('[TikTok Upload] Token refreshed successfully');
         }
 
-        // 4. Supabase Storage에서 영상 파일 다운로드
+        // 4. R2(processed_video_storage 폴더)에서 영상 파일 다운로드
         console.log('[TikTok Upload] Downloading video from storage...');
-        const { data: fileData, error: downloadError }: DownloadResult<Blob> = await supabase.storage
-            .from('processed_video_storage')
-            .download(`${userId}/${taskId}/${taskId}_final.mp4`);
-
-        if (downloadError || !fileData) {
+        let buffer: ArrayBuffer;
+        try {
+            const bytes = await r2ServerAPI.getObject(`processed_video_storage/${userId}/${taskId}/${taskId}_final.mp4`);
+            buffer = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer;
+        } catch (downloadError) {
             console.error('[TikTok Upload] Video download failed:', downloadError);
             await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, {
                 export_status: ExportStatus.FAILED,
@@ -197,7 +200,6 @@ export async function POST(request: NextRequest) {
             });
         }
 
-        const buffer = await fileData.arrayBuffer();
         const videoSize = buffer.byteLength;
 
         const chunkSize = videoSize < MIN_CHUNK
@@ -301,10 +303,10 @@ export async function POST(request: NextRequest) {
             });
         }
 
-        await supabase
-            .from('user_tiktok_tokens')
-            .update({ last_used_at: new Date().toISOString() })
-            .eq('id', tokenData.id);
+        await db
+            .update(userTiktokTokens)
+            .set({ last_used_at: new Date().toISOString() })
+            .where(eq(userTiktokTokens.id, tokenData.id));
 
         console.log('[TikTok Upload] Success! URL:', videoUrl);
         await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, {

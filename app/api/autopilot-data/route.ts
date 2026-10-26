@@ -1,9 +1,11 @@
 import { NextRequest } from "next/server";
 import { getNextBaseResponse } from "@/lib/utils/getNextBaseResponse";
-import { createSupabaseServiceRoleClient } from "@/lib/supabase/supabaseServiceRole";
+import { count, eq } from "drizzle-orm";
 import { AutopilotData } from "@/lib/api/types/supabase/AutopilotData";
 import { getIsValidRequestS2S } from "@/lib/utils/getIsValidRequest";
 import { getAutopilotLimitByPlan } from "@/lib/utils/subscriptionUtils";
+import { getNeonDb } from "@/lib/db/neon";
+import { autopilotData, users } from "@/lib/db/schema";
 
 /**
  * POST /api/autopilot-data
@@ -30,18 +32,18 @@ export async function POST(
         });
     }
 
-    const supabase = createSupabaseServiceRoleClient();
+    const db = getNeonDb();
 
     try {
-        // 1. Get user plan
-        const { data: userData, error: userError } = await supabase
-            .from('users')
-            .select('plan')
-            .eq('id', sessionUserId)
-            .single();
+        // 1. Get user plan (Supabase .single() 계약 — 없으면 에러)
+        const userRows = await db
+            .select({ plan: users.plan })
+            .from(users)
+            .where(eq(users.id, sessionUserId))
+            .limit(1);
 
-        if (userError) {
-            console.error('Fetch user plan error:', userError);
+        if (!userRows[0]) {
+            console.error('Fetch user plan error: no row');
             return getNextBaseResponse({
                 success: false,
                 status: 500,
@@ -50,23 +52,15 @@ export async function POST(
         }
 
         // 2. Count existing autopilot series
-        const { count, error: countError } = await supabase
-            .from('autopilot_data')
-            .select('*', { count: 'exact', head: true })
-            .eq('user_id', sessionUserId);
-
-        if (countError) {
-            console.error('Count autopilot series error:', countError);
-            return getNextBaseResponse({
-                success: false,
-                status: 500,
-                error: 'Failed to verify existing series limit.'
-            });
-        }
+        const countRows = await db
+            .select({ value: count() })
+            .from(autopilotData)
+            .where(eq(autopilotData.user_id, sessionUserId));
+        const existingCount = Number(countRows[0]?.value ?? 0);
 
         // 3. Verify against plan limit
-        const limit = getAutopilotLimitByPlan(userData?.plan);
-        if (count !== null && count >= limit) {
+        const limit = getAutopilotLimitByPlan(userRows[0]?.plan);
+        if (existingCount >= limit) {
             return getNextBaseResponse({
                 success: false,
                 status: 403,
@@ -76,17 +70,19 @@ export async function POST(
 
         const newAutopilotData: Partial<AutopilotData> = await request.json();
 
-        const { data, error } = await supabase
-            .from('autopilot_data')
-            .insert({
-                ...newAutopilotData,
-                user_id: sessionUserId // Force the user_id to be the authenticated user
-            })
-            .select()
-            .single();
+        // 페이로드는 클라이언트가 보내며 누락 NOT NULL 필드는 DB 제약이 걸러준다.
+        const insertPayload = {
+            ...newAutopilotData,
+            user_id: sessionUserId // Force the user_id to be the authenticated user
+        } as typeof autopilotData.$inferInsert;
 
-        if (error) {
-            console.error('Autopilot insert error:', error);
+        const [data] = await db
+            .insert(autopilotData)
+            .values(insertPayload)
+            .returning();
+
+        if (!data) {
+            console.error('Autopilot insert error: no row returned');
             return getNextBaseResponse({
                 success: false,
                 status: 500,

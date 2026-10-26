@@ -1,7 +1,9 @@
 import { NextRequest } from "next/server";
 import { getNextBaseResponse } from "@/lib/utils/getNextBaseResponse";
-import { createSupabaseServiceRoleClient } from "@/lib/supabase/supabaseServiceRole";
+import { and, eq } from "drizzle-orm";
 import { getIsValidRequestS2S } from "@/lib/utils/getIsValidRequest";
+import { getNeonDb } from "@/lib/db/neon";
+import { autopilotData, userTiktokTokens, userYoutubeTokens } from "@/lib/db/schema";
 
 /**
  * GET /api/autopilot-data/platform-connection
@@ -28,38 +30,43 @@ export async function GET(request: NextRequest) {
         });
     }
 
-    const supabase = createSupabaseServiceRoleClient();
+    const db = getNeonDb();
 
     try {
-        // 1. autopilot_data에서 해당 시리즈의 토큰 ID들 조회
-        const { data: autopilot } = await supabase
-            .from('autopilot_data')
-            .select('youtube_token_id, tiktok_token_id')
-            .eq('id', seriesId)
-            .single();
+        // 1. autopilot_data에서 해당 시리즈의 토큰 ID들 조회 (Supabase .single() 계약 — 없으면 에러)
+        const autopilotRows = await db
+            .select({ youtube_token_id: autopilotData.youtube_token_id, tiktok_token_id: autopilotData.tiktok_token_id })
+            .from(autopilotData)
+            .where(eq(autopilotData.id, seriesId))
+            .limit(1);
+
+        if (!autopilotRows[0]) {
+            throw new Error(`autopilot series not found: ${seriesId}`);
+        }
+        const autopilot = autopilotRows[0];
 
         let youtubeToken = null;
         let tiktokToken = null;
 
         if (autopilot) {
             const [youtubeResult, tiktokResult] = await Promise.all([
-                autopilot.youtube_token_id 
-                    ? supabase
-                        .from('user_youtube_tokens')
-                        .select('user_id, handle_name, display_name')
-                        .eq('id', autopilot.youtube_token_id)
-                        .maybeSingle()
-                    : Promise.resolve({ data: null }),
-                autopilot.tiktok_token_id 
-                    ? supabase
-                        .from('user_tiktok_tokens')
-                        .select('user_id, handle_name, display_name')
-                        .eq('id', autopilot.tiktok_token_id)
-                        .maybeSingle()
-                    : Promise.resolve({ data: null })
+                autopilot.youtube_token_id
+                    ? db
+                        .select({ user_id: userYoutubeTokens.user_id, handle_name: userYoutubeTokens.handle_name, display_name: userYoutubeTokens.display_name })
+                        .from(userYoutubeTokens)
+                        .where(eq(userYoutubeTokens.id, autopilot.youtube_token_id))
+                        .limit(1)
+                    : Promise.resolve([]),
+                autopilot.tiktok_token_id
+                    ? db
+                        .select({ user_id: userTiktokTokens.user_id, handle_name: userTiktokTokens.handle_name, display_name: userTiktokTokens.display_name })
+                        .from(userTiktokTokens)
+                        .where(eq(userTiktokTokens.id, autopilot.tiktok_token_id))
+                        .limit(1)
+                    : Promise.resolve([])
             ]);
-            youtubeToken = youtubeResult.data;
-            tiktokToken = tiktokResult.data;
+            youtubeToken = youtubeResult[0] ?? null;
+            tiktokToken = tiktokResult[0] ?? null;
         }
 
         return getNextBaseResponse({
@@ -122,7 +129,7 @@ export async function DELETE(request: NextRequest) {
         });
     }
 
-    const supabase = createSupabaseServiceRoleClient();
+    const db = getNeonDb();
 
     try {
         if (platform !== 'youtube' && platform !== 'tiktok') {
@@ -133,19 +140,24 @@ export async function DELETE(request: NextRequest) {
             });
         }
 
-        const updateField = platform === 'youtube' ? 'youtube_token_id' : 'tiktok_token_id';
-
         // 특정 시리즈의 토큰 맵핑 필드를 null로 업데이트하여 연동 해제
-        const { error } = await supabase
-            .from('autopilot_data')
-            .update({
-                [updateField]: null,
-                updated_at: new Date().toISOString()
-            })
-            .eq('id', seriesId)
-            .eq('user_id', sessionUserId);
-
-        if (error) throw error;
+        if (platform === 'youtube') {
+            await db
+                .update(autopilotData)
+                .set({
+                    youtube_token_id: null,
+                    updated_at: new Date().toISOString()
+                })
+                .where(and(eq(autopilotData.id, seriesId), eq(autopilotData.user_id, sessionUserId)));
+        } else {
+            await db
+                .update(autopilotData)
+                .set({
+                    tiktok_token_id: null,
+                    updated_at: new Date().toISOString()
+                })
+                .where(and(eq(autopilotData.id, seriesId), eq(autopilotData.user_id, sessionUserId)));
+        }
 
         return getNextBaseResponse({
             success: true,

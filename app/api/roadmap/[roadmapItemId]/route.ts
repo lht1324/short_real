@@ -1,16 +1,18 @@
-// app/api/roadmap/route.ts
+// app/api/roadmap/[roadmapItemId]/route.ts
 
 import { NextRequest } from "next/server";
 import { getNextBaseResponse } from "@/lib/utils/getNextBaseResponse";
-import { createSupabaseServiceRoleClient } from "@/lib/supabase/supabaseServiceRole";
+import { eq } from "drizzle-orm";
 import { RoadmapItem } from "@/lib/api/types/supabase/RoadmapItem";
 import { revalidateTag } from "next/cache";
+import { getNeonDb } from "@/lib/db/neon";
+import { roadmapItems } from "@/lib/db/schema";
 
 export async function DELETE(
     request: NextRequest,
     { params }: { params: Promise<{ roadmapItemId: string }> }
 ) {
-    const supabase = createSupabaseServiceRoleClient();
+    const db = getNeonDb();
 
     try {
         const { roadmapItemId } = await params;
@@ -23,19 +25,9 @@ export async function DELETE(
             });
         }
 
-        const { error } = await supabase
-            .from('roadmap_items')
-            .delete()
-            .eq('id', roadmapItemId);
-
-        if (error) {
-            console.error('Roadmap delete error:', error);
-            return getNextBaseResponse({
-                success: false,
-                status: 500,
-                error: 'Failed to delete roadmap items.'
-            });
-        }
+        await db
+            .delete(roadmapItems)
+            .where(eq(roadmapItems.id, roadmapItemId));
 
         // 삭제 성공 시 캐시 무효화
         revalidateTag('roadmap', 'hours');
@@ -61,7 +53,7 @@ export async function PATCH(
     request: NextRequest,
     { params }: { params: Promise<{ roadmapItemId: string }> }
 ) {
-    const supabase = createSupabaseServiceRoleClient();
+    const db = getNeonDb();
 
     try {
         const { roadmapItemId } = await params;
@@ -77,18 +69,19 @@ export async function PATCH(
 
         const currentDateString = new Date().toISOString();
 
-        const { data: patchRoadmapItemResult, error } = await supabase
-            .from('roadmap_items')
-            .update({
+        // Supabase .select().single() 계약 — 업데이트 대상이 없으면 에러
+        const patchResult = await db
+            .update(roadmapItems)
+            .set({
                 ...newRoadmapItem,
                 updated_at: currentDateString,
             })
-            .eq('id', roadmapItemId)
-            .select()
-            .single();
+            .where(eq(roadmapItems.id, roadmapItemId))
+            .returning();
 
-        if (error) {
-            console.error('Roadmap patch error:', error);
+        const patchRoadmapItemResult = patchResult[0];
+        if (!patchRoadmapItemResult) {
+            console.error('Roadmap patch error: no row updated');
             return getNextBaseResponse({
                 success: false,
                 status: 500,

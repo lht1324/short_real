@@ -8,8 +8,11 @@ import {
     VoiceSettings
 } from "@/lib/api/types/eleven-labs/Voice";
 import {SceneData, SubtitleSegment} from "@/lib/api/types/supabase/VideoGenerationTasks";
-import {createSupabaseServiceRoleClient} from "@/lib/supabase/supabaseServiceRole";
+import {r2ServerAPI} from "@/lib/r2";
 import Replicate from "replicate";
+
+// R2 키 접두 — 구 Supabase 버킷명을 폴더로 사용
+const VOICE_PREFIX = 'narration_voice_storage';
 
 export const voiceServerAPI = {
     // GET /voices - 사용 가능한 음성 목록 조회
@@ -158,7 +161,6 @@ export const voiceServerAPI = {
         const replicate = new Replicate({
             auth: process.env.REPLICATE_API_TOKEN,
         });
-        const supabase = createSupabaseServiceRoleClient();
 
         try {
             // 1. 배속 계산 (FFmpeg atempo 필터용)
@@ -167,29 +169,18 @@ export const voiceServerAPI = {
 
             // 2. 임시 업로드 (Replicate 호출용)
             const tempFileName = `temp/scale-voice-${tempIdentifier}.mp3`;
-            const { error: uploadError } = await supabase.storage
-                .from('narration_voice_storage')
-                .upload(tempFileName, voiceResult.audioBuffer, {
-                    contentType: 'audio/mpeg',
-                    upsert: true
-                });
+            await r2ServerAPI.putObject(`${VOICE_PREFIX}/${tempFileName}`, voiceResult.audioBuffer, 'audio/mpeg');
 
-            if (uploadError) throw new Error(`Temp audio upload failed: ${uploadError.message}`);
-
-            const { data: signedData, error: signedError } = await supabase.storage
-                .from('narration_voice_storage')
-                .createSignedUrl(tempFileName, 300);
-
-            if (signedError || !signedData?.signedUrl) throw new Error("Failed to create signed URL for temp audio.");
+            const tempSignedUrl = await r2ServerAPI.presignGet(`${VOICE_PREFIX}/${tempFileName}`, 300);
 
             // 3. Replicate FFmpeg Sandbox 호출
             // atempo 필터는 0.5 ~ 2.0 사이만 지원하나, 현재 우리의 보정 범위(1.0 ~ 1.15)는 안전함.
             const ffmpegArgs = `-filter:a "atempo=${speed}" -c:a libmp3lame -q:a 2`;
-            
+
             const prediction = await replicate.predictions.create({
                 version: "lht1324/ffmpeg-sandbox-2:06262bdc243f9afe6d1b9a8d338ab536044d0604ce4c420c9cde7ee7fe781339",
                 input: {
-                    video_urls: JSON.stringify([signedData.signedUrl]),
+                    video_urls: JSON.stringify([tempSignedUrl]),
                     ffmpeg_args: ffmpegArgs,
                 }
             });
@@ -212,7 +203,7 @@ export const voiceServerAPI = {
             }));
 
             // 6. 임시 파일 삭제 (비동기로 진행하여 응답 속도 확보)
-            supabase.storage.from('narration_voice_storage').remove([tempFileName]).catch(console.error);
+            r2ServerAPI.deleteKeys([`${VOICE_PREFIX}/${tempFileName}`]).catch(console.error);
 
             return {
                 audioBuffer: scaledAudioBuffer,
@@ -225,26 +216,15 @@ export const voiceServerAPI = {
         }
     },
 
-    // POST /voices/narration/storage - 오디오 Buffer를 Supabase Storage에 저장
+    // POST /voices/narration/storage - 오디오 Buffer를 R2(narration_voice_storage 폴더)에 저장
     async postNarrationBufferStream(
         audioBuffer: Buffer,
         taskId: string,
         userId: string,
     ) {
-        // Supabase Storage에 저장
-        const supabase = createSupabaseServiceRoleClient();
         const fileName = `${userId}/${taskId}/voice_full.mp3`;
 
-        const { data, error: uploadError } = await supabase.storage
-            .from('narration_voice_storage')
-            .upload(fileName, audioBuffer, {
-                contentType: 'audio/mpeg',
-                upsert: true
-            });
-
-        if (uploadError) {
-            throw new Error(`Storage upload failed: ${uploadError.message}`);
-        }
+        await r2ServerAPI.putObject(`${VOICE_PREFIX}/${fileName}`, audioBuffer, 'audio/mpeg');
 
         return {
             success: true,
@@ -253,31 +233,11 @@ export const voiceServerAPI = {
     },
 
     async getVoiceSignedUrl(taskId: string, userId: string) {
-        const supabase = createSupabaseServiceRoleClient();
-
-        const { data, error } = await supabase.storage
-            .from('narration_voice_storage')
-            .createSignedUrl(`${userId}/${taskId}/voice_full.mp3`, 60 * 60);
-
-        if (!data || !data.signedUrl) {
-            throw new Error(error instanceof Error ? error.message : "Unexpected error in getVoiceSignedUrl()");
-        }
-
-        return data.signedUrl;
+        return r2ServerAPI.presignGet(`${VOICE_PREFIX}/${userId}/${taskId}/voice_full.mp3`, 60 * 60);
     },
 
     async getSceneVoiceSignedUrl(taskId: string, userId: string, sceneNumber: number) {
-        const supabase = createSupabaseServiceRoleClient();
-
-        const { data, error } = await supabase.storage
-            .from('narration_voice_storage')
-            .createSignedUrl(`${userId}/${taskId}/voice_${sceneNumber}.mp3`, 60 * 60);
-
-        if (!data || !data.signedUrl) {
-            throw new Error(error instanceof Error ? error.message : "Unexpected error in getSceneVoiceSignedUrl()");
-        }
-
-        return data.signedUrl;
+        return r2ServerAPI.presignGet(`${VOICE_PREFIX}/${userId}/${taskId}/voice_${sceneNumber}.mp3`, 60 * 60);
     },
 
     async sliceVoiceToScenes(
@@ -288,7 +248,6 @@ export const voiceServerAPI = {
         const replicate = new Replicate({
             auth: process.env.REPLICATE_API_TOKEN,
         });
-        const supabase = createSupabaseServiceRoleClient();
 
         try {
             // 1. 이미 업로드되어 있는 통짜 오디오의 Signed URL을 확보합니다.
@@ -330,7 +289,7 @@ export const voiceServerAPI = {
                     throw new Error(`Failed to slice audio for scene ${sceneNumber}`);
                 }
 
-                // 3. 잘려진 오디오 파일을 다운로드하여 Supabase Storage에 업로드합니다.
+                // 3. 잘려진 오디오 파일을 다운로드하여 R2(narration_voice_storage 폴더)에 업로드합니다.
                 const response = await fetch(processedAudioUrl.toString());
                 if (!response.ok) {
                     throw new Error(`Failed to download sliced audio for scene ${sceneNumber}`);
@@ -338,16 +297,7 @@ export const voiceServerAPI = {
                 const slicedAudioBuffer = Buffer.from(await response.arrayBuffer());
 
                 const storagePath = `${userId}/${taskId}/voice_${sceneNumber}.mp3`;
-                const { error: uploadError } = await supabase.storage
-                    .from('narration_voice_storage')
-                    .upload(storagePath, slicedAudioBuffer, {
-                        contentType: 'audio/mpeg',
-                        upsert: true
-                    });
-
-                if (uploadError) {
-                    throw new Error(`Storage upload failed for scene ${sceneNumber}: ${uploadError.message}`);
-                }
+                await r2ServerAPI.putObject(`${VOICE_PREFIX}/${storagePath}`, slicedAudioBuffer, 'audio/mpeg');
 
                 console.log(`[sliceVoiceToScenes] Scene ${sceneNumber} sliced & uploaded successfully.`);
             });

@@ -4,11 +4,14 @@ import {getNextBaseResponse} from "@/lib/utils/getNextBaseResponse";
 import {videoGenerationTasksServerAPI} from "@/lib/api/server/videoGenerationTasksServerAPI";
 import {llmServerAPI} from "@/lib/api/server/llmServerAPI";
 import {internalFireAndForgetFetch} from "@/lib/utils/internalFetch";
-import {createSupabaseServiceRoleClient} from "@/lib/supabase/supabaseServiceRole";
 import {AutopilotData} from "@/lib/api/types/supabase/AutopilotData";
 import {VideoGenerationTask, VideoGenerationTaskStatus} from "@/lib/api/types/supabase/VideoGenerationTasks";
 import {musicServerAPI} from "@/lib/api/server/musicServerAPI";
 import {voiceServerAPI} from "@/lib/api/server/voiceServerAPI";
+import {r2ServerAPI} from "@/lib/r2";
+import {getNeonDb} from "@/lib/db/neon";
+import {autopilotData} from "@/lib/db/schema";
+import {eq} from "drizzle-orm";
 import Replicate from "replicate";
 
 export async function POST(
@@ -22,7 +25,6 @@ export async function POST(
         });
     }
 
-    const supabase = createSupabaseServiceRoleClient();
     const replicate = new Replicate({
         auth: process.env.REPLICATE_API_TOKEN,
     });
@@ -56,13 +58,13 @@ export async function POST(
             throw new Error('Fetching video generation task is failed.');
         }
 
-        const { data: autopilotData, error } = await supabase
-            .from('autopilot_data')
-            .select('*')
-            .eq('id', seriesId)
-            .single();
+        const [autopilotDataRow] = await getNeonDb()
+            .select()
+            .from(autopilotData)
+            .where(eq(autopilotData.id, seriesId))
+            .limit(1);
 
-        if (error) {
+        if (!autopilotDataRow) {
             throw new Error('Fetching autopilot data is failed.');
         }
 
@@ -82,7 +84,7 @@ export async function POST(
 
         const {
             niche_value: nicheValue,
-        }: AutopilotData = autopilotData;
+        }: AutopilotData = autopilotDataRow as unknown as AutopilotData;
 
         // [Step 1] 예술적 곡 선택 (Artistic Song Selection) Prep
         const firstMusicUrl = await musicServerAPI.getMusicSignedUrl(`${userId}/${taskId}/${taskId}_0.mp3`, 60 * 60);
@@ -149,7 +151,7 @@ export async function POST(
             throw new Error("Music preprocessing failed: No output from Replicate");
         }
 
-        // 추출된 후보 클립들을 Supabase Storage에 업로드
+        // 추출된 후보 클립들을 R2에 업로드
         const uploadPromises = preprocessorResult.map(async (url, index) => {
             const response = await fetch(url);
             if (!response.ok) throw new Error(`Failed to fetch candidate ${index} from ${url}`);
@@ -157,14 +159,7 @@ export async function POST(
             const arrayBuffer = await response.arrayBuffer();
             const storagePath = `${userId}/${taskId}/candidate_${index}.mp3`;
 
-            const { error: uploadError } = await supabase.storage
-                .from('video_music_temp_storage')
-                .upload(storagePath, arrayBuffer, {
-                    contentType: 'audio/mpeg',
-                    upsert: true
-                });
-
-            if (uploadError) throw new Error(`Failed to upload candidate ${index}: ${uploadError.message}`);
+            await r2ServerAPI.putObject(`video_music_temp_storage/${storagePath}`, arrayBuffer, 'audio/mpeg');
 
             return storagePath;
         });
@@ -208,15 +203,14 @@ export async function POST(
 
         console.log(`[Music Mixing] Calculated mixingGainDb: ${mixingGainDb}dB (Intensity: ${scriptIntensity})`);
 
-        // [Step 3.5] 최종 선택된 파일을 autopilot_cut_music.mp3로 고정 (사장님 요청사항)
+        // R2 copy (upsert 계약 — copyObject는 대상 키 덮어쓰기)
         const selectedCandidatePath = `${userId}/${taskId}/candidate_${finalCandidateIndex}.mp3`;
         const finalCutMusicPath = `${userId}/${taskId}/autopilot_cut_music.mp3`;
 
-        const { error: copyError } = await supabase.storage
-            .from('video_music_temp_storage')
-            .copy(selectedCandidatePath, finalCutMusicPath);
-
-        if (copyError) throw new Error(`Failed to copy selected candidate to final path: ${copyError.message}`);
+        await r2ServerAPI.copyObject(
+            `video_music_temp_storage/${selectedCandidatePath}`,
+            `video_music_temp_storage/${finalCutMusicPath}`,
+        );
 
         // DB 업데이트: 최종 선택된 정보와 가공 완료 플래그 저장
         await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, {

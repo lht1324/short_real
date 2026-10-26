@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createSupabaseServiceRoleClient } from "@/lib/supabase/supabaseServiceRole";
 import { User } from "@/lib/api/types/supabase/Users";
-import { PostgrestError } from "@supabase/supabase-js";
 import { PolarClient } from "@/lib/PolarClient";
+import { getNeonDb } from "@/lib/db/neon";
+import { users } from "@/lib/db/schema";
+import { and, eq, isNotNull, lte } from "drizzle-orm";
 
 export async function GET(request: NextRequest) {
-    const supabase = createSupabaseServiceRoleClient();
     const polar = new PolarClient().getClient();
 
     // 1. 보안 체크
@@ -14,25 +14,23 @@ export async function GET(request: NextRequest) {
         return new NextResponse('Unauthorized', { status: 401 });
     }
 
+    const db = getNeonDb();
+
     // 2. 대상 유저 조회 (만료 2시간 전 이내인 유저)
     // 변경점: 2시간 버퍼 설정 (안전 + 비용 효율 최적화)
     const targetDate = new Date();
     targetDate.setHours(targetDate.getHours() + 3); // NOW + 3h
 
-    const {
-        data: targetUsers,
-        error
-    }: {
-        data: User[] | null;
-        error: PostgrestError | null;
-    } = await supabase
-        .from('users')
-        .select('*')
-        .not('scheduled_downgrade_at', 'is', null)
-        .lte('scheduled_downgrade_at', targetDate.toISOString()) // 3시간 이내 만료 예정
-        .not('downgrade_target_plan_id', 'is', null);
+    const targetUsers = await db
+        .select()
+        .from(users)
+        .where(and(
+            isNotNull(users.scheduled_downgrade_at),
+            lte(users.scheduled_downgrade_at, targetDate.toISOString()), // 3시간 이내 만료 예정
+            isNotNull(users.downgrade_target_plan_id),
+        ));
 
-    if (targetUsers && targetUsers.length > 0) {
+    if (targetUsers.length > 0) {
         console.log(`[DEBUG] Found ${targetUsers.length} users with scheduled downgrades.`);
 
         targetUsers.forEach((user) => {
@@ -50,16 +48,12 @@ export async function GET(request: NextRequest) {
         console.log('[DEBUG] No users found matching the criteria.');
     }
 
-    if (error) {
-        console.error('Error fetching scheduled downgrades:', error);
-        return NextResponse.json({ success: false, error: error.message }, { status: 500 });
-    }
-
-    if (!targetUsers || targetUsers.length === 0) {
+    if (targetUsers.length === 0) {
         return NextResponse.json({ success: true, message: 'No scheduled downgrades to process' });
     }
 
     // 3. 순회하며 처리
+    let processed = 0;
     for (const user of targetUsers) {
         try {
             // [중요] subscription_id 필드가 Users 테이블에 있어야 합니다.
@@ -89,18 +83,15 @@ export async function GET(request: NextRequest) {
             });
 
             // DB 초기화 (성공 시)
-            const { error: updateError } = await supabase
-                .from('users')
-                .update({
+            await db
+                .update(users)
+                .set({
                     scheduled_downgrade_at: null,
-                    downgrade_target_plan_id: null
+                    downgrade_target_plan_id: null,
                 })
-                .eq('id', user.id);
+                .where(eq(users.id, user.id));
 
-            if (updateError) {
-                console.error(`Failed to update user ${user.id}:`, updateError);
-            }
-
+            processed++;
         } catch (error) {
             console.error(`Downgrade failed for user ${user.id}`, error);
         }

@@ -1,5 +1,4 @@
 import {NextRequest} from "next/server";
-import {createSupabaseServiceRoleClient} from "@/lib/supabase/supabaseServiceRole";
 import {videoGenerationTasksServerAPI} from "@/lib/api/server/videoGenerationTasksServerAPI";
 import {taskCheckAndCleanupIfCancelled} from "@/lib/utils/taskCheckAndCleanupIfCancelled";
 import {SceneData, SceneGenerationStatus, VideoGenerationTaskStatus} from "@/lib/api/types/supabase/VideoGenerationTasks";
@@ -10,6 +9,9 @@ import {delay} from "@/lib/utils/asyncUtils";
 import {getIsValidRequestS2S} from "@/lib/utils/getIsValidRequest";
 import {usersServerAPI} from "@/lib/api/server/usersServerAPI";
 import {aiModelDataServerAPI} from "@/lib/api/server/aiModelDataServerAPI";
+import {r2ServerAPI} from "@/lib/r2";
+import {getNeonDb} from "@/lib/db/neon";
+import {sql} from "drizzle-orm";
 
 export async function POST(request: NextRequest) {
     if (!getIsValidRequestS2S(request)) {
@@ -19,8 +21,6 @@ export async function POST(request: NextRequest) {
             error: 'Unauthorized internal request',
         });
     }
-
-    const supabase = createSupabaseServiceRoleClient();
 
     // URL에서 파라미터 추출
     const { searchParams } = new URL(request.url);
@@ -115,16 +115,9 @@ export async function POST(request: NextRequest) {
                 };
             }
 
-            const { data: imageData, error: imageError } = await supabase.storage
-                .from("scene_image_temp_storage")
-                .download(`${userId}/${taskId}/${sceneData.sceneNumber}.jpeg`);
+            const imageData = await r2ServerAPI.getObject(`scene_image_temp_storage/${userId}/${taskId}/${sceneData.sceneNumber}.jpeg`);
 
-            if (imageError || !imageData) {
-                throw new Error(`Supabase image download error for scene #${sceneData.sceneNumber}: ${imageError?.message}`);
-            }
-
-            const imageArrayBuffer = await imageData.arrayBuffer();
-            const imageBase64 = Buffer.from(imageArrayBuffer).toString('base64');
+            const imageBase64 = Buffer.from(imageData).toString('base64');
 
             const postVideoGenPromptResult = await llmServerAPI.postVideoGenPrompt(
                 sceneData.sceneNumber,
@@ -175,14 +168,12 @@ export async function POST(request: NextRequest) {
                 resolution,
             );
 
-            const { error } = await supabase.rpc('update_scene_request_id', {
-                target_task_id: taskId,
-                target_scene_number: sceneData.sceneNumber,
-                new_request_id: requestId,
-            });
+            const rpcResult = await getNeonDb().execute(
+                sql`SELECT update_scene_request_id(${taskId}::uuid, ${sceneData.sceneNumber}::integer, ${requestId}::text)`
+            );
 
-            if (error) {
-                console.error(`Scene #${sceneData.sceneNumber} requestId update error: `, error);
+            if (!rpcResult) {
+                console.error(`Scene #${sceneData.sceneNumber} requestId update error`);
                 throw Error(`Updating requestId of Scene #${sceneData.sceneNumber} is failed.`);
             }
 

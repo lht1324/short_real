@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getIsValidRequestC2S } from '@/lib/utils/getIsValidRequest';
 import { getNextBaseResponse } from '@/lib/utils/getNextBaseResponse';
-import { createSupabaseServiceRoleClient } from "@/lib/supabase/supabaseServiceRole";
+import { and, eq } from "drizzle-orm";
+import { getNeonDb } from "@/lib/db/neon";
+import { autopilotData, userTiktokTokens } from "@/lib/db/schema";
 
 /**
  * GET /api/video/export/tiktok/autopilot/oauth
@@ -31,25 +33,28 @@ export async function GET(request: NextRequest) {
         });
     }
 
-    const supabase = createSupabaseServiceRoleClient();
+    const db = getNeonDb();
 
     try {
-        // 1. autopilot_data에서 해당 시리즈의 토큰 ID 조회
-        const { data: autopilot } = await supabase
-            .from('autopilot_data')
-            .select('tiktok_token_id')
-            .eq('id', seriesId)
-            .single();
+        // 1. autopilot_data에서 해당 시리즈의 토큰 ID 조회 (Supabase .single() 계약)
+        const autopilotRows = await db
+            .select({ tiktok_token_id: autopilotData.tiktok_token_id })
+            .from(autopilotData)
+            .where(eq(autopilotData.id, seriesId))
+            .limit(1);
+        const autopilot = autopilotRows[0];
 
-        let existingToken = null;
+        let existingToken: { refresh_token: string } | null = null;
         if (autopilot?.tiktok_token_id) {
-            const { data: token } = await supabase
-                .from('user_tiktok_tokens')
-                .select('refresh_token')
-                .eq('user_id', user.id)
-                .eq('id', autopilot.tiktok_token_id)
-                .maybeSingle();
-            existingToken = token;
+            const tokenRows = await db
+                .select({ refresh_token: userTiktokTokens.refresh_token })
+                .from(userTiktokTokens)
+                .where(and(
+                    eq(userTiktokTokens.user_id, user.id),
+                    eq(userTiktokTokens.id, autopilot.tiktok_token_id)
+                ))
+                .limit(1);
+            existingToken = tokenRows[0] ?? null;
         }
 
         if (existingToken?.refresh_token) {
@@ -63,10 +68,10 @@ export async function GET(request: NextRequest) {
             scope: 'user.info.basic,video.publish',
             response_type: 'code',
             redirect_uri: `${process.env.BASE_URL}/callback/tiktok`,
-            state: JSON.stringify({ 
-                seriesId: seriesId, 
-                userId: user.id, 
-                mode: 'autopilot' 
+            state: JSON.stringify({
+                seriesId: seriesId,
+                userId: user.id,
+                mode: 'autopilot'
             }),
         });
 

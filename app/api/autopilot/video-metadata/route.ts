@@ -5,7 +5,9 @@ import {videoGenerationTasksServerAPI} from "@/lib/api/server/videoGenerationTas
 import {llmServerAPI} from "@/lib/api/server/llmServerAPI";
 import {voiceServerAPI} from "@/lib/api/server/voiceServerAPI";
 import {internalFireAndForgetFetch} from "@/lib/utils/internalFetch";
-import {createSupabaseServiceRoleClient} from "@/lib/supabase/supabaseServiceRole";
+import {getNeonDb} from "@/lib/db/neon";
+import {autopilotData as autopilotDataTable} from "@/lib/db/schema";
+import {eq} from "drizzle-orm";
 import {AutopilotData} from "@/lib/api/types/supabase/AutopilotData";
 import {
     SceneData,
@@ -27,7 +29,7 @@ export async function POST(
         });
     }
 
-    const supabase = createSupabaseServiceRoleClient();
+    const db = getNeonDb();
 
     try {
         const searchParams = request.nextUrl.searchParams;
@@ -41,13 +43,15 @@ export async function POST(
             });
         }
 
-        const { data: autopilotData, error: fetchError } = await supabase
-            .from('autopilot_data')
-            .select('*')
-            .eq('id', seriesId)
-            .single();
+        const autopilotRows = await db
+            .select()
+            .from(autopilotDataTable)
+            .where(eq(autopilotDataTable.id, seriesId))
+            .limit(1);
 
-        if (fetchError || !autopilotData) {
+        const autopilot = autopilotRows[0] as unknown as AutopilotData;
+
+        if (!autopilot) {
             return getNextBaseResponse({
                 success: false,
                 status: 500,
@@ -66,7 +70,7 @@ export async function POST(
             resolution,
             aspect_ratio: aspectRatio,
             ai_model_config: aiModelConfig,
-        }: AutopilotData = autopilotData;
+        }: AutopilotData = autopilot;
 
         // 1. 주제 발굴 (Topic Discovery)
         const nicheData = nichePresetId
@@ -90,10 +94,10 @@ export async function POST(
         const finalTopic = newTopic || nicheValue;
         const updatedHistory = [finalTopic, ...topicHistory].slice(0, 180);
 
-        await supabase
-            .from('autopilot_data')
-            .update({ topic_history: updatedHistory, })
-            .eq('id', seriesId);
+        await db
+            .update(autopilotDataTable)
+            .set({ topic_history: updatedHistory })
+            .where(eq(autopilotDataTable.id, seriesId));
 
         // 3. 프롬프트 구성 (Preset / Custom 모드)
         const userPrompt = nicheData
@@ -203,10 +207,10 @@ export async function POST(
         // });
 
         // [New] Update autopilot_data with the current generating taskId
-        await supabase
-            .from('autopilot_data')
-            .update({ current_generating_task_id: taskId })
-            .eq('id', seriesId);
+        await db
+            .update(autopilotDataTable)
+            .set({ current_generating_task_id: taskId })
+            .where(eq(autopilotDataTable.id, seriesId));
 
         // 5. OpenAI를 통해 씬 분할 (Scene Segmentation)
         const postSceneSegmentationResult = await llmServerAPI.postSceneSegmentation(

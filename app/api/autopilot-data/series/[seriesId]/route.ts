@@ -1,11 +1,13 @@
 import { NextRequest } from "next/server";
 import { getNextBaseResponse } from "@/lib/utils/getNextBaseResponse";
-import { createSupabaseServiceRoleClient } from "@/lib/supabase/supabaseServiceRole";
 import { cryptoUtils } from "@/lib/utils/cryptoUtils";
 import { AutopilotData } from "@/lib/api/types/supabase/AutopilotData";
 import { getIsValidRequestS2S } from "@/lib/utils/getIsValidRequest";
 import { schedules, tasks } from "@trigger.dev/sdk/v3";
 import { subtractHoursFromCron } from "@/lib/utils/cronUtils";
+import { getNeonDb } from "@/lib/db/neon";
+import { autopilotData } from "@/lib/db/schema";
+import { eq } from "drizzle-orm";
 
 /**
  * GET /api/autopilot-data/series/[seriesId]
@@ -34,16 +36,16 @@ export async function GET(
         });
     }
 
-    const supabase = createSupabaseServiceRoleClient();
+    const db = getNeonDb();
 
     try {
-        const { data, error } = await supabase
-            .from('autopilot_data')
-            .select('*')
-            .eq('id', seriesId)
-            .single();
+        const [data] = await db
+            .select()
+            .from(autopilotData)
+            .where(eq(autopilotData.id, seriesId))
+            .limit(1);
 
-        if (error) throw error;
+        if (!data) throw new Error("Series not found.");
         
         if (data.user_id !== sessionUserId) {
             return getNextBaseResponse({
@@ -56,7 +58,7 @@ export async function GET(
         return getNextBaseResponse({
             success: true,
             status: 200,
-            data: { autopilotData: data as AutopilotData },
+            data: { autopilotData: data as unknown as AutopilotData },
             message: "Successfully fetched autopilot series."
         });
     } catch (error) {
@@ -96,20 +98,20 @@ export async function PATCH(
         });
     }
 
-    const supabase = createSupabaseServiceRoleClient();
+    const db = getNeonDb();
 
     try {
         // 1. Ownership Check
-        const { data: existingData, error: fetchError } = await supabase
-            .from('autopilot_data')
-            .select('user_id')
-            .eq('id', seriesId)
-            .single();
-            
-        if (fetchError || !existingData) {
+        const [existingData] = await db
+            .select({ user_id: autopilotData.user_id })
+            .from(autopilotData)
+            .where(eq(autopilotData.id, seriesId))
+            .limit(1);
+
+        if (!existingData) {
             return getNextBaseResponse({ success: false, status: 404, error: "Series not found." });
         }
-        
+
         if (existingData.user_id !== sessionUserId) {
             return getNextBaseResponse({ success: false, status: 403, error: "Forbidden. You can only update your own series." });
         }
@@ -144,21 +146,20 @@ export async function PATCH(
             updateData.tiktok_token_id = null;
         }
 
-        const { data, error } = await supabase
-            .from('autopilot_data')
-            .update({
+        const [data] = await db
+            .update(autopilotData)
+            .set({
                 ...updateData,
-                updated_at: new Date().toISOString()
+                updated_at: new Date().toISOString(),
             })
-            .eq('id', seriesId)
-            .select()
-            .single();
+            .where(eq(autopilotData.id, seriesId))
+            .returning();
 
-        if (error) throw error;
+        if (!data) throw new Error("Series not found.");
 
         // 3. Trigger.dev Schedule Sync
         try {
-            const updated: AutopilotData = data;
+            const updated: AutopilotData = data as unknown as AutopilotData;
             const runImmediately = request.nextUrl.searchParams.get('runImmediately') === 'true';
             
             // Sync if scheduling fields have changed OR runImmediately is requested
@@ -264,31 +265,28 @@ export async function DELETE(
         });
     }
 
-    const supabase = createSupabaseServiceRoleClient();
+    const db = getNeonDb();
 
     try {
         // 1. Ownership Check
-        const { data: existingData, error: fetchError } = await supabase
-            .from('autopilot_data')
-            .select('user_id')
-            .eq('id', seriesId)
-            .single();
-            
-        if (fetchError || !existingData) {
+        const [existingData] = await db
+            .select({ user_id: autopilotData.user_id })
+            .from(autopilotData)
+            .where(eq(autopilotData.id, seriesId))
+            .limit(1);
+
+        if (!existingData) {
             return getNextBaseResponse({ success: false, status: 404, error: "Series not found." });
         }
-        
+
         if (existingData.user_id !== sessionUserId) {
             return getNextBaseResponse({ success: false, status: 403, error: "Forbidden. You can only delete your own series." });
         }
 
         // 2. Delete from DB
-        const { error } = await supabase
-            .from('autopilot_data')
-            .delete()
-            .eq('id', seriesId);
-
-        if (error) throw error;
+        await db
+            .delete(autopilotData)
+            .where(eq(autopilotData.id, seriesId));
 
         // 3. Trigger.dev Schedule Cleanup
         try {

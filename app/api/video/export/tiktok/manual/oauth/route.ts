@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getIsValidRequestC2S } from '@/lib/utils/getIsValidRequest';
 import { getNextBaseResponse } from '@/lib/utils/getNextBaseResponse';
-import { createSupabaseServiceRoleClient } from "@/lib/supabase/supabaseServiceRole";
+import { and, eq } from "drizzle-orm";
 import { internalFireAndForgetFetch } from "@/lib/utils/internalFetch";
 import { videoGenerationTasksServerAPI } from "@/lib/api/server/videoGenerationTasksServerAPI";
+import { getNeonDb } from "@/lib/db/neon";
+import { userTiktokTokens } from "@/lib/db/schema";
 import { ExportPlatform, ExportStatus } from "@/lib/api/types/supabase/VideoGenerationTasks";
 import { cryptoUtils } from "@/lib/utils/cryptoUtils";
 
@@ -34,7 +36,7 @@ export async function GET(request: NextRequest) {
         });
     }
 
-    const supabase = createSupabaseServiceRoleClient();
+    const db = getNeonDb();
 
     try {
         // 복호화 시도 (DB 조회용)
@@ -48,20 +50,21 @@ export async function GET(request: NextRequest) {
             }
         }
 
-        // 2. 해당 고유 토큰 ID에 매칭되는 기존 토큰이 있는지 조회
-        let tokenQuery = supabase
-             .from('user_tiktok_tokens')
-             .select('id, refresh_token, refresh_expires_at')
-             .eq('user_id', user.id);
-
+        // 2. 해당 고유 토큰 ID에 매칭되는 기존 토큰이 있는지 조회 (Supabase maybeSingle 계약)
+        const tokenConditions = [eq(userTiktokTokens.user_id, user.id)];
         if (decryptedTokenId) {
-            tokenQuery = tokenQuery.eq('id', decryptedTokenId);
+            tokenConditions.push(eq(userTiktokTokens.id, decryptedTokenId));
         }
 
-        const { data: existingToken } = await tokenQuery.maybeSingle();
+        const tokenRows = await db
+            .select({ id: userTiktokTokens.id, refresh_token: userTiktokTokens.refresh_token, refresh_expires_at: userTiktokTokens.refresh_expires_at })
+            .from(userTiktokTokens)
+            .where(and(...tokenConditions))
+            .limit(1);
+        const existingToken = tokenRows[0] ?? null;
 
         // 3. 토큰이 유효하게 남아있다면 OAuth 없이 즉시 업로드 트리거
-        if (!isProfileMode && existingToken?.refresh_token && Date.now() < new Date(existingToken.refresh_expires_at).getTime() && taskId) {
+        if (!isProfileMode && existingToken?.refresh_token && existingToken.refresh_expires_at && Date.now() < new Date(existingToken.refresh_expires_at).getTime() && taskId) {
             const tokenToPass = targetTokenId || cryptoUtils.encrypt(existingToken.id, user.id);
 
             internalFireAndForgetFetch(

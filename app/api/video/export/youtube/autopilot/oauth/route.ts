@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getNextBaseResponse } from "@/lib/utils/getNextBaseResponse";
 import { getIsValidRequestC2S } from "@/lib/utils/getIsValidRequest";
-import { createSupabaseServiceRoleClient } from "@/lib/supabase/supabaseServiceRole";
+import { and, eq } from "drizzle-orm";
 import { internalFireAndForgetFetch } from "@/lib/utils/internalFetch";
 import { videoGenerationTasksServerAPI } from "@/lib/api/server/videoGenerationTasksServerAPI";
+import { getNeonDb } from "@/lib/db/neon";
+import { autopilotData, userYoutubeTokens } from "@/lib/db/schema";
 import { ExportPlatform, ExportStatus } from "@/lib/api/types/supabase/VideoGenerationTasks";
 import { AutopilotData } from "@/lib/api/types/supabase/AutopilotData";
 import { ExportPrivacySetting } from "@/components/page/workspace/dashboard/export-settings-modal/ExportPrivacySetting";
@@ -36,17 +38,19 @@ export async function GET(request: NextRequest) {
         });
     }
 
-    const supabase = createSupabaseServiceRoleClient();
+    const db = getNeonDb();
 
     try {
-        // 1. Fetch Autopilot Data to check for pending tasks and settings
-        const { data: autopilotData } = await supabase
-            .from('autopilot_data')
-            .select('*')
-            .eq('id', seriesId)
-            .single();
+        // 1. Fetch Autopilot Data to check for pending tasks and settings (Supabase .single() 계약)
+        const autopilotRows = await db
+            .select()
+            .from(autopilotData)
+            .where(eq(autopilotData.id, seriesId))
+            .limit(1);
 
-        if (!autopilotData) {
+        const autopilotRow = autopilotRows[0];
+
+        if (!autopilotRow) {
             return getNextBaseResponse({
                 success: false,
                 status: 404,
@@ -54,25 +58,27 @@ export async function GET(request: NextRequest) {
             });
         }
 
-        const series = autopilotData as AutopilotData;
+        const series = autopilotRow as unknown as AutopilotData;
         const privacySetting = searchParams.get('privacySetting') || series.youtube_privacy || ExportPrivacySetting.UNLISTED;
 
         // 2. Check for existing token for this specific series
-        let existingToken = null;
+        let existingToken: { refresh_token: string } | null = null;
         if (series.youtube_token_id) {
-            const { data: token } = await supabase
-                .from('user_youtube_tokens')
-                .select('refresh_token')
-                .eq('user_id', user.id)
-                .eq('id', series.youtube_token_id)
-                .maybeSingle();
-            existingToken = token;
+            const tokenRows = await db
+                .select({ refresh_token: userYoutubeTokens.refresh_token })
+                .from(userYoutubeTokens)
+                .where(and(
+                    eq(userYoutubeTokens.user_id, user.id),
+                    eq(userYoutubeTokens.id, series.youtube_token_id)
+                ))
+                .limit(1);
+            existingToken = tokenRows[0] ?? null;
         }
 
         if (existingToken?.refresh_token) {
             // ALREADY CONNECTED: Trigger upload if a task is pending
             const pendingTaskId = series.current_generating_task_id;
-            
+
             if (pendingTaskId) {
                 internalFireAndForgetFetch(
                     `${process.env.BASE_URL}/api/video/export/youtube/upload?taskId=${pendingTaskId}&privacySetting=${privacySetting}`,

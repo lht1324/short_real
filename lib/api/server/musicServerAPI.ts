@@ -1,7 +1,13 @@
-import {createSupabaseServiceRoleClient} from "@/lib/supabase/supabaseServiceRole";
 import {MusicData} from "@/lib/api/types/supabase/VideoGenerationTasks";
 import Replicate from "replicate";
+import {eq} from "drizzle-orm";
 import {videoGenerationTasksServerAPI} from "@/lib/api/server/videoGenerationTasksServerAPI";
+import {getNeonDb} from "@/lib/db/neon";
+import {videoGenerationTasks} from "@/lib/db/schema";
+import {r2ServerAPI} from "@/lib/r2";
+
+// R2 키 접두 — 구 Supabase 버킷명을 폴더로 사용
+const MUSIC_PREFIX = 'video_music_temp_storage';
 
 export const musicServerAPI = {
     async postMusic(
@@ -10,8 +16,6 @@ export const musicServerAPI = {
         musicFileList: (File | Blob | ArrayBuffer)[],
         musicDataList: MusicData[],
     ): Promise<{ success: boolean, error?: string }> {
-        const supabase = createSupabaseServiceRoleClient();
-
         try {
             let uploadSuccessCount = 0;
 
@@ -19,19 +23,14 @@ export const musicServerAPI = {
                 const musicFile = musicFileList[index];
                 const musicData = musicDataList[index];
 
-                // 1. mp3 파일 업로드
+                // 1. mp3 파일 업로드 — putObject는 upsert 고정
                 const audioFilePath = `${userId}/${taskId}/${taskId}_${index}.mp3`;
 
-                const { error: audioError } = await supabase.storage
-                    .from('video_music_temp_storage')
-                    .upload(audioFilePath, musicFile, {
-                        contentType: 'audio/mpeg',
-                        upsert: true
-                    });
-
-                if (audioError) {
+                try {
+                    await r2ServerAPI.putObject(`${MUSIC_PREFIX}/${audioFilePath}`, musicFile, 'audio/mpeg');
+                } catch (audioError) {
                     console.error('Error uploading music file to storage:', audioError);
-                    throw new Error(audioError.message);
+                    throw audioError;
                 }
 
                 // 2. 이미지 다운로드 및 업로드
@@ -42,14 +41,9 @@ export const musicServerAPI = {
                             const imageBlob = await imageResponse.blob();
                             const imageFilePath = `${userId}/${taskId}/${taskId}_${index}.jpeg`;
 
-                            const { error: imageError } = await supabase.storage
-                                .from('video_music_temp_storage')
-                                .upload(imageFilePath, imageBlob, {
-                                    contentType: 'image/jpeg',
-                                    upsert: true
-                                });
-
-                            if (imageError) {
+                            try {
+                                await r2ServerAPI.putObject(`${MUSIC_PREFIX}/${imageFilePath}`, imageBlob, 'image/jpeg');
+                            } catch (imageError) {
                                 console.error(`Error uploading image ${index}:`, imageError);
                                 // 이미지 업로드 실패는 치명적이지 않으므로 계속 진행
                             }
@@ -83,53 +77,49 @@ export const musicServerAPI = {
     },
 
     async getMusicData(taskId: string, userId: string): Promise<MusicData[]> {
-        const supabase = createSupabaseServiceRoleClient();
+        const db = getNeonDb();
 
         try {
-            // 1. video_generation_tasks 테이블에서 music_data_list 가져오기
-            const { data: taskData, error: taskError } = await supabase
-                .from('video_generation_tasks')
-                .select('*')
-                .eq('id', taskId)
-                .single();
+            // 1. video_generation_tasks 테이블에서 music_data_list 가져오기 (Supabase .single() 계약)
+            const taskRows = await db
+                .select()
+                .from(videoGenerationTasks)
+                .where(eq(videoGenerationTasks.id, taskId))
+                .limit(1);
 
-            if (taskError) {
-                console.error('Error fetching music_data_list:', taskError);
-                throw taskError;
+            if (!taskRows[0]) {
+                throw new Error(`Task not found for music data: ${taskId}`);
             }
 
-            if (!taskData?.music_data_list || taskData.music_data_list.length === 0) {
+            const musicDataList = taskRows[0].music_data_list;
+            if (!musicDataList || musicDataList.length === 0) {
                 return [];
             }
 
-            const musicDataList = taskData.music_data_list as MusicData[];
-
-            // 2. video_music_temp_storage에서 유저/태스크 경로 파일 리스트 확인
+            // 2. video_music_temp_storage 폴더에서 파일 존재 확인
             const storageFolderPath = `${userId}/${taskId}`;
-            const { data: fileList, error: listError } = await supabase.storage
-                .from('video_music_temp_storage')
-                .list(storageFolderPath);
-
-            if (listError) {
+            const fileList = await r2ServerAPI.listKeys(`${MUSIC_PREFIX}/${storageFolderPath}/`).catch((listError) => {
                 console.error('Error listing music files:', listError);
-            }
+                return [] as string[];
+            });
 
-            if (!fileList || fileList.length === 0) {
+            if (fileList.length === 0) {
                 return musicDataList;
             }
 
-            // 3. 각 index에 대해 signedUrl 생성
+            // 3. 각 index에 대해 signedUrl 생성 (Supabase createSignedUrls 계약 → Map으로 결합)
             const pathList: string[] = [];
             for (let index = 0; index < musicDataList.length; index++) {
                 pathList.push(`${userId}/${taskId}/${taskId}_${index}.mp3`);
                 pathList.push(`${userId}/${taskId}/${taskId}_${index}.jpeg`);
             }
 
-            const { data: signedUrlDataList, error: urlError } = await supabase.storage
-                .from('video_music_temp_storage')
-                .createSignedUrls(pathList, 86400);
-
-            if (urlError) {
+            const signedUrlMap = new Map<string, string>();
+            try {
+                await Promise.all(pathList.map(async (path) => {
+                    signedUrlMap.set(path, await r2ServerAPI.presignGet(`${MUSIC_PREFIX}/${path}`, 86400));
+                }));
+            } catch (urlError) {
                 console.error('Error creating signed URLs:', urlError);
                 return musicDataList;
             }
@@ -139,13 +129,10 @@ export const musicServerAPI = {
                 const targetAudioPath = `${userId}/${taskId}/${taskId}_${index}.mp3`;
                 const targetImagePath = `${userId}/${taskId}/${taskId}_${index}.jpeg`;
 
-                const audioSignedData = signedUrlDataList?.find(item => item.path === targetAudioPath);
-                const imageSignedData = signedUrlDataList?.find(item => item.path === targetImagePath);
-
                 return {
                     ...musicData,
-                    audioUrl: audioSignedData?.signedUrl || musicData.audioUrl,
-                    imageUrl: imageSignedData?.signedUrl || musicData.imageUrl,
+                    audioUrl: signedUrlMap.get(targetAudioPath) || musicData.audioUrl,
+                    imageUrl: signedUrlMap.get(targetImagePath) || musicData.imageUrl,
                 };
             });
         } catch (error) {
@@ -155,17 +142,7 @@ export const musicServerAPI = {
     },
 
     async getMusicSignedUrl(filePath: string, expiresIn: number = 60 * 60 * 24) {
-        const supabase = createSupabaseServiceRoleClient();
-
-        const { data, error } = await supabase.storage
-            .from('video_music_temp_storage')
-            .createSignedUrl(filePath, expiresIn);
-
-        if (error || !data?.signedUrl) {
-            throw new Error(error?.message || `There is no image data.`);
-        }
-
-        return data.signedUrl;
+        return r2ServerAPI.presignGet(`${MUSIC_PREFIX}/${filePath}`, expiresIn);
     },
 
     async resampleAudioForLLM(
@@ -175,7 +152,6 @@ export const musicServerAPI = {
         const replicate = new Replicate({
             auth: process.env.REPLICATE_API_TOKEN,
         });
-        const supabase = createSupabaseServiceRoleClient();
 
         try {
             // 1. 오디오 다운로드
@@ -185,20 +161,9 @@ export const musicServerAPI = {
 
             // 2. 임시 업로드 (Replicate 호출용)
             const tempFileName = `temp/resample-llm-${tempIdentifier}.mp3`;
-            const { error: uploadError } = await supabase.storage
-                .from('video_music_temp_storage')
-                .upload(tempFileName, audioBuffer, {
-                    contentType: 'audio/mpeg',
-                    upsert: true
-                });
+            await r2ServerAPI.putObject(`${MUSIC_PREFIX}/${tempFileName}`, audioBuffer, 'audio/mpeg');
 
-            if (uploadError) throw new Error(`Temp audio upload failed: ${uploadError.message}`);
-
-            const { data: signedData, error: signedError } = await supabase.storage
-                .from('video_music_temp_storage')
-                .createSignedUrl(tempFileName, 300);
-
-            if (signedError || !signedData?.signedUrl) throw new Error("Failed to create signed URL for temp audio.");
+            const tempSignedUrl = await r2ServerAPI.presignGet(`${MUSIC_PREFIX}/${tempFileName}`, 300);
 
             // 3. Replicate FFmpeg Sandbox 호출 (Mono, 24kHz, 64kbps)
             const ffmpegArgs = `-ar 24000 -ac 1 -b:a 64k`;
@@ -206,7 +171,7 @@ export const musicServerAPI = {
             const prediction = await replicate.predictions.create({
                 version: "lht1324/ffmpeg-sandbox-2:06262bdc243f9afe6d1b9a8d338ab536044d0604ce4c420c9cde7ee7fe781339",
                 input: {
-                    video_urls: JSON.stringify([signedData.signedUrl]),
+                    video_urls: JSON.stringify([tempSignedUrl]),
                     ffmpeg_args: ffmpegArgs,
                 }
             });
@@ -222,7 +187,7 @@ export const musicServerAPI = {
             const resampledBuffer = Buffer.from(await processedResponse.arrayBuffer());
 
             // 5. 임시 파일 삭제 (비동기로 진행하여 응답 속도 확보)
-            supabase.storage.from('video_music_temp_storage').remove([tempFileName]).catch(console.error);
+            r2ServerAPI.deleteKeys([`${MUSIC_PREFIX}/${tempFileName}`]).catch(console.error);
 
             return resampledBuffer.toString('base64');
         } catch (error) {

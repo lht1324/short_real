@@ -3,7 +3,7 @@ import { getIsValidRequestS2S } from "@/lib/utils/getIsValidRequest";
 import { getNextBaseResponse } from "@/lib/utils/getNextBaseResponse";
 import { videoGenerationTasksServerAPI } from "@/lib/api/server/videoGenerationTasksServerAPI";
 import { videoServerAPI } from "@/lib/api/server/videoServerAPI";
-import { createSupabaseServiceRoleClient } from "@/lib/supabase/supabaseServiceRole";
+import { r2ServerAPI } from "@/lib/r2";
 import { SceneGenerationStatus } from "@/lib/api/types/supabase/VideoGenerationTasks";
 
 /**
@@ -33,7 +33,6 @@ export async function POST(request: NextRequest) {
     }
 
     const sceneNumber = parseInt(sceneNumberString, 10);
-    const supabase = createSupabaseServiceRoleClient();
 
     try {
         const requestBody = await request.json();
@@ -110,19 +109,12 @@ export async function POST(request: NextRequest) {
             }
             const rawVideoBuffer = await rawVideoResponse.arrayBuffer();
 
+            // 4. R2 업로드 (video_raw & video_processed — upsert)
             const rawFileName = `${userId}/${taskId}/video_raw_${sceneNumber}.mp4`;
             const processedFileName = `${userId}/${taskId}/video_processed_${sceneNumber}.mp4`;
 
-            // Storage Upload (upsert)
-            await supabase.storage.from("processed_video_storage").upload(rawFileName, Buffer.from(rawVideoBuffer), {
-                contentType: "video/mp4",
-                upsert: true,
-            });
-
-            await supabase.storage.from("processed_video_storage").upload(processedFileName, Buffer.from(processedVideoBuffer), {
-                contentType: "video/mp4",
-                upsert: true,
-            });
+            await r2ServerAPI.putObject(`processed_video_storage/${rawFileName}`, rawVideoBuffer, "video/mp4");
+            await r2ServerAPI.putObject(`processed_video_storage/${processedFileName}`, processedVideoBuffer, "video/mp4");
 
             // 5. 해당 씬의 status만 COMPLETED로 갱신 (완공 상태 전이)
             await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, {
