@@ -12,7 +12,6 @@ const nextConfig: NextConfig = {
 
     // 외부 이미지 허용
     images: {
-        // test
         remotePatterns: [
             {
                 protocol: 'https',
