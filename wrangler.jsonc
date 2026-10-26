@@ -9,7 +9,11 @@
   // NEXT_PUBLIC_BASE_URL은 prod 단일 오리진 — baseFetch가 prod 분기에서 동일 오리진 사용.
   "vars": {
     "BASE_URL": "https://shortreal.ai",
-    "NEXT_PUBLIC_BASE_URL": "https://shortreal.ai"
+    "HELLYEAH_TRACKER_ID": "019fc303-a119-7000-a2bc-009a1e2abf4b",
+    "NEXT_PUBLIC_BASE_URL": "https://shortreal.ai",
+    "NEXT_PUBLIC_DEMO_ASSETS_URL": "/assets/demo",
+    "NEXT_PUBLIC_HELLYEAH_TRACKER_ENV": "local",
+    "NEXT_PUBLIC_HELLYEAH_TRACKER_ID": "019fc303-a119-7000-a2bc-009a1e2abf4b"
   },
   "assets": {
     "directory": ".open-next/assets",
