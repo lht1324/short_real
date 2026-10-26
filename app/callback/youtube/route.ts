@@ -1,14 +1,15 @@
 // app/api/callback/youtube/route.ts
 import {NextRequest, NextResponse} from 'next/server';
-import {createSupabaseServiceRoleClient} from "@/lib/supabase/supabaseServiceRole";
 import {internalFireAndForgetFetch} from "@/lib/utils/internalFetch";
 import {videoGenerationTasksServerAPI} from "@/lib/api/server/videoGenerationTasksServerAPI";
 import {ExportPlatform, ExportStatus} from "@/lib/api/types/supabase/VideoGenerationTasks";
 import { cryptoUtils } from "@/lib/utils/cryptoUtils";
+import {getNeonDb} from "@/lib/db/neon";
+import {userYoutubeTokens, autopilotData} from "@/lib/db/schema";
+import {and, eq} from "drizzle-orm";
 
 
 export async function GET(request: NextRequest) {
-    const supabase = createSupabaseServiceRoleClient();
     const originUrl = process.env.NODE_ENV === 'production' || !request.nextUrl.origin.includes("localhost")
         ? request.nextUrl.origin
         : request.nextUrl.origin.replaceAll("https", "http");
@@ -100,7 +101,8 @@ export async function GET(request: NextRequest) {
             return NextResponse.redirect(isAutopilot ? `${originUrl}/workspace/autopilot?seriesId=${seriesId}` : `${originUrl}/workspace/dashboard`);
         }
 
-        // 4. Supabase에 토큰 저장 (Service Role 사용)
+        // 4. Neon에 토큰 저장 (Drizzle)
+        const db = getNeonDb();
         const expiresAt = new Date(
             Date.now() + tokens.expires_in * 1000
         ).toISOString();
@@ -126,11 +128,6 @@ export async function GET(request: NextRequest) {
 
         // --- 3단계 수정 내용 시작 ---
         // (1) 기존 레코드의 ID를 조회 (중복 연동 판단)
-        let findQuery = supabase
-            .from('user_youtube_tokens')
-            .select('id')
-            .eq('user_id', userId);
-
         let decryptedTokenId: string | null = null;
         if (!isAutopilot && targetTokenId && targetTokenId !== 'null' && targetTokenId !== 'undefined') {
             try {
@@ -140,15 +137,18 @@ export async function GET(request: NextRequest) {
             }
         }
 
-        if (decryptedTokenId) {
-            findQuery = findQuery.eq('id', decryptedTokenId);
-        } else if (handleName) {
-            findQuery = findQuery.eq('handle_name', handleName);
-        } else {
-            findQuery = findQuery.eq('id', '00000000-0000-0000-0000-000000000000');
-        }
+        // 매칭 조건: 명시적 토큰 ID → handle_name 매칭 → 매칭 불가 센티널(0 rows 보장)
+        const matchCondition = decryptedTokenId
+            ? and(eq(userYoutubeTokens.user_id, userId), eq(userYoutubeTokens.id, decryptedTokenId))
+            : handleName
+                ? and(eq(userYoutubeTokens.user_id, userId), eq(userYoutubeTokens.handle_name, handleName))
+                : and(eq(userYoutubeTokens.user_id, userId), eq(userYoutubeTokens.id, '00000000-0000-0000-0000-000000000000'));
 
-        const { data: existingRecord } = await findQuery.maybeSingle();
+        const [existingRecord] = await db
+            .select({ id: userYoutubeTokens.id })
+            .from(userYoutubeTokens)
+            .where(matchCondition)
+            .limit(1);
 
         const tokenPayload = {
             user_id: userId,
@@ -161,25 +161,23 @@ export async function GET(request: NextRequest) {
             updated_at: new Date().toISOString()
         };
 
-        let dbResult;
+        let dbResult: { id: string } | undefined;
         if (existingRecord?.id) {
             // (2) 이미 존재하는 경우: id 기준으로 UPDATE
-            dbResult = await supabase
-                .from('user_youtube_tokens')
-                .update(tokenPayload)
-                .eq('id', existingRecord.id)
-                .select('id')
-                .single();
+            [dbResult] = await db
+                .update(userYoutubeTokens)
+                .set(tokenPayload)
+                .where(eq(userYoutubeTokens.id, existingRecord.id))
+                .returning({ id: userYoutubeTokens.id });
         } else {
             // (3) 존재하지 않는 경우: INSERT
-            dbResult = await supabase
-                .from('user_youtube_tokens')
-                .insert(tokenPayload)
-                .select('id')
-                .single();
+            [dbResult] = await db
+                .insert(userYoutubeTokens)
+                .values(tokenPayload)
+                .returning({ id: userYoutubeTokens.id });
         }
 
-        const dbError = dbResult.error;
+        const dbError = dbResult ? null : new Error('Token upsert returned no row');
         // --- 3단계 수정 내용 끝 ---
 
         if (dbError) {
@@ -195,7 +193,7 @@ export async function GET(request: NextRequest) {
             return NextResponse.redirect(isAutopilot ? `${originUrl}/workspace/autopilot?seriesId=${seriesId}` : (isProfileMode ? `${originUrl}/profile` : `${originUrl}/workspace/dashboard`));
         }
 
-        const finalTokenId = existingRecord?.id || dbResult.data?.id;
+        const finalTokenId = existingRecord?.id || dbResult?.id;
 
         // 5. 모드에 따른 후속 작업 및 리다이렉트
         if (isProfileMode) {
@@ -204,13 +202,13 @@ export async function GET(request: NextRequest) {
 
         if (isAutopilot) {
             if (finalTokenId) {
-                await supabase
-                    .from('autopilot_data')
-                    .update({
+                await db
+                    .update(autopilotData)
+                    .set({
                         youtube_token_id: finalTokenId,
-                        updated_at: new Date().toISOString()
+                        updated_at: new Date().toISOString(),
                     })
-                    .eq('id', seriesId);
+                    .where(eq(autopilotData.id, seriesId));
             }
             // 오토파일럿 모드인 경우: 설정 페이지로 리다이렉트
             return NextResponse.redirect(`${originUrl}/workspace/autopilot?seriesId=${seriesId}`);

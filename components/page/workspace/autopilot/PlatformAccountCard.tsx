@@ -43,7 +43,7 @@ function PlatformAccountCard({
                 type="button"
                 onClick={onClickConnect}
                 disabled={isDisabled}
-                className="w-full flex items-center justify-between bg-gray-800 hover:bg-gray-700 text-white rounded-xl h-[56px] px-4 transition-all border border-purple-500/30 hover:border-purple-400 shadow-lg disabled:opacity-40 disabled:cursor-not-allowed group"
+                className="w-full flex items-center justify-between bg-gray-800 hover:bg-gray-700 text-white rounded-xl h-14 px-4 transition-all border border-purple-500/30 hover:border-purple-400 shadow-lg disabled:opacity-40 disabled:cursor-not-allowed group"
             >
                 <div className="flex items-center">
                     <div className="relative w-6 h-6 mr-8 flex-shrink-0 transition-transform group-hover:scale-110">
@@ -86,7 +86,7 @@ function PlatformAccountCard({
                         />
                     </div>
                     <div className="flex flex-col">
-                        <span className="text-sm font-black text-white truncate max-w-[120px]">
+                        <span className="text-sm font-black text-white truncate max-w-[7.5rem]">
                             {handleName ? (handleName.startsWith('@') ? handleName : `@${handleName}`) : (displayName || 'Connected')}
                         </span>
                         <span className="text-[10px] font-bold text-gray-500 uppercase tracking-tight">

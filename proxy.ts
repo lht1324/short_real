@@ -1,7 +1,14 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { createSupabaseProxyClient } from '@/lib/supabase/supabaseProxy';
+import { getAuth } from '@/lib/auth/server';
+import { getNeonDb } from '@/lib/db/neon';
+import { users } from '@/lib/db/schema';
+import { eq } from 'drizzle-orm';
 
+/**
+ * 로그인 가드 — Neon Auth 세션으로 판정 (Supabase에서 이관).
+ * getSession이 edge/proxy에서 깨지면 auth.middleware로 폴백할 것.
+ */
 export async function proxy(request: NextRequest) {
     const path = request.nextUrl.pathname;
 
@@ -12,41 +19,43 @@ export async function proxy(request: NextRequest) {
 
         // secret 파라미터가 없거나, 환경 변수 값과 다르면 메인으로 리다이렉트
         if (!secretParam || secretParam !== adminSecretKey) {
-            // 404를 반환하거나 메인으로 보낼 수 있습니다. 여기서는 메인으로 보냅니다.
             return NextResponse.redirect(new URL('/', request.url));
         }
     }
 
-    // 2. 세션 검사 및 라우팅 보호
-    const { supabase, supabaseResponse } = await createSupabaseProxyClient(request);
+    // 2. 세션 검사 및 라우팅 보호 — Neon Auth 세션 (Better Auth ID는 UUID가 아니라 email 브릿지로 판단)
+    const auth = getAuth();
+    const { data: session } = await auth.getSession();
+    const user = session?.user ?? null;
 
     if (path.startsWith('/sign-in')) {
-        const { data: { user } } = await supabase.auth.getUser();
         if (user) {
             return NextResponse.redirect(new URL('/workspace/dashboard', request.url));
         }
+        return NextResponse.next();
     }
 
-    // 3. /workspace 하위 경로 보호 (구독 플랜 확인)
+    // 3. /workspace 하위 경로 보호 (구독 플랜 확인 — Neon users 테이블)
     if (path.startsWith('/workspace')) {
-        const { data: { user } } = await supabase.auth.getUser();
-
-        if (!user) {
-            return NextResponse.redirect(new URL('/sign-in', request.url));
+        if (!user || !user.email) {
+            const signInUrl = new URL('/sign-in', request.url);
+            signInUrl.searchParams.set('redirectTo', path);
+            return NextResponse.redirect(signInUrl);
         }
 
-        const { data: userData } = await supabase
-            .from('users')
-            .select('plan')
-            .eq('id', user.id)
-            .single();
+        const db = getNeonDb();
+        const [userData] = await db
+            .select({ plan: users.plan })
+            .from(users)
+            .where(eq(users.email, user.email))
+            .limit(1);
 
         if (!userData?.plan || userData.plan === 'none') {
             return NextResponse.redirect(new URL('/profile', request.url));
         }
     }
 
-    return supabaseResponse;
+    return NextResponse.next();
 }
 
 export const config = {

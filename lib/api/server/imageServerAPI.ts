@@ -1,4 +1,4 @@
-import {createSupabaseServiceRoleClient} from "@/lib/supabase/supabaseServiceRole";
+import {r2ServerAPI} from "@/lib/r2";
 import {fal} from "@fal-ai/client";
 import {FluxPrompt} from "@/lib/api/types/open-ai/FluxPrompt";
 import {ImageFile} from "@fal-ai/client/endpoints";
@@ -20,8 +20,6 @@ export const imageServerAPI = {
         resolution: '720p' | '1080p' | '2160p',
         aspectRatio: '16:9' | '9:16',
     ): Promise<{ success: boolean; error?: { message: string; code: string; status?: number } }> {
-        const supabase = createSupabaseServiceRoleClient();
-
         try {
             const decryptedApiKey = cryptoUtils.decrypt(falAiApiKey, userId);
             
@@ -121,19 +119,12 @@ export const imageServerAPI = {
             const arrayBuffer = await imageResponse.arrayBuffer();
             const imageBuffer = Buffer.from(arrayBuffer);
 
-            // Supabase Storage에 이미지 업로드
-            const { error: uploadError } = await supabase.storage
-                .from('scene_image_temp_storage') // 버킷 이름
-                .upload(`${userId}/${taskId}/${sceneNumber}.jpeg`, imageBuffer, {
-                    contentType: 'image/jpeg', // 파일 포맷 지정
-                    upsert: true // 덮어쓰기 허용
-                });
-
-            // imageBase64 지우는 것 고려하기
-            if (uploadError) {
-                // 업로드 실패 시, 에러를 던져서 전체 프로세스를 중단시킵니다.
-                throw new Error(`Supabase Storage 업로드 실패: ${uploadError.message}`);
-            }
+            // R2(scene_image_temp_storage 폴더)에 이미지 업로드 — putObject는 upsert 고정
+            await r2ServerAPI.putObject(
+                `scene_image_temp_storage/${userId}/${taskId}/${sceneNumber}.jpeg`,
+                imageBuffer,
+                'image/jpeg',
+            );
 
             return {
                 success: true,
@@ -165,8 +156,6 @@ export const imageServerAPI = {
             status?: number;
         }
     }> {
-        const supabase = createSupabaseServiceRoleClient();
-
         try {
             const decryptedApiKey = cryptoUtils.decrypt(falAiApiKey, userId);
             
@@ -206,19 +195,12 @@ export const imageServerAPI = {
             const arrayBuffer = await imageResponse.arrayBuffer();
             const imageBuffer = Buffer.from(arrayBuffer);
 
-            // Supabase Storage에 이미지 업로드
-            const { error: uploadError } = await supabase.storage
-                .from('scene_image_temp_storage') // 버킷 이름
-                .upload(`${userId}/${taskId}/reference_image_${entityId}.jpeg`, imageBuffer, {
-                    contentType: 'image/jpeg', // 파일 포맷 지정
-                    upsert: true // 덮어쓰기 허용
-                });
-
-            // imageBase64 지우는 것 고려하기
-            if (uploadError) {
-                // 업로드 실패 시, 에러를 던져서 전체 프로세스를 중단시킵니다.
-                throw new Error(`Supabase Storage 업로드 실패: ${uploadError.message}`);
-            }
+            // R2(scene_image_temp_storage 폴더)에 이미지 업로드 — putObject는 upsert 고정
+            await r2ServerAPI.putObject(
+                `scene_image_temp_storage/${userId}/${taskId}/reference_image_${entityId}.jpeg`,
+                imageBuffer,
+                'image/jpeg',
+            );
 
             return {
                 success: true,
@@ -237,16 +219,7 @@ export const imageServerAPI = {
     },
 
     async getImageSignedUrl(filePath: string) {
-        const supabase = createSupabaseServiceRoleClient();
-
-        const { data, error } = await supabase.storage
-            .from('scene_image_temp_storage')
-            .createSignedUrl(filePath, 60 * 60 * 24);
-
-        if (error || !data?.signedUrl) {
-            throw new Error(error?.message || `There is no image data.`);
-        }
-
-        return data.signedUrl;
+        // R2(scene_image_temp_storage 폴더) 서명 URL — Supabase 24시간 계약 유지
+        return r2ServerAPI.presignGet(`scene_image_temp_storage/${filePath}`, 60 * 60 * 24);
     }
 }

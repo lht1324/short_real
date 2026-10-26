@@ -1,9 +1,11 @@
 import {NextRequest} from "next/server";
-import {createSupabaseServiceRoleClient} from "@/lib/supabase/supabaseServiceRole";
 import {getNextBaseResponse} from "@/lib/utils/getNextBaseResponse";
 import {cryptoUtils} from "@/lib/utils/cryptoUtils";
 import {getIsValidRequestS2S} from "@/lib/utils/getIsValidRequest";
 import {ExportPlatform} from "@/lib/api/types/supabase/VideoGenerationTasks";
+import {and, eq} from "drizzle-orm";
+import {getNeonDb} from "@/lib/db/neon";
+import {userTiktokTokens, userYoutubeTokens} from "@/lib/db/schema";
 
 export async function GET(
     request: NextRequest,
@@ -39,19 +41,20 @@ export async function GET(
             });
         }
 
-        const supabase = createSupabaseServiceRoleClient();
+        const db = getNeonDb();
 
         if (platform === ExportPlatform.YOUTUBE) {
-            const { data: youtubeTokens, error: youtubeError } = await supabase
-                .from("user_youtube_tokens")
-                .select("id, display_name, handle_name, avatar_url")
-                .eq("user_id", userId);
+            const youtubeTokens = await db
+                .select({
+                    id: userYoutubeTokens.id,
+                    display_name: userYoutubeTokens.display_name,
+                    handle_name: userYoutubeTokens.handle_name,
+                    avatar_url: userYoutubeTokens.avatar_url,
+                })
+                .from(userYoutubeTokens)
+                .where(eq(userYoutubeTokens.user_id, userId));
 
-            if (youtubeError) {
-                throw youtubeError;
-            }
-
-            const channels = (youtubeTokens || []).map((token) => ({
+            const channels = youtubeTokens.map((token) => ({
                 id: cryptoUtils.encrypt(token.id, userId),
                 seriesId: null,
                 displayName: token.display_name || "YouTube Shorts Channel",
@@ -69,16 +72,17 @@ export async function GET(
                 message: "Successfully fetched YouTube channels."
             });
         } else {
-            const { data: tiktokTokens, error: tiktokError } = await supabase
-                .from("user_tiktok_tokens")
-                .select("id, display_name, handle_name, avatar_url")
-                .eq("user_id", userId);
+            const tiktokTokens = await db
+                .select({
+                    id: userTiktokTokens.id,
+                    display_name: userTiktokTokens.display_name,
+                    handle_name: userTiktokTokens.handle_name,
+                    avatar_url: userTiktokTokens.avatar_url,
+                })
+                .from(userTiktokTokens)
+                .where(eq(userTiktokTokens.user_id, userId));
 
-            if (tiktokError) {
-                throw tiktokError;
-            }
-
-            const channels = (tiktokTokens || []).map((token) => ({
+            const channels = tiktokTokens.map((token) => ({
                 id: cryptoUtils.encrypt(token.id, userId),
                 seriesId: null,
                 displayName: token.display_name || "TikTok Account",
@@ -160,17 +164,16 @@ export async function DELETE(
             });
         }
 
-        const supabase = createSupabaseServiceRoleClient();
-        const tableName = platform === ExportPlatform.YOUTUBE ? "user_youtube_tokens" : "user_tiktok_tokens";
+        const db = getNeonDb();
 
-        const { error } = await supabase
-            .from(tableName)
-            .delete()
-            .eq("id", decryptedTokenId)
-            .eq("user_id", userId);
-
-        if (error) {
-            throw error;
+        if (platform === ExportPlatform.YOUTUBE) {
+            await db
+                .delete(userYoutubeTokens)
+                .where(and(eq(userYoutubeTokens.id, decryptedTokenId), eq(userYoutubeTokens.user_id, userId)));
+        } else {
+            await db
+                .delete(userTiktokTokens)
+                .where(and(eq(userTiktokTokens.id, decryptedTokenId), eq(userTiktokTokens.user_id, userId)));
         }
 
         return getNextBaseResponse({

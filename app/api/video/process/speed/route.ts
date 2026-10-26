@@ -4,8 +4,10 @@ import {videoServerAPI} from "@/lib/api/server/videoServerAPI";
 import {taskCheckAndCleanupIfCancelled} from "@/lib/utils/taskCheckAndCleanupIfCancelled";
 import {getNextBaseResponse} from "@/lib/utils/getNextBaseResponse";
 import {getIsValidRequestS2S} from "@/lib/utils/getIsValidRequest";
-import {createSupabaseServiceRoleClient} from "@/lib/supabase/supabaseServiceRole";
 import {getErrorMessage} from "@/lib/utils/ErrorUtils";
+import {r2ServerAPI} from "@/lib/r2";
+import {getNeonDb} from "@/lib/db/neon";
+import {sql} from "drizzle-orm";
 import {FalAiErrorDetail} from "@/lib/api/types/fal-ai/FalAIResponse";
 import {SceneGenerationStatus, VideoGenerationTaskStatus} from "@/lib/api/types/supabase/VideoGenerationTasks";
 import {internalFireAndForgetFetch} from "@/lib/utils/internalFetch";
@@ -20,8 +22,6 @@ export async function POST(request: NextRequest) {
             error: 'Unauthorized internal request',
         });
     }
-    const supabase = createSupabaseServiceRoleClient();
-
     const { searchParams } = new URL(request.url);
     const taskId = searchParams.get('taskId');
     const isRetriedByViolence = searchParams.get('isRetriedByViolence') === 'true';
@@ -76,13 +76,10 @@ export async function POST(request: NextRequest) {
 
             // 중복 처리 여부 검증 (신규 파일명 규칙 기준)
             const processedFileName = `${userId}/${taskId}/video_processed_${sceneToProcess.sceneNumber}.mp4`;
-            const { data: existingFiles } = await supabase.storage
-                .from('processed_video_storage')
-                .list(`${userId}/${taskId}`, {
-                    search: `video_processed_${sceneToProcess.sceneNumber}.mp4`
-                });
+            const targetFileName = `video_processed_${sceneToProcess.sceneNumber}.mp4`;
+            const existingFiles = await r2ServerAPI.listKeys(`processed_video_storage/${userId}/${taskId}/`);
 
-            if (existingFiles && existingFiles.length > 0) {
+            if (existingFiles.includes(targetFileName)) {
                 console.log(`[Safety Guard] 파일이 이미 존재함. 중복 요청 스킵: ${processedFileName}`);
                 return getNextBaseResponse({
                     success: true,
@@ -143,29 +140,11 @@ export async function POST(request: NextRequest) {
             const rawVideoBuffer = await rawVideoResponse.arrayBuffer();
 
             const rawFileName = `${userId}/${taskId}/video_raw_${sceneToProcess.sceneNumber}.mp4`;
-            const { error: rawUploadError } = await supabase.storage
-                .from('processed_video_storage')
-                .upload(rawFileName, Buffer.from(rawVideoBuffer), {
-                    contentType: 'video/mp4',
-                    upsert: true
-                });
-
-            if (rawUploadError) {
-                throw new Error(`Raw video storage upload failed: ${rawUploadError.message}`);
-            }
+            await r2ServerAPI.putObject(`processed_video_storage/${rawFileName}`, rawVideoBuffer, 'video/mp4');
             console.log(`[Speed Process] 원본 비디오 업로드 완료: ${rawFileName}`);
 
             // 7-2. 가공 비디오(Processed) 업로드
-            const { error: uploadError } = await supabase.storage
-                .from('processed_video_storage')
-                .upload(processedFileName, Buffer.from(videoBuffer), {
-                    contentType: 'video/mp4',
-                    upsert: true
-                });
-
-            if (uploadError) {
-                throw new Error(`Processed video storage upload failed: ${uploadError.message}`);
-            }
+            await r2ServerAPI.putObject(`processed_video_storage/${processedFileName}`, videoBuffer, 'video/mp4');
             console.log(`[Speed Process] 가공 비디오 업로드 완료: ${processedFileName}`);
 
             // DB scene_breakdown_list 에서 해당 씬의 status를 SceneGenerationStatus.COMPLETED 로 갱신
@@ -187,24 +166,24 @@ export async function POST(request: NextRequest) {
             // [병합 트리거] "내가 마지막인가?" 확인 로직
             // =========================================================
 
-            // 9. RPC 호출 (Atomic하게 카운트 증가 및 조회)
-            const { data: countResult, error: rpcError } = await supabase.rpc(
-                "increment_and_get_scene_count",
-                {
-                    task_id: videoGenerationTask.id,
-                    target_request_id: requestId,
+            // 9. RPC 호출 (Atomic하게 카운트 증가 및 조회) — Drizzle execute로 RPC 직접 호출
+            let processedCount: number;
+            let totalCount: number | null;
+            try {
+                const rpcResult = await getNeonDb().execute(
+                    sql`SELECT * FROM increment_and_get_scene_count(${videoGenerationTask.id}::uuid, ${requestId}::text)`
+                );
+                const countRow = rpcResult.rows[0] as { processed_count: number; total_count: number | null } | undefined;
+                if (!countRow) {
+                    throw new Error("RPC returned no row");
                 }
-            );
-
-            if (rpcError) {
+                processedCount = countRow.processed_count;
+                totalCount = countRow.total_count;
+            } catch (rpcError) {
                 console.error("RPC Error:", rpcError);
                 // RPC 실패 시 로직 중단해야 안전함
                 throw new Error("RPC Execution Failed");
             }
-            const {
-                processed_count: processedCount,
-                total_count: totalCount,
-            } = countResult;
 
             console.log(`Speed Webhook: Scene ${requestId} finished. Progress: ${processedCount}/${totalCount}`);
 
@@ -266,13 +245,11 @@ export async function POST(request: NextRequest) {
                                 true,
                             );
 
-                            const { error } = await supabase.rpc('update_scene_request_id', {
-                                target_task_id: taskId,
-                                target_scene_number: currentSceneData.sceneNumber,
-                                new_request_id: newRequestId,
-                            })
+                            const rpcResult = await getNeonDb().execute(
+                                sql`SELECT update_scene_request_id(${taskId}::uuid, ${currentSceneData.sceneNumber}::integer, ${newRequestId}::text)`
+                            );
 
-                            if (!error) {
+                            if (rpcResult) {
                                 return getNextBaseResponse({
                                     success: true,
                                     status: 200,

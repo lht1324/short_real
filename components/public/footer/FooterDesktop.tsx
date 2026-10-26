@@ -7,7 +7,7 @@ function FooterDesktop() {
 
     return (
         <footer className="py-10 md:py-12 px-4 sm:px-6 lg:px-8 border-t border-white/5 bg-[#0b0b15]">
-            <div className="max-w-[1400px] mx-auto">
+            <div className="max-w-[87.5rem] mx-auto">
                 <div className="grid grid-cols-1 md:grid-cols-12 gap-8 mb-10">
                     {/* Brand Col */}
                     <div className="md:col-span-6 lg:col-span-8 flex flex-col items-start">
@@ -56,7 +56,7 @@ function FooterDesktop() {
                             rel="noopener noreferrer" 
                             className="flex items-center space-x-3 text-zinc-400 hover:text-white transition-colors font-medium text-sm w-fit group"
                         >
-                            <div className="w-[45px] flex items-center justify-center relative grayscale opacity-70 group-hover:grayscale-0 group-hover:opacity-100 transition-all">
+                            <div className="w-[2.8125rem] flex items-center justify-center relative grayscale opacity-70 group-hover:grayscale-0 group-hover:opacity-100 transition-all">
                                 <Image
                                     src="/icons/youtube-logo.png"
                                     alt="ShortReal AI YouTube"
@@ -73,7 +73,7 @@ function FooterDesktop() {
                             rel="noopener noreferrer" 
                             className="flex items-center space-x-3 text-zinc-400 hover:text-white transition-colors font-medium text-sm w-fit group"
                         >
-                            <div className="w-[45px] flex items-center justify-center relative grayscale opacity-70 group-hover:grayscale-0 group-hover:opacity-100 transition-all">
+                            <div className="w-[2.8125rem] flex items-center justify-center relative grayscale opacity-70 group-hover:grayscale-0 group-hover:opacity-100 transition-all">
                                 <Image
                                     src="/icons/x-logo.svg"
                                     alt="ShortReal AI X"

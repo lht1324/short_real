@@ -1,89 +1,74 @@
-# 작업 진행 상황 (Last Updated: 2026-08-12 03:36)
+# 작업 진행 상황 (Last Updated: 2026-10-26 21:59)
 
 ## 1. 현재 상황 (Current Status)
 
-### 🎯 현 단계 목표: 숏폼 영상 편집기의 Remotion 기반 마이그레이션
-* 클라이언트(에디터 미리보기/자막 렌더링)는 Remotion Player 기반 전환 **완료**.
-* 서버 final merge 파이프라인(ffmpeg 스티칭 + ASS 번인 + BGM 편집) → Remotion 서버 렌더링(`renderMedia`) 교체 **완료** (렌더 품질 문제까지 수정 완료).
-* 남은 작업: **구조 정리** — ① `components/remotion`에 `client` 폴더를 만들어 클라이언트 컴포넌트 이전, ② 기존 ffmpeg 로직(feature 잔재) 전수 조사 후 삭제. (내일 진행 예정)
+### 🎯 현 단계: Supabase → Neon + Cloudflare 마이그레이션 — **코드 교체 전부 완료, Supabase 의존 0 달성** (2026-10-26)
+* **이번 세션 완성물 (2026-10-24~26)**
+  * **DB**: Drizzle `lib/db/schema.ts`(10테이블 1:1 미러) + `lib/db/neon.ts`(싱글톤) + serverAPI·route 25파일 교체. RPC 3종(`increment_user_credit`, `update_scene_request_id`, 누락 복구한 `increment_and_get_scene_count`)을 `db.execute(sql...)`로 호출. Supabase `.single()`/`.maybeSingle()` 계약 = `limit(1)+[0]??null`. 검증: 카운트 전수 일치·FK 고아 0·RPC 스모크 통과.
+  * **Storage → R2**: `lib/r2.ts`(put/presign/get/list/delete/copy, Blob 지원, ResponseContentDisposition=다운로드 강제). serverAPI 4종+route 6종+trigger 1종 교체. 키 규칙 = 구 버킷명이 폴더 접두(`processed_video_storage/{user}/{task}/...`). 스모크: `short-real-dev` 184파일 정확 일치.
+  * **Realtime → Upstash Streams + SSE**: `lib/taskEvents.ts`(XADD+MAXLEN 100, fail-soft) + `app/api/events/route.ts`(5초 틱·100초 후 커서 재연결·taskId 소유권 검증) + `components/public/useTaskEvents.ts`(커서 보존 재연결·백그라운드 탭 정지). 발행은 `videoGenerationTasksServerAPI` post/patch×3/delete에 훅 — **모든 mutation 경로가 이 파일을 지나므로 파이프라인 전체 이벤트가 흐름**. 스모크: XADD/XRANGE 왕복 정상.
+  * **Auth → Neon Auth (Managed Better Auth)**: `lib/auth/{client,server}.ts` + `/api/auth/[...path]` 프록시 + `/callback/session`(verifier 클라 교환 페이지) + `callback/auth`(email find-or-create — 기존 행 승계) + `getIsValidRequestC2S`(세션→email→행, 안전망 생성) + `proxy.ts` 가드. **사장님 로컬 OAuth 로그인 성공 확인 (2026-10-26)**. env: `NEON_AUTH_BASE_URL`·`NEON_AUTH_COOKIE_SECRET` (JWKS_URL 불필요 — JWT 직접 검증 코드 0).
+  * **client-gateway in-process 개조 (Workers 이관 하드 블로커 해소)**: fetch 프록시(외부 도메인 재발사) → **라우트 테이블 매칭 + 모듈 lazy import + 핸들러 직접 호출**. 테이블 33파일/46 엔트리 = **브라우저(baseFetch) C2S 경유만**. 전수 대조(테이블↔실제 라우트 파일)로 누락 0 기계 검증. **운영 규칙: 새 클라 API 라우트 추가 시 ROUTE_ENTRIES 1줄 필수(누락 시 404).**
+  * **Supabase 의존 0**: `lib/supabase/` 4종 삭제 + `@supabase/ssr`·`@supabase/supabase-js` 제거. `lib/api/types/supabase/` 폴더명은 레거시 명칭으로 유지(타입 경로일 뿐 의존 없음). `@upstash/ratelimit`도 제거(Redis는 Streams 전용 — fal은 동시실행수 모델이라 사전 스로틀 불필요, fal 공식 문서 확인).
+  * **개발 환경 정비**: ngrok 은퇴 → **CF Tunnel**(`dev.shortreal.ai`→localhost:3001, 4프로젝트 동시 상주). 포트 배치 확정: **short_real 3000(클라)/3001(서버)**, tailored-ad 3002/3003, LocalAgentsLink 3004/3005, jaeholee.xyz 3006/3007. Docker Desktop 설치 시도 후 제거(자체 VM이 systemd dockerd와 소켓·락 충돌 실측) → **systemd dockerd + CLI만**. 디스크 27.6GB 정리(죽은 볼륨 71개 19.67GB+이미지 7.95GB), `.dockerignore`에 node_modules·.next·env 추가.
+* **직전 구현 (2026-09-05, tsc 클린) — 유효**: 로고 업로드·프롬프트·Detail 표시·FormatTile Canvas 합성 다운로드·로고 투명 강제 등은 그대로 유지.
 
 ---
 
 ## 2. 완수된 작업 (Completed Milestones)
 
-### 2-1. Remotion Player 마이그레이션 후속 수정 (타입/런타임 정리)
-* **TS 타입 에러 전면 해소** (`npx tsc --noEmit` 클린):
-    * Remotion 4.0.507의 `Player`/`Composition`은 `component` prop의 제네릭 추론이 불가능한 구조(유니언 제네릭)라 Props가 `Record<string, unknown>`으로 폴백됨 → `SceneBlock`을 `Record<string, unknown>` 수용형으로 선언 후 내부에서 `as unknown as RemotionSceneInput` 캐스팅.
-    * `SceneBlock`: `Loop`에 `durationInFrames` 부여(`useVideoConfig` 활용), `memo()` 제거, `Player`에서 `playbackRate` 제거.
-    * `components/remotion/fonts.ts`: 서버 렌더 환경 안전을 위한 `document` 가드 추가.
-    * `playerRef.play()` 반환이 void인 버전이라 기존 `.catch()` 제거.
-* 파일: `components/remotion/SceneBlock.tsx`, `ShortRealRoot.tsx`, `fonts.ts`, `components/page/workspace/editor/VideoPlayerPanel.tsx`
+### 2-27. Neon 마이그레이션 코드 교체 전체 완료 (2026-10-24~26)
+* DB(25파일)·Storage(R2 11파일)·Realtime(Upstash SSE 4파일)·Auth(Neon Auth 12파일)·client-gateway in-process 개조. Supabase 의존 0. 상세는 `MIGRATION_SUPABASE_TO_NEON.md` §진행 상태(2026-10-26 갱신) + §개발 토폴로지 + §Workers 호출 모델.
+* **스토리지 찌꺼기 정리 (2026-10-24)**: 규칙 확정("현행 명명 규격 파일 0개" ‖ "DB에 id 없음" → 폐기) 후 Supabase 4버킷 정리 — 폐기 5 task(90파일/382MB+music·scene)+d0cc01df(32파일)+슬림화 948파일/3.4GB+레거시 잔여 → 최종 184파일/656MB, 로컬 덤프와 1:1 일치, DB 23→6 rows. 백업 zip 재생성(`~/다운로드/shortreal-supabase-storage.zip`).
+* **DB 데이터 이전 (2026-10-24)**: Supabase REST JSON 덤프(136 rows) → Neon development INSERT. numeric[]/text[] 배열 리터럴 변환. FK 고아 0.
 
-### 2-2. 장면 자동 전환 버그 수정 (4단계)
-1. **전환 미발생**: 기존 조건(`frameupdate` + 마지막 프레임 + 정지)이 Remotion 자동 정지 타이밍과 어긋남 → **PlayerRef `ended` 이벤트** 기반으로 교체.
-2. **전환 후 음악만 재생**: 활성 씬 카드가 바뀌면 `Player`가 통째로 리마운트(`autoPlay=false`)되어 영상/음성 정지 → 리마운트 동기화 effect 추가 (`isPlaying === true`면 새 Player를 프레임 0부터 재생).
-3. **음성 초반부 컷**: 전환 직후 새로 마운트된 음성이 콜드 로드되어 버퍼링 후 현재 위치에 합류 → 현재/이전/다음 씬 음성 **프리로드**(숨은 `Audio` 요소 + 브라우저 캐시 워밍, 사용 종료 엔트리 정리 로직 포함).
-4. **프로그레스 바 씬 2 이후 정지**: `frameupdate` 리스너가 빈 deps(`[]`)로 등록되어 리마운트 시 사라짐 → deps에 `activeSceneIndex` 추가해 재바인드.
-* 파일: `components/page/workspace/editor/VideoPlayerPanel.tsx`
+### 2-26. Neon 마이그레이션 Phase 0/1 (2026-10-23)
+* Neon 프로젝트+브랜치+스키마+RPC+R2 버킷+계획서 (상세 git 히스토리).
 
-### 2-3. 자막 렌더링: 청크(묶음) 카라오케 방식으로 전면 재설계
-* **업계 조사 결론**: 숏폼 자막 표준 = **1~3단어 묶음 + 활성 단어 강조**, 묶음은 흘러가듯 누적되지 않고 **통째로 교체**. 카라오케 최적 크기 70~90px@1080, Hue Hormozi 스타일(굵은 산스 + 강조색)이 지배적.
-* `CaptionLayer` 전면 재작성:
-    * 청크 단위 교체(청크 시작 인덱스 기준 고정 경계) + 단어 간 갭에서도 묶음 유지(논리 활성 인덱스).
-    * 활성 단어만 스프링 팝(0.9→1.1, Y리프트), 비활성 단어 45% 투명도.
-    * `captionChunkSize` 추가: `auto`(Hormozi 기본, 목표 캐던스 0.9초 기준 평균 단어 길이로 2~3단어 자동 산출), 2/3/4 고정.
-* **Word Grouping 선택기 UI** 추가 (Auto / 2 / 3 / 4) — 에디터 + 오토파일럿 양쪽 동작.
-
-### 2-4. 폰트 크기 단위 재정의: "px @1080" 절대 단위 전환
-* 기존 `REMOTION_DESIGN_WIDTH = 360` 설계 기준 → **1080 출력 해상도 기준**으로 전환. (가장 중요한 사실: 컴포지션은 소스 해상도와 무관하게 9:16 = 1080×1920, 16:9 = 1920×1080 고정이라 캔버스 px가 곧 절대 단위)
-* 슬라이더/입력 범위 36~84 → **48~120**, 기본값 48 → **72** (업계 카라오케 스위트 스팟) — 에디터/오토파일럿/ShortRealRoot 일괄.
-* 라벨을 "px" → **"px @1080"** + 보조 표기 **"≈ {X}% of frame height"**(aspectRatio별 실제 캔버스 기준 계산) 추가.
-* 아웃라인 두께 환산 공식 재보정(`36 * fontSize/72 * width/1080`) — 시각 비율 기존과 동일.
-* 서버 ASS 경로(`captionUtils`의 `captionOneLineHeight`)도 같은 환산 함수 경유라 자동 일관성 확인.
-* 참고: 기존 저장 설정(예: 48)은 이후 "48px @1080" = 업계 최소 가독 수준으로 해석됨.
-
-### 2-5. 서명 URL 만료 대응 (Remotion MediaPlaybackError Code 4)
-* **원인**: 씬 영상/음성 URL은 전부 **1시간 만료 Supabase 서명 URL**(`/api/video/task/[taskId]/urls`가 3600s 발급). 마운트 시 1회만 발급받고 편집 세션이 1시간을 넘기면 전체 미디어 만료 → Remotion `<Video>`가 명시적으로 에러 스로우. (기존 `<video>`는 파일 전체를 1회 버퍼링 + HTTP 캐시로 만료가 은폐됐음)
-* **수정**: 에디터 로드 완료 후 **50분 주기 자동 재발급 interval** (`getVideoTaskUrls` 재호출 → `scenesUrlData` 갱신) + 음성 프리로드 캐시의 만료 URL 엔트리 정리.
-
-### 2-6. 단어 애니메이션 6종 구현 + Word Animation 선택기
-* `RemotionCaptionStyleConfig.captionAnimation`: **pop**(기본, 업계 스탠다드) / **swift**(오버슛 없는 스내피) / **fadeSlide**(슬라이드+페이드, 차분) / **bounce**(과장 팝) / **colorOnly**(무빙 0) / **highlightBar**(단어 뒤 활성색 반투명 배너 페이드 인).
-* 기존 저장 데이터는 미지정 시 `pop`으로 자동 폴백.
-
-### 2-7. 컨트롤 오버레이 네이티브 드래그 고스터 제거
-* 버튼/속도/프로그레스 바 클러스터가 드래그 시 브라우저 드래그 고스트로 떠다니는 현상 → 오버레이 루트에 `onDragStart` preventDefault + `select-none` 추가, 슬라이더들에 `touch-action: none`.
-
-### 2-8. Remotion 서버 렌더 파이프라인 구현 + 프레임 스터터 수정 (2026-08-12)
-* **서버 렌더 인프라 완성**: `components/remotion/server/` (`FullVideo.tsx` — 씬 스티칭 + 씬별 배속 + 음성 + BGM + 자막 올-인-원 컴포지션, `FullVideoRoot.tsx`, `index.ts`) + `trigger/render-final-video.ts` (Trigger.dev 태스크, `/api/video/merge/final/route.ts`가 등록). mediabunny로 음성 실측 길이 확인, 렌더 후 Supabase 업로드까지 1회로 수렴.
-* **렌더 스터터(드드득) 원인 규명/수정**: `<Video>`(브라우저 엘리먼트)가 renderMedia 중 seek 레이스로 **홀드-점프**(같은 프레임 2회 → 2프레임분 점프) 반복. 모션 밴드(자막 없는 y384~768) 비교 분석으로 확정 (Remotion 홀드 33 vs ffmpeg 23, 큰 점프 143 vs 46). 수정: **`<OffthreadVideo>`로 교체** + `concurrency: 2 → 1` + `colorSpace: 'bt709'` (기본값은 yuvj420p full-range/BT.470BG — color flag 미전달 문제, `@remotion/renderer/dist/ffmpeg-args.js`에서 확인). 사장님 재렌더 검증 **통과**.
-* 부수 발견: Remotion 결과물에 씬 경계 검은 프레임 2개(162, 294) 존재 — 스터터와 무관한 별개 이슈 (트림/반올림 경계 문제 잔재, 우선순위 낮음).
-* **아키텍처 결정: Remotion 올-인-원 채택** (ffmpeg/Remotion 하이브리드 폐기). 근거: 배속 품질은 프레임 선택 기반이라 양쪽 동일(minterpolate 미사용 시), 하이브리드는 배속 씬을 2회 처리(인코딩+캡처), 방금 겪은 버그 3종이 전부 "두 시스템 경계"에서 발생. 배속 씬도 사전 인코딩(`postProcessedVideo`) 없이 raw → `playbackRate`로 통일 예정.
-* **기존 ffmpeg 로직 위치 전수 파악 완료** (`merge/final/process/route.ts`에서 정방향 추적): `videoServerAPI.postFinalVideo`(:327, atempo+concat), `postVideoMergeCaption`(:173, ASS 번인), `postVideoMergeMusic`(:214, amix+afade), `musicServerAPI.postMusicModifying`(:157), `captionUtils.generateASSContent`, 웹훅 3개(`webhook/replicate/video/merge/caption`, `video/merge/music`, `music/modifying`). ⚠️ `merge/route.ts:53`도 `postFinalVideo`를 직접 호출 — 삭제 시 호출부 전수 확인 필요.
+### 2-25 이전 (2026-09-05 ~)
+* FormatTile 합성 다운로드, 로고 업로드·배선, 썸네일 v2, 폰트 34개 등 (상세 git 히스토리).
 
 ---
 
 ## 3. 향후 작업 (Next Steps)
 
-### 🔴 components/remotion 폴더 구조 정리 (내일 진행)
-1. **`client` 폴더 신설**: `components/remotion/` 루트의 클라이언트 전용 컴포넌트(`SceneBlock.tsx`, `CaptionLayer.tsx`, `ShortRealRoot.tsx`, `fonts.ts` 등)를 `components/remotion/client/`로 이전. `server/`(서버 렌더용)와 구조 분리. import 경로 전파 주의(에디터 페이지 등).
-2. **기존 ffmpeg 로직 삭제** (2-8에 정리한 위치 전수 확인 후):
-    * `app/api/video/merge/final/process/route.ts` (구식 최종 병합 본체)
-    * `videoServerAPI.postFinalVideo` / `postVideoMergeCaption` / `postVideoMergeMusic` + `musicServerAPI.postMusicModifying`
-    * `captionUtils.generateASSContent` (Remotion 자막이 대체)
-    * 웹훅 3개: `webhook/replicate/video/merge/caption`, `video/merge/music`, `music/modifying`
-    * `app/api/video/merge/route.ts`, `merge/music/route.ts` (호출부 확인 후 — `merge/route.ts:53`이 postFinalVideo 호출)
-3. **배속 씬 올-인-원 전환**: `render-final-video.ts`에서 `postProcessedVideo` 분기 제거 → 전 씬 raw 영상을 `playbackRate`로 처리 (1차 가공본 `video_processed_N` 경로도 정리 대상).
+### 🔴 Workers 이관 (마지막 단계) — 선행 블로커 있음
+1. **internalFireAndForgetFetch의 in-process 전환** ⚠️ 하드 블로커 — 자기 API를 향한 FnF(~20곳)를 함수 호출+`ctx.waitUntil`로. TailoredAd `internalFetch.ts` 패턴(로컬 폴백 포함). gateway 디스패처를 공유하는 형태가 깔끔.
+2. **Cloudflare Workers 배포 세팅** — `@opennextjs/cloudflare` + `wrangler.jsonc`(TailoredAd 패턴), GitHub 연동(Workers Builds). **Paid $5 결제 완료(30s CPU)**. env는 Build Variables + Secrets(`process.env`는 Workers에서 빌드타임 값 — 런타임 Secrets은 serverEnv 패턴 필요, 이때 getNeonDb·getR2·getAuth가 async 전환 필요할 수 있음 — 호출부 await 여부 점검).
+3. **웹훅 리포인트 3곳** — fal·suno·polar → prod 도메인 (지금은 CF Tunnel `dev.shortreal.ai`로 실측 완료된 상태).
+4. **컷오버 E2E** — 가입→결제→생성→Export 풀사이클, 크레딧 증감 신/구 diff 0, SSE 진행 표시, Supabase 프로젝트 폐기.
 
-### 🟡 잔여 확인/이슈
-* OffthreadVideo 안정성 확인 후 `concurrency: 2` 복귀 테스트 (렌더 시간 단축 여부).
-* 씬 경계 검은 프레임 2개(162, 294) — 트림/반올림 경계 이슈, 우선순위 낮음.
-* ESLint 설정 순환참조로 린트 불가 상태 (`next lint --file/--dir` 옵션 미지원, 직접 eslint는 circular reference 에러) — tsc --noEmit은 클린.
-* (이전 랜딩 페이지 잔여) Features 섹션 소리 복원 최종 확인.
+### 🟡 짧은 잔여
+* **dev 브랜치 Neon Auth 활성화** — production만 켜짐. dev에서 로그인 재현되면 콘솔 토글 (현재는 prod 경유 동작 확인됨).
+* **`lib/api/types/supabase/` 폴더 개명** — 레거시 명칭 정리 (기능 무관, 여유 시).
+* **`.env.local`의 `SUPABASE_*` 5개 제거** — 의존 제거됐으니 env 정리 (사장님 몫).
+* **dev 세션 401 이슈 관찰** — A/B 재시작 사이클에서 세션 쿠키 무효화(클라는 이메일 보유, 서버는 세션 없음) 재현되면 auth 쿠키 오리진 점검. 재로그인으로 해결되는 상태.
+
+### 🟢 ShortReal 기존 대기 (마이그레이션과 병행 가능)
+* CreateForm 최종 UI 확인(0스크롤·반응형·라이트/다크) — 사장 확인 대기
+* 과금 확정 — `success only` 이전 (Polar 차감 기준)
+* Remotion 폴더 구조 정리, 액센트 색 불일치, ESLint 순환참조
+* 폰트 결정 주체 이관 (2단계) — prompt=패밀리+문구, analysis=배치+색/두께
 
 ---
 
 ## 4. 참고 (Reminders)
-* 공용: `getNextBaseResponse()` 사용 (엔드포인트 응답 규격), UI는 영어/한국어 구분 준수, 들여쓰기 공백 4칸.
-* Remotion 4.0.507 습성 메모: `component` prop 타입 추론 불가(Record 수용형 패턴), `PlayerProps`에 `onEnded` 없음(`ended` 이벤트 리스너 사용), `play()` 반환 void.
-* 서버 렌더: `<Video>` 대신 **`<OffthreadVideo>`** 사용 (seek 레이스 없음). `colorSpace: 'bt709'` 지정 필수 (기본값 yuvj420p full-range). 저사양 머신에서는 `concurrency: 1`.
-* 서명 URL: `postVideoMergeCaption` 등 샌드박스 예약 작업은 `lht1324/ffmpeg-sandbox-2` (Replicate) 사용 중. → 위 ffmpeg 로직 삭제 시 함께 제거 대상.
+
+* 공용: `getNextBaseResponse()` 사용, UI는 영어, 들여쓰기 4칸, 함수명 약어 금지. ESLint 불가 — `npx tsc --noEmit`으로 검증.
+* **개발 토폴로지 (2026-10-26 확정)**:
+  ```
+  외부 웹훅 (fal·suno·polar) → CF Tunnel(dev.shortreal.ai) → localhost:3001 (서버 B, Docker)
+  브라우저 → localhost:3000 (클라 A, 호스트) → baseFetch(NEXT_PUBLIC_BASE_URL=3001) → gateway → in-process 디스패치(라우트는 B에서 실행)
+  ```
+  * gateway 우선순위 = `BASE_URL(터널) || NEXT_PUBLIC_BASE_URL` — 어느 인스턴스에서 실행되든 터널(=서버 3001)로 종착하는 단일 진실. ⚠️ `NEXT_PUBLIC 우선`으로 바꾸면 컨테이너에서 `localhost:3001`이 존재하지 않는 포트라 ECONNREFUSED (실측 함정).
+  * **localhost는 실행 주체 좌표계** — 컨테이너에서 localhost = 컨테이너 자신. 크로스 홉 주소 지정 시 "어느 프로세스가 이 코드를 실행하는가"를 먼저 물어라.
+  * CF Tunnel은 외부 진입 전용 — 터널이 흔들려도(QUIC 단절 자동복구 실측) 로컬 API는 영향 없어야 정상.
+  * **Docker Desktop 사용 금지 확정** — 자체 VM이 systemd dockerd와 소켓·락 충돌. CLI + lazydocker(TUI)만.
+* **Workers 호출 모델 (이관 시)**: 요청 1 = isolate 1 = 페이지·API 전부 같은 실행 컨텍스트. **자기 zone fetch 금지**(inner invocation — TailoredAd 실측 사망) → 라우트 간 호출은 함수 직접 호출(라우트 테이블). FnF = in-process 호출 + `ctx.waitUntil`. **제한은 CPU 시간만**(Paid 30s 기본 — wall-clock 무제한, I/O 대기 불산출). 무거운 연산은 trigger.dev가 담당하는 기존 구조 유지.
+* **Neon 프로젝트**: `short-real` (id `green-dawn-44947241`), Singapore, PG17. 브랜치: `production`(br-holy-art-b3f7doa0) + `development`(br-damp-unit-b38v2xhi). DB `neondb`. 데이터는 development만(136 rows).
+* **R2**: 버킷 `short-real`(운영)/`short-real-dev`(개발·184파일)/`short-real-demo`(public·`assets.shortreal.ai`). 코드는 `CLOUDFLARE_R2_BUCKET=short-real` base명만 받고 dev에서 `-dev` 접미 자동. R2 토큰 스코프: `short-real`+`short-real-dev` (demo는 public이라 불필요).
+* **Upstash**: `short-real-redis` Singapore, PayG($0.2/10만 커맨드)+Max budget $20. Streams 전용(prefix `short-real:user/{id}`·`short-real:task/{id}`).
+* **Neon Auth**: production 브랜치 활성화, Google+GitHub. env `NEON_AUTH_BASE_URL`·`NEON_AUTH_COOKIE_SECRET`. Better Auth ID는 UUID가 아님 → **email 브릿지**(find-or-create) 필수 패턴.
+* **배포**: Cloudflare Workers Builds (GitHub 연동) — Build command `npx @opennextjs/cloudflare build`, Deploy `npx @opennextjs/cloudflare deploy`. `NEXT_PUBLIC_*`는 Build Variables 인라인.
+* **요청 경로 / RPC / 파일 경로 / LLM / 썸네일 / 다운로드 / 용어 계약 / 시드 규칙 / 사장 UI 원칙 / Remotion** 등 ShortReal 파이프라인 상세는 이전 세션 기록 및 `SHORTREAL-AD.md` 참조.
+* Remotion 4.0.507: `<OffthreadVideo>` + `colorSpace: 'bt709'`, 저사양 `concurrency: 1`.

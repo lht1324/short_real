@@ -2,8 +2,10 @@
 
 import { NextRequest } from "next/server";
 import { getNextBaseResponse } from "@/lib/utils/getNextBaseResponse";
-import { createSupabaseServiceRoleClient } from "@/lib/supabase/supabaseServiceRole";
+import { asc } from "drizzle-orm";
 import { RoadmapItem } from "@/lib/api/types/supabase/RoadmapItem";
+import { getNeonDb } from "@/lib/db/neon";
+import { roadmapItems } from "@/lib/db/schema";
 import { unstable_cache, revalidateTag } from "next/cache";
 
 /**
@@ -11,15 +13,12 @@ import { unstable_cache, revalidateTag } from "next/cache";
  */
 const getCachedRoadmapItems = unstable_cache(
     async () => {
-        console.log('❌ Cache MISS - Fetching roadmap items from Supabase');
-        const supabase = createSupabaseServiceRoleClient();
-        const { data, error } = await supabase
-            .from('roadmap_items')
-            .select('*')
-            .order('status', { ascending: true });
-
-        if (error) throw error;
-        return data as RoadmapItem[];
+        console.log('❌ Cache MISS - Fetching roadmap items from Neon');
+        const db = getNeonDb();
+        return db
+            .select()
+            .from(roadmapItems)
+            .orderBy(asc(roadmapItems.status));
     },
     ['roadmap_items'],
     {
@@ -35,7 +34,7 @@ const getCachedRoadmapItems = unstable_cache(
 export async function GET(_request: NextRequest) {
     try {
         const roadmapItemList = await getCachedRoadmapItems();
-        
+
         console.log('✅ Cache HIT or Fresh Data - Roadmap items served');
         return getNextBaseResponse({
             success: true,
@@ -57,27 +56,26 @@ export async function GET(_request: NextRequest) {
 export async function POST(
     request: NextRequest,
 ) {
-    const supabase = createSupabaseServiceRoleClient();
+    const db = getNeonDb();
 
     try {
         const newRoadmapItem: Partial<RoadmapItem> = await request.json();
 
-        const { data: postRoadmapItemResult, error } = await supabase
-            .from('roadmap_items')
-            .upsert({
-                ...newRoadmapItem,
+        // Supabase upsert(PK 기준) → Drizzle onConflictDoUpdate로 동일 계약 유지.
+        // 페이로드는 admin 클라이언트가 풀 아이템을 보내며, 누락 필드는 DB의 NOT NULL이 걸러준다.
+        const { id, ...updateFields } = newRoadmapItem;
+        const insertPayload = {
+            ...(id !== undefined ? { id } : {}),
+            ...updateFields,
+        } as typeof roadmapItems.$inferInsert;
+        const [postRoadmapItemResult] = await db
+            .insert(roadmapItems)
+            .values(insertPayload)
+            .onConflictDoUpdate({
+                target: roadmapItems.id,
+                set: updateFields,
             })
-            .select()
-            .single();
-
-        if (error) {
-            console.error('Roadmap patch error:', error);
-            return getNextBaseResponse({
-                success: false,
-                status: 500,
-                error: 'Failed to post roadmap items.'
-            });
-        }
+            .returning();
 
         // 데이터가 변경되었으므로 'roadmap' 태그가 달린 캐시 무효화
         revalidateTag('roadmap', 'hours');

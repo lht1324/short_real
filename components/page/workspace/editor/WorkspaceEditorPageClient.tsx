@@ -30,7 +30,7 @@ import MusicPanel from "@/components/page/workspace/editor/MusicPanel";
 import {musicClientAPI} from "@/lib/api/client/musicClientAPI";
 import dynamic from "next/dynamic";
 import {useAuth} from "@/context/AuthContext";
-import {createBrowserClient} from "@supabase/ssr";
+import {useTaskEvents} from "@/components/public/useTaskEvents";
 import ColorPickerPopover from "@/components/page/workspace/editor/ColorPickerPopover";
 const MusicEditPanel = dynamic(
     () => import('@/components/page/workspace/editor/MusicEditPanel'), // 컴포넌트 경로
@@ -233,29 +233,15 @@ function WorkspaceEditorPageClient() {
     }, []);
 
     // Supabase Realtime 구독 (태스크 & 씬 breakdown_list 실시간 DB 변경 감지)
-    useEffect(() => {
+    // SSE 이벤트 수신 — 변화 신호가 오면 태스크를 재조회하고, 아래 정밀 반영 로직을 실행한다.
+    // (Supabase Realtime은 row 페이로드를 실어 보냈지만, Upstash Streams는 신호만 주므로 재조회가 데이터 소스)
+    const handleTaskEvent = useCallback(async () => {
         if (!taskId) return;
+        const updatedTask = await videoClientAPI.getVideoTaskByTaskId(taskId);
+        if (!updatedTask) return;
+        const newBreakdownList = updatedTask.scene_breakdown_list;
 
-        const supabase = createBrowserClient(
-            process.env.NEXT_PUBLIC_SUPABASE_URL!,
-            process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-        );
-
-        const channel = supabase
-            .channel(`video_task_editor_${taskId}`)
-            .on(
-                'postgres_changes',
-                {
-                    event: 'UPDATE',
-                    schema: 'public',
-                    table: 'video_generation_tasks',
-                    filter: `id=eq.${taskId}`,
-                },
-                async (payload) => {
-                    const updatedTask = payload.new as VideoGenerationTask;
-                    const newBreakdownList = updatedTask.scene_breakdown_list;
-
-                    if (!newBreakdownList || newBreakdownList.length === 0) return;
+        if (!newBreakdownList || newBreakdownList.length === 0) return;
 
                     const currentBreakdownList = videoDataRef.current?.sceneBreakdownList || [];
 
@@ -367,14 +353,14 @@ function WorkspaceEditorPageClient() {
                             };
                         });
                     }
-                }
-            )
-            .subscribe();
-
-        return () => {
-            channel.unsubscribe();
-        };
     }, [taskId, user?.id, searchParams]);
+
+    useTaskEvents({
+        userId: user?.id,
+        taskIds: taskId ? [taskId] : [],
+        enabled: !!taskId && !!user?.id,
+        onEvent: handleTaskEvent,
+    });
 
     const [isCaptionEnabled, setIsCaptionEnabled] = useState(true);
 

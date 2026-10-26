@@ -1,6 +1,6 @@
 import {SceneData} from '@/lib/api/types/supabase/VideoGenerationTasks';
 import Replicate from "replicate";
-import {createSupabaseServiceRoleClient} from "@/lib/supabase/supabaseServiceRole";
+import {r2ServerAPI} from "@/lib/r2";
 import {ALL_FORMATS, Input, UrlSource} from "mediabunny";
 import {fal} from "@fal-ai/client";
 import {cryptoUtils} from "@/lib/utils/cryptoUtils";
@@ -20,7 +20,6 @@ export const videoServerAPI = {
         isViolence: boolean = false,
         isRegenerate: boolean = false,
     ) {
-        const supabase = createSupabaseServiceRoleClient();
         const decryptedApiKey = cryptoUtils.decrypt(falAiApiKey, userId);
 
         const falAIClient = fal;
@@ -44,15 +43,11 @@ export const videoServerAPI = {
         }
         const webhookUrl = webhookUrlObject.toString();
 
-        // Signed URL 생성 (1시간 유효)
-        const { data, error } = await supabase.storage
-            .from('scene_image_temp_storage')
-            .createSignedUrl(`${userId}/${taskId}/${sceneData.sceneNumber}.jpeg`, 60 * 60 * 24);
-
-        if (error || !data?.signedUrl) {
-            throw new Error(error?.message || `Scene ${sceneData.sceneNumber}: 이미지 데이터가 없습니다.`);
-        }
-        const imageUrl = data.signedUrl;
+        // Signed URL 생성 (24시간 유효 — R2 scene_image_temp_storage 폴더)
+        const imageUrl = await r2ServerAPI.presignGet(
+            `scene_image_temp_storage/${userId}/${taskId}/${sceneData.sceneNumber}.jpeg`,
+            60 * 60 * 24,
+        );
 
         const videoAIModelEndpointId = videoAIModelData.endpoint_id;
         const videoAIModelSupportedDurations = videoAIModelData.supported_duration_range ?? [];
@@ -166,18 +161,15 @@ export const videoServerAPI = {
     },
 
     async getVideoSignedUrl(filePath: string, expiresIn: number = 60 * 60 * 24, fileName?: string) {
-        const supabase = createSupabaseServiceRoleClient();
+        // Supabase { download: fileName ?? true } 계약 → R2 ResponseContentDisposition
+        const responseContentDisposition = fileName
+            ? `attachment; filename="${fileName}"`
+            : 'attachment';
 
-        const { data, error } = await supabase.storage
-            .from('processed_video_storage')
-            .createSignedUrl(filePath, expiresIn, {
-                download: fileName ?? true,
-            });
-
-        if (error || !data?.signedUrl) {
-            throw new Error(error?.message || `There is no video data.`);
-        }
-
-        return data.signedUrl;
+        return r2ServerAPI.presignGet(
+            `processed_video_storage/${filePath}`,
+            expiresIn,
+            { responseContentDisposition },
+        );
     }
 }

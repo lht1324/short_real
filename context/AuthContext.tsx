@@ -1,10 +1,9 @@
 'use client'
 
-import React, {createContext, useCallback, useContext, useEffect, useState} from 'react'
-import { User as SupabaseUser, Session } from '@supabase/supabase-js'
+import React, {createContext, useCallback, useContext, useEffect, useRef, useState} from 'react'
 import { User } from '@/lib/api/types/supabase/Users'
+import { authClient } from "@/lib/auth/client";
 import {usersClientAPI} from "@/lib/api/client/usersClientAPI";
-import {createBrowserClient} from "@supabase/ssr";
 
 export enum OAuthProvider {
     Google = "google",
@@ -13,137 +12,106 @@ export enum OAuthProvider {
 
 interface AuthContextType {
     user: User | null
-    supabaseUser: SupabaseUser | null
-    session: Session | null
     isInitializingAuthContext: boolean
     signInWithOAuth: (provider: OAuthProvider, redirectTo?: string) => Promise<{ error?: string }>
     signOut: () => Promise<void>
     refreshUser: () => Promise<void>
 }
-const supabase = createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-)
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
+    // Better Auth 세션 (auth 테이블 신원) — 우리 users 행과 분리. 매칭은 email로.
+    const { data: session, isPending: isSessionPending } = authClient.useSession();
     const [user, setUser] = useState<User | null>(null)
-    const [supabaseUser, setSupabaseUser] = useState<SupabaseUser | null>(null)
-    const [session, setSession] = useState<Session | null>(null)
-    const [isLoading, setIsLoading] = useState(true)
-    const [isInitialized, setIsInitialized] = useState(false)
+    const [profileKnown, setProfileKnown] = useState(false)
+    const lastEmailRef = useRef<string | null>(null);
 
-    // 서버에서 사용자 프로필 가져오기 (중복 호출 방지)
-    const fetchUserProfile = useCallback(async (userId: string) => {
-        // 이미 같은 사용자의 프로필이 있다면 스킵
-        if (user?.id === userId) {
-            return user;
-        }
+    // 세션 email → 우리 users 행 (ID 체계가 달라서 email 매핑. 없으면 null)
+    const loadProfile = useCallback(async (email: string) => {
+        const profile = await usersClientAPI.getUserByEmail(email);
+        setUser(profile);
+        setProfileKnown(true);
+    }, []);
 
-        const result = await usersClientAPI.getUserByUserId(userId);
-        return result;
-    }, [user]);
+    useEffect(() => {
+        if (isSessionPending) return;
+        const email = session?.user?.email ?? null;
+        let cancelled = false;
+        // 동기 setState는 lint(react-hooks/set-state-in-effect) 위반이라 마이크로태스크로 지연
+        void Promise.resolve().then(() => {
+            if (cancelled) return;
+            if (!email) {
+                lastEmailRef.current = null;
+                setUser(null);
+                setProfileKnown(true);
+                return;
+            }
+            // 동일 email이면 재조회 생략 (세션 갱신 반복 호출 방지)
+            if (email === lastEmailRef.current) return;
+            lastEmailRef.current = email;
+            setProfileKnown(false);
+            void loadProfile(email);
+        });
+        return () => {
+            cancelled = true;
+        };
+    }, [session?.user?.email, isSessionPending, loadProfile]);
 
     const refreshUser = useCallback(async () => {
-        if (session?.user) {
-            const profile = await fetchUserProfile(session.user.id)
-            setUser(profile)
+        const email = session?.user?.email;
+        if (email) {
+            await loadProfile(email);
         }
-    }, [session?.user, fetchUserProfile]);
-    
-    const getOAuthOptionByProvider = useCallback((provider: OAuthProvider) => {
-        switch (provider) {
-            case OAuthProvider.Google: return {
-                queryParams: {
-                    access_type: 'offline',
-                    prompt: 'consent',
-                },
-            }
-            case OAuthProvider.GitHub: return {
-                scopes: 'user'
-            }
-        }
-    }, []);
-    
+    }, [session?.user?.email, loadProfile]);
+
     const signInWithOAuth = useCallback(async (provider: OAuthProvider, redirectTo?: string): Promise<{ error?: string }> => {
         try {
-            const { error } = await supabase.auth.signInWithOAuth({
-                provider: provider,
-                options: {
-                    redirectTo: `${process.env.NEXT_PUBLIC_BASE_URL}/callback/auth${redirectTo ? `?redirectTo=${redirectTo}` : ""}`,
-                    ...getOAuthOptionByProvider(provider),
-                }
-            })
+            // 빌드타임 NEXT_PUBLIC_BASE_URL 금지 — prod 번들에 localhost가 박혀 OAuth가 localhost로 튐.
+            // 클라 런타임 origin이 항상 정답 (dev localhost·prod 실도메인 전부).
+            // callbackURL은 trusted domains에 등록돼 있어야 함 (localhost 기본 허용).
+            const callbackURL = `${window.location.origin}/callback/auth${redirectTo ? `?redirectTo=${redirectTo}` : ""}`;
+            const { error } = await authClient.signIn.social({
+                provider,
+                callbackURL,
+            });
             if (error) {
                 throw error;
             }
+            // 팝업 모드: 세션 확정 후 콜백으로 이동 (행 생성).
+            // 성공 후 이동을 안 하면 행 만드는 곳을 영원히 안 거쳐서 prod 빈 DB에서 터진다.
+            // 리다이렉트 모드에선 페이지가 언로드돼 이 코드가 실행 안 됨 (문제없음).
+            for (let i = 0; i < 20; i++) {
+                try {
+                    const { data } = await authClient.getSession();
+                    if (data?.session) break;
+                } catch {
+                    /* 재시도 */
+                }
+                await new Promise((resolve) => setTimeout(resolve, 500));
+            }
+            // 전체 로드 고의 사용 — 콜백 route 핸들러 실행 + 쿠키 확정이 필요해서
+            // router 내비게이션(route 핸들러행 미지원 가능) 대신 쓴다.
+            // eslint-disable-next-line @next/next/no-location-assign-relative-destination
+            window.location.href = callbackURL;
             return {}
         } catch (error) {
             return { error: `An error occurred during ${provider} sign in: ${error instanceof Error ? error.message : 'Unknown error'}` }
         }
-    }, [getOAuthOptionByProvider]);
-
-    const signOut = useCallback(async () => {
-        await supabase.auth.signOut();
     }, []);
 
-    useEffect(() => {
-        // Auth 상태 변경 감지 (초기 상태도 포함)
-        const { data: { subscription } } = supabase.auth.onAuthStateChange(
-            async (event, session) => {
-                if (!isInitialized) {
-                    setIsInitialized(true)
-                }
+    const signOut = useCallback(async () => {
+        await authClient.signOut();
+        setUser(null);
+        setProfileKnown(true);
+    }, []);
 
-                setSession(session)
-                setSupabaseUser(session?.user ?? null)
-
-                if (session?.user) {
-                    const profile = await fetchUserProfile(session.user.id)
-                    setUser(profile)
-                } else {
-                    setUser(null)
-                }
-                setIsLoading(false)
-            }
-        )
-
-        return () => {
-            subscription?.unsubscribe()
-        }
-    }, [fetchUserProfile, isInitialized]);
-
-    // Users 테이블 실시간 구독
-    useEffect(() => {
-        if (!user?.id) return;
-
-        const channel = supabase
-            .channel(`user-${user.id}`)
-            .on(
-                'postgres_changes',
-                {
-                    event: 'UPDATE',
-                    schema: 'public',
-                    table: 'users',
-                    filter: `id=eq.${user.id}`,
-                },
-                (payload) => {
-                    setUser(payload.new as User);
-                }
-            )
-            .subscribe(() => {
-            });
-
-        return () => {
-            supabase.removeChannel(channel);
-        };
-    }, [user?.id]);
+    // NOTE: users 테이블 실시간 구독(`user-${user.id}` 채널) 제거 — TailoredAd 선례(10-21).
+    // 이 구독의 소비자는 자기 자신뿐이고 비용은 상량이었음 — 로그인 상태면 모든 페이지에서 폴링.
+    // 플랜 변경이 다른 탭에 반영되는 건 새로고침으로 복구된다(기능 손실 아님).
 
     const value: AuthContextType = {
         user: user,
-        supabaseUser: supabaseUser,
-        session: session,
-        isInitializingAuthContext: isLoading,
+        isInitializingAuthContext: isSessionPending || !profileKnown,
         signInWithOAuth: signInWithOAuth,
         signOut: signOut,
         refreshUser: refreshUser

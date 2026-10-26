@@ -399,6 +399,107 @@ const FONT_FAMILY_LIST: FontFamily[] = [
             { weight: 800, isItalicSupported: true }
         ]
     },
+    {
+        name: "Barlow",
+        generic: "sans-serif",
+        weightList: [
+            { weight: 100, isItalicSupported: true },
+            { weight: 200, isItalicSupported: true },
+            { weight: 300, isItalicSupported: true },
+            { weight: 400, isItalicSupported: true },
+            { weight: 500, isItalicSupported: true },
+            { weight: 600, isItalicSupported: true },
+            { weight: 700, isItalicSupported: true },
+            { weight: 800, isItalicSupported: true },
+            { weight: 900, isItalicSupported: true }
+        ]
+    },
+    {
+        name: "Barlow Condensed",
+        generic: "sans-serif",
+        weightList: [
+            { weight: 100, isItalicSupported: true },
+            { weight: 200, isItalicSupported: true },
+            { weight: 300, isItalicSupported: true },
+            { weight: 400, isItalicSupported: true },
+            { weight: 500, isItalicSupported: true },
+            { weight: 600, isItalicSupported: true },
+            { weight: 700, isItalicSupported: true },
+            { weight: 800, isItalicSupported: true },
+            { weight: 900, isItalicSupported: true }
+        ]
+    },
+    {
+        name: "Fjalla One",
+        generic: "sans-serif",
+        weightList: [
+            { weight: 400, isItalicSupported: false }
+        ]
+    },
+    {
+        name: "Pathway Gothic One",
+        generic: "sans-serif",
+        weightList: [
+            { weight: 400, isItalicSupported: false }
+        ]
+    },
+    {
+        name: "PT Sans",
+        generic: "sans-serif",
+        weightList: [
+            { weight: 400, isItalicSupported: true },
+            { weight: 700, isItalicSupported: true }
+        ]
+    },
+    {
+        name: "PT Sans Narrow",
+        generic: "sans-serif",
+        weightList: [
+            { weight: 400, isItalicSupported: false },
+            { weight: 700, isItalicSupported: false }
+        ]
+    },
+    {
+        name: "Titillium Web",
+        generic: "sans-serif",
+        weightList: [
+            { weight: 200, isItalicSupported: true },
+            { weight: 300, isItalicSupported: true },
+            { weight: 400, isItalicSupported: true },
+            { weight: 600, isItalicSupported: true },
+            { weight: 700, isItalicSupported: true },
+            { weight: 900, isItalicSupported: true }
+        ]
+    },
+    {
+        name: "League Gothic",
+        generic: "sans-serif",
+        weightList: [
+            { weight: 400, isItalicSupported: false }
+        ]
+    },
+    {
+        name: "League Spartan",
+        generic: "sans-serif",
+        weightList: [
+            { weight: 100, isItalicSupported: false },
+            { weight: 200, isItalicSupported: false },
+            { weight: 300, isItalicSupported: false },
+            { weight: 400, isItalicSupported: false },
+            { weight: 500, isItalicSupported: false },
+            { weight: 600, isItalicSupported: false },
+            { weight: 700, isItalicSupported: false },
+            { weight: 800, isItalicSupported: false },
+            { weight: 900, isItalicSupported: false }
+        ]
+    },
+    {
+        name: "Russo One",
+        generic: "sans-serif",
+        weightList: [
+            { weight: 400, isItalicSupported: false }
+        ]
+    },
 
     // ==================== Display ====================
     {

@@ -1,9 +1,11 @@
 // app/api/youtube/upload/route.ts
 import { NextRequest } from 'next/server';
-import { createSupabaseServiceRoleClient } from '@/lib/supabase/supabaseServiceRole';
 import { getNextBaseResponse } from '@/lib/utils/getNextBaseResponse';
-import { DownloadResult } from "@supabase/storage-js";
+import { and, eq } from "drizzle-orm";
 import { videoGenerationTasksServerAPI } from "@/lib/api/server/videoGenerationTasksServerAPI";
+import { getNeonDb } from "@/lib/db/neon";
+import { autopilotData, userYoutubeTokens } from "@/lib/db/schema";
+import { r2ServerAPI } from "@/lib/r2";
 import { ExportPlatform, ExportStatus } from "@/lib/api/types/supabase/VideoGenerationTasks";
 import { getIsValidRequestS2S } from "@/lib/utils/getIsValidRequest";
 import { cryptoUtils } from "@/lib/utils/cryptoUtils";
@@ -16,8 +18,6 @@ export async function POST(request: NextRequest) {
             error: 'Unauthorized internal request',
         });
     }
-
-    const supabase = createSupabaseServiceRoleClient();
 
     // URL에서 파라미터 추출
     const { searchParams } = new URL(request.url);
@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
         });
     }
 
-    // 1262af2d-502d-4f7d-9752-3993008dd3fe
+    const db = getNeonDb();
 
     try {
         const privacySetting = searchParams.get('privacySetting');
@@ -93,30 +93,30 @@ export async function POST(request: NextRequest) {
         let targetTokenIdToQuery: string | null = decryptedTokenId;
 
         if (!targetTokenIdToQuery && videoGenerationTask.series_id) {
-            const { data: autopilot } = await supabase
-                .from('autopilot_data')
-                .select('youtube_token_id')
-                .eq('id', videoGenerationTask.series_id)
-                .single();
-            if (autopilot?.youtube_token_id) {
-                targetTokenIdToQuery = autopilot.youtube_token_id;
+            const autopilotRows = await db
+                .select({ youtube_token_id: autopilotData.youtube_token_id })
+                .from(autopilotData)
+                .where(eq(autopilotData.id, videoGenerationTask.series_id))
+                .limit(1);
+            if (autopilotRows[0]?.youtube_token_id) {
+                targetTokenIdToQuery = autopilotRows[0].youtube_token_id;
             }
         }
 
-        let tokenQuery = supabase
-            .from('user_youtube_tokens')
-            .select('*')
-            .eq('user_id', userId);
-
+        const tokenConditions = [eq(userYoutubeTokens.user_id, userId)];
         if (targetTokenIdToQuery) {
-            tokenQuery = tokenQuery.eq('id', targetTokenIdToQuery);
+            tokenConditions.push(eq(userYoutubeTokens.id, targetTokenIdToQuery));
         }
 
-        const { data: tokenData, error: tokenError } = await tokenQuery
-            .maybeSingle();
+        const tokenRows = await db
+            .select()
+            .from(userYoutubeTokens)
+            .where(and(...tokenConditions))
+            .limit(1);
+        const tokenData = tokenRows[0] ?? null;
 
-        if (tokenError || !tokenData) {
-            console.error('[YouTube Upload] Token not found:', tokenError);
+        if (!tokenData) {
+            console.error('[YouTube Upload] Token not found');
 
             await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, {
                 export_status: ExportStatus.FAILED,
@@ -170,25 +170,25 @@ export async function POST(request: NextRequest) {
             // 3. DB 업데이트 (새 access_token + 새 만료시간)
             const newExpiresAt = new Date(Date.now() + newTokens.expires_in * 1000).toISOString();
 
-            await supabase
-                .from('user_youtube_tokens')
-                .update({
+            await db
+                .update(userYoutubeTokens)
+                .set({
                     access_token: accessToken,
                     expires_at: newExpiresAt,
                     updated_at: new Date().toISOString()
                 })
-                .eq('id', tokenData.id);
+                .where(eq(userYoutubeTokens.id, tokenData.id));
 
             console.log('[YouTube Upload] Token refreshed successfully');
         }
 
-        // 4. Supabase Storage에서 영상 파일 다운로드
+        // 4. R2(processed_video_storage 폴더)에서 영상 파일 다운로드
         console.log('[YouTube Upload] Downloading video from storage...');
-        const { data: fileData, error: downloadError }: DownloadResult<Blob> = await supabase.storage
-            .from('processed_video_storage')
-            .download(`${userId}/${taskId}/${taskId}_final.mp4`);
-
-        if (downloadError || !fileData) {
+        let buffer: ArrayBuffer;
+        try {
+            const bytes = await r2ServerAPI.getObject(`processed_video_storage/${userId}/${taskId}/${taskId}_final.mp4`);
+            buffer = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer;
+        } catch (downloadError) {
             console.error('[YouTube Upload] Video download failed:', downloadError);
 
             await videoGenerationTasksServerAPI.patchVideoGenerationTask(taskId, {
@@ -202,9 +202,6 @@ export async function POST(request: NextRequest) {
                 error: 'Video file not found'
             });
         }
-
-        // 5. 영상 파일을 Buffer로 변환
-        const buffer = await fileData.arrayBuffer();
 
         // 6. YouTube API로 업로드
         console.log('[YouTube Upload] Uploading to YouTube...');

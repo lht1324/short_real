@@ -1,60 +1,54 @@
-import {createSupabaseServiceRoleClient} from "@/lib/supabase/supabaseServiceRole";
 import {AIModelData} from "@/lib/api/types/supabase/AIModelData";
+import {and, eq} from "drizzle-orm";
+import {getNeonDb} from "@/lib/db/neon";
+import {aiModelData} from "@/lib/db/schema";
 
 export const aiModelDataServerAPI = {
     async getAIModelDataList(): Promise<AIModelData[]> {
-        const supabase = createSupabaseServiceRoleClient();
+        try {
+            const db = getNeonDb();
+            const rows = await db
+                .select()
+                .from(aiModelData);
 
-        const { data, error } = await supabase
-            .from('ai_model_data')
-            .select('*');
-
-        if (error) {
-            if (error.code === 'PGRST116') { // No rows returned
-                return [];
-            }
-            throw new Error(`Failed to get ai model data list: ${error.message}`);
+            return rows as unknown as AIModelData[];
+        } catch (error) {
+            throw new Error(`Failed to get ai model data list: ${error instanceof Error ? error.message : String(error)}`);
         }
-
-        return data;
     },
 
     async getAIModelDataById(id: string): Promise<AIModelData | null> {
-        const supabase = createSupabaseServiceRoleClient();
+        try {
+            const db = getNeonDb();
+            const rows = await db
+                .select()
+                .from(aiModelData)
+                .where(eq(aiModelData.id, id))
+                .limit(1);
 
-        const { data, error } = await supabase
-            .from('ai_model_data')
-            .select('*')
-            .eq('id', id)
-            .single();
-
-        if (error) {
-            if (error.code === 'PGRST116') { // No rows returned
-                return null;
-            }
-            throw new Error(`Failed to get ai model data: ${error.message}`);
+            // Supabase .single() 계약 — 0 rows면 null
+            return rows[0] ? rows[0] as unknown as AIModelData : null;
+        } catch (error) {
+            throw new Error(`Failed to get ai model data: ${error instanceof Error ? error.message : String(error)}`);
         }
-
-        return data;
     },
 
     async getAIModelDataByDisplayNameAndCategory(displayName: string, category: string): Promise<AIModelData | null> {
-        const supabase = createSupabaseServiceRoleClient();
+        try {
+            const db = getNeonDb();
+            const rows = await db
+                .select()
+                .from(aiModelData)
+                .where(and(
+                    eq(aiModelData.display_name, displayName),
+                    eq(aiModelData.category, category),
+                ))
+                .limit(1);
 
-        const { data, error } = await supabase
-            .from('ai_model_data')
-            .select('*')
-            .eq('display_name', displayName)
-            .eq('category', category)
-            .maybeSingle();
-
-        if (error) {
-            if (error.code === 'PGRST116') { // No rows returned
-                return null;
-            }
-            throw new Error(`Failed to get ai model data by display name & category: ${error.message}`);
+            // Supabase .maybeSingle() 계약 — 0 rows면 null
+            return rows[0] ? rows[0] as unknown as AIModelData : null;
+        } catch (error) {
+            throw new Error(`Failed to get ai model data by display name & category: ${error instanceof Error ? error.message : String(error)}`);
         }
-
-        return data;
     }
 }

@@ -647,7 +647,7 @@ function WorkspaceAutopilotPageClient() {
 
             {/* Background Effects - Toned down significantly */}
             <div className="absolute inset-0 opacity-[0.03] pointer-events-none z-0">
-                <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-indigo-500 rounded-full blur-[120px]"></div>
+                <div className="absolute top-1/4 left-1/4 w-[31.25rem] h-[31.25rem] bg-indigo-500 rounded-full blur-[7.5rem]"></div>
             </div>
 
             {/* Plan Exceeded Warning Banner */}
@@ -667,11 +667,11 @@ function WorkspaceAutopilotPageClient() {
             )}
 
             {isInitialLoading ? (
-                <div className="flex h-[calc(100vh-73px)] items-center justify-center relative z-10">
+                <div className="flex h-[calc(100vh-4.5625rem)] items-center justify-center relative z-10">
                     <Loader2 className="w-8 h-8 animate-spin text-zinc-500" />
                 </div>
             ) : (
-                <div className="flex h-[calc(100vh-73px)] relative z-10">
+                <div className="flex h-[calc(100vh-4.5625rem)] relative z-10">
                     {/* Left Sidebar */}
                     <WorkspaceSidebar activeItem={WorkspaceSidebarItem.AUTOPILOT} />
 

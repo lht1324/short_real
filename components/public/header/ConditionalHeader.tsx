@@ -6,6 +6,7 @@ import Header from './Header';
 const HIDE_PATHNAME_LIST = [
     "workspace",
     "admin",
+    "ad",
 ]
 
 function ConditionalHeader() {

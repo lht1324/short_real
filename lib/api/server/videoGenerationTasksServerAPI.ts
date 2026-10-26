@@ -1,189 +1,175 @@
-import { createSupabaseServer } from '@/lib/supabase/supabaseServer';
 import {VideoGenerationTask, VideoGenerationTaskStatus} from '@/lib/api/types/supabase/VideoGenerationTasks';
-import {createSupabaseServiceRoleClient} from "@/lib/supabase/supabaseServiceRole";
+import {desc, eq} from "drizzle-orm";
+import {getNeonDb} from "@/lib/db/neon";
+import {videoGenerationTasks} from "@/lib/db/schema";
+import {r2ServerAPI} from "@/lib/r2";
+import {publishTaskDelete, publishTaskWrite} from "@/lib/taskEvents";
+
+// R2 키 접두 — 구 Supabase 버킷명을 폴더로 사용
+const FOLDER_PREFIXES = [
+    'processed_video_storage',
+    'scene_image_temp_storage',
+    'video_music_temp_storage',
+    'narration_voice_storage',
+] as const;
 
 export const videoGenerationTasksServerAPI = {
-    // POST - 새로운 영상 생성 작업 생성
+    // POST - 새로운 영상 생성 작업 생성 (Supabase upsert 계약 → PK 충돌 시 update)
     async postVideoGenerationTask(taskData: Partial<VideoGenerationTask>): Promise<VideoGenerationTask> {
-        const supabase = createSupabaseServiceRoleClient();
-        
-        const { data, error } = await supabase
-            .from('video_generation_tasks')
-            .upsert(taskData)
-            .select()
-            .single();
+        const db = getNeonDb();
 
-        if (error) {
-            throw new Error(`Failed to create video generation task: ${error.message}`);
+        try {
+            // 페이로드는 호출부(파이프라인)가 필수 컬럼을 채워 보내며, 누락 시 DB NOT NULL이 걸러준다.
+            const insertPayload = taskData as typeof videoGenerationTasks.$inferInsert;
+
+            const [data] = await db
+                .insert(videoGenerationTasks)
+                .values(insertPayload)
+                .onConflictDoUpdate({
+                    target: videoGenerationTasks.id,
+                    set: taskData,
+                })
+                .returning();
+
+            if (!data) {
+                throw new Error('Failed to create video generation task: no row returned');
+            }
+
+            await publishTaskWrite(data.id, data.user_id);
+
+            return data as unknown as VideoGenerationTask;
+        } catch (error) {
+            const message = error instanceof Error ? error.message : String(error);
+            throw new Error(`Failed to create video generation task: ${message}`);
         }
-
-        return data;
     },
 
     // GET - 전체 작업 조회
     async getVideoGenerationTasks(): Promise<VideoGenerationTask[] | null> {
-        const supabase = await createSupabaseServer("readOnly");
+        const db = getNeonDb();
 
-        const { data, error } = await supabase
-            .from('video_generation_tasks')
-            .select('*');
+        const rows = await db
+            .select()
+            .from(videoGenerationTasks);
 
-        if (error) {
-            if (error.code === 'PGRST116') { // No rows returned
-                return null;
-            }
-            throw new Error(`Failed to get video generation task: ${error.message}`);
-        }
-
-        return data;
+        return rows as unknown as VideoGenerationTask[];
     },
 
-    // GET - 작업 ID로 단일 작업 조회
+    // GET - 작업 ID로 단일 작업 조회 (Supabase .single() 계약 — 0 rows면 null)
     async getVideoGenerationTaskById(taskId: string): Promise<VideoGenerationTask | null> {
-        // const supabase = await createSupabaseServer("readOnly");
-        const supabase = createSupabaseServiceRoleClient();
-        
-        const { data, error } = await supabase
-            .from('video_generation_tasks')
-            .select('*')
-            .eq('id', taskId)
-            .single();
+        const db = getNeonDb();
 
-        if (error) {
-            if (error.code === 'PGRST116') { // No rows returned
-                return null;
-            }
-            throw new Error(`Failed to get video generation task: ${error.message}`);
-        }
+        const rows = await db
+            .select()
+            .from(videoGenerationTasks)
+            .where(eq(videoGenerationTasks.id, taskId))
+            .limit(1);
 
-        return data;
+        return rows[0] ? rows[0] as unknown as VideoGenerationTask : null;
     },
 
     // GET - 사용자 ID로 작업 목록 조회
     async getVideoGenerationTasksByUserId(userId: string, limit: number = 10, offset: number = 0): Promise<VideoGenerationTask[]> {
-        const supabase = createSupabaseServiceRoleClient();
-        
-        const { data, error } = await supabase
-            .from('video_generation_tasks')
-            .select('*')
-            .eq('user_id', userId)
-            .order('created_at', { ascending: false });
-            // .range(offset, offset + limit - 1);
+        const db = getNeonDb();
 
-        if (error) {
-            throw new Error(`Failed to get user's video generation tasks: ${error.message}`);
-        }
+        const rows = await db
+            .select()
+            .from(videoGenerationTasks)
+            .where(eq(videoGenerationTasks.user_id, userId))
+            .orderBy(desc(videoGenerationTasks.created_at));
 
-        return data || [];
+        return rows as unknown as VideoGenerationTask[];
     },
 
-    // PATCH - 작업 데이터 업데이트
+    // PATCH - 작업 데이터 업데이트 (Supabase .single() 계약 — 대상 없으면 throw)
     async patchVideoGenerationTask(taskId: string, videoGenerationTask: Partial<VideoGenerationTask>): Promise<VideoGenerationTask> {
-        const supabase = createSupabaseServiceRoleClient();
+        const db = getNeonDb();
         const currentDateString = new Date().toISOString();
 
-        const { data, error } = await supabase
-            .from('video_generation_tasks')
-            .update({
+        const rows = await db
+            .update(videoGenerationTasks)
+            .set({
                 ...videoGenerationTask,
                 updated_at: currentDateString,
             })
-            .eq('id', taskId)
-            .select()
-            .single();
+            .where(eq(videoGenerationTasks.id, taskId))
+            .returning();
 
-        if (error) {
-            throw new Error(`Failed to update task status: ${error.message}`);
+        if (!rows[0]) {
+            throw new Error(`Failed to update task status: task not found (${taskId})`);
         }
 
-        return data;
+        await publishTaskWrite(taskId, rows[0].user_id);
+
+        return rows[0] as unknown as VideoGenerationTask;
     },
 
     // PATCH - 작업 상태만 업데이트
     async patchVideoGenerationTaskStatus(taskId: string, status: VideoGenerationTaskStatus): Promise<VideoGenerationTask> {
-        const supabase = createSupabaseServiceRoleClient();
+        const db = getNeonDb();
 
-        const { data, error } = await supabase
-            .from('video_generation_tasks')
-            .update({ status: status } as Partial<VideoGenerationTask>)
-            .eq('id', taskId)
-            .select()
-            .single();
+        const rows = await db
+            .update(videoGenerationTasks)
+            .set({ status })
+            .where(eq(videoGenerationTasks.id, taskId))
+            .returning();
 
-        if (error) {
-            throw new Error(`Failed to update task status: ${error.message}`);
+        if (!rows[0]) {
+            throw new Error(`Failed to update task status: task not found (${taskId})`);
         }
 
-        return data;
+        await publishTaskWrite(taskId, rows[0].user_id);
+
+        return rows[0] as unknown as VideoGenerationTask;
     },
 
     async patchVideoGenerationTaskFailed(taskId: string, isFailed: boolean = true): Promise<VideoGenerationTask> {
-        const supabase = createSupabaseServiceRoleClient();
+        const db = getNeonDb();
 
-        const { data, error } = await supabase
-            .from('video_generation_tasks')
-            .update({ is_generation_failed: isFailed } as Partial<VideoGenerationTask>)
-            .eq('id', taskId)
-            .select()
-            .single();
+        const rows = await db
+            .update(videoGenerationTasks)
+            .set({ is_generation_failed: isFailed })
+            .where(eq(videoGenerationTasks.id, taskId))
+            .returning();
 
-        if (error) {
-            throw new Error(`Failed to update task status: ${error.message}`);
+        if (!rows[0]) {
+            throw new Error(`Failed to update task status: task not found (${taskId})`);
         }
 
-        return data;
+        await publishTaskWrite(taskId, rows[0].user_id);
+
+        return rows[0] as unknown as VideoGenerationTask;
     },
 
-    // DELETE - 작업 삭제
+    // DELETE - 작업 삭제 (DB 레코드 + R2 4개 폴더의 태스크 파일 전부)
     async deleteVideoGenerationTask(taskId: string): Promise<boolean> {
-        const supabase = createSupabaseServiceRoleClient();
+        const db = getNeonDb();
 
         try {
             const existingTask = await videoGenerationTasksServerAPI.getVideoGenerationTaskById(taskId);
 
             if (!existingTask) throw new Error("Task not found.");
 
-            // 1. narration_voice_storage 삭제
-            const { error: voiceError } = await supabase.storage
-                .from('narration_voice_storage')
-                .remove([`${existingTask.user_id}/${taskId}.mp3`]);
-            if (voiceError) console.error('Storage delete error (narration_voice):', voiceError.message);
-
-            // 2-4. 나머지 버킷들 (폴더 기반 - taskId 폴더 내 모든 파일 조회 후 삭제)
-            const folderBasedBuckets = [
-                'processed_video_storage',
-                'scene_image_temp_storage',
-                'video_music_temp_storage'
-            ];
-
-            for (const bucketName of folderBasedBuckets) {
-                const { data: files, error: listError } = await supabase.storage
-                    .from(bucketName)
-                    .list(taskId);
-
-                if (listError) {
-                    console.error(`Failed to list files in ${bucketName}:`, listError.message);
-                    continue;
-                }
-
-                if (files && files.length > 0) {
-                    const filePaths = files.map(file => `${existingTask.user_id}/${taskId}/${file.name}`);
-                    const { error: removeError } = await supabase.storage
-                        .from(bucketName)
-                        .remove(filePaths);
-                    if (removeError) console.error(`Storage delete error (${bucketName}):`, removeError.message);
+            // R2: 유저폴더/{taskId} 폴더의 파일 전부 삭제 (현재 유저폴더 체계 구조)
+            for (const prefix of FOLDER_PREFIXES) {
+                try {
+                    const files = await r2ServerAPI.listKeys(`${prefix}/${existingTask.user_id}/${taskId}/`);
+                    if (files.length > 0) {
+                        await r2ServerAPI.deleteKeys(
+                            files.map((name) => `${prefix}/${existingTask.user_id}/${taskId}/${name}`)
+                        );
+                    }
+                } catch (storageError) {
+                    console.error(`R2 delete error (${prefix}):`, storageError);
                 }
             }
 
             // DB에서 작업 레코드 삭제
-            const { error } = await supabase
-                .from('video_generation_tasks')
-                .delete()
-                .eq('id', taskId);
+            await db
+                .delete(videoGenerationTasks)
+                .where(eq(videoGenerationTasks.id, taskId));
 
-            if (error) {
-                throw new Error(`Failed to delete video generation task: ${error.message}`);
-            }
+            await publishTaskDelete(taskId, existingTask.user_id);
 
             return true;
         } catch (error) {

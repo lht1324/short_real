@@ -1,8 +1,10 @@
 import { NextRequest } from "next/server";
 import { getNextBaseResponse } from "@/lib/utils/getNextBaseResponse";
-import { createSupabaseServiceRoleClient } from "@/lib/supabase/supabaseServiceRole";
+import { asc, eq } from "drizzle-orm";
 import { AutopilotData } from "@/lib/api/types/supabase/AutopilotData";
 import { getIsValidRequestS2S } from "@/lib/utils/getIsValidRequest";
+import { getNeonDb } from "@/lib/db/neon";
+import { autopilotData } from "@/lib/db/schema";
 
 /**
  * GET /api/autopilot-data/user/[userId]
@@ -31,21 +33,19 @@ export async function GET(
         });
     }
 
-    const supabase = createSupabaseServiceRoleClient();
+    const db = getNeonDb();
 
     try {
-        const { data, error } = await supabase
-            .from('autopilot_data')
-            .select('*')
-            .eq('user_id', userId)
-            .order('created_at', { ascending: true });
-
-        if (error) throw error;
+        const data = await db
+            .select()
+            .from(autopilotData)
+            .where(eq(autopilotData.user_id, userId))
+            .orderBy(asc(autopilotData.created_at));
 
         return getNextBaseResponse({
             success: true,
             status: 200,
-            data: { autopilotDataList: data as AutopilotData[] },
+            data: { autopilotDataList: data as unknown as AutopilotData[] },
             message: "Successfully fetched user's autopilot data."
         });
     } catch (error) {
@@ -85,21 +85,19 @@ export async function PATCH(
         });
     }
 
-    const supabase = createSupabaseServiceRoleClient();
+    const db = getNeonDb();
 
     try {
         const updateData: Partial<AutopilotData> = await request.json();
 
-        const { data, error } = await supabase
-            .from('autopilot_data')
-            .update({
+        const data = await db
+            .update(autopilotData)
+            .set({
                 ...updateData,
                 updated_at: new Date().toISOString()
             })
-            .eq('user_id', userId)
-            .select();
-
-        if (error) throw error;
+            .where(eq(autopilotData.user_id, userId))
+            .returning();
 
         return getNextBaseResponse({
             success: true,
@@ -144,15 +142,12 @@ export async function DELETE(
         });
     }
 
-    const supabase = createSupabaseServiceRoleClient();
+    const db = getNeonDb();
 
     try {
-        const { error } = await supabase
-            .from('autopilot_data')
-            .delete()
-            .eq('user_id', userId);
-
-        if (error) throw error;
+        await db
+            .delete(autopilotData)
+            .where(eq(autopilotData.user_id, userId));
 
         return getNextBaseResponse({
             success: true,

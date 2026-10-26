@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { internalFireAndForgetFetch } from '@/lib/utils/internalFetch';
-import { createSupabaseServiceRoleClient } from "@/lib/supabase/supabaseServiceRole";
 import {videoGenerationTasksServerAPI} from "@/lib/api/server/videoGenerationTasksServerAPI";
 import {ExportPlatform, ExportStatus} from "@/lib/api/types/supabase/VideoGenerationTasks";
 import { cryptoUtils } from "@/lib/utils/cryptoUtils";
+import {getNeonDb} from "@/lib/db/neon";
+import {userTiktokTokens, autopilotData} from "@/lib/db/schema";
+import {and, eq} from "drizzle-orm";
 
 
 export async function GET(request: NextRequest) {
@@ -97,8 +99,8 @@ export async function GET(request: NextRequest) {
             return NextResponse.redirect(isAutopilot ? `${originUrl}/workspace/autopilot?seriesId=${seriesId}` : `${originUrl}/workspace/dashboard`);
         }
 
-        // 4. Supabase에 토큰 저장
-        const supabase = createSupabaseServiceRoleClient();
+        // 4. Neon에 토큰 저장 (Drizzle)
+        const db = getNeonDb();
 
         // [수정] TikTok 사용자 정보 조회 (Display Name + avatar_url)
         let displayName = null;
@@ -124,11 +126,6 @@ export async function GET(request: NextRequest) {
 
         // --- 3단계 수정 내용 시작 ---
         // (1) 기존 레코드의 ID를 조회 (중복 연동 판단)
-        let findQuery = supabase
-            .from('user_tiktok_tokens')
-            .select('id')
-            .eq('user_id', userId);
-
         let decryptedTokenId: string | null = null;
         if (!isAutopilot && targetTokenId && targetTokenId !== 'null' && targetTokenId !== 'undefined') {
             try {
@@ -138,15 +135,18 @@ export async function GET(request: NextRequest) {
             }
         }
 
-        if (decryptedTokenId) {
-            findQuery = findQuery.eq('id', decryptedTokenId);
-        } else if (tokens.open_id) {
-            findQuery = findQuery.eq('tiktok_user_id', tokens.open_id);
-        } else {
-            findQuery = findQuery.eq('id', '00000000-0000-0000-0000-000000000000');
-        }
+        // 매칭 조건: 명시적 토큰 ID → open_id 매칭 → 매칭 불가 센티널(0 rows 보장)
+        const matchCondition = decryptedTokenId
+            ? and(eq(userTiktokTokens.user_id, userId), eq(userTiktokTokens.id, decryptedTokenId))
+            : tokens.open_id
+                ? and(eq(userTiktokTokens.user_id, userId), eq(userTiktokTokens.tiktok_user_id, tokens.open_id))
+                : and(eq(userTiktokTokens.user_id, userId), eq(userTiktokTokens.id, '00000000-0000-0000-0000-000000000000'));
 
-        const { data: existingRecord } = await findQuery.maybeSingle();
+        const [existingRecord] = await db
+            .select({ id: userTiktokTokens.id })
+            .from(userTiktokTokens)
+            .where(matchCondition)
+            .limit(1);
 
         const tokenPayload = {
             user_id: userId,
@@ -158,28 +158,27 @@ export async function GET(request: NextRequest) {
             display_name: displayName,
             avatar_url: avatarUrl,
             updated_at: new Date().toISOString(),
+            created_at: new Date().toISOString(),
             last_used_at: new Date().toISOString(),
         };
 
-        let dbResult;
+        let dbResult: { id: string } | undefined;
         if (existingRecord?.id) {
             // (2) 이미 존재하는 경우: id 기준으로 UPDATE
-            dbResult = await supabase
-                .from('user_tiktok_tokens')
-                .update(tokenPayload)
-                .eq('id', existingRecord.id)
-                .select('id')
-                .single();
+            [dbResult] = await db
+                .update(userTiktokTokens)
+                .set(tokenPayload)
+                .where(eq(userTiktokTokens.id, existingRecord.id))
+                .returning({ id: userTiktokTokens.id });
         } else {
             // (3) 존재하지 않는 경우: INSERT
-            dbResult = await supabase
-                .from('user_tiktok_tokens')
-                .insert(tokenPayload)
-                .select('id')
-                .single();
+            [dbResult] = await db
+                .insert(userTiktokTokens)
+                .values(tokenPayload)
+                .returning({ id: userTiktokTokens.id });
         }
 
-        const dbError = dbResult.error;
+        const dbError = dbResult ? null : new Error('Token upsert returned no row');
         // --- 3단계 수정 내용 끝 ---
 
         if (dbError) {
@@ -195,7 +194,7 @@ export async function GET(request: NextRequest) {
             return NextResponse.redirect(isAutopilot ? `${originUrl}/workspace/autopilot?seriesId=${seriesId}` : (isProfileMode ? `${originUrl}/profile` : `${originUrl}/workspace/dashboard`));
         }
 
-        const finalTokenId = existingRecord?.id || dbResult.data?.id;
+        const finalTokenId = existingRecord?.id || dbResult?.id;
 
         // 5. 모드에 따른 후속 작업 및 리다이렉트
         if (isProfileMode) {
@@ -204,13 +203,13 @@ export async function GET(request: NextRequest) {
 
         if (isAutopilot) {
             if (finalTokenId) {
-                await supabase
-                    .from('autopilot_data')
-                    .update({
+                await db
+                    .update(autopilotData)
+                    .set({
                         tiktok_token_id: finalTokenId,
-                        updated_at: new Date().toISOString()
+                        updated_at: new Date().toISOString(),
                     })
-                    .eq('id', seriesId);
+                    .where(eq(autopilotData.id, seriesId));
             }
             return NextResponse.redirect(`${originUrl}/workspace/autopilot?seriesId=${seriesId}`);
         }

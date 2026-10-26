@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getNextBaseResponse } from "@/lib/utils/getNextBaseResponse";
 import { getIsValidRequestC2S } from "@/lib/utils/getIsValidRequest";
-import { createSupabaseServiceRoleClient } from "@/lib/supabase/supabaseServiceRole";
+import { and, eq } from "drizzle-orm";
 import { internalFireAndForgetFetch } from "@/lib/utils/internalFetch";
 import { videoGenerationTasksServerAPI } from "@/lib/api/server/videoGenerationTasksServerAPI";
+import { getNeonDb } from "@/lib/db/neon";
+import { userYoutubeTokens } from "@/lib/db/schema";
 import { ExportPlatform, ExportStatus } from "@/lib/api/types/supabase/VideoGenerationTasks";
 import { cryptoUtils } from "@/lib/utils/cryptoUtils";
 
@@ -32,7 +34,7 @@ export async function GET(request: NextRequest) {
         });
     }
 
-    const supabase = createSupabaseServiceRoleClient();
+    const db = getNeonDb();
 
     try {
         const privacySetting = request.nextUrl.searchParams.get('privacySetting');
@@ -58,23 +60,24 @@ export async function GET(request: NextRequest) {
             }
         }
 
-        // 2. 해당 고유 토큰 ID에 매칭되는 기존 토큰이 있는지 조회
-        let tokenQuery = supabase
-            .from('user_youtube_tokens')
-            .select('id, refresh_token, expires_at')
-            .eq('user_id', user.id);
-
+        // 2. 해당 고유 토큰 ID에 매칭되는 기존 토큰이 있는지 조회 (Supabase maybeSingle 계약)
+        const tokenConditions = [eq(userYoutubeTokens.user_id, user.id)];
         if (decryptedTokenId) {
-            tokenQuery = tokenQuery.eq('id', decryptedTokenId);
+            tokenConditions.push(eq(userYoutubeTokens.id, decryptedTokenId));
         }
 
-        const { data: existingToken } = await tokenQuery.maybeSingle();
+        const tokenRows = await db
+            .select({ id: userYoutubeTokens.id, refresh_token: userYoutubeTokens.refresh_token, expires_at: userYoutubeTokens.expires_at })
+            .from(userYoutubeTokens)
+            .where(and(...tokenConditions))
+            .limit(1);
+        const existingToken = tokenRows[0] ?? null;
 
         if (!isProfileMode && existingToken?.refresh_token && taskId && privacySetting) {
             // 토큰 있음 → OAuth 건너뛰고 바로 업로드 트리거 (암호화된 targetTokenId 전달)
             // 만약 targetTokenId가 없었다면 (예: legacy 수동 연동 복구), 새로 암호화하여 생성
             const tokenToPass = targetTokenId || cryptoUtils.encrypt(existingToken.id, user.id);
-            
+
             internalFireAndForgetFetch(
                 `${process.env.BASE_URL}/api/video/export/youtube/upload?taskId=${taskId}&privacySetting=${privacySetting}&tokenId=${tokenToPass}`,
                 { method: 'POST' }
