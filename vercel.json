@@ -1,8 +1,0 @@
-{
-    "crons": [
-        {
-            "path": "/api/polar/subscriptions/cron",
-            "schedule": "0 * * * *"
-        }
-    ]
-}
