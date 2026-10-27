@@ -1,0 +1,25 @@
+{
+  // short-real-cron — Vercel Cron 대체. 별도 Workers 프로젝트(Git 연동 root directory: cron-worker,
+  // deploy command: npx wrangler deploy)로 배포한다. 루트의 OpenNext 빌드와 관련 없다.
+  // 검증 전용 HTTP 핸들러(/__run?secret=) 외에는 스케줄 트리거만 사용 — workers.dev URL은 테스트용.
+  "$schema": "../node_modules/wrangler/config-schema.json",
+  "name": "short-real-cron",
+  "main": "src/index.js",
+  "compatibility_date": "2026-09-01",
+  "observability": {
+    "logs": {
+      "enabled": true,
+      "head_sampling_rate": 1,
+      "invocation_logs": true,
+      "persist": true
+    }
+  },
+  "triggers": {
+    // vercel.json에 있던 원래 스케줄 그대로. UTC 기준 매시각 정각.
+    "crons": ["0 * * * *"]
+  },
+  "vars": {
+    "TARGET_URL": "https://shortreal.ai/api/polar/subscriptions/cron"
+  }
+  // CRON_SECRET은 Secret으로 등록 (대시보드 — 값은 기존과 동일). plain vars에 넣지 말 것.
+}
