@@ -74,8 +74,17 @@ ShortReal의 Supabase 의존 4종(Auth·Postgres·Storage·Realtime)을 Neon + C
 * Realtime 진행 표시 확인.
 * 웹훅 4곳(polar/replicate/fal/suno) 리포인트 + E2E.
 
-## 진행 상태 (2026-10-26 갱신)
+## 진행 상태 (2026-10-27 갱신 — 마이그레이션 종결)
 
+* ** 컷오버 및 서비스 전환 종결 (2026-10-27)**:
+  * [x] **prod 커스텀 도메인 컷오버 완료** — `shortreal.ai` NS가 Cloudflare DNS, Vercel A/CNAME 레코드 삭제, Workers `short-real` 바인딩. 실측: `server: cloudflare` + `cf-ray`, x-vercel 지문 소멸, `/` 200·`/api` 401. www 바인딩은 NXDOMAIN 확인 후 사장님 추가 진행 (실측 대기).
+  * [x] **Vercel 프로젝트 삭제 + Free 플랜 하향** — 트래픽 0 확정 후 삭제. 레포 잔재도 정리: 커밋 `df22dc8` (vercel.json 삭제, layout.tsx의 `@vercel/analytics` 제거, package.json에서 `@vercel/analytics`·`@vercel/functions` 제거).
+  * [x] **Supabase 프로젝트 삭제** — 백업 후 삭제 완료. "production이 비어도 development = Supabase 데이터면 OK" 정책 확정.
+  * [x] **Polar 웹훅 체인 완주** — 근본 원인 = Polar 등록 URL이 옛 경로(`/api/polar/checkouts/success`, 실제 라우트는 `/webhook/polar/checkouts/success`). 제 MCP API로 URL 수정 + 실패 이벤트 재전송 → HTTP 200 → DB 실측 `plan=plan-1`·`subscription_id` 부여. endpoint id `a031822c-2bdb-490c-863b-6605b8142ff7`.
+  * [x] **cron 워커 `short-real-cron`** (커밋 `a68a513`) — 레포 `cron-worker/` (`0 * * * *`, `TARGET_URL` var + `CRON_SECRET` Secret). `/__run?secret=` 수동실행 → `{"ok":true,"status":200}` 실측. ⚠️ 교훈: Git CI 배포 성공 후 대시보드 수동 배포가 얹히면 라이브가 구 코드로 되돌아감 — 배포 후 `/`→404·`/__run`→401 실측 루틴 유지.
+  * [x] **users 중복 정리** — production에서 lht1324@gmail.com 2행 → 1행 (plan 부여 최신행 유지) + `users_email_uidx` 유니크 인덱스 생성 (이중 create race 차단).
+  * [x] **`credit_count`/`image_limit`/`subscription_grants` 판정** — 셋 모두 코드 참조 0 (schema.ts 정의만 존재). 웹훅이 plan·subscription_id만 쓰는 것은 설계상 정확. Polar 제품 metadata `imageLimit`도 현재 미참조.
+  * [ ] **Polar 웹훅 이벤트 확장 (나중에)** — endpoint 이벤트가 `subscription.created` 1개뿐. 취소·환불 lifecycle은 필요 시 별도 설계 (현재 `scheduled_downgrade_at`은 cancel 라우트담당 추정).
 * [x] Neon 프로젝트 (Singapore) + production/development 브랜치 + PG17.
 * [x] DB 스키마 10 테이블 + 인덱스 + FK → production/development 양쪽 적용 완료 (`db/neon/01_schema.sql`). ad_generation_batches·usage_ledger는 2026-10-24 흔적 제거로 DROP.
 * [x] RPC **3종** 이식 → production/development 양쪽 적용 완료 (`db/neon/02_functions.sql`). `users.credit_count` 컬럼 추가.
